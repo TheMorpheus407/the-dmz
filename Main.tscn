@@ -1,0 +1,163 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://main.gd" id="1"]
+
+[node name="Main" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.08, 0.1, 0.13, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Panel" type="PanelContainer" parent="Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(640, 360)
+
+[node name="VBox" type="VBoxContainer" parent="Margin/Panel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="Margin/Panel/VBox"]
+layout_mode = 2
+text = "Email Review"
+theme_override_font_sizes/font_size = 26
+
+[node name="Meta" type="VBoxContainer" parent="Margin/Panel/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="FromLabel" type="Label" parent="Margin/Panel/VBox/Meta"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "From: loading@message.local"
+
+[node name="SubjectLabel" type="Label" parent="Margin/Panel/VBox/Meta"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Subject: Loading subject"
+
+[node name="ClassificationLabel" type="Label" parent="Margin/Panel/VBox/Meta"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Classification: Unknown"
+theme_override_font_sizes/font_size = 16
+
+[node name="BonusLabel" type="Label" parent="Margin/Panel/VBox/Meta"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Bonus: €0"
+theme_override_font_sizes/font_size = 16
+
+[node name="EmailBody" type="RichTextLabel" parent="Margin/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_minimum_size = Vector2(0, 220)
+fit_content = true
+scroll_active = false
+autowrap_mode = 2
+text = "Loading message..."
+
+[node name="DecisionLabel" type="Label" parent="Margin/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Decision: No decision yet"
+theme_override_font_sizes/font_size = 18
+
+[node name="TotalEarnedLabel" type="Label" parent="Margin/Panel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Total earned: €0"
+theme_override_font_sizes/font_size = 16
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Panel/VBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="AcceptButton" type="Button" parent="Margin/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Accept"
+
+[node name="DenyButton" type="Button" parent="Margin/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Deny"
+
+[node name="QuarantineButton" type="Button" parent="Margin/Panel/VBox/Buttons"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Quarantine"
+
+[node name="SuccessScreen" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Dimmer" type="ColorRect" parent="SuccessScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.75)
+
+[node name="Center" type="CenterContainer" parent="SuccessScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="SuccessPanel" type="PanelContainer" parent="SuccessScreen/Center"]
+layout_mode = 2
+custom_minimum_size = Vector2(480, 220)
+
+[node name="SuccessVBox" type="VBoxContainer" parent="SuccessScreen/Center/SuccessPanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 12
+
+[node name="DayLabel" type="Label" parent="SuccessScreen/Center/SuccessPanel/SuccessVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Day 1 done"
+theme_override_font_sizes/font_size = 28
+
+[node name="SuccessTotalLabel" type="Label" parent="SuccessScreen/Center/SuccessPanel/SuccessVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Total earned: €0"
+theme_override_font_sizes/font_size = 18
+
+[node name="NextDayButton" type="Button" parent="SuccessScreen/Center/SuccessPanel/SuccessVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Next Day"
