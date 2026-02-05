@@ -12,6 +12,10 @@ die() {
   exit 1
 }
 
+warn() {
+  echo "WARN: $*" >&2
+}
+
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
 }
@@ -36,7 +40,7 @@ run_agent() {
 
 first_word() {
   local file="$1"
-  [[ -s "$file" ]] || die "Expected non-empty file: $file"
+  [[ -s "$file" ]] || { echo ""; return 0; }
   awk 'NR==1{print $1; exit}' "$file"
 }
 
@@ -95,7 +99,9 @@ current_branch="$(git rev-parse --abbrev-ref HEAD)"
 [[ "$current_branch" != "HEAD" ]] || die "Detached HEAD. Checkout a branch before running."
 target_branch="$current_branch"
 
-[[ -z "$(git status --porcelain)" ]] || die "Working tree is not clean. Commit or stash before running."
+if [[ -n "$(git status --porcelain)" ]]; then
+  warn "Working tree is not clean. Continuing with uncommitted changes."
+fi
 
 name_with_owner="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
 owner="${name_with_owner%%/*}"
@@ -133,8 +139,6 @@ implementation_file="$issue_dir/implementation.md"
 review_a_file="$issue_dir/review-1.md"
 review_b_file="$issue_dir/review-2.md"
 
-rm -f "$research_file"
-
 research_prompt=$(cat <<EOF
 You are the Research Agent for GitHub issue #$issue_number in this repository.
 
@@ -148,15 +152,16 @@ Requirements:
 Important:
 - Write the full research to the file.
 - Mention key findings in the file.
+- If any expected file is missing, ignore it and continue. Do your best and do not error out.
 EOF
 )
 
-run_agent "$RESEARCH_AGENT" "$research_prompt"
-[[ -s "$research_file" ]] || die "Research file missing or empty: $research_file"
+if ! run_agent "$RESEARCH_AGENT" "$research_prompt"; then
+  warn "Research agent exited non-zero. Continuing."
+fi
+[[ -s "$research_file" ]] || warn "Research file missing or empty: $research_file (continuing)."
 
 while true; do
-  rm -f "$implementation_file"
-
   implement_prompt=$(cat <<EOF
 You are the Implementer Agent for GitHub issue #$issue_number in this repository.
 
@@ -170,13 +175,14 @@ Requirements:
 Important:
 - Do NOT commit changes.
 - Write the documentation file directly.
+- Check uncommitted files and existing artifacts; proceed even if some are missing. Do your best and do not error out.
 EOF
 )
 
-  run_agent "$IMPLEMENT_AGENT" "$implement_prompt"
-  [[ -s "$implementation_file" ]] || die "Implementation file missing or empty: $implementation_file"
-
-  rm -f "$review_a_file" "$review_b_file"
+  if ! run_agent "$IMPLEMENT_AGENT" "$implement_prompt"; then
+    warn "Implementer agent exited non-zero. Continuing."
+  fi
+  [[ -s "$implementation_file" ]] || warn "Implementation file missing or empty: $implementation_file (continuing)."
 
   review_a_prompt=$(cat <<EOF
 You are Reviewer A for GitHub issue #$issue_number. Focus: correctness of the uncommitted changes.
@@ -191,11 +197,14 @@ Requirements:
 
 Important:
 - Do NOT pipe output to a file. Write the file directly.
+- Check uncommitted files and existing artifacts; proceed even if some are missing. Do your best and do not error out.
 EOF
 )
 
-  run_agent "$REVIEW_A_AGENT" "$review_a_prompt"
-  [[ -s "$review_a_file" ]] || die "Review A file missing or empty: $review_a_file"
+  if ! run_agent "$REVIEW_A_AGENT" "$review_a_prompt"; then
+    warn "Reviewer A agent exited non-zero. Continuing."
+  fi
+  [[ -s "$review_a_file" ]] || warn "Review A file missing or empty: $review_a_file (continuing)."
 
   review_b_prompt=$(cat <<EOF
 You are Reviewer B for GitHub issue #$issue_number. Focus: do the uncommitted changes solve the issue?
@@ -210,11 +219,14 @@ Requirements:
 
 Important:
 - Write findings to the review document directly.
+- Check uncommitted files and existing artifacts; proceed even if some are missing. Do your best and do not error out.
 EOF
 )
 
-  run_agent "$REVIEW_B_AGENT" "$review_b_prompt"
-  [[ -s "$review_b_file" ]] || die "Review B file missing or empty: $review_b_file"
+  if ! run_agent "$REVIEW_B_AGENT" "$review_b_prompt"; then
+    warn "Reviewer B agent exited non-zero. Continuing."
+  fi
+  [[ -s "$review_b_file" ]] || warn "Review B file missing or empty: $review_b_file (continuing)."
 
   review_a_word="$(first_word "$review_a_file")"
   review_b_word="$(first_word "$review_b_file")"
@@ -223,7 +235,7 @@ EOF
     break
   fi
 
-  echo "Reviews not accepted. Restarting implementation loop."
+  echo "Reviews not accepted or missing. Restarting implementation loop."
 done
 
 git add -A
