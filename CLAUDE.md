@@ -10,12 +10,12 @@ Use task-specialized sub-agents from `.claude/agents/` for focused work:
 
 | Agent | Domain | When to Use |
 |-------|--------|-------------|
-| frontend | SvelteKit, Svelte 5, PixiJS, UI, a11y | Component creation, styling, client state, routing |
-| backend | Fastify, game engine, event sourcing | Route handlers, middleware, business logic |
-| database | PostgreSQL, Drizzle ORM, RLS | Schema changes, migrations, queries |
+| frontend | SvelteKit, Svelte 5, PixiJS, terminal UI, a11y | Component creation, styling, client state, routing, theming |
+| backend | Fastify, game engine, event sourcing, API design | Route handlers, middleware, module implementation, business logic |
+| database | PostgreSQL, Drizzle ORM, RLS | Schema changes, migrations, RLS policies, queries |
 | testing | Vitest, Playwright | Writing tests, coverage analysis, test infrastructure |
-| devops | Docker, CI/CD, GitHub Actions | Containers, pipelines, deployment, monitoring |
-| reviewer | Code quality, security, standards | Post-implementation review, security audit (read-only — no Edit/Write) |
+| devops | Docker, Kubernetes, CI/CD, GitHub Actions | Containers, pipelines, deployment, infrastructure config |
+| reviewer | Correctness, security, performance, a11y | Post-implementation review, security audit (read-only — no Edit/Write) |
 
 ### Agent Strategy
 

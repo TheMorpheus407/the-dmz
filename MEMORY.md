@@ -17,6 +17,7 @@
 - [x] Development roadmap (`docs/MILESTONES.md`, M0–M16)
 - [x] Multi-agent development loop (`auto-develop.sh`)
 - [x] AI instruction files (SOUL.md, AGENTS.md, CLAUDE.md, MEMORY.md)
+- [x] Sub-agent definitions (`.claude/agents/`: frontend, backend, database, testing, devops, reviewer)
 
 ## Tech Decisions Log
 
