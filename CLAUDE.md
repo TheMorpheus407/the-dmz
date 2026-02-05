@@ -15,7 +15,7 @@ Use task-specialized sub-agents from `.claude/agents/` for focused work:
 | database | PostgreSQL, Drizzle ORM, RLS | Schema changes, migrations, queries |
 | testing | Vitest, Playwright | Writing tests, coverage analysis, test infrastructure |
 | devops | Docker, CI/CD, GitHub Actions | Containers, pipelines, deployment, monitoring |
-| reviewer | Code quality, security, standards | Post-implementation review, security audit |
+| reviewer | Code quality, security, standards | Post-implementation review, security audit (read-only — no Edit/Write) |
 
 ### Agent Strategy
 
@@ -30,13 +30,9 @@ Use task-specialized sub-agents from `.claude/agents/` for focused work:
 - Use `gh` for all GitHub interactions (issues, PRs, checks).
 - Run tests with Bash (`pnpm test`), not by reading test output files.
 
-## Issue-Driven Workflow
+## Automation
 
-The `auto-develop.sh` script automates: Research → Implement → Review (2 passes) → Commit → Close.
-When working interactively, follow the same discipline:
+The `auto-develop.sh` script automates issue lifecycle: Research, Implement, Review (2 passes), Commit, Close. When working interactively, follow the same flow from `AGENTS.md` and additionally:
 
-1. Read the issue and linked documents
-2. Research the relevant codebase area
-3. Implement with tests
-4. Self-review against the prohibited actions list
-5. Commit only when tests pass
+- Self-review against the prohibited actions list before committing.
+- Prefer dispatching to sub-agents over doing everything in one thread.

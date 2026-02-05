@@ -12,8 +12,8 @@
 
 - [x] Game premise and story (`docs/story.md`)
 - [x] Business Requirements Document (`docs/BRD.md`, 1,363 lines)
-- [x] 14 BRD research files (`docs/BRD/`, ~23,000 lines)
-- [x] 14 Design Documents (`docs/DD/`, ~24,000 lines)
+- [x] 14 BRD research files (`docs/BRD/`, ~22,200 lines)
+- [x] 14 Design Documents (`docs/DD/`, ~24,500 lines)
 - [x] Development roadmap (`docs/MILESTONES.md`, M0–M16)
 - [x] Multi-agent development loop (`auto-develop.sh`)
 - [x] AI instruction files (SOUL.md, AGENTS.md, CLAUDE.md, MEMORY.md)
@@ -31,22 +31,24 @@
 | Analytics DB | PostgreSQL (defer specialty DB) | Start simple, evaluate at M7 | 2026-02-05 |
 | Architecture | Modular monolith | Avoid premature decomposition | 2026-02-05 |
 
-## Next Up: M0 — Project Bootstrap
+## Next Up: M0 — Project Bootstrap (2 weeks)
 
 - [ ] Initialize pnpm monorepo (`packages/frontend`, `packages/backend`, `packages/shared`)
 - [ ] Scaffold SvelteKit app
 - [ ] Scaffold Fastify server
 - [ ] Configure TypeScript strict mode
-- [ ] Set up ESLint + Prettier
+- [ ] Set up ESLint + Prettier + Husky pre-commit hooks
 - [ ] Create Docker Compose (PostgreSQL, Redis)
 - [ ] Set up Drizzle ORM + first migration
+- [ ] Shared validation: Zod schemas compiled to JSON Schema for Fastify
 - [ ] Create GitHub Actions CI pipeline
 - [ ] Set up Vitest + Playwright
-- [ ] Configure Husky pre-commit hooks
+
+**Exit criteria:** `pnpm dev` starts both frontend and backend. CI passes. First migration runs.
 
 ## Known Blockers
 
-- pnpm not installed globally (`npm i -g pnpm`)
+- pnpm not yet installed globally (`npm i -g pnpm` or `corepack enable`)
 
 ## Architecture Notes
 

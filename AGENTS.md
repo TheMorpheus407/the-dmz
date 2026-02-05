@@ -16,14 +16,19 @@ the-dmz/
 │   ├── MILESTONES.md      # Development roadmap (M0–M16)
 │   ├── BRD/               # 14 BRD research files
 │   └── DD/                # 14 Design Documents (DD-01 to DD-14)
-├── packages/              # Monorepo workspaces (created in M0)
+├── packages/              # Monorepo workspaces (created in M0, may not exist yet)
 │   ├── frontend/          # SvelteKit app
 │   ├── backend/           # Fastify server
 │   └── shared/            # Shared types, Zod schemas, constants
-├── logs/issues/           # Per-issue research and review artifacts
-├── SOUL.md                # Project identity, tech stack, standards
+├── logs/issues/{N}/       # Per-issue artifacts (created by auto-develop.sh)
+│   ├── issue.json         # Issue snapshot from GitHub
+│   ├── research.md        # Research agent output
+│   ├── implementation.md  # Implementer agent summary
+│   ├── review-1.md        # Reviewer A verdict (ACCEPTED/DENIED)
+│   └── review-2.md        # Reviewer B verdict (ACCEPTED/DENIED)
+├── SOUL.md                # Project identity, tech stack, standards (do not modify)
 ├── MEMORY.md              # Living project state (update as you work)
-├── AGENTS.md              # This file
+├── AGENTS.md              # This file (do not modify without user instruction)
 ├── CLAUDE.md              # Claude Code extensions
 └── auto-develop.sh        # Multi-agent development loop
 ```
@@ -56,6 +61,27 @@ pnpm db:seed              # Seed development data
 5. Write or update tests for every change.
 6. Run tests before considering work complete.
 7. Never commit without passing tests.
+8. Update `MEMORY.md` when completing milestones or making significant decisions.
+
+### auto-develop.sh Pipeline
+
+The script orchestrates four agent roles against the lowest-numbered open issue:
+
+```
+Research Agent  -->  Implementer Agent  -->  Reviewer A (correctness)
+                                         -->  Reviewer B (issue coverage)
+                         ^                          |
+                         |  loop if DENIED          |
+                         +--------------------------+
+                    On both ACCEPTED: commit, push, close issue
+```
+
+- **Research:** Reads the issue, codebase, and docs. Writes `logs/issues/{N}/research.md`.
+- **Implement:** Reads research + issue. Implements code and tests. Writes `implementation.md`. Does NOT commit.
+- **Review A:** Checks uncommitted changes for correctness, quality, and security. First word: `ACCEPTED` or `DENIED`.
+- **Review B:** Checks whether changes fully solve the issue. First word: `ACCEPTED` or `DENIED`.
+- If either reviewer says `DENIED`, the implement-review loop restarts.
+- Each role can be assigned to `claude` or `codex` independently via CLI flags.
 
 ## Git Conventions
 
@@ -65,6 +91,7 @@ pnpm db:seed              # Seed development data
 - Never force-push to master.
 - Never amend published commits.
 - Never skip hooks (`--no-verify`).
+- When running inside `auto-develop.sh`: the script handles commit, push, and issue close. Do NOT commit yourself.
 
 ## File Conventions
 
@@ -83,6 +110,7 @@ Read its Design Document first. The DD index is in `SOUL.md`.
 - Read, write, or execute anything outside the project root
 - Delete top-level directories (`rm -rf docs/`, `rm -rf packages/`)
 - Modify `.git/config` or `.git/hooks/` directly
+- Modify governance files (`SOUL.md`, `AGENTS.md`, `auto-develop.sh`) without explicit user instruction
 - Write to `/tmp`, `/etc`, `/usr`, `~/.ssh`, or any path outside this repo
 - Write secrets, API keys, or tokens into any tracked file
 

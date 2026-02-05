@@ -65,8 +65,8 @@ All engineering artifacts (commits, PRs, code comments, docs) are strictly profe
 | Game premise | `docs/story.md` | 59 |
 | Business Requirements | `docs/BRD.md` | 1,363 |
 | Development Roadmap | `docs/MILESTONES.md` | 565 |
-| 14 Design Documents | `docs/DD/01-14_*.md` | ~24,000 |
-| 14 BRD Research Files | `docs/BRD/01-14_*.md` | ~23,000 |
+| 14 Design Documents | `docs/DD/` | ~24,500 |
+| 14 BRD Research Files | `docs/BRD/` | ~22,200 |
 
 ### Design Document Index
 
