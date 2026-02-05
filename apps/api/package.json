@@ -4,14 +4,26 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node -e \"console.log('build not configured for api yet')\"",
-    "dev": "node -e \"console.log('dev not configured for api yet')\"",
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
     "lint": "node -e \"console.log('lint not configured for api yet')\"",
-    "test": "node ./scripts/verify-shared-import.mjs",
-    "typecheck": "node -e \"console.log('typecheck not configured for api yet')\"",
-    "clean": "node -e \"console.log('clean not configured for api yet')\""
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true });\""
   },
   "dependencies": {
-    "@the-dmz/shared": "workspace:*"
+    "@fastify/cors": "^11.2.0",
+    "@the-dmz/shared": "workspace:*",
+    "fastify": "^5.0.0",
+    "fastify-plugin": "^5.0.0",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.0"
   }
 }
