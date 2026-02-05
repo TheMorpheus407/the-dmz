@@ -120,26 +120,30 @@ query($owner: String!, $name: String!, $endCursor: String) {
 }
 '
 
-issue_number="$(
-  gh api graphql --paginate --slurp -F owner="$owner" -F name="$repo" -f query="$gql" \
-    | jq '[.[].data.repository.issues.nodes[].number] | min'
-)"
+while true; do
+  issue_number="$(
+    gh api graphql --paginate --slurp -F owner="$owner" -F name="$repo" -f query="$gql" \
+      | jq '[.[].data.repository.issues.nodes[].number] | min'
+  )"
 
-[[ -n "$issue_number" && "$issue_number" != "null" ]] || die "No open issues found."
+  if [[ -z "$issue_number" || "$issue_number" == "null" ]]; then
+    echo "No open issues found. Exiting."
+    exit 0
+  fi
 
-issue_dir="logs/issues/$issue_number"
-mkdir -p "$issue_dir"
+  issue_dir="logs/issues/$issue_number"
+  mkdir -p "$issue_dir"
 
-issue_title="$(gh issue view "$issue_number" --json title -q .title)"
-issue_json="$issue_dir/issue.json"
-gh issue view "$issue_number" --json number,title,body,author,labels,assignees,comments,createdAt,updatedAt,url --comments > "$issue_json"
+  issue_title="$(gh issue view "$issue_number" --json title -q .title)"
+  issue_json="$issue_dir/issue.json"
+  gh issue view "$issue_number" --json number,title,body,author,labels,assignees,comments,createdAt,updatedAt,url --comments > "$issue_json"
 
-research_file="$issue_dir/research.md"
-implementation_file="$issue_dir/implementation.md"
-review_a_file="$issue_dir/review-1.md"
-review_b_file="$issue_dir/review-2.md"
+  research_file="$issue_dir/research.md"
+  implementation_file="$issue_dir/implementation.md"
+  review_a_file="$issue_dir/review-1.md"
+  review_b_file="$issue_dir/review-2.md"
 
-research_prompt=$(cat <<EOF
+  research_prompt=$(cat <<EOF
 You are the Research Agent for GitHub issue #$issue_number in this repository.
 
 Requirements:
@@ -156,13 +160,13 @@ Important:
 EOF
 )
 
-if ! run_agent "$RESEARCH_AGENT" "$research_prompt"; then
-  warn "Research agent exited non-zero. Continuing."
-fi
-[[ -s "$research_file" ]] || warn "Research file missing or empty: $research_file (continuing)."
+  if ! run_agent "$RESEARCH_AGENT" "$research_prompt"; then
+    warn "Research agent exited non-zero. Continuing."
+  fi
+  [[ -s "$research_file" ]] || warn "Research file missing or empty: $research_file (continuing)."
 
-while true; do
-  implement_prompt=$(cat <<EOF
+  while true; do
+    implement_prompt=$(cat <<EOF
 You are the Implementer Agent for GitHub issue #$issue_number in this repository.
 
 Requirements:
@@ -179,12 +183,12 @@ Important:
 EOF
 )
 
-  if ! run_agent "$IMPLEMENT_AGENT" "$implement_prompt"; then
-    warn "Implementer agent exited non-zero. Continuing."
-  fi
-  [[ -s "$implementation_file" ]] || warn "Implementation file missing or empty: $implementation_file (continuing)."
+    if ! run_agent "$IMPLEMENT_AGENT" "$implement_prompt"; then
+      warn "Implementer agent exited non-zero. Continuing."
+    fi
+    [[ -s "$implementation_file" ]] || warn "Implementation file missing or empty: $implementation_file (continuing)."
 
-  review_a_prompt=$(cat <<EOF
+    review_a_prompt=$(cat <<EOF
 You are Reviewer A for GitHub issue #$issue_number. Focus: correctness of the uncommitted changes.
 
 Requirements:
@@ -201,12 +205,12 @@ Important:
 EOF
 )
 
-  if ! run_agent "$REVIEW_A_AGENT" "$review_a_prompt"; then
-    warn "Reviewer A agent exited non-zero. Continuing."
-  fi
-  [[ -s "$review_a_file" ]] || warn "Review A file missing or empty: $review_a_file (continuing)."
+    if ! run_agent "$REVIEW_A_AGENT" "$review_a_prompt"; then
+      warn "Reviewer A agent exited non-zero. Continuing."
+    fi
+    [[ -s "$review_a_file" ]] || warn "Review A file missing or empty: $review_a_file (continuing)."
 
-  review_b_prompt=$(cat <<EOF
+    review_b_prompt=$(cat <<EOF
 You are Reviewer B for GitHub issue #$issue_number. Focus: do the uncommitted changes solve the issue?
 
 Requirements:
@@ -223,30 +227,31 @@ Important:
 EOF
 )
 
-  if ! run_agent "$REVIEW_B_AGENT" "$review_b_prompt"; then
-    warn "Reviewer B agent exited non-zero. Continuing."
+    if ! run_agent "$REVIEW_B_AGENT" "$review_b_prompt"; then
+      warn "Reviewer B agent exited non-zero. Continuing."
+    fi
+    [[ -s "$review_b_file" ]] || warn "Review B file missing or empty: $review_b_file (continuing)."
+
+    review_a_word="$(first_word "$review_a_file")"
+    review_b_word="$(first_word "$review_b_file")"
+
+    if [[ "$review_a_word" == "ACCEPTED" && "$review_b_word" == "ACCEPTED" ]]; then
+      break
+    fi
+
+    echo "Reviews not accepted or missing. Restarting implementation loop."
+  done
+
+  git add -A
+
+  if git diff --cached --quiet; then
+    die "No changes staged for commit."
   fi
-  [[ -s "$review_b_file" ]] || warn "Review B file missing or empty: $review_b_file (continuing)."
 
-  review_a_word="$(first_word "$review_a_file")"
-  review_b_word="$(first_word "$review_b_file")"
+  commit_title="$(printf "%s" "$issue_title" | tr '\n' ' ' | tr -s ' ')"
+  git commit -m "Issue #$issue_number: $commit_title"
+  git push origin "$target_branch"
+  gh issue close "$issue_number"
 
-  if [[ "$review_a_word" == "ACCEPTED" && "$review_b_word" == "ACCEPTED" ]]; then
-    break
-  fi
-
-  echo "Reviews not accepted or missing. Restarting implementation loop."
+  echo "Completed issue #$issue_number."
 done
-
-git add -A
-
-if git diff --cached --quiet; then
-  die "No changes staged for commit."
-fi
-
-commit_title="$(printf "%s" "$issue_title" | tr '\n' ' ' | tr -s ' ')"
-git commit -m "Issue #$issue_number: $commit_title"
-git push origin "$target_branch"
-gh issue close "$issue_number"
-
-echo "Completed issue #$issue_number."
