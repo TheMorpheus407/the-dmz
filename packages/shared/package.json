@@ -3,17 +3,37 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./types": {
+      "types": "./dist/esm/types/index.d.ts",
+      "import": "./dist/esm/types/index.js",
+      "require": "./dist/cjs/types/index.js"
+    },
+    "./constants": {
+      "types": "./dist/esm/constants/index.d.ts",
+      "import": "./dist/esm/constants/index.js",
+      "require": "./dist/cjs/constants/index.js"
+    },
+    "./utils": {
+      "types": "./dist/esm/utils/index.d.ts",
+      "import": "./dist/esm/utils/index.js",
+      "require": "./dist/cjs/utils/index.js"
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "dev": "tsc -p tsconfig.json --watch",
+    "build": "pnpm run clean && pnpm run build:esm && pnpm run build:cjs && pnpm run build:cjs:package",
+    "build:esm": "tsc -p tsconfig.esm.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json",
+    "build:cjs:package": "node -e \"const fs = require('node:fs'); fs.mkdirSync('dist/cjs', { recursive: true }); fs.writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }, null, 2));\"",
+    "dev": "tsc -p tsconfig.esm.json --watch",
     "lint": "node -e \"console.log('lint not configured for shared yet')\"",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
