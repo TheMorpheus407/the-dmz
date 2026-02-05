@@ -69,27 +69,44 @@ validate_agent "$REVIEW_B_AGENT"
 require_cmd git
 require_cmd gh
 require_cmd jq
-require_cmd claude
-require_cmd codex
+
+needs_claude=false
+needs_codex=false
+for agent in "$RESEARCH_AGENT" "$IMPLEMENT_AGENT" "$REVIEW_A_AGENT" "$REVIEW_B_AGENT"; do
+  case "$agent" in
+    claude) needs_claude=true ;;
+    codex) needs_codex=true ;;
+  esac
+done
+
+if $needs_claude; then
+  require_cmd claude
+fi
+if $needs_codex; then
+  require_cmd codex
+fi
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || die "Not inside a git repository."
 cd "$repo_root"
 
+gh auth status -t >/dev/null 2>&1 || die "gh is not authenticated. Run 'gh auth login'."
+
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
-[[ "$current_branch" == "main" ]] || die "Must be on branch 'main' (current: $current_branch)."
+[[ "$current_branch" != "HEAD" ]] || die "Detached HEAD. Checkout a branch before running."
+target_branch="$current_branch"
 
 [[ -z "$(git status --porcelain)" ]] || die "Working tree is not clean. Commit or stash before running."
-
-gh auth status -t >/dev/null 2>&1 || die "gh is not authenticated. Run 'gh auth login'."
 
 name_with_owner="$(gh repo view --json nameWithOwner -q .nameWithOwner)"
 owner="${name_with_owner%%/*}"
 repo="${name_with_owner#*/}"
+required_owner="TheMorpheus407"
+[[ "$owner" == "$required_owner" ]] || die "Repository owner must be $required_owner (found: $owner)."
 
 gql='
 query($owner: String!, $name: String!, $endCursor: String) {
   repository(owner: $owner, name: $name) {
-    issues(states: OPEN, first: 100, after: $endCursor) {
+    issues(states: OPEN, first: 100, after: $endCursor, filterBy: {createdBy: $owner}) {
       nodes { number }
       pageInfo { hasNextPage endCursor }
     }
@@ -215,7 +232,7 @@ fi
 
 commit_title="$(printf "%s" "$issue_title" | tr '\n' ' ' | tr -s ' ')"
 git commit -m "Issue #$issue_number: $commit_title"
-git push origin main
+git push origin "$target_branch"
 gh issue close "$issue_number"
 
 echo "Completed issue #$issue_number."
