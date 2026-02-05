@@ -155,7 +155,7 @@ run_agent "$RESEARCH_AGENT" "$research_prompt"
 [[ -s "$research_file" ]] || die "Research file missing or empty: $research_file"
 
 while true; do
-  rm -f "$implementation_file" "$review_a_file" "$review_b_file"
+  rm -f "$implementation_file"
 
   implement_prompt=$(cat <<EOF
 You are the Implementer Agent for GitHub issue #$issue_number in this repository.
@@ -175,6 +175,8 @@ EOF
 
   run_agent "$IMPLEMENT_AGENT" "$implement_prompt"
   [[ -s "$implementation_file" ]] || die "Implementation file missing or empty: $implementation_file"
+
+  rm -f "$review_a_file" "$review_b_file"
 
   review_a_prompt=$(cat <<EOF
 You are Reviewer A for GitHub issue #$issue_number. Focus: correctness of the uncommitted changes.
