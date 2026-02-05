@@ -22,6 +22,11 @@
       "import": "./dist/esm/constants/index.js",
       "require": "./dist/cjs/constants/index.js"
     },
+    "./schemas": {
+      "types": "./dist/esm/schemas/index.d.ts",
+      "import": "./dist/esm/schemas/index.js",
+      "require": "./dist/cjs/schemas/index.js"
+    },
     "./utils": {
       "types": "./dist/esm/utils/index.d.ts",
       "import": "./dist/esm/utils/index.js",
@@ -29,17 +34,23 @@
     }
   },
   "scripts": {
-    "build": "pnpm run clean && pnpm run build:esm && pnpm run build:cjs && pnpm run build:cjs:package",
+    "build": "pnpm run clean && pnpm run generate:schemas && pnpm run build:esm && pnpm run build:cjs && pnpm run build:cjs:package",
     "build:esm": "tsc -p tsconfig.esm.json",
     "build:cjs": "tsc -p tsconfig.cjs.json",
     "build:cjs:package": "node -e \"const fs = require('node:fs'); fs.mkdirSync('dist/cjs', { recursive: true }); fs.writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }, null, 2));\"",
-    "dev": "tsc -p tsconfig.esm.json --watch",
+    "dev": "pnpm run generate:schemas && tsc -p tsconfig.esm.json --watch",
+    "generate:schemas": "tsx scripts/generate-json-schemas.ts",
     "lint": "node -e \"console.log('lint not configured for shared yet')\"",
-    "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "pnpm run generate:schemas && vitest run",
+    "typecheck": "pnpm run generate:schemas && tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true });\""
   },
+  "dependencies": {
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "^3.23.0"
+  },
   "devDependencies": {
+    "tsx": "^4.21.0",
     "typescript": "^5.5.4",
     "vitest": "^2.1.0"
   }

@@ -32,6 +32,25 @@ describe("health routes", () => {
     expect(response.json()).toEqual({ status: "ok" });
   });
 
+  it("rejects unexpected query params for /health", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/health?probe=invalid",
+    });
+
+    expect(response.statusCode).toBe(400);
+    const payload = response.json() as {
+      success: boolean;
+      error: { code: string; message: string; details: { issues: unknown[] } };
+    };
+
+    expect(payload.success).toBe(false);
+    expect(payload.error.code).toBe("VALIDATION_FAILED");
+    expect(payload.error.message).toBe("Validation failed");
+    expect(Array.isArray(payload.error.details.issues)).toBe(true);
+    expect(payload.error.details.issues.length).toBeGreaterThan(0);
+  });
+
   it("returns 503 for /ready when dependencies are missing", async () => {
     const response = await app.inject({
       method: "GET",
