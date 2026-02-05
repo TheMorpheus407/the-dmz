@@ -1,8 +1,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { buildApp } from "../../../app.js";
-import { loadConfig } from "../../../config.js";
+import { loadConfig, type AppConfig } from "../../../config.js";
 
-const createTestConfig = () => {
+const createTestConfig = (): AppConfig => {
   const base = loadConfig();
   return {
     ...base,
@@ -63,7 +63,7 @@ describe("health routes", () => {
       checks: {
         database: {
           ok: false,
-          message: "Database connection not configured",
+          message: "Database health check disabled for tests",
         },
         redis: {
           ok: false,

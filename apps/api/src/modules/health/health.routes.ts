@@ -32,7 +32,7 @@ export const registerHealthRoutes = async (fastify: FastifyInstance): Promise<vo
       },
     },
     async (_request, reply) => {
-      const readiness = await getReadiness();
+      const readiness = await getReadiness(fastify.config);
       if (readiness.status !== "ok") {
         reply.code(503);
       }

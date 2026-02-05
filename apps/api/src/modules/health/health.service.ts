@@ -1,3 +1,4 @@
+import { type AppConfig } from "../../config.js";
 import { checkDatabaseHealth } from "../../shared/database/connection.js";
 import { checkRedisHealth } from "../../shared/database/redis.js";
 
@@ -15,8 +16,11 @@ export type ReadinessResponse = {
 
 export const getHealth = (): HealthResponse => ({ status: "ok" });
 
-export const getReadiness = async (): Promise<ReadinessResponse> => {
-  const [database, redis] = await Promise.all([checkDatabaseHealth(), checkRedisHealth()]);
+export const getReadiness = async (config: AppConfig): Promise<ReadinessResponse> => {
+  const [database, redis] = await Promise.all([
+    checkDatabaseHealth(config),
+    checkRedisHealth(),
+  ]);
   const status = database.ok && redis.ok ? "ok" : "degraded";
 
   return {
