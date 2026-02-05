@@ -13,13 +13,15 @@ The DMZ: Archive Gate is a cybersecurity awareness training platform built as a 
 | Layer | Technology |
 |-------|-----------|
 | Frontend | SvelteKit 2.x, Svelte 5, TypeScript, PixiJS |
-| Backend | Node.js, TypeScript, Fastify (modular monolith) |
+| Backend | Node.js, TypeScript, Fastify 5.x (modular monolith) |
 | Database | PostgreSQL (RLS multi-tenancy), Redis |
 | Analytics DB | PostgreSQL initially; ClickHouse or TimescaleDB when needed |
 | AI | Claude API (phishing content generation) |
 | ORM | Drizzle ORM (versioned migrations) |
 | Validation | Zod → JSON Schema (Fastify) |
-| Package manager | pnpm (monorepo workspaces) |
+| Build orchestration | Turborepo (pipeline caching, task graph) |
+| Package manager | pnpm 9.x (monorepo workspaces) |
+| Linting | ESLint 9.x (flat config), Prettier |
 | Testing | Vitest (unit), Playwright (E2E) |
 | CI/CD | GitHub Actions |
 | Infrastructure | Docker, Kubernetes |
@@ -43,7 +45,8 @@ The DMZ: Archive Gate is a cybersecurity awareness training platform built as a 
 - All API endpoints validated with Zod. All responses typed.
 - Structured logging with Pino. Redact PII fields.
 - Error codes registry — every error gets a unique code.
-- Tests colocated: `thing.ts` → `thing.test.ts`.
+- Frontend and shared tests colocated: `thing.ts` → `thing.test.ts`.
+- Backend module tests in `__tests__/` subdirectories: `module/__tests__/thing.test.ts`.
 
 ## Security Principles
 

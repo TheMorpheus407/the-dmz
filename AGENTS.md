@@ -10,16 +10,19 @@ All work MUST stay within this repository. Never read, write, or execute anythin
 
 ```
 the-dmz/
+├── apps/                  # Application workspaces (created in M0, may not exist yet)
+│   ├── web/               # SvelteKit frontend (Svelte 5) — filter: pnpm --filter web
+│   └── api/               # Fastify backend (Node.js/TS) — filter: pnpm --filter api
+├── packages/              # Library workspaces
+│   └── shared/            # Shared types, Zod schemas, constants — @the-dmz/shared
 ├── docs/                  # All project documentation
 │   ├── BRD.md             # Business Requirements Document
 │   ├── story.md           # Game premise and mechanics
 │   ├── MILESTONES.md      # Development roadmap (M0–M16)
 │   ├── BRD/               # 14 BRD research files
 │   └── DD/                # 14 Design Documents (DD-01 to DD-14)
-├── packages/              # Monorepo workspaces (created in M0, may not exist yet)
-│   ├── frontend/          # SvelteKit app
-│   ├── backend/           # Fastify server
-│   └── shared/            # Shared types, Zod schemas, constants
+├── e2e/                   # Playwright E2E tests (root-level)
+├── docker/                # Docker init scripts (postgres/, etc.)
 ├── .claude/agents/        # Task-specialized sub-agent instructions (Claude Code)
 ├── logs/issues/{N}/       # Per-issue artifacts (created by auto-develop.sh)
 │   ├── issue.json         # Issue snapshot from GitHub
@@ -27,6 +30,9 @@ the-dmz/
 │   ├── implementation.md  # Implementer agent summary
 │   ├── review-1.md        # Reviewer A verdict (ACCEPTED/DENIED)
 │   └── review-2.md        # Reviewer B verdict (ACCEPTED/DENIED)
+├── pnpm-workspace.yaml    # Workspace definitions: apps/*, packages/*
+├── turbo.json             # Turborepo pipeline config
+├── tsconfig.base.json     # Shared TypeScript base config
 ├── SOUL.md                # Project identity, tech stack, standards (do not modify)
 ├── MEMORY.md              # Living project state (update as you work)
 ├── AGENTS.md              # This file (do not modify without user instruction)
@@ -36,21 +42,50 @@ the-dmz/
 
 ## Environment
 
-- Node.js 22.x, npm 10.x, pnpm (install if missing: `corepack enable` or `npm i -g pnpm`)
+- Node.js 22.x, pnpm 9.x (install if missing: `corepack enable` or `npm i -g pnpm`)
+- Turborepo for build orchestration (`turbo.json` at repo root)
 - Git, gh CLI (authenticated), Docker
 - Repository: github.com/TheMorpheus407/the-dmz (master branch)
 
 ## Commands (M0+)
 
 ```sh
+# Core
 pnpm install              # Install all workspace dependencies
-pnpm dev                  # Start frontend + backend dev servers
-pnpm build                # Production build
-pnpm test                 # Run all tests (Vitest + Playwright)
-pnpm lint                 # ESLint + Prettier check
+pnpm dev                  # Start frontend + backend dev servers (via Turborepo)
+pnpm dev:web              # Start only SvelteKit (port 5173)
+pnpm dev:api              # Start only Fastify (port 3001)
+pnpm dev:services         # Start only Docker Compose services
+pnpm build                # Production build (via Turborepo)
+
+# Quality
+pnpm lint                 # ESLint check (via Turborepo)
 pnpm lint:fix             # Auto-fix lint issues
+pnpm format               # Format all files (Prettier)
+pnpm format:check         # Check formatting (CI mode)
+pnpm typecheck            # TypeScript strict check across all packages
+
+# Testing
+pnpm test                 # Run all Vitest tests (via Turborepo)
+pnpm test:watch           # Watch mode for active development
+pnpm test:coverage        # Run tests with coverage report
+pnpm test:e2e             # Run Playwright E2E tests
+pnpm --filter api test    # Run API tests only
+pnpm --filter web test    # Run web tests only
+
+# Database
 pnpm db:migrate           # Run Drizzle migrations
 pnpm db:seed              # Seed development data
+pnpm db:seed:test         # Seed test database
+pnpm db:reset             # Drop, re-migrate, re-seed (dev only)
+pnpm --filter api db:generate  # Generate migration from schema changes
+pnpm --filter api db:studio    # Open Drizzle Studio
+
+# Infrastructure
+pnpm services:up          # Start PostgreSQL + Redis (Docker Compose)
+pnpm services:down        # Stop infrastructure services
+pnpm services:reset       # Stop, remove volumes, restart (clean slate)
+pnpm services:logs        # Tail infrastructure service logs
 ```
 
 ## Workflow
@@ -97,9 +132,12 @@ Research Agent  -->  Implementer Agent  -->  Reviewer A (correctness)
 
 ## File Conventions
 
-- Tests colocated: `module/thing.ts` → `module/thing.test.ts`
-- Shared types in `packages/shared/`
-- Migrations in `packages/backend/drizzle/` — numbered, never edited after merge
+- Tests colocated: `module/thing.ts` -> `module/thing.test.ts`
+- Backend module tests in `__tests__/` subdirectories: `module/__tests__/module.service.test.ts`
+- Shared types in `packages/shared/` (npm scope: `@the-dmz/shared`)
+- Database schema in `apps/api/src/db/schema/` (Drizzle TypeScript DSL)
+- Migrations in `apps/api/src/shared/database/migrations/` — numbered, never edited after merge
+- E2E tests in root-level `e2e/` directory (Playwright)
 - No default exports. Named exports only.
 
 ## Before Implementing Any System
@@ -110,7 +148,7 @@ Read its Design Document first. The DD index is in `SOUL.md`.
 
 ### Filesystem
 - Read, write, or execute anything outside the project root
-- Delete top-level directories (`rm -rf docs/`, `rm -rf packages/`)
+- Delete top-level directories (`rm -rf docs/`, `rm -rf apps/`, `rm -rf packages/`)
 - Modify `.git/config` or `.git/hooks/` directly
 - Modify governance files (`SOUL.md`, `AGENTS.md`, `auto-develop.sh`) without explicit user instruction
 - Write to `/tmp`, `/etc`, `/usr`, `~/.ssh`, or any path outside this repo

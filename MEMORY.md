@@ -4,8 +4,8 @@
 
 ## Current State
 
-- **Phase:** Pre-implementation (documentation complete)
-- **Active milestone:** None — M0 not started
+- **Phase:** Pre-implementation (documentation complete, issues created)
+- **Active milestone:** M0 — Project Bootstrap (33 issues created on GitHub, #1–#33)
 - **Blocker:** Monorepo needs bootstrapping (M0)
 
 ## Completed Work
@@ -18,6 +18,7 @@
 - [x] Multi-agent development loop (`auto-develop.sh`)
 - [x] AI instruction files (SOUL.md, AGENTS.md, CLAUDE.md, MEMORY.md)
 - [x] Sub-agent definitions (`.claude/agents/`: frontend, backend, database, testing, devops, reviewer)
+- [x] M0 GitHub issues created (#1–#33, 33 issues covering full bootstrap scope)
 
 ## Tech Decisions Log
 
@@ -31,19 +32,57 @@
 | Package manager | pnpm | Monorepo workspaces, disk efficiency | 2026-02-05 |
 | Analytics DB | PostgreSQL (defer specialty DB) | Start simple, evaluate at M7 | 2026-02-05 |
 | Architecture | Modular monolith | Avoid premature decomposition | 2026-02-05 |
+| Build orchestration | Turborepo | Task graph, caching, pnpm workspace integration | 2026-02-05 |
+| Monorepo layout | `apps/*` + `packages/*` | Apps (deployables) vs packages (libraries) separation | 2026-02-05 |
 
-## Next Up: M0 — Project Bootstrap (2 weeks)
+## Next Up: M0 — Project Bootstrap (33 issues, #1–#33)
 
-- [ ] Initialize pnpm monorepo (`packages/frontend`, `packages/backend`, `packages/shared`)
-- [ ] Scaffold SvelteKit app
-- [ ] Scaffold Fastify server
-- [ ] Configure TypeScript strict mode
-- [ ] Set up ESLint + Prettier + Husky pre-commit hooks
-- [ ] Create Docker Compose (PostgreSQL, Redis)
-- [ ] Set up Drizzle ORM + first migration
-- [ ] Shared validation: Zod schemas compiled to JSON Schema for Fastify
-- [ ] Create GitHub Actions CI pipeline
-- [ ] Set up Vitest + Playwright
+### Core Scaffolding (#1–#5)
+- [ ] #1 Initialize pnpm monorepo with Turborepo (`apps/web`, `apps/api`, `packages/shared`)
+- [ ] #2 Scaffold SvelteKit frontend in `apps/web`
+- [ ] #3 Scaffold Fastify backend in `apps/api`
+- [ ] #4 Create shared TypeScript package (`packages/shared`)
+- [ ] #5 Set up Zod shared validation schemas
+
+### Infrastructure & Database (#6–#7, #17–#18, #20, #32)
+- [ ] #6 Docker Compose dev environment (PostgreSQL, Redis)
+- [ ] #7 Drizzle ORM + migration framework
+- [ ] #18 Initial database schema migration (`0001_initial_schema`)
+- [ ] #17 Test database seeding infrastructure
+- [ ] #20 Docker Compose health checks and service readiness
+- [ ] #32 Application Dockerfiles for API and Web
+
+### Tooling & DX (#9–#16, #19, #25–#26)
+- [ ] #9 TypeScript strict mode configuration
+- [ ] #10 ESLint with flat config
+- [ ] #11 Prettier for code formatting
+- [ ] #12 Husky git hooks with lint-staged
+- [ ] #15 Unified `pnpm dev` orchestration script
+- [ ] #16 `.env.example` and environment variable validation
+- [ ] #19 Repository configuration (.gitignore, .gitattributes, LICENSE)
+- [ ] #25 VS Code workspace settings and debug configuration
+- [ ] #26 Automated dependency updates (Renovate)
+
+### Testing (#13–#14, #24)
+- [ ] #13 Vitest unit testing infrastructure
+- [ ] #14 Playwright E2E testing infrastructure
+- [ ] #24 Accessibility testing foundation (axe-core in CI)
+
+### CI/CD & Security (#8, #23, #29–#30, #33)
+- [ ] #8 GitHub Actions CI/CD pipeline
+- [ ] #23 Dependency scanning and security baseline in CI
+- [ ] #29 Security headers middleware (Helmet, CSP, HSTS)
+- [ ] #30 Request input sanitization middleware
+- [ ] #33 Rate limiting middleware (@fastify/rate-limit)
+
+### Backend Architecture (#27–#28, #31)
+- [ ] #27 OpenAPI/Swagger documentation endpoint
+- [ ] #28 In-process event bus with DomainEvent interface
+- [ ] #31 Auth RBAC and session schema migration
+
+### Documentation (#21–#22)
+- [ ] #21 Developer documentation (README.md + CONTRIBUTING.md)
+- [ ] #22 Architecture Decision Records (ADR template + initial ADRs)
 
 **Exit criteria:** `pnpm dev` starts both frontend and backend. CI passes. First migration runs.
 
@@ -53,9 +92,12 @@
 
 ## Architecture Notes
 
-- Monorepo: `packages/frontend`, `packages/backend`, `packages/shared`
+- Monorepo: `apps/web` (SvelteKit), `apps/api` (Fastify), `packages/shared` (types, schemas, constants)
+- Workspaces: `apps/*` + `packages/*` (pnpm-workspace.yaml)
+- Build orchestration: Turborepo (`turbo.json`)
 - 4 route groups: `/(game)`, `/(admin)`, `/(auth)`, `/(public)`
 - Event sourcing: immutable `game.events` table, snapshots every 50 events
+- In-process event bus (EventEmitter-based) from M0, upgrades to BullMQ in M1+
 - State layers: ephemeral UI / synced game state / event sourcing
 - 11-phase day cycle state machine (see DD-01)
 - 13 in-game document types (see DD-02, DD-07)
