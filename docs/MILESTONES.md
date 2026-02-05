@@ -13,7 +13,7 @@ These principles emerged as consensus across all 7 architecture reviews:
 3. **Accessibility is structural, not cosmetic** -- WCAG 2.1 AA is a legal requirement at launch (BRD Section 9.6). Bake into every component.
 4. **Privacy by design** -- pseudonymization and data minimization ship with the first event, not bolted on later.
 5. **Modular monolith first** -- no premature microservice extraction. Clear module boundaries with future extraction paths.
-6. **TimescaleDB over ClickHouse** -- same PostgreSQL stack, same ORM, same tooling. Defer ClickHouse until proven insufficient.
+6. **Start with PostgreSQL for analytics, add ClickHouse or TimescaleDB when needed** -- use PostgreSQL with monthly partitioning initially. Evaluate TimescaleDB (same stack, same ORM) or ClickHouse (columnar, higher throughput) when write volume demands it.
 7. **Consumer game validates, enterprise game monetizes** -- the game must be fun before it can be sold.
 
 ---
@@ -246,7 +246,7 @@ These principles emerged as consensus across all 7 architecture reviews:
 | Event schema & taxonomy | Canonical event format, naming conventions, payload standards, versioning |
 | Core loop instrumentation | Events for all decision points, threats, incidents, upgrades, resources |
 | Event ingestion pipeline | Analytics module subscribes to game events, writes to analytics store |
-| Analytics event store | TimescaleDB hypertable on `analytics.events`, monthly partitioning |
+| Analytics event store | `analytics.events` with monthly partitioning (ClickHouse or TimescaleDB when write volume demands it) |
 | Player skill profiles | 7-domain competency scores, trends, recommended focus areas |
 | Competency framework | Phishing detection, social engineering resistance, incident response, password security, data handling, physical security, compliance awareness |
 | Evidence weighting model | Difficulty-adjusted, context-weighted scoring |
@@ -260,7 +260,7 @@ These principles emerged as consensus across all 7 architecture reviews:
 | Pseudonymization (v1) | Privacy-by-design for all analytics events |
 | Graceful degradation | Game continues if analytics is temporarily down |
 
-**Exit criteria:** Events flow from game engine through analytics pipeline into TimescaleDB. Player competency profiles computed. Phishing KPIs measurable. Consumer retention trackable. All events schema-validated and pseudonymized.
+**Exit criteria:** Events flow from game engine through analytics pipeline into the analytics store. Player competency profiles computed. Phishing KPIs measurable. Consumer retention trackable. All events schema-validated and pseudonymized.
 
 ---
 
@@ -532,7 +532,7 @@ These principles emerged as consensus across all 7 architecture reviews:
 | **Modular monolith → microservices** | Avoid premature decomposition. Clear module boundaries. Extract when proven necessary. |
 | **Event sourcing** | Determinism for replay, audit, enterprise compliance. Non-negotiable. |
 | **PostgreSQL + RLS** | Proven at scale. RLS for tenant isolation. JSONB for flexible schemas. |
-| **TimescaleDB over ClickHouse** | Same PostgreSQL stack. JOINs to operational tables. One line of SQL to create hypertable. Upgrade path to ClickHouse if needed at 100K+ concurrent. |
+| **ClickHouse or TimescaleDB for analytics** | Start with PostgreSQL partitioning. Evaluate TimescaleDB (same stack, JOINs to operational tables) or ClickHouse (columnar, highest throughput) when write volume demands a dedicated analytics store. Decision deferred to M7. |
 | **Redis for everything ephemeral** | Sessions, cache, email pool, leaderboards, BullMQ queues, presence. |
 | **Claude API primary, self-hosted fallback** | Best content quality. Offline/enterprise fallback with Mistral/Llama. |
 | **Shared-schema first** | RLS-enforced shared database for all early tenants. Dedicated schema/DB deferred to M15 when first large contract requires it. |
