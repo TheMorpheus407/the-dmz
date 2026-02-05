@@ -32,7 +32,8 @@ A new Stuxnet variant has crashed most of the public internet. Governments, univ
 
 ## Breach Consequence
 - A successful breach triggers a ransom note.
-- The ransom costs total earnings divided by 10.
+- The ransom costs total earnings divided by 10, rounded up with a minimum of €1.
+- Operations stay locked behind the ransom note until payment is confirmed.
 - If we can pay, we lose money; if we cannot, we lose the game.
 
 ## Primary Threats
