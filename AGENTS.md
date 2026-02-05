@@ -20,6 +20,7 @@ the-dmz/
 │   ├── frontend/          # SvelteKit app
 │   ├── backend/           # Fastify server
 │   └── shared/            # Shared types, Zod schemas, constants
+├── .claude/agents/        # Task-specialized sub-agent instructions (Claude Code)
 ├── logs/issues/{N}/       # Per-issue artifacts (created by auto-develop.sh)
 │   ├── issue.json         # Issue snapshot from GitHub
 │   ├── research.md        # Research agent output
@@ -35,7 +36,7 @@ the-dmz/
 
 ## Environment
 
-- Node.js 22.x, npm 10.x, pnpm (install if missing: `npm i -g pnpm`)
+- Node.js 22.x, npm 10.x, pnpm (install if missing: `corepack enable` or `npm i -g pnpm`)
 - Git, gh CLI (authenticated), Docker
 - Repository: github.com/TheMorpheus407/the-dmz (master branch)
 
@@ -65,7 +66,7 @@ pnpm db:seed              # Seed development data
 
 ### auto-develop.sh Pipeline
 
-The script orchestrates four agent roles against the lowest-numbered open issue:
+The script orchestrates four agent roles against the lowest-numbered open issue (filtered to issues created by the repo owner):
 
 ```
 Research Agent  -->  Implementer Agent  -->  Reviewer A (correctness)
@@ -82,6 +83,7 @@ Research Agent  -->  Implementer Agent  -->  Reviewer A (correctness)
 - **Review B:** Checks whether changes fully solve the issue. First word: `ACCEPTED` or `DENIED`.
 - If either reviewer says `DENIED`, the implement-review loop restarts.
 - Each role can be assigned to `claude` or `codex` independently via CLI flags.
+- The script works on the current branch. It requires a clean working tree before starting.
 
 ## Git Conventions
 
