@@ -1,0 +1,15 @@
+node_modules
+.pnpm-store
+.turbo
+.git
+.gitignore
+.github
+.vscode
+.idea
+dist
+coverage
+logs
+*.log
+.env
+.env.*
+!.env.example

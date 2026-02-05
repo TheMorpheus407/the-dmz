@@ -13,7 +13,11 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "env:setup": "node scripts/copy-env.mjs",
+    "services:up": "docker compose up -d",
+    "services:down": "docker compose down",
+    "services:reset": "docker compose down -v && docker compose up -d"
   },
   "devDependencies": {
     "turbo": "^2.0.0"
