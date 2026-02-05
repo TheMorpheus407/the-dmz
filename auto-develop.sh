@@ -28,9 +28,9 @@ run_agent() {
   local agent="$1"
   local prompt="$2"
   if [[ "$agent" == "claude" ]]; then
-    claude -p "$prompt"
+    claude --dangerously-skip-permissions -p "$prompt"
   else
-    codex exec "$prompt"
+    codex exec --yolo "$prompt"
   fi
 }
 
