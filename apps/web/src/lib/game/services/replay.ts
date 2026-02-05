@@ -1,0 +1,6 @@
+import type { GameEvent } from "../state/events";
+import { initialGameState, reduceGameState } from "../state/reducer";
+import type { GameState } from "../state/reducer";
+
+export const replayEvents = (events: GameEvent[]): GameState =>
+  events.reduce(reduceGameState, initialGameState);

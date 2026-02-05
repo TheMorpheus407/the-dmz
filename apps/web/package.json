@@ -4,14 +4,24 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node -e \"console.log('build not configured for web yet')\"",
-    "dev": "node -e \"console.log('dev not configured for web yet')\"",
+    "dev": "svelte-kit dev",
+    "build": "svelte-kit build",
+    "preview": "svelte-kit preview",
     "lint": "node -e \"console.log('lint not configured for web yet')\"",
-    "test": "node ./scripts/verify-shared-import.mjs",
-    "typecheck": "node -e \"console.log('typecheck not configured for web yet')\"",
-    "clean": "node -e \"console.log('clean not configured for web yet')\""
+    "test": "node ./scripts/verify-shared-import.mjs && node ./scripts/verify-scaffold.mjs",
+    "typecheck": "svelte-check --tsconfig ./tsconfig.json",
+    "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('.svelte-kit', { recursive: true, force: true }); fs.rmSync('build', { recursive: true, force: true });\""
   },
   "dependencies": {
     "@the-dmz/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "^2.0.0",
+    "@sveltejs/kit": "^2.0.0",
+    "@types/node": "^22.0.0",
+    "svelte": "^5.0.0",
+    "svelte-check": "^3.6.0",
+    "typescript": "^5.5.4",
+    "vite": "^6.3.0"
   }
 }
