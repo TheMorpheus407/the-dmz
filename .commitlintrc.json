@@ -1,0 +1,7 @@
+{
+  "extends": ["@commitlint/config-conventional"],
+  "rules": {
+    "scope-enum": [2, "always", ["web", "api", "shared", "infra", "ci", "deps"]],
+    "subject-case": [2, "always", "lower-case"]
+  }
+}
