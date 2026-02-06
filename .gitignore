@@ -5,6 +5,10 @@ dist/
 coverage/
 .svelte-kit/
 apps/web/build/
+playwright-report/
+test-results/
+e2e/.setup-state.json
+e2e/.tmp-results/
 .env
 .env.*
 !.env.example

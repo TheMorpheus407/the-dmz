@@ -197,6 +197,8 @@ export default [
       'apps/web/vitest.config.ts',
       'packages/shared/vitest.config.ts',
       'vitest.workspace.ts',
+      'playwright.config.ts',
+      'e2e/**/*.{ts,tsx}',
       '**/*.test.{ts,tsx}',
       '**/__tests__/**/*.{ts,tsx}',
       'packages/shared/scripts/**/*.{ts,tsx}',
@@ -229,6 +231,8 @@ export default [
       'apps/web/vitest.config.ts',
       'packages/shared/vitest.config.ts',
       'vitest.workspace.ts',
+      'playwright.config.ts',
+      'e2e/**/*.{ts,tsx}',
     ],
     languageOptions: {
       parser: tsParser,
