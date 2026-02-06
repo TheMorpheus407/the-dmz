@@ -1,8 +1,10 @@
-import { getDatabasePool, type DatabasePool } from '../../shared/database/connection.js';
+import { getDatabasePool } from '../../shared/database/connection.js';
+
+import type { TransactionSql } from 'postgres';
 
 const rollbackSignal = new Error('ROLLBACK_TEST_TRANSACTION');
 
-export type TestTransaction<T> = (transaction: DatabasePool) => Promise<T> | T;
+export type TestTransaction<T> = (transaction: TransactionSql) => Promise<T> | T;
 
 export async function withTestTransaction<T>(fn: TestTransaction<T>): Promise<T> {
   const pool = getDatabasePool();
@@ -23,7 +25,7 @@ export async function withTestTransaction<T>(fn: TestTransaction<T>): Promise<T>
 }
 
 export async function resetTestDatabase(): Promise<void> {
-  if (process.env.NODE_ENV !== 'test') {
+  if (process.env['NODE_ENV'] !== 'test') {
     throw new Error('resetTestDatabase can only be used in test environment.');
   }
 
