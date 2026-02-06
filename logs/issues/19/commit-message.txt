@@ -1,0 +1,3 @@
+chore(config): repository configuration (.gitignore, .gitattributes, license)
+
+Closes #19

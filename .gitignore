@@ -1,14 +1,46 @@
-/.idea/
+# Dependencies
 node_modules/
-.turbo/
+.pnpm-store/
+
+# Build outputs
 dist/
-coverage/
+build/
 .svelte-kit/
 apps/web/build/
-playwright-report/
-test-results/
-e2e/.setup-state.json
-e2e/.tmp-results/
+.turbo/
+
+# Environment files (never commit secrets)
 .env
 .env.*
 !.env.example
+
+# Testing
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+e2e/.setup-state.json
+e2e/.tmp-results/
+
+# IDE
+/.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Database
+*.sql.bak
+pgdata/
+
+# Logs (runtime log files only — logs/issues/ pipeline artifacts stay tracked)
+*.log
+
+# TypeScript
+*.tsbuildinfo
