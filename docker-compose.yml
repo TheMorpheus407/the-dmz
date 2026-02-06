@@ -1,4 +1,23 @@
-version: '3.9'
+# Docker Compose development environment for The DMZ: Archive Gate
+#
+# Services:
+#   postgres  — PostgreSQL 16 on localhost:5432
+#   redis     — Redis 7 on localhost:6379
+#   adminer   — Database UI on localhost:8080 (opt-in via --profile tools)
+#
+# Connection strings:
+#   PostgreSQL: postgresql://dmz:dmz_dev@localhost:5432/dmz_dev
+#   Redis:      redis://localhost:6379
+#
+# Database tools (pgAdmin, TablePlus, DBeaver, Adminer):
+#   Host: localhost | Port: 5432 | User: dmz | Password: dmz_dev | Database: dmz_dev
+#
+# Usage:
+#   pnpm services:up       — start infrastructure in background
+#   pnpm services:down     — stop infrastructure
+#   pnpm services:reset    — stop, remove volumes, restart (clean slate)
+#   pnpm services:logs     — tail service logs
+#   docker compose --profile tools up -d  — include Adminer
 
 services:
   postgres:
@@ -15,9 +34,9 @@ services:
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-dmz} -d ${POSTGRES_DB:-dmz_dev}']
       interval: 5s
-      timeout: 5s
+      timeout: 3s
       retries: 5
-      start_period: 5s
+      start_period: 10s
 
   redis:
     image: redis:7-alpine
@@ -29,6 +48,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+      start_period: 5s
 
   adminer:
     image: adminer:latest
@@ -36,7 +56,8 @@ services:
     ports:
       - '8080:8080'
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres_data:

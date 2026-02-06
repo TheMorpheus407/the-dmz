@@ -37,6 +37,7 @@
     "services:up": "docker compose up -d",
     "services:down": "docker compose down",
     "services:reset": "docker compose down -v && docker compose up -d",
+    "services:logs": "docker compose logs -f",
     "test:scripts": "node --test scripts/dev-preflight.test.mjs"
   },
   "devDependencies": {
