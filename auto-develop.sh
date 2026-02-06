@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
 usage() {
   cat <<'EOF'
@@ -14,6 +14,10 @@ die() {
 
 warn() {
   echo "WARN: $*" >&2
+}
+
+sleep_briefly() {
+  sleep 2
 }
 
 require_cmd() {
@@ -120,11 +124,21 @@ query($owner: String!, $name: String!, $endCursor: String) {
 }
 '
 
+issue_loop:
 while true; do
-  issue_number="$(
-    gh api graphql --paginate --slurp -F owner="$owner" -F name="$repo" -f query="$gql" \
-      | jq '[.[].data.repository.issues.nodes[].number] | min'
-  )"
+  issues_json="$(gh api graphql --paginate --slurp -F owner="$owner" -F name="$repo" -f query="$gql")"
+  if [[ $? -ne 0 ]]; then
+    warn "Failed to query issues. Retrying."
+    sleep_briefly
+    continue issue_loop
+  fi
+
+  issue_number="$(printf "%s" "$issues_json" | jq '[.[].data.repository.issues.nodes[].number] | min')"
+  if [[ $? -ne 0 ]]; then
+    warn "Failed to parse issue list."
+    sleep_briefly
+    continue issue_loop
+  fi
 
   if [[ -z "$issue_number" || "$issue_number" == "null" ]]; then
     echo "No open issues found. Exiting."
@@ -134,9 +148,15 @@ while true; do
   issue_dir="logs/issues/$issue_number"
   mkdir -p "$issue_dir"
 
-  issue_title="$(gh issue view "$issue_number" --json title -q .title)"
+  issue_title="$(gh issue view "$issue_number" --json title -q .title 2>/dev/null || true)"
+  if [[ -z "$issue_title" ]]; then
+    warn "Issue title unavailable for #$issue_number."
+    issue_title="(title unavailable)"
+  fi
   issue_json="$issue_dir/issue.json"
-  gh issue view "$issue_number" --json number,title,body,author,labels,assignees,comments,createdAt,updatedAt,url --comments > "$issue_json"
+  if ! gh issue view "$issue_number" --json number,title,body,author,labels,assignees,comments,createdAt,updatedAt,url --comments > "$issue_json"; then
+    warn "Failed to write issue snapshot for #$issue_number."
+  fi
 
   research_file="$issue_dir/research.md"
   implementation_file="$issue_dir/implementation.md"
@@ -165,6 +185,7 @@ EOF
   fi
   [[ -s "$research_file" ]] || warn "Research file missing or empty: $research_file (continuing)."
 
+  implement_loop:
   while true; do
     implement_prompt=$(cat <<EOF
 You are the Implementer Agent for GitHub issue #$issue_number in this repository.
@@ -195,6 +216,7 @@ Requirements:
 - Review the uncommitted changes (git diff, git status). Include untracked files!
 - Check clean code, regressions, bugs, correctness, edge cases, complexity and maintainability, naming conventions, DRY, documentation within the code, test quality and coverage, separation of concerns, scalability, security, vulnerabilities, efficiency, UX-
 - Run tests if available; if none are found, say so explicitly.
+- Run pnpm lint; if it fails, start with DENIED and explain why.
 - First word MUST be ACCEPTED or DENIED followed by ONE space!
 - If ANY concern exists, start with DENIED. Only start with ACCEPTED if there are NO concerns.
 - Write your review to: $review_a_file
@@ -217,6 +239,7 @@ Requirements:
 - Read the issue and comments, then evaluate the changes against the requirements. The goal is to PROOF, that the changes solve the given issue completely.
 - Review the uncommitted changes (git diff, git status). Include untracked files!
 - Run tests if available; if none are found, say so explicitly.
+- Run pnpm lint; if it fails, start with DENIED and explain why.
 - First word MUST be ACCEPTED or DENIED.
 - If ANY concern exists, start with DENIED. Only start with ACCEPTED if there are NO concerns.
 - Write your review to: $review_b_file
@@ -236,22 +259,39 @@ EOF
     review_b_word="$(first_word "$review_b_file")"
 
     if [[ "$review_a_word" == "ACCEPTED" && "$review_b_word" == "ACCEPTED" ]]; then
+      if ! pnpm lint; then
+        warn "pnpm lint failed. Restarting implementation loop."
+        continue implement_loop
+      fi
       break
     fi
 
     echo "Reviews not accepted or missing. Restarting implementation loop."
   done
 
-  git add -A
+  if ! git add -A; then
+    warn "git add failed. Skipping commit/push/close for issue #$issue_number."
+    continue issue_loop
+  fi
 
   if git diff --cached --quiet; then
-    die "No changes staged for commit."
+    warn "No changes staged for commit on issue #$issue_number."
+    continue issue_loop
   fi
 
   commit_title="$(printf "%s" "$issue_title" | tr '\n' ' ' | tr -s ' ')"
-  git commit -m "Issue #$issue_number: $commit_title"
-  git push origin "$target_branch"
-  gh issue close "$issue_number"
+  if ! git commit -m "Issue #$issue_number: $commit_title"; then
+    warn "git commit failed for issue #$issue_number."
+    continue issue_loop
+  fi
+  if ! git push origin "$target_branch"; then
+    warn "git push failed for issue #$issue_number."
+    continue issue_loop
+  fi
+  if ! gh issue close "$issue_number"; then
+    warn "Failed to close issue #$issue_number."
+    continue issue_loop
+  fi
 
   echo "Completed issue #$issue_number."
 done

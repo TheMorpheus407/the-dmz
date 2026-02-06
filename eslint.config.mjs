@@ -193,7 +193,10 @@ export default [
     files: ['**/*.{ts,tsx}'],
     ignores: [
       'apps/api/drizzle.config.ts',
+      'apps/api/vitest.config.ts',
       'apps/web/vitest.config.ts',
+      'packages/shared/vitest.config.ts',
+      'vitest.workspace.ts',
       '**/*.test.{ts,tsx}',
       '**/__tests__/**/*.{ts,tsx}',
       'packages/shared/scripts/**/*.{ts,tsx}',
@@ -222,7 +225,10 @@ export default [
       '**/*.test.{ts,tsx}',
       '**/__tests__/**/*.{ts,tsx}',
       'packages/shared/scripts/**/*.{ts,tsx}',
+      'apps/api/vitest.config.ts',
       'apps/web/vitest.config.ts',
+      'packages/shared/vitest.config.ts',
+      'vitest.workspace.ts',
     ],
     languageOptions: {
       parser: tsParser,

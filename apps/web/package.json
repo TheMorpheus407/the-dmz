@@ -10,6 +10,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "node ./scripts/verify-shared-import.mjs && node ./scripts/verify-scaffold.mjs && vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "pnpm run test -- --coverage",
     "typecheck": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('.svelte-kit', { recursive: true, force: true }); fs.rmSync('build', { recursive: true, force: true });\""
   },
@@ -19,12 +21,14 @@
   "devDependencies": {
     "@sveltejs/adapter-node": "^2.0.0",
     "@sveltejs/kit": "^2.0.0",
+    "@testing-library/svelte": "^5.3.1",
     "@types/node": "^22.0.0",
-    "@vitest/coverage-v8": "^2.1.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "jsdom": "^28.0.0",
     "svelte": "^5.0.0",
     "svelte-check": "^3.6.0",
     "typescript": "^5.5.4",
     "vite": "^6.3.0",
-    "vitest": "^2.1.0"
+    "vitest": "^4.0.18"
   }
 }

@@ -16,6 +16,8 @@
     "db:seed": "tsx src/shared/database/seed.ts",
     "db:reset": "tsx src/shared/database/reset.ts",
     "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true });\""
   },
@@ -31,10 +33,10 @@
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
-    "@vitest/coverage-v8": "^2.1.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "drizzle-kit": "^0.24.0",
     "tsx": "^4.0.0",
     "typescript": "^5.5.4",
-    "vitest": "^2.1.0"
+    "vitest": "^4.0.18"
   }
 }

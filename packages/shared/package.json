@@ -43,6 +43,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "pnpm run generate:schemas && vitest run",
+    "test:watch": "pnpm run generate:schemas && vitest",
+    "test:coverage": "pnpm run generate:schemas && vitest run --coverage",
     "typecheck": "pnpm run generate:schemas && tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true });\""
   },
@@ -51,9 +53,9 @@
     "zod-to-json-schema": "^3.23.0"
   },
   "devDependencies": {
-    "@vitest/coverage-v8": "^2.1.0",
+    "@vitest/coverage-v8": "^4.0.18",
     "tsx": "^4.21.0",
     "typescript": "^5.5.4",
-    "vitest": "^2.1.0"
+    "vitest": "^4.0.18"
   }
 }

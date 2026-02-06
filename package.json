@@ -16,6 +16,8 @@
     "format:check": "prettier --check .",
     "prepare": "husky",
     "test": "turbo run test",
+    "test:watch": "turbo run test:watch --parallel",
+    "test:coverage": "turbo run test:coverage",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean",
     "env:setup": "node scripts/copy-env.mjs",
