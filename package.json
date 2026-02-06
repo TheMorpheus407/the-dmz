@@ -8,7 +8,11 @@
     "pnpm": ">=9"
   },
   "scripts": {
-    "dev": "turbo run dev --parallel",
+    "predev": "node scripts/dev-preflight.mjs",
+    "dev": "turbo run dev --parallel --filter=@the-dmz/web --filter=@the-dmz/api",
+    "dev:web": "pnpm --filter @the-dmz/web dev",
+    "dev:api": "pnpm --filter @the-dmz/api dev",
+    "dev:services": "docker compose up -d",
     "build": "turbo run build",
     "lint": "turbo run lint && pnpm exec eslint playwright.config.ts e2e --max-warnings=0",
     "lint:fix": "turbo run lint:fix && pnpm exec eslint playwright.config.ts e2e --fix",
@@ -28,7 +32,8 @@
     "env:setup": "node scripts/copy-env.mjs",
     "services:up": "docker compose up -d",
     "services:down": "docker compose down",
-    "services:reset": "docker compose down -v && docker compose up -d"
+    "services:reset": "docker compose down -v && docker compose up -d",
+    "test:scripts": "node --test scripts/dev-preflight.test.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

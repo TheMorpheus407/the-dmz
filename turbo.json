@@ -7,7 +7,8 @@
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["WEB_PORT", "API_PORT", "PORT", "VITE_API_URL"]
     },
     "lint": {
       "outputs": []

@@ -149,7 +149,7 @@ jobs:
           DATABASE_TEST_URL: postgres://dmz:dmz_dev@postgres:5432/dmz_test
           REDIS_URL: redis://redis:6379
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:5173
-          PLAYWRIGHT_API_BASE_URL: http://127.0.0.1:3001
+          PLAYWRIGHT_API_BASE_URL: http://127.0.0.1:3000
         run: pnpm test:e2e
       - name: Upload Playwright artifacts
         if: failure()

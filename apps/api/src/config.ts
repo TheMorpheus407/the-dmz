@@ -20,7 +20,7 @@ const booleanSchema = z.preprocess((value) => {
 const envSchema = z
   .object({
     NODE_ENV: z.enum(nodeEnvs).default('development'),
-    PORT: z.coerce.number().int().positive().default(3001),
+    PORT: z.coerce.number().int().positive().default(3000),
     DATABASE_URL: z.string().min(1).default('postgres://localhost:5432/the_dmz'),
     DATABASE_POOL_MAX: z.coerce.number().int().positive().optional(),
     DATABASE_POOL_IDLE_TIMEOUT: z.coerce.number().int().positive().optional(),
@@ -43,8 +43,28 @@ const envSchema = z
 
 export type AppConfig = z.infer<typeof envSchema>;
 
+const firstDefinedNonBlank = (...values: Array<string | undefined>): string | undefined => {
+  for (const value of values) {
+    if (typeof value !== 'string') {
+      continue;
+    }
+
+    if (value.trim().length === 0) {
+      continue;
+    }
+
+    return value;
+  }
+
+  return undefined;
+};
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  const result = envSchema.safeParse(env);
+  const normalizedEnv = {
+    ...env,
+    PORT: firstDefinedNonBlank(env['API_PORT'], env['PORT']),
+  };
+  const result = envSchema.safeParse(normalizedEnv);
 
   if (!result.success) {
     const formatted = result.error.flatten();

@@ -1,0 +1,3 @@
+ci(infra): configure unified `pnpm dev` orchestration script
+
+Closes #15
