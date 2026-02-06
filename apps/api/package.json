@@ -14,6 +14,7 @@
     "db:smoke": "tsx src/shared/database/smoke.ts",
     "db:studio": "drizzle-kit studio --config drizzle.config.ts",
     "db:seed": "tsx src/shared/database/seed.ts",
+    "db:seed:test": "tsx src/shared/database/seed-test.ts",
     "db:reset": "tsx src/shared/database/reset.ts",
     "test": "vitest run",
     "test:watch": "vitest",
