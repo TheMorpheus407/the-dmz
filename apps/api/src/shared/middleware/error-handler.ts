@@ -20,7 +20,7 @@ export type AppErrorOptions = {
 export class AppError extends Error {
   public readonly code: ErrorCode;
   public readonly statusCode: number;
-  public readonly details?: Record<string, unknown>;
+  public readonly details: Record<string, unknown> | undefined;
 
   constructor(options: AppErrorOptions) {
     super(options.message);
