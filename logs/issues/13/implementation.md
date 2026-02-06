@@ -1,34 +1,29 @@
-# Implementation Summary
+# Implementation Summary — Issue #13
 
-## Changes
-- Established Vitest workspace and per-package configs for api/web/shared with v8 coverage and test globs aligned to the repo.
-- Added test setup helpers for API and Web, plus smoke tests for shared error codes and a Svelte component render.
-- Added/updated test scripts and dev dependencies for coverage/watch runs; wired Turbo test tasks and ESLint handling for Vitest config files.
+## What I Changed
+- Updated `apps/web/package.json` scripts to fix the two denied findings and keep Vitest infrastructure reliable from a clean checkout:
+  - `test:coverage` now runs `svelte-kit sync`, scaffold checks, and `vitest run --coverage` directly.
+  - `typecheck` now runs `svelte-kit sync` before `svelte-check`/`tsc`.
+- Kept the existing `test` / `test:watch` `svelte-kit sync` pre-step behavior in place.
 
 ## Files Touched
-- vitest.workspace.ts
-- apps/api/vitest.config.ts
-- apps/api/src/__tests__/setup.ts
-- apps/api/src/__tests__/helpers/db.ts
-- apps/api/src/__tests__/helpers/factory.ts
-- apps/web/vitest.config.ts
-- apps/web/src/__tests__/setup.ts
-- apps/web/src/__tests__/helpers/render.ts
-- apps/web/src/__tests__/smoke/smoke-component.test.ts
-- apps/web/src/__tests__/fixtures/Smoke.svelte
-- packages/shared/vitest.config.ts
-- packages/shared/src/constants/error-codes.test.ts
-- package.json
-- apps/api/package.json
-- apps/web/package.json
-- packages/shared/package.json
-- turbo.json
-- eslint.config.mjs
-- pnpm-lock.yaml
+- `apps/web/package.json`
+- `logs/issues/13/implementation.md`
 
 ## Tests Run
-- pnpm test
+- `pnpm --filter @the-dmz/web clean && pnpm --filter @the-dmz/web typecheck` (PASS)
+- `pnpm --filter @the-dmz/web clean && pnpm --filter @the-dmz/web test` (PASS)
+- `rm -rf apps/web/coverage && pnpm --filter @the-dmz/web test:coverage && [ -d apps/web/coverage ]` (PASS, coverage directory created)
+- `pnpm --filter @the-dmz/api test` (PASS)
+- `pnpm --filter @the-dmz/shared test` (PASS)
+- `pnpm --filter @the-dmz/web test` (PASS)
+- `pnpm test` (PASS)
+- `pnpm test:coverage` (PASS)
+- `pnpm --filter @the-dmz/api test:watch -- --run` (PASS)
+- `pnpm --filter @the-dmz/web test:watch -- --run` (PASS)
+- `pnpm --filter @the-dmz/shared test:watch -- --run` (PASS)
 
-## Notes
-- `pnpm test` emits the existing SvelteKit scaffold warning about `apps/web/tsconfig.json` not extending `./.svelte-kit/tsconfig.json`.
-- `auto-develop.sh` is modified in the working tree but unrelated to issue #13 and was not touched in this implementation.
+## Result
+- Clean-state web `typecheck` no longer fails with missing `.svelte-kit/tsconfig.json`.
+- Web coverage now runs through the declared `test:coverage` script and writes to `apps/web/coverage`.
+- No commits were created.

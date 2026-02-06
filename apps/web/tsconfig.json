@@ -1,27 +1,21 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["svelte", "vite/client"],
-    "baseUrl": ".",
-    "rootDirs": ["./src", "./.svelte-kit/types"],
-    "paths": {
-      "$lib": ["src/lib"],
-      "$lib/*": ["src/lib/*"],
-      "$api": ["src/lib/api"],
-      "$api/*": ["src/lib/api/*"],
-      "$ui": ["src/lib/ui"],
-      "$ui/*": ["src/lib/ui/*"],
-      "$stores": ["src/lib/stores"],
-      "$stores/*": ["src/lib/stores/*"],
-      "$utils": ["src/lib/utils"],
-      "$utils/*": ["src/lib/utils/*"],
-      "$game": ["src/lib/game"],
-      "$game/*": ["src/lib/game/*"]
-    },
-    "isolatedModules": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
     "resolveJsonModule": true,
-    "verbatimModuleSyntax": true
+    "sourceMap": true
   },
   "include": [
     "src/**/*.d.ts",

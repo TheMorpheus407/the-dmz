@@ -1,54 +1,64 @@
 # Research: Issue #13 — Vitest Unit Testing Infrastructure
 
 **Key Findings**
-- The Vitest workspace and per-package configs already exist: `vitest.workspace.ts`, `apps/api/vitest.config.ts`, `apps/web/vitest.config.ts`, and `packages/shared/vitest.config.ts`.
-- Svelte component testing is wired up: `@testing-library/svelte` and `jsdom` are in `apps/web` devDependencies, the Vitest config uses `svelteTesting` + `jsdom`, and a smoke component test exists under `apps/web/src/__tests__/smoke/`.
-- API + shared packages have passing unit tests and coverage configuration with v8 reporters; API test utilities (`apps/api/src/__tests__/helpers/*`) and setup file exist.
-- Root scripts and Turbo tasks include `test`, `test:watch`, and `test:coverage`, while CI runs per-package tests with coverage and overrides thresholds via CLI.
+- The Vitest workspace and per-package configs already exist and match the issue spec: `vitest.workspace.ts`, `apps/api/vitest.config.ts`, `apps/web/vitest.config.ts`, `packages/shared/vitest.config.ts`.
+- Web component testing is wired with `@testing-library/svelte` + `jsdom`, plus a smoke component test under `apps/web/src/__tests__/smoke/`.
+- API and shared packages have tests and coverage configuration with the v8 provider; API test utilities (`apps/api/src/__tests__/helpers/*`) and setup file are in place.
+- Root scripts and Turbo tasks include `test`, `test:watch`, and `test:coverage`; CI runs per-package tests with coverage artifacts.
+- Main practical constraint: `@the-dmz/shared` exports point to `dist/`, so direct package tests can fail unless the shared package is built first.
 
 ## Current Behavior (Repo)
-- Root `pnpm test` runs `turbo run test` (`package.json`), and Turbo’s `test` task depends on `^build` with `coverage/**` outputs (`turbo.json`).
-- `vitest.workspace.ts` exists at repo root and lists `apps/api`, `apps/web`, `packages/shared`.
-- `apps/api` runs `vitest run` and includes `apps/api/vitest.config.ts` with `node` env, setup file, include globs for `__tests__` and `*.spec.ts`, and v8 coverage config.
-- `apps/web` runs `vitest run` after two preflight scripts; its config uses `jsdom`, `sveltekit()` + `svelteTesting()` plugins, alias config matching `svelte.config.js`, and coverage over `src/**/*.{ts,svelte}`.
-- `packages/shared` runs `generate:schemas` before tests and has a Vitest config covering `src/**/*.test.ts`/`*.spec.ts` with v8 coverage.
-- CI (`.github/workflows/ci.yml`) builds `@the-dmz/shared` first, then runs per-package tests with coverage and low thresholds set via CLI flags.
+- Root `pnpm test` runs `turbo run test` (`package.json`) and Turbo’s `test` task depends on `^build` with `coverage/**` outputs (`turbo.json`).
+- `vitest.workspace.ts` lists the three workspaces: `apps/api`, `apps/web`, `packages/shared`.
+- `apps/api/vitest.config.ts` uses `environment: 'node'`, includes `src/**/__tests__/**/*.test.ts` and `src/**/*.spec.ts`, and configures v8 coverage with `text`, `lcov`, `html` reporters. Setup file: `apps/api/src/__tests__/setup.ts`.
+- `apps/web/vitest.config.ts` uses `environment: 'jsdom'`, `sveltekit()` + `svelteTesting()` plugins, alias config matching `svelte.config.js`, and coverage over `src/**/*.{ts,svelte}`. Setup file: `apps/web/src/__tests__/setup.ts`.
+- `packages/shared/vitest.config.ts` runs in `node` and includes `src/**/*.test.ts`, `src/**/*.spec.ts`, plus `src/**/__tests__/**/*.test.ts` with v8 coverage.
+- CI (`.github/workflows/ci.yml`) builds `@the-dmz/shared` first, then runs tests for shared/api/web with coverage flags and uploads `**/coverage/**` artifacts.
 
-## Gaps / Deviations vs Issue Requirements
-- No functional gaps found relative to the issue spec; the required configs, setup files, helpers, and smoke tests are present.
-- `apps/web` and `packages/shared` test globs are broader than the spec (they include colocated `src/**/*.test.ts`), which is intentional to cover existing tests outside `__tests__`.
-- Root `pnpm test` uses Turbo instead of `vitest --workspace`; the workspace file is still useful for direct `vitest` runs but is not the default path.
-- `apps/web` `test:coverage` re-runs the preflight scripts via `pnpm run test -- --coverage`, which can fail if `@the-dmz/shared` is not built locally.
+## Alignment With Issue Requirements
+- **Root workspace config:** Present and matches spec.
+- **API config:** Node env, v8 coverage, setup file, test patterns present. No path aliases are defined in `apps/api/tsconfig.json`, so there are no alias mappings to replicate.
+- **Web config:** jsdom + Testing Library Svelte + alias mapping present. Test patterns are broader than spec to include colocated `src/**/*.test.ts`.
+- **Shared config:** Node env + v8 coverage present. Includes colocated tests under `src/`.
+- **Test utilities:** `apps/api/src/__tests__/setup.ts`, `apps/api/src/__tests__/helpers/db.ts`, `apps/api/src/__tests__/helpers/factory.ts`, `apps/web/src/__tests__/setup.ts`, `apps/web/src/__tests__/helpers/render.ts` are present.
+- **Smoke tests:** API health route test, web Svelte component smoke test, and shared type guard/error code tests are present.
+- **Scripts:** Root `test`, `test:watch`, `test:coverage` are present; package-level scripts exist in api/web/shared.
+- **Coverage output:** `coverage/` directories generated and gitignored.
 
-## Root Cause Analysis
-- The original issue likely stemmed from incomplete testing scaffolding (missing workspace config, per-package configs, DOM test dependencies, and setup utilities). The current repo state shows these have been added, and smoke tests are present across packages, indicating the root cause has been addressed.
+## Notes From Design Docs
+- DD-08 Section 24 expects **unit tests, component tests, and E2E tests** as part of the quality strategy (aligned with this issue’s unit/component scaffolding).
+- DD-09 defines module test structure under `__tests__/` for services, routes, and integration tests; the API tests follow this layout.
+
+## Root Cause / Context
+- The issue aimed to establish missing Vitest infrastructure across the monorepo. The current codebase already contains the workspace config, per-package configs, test utilities, and smoke tests, indicating the initial gaps were addressed.
+- The remaining friction point is dependency resolution for `@the-dmz/shared` because it exports from `dist/`. Tests in `apps/api` and `apps/web` rely on shared being built first; Turbo and CI handle this, but direct per-package test runs may fail if shared isn’t built.
 
 ## Impacted Modules / Files
-- Root: `vitest.workspace.ts`, `package.json`, `turbo.json`.
+- Root: `vitest.workspace.ts`, `package.json`, `turbo.json`, `.gitignore`.
 - API: `apps/api/vitest.config.ts`, `apps/api/src/__tests__/setup.ts`, `apps/api/src/__tests__/helpers/db.ts`, `apps/api/src/__tests__/helpers/factory.ts`, `apps/api/src/modules/health/__tests__/health.routes.test.ts`.
-- Web: `apps/web/vitest.config.ts`, `apps/web/src/__tests__/setup.ts`, `apps/web/src/__tests__/helpers/render.ts`, `apps/web/src/__tests__/smoke/smoke-component.test.ts`, `apps/web/src/__tests__/fixtures/Smoke.svelte`.
+- Web: `apps/web/vitest.config.ts`, `apps/web/src/__tests__/setup.ts`, `apps/web/src/__tests__/helpers/render.ts`, `apps/web/src/__tests__/smoke/smoke-component.test.ts`, `apps/web/src/__tests__/fixtures/Smoke.svelte`, `apps/web/scripts/verify-*.mjs`.
 - Shared: `packages/shared/vitest.config.ts`, `packages/shared/src/**/*.test.ts`.
-- CI: `.github/workflows/ci.yml` (coverage thresholds enforced via CLI overrides).
+- CI: `.github/workflows/ci.yml` for coverage runs and artifacts.
 
 ## Constraints / Dependencies
-- ESM repo (`"type": "module"`), so Vitest configs are ESM/TS and must remain compatible.
-- `@the-dmz/shared` exports point to `dist/`; tests in other packages rely on a built shared package (Turbo test depends on build; CI builds shared explicitly).
-- Svelte 5 testing requires `@testing-library/svelte` + a DOM implementation (`jsdom` is currently used).
-- Backend module structure in DD-09 expects tests under `__tests__` directories; shared and web already include colocated tests, so include globs must allow both.
+- ESM repo (`"type": "module"`), so Vitest configs must remain ESM/TS.
+- `@the-dmz/shared` publishes from `dist/`; tests in other packages need shared built, or they must alias to source for tests.
+- Svelte 5 testing requires `@testing-library/svelte` plus a DOM environment (`jsdom` in use).
+- Module test convention in DD-09 expects `__tests__` directories; shared/web have colocated tests, so include globs must remain broader.
 
 ## Alternative Approaches
-- Use `vitest --workspace` at the root instead of Turbo, if a single command should orchestrate all packages without build dependency.
-- Swap `jsdom` for `happy-dom` in web tests for faster DOM simulation if needed.
-- Add a path alias to map `@the-dmz/shared` to source in tests to avoid pre-building the shared package (tradeoff: diverges from runtime resolution).
+- Use `vitest --workspace` at the root (rather than Turbo) if a single Vitest-native entrypoint is desired.
+- Swap `jsdom` for `happy-dom` in `apps/web` for faster DOM emulation (tradeoff: slightly different DOM behavior).
+- Add a test-only alias to map `@the-dmz/shared` to `packages/shared/src` to remove the build dependency for local testing (tradeoff: diverges from runtime resolution).
 
 ## Risks / Tradeoffs
-- Preflight scripts in `apps/web` `test`/`test:coverage` can fail if `@the-dmz/shared` isn’t built locally; Turbo mitigates this, but direct package runs need care.
-- CI coverage thresholds are enforced via CLI flags (currently `1%`), which override the `0%` thresholds in config; discrepancies could confuse local vs CI outcomes.
-- API test helpers include DB utilities (`resetTestDatabase`, transaction rollback) that will require a live test database when used; they are placeholders today.
+- **Local per-package tests** may fail if `@the-dmz/shared` hasn’t been built first (especially `apps/web` due to preflight scripts importing shared).
+- **Coverage thresholds** are set to `0` in configs but overridden to `1%` in CI via CLI flags; this mismatch can confuse local vs CI outcomes.
+- **Test glob drift**: tightening globs to `__tests__` only would drop existing colocated tests in shared/web.
 
 ## Test Ideas / Validation
-- `pnpm test` at repo root to ensure Turbo orchestration and coverage outputs.
-- `pnpm --filter @the-dmz/api test` to validate Fastify `inject` health tests.
-- `pnpm --filter @the-dmz/web test` to confirm Svelte component tests run under `jsdom`.
-- `pnpm --filter @the-dmz/shared test` to confirm schema generation + unit tests.
-- `pnpm test:coverage` to verify `coverage/` directories are produced across packages.
+- `pnpm test` at repo root to validate Turbo orchestration and coverage output.
+- `pnpm --filter @the-dmz/shared build` then `pnpm --filter @the-dmz/api test` to ensure API tests pass with shared built.
+- `pnpm --filter @the-dmz/web test` to validate Svelte component tests under `jsdom`.
+- `pnpm test:coverage` to verify `coverage/` directories are produced in each package.
+- Optional: `vitest --workspace` (from repo root) to confirm the workspace file functions as expected.
