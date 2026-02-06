@@ -34,6 +34,7 @@
 | Architecture | Modular monolith | Avoid premature decomposition | 2026-02-05 |
 | Build orchestration | Turborepo | Task graph, caching, pnpm workspace integration | 2026-02-05 |
 | Monorepo layout | `apps/*` + `packages/*` | Apps (deployables) vs packages (libraries) separation | 2026-02-05 |
+| auto-develop finalization | Dedicated finalizer agent for commit/push/close | Keeps final git operations in-agent with unbounded retries and validation checks | 2026-02-06 |
 
 ## Next Up: M0 — Project Bootstrap (33 issues, #1–#33)
 

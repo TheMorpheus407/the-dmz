@@ -3,7 +3,7 @@ set -uo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: auto-develop.sh --research <claude|codex> --implement <claude|codex> --review-a <claude|codex> --review-b <claude|codex>
+Usage: auto-develop.sh --research <claude|codex> --implement <claude|codex> --review-a <claude|codex> --review-b <claude|codex> [--finalize <claude|codex>]
 EOF
 }
 
@@ -46,6 +46,24 @@ first_word() {
   local file="$1"
   [[ -s "$file" ]] || { echo ""; return 0; }
   awk 'NR==1{print $1; exit}' "$file"
+}
+
+is_head_pushed() {
+  local branch="$1"
+  local local_head remote_head
+
+  local_head="$(git rev-parse HEAD 2>/dev/null)" || return 1
+  remote_head="$(git ls-remote --heads origin "$branch" 2>/dev/null | awk 'NR==1{print $1}')"
+
+  [[ -n "$remote_head" && "$local_head" == "$remote_head" ]]
+}
+
+is_issue_closed() {
+  local issue_num="$1"
+  local state
+
+  state="$(gh issue view "$issue_num" --json state -q .state 2>/dev/null || true)"
+  [[ "$state" == "CLOSED" ]]
 }
 
 # Derive conventional commit type from issue labels.
@@ -159,16 +177,18 @@ RESEARCH_AGENT=""
 IMPLEMENT_AGENT=""
 REVIEW_A_AGENT=""
 REVIEW_B_AGENT=""
+FINALIZE_AGENT=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --research|--implement|--review-a|--review-b)
+    --research|--implement|--review-a|--review-b|--finalize)
       [[ $# -ge 2 ]] || die "Option $1 requires an argument."
       case "$1" in
         --research)  RESEARCH_AGENT="$2" ;;
         --implement) IMPLEMENT_AGENT="$2" ;;
         --review-a)  REVIEW_A_AGENT="$2" ;;
         --review-b)  REVIEW_B_AGENT="$2" ;;
+        --finalize)  FINALIZE_AGENT="$2" ;;
       esac
       shift 2
       ;;
@@ -187,13 +207,18 @@ validate_agent "$IMPLEMENT_AGENT"
 validate_agent "$REVIEW_A_AGENT"
 validate_agent "$REVIEW_B_AGENT"
 
+if [[ -z "$FINALIZE_AGENT" ]]; then
+  FINALIZE_AGENT="$IMPLEMENT_AGENT"
+fi
+validate_agent "$FINALIZE_AGENT"
+
 require_cmd git
 require_cmd gh
 require_cmd jq
 
 needs_claude=false
 needs_codex=false
-for agent in "$RESEARCH_AGENT" "$IMPLEMENT_AGENT" "$REVIEW_A_AGENT" "$REVIEW_B_AGENT"; do
+for agent in "$RESEARCH_AGENT" "$IMPLEMENT_AGENT" "$REVIEW_A_AGENT" "$REVIEW_B_AGENT" "$FINALIZE_AGENT"; do
   case "$agent" in
     claude) needs_claude=true ;;
     codex) needs_codex=true ;;
@@ -272,6 +297,7 @@ while true; do
   implementation_file="$issue_dir/implementation.md"
   review_a_file="$issue_dir/review-1.md"
   review_b_file="$issue_dir/review-2.md"
+  finalize_file="$issue_dir/finalization.md"
 
   research_prompt=$(cat <<EOF
 You are the Research Agent for GitHub issue #$issue_number in this repository.
@@ -326,6 +352,7 @@ Requirements:
 - Check clean code, regressions, bugs, correctness, edge cases, complexity and maintainability, naming conventions, DRY, documentation within the code, test quality and coverage, separation of concerns, scalability, security, vulnerabilities, efficiency, UX-
 - Run tests if available; if none are found, say so explicitly.
 - Run pnpm lint; if it fails, start with DENIED and explain why.
+- Run pnpm typecheck; if it fails, start with DENIED and explain why.
 - First word MUST be ACCEPTED or DENIED followed by ONE space!
 - If ANY concern exists, start with DENIED. Only start with ACCEPTED if there are NO concerns.
 - Write your review to: $review_a_file
@@ -349,6 +376,7 @@ Requirements:
 - Review the uncommitted changes (git diff, git status). Include untracked files!
 - Run tests if available; if none are found, say so explicitly.
 - Run pnpm lint; if it fails, start with DENIED and explain why.
+- Run pnpm typecheck; if it fails, start with DENIED and explain why.
 - First word MUST be ACCEPTED or DENIED.
 - If ANY concern exists, start with DENIED. Only start with ACCEPTED if there are NO concerns.
 - Write your review to: $review_b_file
@@ -378,49 +406,58 @@ EOF
     echo "Reviews not accepted or missing. Restarting implementation loop."
   done
 
-  if ! git add -A; then
-    warn "git add failed. Skipping commit/push/close for issue #$issue_number."
-    continue
-  fi
-
-  if git diff --cached --quiet; then
-    warn "No changes staged for commit on issue #$issue_number."
-    continue
-  fi
-
   commit_msg="$(build_commit_message "$issue_json" "$issue_number" "$issue_title")"
-  if ! git commit -m "$commit_msg"; then
-    warn "git commit failed for issue #$issue_number."
+  commit_msg_file="$issue_dir/commit-message.txt"
+  printf "%s\n" "$commit_msg" > "$commit_msg_file"
+
+  if [[ -z "$(git status --porcelain)" ]]; then
+    warn "No uncommitted changes available to finalize for issue #$issue_number."
     continue
   fi
-  push_ok=false
-  for push_attempt in 1 2 3; do
-    if git push origin "$target_branch"; then
-      push_ok=true
-      break
-    fi
-    warn "git push attempt $push_attempt/3 failed for issue #$issue_number."
-    sleep_briefly
-  done
-  if ! $push_ok; then
-    die "git push failed after 3 attempts for issue #$issue_number. Commit exists locally but was not pushed."
-  fi
 
-  MAX_CLOSE_RETRIES=3
-  close_retries=0
-  close_ok=false
-  while [[ $close_retries -lt $MAX_CLOSE_RETRIES ]]; do
-    close_retries=$((close_retries + 1))
-    if gh issue close "$issue_number" --comment "Closed by auto-develop.sh"; then
-      close_ok=true
-      break
+  finalize_prompt=$(cat <<EOF
+You are the Finalizer Agent for GitHub issue #$issue_number in this repository.
+
+Requirements:
+- Read the issue and comments with gh before finalizing.
+- Review and stage all relevant uncommitted changes.
+- Run pnpm typecheck and pnpm lint before committing. If they fail, fix the code and rerun until they pass.
+- Commit using this exact commit message file: $commit_msg_file
+- Push to branch: $target_branch
+- Close issue #$issue_number with a short comment after a successful push.
+- Write a summary to: $finalize_file (Markdown), including commands run and final git status.
+
+Important:
+- Do not use interactive git commands.
+- Do not skip hooks.
+- Do your best and do not error out if a single command fails; recover and continue until complete.
+EOF
+)
+
+  finalize_attempt=0
+  while true; do
+    finalize_attempt=$((finalize_attempt + 1))
+
+    if ! run_agent "$FINALIZE_AGENT" "$finalize_prompt"; then
+      warn "Finalizer agent exited non-zero on attempt $finalize_attempt for issue #$issue_number."
     fi
-    warn "gh issue close attempt $close_retries/$MAX_CLOSE_RETRIES failed for issue #$issue_number."
-    sleep_briefly
+
+    [[ -s "$finalize_file" ]] || warn "Finalization file missing or empty: $finalize_file (continuing)."
+
+    if ! is_head_pushed "$target_branch"; then
+      warn "Finalizer attempt $finalize_attempt did not push HEAD to origin/$target_branch for issue #$issue_number."
+      sleep_briefly
+      continue
+    fi
+
+    if ! is_issue_closed "$issue_number"; then
+      warn "Finalizer attempt $finalize_attempt did not close issue #$issue_number."
+      sleep_briefly
+      continue
+    fi
+
+    break
   done
-  if ! $close_ok; then
-    die "Failed to close issue #$issue_number after $MAX_CLOSE_RETRIES attempts. The commit has been pushed but the issue remains open. Close it manually and re-run."
-  fi
 
   echo "Completed issue #$issue_number."
 done
