@@ -1,7 +1,28 @@
 {
   "extends": ["@commitlint/config-conventional"],
   "rules": {
-    "scope-enum": [2, "always", ["web", "api", "shared", "infra", "ci", "deps"]],
-    "subject-case": [2, "always", "lower-case"]
+    "type-empty": [0],
+    "subject-empty": [0],
+    "scope-enum": [
+      2,
+      "always",
+      [
+        "web",
+        "api",
+        "shared",
+        "infra",
+        "ci",
+        "deps",
+        "db",
+        "e2e",
+        "docker",
+        "auth",
+        "docs",
+        "config"
+      ]
+    ],
+    "subject-case": [2, "never", ["sentence-case", "start-case", "pascal-case", "upper-case"]],
+    "header-max-length": [2, "always", 100],
+    "body-max-line-length": [0, "always"]
   }
 }

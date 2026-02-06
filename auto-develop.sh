@@ -48,6 +48,113 @@ first_word() {
   awk 'NR==1{print $1; exit}' "$file"
 }
 
+# Derive conventional commit type from issue labels.
+# Reads labels from the issue JSON file (gh issue view --json output).
+# Returns one of: fix, feat, docs, test, ci, chore (default: feat).
+derive_commit_type() {
+  local issue_json_file="$1"
+  local labels
+  labels="$(jq -r '[.labels[].name] | map(ascii_downcase) | .[]' "$issue_json_file" 2>/dev/null)"
+  [[ -n "$labels" ]] || { echo "feat"; return 0; }
+
+  # Check labels in priority order (most specific first)
+  if echo "$labels" | grep -qx "bug"; then
+    echo "fix"
+  elif echo "$labels" | grep -qx "testing"; then
+    echo "test"
+  elif echo "$labels" | grep -qx "documentation"; then
+    echo "docs"
+  elif echo "$labels" | grep -qxE "infrastructure|ci"; then
+    echo "ci"
+  elif echo "$labels" | grep -qx "devtools"; then
+    echo "chore"
+  elif echo "$labels" | grep -qxE "enhancement|feature"; then
+    echo "feat"
+  else
+    echo "feat"
+  fi
+}
+
+# Derive conventional commit scope from issue labels.
+# Maps labels to the allowed scope-enum in .commitlintrc.json:
+#   web, api, shared, infra, ci, db, e2e, docker, auth, docs, config, deps
+# Returns empty string if no scope can be determined.
+derive_commit_scope() {
+  local issue_json_file="$1"
+  local labels
+  labels="$(jq -r '[.labels[].name] | map(ascii_downcase) | .[]' "$issue_json_file" 2>/dev/null)"
+  [[ -n "$labels" ]] || { echo ""; return 0; }
+
+  if echo "$labels" | grep -qx "frontend"; then
+    echo "web"
+  elif echo "$labels" | grep -qx "backend"; then
+    echo "api"
+  elif echo "$labels" | grep -qx "shared"; then
+    echo "shared"
+  elif echo "$labels" | grep -qx "infrastructure"; then
+    echo "infra"
+  elif echo "$labels" | grep -qx "ci"; then
+    echo "ci"
+  elif echo "$labels" | grep -qx "database"; then
+    echo "db"
+  elif echo "$labels" | grep -qx "testing"; then
+    echo "e2e"
+  elif echo "$labels" | grep -qx "documentation"; then
+    echo "docs"
+  elif echo "$labels" | grep -qx "devtools"; then
+    echo "config"
+  else
+    echo ""
+  fi
+}
+
+# Build the conventional commit message for an issue.
+# Format: type(scope): description\n\nCloses #N
+# Usage: build_commit_message <issue_json_file> <issue_number> <issue_title>
+build_commit_message() {
+  local issue_json_file="$1"
+  local issue_num="$2"
+  local raw_title="$3"
+
+  local commit_type
+  commit_type="$(derive_commit_type "$issue_json_file")"
+
+  local commit_scope
+  commit_scope="$(derive_commit_scope "$issue_json_file")"
+
+  # Strip milestone prefix patterns like "M0-13:" or "M0:" from the title
+  local description
+  description="$(printf "%s" "$raw_title" | sed -E 's/^M[0-9]+-?[0-9]*:[[:space:]]*//')"
+
+  # Collapse whitespace and newlines
+  description="$(printf "%s" "$description" | tr '\n' ' ' | tr -s ' ')"
+
+  # Trim leading/trailing whitespace
+  description="$(printf "%s" "$description" | sed -E 's/^[[:space:]]+//;s/[[:space:]]+$//')"
+
+  # Lowercase entire description (commitlint subject-case: lower-case)
+  description="$(printf "%s" "$description" | tr '[:upper:]' '[:lower:]')"
+
+  # Remove trailing period if present (commitlint subject-full-stop rule)
+  description="$(printf "%s" "$description" | sed -E 's/\.$//')"
+
+  # Build header: type(scope): description  or  type: description
+  local header
+  if [[ -n "$commit_scope" ]]; then
+    header="${commit_type}(${commit_scope}): ${description}"
+  else
+    header="${commit_type}: ${description}"
+  fi
+
+  # Truncate header to 100 chars (commitlint header-max-length)
+  if [[ ${#header} -gt 100 ]]; then
+    header="${header:0:100}"
+  fi
+
+  # Full message with footer (blank line before footer per commitlint body-leading-blank)
+  printf "%s\n\nCloses #%s" "$header" "$issue_num"
+}
+
 RESEARCH_AGENT=""
 IMPLEMENT_AGENT=""
 REVIEW_A_AGENT=""
@@ -55,10 +162,16 @@ REVIEW_B_AGENT=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --research) RESEARCH_AGENT="${2:-}"; shift 2 ;;
-    --implement) IMPLEMENT_AGENT="${2:-}"; shift 2 ;;
-    --review-a) REVIEW_A_AGENT="${2:-}"; shift 2 ;;
-    --review-b) REVIEW_B_AGENT="${2:-}"; shift 2 ;;
+    --research|--implement|--review-a|--review-b)
+      [[ $# -ge 2 ]] || die "Option $1 requires an argument."
+      case "$1" in
+        --research)  RESEARCH_AGENT="$2" ;;
+        --implement) IMPLEMENT_AGENT="$2" ;;
+        --review-a)  REVIEW_A_AGENT="$2" ;;
+        --review-b)  REVIEW_B_AGENT="$2" ;;
+      esac
+      shift 2
+      ;;
     -h|--help) usage; exit 0 ;;
     *) die "Unknown argument: $1" ;;
   esac
@@ -95,9 +208,9 @@ if $needs_codex; then
 fi
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || die "Not inside a git repository."
-cd "$repo_root"
+cd "$repo_root" || die "Failed to change directory to repo root: $repo_root"
 
-gh auth status -t >/dev/null 2>&1 || die "gh is not authenticated. Run 'gh auth login'."
+gh auth status >/dev/null 2>&1 || die "gh is not authenticated. Run 'gh auth login'."
 
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 [[ "$current_branch" != "HEAD" ]] || die "Detached HEAD. Checkout a branch before running."
@@ -124,20 +237,17 @@ query($owner: String!, $name: String!, $endCursor: String) {
 }
 '
 
-issue_loop:
 while true; do
-  issues_json="$(gh api graphql --paginate --slurp -F owner="$owner" -F name="$repo" -f query="$gql")"
-  if [[ $? -ne 0 ]]; then
+  if ! issues_json="$(gh api graphql --paginate --slurp -F owner="$owner" -F name="$repo" -f query="$gql")"; then
     warn "Failed to query issues. Retrying."
     sleep_briefly
-    continue issue_loop
+    continue
   fi
 
-  issue_number="$(printf "%s" "$issues_json" | jq '[.[].data.repository.issues.nodes[].number] | min')"
-  if [[ $? -ne 0 ]]; then
+  if ! issue_number="$(printf "%s" "$issues_json" | jq '[.[].data.repository.issues.nodes[].number] | min')"; then
     warn "Failed to parse issue list."
     sleep_briefly
-    continue issue_loop
+    continue
   fi
 
   if [[ -z "$issue_number" || "$issue_number" == "null" ]]; then
@@ -185,7 +295,6 @@ EOF
   fi
   [[ -s "$research_file" ]] || warn "Research file missing or empty: $research_file (continuing)."
 
-  implement_loop:
   while true; do
     implement_prompt=$(cat <<EOF
 You are the Implementer Agent for GitHub issue #$issue_number in this repository.
@@ -261,7 +370,7 @@ EOF
     if [[ "$review_a_word" == "ACCEPTED" && "$review_b_word" == "ACCEPTED" ]]; then
       if ! pnpm lint; then
         warn "pnpm lint failed. Restarting implementation loop."
-        continue implement_loop
+        continue
       fi
       break
     fi
@@ -271,26 +380,46 @@ EOF
 
   if ! git add -A; then
     warn "git add failed. Skipping commit/push/close for issue #$issue_number."
-    continue issue_loop
+    continue
   fi
 
   if git diff --cached --quiet; then
     warn "No changes staged for commit on issue #$issue_number."
-    continue issue_loop
+    continue
   fi
 
-  commit_title="$(printf "%s" "$issue_title" | tr '\n' ' ' | tr -s ' ')"
-  if ! git commit -m "Issue #$issue_number: $commit_title"; then
+  commit_msg="$(build_commit_message "$issue_json" "$issue_number" "$issue_title")"
+  if ! git commit -m "$commit_msg"; then
     warn "git commit failed for issue #$issue_number."
-    continue issue_loop
+    continue
   fi
-  if ! git push origin "$target_branch"; then
-    warn "git push failed for issue #$issue_number."
-    continue issue_loop
+  push_ok=false
+  for push_attempt in 1 2 3; do
+    if git push origin "$target_branch"; then
+      push_ok=true
+      break
+    fi
+    warn "git push attempt $push_attempt/3 failed for issue #$issue_number."
+    sleep_briefly
+  done
+  if ! $push_ok; then
+    die "git push failed after 3 attempts for issue #$issue_number. Commit exists locally but was not pushed."
   fi
-  if ! gh issue close "$issue_number"; then
-    warn "Failed to close issue #$issue_number."
-    continue issue_loop
+
+  MAX_CLOSE_RETRIES=3
+  close_retries=0
+  close_ok=false
+  while [[ $close_retries -lt $MAX_CLOSE_RETRIES ]]; do
+    close_retries=$((close_retries + 1))
+    if gh issue close "$issue_number" --comment "Closed by auto-develop.sh"; then
+      close_ok=true
+      break
+    fi
+    warn "gh issue close attempt $close_retries/$MAX_CLOSE_RETRIES failed for issue #$issue_number."
+    sleep_briefly
+  done
+  if ! $close_ok; then
+    die "Failed to close issue #$issue_number after $MAX_CLOSE_RETRIES attempts. The commit has been pushed but the issue remains open. Close it manually and re-run."
   fi
 
   echo "Completed issue #$issue_number."
