@@ -16,7 +16,9 @@ export type ReadinessResponse = {
 
 export const getHealth = (): HealthResponse => ({ status: "ok" });
 
-export const getReadiness = async (config: AppConfig): Promise<ReadinessResponse> => {
+export const getReadiness = async (
+  config: AppConfig,
+): Promise<ReadinessResponse> => {
   const [database, redis] = await Promise.all([
     checkDatabaseHealth(config),
     checkRedisHealth(),

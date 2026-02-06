@@ -1,0 +1,16 @@
+node_modules
+**/dist
+**/build
+**/.svelte-kit
+**/coverage
+pnpm-lock.yaml
+.claude
+.claude/**
+AGENTS.md
+SOUL.md
+MEMORY.md
+CLAUDE.md
+docs
+docs/**
+logs
+logs/**

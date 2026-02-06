@@ -9,7 +9,7 @@ export interface ThemeState {
 
 export const initialThemeState: ThemeState = {
   name: "green",
-  enableTerminalEffects: false
+  enableTerminalEffects: false,
 };
 
 export const themeStore = writable<ThemeState>(initialThemeState);

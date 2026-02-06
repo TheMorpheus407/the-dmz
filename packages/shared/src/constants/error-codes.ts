@@ -6,7 +6,8 @@ export const ErrorCodeCategory = {
   SYSTEM: "SYSTEM",
 } as const;
 
-export type ErrorCodeCategory = (typeof ErrorCodeCategory)[keyof typeof ErrorCodeCategory];
+export type ErrorCodeCategory =
+  (typeof ErrorCodeCategory)[keyof typeof ErrorCodeCategory];
 
 export const ErrorCodes = {
   AUTH_UNAUTHORIZED: "AUTH_UNAUTHORIZED",

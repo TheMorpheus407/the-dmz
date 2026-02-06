@@ -72,7 +72,10 @@ describe("auth json schemas", () => {
   };
 
   it("creates a login json schema", () => {
-    assertObjectSchema(loginJsonSchema as JsonSchemaShape, ["email", "password"]);
+    assertObjectSchema(loginJsonSchema as JsonSchemaShape, [
+      "email",
+      "password",
+    ]);
   });
 
   it("creates a register json schema", () => {
@@ -84,6 +87,8 @@ describe("auth json schemas", () => {
   });
 
   it("creates a refresh token json schema", () => {
-    assertObjectSchema(refreshTokenJsonSchema as JsonSchemaShape, ["refreshToken"]);
+    assertObjectSchema(refreshTokenJsonSchema as JsonSchemaShape, [
+      "refreshToken",
+    ]);
   });
 });

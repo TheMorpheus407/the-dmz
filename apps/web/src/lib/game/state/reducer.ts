@@ -10,11 +10,14 @@ export interface GameState {
 export const initialGameState: GameState = {
   phase: "DAY_START",
   events: [],
-  lastEventId: null
+  lastEventId: null,
 };
 
-export const reduceGameState = (state: GameState, event: GameEvent): GameState => ({
+export const reduceGameState = (
+  state: GameState,
+  event: GameEvent,
+): GameState => ({
   ...state,
   events: [...state.events, event],
-  lastEventId: event.id
+  lastEventId: event.id,
 });

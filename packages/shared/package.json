@@ -40,7 +40,7 @@
     "build:cjs:package": "node -e \"const fs = require('node:fs'); fs.mkdirSync('dist/cjs', { recursive: true }); fs.writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }, null, 2));\"",
     "dev": "pnpm run generate:schemas && tsc -p tsconfig.esm.json --watch",
     "generate:schemas": "tsx scripts/generate-json-schemas.ts",
-    "lint": "node -e \"console.log('lint not configured for shared yet')\"",
+    "lint": "eslint . --max-warnings=0",
     "test": "pnpm run generate:schemas && vitest run",
     "typecheck": "pnpm run generate:schemas && tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true });\""
@@ -50,6 +50,7 @@
     "zod-to-json-schema": "^3.23.0"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.0",
     "tsx": "^4.21.0",
     "typescript": "^5.5.4",
     "vitest": "^2.1.0"

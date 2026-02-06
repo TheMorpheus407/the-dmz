@@ -3,7 +3,10 @@ import { fileURLToPath } from "node:url";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { closeDatabase, getDatabaseClient } from "./connection.js";
 
-const migrationsFolder = resolve(dirname(fileURLToPath(import.meta.url)), "migrations");
+const migrationsFolder = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "migrations",
+);
 
 const run = async () => {
   const db = getDatabaseClient();

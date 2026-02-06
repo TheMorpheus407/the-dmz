@@ -11,7 +11,7 @@ export interface SessionState {
 export const initialSessionState: SessionState = {
   status: "anonymous",
   userId: null,
-  tenantId: null
+  tenantId: null,
 };
 
 export const sessionStore = writable<SessionState>(initialSessionState);

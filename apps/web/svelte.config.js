@@ -10,9 +10,9 @@ const config = {
       $ui: resolve("./src/lib/ui"),
       $stores: resolve("./src/lib/stores"),
       $utils: resolve("./src/lib/utils"),
-      $game: resolve("./src/lib/game")
-    }
-  }
+      $game: resolve("./src/lib/game"),
+    },
+  },
 };
 
 export default config;

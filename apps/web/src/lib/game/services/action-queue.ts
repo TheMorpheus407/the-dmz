@@ -9,10 +9,13 @@ export interface QueuedAction extends GameAction {
   queuedAt: string;
 }
 
-export const enqueueAction = (queue: QueuedAction[], action: GameAction): QueuedAction[] => [
+export const enqueueAction = (
+  queue: QueuedAction[],
+  action: GameAction,
+): QueuedAction[] => [
   ...queue,
   {
     ...action,
-    queuedAt: new Date().toISOString()
-  }
+    queuedAt: new Date().toISOString(),
+  },
 ];

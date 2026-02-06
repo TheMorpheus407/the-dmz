@@ -2,10 +2,17 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { loadConfig } from "../../config.js";
-import { closeDatabase, getDatabaseClient, getDatabasePool } from "./connection.js";
+import {
+  closeDatabase,
+  getDatabaseClient,
+  getDatabasePool,
+} from "./connection.js";
 import { seedDatabase } from "./seed.js";
 
-const migrationsFolder = resolve(dirname(fileURLToPath(import.meta.url)), "migrations");
+const migrationsFolder = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  "migrations",
+);
 
 const run = async () => {
   const config = loadConfig();

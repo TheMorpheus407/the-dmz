@@ -6,7 +6,9 @@ import {
 } from "@the-dmz/shared/schemas";
 import { getHealth, getReadiness } from "./health.service.js";
 
-export const registerHealthRoutes = async (fastify: FastifyInstance): Promise<void> => {
+export const registerHealthRoutes = async (
+  fastify: FastifyInstance,
+): Promise<void> => {
   fastify.get(
     "/health",
     {

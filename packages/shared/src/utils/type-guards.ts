@@ -18,7 +18,10 @@ export const isApiError = (value: unknown): value is ApiError => {
 
   const record = value as Record<string, unknown>;
 
-  if (!isNonEmptyString(record["code"]) || !isNonEmptyString(record["message"])) {
+  if (
+    !isNonEmptyString(record["code"]) ||
+    !isNonEmptyString(record["message"])
+  ) {
     return false;
   }
 
@@ -44,7 +47,9 @@ export const isPaginationMeta = (value: unknown): value is PaginationMeta => {
   );
 };
 
-export const isApiResponse = <T = unknown>(value: unknown): value is ApiResponse<T> => {
+export const isApiResponse = <T = unknown>(
+  value: unknown,
+): value is ApiResponse<T> => {
   if (!isRecord(value)) {
     return false;
   }

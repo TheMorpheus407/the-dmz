@@ -22,7 +22,9 @@ const createDatabasePool = (config: AppConfig): DatabasePool =>
     ssl: config.DATABASE_SSL ? "require" : false,
   });
 
-export const getDatabasePool = (config: AppConfig = loadConfig()): DatabasePool => {
+export const getDatabasePool = (
+  config: AppConfig = loadConfig(),
+): DatabasePool => {
   if (!pool) {
     pool = createDatabasePool(config);
   }
@@ -30,7 +32,9 @@ export const getDatabasePool = (config: AppConfig = loadConfig()): DatabasePool 
   return pool;
 };
 
-export const getDatabaseClient = (config: AppConfig = loadConfig()): DatabaseClient => {
+export const getDatabaseClient = (
+  config: AppConfig = loadConfig(),
+): DatabaseClient => {
   if (!client) {
     const sql = getDatabasePool(config);
     client = drizzle(sql, { schema });

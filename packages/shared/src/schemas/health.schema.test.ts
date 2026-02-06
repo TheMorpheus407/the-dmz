@@ -67,7 +67,9 @@ describe("health json schemas", () => {
     const schema = readinessResponseJsonSchema as JsonSchemaShape;
     expect(schema.type).toBe("object");
     expect(schema.properties).toBeTruthy();
-    expect(schema.required).toEqual(expect.arrayContaining(["status", "checks"]));
+    expect(schema.required).toEqual(
+      expect.arrayContaining(["status", "checks"]),
+    );
     expect(schema.additionalProperties).toBe(false);
   });
 });

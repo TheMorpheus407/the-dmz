@@ -2,7 +2,11 @@ import cors from "@fastify/cors";
 import fastify, { type FastifyInstance } from "fastify";
 import { loadConfig, type AppConfig } from "./config.js";
 import { healthPlugin } from "./modules/health/index.js";
-import { AppError, createErrorHandler, ErrorCodes } from "./shared/middleware/error-handler.js";
+import {
+  AppError,
+  createErrorHandler,
+  ErrorCodes,
+} from "./shared/middleware/error-handler.js";
 import { requestLogger } from "./shared/middleware/request-logger.js";
 import { generateId } from "./shared/utils/id.js";
 
@@ -13,7 +17,9 @@ const localOrigins = new Set([
   "http://127.0.0.1:3000",
 ]);
 
-const resolveRequestId = (value: string | string[] | undefined): string | undefined => {
+const resolveRequestId = (
+  value: string | string[] | undefined,
+): string | undefined => {
   if (typeof value === "string") {
     return value;
   }
@@ -43,7 +49,8 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
       },
     },
     requestIdHeader: "x-request-id",
-    genReqId: (req) => resolveRequestId(req.headers["x-request-id"]) ?? generateId(),
+    genReqId: (req) =>
+      resolveRequestId(req.headers["x-request-id"]) ?? generateId(),
   });
 
   app.decorate("config", config);

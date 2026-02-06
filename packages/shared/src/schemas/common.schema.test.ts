@@ -59,7 +59,9 @@ describe("common json schemas", () => {
     expect(schema.type).toBe("object");
     expect(schema.properties).toBeTruthy();
     const keys = Object.keys(schema.properties ?? {});
-    expect(keys).toEqual(expect.arrayContaining(["page", "limit", "sortOrder"]));
+    expect(keys).toEqual(
+      expect.arrayContaining(["page", "limit", "sortOrder"]),
+    );
     expect(schema.additionalProperties).toBe(false);
   });
 

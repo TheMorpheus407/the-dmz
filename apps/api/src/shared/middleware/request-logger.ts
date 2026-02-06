@@ -9,7 +9,7 @@ export const requestLogger: FastifyPluginAsync = fp(async (fastify) => {
         method: request.method,
         url: request.url,
       },
-      "request received"
+      "request received",
     );
   });
 
@@ -26,7 +26,7 @@ export const requestLogger: FastifyPluginAsync = fp(async (fastify) => {
         statusCode: reply.statusCode,
         durationMs,
       },
-      "request completed"
+      "request completed",
     );
   });
 });

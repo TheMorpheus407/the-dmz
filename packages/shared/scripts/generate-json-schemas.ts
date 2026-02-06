@@ -39,5 +39,12 @@ const outputPath = fileURLToPath(
   new URL("../src/schemas/json-schemas.generated.ts", import.meta.url),
 );
 
+const prettier = await import("prettier");
+const prettierConfig = await prettier.resolveConfig(outputPath);
+const formatted = await prettier.format(output, {
+  ...(prettierConfig ?? {}),
+  parser: "typescript",
+});
+
 mkdirSync(dirname(outputPath), { recursive: true });
-writeFileSync(outputPath, output, "utf8");
+writeFileSync(outputPath, formatted, "utf8");

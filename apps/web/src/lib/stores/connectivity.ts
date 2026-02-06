@@ -7,7 +7,9 @@ export interface ConnectivityState {
 
 export const initialConnectivityState: ConnectivityState = {
   online: true,
-  lastChange: null
+  lastChange: null,
 };
 
-export const connectivityStore = writable<ConnectivityState>(initialConnectivityState);
+export const connectivityStore = writable<ConnectivityState>(
+  initialConnectivityState,
+);

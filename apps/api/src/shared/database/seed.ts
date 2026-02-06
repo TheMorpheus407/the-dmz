@@ -24,9 +24,12 @@ export const seedDatabase = async (): Promise<void> => {
     },
   ];
 
-  await db.insert(tenants).values(defaultTenants).onConflictDoNothing({
-    target: [tenants.slug],
-  });
+  await db
+    .insert(tenants)
+    .values(defaultTenants)
+    .onConflictDoNothing({
+      target: [tenants.slug],
+    });
 
   const systemTenant = await db
     .select({ tenantId: tenants.tenantId })

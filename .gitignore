@@ -3,6 +3,8 @@ node_modules/
 .turbo/
 dist/
 coverage/
+.svelte-kit/
+apps/web/build/
 .env
 .env.*
 !.env.example

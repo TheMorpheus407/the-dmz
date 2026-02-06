@@ -7,7 +7,7 @@ export interface SettingsState {
 
 export const initialSettingsState: SettingsState = {
   reducedMotion: false,
-  soundEnabled: true
+  soundEnabled: true,
 };
 
 export const settingsStore = writable<SettingsState>(initialSettingsState);

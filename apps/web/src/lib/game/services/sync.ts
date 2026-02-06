@@ -9,5 +9,5 @@ export interface SyncResult {
 
 export const reconcileState = (serverEvents: GameEvent[]): SyncResult => ({
   state: replayEvents(serverEvents),
-  events: serverEvents
+  events: serverEvents,
 });

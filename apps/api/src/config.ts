@@ -1,7 +1,15 @@
 import { z } from "zod";
 
 const nodeEnvs = ["development", "test", "production"] as const;
-const logLevels = ["fatal", "error", "warn", "info", "debug", "trace", "silent"] as const;
+const logLevels = [
+  "fatal",
+  "error",
+  "warn",
+  "info",
+  "debug",
+  "trace",
+  "silent",
+] as const;
 
 const booleanSchema = z.preprocess((value) => {
   if (typeof value === "string") {
@@ -21,10 +29,17 @@ const envSchema = z
   .object({
     NODE_ENV: z.enum(nodeEnvs).default("development"),
     PORT: z.coerce.number().int().positive().default(3001),
-    DATABASE_URL: z.string().min(1).default("postgres://localhost:5432/the_dmz"),
+    DATABASE_URL: z
+      .string()
+      .min(1)
+      .default("postgres://localhost:5432/the_dmz"),
     DATABASE_POOL_MAX: z.coerce.number().int().positive().optional(),
     DATABASE_POOL_IDLE_TIMEOUT: z.coerce.number().int().positive().optional(),
-    DATABASE_POOL_CONNECT_TIMEOUT: z.coerce.number().int().positive().optional(),
+    DATABASE_POOL_CONNECT_TIMEOUT: z.coerce
+      .number()
+      .int()
+      .positive()
+      .optional(),
     DATABASE_SSL: booleanSchema.optional(),
     REDIS_URL: z.string().min(1).default("redis://localhost:6379"),
     LOG_LEVEL: z.enum(logLevels).default("info"),
@@ -48,7 +63,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
 
   if (!result.success) {
     const formatted = result.error.flatten();
-    throw new Error(`Invalid environment configuration: ${JSON.stringify(formatted.fieldErrors)}`);
+    throw new Error(
+      `Invalid environment configuration: ${JSON.stringify(formatted.fieldErrors)}`,
+    );
   }
 
   return result.data;

@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { isApiError, isApiResponse, isPaginationMeta, isUserBase } from "./type-guards.js";
+import {
+  isApiError,
+  isApiResponse,
+  isPaginationMeta,
+  isUserBase,
+} from "./type-guards.js";
 
 describe("isApiError", () => {
   it("accepts a valid error shape", () => {
@@ -16,7 +21,9 @@ describe("isApiError", () => {
   it("rejects invalid shapes", () => {
     expect(isApiError({ code: "", message: "" })).toBe(false);
     expect(isApiError({ code: "VALID", message: 12 })).toBe(false);
-    expect(isApiError({ code: "VALID", message: "ok", details: [] })).toBe(false);
+    expect(isApiError({ code: "VALID", message: "ok", details: [] })).toBe(
+      false,
+    );
   });
 });
 
@@ -28,7 +35,9 @@ describe("isPaginationMeta", () => {
   });
 
   it("rejects invalid pagination meta", () => {
-    expect(isPaginationMeta({ page: "1", limit: 20, total: 120, totalPages: 6 })).toBe(false);
+    expect(
+      isPaginationMeta({ page: "1", limit: 20, total: 120, totalPages: 6 }),
+    ).toBe(false);
   });
 });
 
@@ -58,8 +67,15 @@ describe("isApiResponse", () => {
   });
 
   it("rejects responses with invalid error or meta", () => {
-    expect(isApiResponse({ success: false, error: { code: 123, message: "no" } })).toBe(false);
-    expect(isApiResponse({ success: true, meta: { page: "1", limit: 10, total: 10, totalPages: 1 } })).toBe(false);
+    expect(
+      isApiResponse({ success: false, error: { code: 123, message: "no" } }),
+    ).toBe(false);
+    expect(
+      isApiResponse({
+        success: true,
+        meta: { page: "1", limit: 10, total: 10, totalPages: 1 },
+      }),
+    ).toBe(false);
   });
 });
 
@@ -76,6 +92,8 @@ describe("isUserBase", () => {
   });
 
   it("rejects invalid users", () => {
-    expect(isUserBase({ id: "", email: "", displayName: "", tenantId: "" })).toBe(false);
+    expect(
+      isUserBase({ id: "", email: "", displayName: "", tenantId: "" }),
+    ).toBe(false);
   });
 });

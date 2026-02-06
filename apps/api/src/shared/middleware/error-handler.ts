@@ -30,13 +30,19 @@ export class AppError extends Error {
   }
 }
 
-const isAppError = (error: unknown): error is AppError => error instanceof AppError;
+const isAppError = (error: unknown): error is AppError =>
+  error instanceof AppError;
 
-const normalizeDetails = (details?: Record<string, unknown>): Record<string, unknown> =>
-  details ?? {};
+const normalizeDetails = (
+  details?: Record<string, unknown>,
+): Record<string, unknown> => details ?? {};
 
 export const createErrorHandler = () =>
-  function errorHandler(error: FastifyError, request: FastifyRequest, reply: FastifyReply) {
+  function errorHandler(
+    error: FastifyError,
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ) {
     let statusCode = error.statusCode ?? 500;
     let code: ErrorCode = ErrorCodes.INTERNAL_SERVER_ERROR;
     let message = "Internal Server Error";
