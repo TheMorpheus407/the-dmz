@@ -1,6 +1,8 @@
 import fp from "fastify-plugin";
-import type { FastifyPluginAsync } from "fastify";
+
 import { registerHealthRoutes } from "./health.routes.js";
+
+import type { FastifyPluginAsync } from "fastify";
 
 const healthPluginImpl: FastifyPluginAsync = async (fastify) => {
   await registerHealthRoutes(fastify);

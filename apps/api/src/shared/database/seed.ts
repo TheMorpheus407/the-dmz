@@ -1,5 +1,7 @@
 import { pathToFileURL } from "node:url";
+
 import { eq } from "drizzle-orm";
+
 import { closeDatabase, getDatabaseClient } from "./connection.js";
 import { tenants } from "./schema/index.js";
 

@@ -1,5 +1,6 @@
-import type { ZodTypeAny } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
+
+import type { ZodTypeAny } from "zod";
 
 export type JsonSchema = Record<string, unknown>;
 

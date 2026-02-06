@@ -1,5 +1,6 @@
-import adapter from "@sveltejs/adapter-node";
 import { resolve } from "node:path";
+
+import adapter from "@sveltejs/adapter-node";
 
 const config = {
   kit: {

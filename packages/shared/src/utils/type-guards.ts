@@ -16,7 +16,7 @@ export const isApiError = (value: unknown): value is ApiError => {
     return false;
   }
 
-  const record = value as Record<string, unknown>;
+  const record = value;
 
   if (
     !isNonEmptyString(record["code"]) ||
@@ -37,7 +37,7 @@ export const isPaginationMeta = (value: unknown): value is PaginationMeta => {
     return false;
   }
 
-  const record = value as Record<string, unknown>;
+  const record = value;
 
   return (
     isNumber(record["page"]) &&
@@ -54,7 +54,7 @@ export const isApiResponse = <T = unknown>(
     return false;
   }
 
-  const record = value as Record<string, unknown>;
+  const record = value;
 
   if (typeof record["success"] !== "boolean") {
     return false;
@@ -76,7 +76,7 @@ export const isUserBase = (value: unknown): value is UserBase => {
     return false;
   }
 
-  const record = value as Record<string, unknown>;
+  const record = value;
 
   return (
     isNonEmptyString(record["id"]) &&

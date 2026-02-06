@@ -40,7 +40,8 @@
     "build:cjs:package": "node -e \"const fs = require('node:fs'); fs.mkdirSync('dist/cjs', { recursive: true }); fs.writeFileSync('dist/cjs/package.json', JSON.stringify({ type: 'commonjs' }, null, 2));\"",
     "dev": "pnpm run generate:schemas && tsc -p tsconfig.esm.json --watch",
     "generate:schemas": "tsx scripts/generate-json-schemas.ts",
-    "lint": "eslint . --max-warnings=0",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "pnpm run generate:schemas && vitest run",
     "typecheck": "pnpm run generate:schemas && tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true });\""

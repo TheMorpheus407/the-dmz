@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
 import { buildApp } from "../../../app.js";
 import { loadConfig, type AppConfig } from "../../../config.js";
 

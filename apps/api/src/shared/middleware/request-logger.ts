@@ -1,4 +1,5 @@
 import fp from "fastify-plugin";
+
 import type { FastifyPluginAsync } from "fastify";
 
 export const requestLogger: FastifyPluginAsync = fp(async (fastify) => {

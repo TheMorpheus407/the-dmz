@@ -1,5 +1,6 @@
-import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 import { ZodError } from "zod";
+
+import type { FastifyError, FastifyReply, FastifyRequest } from "fastify";
 
 export const ErrorCodes = {
   INTERNAL_SERVER_ERROR: "INTERNAL_SERVER_ERROR",

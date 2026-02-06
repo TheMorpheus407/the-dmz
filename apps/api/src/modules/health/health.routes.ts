@@ -1,10 +1,12 @@
-import type { FastifyInstance } from "fastify";
 import {
   healthQueryJsonSchema,
   healthResponseJsonSchema,
   readinessResponseJsonSchema,
 } from "@the-dmz/shared/schemas";
+
 import { getHealth, getReadiness } from "./health.service.js";
+
+import type { FastifyInstance } from "fastify";
 
 export const registerHealthRoutes = async (
   fastify: FastifyInstance,

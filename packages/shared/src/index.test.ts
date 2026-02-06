@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+
 import { sharedVersion } from "./index.js";
 
 describe("sharedVersion", () => {

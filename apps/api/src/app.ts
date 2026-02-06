@@ -1,5 +1,6 @@
 import cors from "@fastify/cors";
 import fastify, { type FastifyInstance } from "fastify";
+
 import { loadConfig, type AppConfig } from "./config.js";
 import { healthPlugin } from "./modules/health/index.js";
 import {

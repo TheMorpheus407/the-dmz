@@ -1,6 +1,8 @@
 import postgres, { type Sql } from "postgres";
 import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+
 import { loadConfig, type AppConfig } from "../../config.js";
+
 import * as schema from "./schema/index.js";
 
 export type DependencyHealth = {

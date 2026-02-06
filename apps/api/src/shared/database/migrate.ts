@@ -1,6 +1,8 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+
 import { migrate } from "drizzle-orm/postgres-js/migrator";
+
 import { closeDatabase, getDatabaseClient } from "./connection.js";
 
 const migrationsFolder = resolve(
