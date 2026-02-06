@@ -1,6 +1,6 @@
-import { writable } from "svelte/store";
+import { writable } from 'svelte/store';
 
-export type SessionStatus = "anonymous" | "authenticated";
+export type SessionStatus = 'anonymous' | 'authenticated';
 
 export interface SessionState {
   status: SessionStatus;
@@ -9,7 +9,7 @@ export interface SessionState {
 }
 
 export const initialSessionState: SessionState = {
-  status: "anonymous",
+  status: 'anonymous',
   userId: null,
   tenantId: null,
 };

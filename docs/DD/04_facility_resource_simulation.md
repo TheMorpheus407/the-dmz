@@ -754,7 +754,6 @@ Testing ensures the facility simulation is correct, deterministic, and balanced.
 
 ---
 
-
 ## 24. Resource Forecasting, Capacity Planning, and Advisory Tools
 
 Resource management is more than a snapshot of current usage. The player must understand how today's choices affect tomorrow's capacity, costs, and risk. The facility simulation therefore includes forecasting and advisory tools that project resource utilization and operating costs over a short horizon. These tools are intentionally simple but provide just enough forward visibility to teach planning behavior.
@@ -893,26 +892,27 @@ In cooperative missions (2-6 players per FR-MP-001), one player could handle tri
 The BRD (FR-CON-005, FR-CON-006) defines a seasonal episodic structure with 4 seasons per year, each with 11 chapters over 12 weeks. Season themes have direct facility implications: Season 1 (Signal Loss/Stuxnet) focuses on core facility operations; Season 2 (Supply Lines/SolarWinds) could introduce supply chain-compromised upgrades and vendor trust mechanics; Season 3 (Dark Channels/Ransomware) escalates breach pressure and facility lockdown scenarios; Season 4 (The Inside Job/Insider Threats) could introduce staff-related facility vulnerabilities. The facility simulation should support temporary modifiers layered on top of base capacity without permanent schema changes.
 
 ---
+
 ## 28. Appendix A: Facility Tier Reference Tables
 
 The following table provides example capacity values for each tier. These values are configuration defaults and can be adjusted during balancing.
 
-| Tier | Rack Capacity (U) | Power Budget (kW) | Cooling (tons) | Bandwidth (Mbps) | Base Operating Cost per Day |
-| --- | --- | --- | --- | --- | --- |
-| Outpost | 42 | 10.0 | 5.0 | 100 | 500 |
-| Station | 84 | 20.0 | 10.0 | 250 | 1200 |
-| Vault | 168 | 40.0 | 20.0 | 500 | 2600 |
-| Fortress | 252 | 60.0 | 30.0 | 1000 | 4200 |
-| Citadel | 336 | 80.0 | 40.0 | 2000 | 6500 |
+| Tier     | Rack Capacity (U) | Power Budget (kW) | Cooling (tons) | Bandwidth (Mbps) | Base Operating Cost per Day |
+| -------- | ----------------- | ----------------- | -------------- | ---------------- | --------------------------- |
+| Outpost  | 42                | 10.0              | 5.0            | 100              | 500                         |
+| Station  | 84                | 20.0              | 10.0           | 250              | 1200                        |
+| Vault    | 168               | 40.0              | 20.0           | 500              | 2600                        |
+| Fortress | 252               | 60.0              | 30.0           | 1000             | 4200                        |
+| Citadel  | 336               | 80.0              | 40.0           | 2000             | 6500                        |
 
 **Tier progression requirements (example defaults)**
 
-| Tier Upgrade | Funds Required | Trust Required (TS, 0-500+) | Narrative Gate |
-| --- | --- | --- | --- |
-| Outpost -> Station | 25,000 | 100 | Complete Act I: "Stability" |
-| Station -> Vault | 80,000 | 200 | Resolve Nexion contract conflict |
-| Vault -> Fortress | 200,000 | 325 | Survive multi-phase breach campaign |
-| Fortress -> Citadel | 500,000 | 450 | Achieve "Global Node" status |
+| Tier Upgrade        | Funds Required | Trust Required (TS, 0-500+) | Narrative Gate                      |
+| ------------------- | -------------- | --------------------------- | ----------------------------------- |
+| Outpost -> Station  | 25,000         | 100                         | Complete Act I: "Stability"         |
+| Station -> Vault    | 80,000         | 200                         | Resolve Nexion contract conflict    |
+| Vault -> Fortress   | 200,000        | 325                         | Survive multi-phase breach campaign |
+| Fortress -> Citadel | 500,000        | 450                         | Achieve "Global Node" status        |
 
 ---
 
@@ -1040,51 +1040,50 @@ function facilityDailyTick(sessionId, dayIndex):
 
 ---
 
-
 ## 32. Appendix E: Upgrade Catalog and Resource Effects
 
 The following catalog lists representative upgrades. Values are example defaults and are configuration-driven.
 
-| Upgrade ID | Name | Category | Min Tier | Cost | Install Days | Resource Delta | Security Delta | OpEx / Day | Threat Surface Delta | Notes |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| UPG-RACK-01 | Expansion Pod A | Capacity | Outpost | 8,000 | 1 | +10U rack | None | 50 | +0.02 | Basic rack expansion kit |
-| UPG-RACK-02 | Expansion Pod B | Capacity | Station | 18,000 | 2 | +20U rack | None | 90 | +0.04 | Requires downtime window |
-| UPG-RACK-03 | Modular Vault C | Capacity | Vault | 45,000 | 3 | +40U rack | None | 160 | +0.06 | Adds maintenance overhead |
-| UPG-POWER-01 | Power Bus Upgrade | Capacity | Outpost | 6,500 | 1 | +2.5 kW | None | 40 | +0.03 | Slight cooling penalty |
-| UPG-POWER-02 | Redundant Feed | Capacity | Station | 14,000 | 2 | +5.0 kW | None | 80 | +0.05 | Improves outage resilience |
-| UPG-POWER-03 | High Density Feed | Capacity | Vault | 35,000 | 3 | +10.0 kW | None | 140 | +0.07 | Requires rack rebalancing |
-| UPG-COOL-01 | Chiller Booster | Capacity | Outpost | 7,500 | 1 | +1.5 tons | None | 45 | +0.03 | Minor power increase |
-| UPG-COOL-02 | Liquid Loop Retrofit | Capacity | Station | 16,000 | 2 | +3.0 tons | None | 90 | +0.05 | Reduces maintenance debt growth |
-| UPG-COOL-03 | Cryo Stack | Capacity | Fortress | 60,000 | 4 | +8.0 tons | None | 180 | +0.08 | High installation risk |
-| UPG-BW-01 | Link Aggregation | Capacity | Outpost | 9,000 | 1 | +50 Mbps | None | 60 | +0.03 | No downtime |
-| UPG-BW-02 | Microwave Relay | Capacity | Station | 20,000 | 2 | +150 Mbps | None | 120 | +0.06 | Vulnerable to storms event |
-| UPG-BW-03 | Fiber Ring | Capacity | Vault | 55,000 | 3 | +400 Mbps | None | 220 | +0.09 | Adds resilience vs DDoS |
-| UPG-EFF-01 | Power Optimization Suite | Efficiency | Outpost | 5,000 | 1 | -5 percent power usage | None | 70 | +0.05 | Requires monitoring upgrade |
-| UPG-EFF-02 | Cooling Balancer | Efficiency | Station | 12,000 | 2 | -8 percent cooling usage | None | 110 | +0.06 | Lowers maintenance debt |
-| UPG-EFF-03 | Bandwidth Shaper | Efficiency | Station | 14,000 | 2 | -10 percent bandwidth usage | Minor | 130 | +0.07 | Also reduces DDoS impact |
-| UPG-SEC-01 | IDS Sensor Grid | Security | Outpost | 10,000 | 1 | None | +Low vs intrusion | 150 | +0.10 | Adds sensor management plane |
-| UPG-SEC-02 | WAF Gateway | Security | Station | 18,000 | 2 | None | +Medium vs web attacks | 220 | +0.14 | Misconfig risk and rule updates |
-| UPG-SEC-03 | SIEM Core | Security | Vault | 40,000 | 3 | +2U rack, +0.5 kW | +High vs multi-vector | 350 | +0.20 | Centralized data pipeline exposure |
-| UPG-SEC-04 | DDoS Mitigation Node | Security | Station | 22,000 | 2 | +0.5 kW | +High vs DDoS | 260 | +0.16 | New edge services surface |
-| UPG-SEC-05 | Zero Trust Broker | Security | Fortress | 80,000 | 4 | +4U rack, +1.0 kW | +High vs social engineering | 420 | +0.24 | Complex policy engine |
-| UPG-SEC-06 | Perimeter Firewall | Security | Outpost | 8,000 | 1 | +1U rack, +0.3 kW | +Medium vs network intrusion | 130 | +0.08 | Rule management overhead |
-| UPG-SEC-07 | IPS Gateway | Security | Station | 15,000 | 2 | +1U rack, +0.5 kW | +Medium vs intrusion, +Low vs malware | 190 | +0.12 | False positive tuning required |
-| UPG-SEC-08 | EDR Suite | Security | Vault | 28,000 | 2 | +2U rack, +0.5 kW | +High vs malware, +Medium vs ransomware | 300 | +0.18 | Endpoint agent management plane |
-| UPG-SEC-09 | Threat Intel Feed | Security | Station | 12,000 | 1 | None | +Low vs all vectors (early warning) | 200 | +0.06 | Feed integration and parsing |
-| UPG-SEC-10 | SOAR Platform | Security | Fortress | 65,000 | 4 | +3U rack, +0.8 kW | +High vs multi-vector (automated response) | 380 | +0.22 | Playbook and API exposure |
-| UPG-SEC-11 | Honeypot Network | Security | Vault | 20,000 | 2 | +2U rack, +0.3 kW | +Medium vs intrusion (deception) | 160 | +0.10 | Attacker redirection surface |
-| UPG-SEC-12 | AI Anomaly Detection | Security | Fortress | 75,000 | 3 | +4U rack, +1.5 kW | +High vs insider threat, +Medium vs zero-day | 450 | +0.26 | ML model drift and data pipeline |
-| UPG-OPS-01 | Maintenance Bay | Operations | Outpost | 6,000 | 1 | None | None | 90 | +0.05 | -15 percent maintenance debt growth |
-| UPG-OPS-02 | Spare Parts Cache | Operations | Station | 12,000 | 2 | None | None | 120 | +0.06 | Reduces failure recovery time |
-| UPG-OPS-03 | Automation Console | Operations | Vault | 30,000 | 3 | +1U rack, +0.3 kW | None | 180 | +0.10 | Improves forecast accuracy |
-| UPG-OPS-04 | Incident Response Suite | Operations | Vault | 35,000 | 3 | None | +Medium response | 200 | +0.12 | Adds response tooling surface |
-| UPG-STAFF-01 | Junior Technician | Staff | Outpost | 4,000 | 0 | None | None | 150 | +0.00 | -10% maintenance debt growth, -1 day breach recovery |
-| UPG-STAFF-02 | Security Analyst | Staff | Station | 10,000 | 0 | None | +Low vs all vectors | 280 | +0.00 | -1 day breach recovery, improves incident response |
-| UPG-STAFF-03 | Senior Engineer | Staff | Vault | 25,000 | 0 | None | None | 400 | +0.00 | -20% maintenance debt growth, -2 day breach recovery |
-| UPG-TIER-01 | Station Upgrade | Tier | Outpost | 25,000 | 3 | Tier change | None | 0 | +0.00 | Unlocks Station tier |
-| UPG-TIER-02 | Vault Upgrade | Tier | Station | 80,000 | 4 | Tier change | None | 0 | +0.00 | Unlocks Vault tier |
-| UPG-TIER-03 | Fortress Upgrade | Tier | Vault | 200,000 | 5 | Tier change | None | 0 | +0.00 | Unlocks Fortress tier |
-| UPG-TIER-04 | Citadel Upgrade | Tier | Fortress | 500,000 | 6 | Tier change | None | 0 | +0.00 | Unlocks Citadel tier |
+| Upgrade ID   | Name                     | Category   | Min Tier | Cost    | Install Days | Resource Delta              | Security Delta                               | OpEx / Day | Threat Surface Delta | Notes                                                |
+| ------------ | ------------------------ | ---------- | -------- | ------- | ------------ | --------------------------- | -------------------------------------------- | ---------- | -------------------- | ---------------------------------------------------- |
+| UPG-RACK-01  | Expansion Pod A          | Capacity   | Outpost  | 8,000   | 1            | +10U rack                   | None                                         | 50         | +0.02                | Basic rack expansion kit                             |
+| UPG-RACK-02  | Expansion Pod B          | Capacity   | Station  | 18,000  | 2            | +20U rack                   | None                                         | 90         | +0.04                | Requires downtime window                             |
+| UPG-RACK-03  | Modular Vault C          | Capacity   | Vault    | 45,000  | 3            | +40U rack                   | None                                         | 160        | +0.06                | Adds maintenance overhead                            |
+| UPG-POWER-01 | Power Bus Upgrade        | Capacity   | Outpost  | 6,500   | 1            | +2.5 kW                     | None                                         | 40         | +0.03                | Slight cooling penalty                               |
+| UPG-POWER-02 | Redundant Feed           | Capacity   | Station  | 14,000  | 2            | +5.0 kW                     | None                                         | 80         | +0.05                | Improves outage resilience                           |
+| UPG-POWER-03 | High Density Feed        | Capacity   | Vault    | 35,000  | 3            | +10.0 kW                    | None                                         | 140        | +0.07                | Requires rack rebalancing                            |
+| UPG-COOL-01  | Chiller Booster          | Capacity   | Outpost  | 7,500   | 1            | +1.5 tons                   | None                                         | 45         | +0.03                | Minor power increase                                 |
+| UPG-COOL-02  | Liquid Loop Retrofit     | Capacity   | Station  | 16,000  | 2            | +3.0 tons                   | None                                         | 90         | +0.05                | Reduces maintenance debt growth                      |
+| UPG-COOL-03  | Cryo Stack               | Capacity   | Fortress | 60,000  | 4            | +8.0 tons                   | None                                         | 180        | +0.08                | High installation risk                               |
+| UPG-BW-01    | Link Aggregation         | Capacity   | Outpost  | 9,000   | 1            | +50 Mbps                    | None                                         | 60         | +0.03                | No downtime                                          |
+| UPG-BW-02    | Microwave Relay          | Capacity   | Station  | 20,000  | 2            | +150 Mbps                   | None                                         | 120        | +0.06                | Vulnerable to storms event                           |
+| UPG-BW-03    | Fiber Ring               | Capacity   | Vault    | 55,000  | 3            | +400 Mbps                   | None                                         | 220        | +0.09                | Adds resilience vs DDoS                              |
+| UPG-EFF-01   | Power Optimization Suite | Efficiency | Outpost  | 5,000   | 1            | -5 percent power usage      | None                                         | 70         | +0.05                | Requires monitoring upgrade                          |
+| UPG-EFF-02   | Cooling Balancer         | Efficiency | Station  | 12,000  | 2            | -8 percent cooling usage    | None                                         | 110        | +0.06                | Lowers maintenance debt                              |
+| UPG-EFF-03   | Bandwidth Shaper         | Efficiency | Station  | 14,000  | 2            | -10 percent bandwidth usage | Minor                                        | 130        | +0.07                | Also reduces DDoS impact                             |
+| UPG-SEC-01   | IDS Sensor Grid          | Security   | Outpost  | 10,000  | 1            | None                        | +Low vs intrusion                            | 150        | +0.10                | Adds sensor management plane                         |
+| UPG-SEC-02   | WAF Gateway              | Security   | Station  | 18,000  | 2            | None                        | +Medium vs web attacks                       | 220        | +0.14                | Misconfig risk and rule updates                      |
+| UPG-SEC-03   | SIEM Core                | Security   | Vault    | 40,000  | 3            | +2U rack, +0.5 kW           | +High vs multi-vector                        | 350        | +0.20                | Centralized data pipeline exposure                   |
+| UPG-SEC-04   | DDoS Mitigation Node     | Security   | Station  | 22,000  | 2            | +0.5 kW                     | +High vs DDoS                                | 260        | +0.16                | New edge services surface                            |
+| UPG-SEC-05   | Zero Trust Broker        | Security   | Fortress | 80,000  | 4            | +4U rack, +1.0 kW           | +High vs social engineering                  | 420        | +0.24                | Complex policy engine                                |
+| UPG-SEC-06   | Perimeter Firewall       | Security   | Outpost  | 8,000   | 1            | +1U rack, +0.3 kW           | +Medium vs network intrusion                 | 130        | +0.08                | Rule management overhead                             |
+| UPG-SEC-07   | IPS Gateway              | Security   | Station  | 15,000  | 2            | +1U rack, +0.5 kW           | +Medium vs intrusion, +Low vs malware        | 190        | +0.12                | False positive tuning required                       |
+| UPG-SEC-08   | EDR Suite                | Security   | Vault    | 28,000  | 2            | +2U rack, +0.5 kW           | +High vs malware, +Medium vs ransomware      | 300        | +0.18                | Endpoint agent management plane                      |
+| UPG-SEC-09   | Threat Intel Feed        | Security   | Station  | 12,000  | 1            | None                        | +Low vs all vectors (early warning)          | 200        | +0.06                | Feed integration and parsing                         |
+| UPG-SEC-10   | SOAR Platform            | Security   | Fortress | 65,000  | 4            | +3U rack, +0.8 kW           | +High vs multi-vector (automated response)   | 380        | +0.22                | Playbook and API exposure                            |
+| UPG-SEC-11   | Honeypot Network         | Security   | Vault    | 20,000  | 2            | +2U rack, +0.3 kW           | +Medium vs intrusion (deception)             | 160        | +0.10                | Attacker redirection surface                         |
+| UPG-SEC-12   | AI Anomaly Detection     | Security   | Fortress | 75,000  | 3            | +4U rack, +1.5 kW           | +High vs insider threat, +Medium vs zero-day | 450        | +0.26                | ML model drift and data pipeline                     |
+| UPG-OPS-01   | Maintenance Bay          | Operations | Outpost  | 6,000   | 1            | None                        | None                                         | 90         | +0.05                | -15 percent maintenance debt growth                  |
+| UPG-OPS-02   | Spare Parts Cache        | Operations | Station  | 12,000  | 2            | None                        | None                                         | 120        | +0.06                | Reduces failure recovery time                        |
+| UPG-OPS-03   | Automation Console       | Operations | Vault    | 30,000  | 3            | +1U rack, +0.3 kW           | None                                         | 180        | +0.10                | Improves forecast accuracy                           |
+| UPG-OPS-04   | Incident Response Suite  | Operations | Vault    | 35,000  | 3            | None                        | +Medium response                             | 200        | +0.12                | Adds response tooling surface                        |
+| UPG-STAFF-01 | Junior Technician        | Staff      | Outpost  | 4,000   | 0            | None                        | None                                         | 150        | +0.00                | -10% maintenance debt growth, -1 day breach recovery |
+| UPG-STAFF-02 | Security Analyst         | Staff      | Station  | 10,000  | 0            | None                        | +Low vs all vectors                          | 280        | +0.00                | -1 day breach recovery, improves incident response   |
+| UPG-STAFF-03 | Senior Engineer          | Staff      | Vault    | 25,000  | 0            | None                        | None                                         | 400        | +0.00                | -20% maintenance debt growth, -2 day breach recovery |
+| UPG-TIER-01  | Station Upgrade          | Tier       | Outpost  | 25,000  | 3            | Tier change                 | None                                         | 0          | +0.00                | Unlocks Station tier                                 |
+| UPG-TIER-02  | Vault Upgrade            | Tier       | Station  | 80,000  | 4            | Tier change                 | None                                         | 0          | +0.00                | Unlocks Vault tier                                   |
+| UPG-TIER-03  | Fortress Upgrade         | Tier       | Vault    | 200,000 | 5            | Tier change                 | None                                         | 0          | +0.00                | Unlocks Fortress tier                                |
+| UPG-TIER-04  | Citadel Upgrade          | Tier       | Fortress | 500,000 | 6            | Tier change                 | None                                         | 0          | +0.00                | Unlocks Citadel tier                                 |
 
 ---
 
@@ -1092,24 +1091,24 @@ The following catalog lists representative upgrades. Values are example defaults
 
 This library standardizes facility alerts for consistent UI copy and analytics tagging. Messages are examples and can be localized.
 
-| Alert Key | Trigger Condition | Player Message | Recommended Action |
-| --- | --- | --- | --- |
-| FAC-ALERT-001 | Rack utilization > 70 percent | "Rack capacity trending high." | Review pending requests, consider expansion |
-| FAC-ALERT-002 | Rack utilization > 90 percent | "Rack capacity critical." | Defer or evict, purchase rack expansion |
-| FAC-ALERT-003 | Power utilization > 70 percent | "Power draw approaching limit." | Optimize power usage, install power upgrade |
-| FAC-ALERT-004 | Power utilization > 90 percent | "Power grid near overload." | Reduce load, delay installations |
-| FAC-ALERT-005 | Cooling utilization > 70 percent | "Cooling headroom shrinking." | Install cooling upgrade, schedule maintenance |
-| FAC-ALERT-006 | Cooling utilization > 90 percent | "Cooling critical. Thermal risk." | Reduce heat load, prioritize cooling |
-| FAC-ALERT-007 | Bandwidth utilization > 70 percent | "Bandwidth saturation rising." | Review high bandwidth clients |
-| FAC-ALERT-008 | Bandwidth utilization > 90 percent | "Bandwidth critical. Latency spikes." | Activate shaping, consider mitigation |
-| FAC-ALERT-009 | Maintenance debt > 0.4 | "Maintenance backlog growing." | Purchase maintenance bay, schedule downtime |
-| FAC-ALERT-010 | Maintenance debt > 0.7 | "Infrastructure reliability at risk." | Halt expansion, repair critical systems |
-| FAC-ALERT-011 | Overcommitment event | "Temporary overcommit active." | Expect instability, plan rollback |
-| FAC-ALERT-012 | Upgrade installing | "Upgrade installation in progress." | Plan for reduced capacity |
-| FAC-ALERT-013 | Upgrade completed | "Upgrade operational." | Review capacity and adjust plans |
-| FAC-ALERT-014 | DDoS active | "External traffic flood detected." | Activate mitigation, reallocate bandwidth |
-| FAC-ALERT-015 | Lease expiry upcoming | "Client lease expires in 2 days." | Consider renewal or release |
-| FAC-ALERT-016 | Facility tier unlocked | "Expansion path unlocked." | Review tier upgrade proposal |
+| Alert Key     | Trigger Condition                  | Player Message                        | Recommended Action                            |
+| ------------- | ---------------------------------- | ------------------------------------- | --------------------------------------------- |
+| FAC-ALERT-001 | Rack utilization > 70 percent      | "Rack capacity trending high."        | Review pending requests, consider expansion   |
+| FAC-ALERT-002 | Rack utilization > 90 percent      | "Rack capacity critical."             | Defer or evict, purchase rack expansion       |
+| FAC-ALERT-003 | Power utilization > 70 percent     | "Power draw approaching limit."       | Optimize power usage, install power upgrade   |
+| FAC-ALERT-004 | Power utilization > 90 percent     | "Power grid near overload."           | Reduce load, delay installations              |
+| FAC-ALERT-005 | Cooling utilization > 70 percent   | "Cooling headroom shrinking."         | Install cooling upgrade, schedule maintenance |
+| FAC-ALERT-006 | Cooling utilization > 90 percent   | "Cooling critical. Thermal risk."     | Reduce heat load, prioritize cooling          |
+| FAC-ALERT-007 | Bandwidth utilization > 70 percent | "Bandwidth saturation rising."        | Review high bandwidth clients                 |
+| FAC-ALERT-008 | Bandwidth utilization > 90 percent | "Bandwidth critical. Latency spikes." | Activate shaping, consider mitigation         |
+| FAC-ALERT-009 | Maintenance debt > 0.4             | "Maintenance backlog growing."        | Purchase maintenance bay, schedule downtime   |
+| FAC-ALERT-010 | Maintenance debt > 0.7             | "Infrastructure reliability at risk." | Halt expansion, repair critical systems       |
+| FAC-ALERT-011 | Overcommitment event               | "Temporary overcommit active."        | Expect instability, plan rollback             |
+| FAC-ALERT-012 | Upgrade installing                 | "Upgrade installation in progress."   | Plan for reduced capacity                     |
+| FAC-ALERT-013 | Upgrade completed                  | "Upgrade operational."                | Review capacity and adjust plans              |
+| FAC-ALERT-014 | DDoS active                        | "External traffic flood detected."    | Activate mitigation, reallocate bandwidth     |
+| FAC-ALERT-015 | Lease expiry upcoming              | "Client lease expires in 2 days."     | Consider renewal or release                   |
+| FAC-ALERT-016 | Facility tier unlocked             | "Expansion path unlocked."            | Review tier upgrade proposal                  |
 
 ---
 
@@ -1117,18 +1116,18 @@ This library standardizes facility alerts for consistent UI copy and analytics t
 
 The scenario matrix defines test cases for balancing and quality assurance. Each scenario has a deterministic starting state and expected outcomes. These scenarios can be used for automated simulation testing.
 
-| Scenario ID | Description | Starting Tier | Key Conditions | Expected Outcome |
-| --- | --- | --- | --- | --- |
-| SCN-001 | Early game steady growth | Outpost | 3 small clients, low threats | Player can expand without overcommit |
-| SCN-002 | High bandwidth surge | Station | 70 percent bandwidth, DDoS risk | DDoS causes overload unless mitigated |
-| SCN-003 | Cooling bottleneck | Station | Cooling at 88 percent, rack at 40 percent | Capacity check blocks cooling-heavy client |
-| SCN-004 | Power constrained upgrade | Vault | Power at 90 percent, upgrade needs +3 kW | Upgrade install blocked or deferred |
-| SCN-005 | Maintenance debt spiral | Vault | Debt 0.65, no maintenance upgrades | Minor failure triggers within 2 days |
-| SCN-006 | Lease expirations | Station | Two large leases expiring next day | Forecast shows relief, approvals feasible after expiry |
-| SCN-007 | Overcommit allowed | Outpost | Policy allows 5 percent overcommit | Overcommit yields short-term revenue, raises debt |
-| SCN-008 | Tier upgrade stress | Fortress | Upgrade installation reduces cooling by 10 percent | Cooling critical alert appears |
-| SCN-009 | Mixed faction portfolio | Vault | Balanced clients from all factions | No single resource dominates utilization |
-| SCN-010 | Criminal network spike | Station | Spiky bandwidth client plus DDoS | Bandwidth overload, client evicted |
+| Scenario ID | Description               | Starting Tier | Key Conditions                                     | Expected Outcome                                       |
+| ----------- | ------------------------- | ------------- | -------------------------------------------------- | ------------------------------------------------------ |
+| SCN-001     | Early game steady growth  | Outpost       | 3 small clients, low threats                       | Player can expand without overcommit                   |
+| SCN-002     | High bandwidth surge      | Station       | 70 percent bandwidth, DDoS risk                    | DDoS causes overload unless mitigated                  |
+| SCN-003     | Cooling bottleneck        | Station       | Cooling at 88 percent, rack at 40 percent          | Capacity check blocks cooling-heavy client             |
+| SCN-004     | Power constrained upgrade | Vault         | Power at 90 percent, upgrade needs +3 kW           | Upgrade install blocked or deferred                    |
+| SCN-005     | Maintenance debt spiral   | Vault         | Debt 0.65, no maintenance upgrades                 | Minor failure triggers within 2 days                   |
+| SCN-006     | Lease expirations         | Station       | Two large leases expiring next day                 | Forecast shows relief, approvals feasible after expiry |
+| SCN-007     | Overcommit allowed        | Outpost       | Policy allows 5 percent overcommit                 | Overcommit yields short-term revenue, raises debt      |
+| SCN-008     | Tier upgrade stress       | Fortress      | Upgrade installation reduces cooling by 10 percent | Cooling critical alert appears                         |
+| SCN-009     | Mixed faction portfolio   | Vault         | Balanced clients from all factions                 | No single resource dominates utilization               |
+| SCN-010     | Criminal network spike    | Station       | Spiky bandwidth client plus DDoS                   | Bandwidth overload, client evicted                     |
 
 ---
 
@@ -1136,18 +1135,19 @@ The scenario matrix defines test cases for balancing and quality assurance. Each
 
 This appendix maps facility decisions to security competencies and NIST CSF categories. It is used in enterprise reporting.
 
-| Facility Action | Security Competency | NIST CSF Category | Measurement Method |
-| --- | --- | --- | --- |
-| Approve request within safe capacity | Capacity planning | PR.IP-01 | Approval accuracy vs capacity |
-| Deny request due to bottleneck | Risk identification | ID.RA-01 | Correct denial rate |
-| Overcommit with warning | Risk acceptance | ID.RA-02 | Overcommit frequency and outcomes |
-| Purchase capacity upgrade | Security investment planning | PR.IP-01 | Upgrade timing vs utilization |
-| Purchase security upgrade | Security budget allocation, defense architecture | PR.PT-01 | Security spend ratio |
-| Allocate bandwidth during incident | Incident response | RS.MI-02 | Response time and effectiveness |
-| Evict low priority client | Operational decision-making | PR.AC-04 | Eviction correctness |
-| Maintain low maintenance debt | Governance and hygiene | ID.GV-01 | Maintenance debt trend |
-| Review Facility Status Report | Security monitoring, dashboard interpretation | DE.CM-01 | Dashboard review frequency and response to alerts |
-| Use forecasting tools | Strategic planning | ID.RM-01 | Forecast alignment with outcomes |
+| Facility Action                      | Security Competency                              | NIST CSF Category | Measurement Method                                |
+| ------------------------------------ | ------------------------------------------------ | ----------------- | ------------------------------------------------- |
+| Approve request within safe capacity | Capacity planning                                | PR.IP-01          | Approval accuracy vs capacity                     |
+| Deny request due to bottleneck       | Risk identification                              | ID.RA-01          | Correct denial rate                               |
+| Overcommit with warning              | Risk acceptance                                  | ID.RA-02          | Overcommit frequency and outcomes                 |
+| Purchase capacity upgrade            | Security investment planning                     | PR.IP-01          | Upgrade timing vs utilization                     |
+| Purchase security upgrade            | Security budget allocation, defense architecture | PR.PT-01          | Security spend ratio                              |
+| Allocate bandwidth during incident   | Incident response                                | RS.MI-02          | Response time and effectiveness                   |
+| Evict low priority client            | Operational decision-making                      | PR.AC-04          | Eviction correctness                              |
+| Maintain low maintenance debt        | Governance and hygiene                           | ID.GV-01          | Maintenance debt trend                            |
+| Review Facility Status Report        | Security monitoring, dashboard interpretation    | DE.CM-01          | Dashboard review frequency and response to alerts |
+| Use forecasting tools                | Strategic planning                               | ID.RM-01          | Forecast alignment with outcomes                  |
 
 ---
+
 **End of Document**

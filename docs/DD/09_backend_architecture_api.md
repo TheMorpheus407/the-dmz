@@ -27,15 +27,15 @@
 
 All backend components must meet the following performance targets from the BRD:
 
-| Metric | Target |
-|--------|--------|
-| API response time | < 200ms (P95) |
-| Game state update latency | < 100ms (P95) |
-| WebSocket message delivery | < 50ms (P95) |
-| Admin dashboard load time | < 2 seconds (P95) |
-| AI email generation | < 10 seconds (pre-generated pool eliminates player-perceived latency) |
-| SCIM sync latency | < 60 seconds (FR-ENT-010) |
-| ABAC policy evaluation | < 10ms (P99) (FR-ENT-015) |
+| Metric                     | Target                                                                |
+| -------------------------- | --------------------------------------------------------------------- |
+| API response time          | < 200ms (P95)                                                         |
+| Game state update latency  | < 100ms (P95)                                                         |
+| WebSocket message delivery | < 50ms (P95)                                                          |
+| Admin dashboard load time  | < 2 seconds (P95)                                                     |
+| AI email generation        | < 10 seconds (pre-generated pool eliminates player-perceived latency) |
+| SCIM sync latency          | < 60 seconds (FR-ENT-010)                                             |
+| ABAC policy evaluation     | < 10ms (P99) (FR-ENT-015)                                             |
 
 ---
 
@@ -48,6 +48,7 @@ The DMZ: Archive Gate backend starts as a **modular monolith** -- a single deplo
 The monolith is organized around **domain modules**, each owning its own database tables, exposing a narrow public interface, and communicating with siblings through either direct function calls (synchronous, within the same process) or an in-process message bus (asynchronous, for eventual consistency patterns).
 
 **Multi-Tenancy Isolation Model (BRD FR-ENT-001):** The backend supports a hybrid isolation model tiered by customer segment:
+
 - **SMB (1-500 users):** Shared database with schema-level isolation (each tenant gets its own PostgreSQL schema within a shared database instance). All tables include non-nullable `tenant_id` with row-level security enforced at the database level (FR-ENT-002).
 - **Mid-Market (500-5K users):** Dedicated PostgreSQL schema per tenant, providing stronger isolation without infrastructure overhead.
 - **Enterprise (5K+ users):** Dedicated database instance per tenant for full data isolation and independent scaling.
@@ -178,17 +179,12 @@ export class EventBus {
     const wildcardHandlers = this.handlers.get('*') ?? new Set();
 
     const allHandlers = [...handlers, ...wildcardHandlers];
-    const results = await Promise.allSettled(
-      allHandlers.map((h) => h(event as DomainEvent))
-    );
+    const results = await Promise.allSettled(allHandlers.map((h) => h(event as DomainEvent)));
 
     for (const result of results) {
       if (result.status === 'rejected') {
         // Log but do not throw -- event handlers must not break the publisher
-        logger.error(
-          { err: result.reason, eventType: event.type },
-          'Event handler failed'
-        );
+        logger.error({ err: result.reason, eventType: event.type }, 'Event handler failed');
       }
     }
   }
@@ -247,7 +243,7 @@ export interface AuthModule {
   issueClientCredentialsToken(
     clientId: string,
     clientSecret: string,
-    scopes?: string[]
+    scopes?: string[],
   ): Promise<AccessToken>;
 }
 ```
@@ -255,6 +251,7 @@ export interface AuthModule {
 **Service-to-service authentication:** OAuth 2.0 client-credentials is the only supported mechanism for external integrations. API keys are not used for S2S access.
 
 **Internal Structure:**
+
 - `auth.service.ts` -- Core authentication logic, password hashing (argon2), token generation
 - `auth.sso.ts` -- SAML 2.0 SP implementation (SP- and IdP-initiated, encrypted assertions), OIDC client (Authorization Code + PKCE), IdP metadata parsing, back-channel logout (BRD 10.3)
 - `auth.scim.ts` -- SCIM 2.0 server endpoints (RFC 7643/7644); sync latency must be under 60 seconds (BRD FR-ENT-010)
@@ -362,6 +359,7 @@ CREATE TABLE auth.oauth_clients (
 ```
 
 **Events Published:**
+
 - `auth.user.created` -- New user registered or provisioned via SCIM
 - `auth.user.updated` -- User profile changed
 - `auth.user.deactivated` -- User deactivated
@@ -401,6 +399,7 @@ export interface GameEngineModule {
 ```
 
 **Internal Structure:**
+
 - `game-engine.service.ts` -- Orchestrates game actions, validates transitions
 - `game-engine.state-machine.ts` -- State machine definitions (DAY_START, EMAIL_TRIAGE, ATTACKS, BREACH_CHECK, UPGRADE, DAY_END)
 - `game-engine.reducer.ts` -- Pure function: `(state, event) => state` for event sourcing
@@ -408,6 +407,7 @@ export interface GameEngineModule {
 - `game-engine.repo.ts` -- Event log persistence, snapshot management (snapshots materialized every 50 events or at day boundaries per BRD 8.5)
 
 **Dependencies:**
+
 - `auth` -- User identity for session creation
 - `content` -- Fetch email content for the current day
 - `facility` -- Resource calculations for client onboarding
@@ -468,6 +468,7 @@ CREATE INDEX idx_game_events_type ON game.events(event_type, server_time);
 ```
 
 **Events Published:**
+
 - `game.session.started` -- New session created
 - `game.session.ended` -- Session completed or abandoned
 - `game.action.processed` -- Any game action (for analytics)
@@ -529,6 +530,7 @@ export interface ContentModule {
 ```
 
 **Dependencies:**
+
 - `ai-pipeline` -- Request AI-generated emails when pool is low
 - `auth` -- Permission checks for content management
 
@@ -574,6 +576,7 @@ CREATE INDEX idx_content_difficulty ON content.items(difficulty) WHERE difficult
 ```
 
 **Redis Email Pool (BRD 8.4, 8.5, 8.6, FR-GAME-004):**
+
 - Pre-generated emails are stored in Redis lists for low-latency delivery.
 - Keyed by difficulty: `email_pool:{difficulty}` (e.g., `email_pool:3`).
 - Producers use `LPUSH` to add generated emails; consumers use `RPOP` to serve game sessions.
@@ -582,6 +585,7 @@ CREATE INDEX idx_content_difficulty ON content.items(difficulty) WHERE difficult
 - Low-watermark triggers `content.pool.low` events for the AI pipeline to replenish.
 
 **Events Published:**
+
 - `content.published` -- New content published (triggers cache invalidation)
 - `content.pool.low` -- Email pool below threshold (triggers AI generation)
 
@@ -619,6 +623,7 @@ export interface AIPipelineModule {
 ```
 
 **Dependencies:**
+
 - `content` -- Store generated emails in the content library
 - `analytics` -- Player skill profiles for personalized difficulty
 
@@ -657,6 +662,7 @@ CREATE TABLE ai.prompt_templates (
 ```
 
 **Events Published:**
+
 - `ai.generation.completed` -- Email generated (for monitoring/cost tracking)
 - `ai.generation.failed` -- Generation failed (triggers fallback)
 - `ai.pool.replenished` -- Pool refilled to threshold
@@ -694,6 +700,7 @@ export interface FacilityModule {
 ```
 
 **Dependencies:**
+
 - `game-engine` -- Receives session context, publishes state changes back
 
 **Database Tables Owned:**
@@ -747,6 +754,7 @@ CREATE TABLE facility.upgrades (
 ```
 
 **Events Published:**
+
 - `facility.resource.critical` -- Resource utilization above 90%
 - `facility.client.onboarded` -- New client added
 - `facility.client.evicted` -- Client removed
@@ -784,6 +792,7 @@ export interface ThreatEngineModule {
 ```
 
 **Dependencies:**
+
 - `game-engine` -- Reads game state for context
 - `facility` -- Reads installed defenses to calculate mitigation
 - `analytics` -- Player skill profile for adaptive difficulty
@@ -818,6 +827,7 @@ CREATE TABLE threat.scenarios_active (
 ```
 
 **Events Published:**
+
 - `threat.attack.launched` -- New attack began
 - `threat.attack.mitigated` -- Attack stopped by defenses
 - `threat.attack.succeeded` -- Attack penetrated defenses
@@ -868,10 +878,12 @@ export interface AnalyticsModule {
 ```
 
 **Dependencies:**
+
 - `auth` -- User/tenant context for scoped analytics
 - `game-engine` -- Subscribes to game events
 
 **Real-Time Metrics (BRD 8.5):**
+
 - Redis Streams provide the fast path for live dashboards and alerts.
 - Streams are partitioned by tenant and category (example: `metrics:{tenantId}:events`).
 - Producers append with `XADD`; consumers (dashboard workers) read via consumer groups.
@@ -921,6 +933,7 @@ CREATE TABLE analytics.compliance_snapshots (
 ```
 
 **Events Consumed:**
+
 - `game.action.processed` -- All game actions for metric computation
 - `game.session.started`, `game.session.ended` -- Session lifecycle tracking
 - `auth.user.created` -- New user for cohort analysis
@@ -957,6 +970,7 @@ export interface BillingModule {
 ```
 
 **Dependencies:**
+
 - `auth` -- User counts for seat metering
 
 **Database Tables Owned:**
@@ -998,6 +1012,7 @@ CREATE TABLE billing.plans (
 ```
 
 **Events Published:**
+
 - `billing.subscription.created` -- New subscription
 - `billing.subscription.upgraded` -- Plan upgraded
 - `billing.subscription.cancelled` -- Cancellation
@@ -1010,6 +1025,7 @@ CREATE TABLE billing.plans (
 **Responsibility:** Enterprise admin dashboard API, tenant CRUD, user management views, campaign management, player observation (live session viewing for trainers), tenant configuration.
 
 **Performance Targets:**
+
 - Tenant provisioning must complete in under 5 minutes, fully automated (BRD FR-ENT-004).
 - White-label branding changes (logo, colors, fonts, custom domains, email templates) must propagate within 60 seconds (BRD FR-ENT-005).
 
@@ -1041,6 +1057,7 @@ export interface AdminModule {
 ```
 
 **Dependencies:**
+
 - `auth` -- User/tenant CRUD delegated to auth module
 - `analytics` -- Dashboard data
 - `billing` -- Subscription status
@@ -1100,6 +1117,7 @@ CREATE INDEX idx_audit_log_tenant ON admin.audit_log(tenant_id, created_at);
 ```
 
 **Events Published:**
+
 - `admin.tenant.created` -- New tenant provisioned
 - `admin.tenant.updated` -- Tenant configuration changed
 - `admin.campaign.started` -- Campaign kicked off
@@ -1143,6 +1161,7 @@ export interface NotificationModule {
 ```
 
 **Dependencies:**
+
 - `auth` -- User identity, connection authentication
 
 **Database Tables Owned:**
@@ -1181,6 +1200,7 @@ CREATE TABLE notification.delivery_log (
 ```
 
 **Events Consumed:**
+
 - `game.breach.occurred` -- Send urgent breach notification
 - `game.achievement.unlocked` -- Send achievement notification
 - `admin.campaign.started` -- Trigger campaign notifications
@@ -1244,9 +1264,7 @@ export async function buildApp(config: AppConfig) {
   const app = Fastify({
     logger: {
       level: config.LOG_LEVEL,
-      transport: config.NODE_ENV === 'development'
-        ? { target: 'pino-pretty' }
-        : undefined,
+      transport: config.NODE_ENV === 'development' ? { target: 'pino-pretty' } : undefined,
       serializers: {
         req(req) {
           return {
@@ -1259,7 +1277,7 @@ export async function buildApp(config: AppConfig) {
         },
       },
     },
-    genReqId: () => generateUUIDv7(),  // UUIDv7 request IDs (BRD 10.1: UUIDv7 for event deduplication)
+    genReqId: () => generateUUIDv7(), // UUIDv7 request IDs (BRD 10.1: UUIDv7 for event deduplication)
     trustProxy: true,
     ajv: {
       customOptions: {
@@ -1278,9 +1296,7 @@ export async function buildApp(config: AppConfig) {
   });
 
   await app.register(helmet, {
-    contentSecurityPolicy: config.NODE_ENV === 'production'
-      ? cspConfig
-      : false,
+    contentSecurityPolicy: config.NODE_ENV === 'production' ? cspConfig : false,
   });
 
   await app.register(rateLimit, {
@@ -1291,7 +1307,7 @@ export async function buildApp(config: AppConfig) {
 
   await app.register(websocket, {
     options: {
-      maxPayload: 1048576,  // 1MB max message size
+      maxPayload: 1048576, // 1MB max message size
       clientTracking: true,
     },
   });
@@ -1356,8 +1372,14 @@ export async function buildApp(config: AppConfig) {
   // ─── Health & Readiness ──────────────────────────────────────────
   app.get('/health', async () => ({ status: 'ok', timestamp: new Date() }));
   app.get('/ready', async () => {
-    const dbOk = await db.execute(sql`SELECT 1`).then(() => true).catch(() => false);
-    const redisOk = await redis.ping().then(() => true).catch(() => false);
+    const dbOk = await db
+      .execute(sql`SELECT 1`)
+      .then(() => true)
+      .catch(() => false);
+    const redisOk = await redis
+      .ping()
+      .then(() => true)
+      .catch(() => false);
     const ready = dbOk && redisOk;
     return { status: ready ? 'ready' : 'degraded', db: dbOk, redis: redisOk };
   });
@@ -1411,7 +1433,7 @@ const authPlugin: FastifyPluginAsync = async (fastify, opts) => {
 // For most modules, do NOT use fp() -- keep them encapsulated
 export default fp(authPlugin, {
   name: 'auth-module',
-  dependencies: [],  // No dependencies on other modules
+  dependencies: [], // No dependencies on other modules
 });
 ```
 
@@ -1446,7 +1468,10 @@ export const LoginResponseSchema = z.object({
 
 export const RegisterRequestSchema = z.object({
   email: z.string().email().max(255),
-  password: z.string().min(12).max(128)
+  password: z
+    .string()
+    .min(12)
+    .max(128)
     .regex(/[A-Z]/, 'Must contain uppercase')
     .regex(/[a-z]/, 'Must contain lowercase')
     .regex(/[0-9]/, 'Must contain digit')
@@ -1570,8 +1595,8 @@ All errors are mapped to a consistent envelope format with machine-readable erro
 // shared/middleware/error-handler.ts
 
 export interface ApiError {
-  code: string;        // Machine-readable: 'AUTH_TOKEN_EXPIRED'
-  message: string;     // Human-readable: 'Your session has expired'
+  code: string; // Machine-readable: 'AUTH_TOKEN_EXPIRED'
+  message: string; // Human-readable: 'Your session has expired'
   details?: Record<string, unknown>;
   requestId: string;
 }
@@ -1579,49 +1604,45 @@ export interface ApiError {
 // Error code registry
 export const ErrorCodes = {
   // Auth errors (401, 403)
-  AUTH_INVALID_CREDENTIALS:  { status: 401, code: 'AUTH_INVALID_CREDENTIALS' },
-  AUTH_TOKEN_EXPIRED:        { status: 401, code: 'AUTH_TOKEN_EXPIRED' },
-  AUTH_TOKEN_INVALID:        { status: 401, code: 'AUTH_TOKEN_INVALID' },
-  AUTH_MFA_REQUIRED:         { status: 403, code: 'AUTH_MFA_REQUIRED' },
-  AUTH_INSUFFICIENT_PERMS:   { status: 403, code: 'AUTH_INSUFFICIENT_PERMS' },
-  AUTH_ACCOUNT_SUSPENDED:    { status: 403, code: 'AUTH_ACCOUNT_SUSPENDED' },
+  AUTH_INVALID_CREDENTIALS: { status: 401, code: 'AUTH_INVALID_CREDENTIALS' },
+  AUTH_TOKEN_EXPIRED: { status: 401, code: 'AUTH_TOKEN_EXPIRED' },
+  AUTH_TOKEN_INVALID: { status: 401, code: 'AUTH_TOKEN_INVALID' },
+  AUTH_MFA_REQUIRED: { status: 403, code: 'AUTH_MFA_REQUIRED' },
+  AUTH_INSUFFICIENT_PERMS: { status: 403, code: 'AUTH_INSUFFICIENT_PERMS' },
+  AUTH_ACCOUNT_SUSPENDED: { status: 403, code: 'AUTH_ACCOUNT_SUSPENDED' },
 
   // Validation errors (400)
-  VALIDATION_FAILED:         { status: 400, code: 'VALIDATION_FAILED' },
-  INVALID_INPUT:             { status: 400, code: 'INVALID_INPUT' },
+  VALIDATION_FAILED: { status: 400, code: 'VALIDATION_FAILED' },
+  INVALID_INPUT: { status: 400, code: 'INVALID_INPUT' },
 
   // Game errors (409, 422)
-  GAME_INVALID_ACTION:       { status: 422, code: 'GAME_INVALID_ACTION' },
-  GAME_SESSION_NOT_FOUND:    { status: 404, code: 'GAME_SESSION_NOT_FOUND' },
-  GAME_SESSION_ENDED:        { status: 409, code: 'GAME_SESSION_ENDED' },
-  GAME_INSUFFICIENT_FUNDS:   { status: 422, code: 'GAME_INSUFFICIENT_FUNDS' },
-  GAME_RESOURCE_EXHAUSTED:   { status: 422, code: 'GAME_RESOURCE_EXHAUSTED' },
-  GAME_BREACH_ACTIVE:        { status: 409, code: 'GAME_BREACH_ACTIVE' },
+  GAME_INVALID_ACTION: { status: 422, code: 'GAME_INVALID_ACTION' },
+  GAME_SESSION_NOT_FOUND: { status: 404, code: 'GAME_SESSION_NOT_FOUND' },
+  GAME_SESSION_ENDED: { status: 409, code: 'GAME_SESSION_ENDED' },
+  GAME_INSUFFICIENT_FUNDS: { status: 422, code: 'GAME_INSUFFICIENT_FUNDS' },
+  GAME_RESOURCE_EXHAUSTED: { status: 422, code: 'GAME_RESOURCE_EXHAUSTED' },
+  GAME_BREACH_ACTIVE: { status: 409, code: 'GAME_BREACH_ACTIVE' },
 
   // Resource errors (404, 409)
-  RESOURCE_NOT_FOUND:        { status: 404, code: 'RESOURCE_NOT_FOUND' },
-  RESOURCE_CONFLICT:         { status: 409, code: 'RESOURCE_CONFLICT' },
-  RESOURCE_GONE:             { status: 410, code: 'RESOURCE_GONE' },
+  RESOURCE_NOT_FOUND: { status: 404, code: 'RESOURCE_NOT_FOUND' },
+  RESOURCE_CONFLICT: { status: 409, code: 'RESOURCE_CONFLICT' },
+  RESOURCE_GONE: { status: 410, code: 'RESOURCE_GONE' },
 
   // Rate limiting (429)
-  RATE_LIMIT_EXCEEDED:       { status: 429, code: 'RATE_LIMIT_EXCEEDED' },
+  RATE_LIMIT_EXCEEDED: { status: 429, code: 'RATE_LIMIT_EXCEEDED' },
 
   // Billing errors (402, 403)
-  BILLING_SEAT_LIMIT:        { status: 403, code: 'BILLING_SEAT_LIMIT' },
-  BILLING_PLAN_REQUIRED:     { status: 402, code: 'BILLING_PLAN_REQUIRED' },
+  BILLING_SEAT_LIMIT: { status: 403, code: 'BILLING_SEAT_LIMIT' },
+  BILLING_PLAN_REQUIRED: { status: 402, code: 'BILLING_PLAN_REQUIRED' },
 
   // Server errors (500, 503)
-  INTERNAL_ERROR:            { status: 500, code: 'INTERNAL_ERROR' },
-  SERVICE_UNAVAILABLE:       { status: 503, code: 'SERVICE_UNAVAILABLE' },
-  AI_GENERATION_FAILED:      { status: 503, code: 'AI_GENERATION_FAILED' },
+  INTERNAL_ERROR: { status: 500, code: 'INTERNAL_ERROR' },
+  SERVICE_UNAVAILABLE: { status: 503, code: 'SERVICE_UNAVAILABLE' },
+  AI_GENERATION_FAILED: { status: 503, code: 'AI_GENERATION_FAILED' },
 } as const;
 
 // Fastify error handler
-export function errorHandler(
-  error: Error,
-  request: FastifyRequest,
-  reply: FastifyReply
-): void {
+export function errorHandler(error: Error, request: FastifyRequest, reply: FastifyReply): void {
   const requestId = request.id;
 
   if (error instanceof AppError) {
@@ -1775,72 +1796,72 @@ interface ApiErrorResponse {
 
 #### Auth Module -- `/api/v1/auth`
 
-| Method | Path | Description | Auth | Rate Limit | Request Schema | Response Schema |
-|--------|------|-------------|------|------------|----------------|-----------------|
-| `POST` | `/auth/register` | Create new account | None | 5/hour/IP | `{ email, password, displayName, tenantSlug? }` | `{ data: { accessToken, user } }` |
-| `POST` | `/auth/login` | Authenticate | None | 10/15min/IP | `{ email, password, mfaCode? }` | `{ data: { accessToken, expiresIn, user } }` |
-| `POST` | `/auth/refresh` | Refresh access token | Refresh cookie | 30/min/user | (httpOnly cookie) | `{ data: { accessToken, expiresIn } }` |
-| `POST` | `/auth/oauth/token` | OAuth 2.0 client-credentials token | Client Credentials | 60/min/client | `{ grant_type: 'client_credentials', client_id, client_secret, scope? }` | `{ data: { accessToken, expiresIn, tokenType } }` |
-| `POST` | `/auth/oauth/clients` | Create OAuth client | Tenant Admin | 20/min | `{ name, scopes }` | `{ data: { clientId, clientSecret, scopes } }` |
-| `POST` | `/auth/oauth/clients/:id/rotate-secret` | Rotate client secret | Tenant Admin | 10/min | -- | `{ data: { clientId, clientSecret } }` |
-| `DELETE` | `/auth/oauth/clients/:id` | Revoke OAuth client | Tenant Admin | 10/min | -- | `204 No Content` |
-| `DELETE` | `/auth/logout` | End session | Bearer | Unlimited | -- | `204 No Content` |
-| `POST` | `/auth/sso/saml` | SAML assertion consumer | None (IdP-initiated) | 50/min/IP | SAML Response (form POST) | Redirect to app with session |
-| `GET` | `/auth/sso/saml/metadata` | SP metadata XML | None | 100/min | -- | XML (SAML metadata) |
-| `GET` | `/auth/sso/oidc/authorize` | OIDC authorization redirect | None | 50/min/IP | `?provider=...&state=...` | 302 Redirect to IdP |
-| `POST` | `/auth/sso/oidc/callback` | OIDC callback | None | 50/min/IP | `{ code, state }` | `{ data: { accessToken, user } }` |
-| `POST` | `/auth/password/reset` | Request password reset | None | 3/hour/IP | `{ email }` | `204 No Content` |
-| `POST` | `/auth/password/change` | Change password | Bearer | 5/hour/user | `{ currentPassword, newPassword }` | `204 No Content` |
-| `POST` | `/auth/mfa/enable` | Enable MFA | Bearer | 5/hour/user | `{ type: 'totp' \| 'webauthn' }` | `{ data: { secret?, qrCodeUrl?, challengeOptions? } }` |
-| `POST` | `/auth/mfa/verify` | Verify MFA setup | Bearer | 10/hour/user | `{ code?, attestation? }` | `{ data: { backupCodes } }` |
-| `POST` | `/auth/mfa/webauthn/register` | Register FIDO2/WebAuthn credential | Bearer | 5/hour/user | `{ attestationResponse }` | `{ data: { credentialId } }` |
-| `POST` | `/auth/mfa/webauthn/authenticate` | Authenticate via WebAuthn | None (challenge-based) | 10/min/IP | `{ assertionResponse }` | `{ data: { accessToken, expiresIn } }` |
+| Method   | Path                                    | Description                        | Auth                   | Rate Limit    | Request Schema                                                           | Response Schema                                        |
+| -------- | --------------------------------------- | ---------------------------------- | ---------------------- | ------------- | ------------------------------------------------------------------------ | ------------------------------------------------------ |
+| `POST`   | `/auth/register`                        | Create new account                 | None                   | 5/hour/IP     | `{ email, password, displayName, tenantSlug? }`                          | `{ data: { accessToken, user } }`                      |
+| `POST`   | `/auth/login`                           | Authenticate                       | None                   | 10/15min/IP   | `{ email, password, mfaCode? }`                                          | `{ data: { accessToken, expiresIn, user } }`           |
+| `POST`   | `/auth/refresh`                         | Refresh access token               | Refresh cookie         | 30/min/user   | (httpOnly cookie)                                                        | `{ data: { accessToken, expiresIn } }`                 |
+| `POST`   | `/auth/oauth/token`                     | OAuth 2.0 client-credentials token | Client Credentials     | 60/min/client | `{ grant_type: 'client_credentials', client_id, client_secret, scope? }` | `{ data: { accessToken, expiresIn, tokenType } }`      |
+| `POST`   | `/auth/oauth/clients`                   | Create OAuth client                | Tenant Admin           | 20/min        | `{ name, scopes }`                                                       | `{ data: { clientId, clientSecret, scopes } }`         |
+| `POST`   | `/auth/oauth/clients/:id/rotate-secret` | Rotate client secret               | Tenant Admin           | 10/min        | --                                                                       | `{ data: { clientId, clientSecret } }`                 |
+| `DELETE` | `/auth/oauth/clients/:id`               | Revoke OAuth client                | Tenant Admin           | 10/min        | --                                                                       | `204 No Content`                                       |
+| `DELETE` | `/auth/logout`                          | End session                        | Bearer                 | Unlimited     | --                                                                       | `204 No Content`                                       |
+| `POST`   | `/auth/sso/saml`                        | SAML assertion consumer            | None (IdP-initiated)   | 50/min/IP     | SAML Response (form POST)                                                | Redirect to app with session                           |
+| `GET`    | `/auth/sso/saml/metadata`               | SP metadata XML                    | None                   | 100/min       | --                                                                       | XML (SAML metadata)                                    |
+| `GET`    | `/auth/sso/oidc/authorize`              | OIDC authorization redirect        | None                   | 50/min/IP     | `?provider=...&state=...`                                                | 302 Redirect to IdP                                    |
+| `POST`   | `/auth/sso/oidc/callback`               | OIDC callback                      | None                   | 50/min/IP     | `{ code, state }`                                                        | `{ data: { accessToken, user } }`                      |
+| `POST`   | `/auth/password/reset`                  | Request password reset             | None                   | 3/hour/IP     | `{ email }`                                                              | `204 No Content`                                       |
+| `POST`   | `/auth/password/change`                 | Change password                    | Bearer                 | 5/hour/user   | `{ currentPassword, newPassword }`                                       | `204 No Content`                                       |
+| `POST`   | `/auth/mfa/enable`                      | Enable MFA                         | Bearer                 | 5/hour/user   | `{ type: 'totp' \| 'webauthn' }`                                         | `{ data: { secret?, qrCodeUrl?, challengeOptions? } }` |
+| `POST`   | `/auth/mfa/verify`                      | Verify MFA setup                   | Bearer                 | 10/hour/user  | `{ code?, attestation? }`                                                | `{ data: { backupCodes } }`                            |
+| `POST`   | `/auth/mfa/webauthn/register`           | Register FIDO2/WebAuthn credential | Bearer                 | 5/hour/user   | `{ attestationResponse }`                                                | `{ data: { credentialId } }`                           |
+| `POST`   | `/auth/mfa/webauthn/authenticate`       | Authenticate via WebAuthn          | None (challenge-based) | 10/min/IP     | `{ assertionResponse }`                                                  | `{ data: { accessToken, expiresIn } }`                 |
 
 **Note:** Hardware-backed MFA (FIDO2/WebAuthn) is **required** for Super Admin access per BRD 7.4.
 
 #### SCIM 2.0 Endpoints -- `/api/v1/auth/scim/v2`
 
-| Method | Path | Description | Auth | Rate Limit |
-|--------|------|-------------|------|------------|
-| `GET` | `/scim/v2/Users` | List users | OAuth2 (client credentials) | 100/min |
-| `GET` | `/scim/v2/Users/:id` | Get user | OAuth2 (client credentials) | 100/min |
-| `POST` | `/scim/v2/Users` | Create user | OAuth2 (client credentials) | 50/min |
-| `PUT` | `/scim/v2/Users/:id` | Replace user | OAuth2 (client credentials) | 50/min |
-| `PATCH` | `/scim/v2/Users/:id` | Update user (PatchOp) | OAuth2 (client credentials) | 50/min |
-| `DELETE` | `/scim/v2/Users/:id` | Deactivate user | OAuth2 (client credentials) | 50/min |
-| `GET` | `/scim/v2/Groups` | List groups | OAuth2 (client credentials) | 100/min |
-| `GET` | `/scim/v2/Groups/:id` | Get group | OAuth2 (client credentials) | 100/min |
-| `POST` | `/scim/v2/Groups` | Create group | OAuth2 (client credentials) | 50/min |
-| `PUT` | `/scim/v2/Groups/:id` | Replace group | OAuth2 (client credentials) | 50/min |
-| `PATCH` | `/scim/v2/Groups/:id` | Update group (PatchOp) | OAuth2 (client credentials) | 50/min |
-| `DELETE` | `/scim/v2/Groups/:id` | Delete group | OAuth2 (client credentials) | 50/min |
-| `POST` | `/scim/v2/Bulk` | Bulk operations | OAuth2 (client credentials) | 10/min |
-| `GET` | `/scim/v2/ServiceProviderConfig` | Service provider config | OAuth2 (client credentials) | 100/min |
-| `GET` | `/scim/v2/Schemas` | Schema discovery | OAuth2 (client credentials) | 100/min |
-| `GET` | `/scim/v2/ResourceTypes` | Resource types | OAuth2 (client credentials) | 100/min |
+| Method   | Path                             | Description             | Auth                        | Rate Limit |
+| -------- | -------------------------------- | ----------------------- | --------------------------- | ---------- |
+| `GET`    | `/scim/v2/Users`                 | List users              | OAuth2 (client credentials) | 100/min    |
+| `GET`    | `/scim/v2/Users/:id`             | Get user                | OAuth2 (client credentials) | 100/min    |
+| `POST`   | `/scim/v2/Users`                 | Create user             | OAuth2 (client credentials) | 50/min     |
+| `PUT`    | `/scim/v2/Users/:id`             | Replace user            | OAuth2 (client credentials) | 50/min     |
+| `PATCH`  | `/scim/v2/Users/:id`             | Update user (PatchOp)   | OAuth2 (client credentials) | 50/min     |
+| `DELETE` | `/scim/v2/Users/:id`             | Deactivate user         | OAuth2 (client credentials) | 50/min     |
+| `GET`    | `/scim/v2/Groups`                | List groups             | OAuth2 (client credentials) | 100/min    |
+| `GET`    | `/scim/v2/Groups/:id`            | Get group               | OAuth2 (client credentials) | 100/min    |
+| `POST`   | `/scim/v2/Groups`                | Create group            | OAuth2 (client credentials) | 50/min     |
+| `PUT`    | `/scim/v2/Groups/:id`            | Replace group           | OAuth2 (client credentials) | 50/min     |
+| `PATCH`  | `/scim/v2/Groups/:id`            | Update group (PatchOp)  | OAuth2 (client credentials) | 50/min     |
+| `DELETE` | `/scim/v2/Groups/:id`            | Delete group            | OAuth2 (client credentials) | 50/min     |
+| `POST`   | `/scim/v2/Bulk`                  | Bulk operations         | OAuth2 (client credentials) | 10/min     |
+| `GET`    | `/scim/v2/ServiceProviderConfig` | Service provider config | OAuth2 (client credentials) | 100/min    |
+| `GET`    | `/scim/v2/Schemas`               | Schema discovery        | OAuth2 (client credentials) | 100/min    |
+| `GET`    | `/scim/v2/ResourceTypes`         | Resource types          | OAuth2 (client credentials) | 100/min    |
 
 #### Game Engine -- `/api/v1/game`
 
-| Method | Path | Description | Auth | Rate Limit |
-|--------|------|-------------|------|------------|
-| `POST` | `/game/sessions` | Start new game | Bearer | 5/min |
-| `GET` | `/game/sessions/:id` | Get session state | Bearer | 60/min |
-| `POST` | `/game/sessions/:id/save` | Save session | Bearer | 10/min |
-| `DELETE` | `/game/sessions/:id` | End/abandon session | Bearer | 5/min |
-| `GET` | `/game/sessions/:id/state` | Get full game state | Bearer | 60/min |
-| `POST` | `/game/sessions/:id/actions` | Submit game action | Bearer | 30/min |
-| `POST` | `/game/sessions/:id/advance-day` | Advance to next day | Bearer | 5/min |
-| `GET` | `/game/sessions/:id/history` | Get event history | Bearer | 20/min |
-| `GET` | `/game/sessions/:id/inbox` | Get current day emails | Bearer | 60/min |
-| `GET` | `/game/sessions/:id/emails/:emailId` | Get email detail | Bearer | 120/min |
-| `POST` | `/game/sessions/:id/emails/:emailId/decide` | Submit email decision | Bearer | 30/min |
-| `GET` | `/game/sessions/:id/facility` | Get facility state | Bearer | 60/min |
-| `GET` | `/game/sessions/:id/upgrades` | List available upgrades | Bearer | 30/min |
-| `POST` | `/game/sessions/:id/upgrades/:upgradeId` | Purchase upgrade | Bearer | 10/min |
-| `GET` | `/game/sessions/:id/intel` | Get intel briefs | Bearer | 30/min |
-| `POST` | `/game/sessions/:id/ransom/pay` | Pay ransom | Bearer | 5/min |
-| `GET` | `/game/leaderboard` | Global leaderboard | Bearer (opt.) | 30/min |
-| `GET` | `/game/achievements` | Player achievements | Bearer | 30/min |
+| Method   | Path                                        | Description             | Auth          | Rate Limit |
+| -------- | ------------------------------------------- | ----------------------- | ------------- | ---------- |
+| `POST`   | `/game/sessions`                            | Start new game          | Bearer        | 5/min      |
+| `GET`    | `/game/sessions/:id`                        | Get session state       | Bearer        | 60/min     |
+| `POST`   | `/game/sessions/:id/save`                   | Save session            | Bearer        | 10/min     |
+| `DELETE` | `/game/sessions/:id`                        | End/abandon session     | Bearer        | 5/min      |
+| `GET`    | `/game/sessions/:id/state`                  | Get full game state     | Bearer        | 60/min     |
+| `POST`   | `/game/sessions/:id/actions`                | Submit game action      | Bearer        | 30/min     |
+| `POST`   | `/game/sessions/:id/advance-day`            | Advance to next day     | Bearer        | 5/min      |
+| `GET`    | `/game/sessions/:id/history`                | Get event history       | Bearer        | 20/min     |
+| `GET`    | `/game/sessions/:id/inbox`                  | Get current day emails  | Bearer        | 60/min     |
+| `GET`    | `/game/sessions/:id/emails/:emailId`        | Get email detail        | Bearer        | 120/min    |
+| `POST`   | `/game/sessions/:id/emails/:emailId/decide` | Submit email decision   | Bearer        | 30/min     |
+| `GET`    | `/game/sessions/:id/facility`               | Get facility state      | Bearer        | 60/min     |
+| `GET`    | `/game/sessions/:id/upgrades`               | List available upgrades | Bearer        | 30/min     |
+| `POST`   | `/game/sessions/:id/upgrades/:upgradeId`    | Purchase upgrade        | Bearer        | 10/min     |
+| `GET`    | `/game/sessions/:id/intel`                  | Get intel briefs        | Bearer        | 30/min     |
+| `POST`   | `/game/sessions/:id/ransom/pay`             | Pay ransom              | Bearer        | 5/min      |
+| `GET`    | `/game/leaderboard`                         | Global leaderboard      | Bearer (opt.) | 30/min     |
+| `GET`    | `/game/achievements`                        | Player achievements     | Bearer        | 30/min     |
 
 **Example: Email Decision Endpoint**
 
@@ -1848,111 +1869,141 @@ interface ApiErrorResponse {
 // modules/game-engine/game-engine.routes.ts (excerpt)
 
 const emailDecideSchema = {
-  params: zodToJsonSchema(z.object({
-    id: z.string().uuid(),
-    emailId: z.string().uuid(),
-  })),
-  body: zodToJsonSchema(z.object({
-    decision: z.enum(['approve', 'deny', 'flag', 'request_verification']),
-    indicators: z.array(z.object({
-      type: z.enum([
-        'urgency', 'domain_mismatch', 'grammar', 'spoofed_header',
-        'suspicious_link', 'attachment_risk', 'impersonation',
-        'emotional_manipulation', 'too_good_to_be_true', 'authority_claim',
-      ]),
-      location: z.string().max(200),
-      description: z.string().max(500).optional(),
-    })).optional(),
-    notes: z.string().max(1000).optional(),
-    timeSpentMs: z.number().int().min(0).max(600000),
-  })),
+  params: zodToJsonSchema(
+    z.object({
+      id: z.string().uuid(),
+      emailId: z.string().uuid(),
+    }),
+  ),
+  body: zodToJsonSchema(
+    z.object({
+      decision: z.enum(['approve', 'deny', 'flag', 'request_verification']),
+      indicators: z
+        .array(
+          z.object({
+            type: z.enum([
+              'urgency',
+              'domain_mismatch',
+              'grammar',
+              'spoofed_header',
+              'suspicious_link',
+              'attachment_risk',
+              'impersonation',
+              'emotional_manipulation',
+              'too_good_to_be_true',
+              'authority_claim',
+            ]),
+            location: z.string().max(200),
+            description: z.string().max(500).optional(),
+          }),
+        )
+        .optional(),
+      notes: z.string().max(1000).optional(),
+      timeSpentMs: z.number().int().min(0).max(600000),
+    }),
+  ),
   response: {
-    200: zodToJsonSchema(z.object({
-      data: z.object({
-        correct: z.boolean(),
-        feedbackType: z.enum(['correct', 'false_positive', 'missed_phishing', 'wrong_indicators']),
-        trustScoreChange: z.number(),
-        fundsChange: z.number(),
-        educationalNotes: z.array(z.string()),
-        indicatorResults: z.array(z.object({
-          type: z.string(),
-          found: z.boolean(),
-          explanation: z.string(),
-        })).optional(),
+    200: zodToJsonSchema(
+      z.object({
+        data: z.object({
+          correct: z.boolean(),
+          feedbackType: z.enum([
+            'correct',
+            'false_positive',
+            'missed_phishing',
+            'wrong_indicators',
+          ]),
+          trustScoreChange: z.number(),
+          fundsChange: z.number(),
+          educationalNotes: z.array(z.string()),
+          indicatorResults: z
+            .array(
+              z.object({
+                type: z.string(),
+                found: z.boolean(),
+                explanation: z.string(),
+              }),
+            )
+            .optional(),
+        }),
       }),
-    })),
+    ),
   },
 };
 
 fastify.post<{
   Params: { id: string; emailId: string };
   Body: EmailDecisionInput;
-}>('/sessions/:id/emails/:emailId/decide', {
-  schema: emailDecideSchema,
-  preHandler: [authGuard, rateLimiter({ max: 30, window: '1m' })],
-}, async (request, reply) => {
-  const { id: sessionId, emailId } = request.params;
-  const action: GameAction = {
-    type: 'EMAIL_DECISION',
-    payload: { emailId, ...request.body },
-  };
+}>(
+  '/sessions/:id/emails/:emailId/decide',
+  {
+    schema: emailDecideSchema,
+    preHandler: [authGuard, rateLimiter({ max: 30, window: '1m' })],
+  },
+  async (request, reply) => {
+    const { id: sessionId, emailId } = request.params;
+    const action: GameAction = {
+      type: 'EMAIL_DECISION',
+      payload: { emailId, ...request.body },
+    };
 
-  const result = await gameEngine.processAction(sessionId, action);
-  return { data: result };
-});
+    const result = await gameEngine.processAction(sessionId, action);
+    return { data: result };
+  },
+);
 ```
 
 #### Content Module -- `/api/v1/content`
 
-| Method | Path | Description | Auth | Rate Limit |
-|--------|------|-------------|------|------------|
-| `GET` | `/content/emails` | List email templates | Admin | 30/min |
-| `GET` | `/content/emails/:id` | Get email template | Admin | 60/min |
-| `POST` | `/content/emails` | Create email template | Admin | 20/min |
-| `PUT` | `/content/emails/:id` | Update email template | Admin | 20/min |
-| `GET` | `/content/documents/:type` | Get document template | Bearer | 60/min |
-| `POST` | `/content/generate` | Trigger AI content gen | Admin | 5/min |
-| `GET` | `/content/scenarios` | List scenarios | Admin | 30/min |
-| `GET` | `/content/scenarios/:id` | Get scenario detail | Admin | 60/min |
-| `GET` | `/content/pool/status` | Email pool status | Admin | 60/min |
+| Method | Path                       | Description            | Auth   | Rate Limit |
+| ------ | -------------------------- | ---------------------- | ------ | ---------- |
+| `GET`  | `/content/emails`          | List email templates   | Admin  | 30/min     |
+| `GET`  | `/content/emails/:id`      | Get email template     | Admin  | 60/min     |
+| `POST` | `/content/emails`          | Create email template  | Admin  | 20/min     |
+| `PUT`  | `/content/emails/:id`      | Update email template  | Admin  | 20/min     |
+| `GET`  | `/content/documents/:type` | Get document template  | Bearer | 60/min     |
+| `POST` | `/content/generate`        | Trigger AI content gen | Admin  | 5/min      |
+| `GET`  | `/content/scenarios`       | List scenarios         | Admin  | 30/min     |
+| `GET`  | `/content/scenarios/:id`   | Get scenario detail    | Admin  | 60/min     |
+| `GET`  | `/content/pool/status`     | Email pool status      | Admin  | 60/min     |
 
 #### Admin Module -- `/api/v1/admin`
 
-| Method | Path | Description | Auth | Rate Limit |
-|--------|------|-------------|------|------------|
-| `GET` | `/admin/tenants` | List tenants | Super Admin | 30/min |
-| `POST` | `/admin/tenants` | Create tenant | Super Admin | 10/min |
-| `GET` | `/admin/tenants/:id` | Get tenant | Tenant Admin | 60/min |
-| `PUT` | `/admin/tenants/:id` | Update tenant | Tenant Admin | 20/min |
-| `GET` | `/admin/users` | List users in tenant | Tenant Admin | 30/min |
-| `GET` | `/admin/users/:id` | Get user detail | Tenant Admin | 60/min |
-| `PUT` | `/admin/users/:id` | Update user | Tenant Admin | 20/min |
-| `POST` | `/admin/users/:id/suspend` | Suspend user | Tenant Admin | 10/min |
-| `POST` | `/admin/campaigns` | Create campaign | Trainer | 10/min |
-| `GET` | `/admin/campaigns` | List campaigns | Trainer | 30/min |
-| `GET` | `/admin/campaigns/:id` | Get campaign | Trainer | 60/min |
-| `PUT` | `/admin/campaigns/:id` | Update campaign | Trainer | 20/min |
-| `POST` | `/admin/campaigns/:id/start` | Start campaign | Trainer | 5/min |
-| `GET` | `/admin/campaigns/:id/results` | Campaign results | Trainer | 30/min |
-| `GET` | `/admin/audit-log` | Get audit log | Tenant Admin | 20/min |
-| `GET` | `/admin/system/health` | System health | Super Admin | 60/min |
+| Method | Path                           | Description          | Auth         | Rate Limit |
+| ------ | ------------------------------ | -------------------- | ------------ | ---------- |
+| `GET`  | `/admin/tenants`               | List tenants         | Super Admin  | 30/min     |
+| `POST` | `/admin/tenants`               | Create tenant        | Super Admin  | 10/min     |
+| `GET`  | `/admin/tenants/:id`           | Get tenant           | Tenant Admin | 60/min     |
+| `PUT`  | `/admin/tenants/:id`           | Update tenant        | Tenant Admin | 20/min     |
+| `GET`  | `/admin/users`                 | List users in tenant | Tenant Admin | 30/min     |
+| `GET`  | `/admin/users/:id`             | Get user detail      | Tenant Admin | 60/min     |
+| `PUT`  | `/admin/users/:id`             | Update user          | Tenant Admin | 20/min     |
+| `POST` | `/admin/users/:id/suspend`     | Suspend user         | Tenant Admin | 10/min     |
+| `POST` | `/admin/campaigns`             | Create campaign      | Trainer      | 10/min     |
+| `GET`  | `/admin/campaigns`             | List campaigns       | Trainer      | 30/min     |
+| `GET`  | `/admin/campaigns/:id`         | Get campaign         | Trainer      | 60/min     |
+| `PUT`  | `/admin/campaigns/:id`         | Update campaign      | Trainer      | 20/min     |
+| `POST` | `/admin/campaigns/:id/start`   | Start campaign       | Trainer      | 5/min      |
+| `GET`  | `/admin/campaigns/:id/results` | Campaign results     | Trainer      | 30/min     |
+| `GET`  | `/admin/audit-log`             | Get audit log        | Tenant Admin | 20/min     |
+| `GET`  | `/admin/system/health`         | System health        | Super Admin  | 60/min     |
 
 #### Analytics Module -- `/api/v1/analytics`
 
-| Method | Path | Description | Auth | Rate Limit |
-|--------|------|-------------|------|------------|
-| `GET` | `/analytics/dashboard/ciso` | CISO dashboard | Admin | 20/min |
-| `GET` | `/analytics/dashboard/training` | Training dashboard | Trainer | 20/min |
-| `GET` | `/analytics/reports/compliance/:framework` | Compliance report | Admin | 10/min |
-| `GET` | `/analytics/reports/phishing` | Phishing sim report | Admin | 10/min |
-| `GET` | `/analytics/reports/retention` | Retention report | Admin | 10/min |
-| `GET` | `/analytics/player/:id/profile` | Player skill profile | Admin | 30/min |
-| `GET` | `/analytics/player/:id/timeline` | Player progress over time | Admin | 20/min |
-| `GET` | `/analytics/org/risk-heatmap` | Org risk heat map | Admin | 10/min |
-| `GET` | `/analytics/org/benchmarks` | Industry benchmarks | Admin | 10/min |
-| `POST` | `/analytics/export` | Export report | Admin | 5/min |
-| `GET` | `/analytics/export/:jobId` | Check export status | Admin | 30/min |
-| `GET` | `/analytics/export/:jobId/download` | Download export | Admin | 10/min |
+| Method | Path                                       | Description               | Auth    | Rate Limit |
+| ------ | ------------------------------------------ | ------------------------- | ------- | ---------- |
+| `GET`  | `/analytics/dashboard/ciso`                | CISO dashboard            | Admin   | 20/min     |
+| `GET`  | `/analytics/dashboard/training`            | Training dashboard        | Trainer | 20/min     |
+| `GET`  | `/analytics/reports/compliance/:framework` | Compliance report         | Admin   | 10/min     |
+| `GET`  | `/analytics/reports/phishing`              | Phishing sim report       | Admin   | 10/min     |
+| `GET`  | `/analytics/reports/retention`             | Retention report          | Admin   | 10/min     |
+| `GET`  | `/analytics/player/:id/profile`            | Player skill profile      | Admin   | 30/min     |
+| `GET`  | `/analytics/player/:id/timeline`           | Player progress over time | Admin   | 20/min     |
+| `GET`  | `/analytics/org/risk-heatmap`              | Org risk heat map         | Admin   | 10/min     |
+| `GET`  | `/analytics/org/benchmarks`                | Industry benchmarks       | Admin   | 10/min     |
+| `POST` | `/analytics/export`                        | Export report             | Admin   | 5/min      |
+| `GET`  | `/analytics/export/:jobId`                 | Check export status       | Admin   | 30/min     |
+| `GET`  | `/analytics/export/:jobId/download`        | Download export           | Admin   | 10/min     |
 
 ### 3.4 GraphQL Endpoint
 
@@ -2073,6 +2124,7 @@ await app.register(swaggerUI, {
 **Rationale:** URL versioning is the most visible and debuggable approach. For a public-facing API consumed by enterprise integrations (SIEM, SOAR, LMS), explicitness outweighs URL aesthetics. The BRD specifies a 12-month deprecation window per version.
 
 **Versioning rules:**
+
 1. **Minor changes** (additive fields, new optional parameters) do NOT require a new version. These are backward-compatible.
 2. **Breaking changes** (removed fields, renamed endpoints, changed semantics) require a new major version.
 3. **Deprecation flow:** Announce v2 -> 6-month dual-run period -> 6-month deprecation warnings in response headers -> sunset v1.
@@ -2120,6 +2172,7 @@ Authentication uses the same JWT access tokens as REST. The `Authorization: Bear
 ### 4.3 Subscriptions & Channels
 
 Clients subscribe to topics after connection:
+
 - `game.session.{sessionId}`
 - `analytics.tenant.{tenantId}`
 - `notifications.user.{userId}`
@@ -2195,11 +2248,11 @@ The modular monolith is designed for **progressive extraction** when scale or is
 
 **Scalability Phases (BRD 7.2):**
 
-| Phase | Concurrent Users | Architecture |
-|-------|-----------------|--------------|
-| Launch | 10,000 | Modular monolith, single-region |
-| Growth | 50,000 | Modular monolith with extracted AI pipeline and analytics services |
-| Scale | 100,000+ | Microservices with NATS JetStream or Kafka; multi-region deployment |
+| Phase  | Concurrent Users | Architecture                                                        |
+| ------ | ---------------- | ------------------------------------------------------------------- |
+| Launch | 10,000           | Modular monolith, single-region                                     |
+| Growth | 50,000           | Modular monolith with extracted AI pipeline and analytics services  |
+| Scale  | 100,000+         | Microservices with NATS JetStream or Kafka; multi-region deployment |
 
 ### 8.1 Extraction Candidates
 
@@ -2231,20 +2284,21 @@ The platform is **event-driven by default**. External systems (SIEM/SOAR/LMS/HRI
 ### 9.1 Webhook Subscription Model
 
 Each tenant can create multiple webhook subscriptions:
+
 - `id`, `tenantId`, `name`, `targetUrl`, `eventTypes[]`, `status`, `createdAt`
 - `secret` is generated server-side, returned once, stored hashed
 - Optional per-subscription filters (e.g., `campaignId`, `departmentId`)
 
 **Management endpoints (Tenant Admin or OAuth2 client with `webhooks.manage` scope):**
 
-| Method | Path | Description | Auth | Rate Limit |
-|--------|------|-------------|------|------------|
-| `POST` | `/webhooks/subscriptions` | Create subscription | Bearer / OAuth2 | 20/min |
-| `GET` | `/webhooks/subscriptions` | List subscriptions | Bearer / OAuth2 | 60/min |
-| `GET` | `/webhooks/subscriptions/:id` | Get subscription | Bearer / OAuth2 | 60/min |
-| `PATCH` | `/webhooks/subscriptions/:id` | Update subscription | Bearer / OAuth2 | 20/min |
-| `DELETE` | `/webhooks/subscriptions/:id` | Disable subscription | Bearer / OAuth2 | 20/min |
-| `POST` | `/webhooks/subscriptions/:id/test` | Send test event | Bearer / OAuth2 | 10/min |
+| Method   | Path                               | Description          | Auth            | Rate Limit |
+| -------- | ---------------------------------- | -------------------- | --------------- | ---------- |
+| `POST`   | `/webhooks/subscriptions`          | Create subscription  | Bearer / OAuth2 | 20/min     |
+| `GET`    | `/webhooks/subscriptions`          | List subscriptions   | Bearer / OAuth2 | 60/min     |
+| `GET`    | `/webhooks/subscriptions/:id`      | Get subscription     | Bearer / OAuth2 | 60/min     |
+| `PATCH`  | `/webhooks/subscriptions/:id`      | Update subscription  | Bearer / OAuth2 | 20/min     |
+| `DELETE` | `/webhooks/subscriptions/:id`      | Disable subscription | Bearer / OAuth2 | 20/min     |
+| `POST`   | `/webhooks/subscriptions/:id/test` | Send test event      | Bearer / OAuth2 | 10/min     |
 
 ### 9.2 Event Payload Shape
 
@@ -2274,11 +2328,13 @@ All events use a consistent envelope:
 ### 9.4 HMAC Signing
 
 Webhook requests include:
+
 - `X-DMZ-Webhook-Id`: delivery UUIDv7
 - `X-DMZ-Webhook-Timestamp`: epoch seconds
 - `X-DMZ-Webhook-Signature`: `v1=<hex(hmac_sha256(secret, "${timestamp}.${rawBody}"))>`
 
 Consumers must:
+
 1. Recompute the HMAC using the shared secret and raw request body.
 2. Compare using constant-time comparison.
 3. Reject requests where the timestamp is older than 5 minutes (replay protection).
@@ -2303,10 +2359,12 @@ Event schemas are published with the OpenAPI spec and versioned under `/api/v1/w
 Rate limits are enforced per **tenant**, **client**, and **IP** with category-specific buckets (auth, write, read, analytics). Limits are enforced in `onRequest` and apply consistently across REST and GraphQL.
 
 **Required response headers (BRD 10.6):**
+
 - `X-RateLimit-Remaining`: remaining requests in the current window for the evaluated bucket (returned on all responses).
 - `Retry-After`: integer seconds to wait before retrying (returned on `429` responses).
 
 Optional transparency headers:
+
 - `X-RateLimit-Limit` and `X-RateLimit-Reset` (epoch seconds) where supported by the limiter.
 
 **429 response example:**
@@ -2359,10 +2417,10 @@ Backend observability uses Prometheus + Grafana as specified in the BRD technolo
 
 The backend must support tiered availability SLAs:
 
-| Tier | SLA | Deployment Strategy |
-|------|-----|---------------------|
-| Consumer | 99.5% uptime | Rolling deployments, no scheduled downtime |
-| Enterprise Standard | 99.9% uptime | 4-hour monthly maintenance window (scheduled) |
-| Enterprise Premium | 99.95% uptime | Zero-downtime deployments |
+| Tier                | SLA           | Deployment Strategy                           |
+| ------------------- | ------------- | --------------------------------------------- |
+| Consumer            | 99.5% uptime  | Rolling deployments, no scheduled downtime    |
+| Enterprise Standard | 99.9% uptime  | 4-hour monthly maintenance window (scheduled) |
+| Enterprise Premium  | 99.95% uptime | Zero-downtime deployments                     |
 
 Blue-green deployments are used for zero-downtime updates (BRD 8.6). Containerized with Docker and orchestrated via Kubernetes. CI/CD via GitHub Actions with automated testing, security scanning, and accessibility validation.

@@ -1,0 +1,30 @@
+{
+  "assignees": [],
+  "author": {
+    "id": "MDQ6VXNlcjIyODUzMjIy",
+    "is_bot": false,
+    "login": "TheMorpheus407",
+    "name": "The Morpheus Tutorials"
+  },
+  "body": "## Summary\nSet up Prettier as the code formatter across the monorepo with Svelte plugin support. Ensure consistent formatting for TypeScript, Svelte, JSON, CSS, and Markdown files.\n\n## Requirements\n\n### Prettier Configuration (`.prettierrc`)\n```json\n{\n  \"semi\": true,\n  \"singleQuote\": true,\n  \"trailingComma\": \"all\",\n  \"printWidth\": 100,\n  \"tabWidth\": 2,\n  \"useTabs\": false,\n  \"arrowParens\": \"always\",\n  \"bracketSpacing\": true,\n  \"endOfLine\": \"lf\",\n  \"plugins\": [\"prettier-plugin-svelte\"],\n  \"overrides\": [\n    {\n      \"files\": \"*.svelte\",\n      \"options\": {\n        \"parser\": \"svelte\"\n      }\n    }\n  ]\n}\n```\n\n### Prettier Ignore (`.prettierignore`)\n```\nnode_modules\ndist\nbuild\n.svelte-kit\ncoverage\n*.min.js\npnpm-lock.yaml\n```\n\n### Plugins\n- `prettier-plugin-svelte` for `.svelte` file formatting\n\n### Scripts\n- `pnpm format` - Format all files\n- `pnpm format:check` - Check formatting (CI mode, no writes)\n\n### ESLint Integration\n- `eslint-config-prettier` to disable ESLint rules that conflict with Prettier\n- Prettier runs AFTER ESLint (format after lint fix)\n\n### Editor Configuration (`.editorconfig`)\n```ini\nroot = true\n\n[*]\nindent_style = space\nindent_size = 2\nend_of_line = lf\ncharset = utf-8\ntrim_trailing_whitespace = true\ninsert_final_newline = true\n\n[*.md]\ntrim_trailing_whitespace = false\n```\n\n## Acceptance Criteria\n- [ ] `pnpm format:check` passes on all files\n- [ ] `pnpm format` correctly formats TS, Svelte, JSON, CSS, MD files\n- [ ] Svelte files are formatted correctly with plugin\n- [ ] No conflicts between ESLint and Prettier\n- [ ] `.editorconfig` provides base editor settings\n- [ ] CI can verify formatting with `format:check`\n\n## References\n- MILESTONES.md: M0 \"Code quality - Prettier\"\n\n## Dependencies\n- M0-01: Initialize pnpm monorepo workspace\n\n---",
+  "comments": [],
+  "createdAt": "2026-02-05T15:22:56Z",
+  "labels": [
+    {
+      "id": "LA_kwDOQ_FFzs8AAAACXIw6vQ",
+      "name": "M0: Bootstrap",
+      "description": "Milestone 0: Project Bootstrap",
+      "color": "1D76DB"
+    },
+    {
+      "id": "LA_kwDOQ_FFzs8AAAACXIw9EQ",
+      "name": "devtools",
+      "description": "Developer tooling & DX",
+      "color": "C5DEF5"
+    }
+  ],
+  "number": 11,
+  "title": "M0-11: Configure Prettier for code formatting",
+  "updatedAt": "2026-02-05T15:22:56Z",
+  "url": "https://github.com/TheMorpheus407/the-dmz/issues/11"
+}

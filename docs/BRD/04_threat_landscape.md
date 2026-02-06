@@ -119,14 +119,14 @@ Phishing remains the single most prevalent attack vector in the cybersecurity la
 
 #### 2.1.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Email Header Analysis | Recognize spoofed sender names | Inspect full headers for SPF/DKIM failures | Trace email routing through relay servers |
-| URL Inspection | Hover before clicking | Identify homoglyph domains (e.g., rn vs. m) | Decode URL-encoded payloads and redirects |
-| Attachment Safety | Never open unexpected attachments | Check file extensions vs. MIME types | Analyze embedded macros and scripts |
-| Urgency Recognition | Pause when pressured | Cross-reference unusual requests through separate channels | Identify AI-crafted urgency patterns |
-| Multi-Channel Awareness | Recognize email phishing | Detect smishing and vishing | Identify coordinated multi-channel attacks |
-| QR Code Hygiene | Question unexpected QR codes | Use QR scanner with URL preview | Recognize tampered physical QR codes |
+| Skill Area              | Beginner                          | Intermediate                                               | Advanced                                   |
+| ----------------------- | --------------------------------- | ---------------------------------------------------------- | ------------------------------------------ |
+| Email Header Analysis   | Recognize spoofed sender names    | Inspect full headers for SPF/DKIM failures                 | Trace email routing through relay servers  |
+| URL Inspection          | Hover before clicking             | Identify homoglyph domains (e.g., rn vs. m)                | Decode URL-encoded payloads and redirects  |
+| Attachment Safety       | Never open unexpected attachments | Check file extensions vs. MIME types                       | Analyze embedded macros and scripts        |
+| Urgency Recognition     | Pause when pressured              | Cross-reference unusual requests through separate channels | Identify AI-crafted urgency patterns       |
+| Multi-Channel Awareness | Recognize email phishing          | Detect smishing and vishing                                | Identify coordinated multi-channel attacks |
+| QR Code Hygiene         | Question unexpected QR codes      | Use QR scanner with URL preview                            | Recognize tampered physical QR codes       |
 
 #### 2.1.4 In-Game Mapping
 
@@ -187,13 +187,13 @@ More than **86% of organizations** have encountered at least one AI-related soci
 
 #### 2.2.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Pretext Recognition | Identify obviously suspicious stories | Detect plausible but unverifiable claims | Analyze AI-generated multi-layered pretexts |
-| Authority Verification | Question unexpected requests from "superiors" | Verify identity through independent channels | Recognize synthetic authority indicators |
-| Information Hygiene | Avoid sharing passwords verbally | Limit social media exposure of work details | Compartmentalize information by need-to-know |
-| Physical Awareness | Challenge unfamiliar visitors | Report tailgating attempts | Conduct social engineering penetration testing |
-| Emotional Regulation | Recognize urgency pressure | Resist flattery and reciprocity manipulation | Maintain skepticism under sustained pressure |
+| Skill Area             | Beginner                                      | Intermediate                                 | Advanced                                       |
+| ---------------------- | --------------------------------------------- | -------------------------------------------- | ---------------------------------------------- |
+| Pretext Recognition    | Identify obviously suspicious stories         | Detect plausible but unverifiable claims     | Analyze AI-generated multi-layered pretexts    |
+| Authority Verification | Question unexpected requests from "superiors" | Verify identity through independent channels | Recognize synthetic authority indicators       |
+| Information Hygiene    | Avoid sharing passwords verbally              | Limit social media exposure of work details  | Compartmentalize information by need-to-know   |
+| Physical Awareness     | Challenge unfamiliar visitors                 | Report tailgating attempts                   | Conduct social engineering penetration testing |
+| Emotional Regulation   | Recognize urgency pressure                    | Resist flattery and reciprocity manipulation | Maintain skepticism under sustained pressure   |
 
 #### 2.2.4 In-Game Mapping
 
@@ -266,17 +266,18 @@ Malware -- malicious software designed to disrupt, damage, or gain unauthorized 
 
 #### 2.3.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
+| Skill Area          | Beginner                                      | Intermediate                                 | Advanced                                   |
+| ------------------- | --------------------------------------------- | -------------------------------------------- | ------------------------------------------ |
 | Malware Recognition | Identify suspicious attachments and downloads | Recognize behavioral indicators of infection | Understand malware families and their TTPs |
-| Ransomware Response | Do not pay without consulting security team | Isolate infected systems immediately | Execute incident response playbooks |
-| Safe Browsing | Avoid suspicious websites | Recognize drive-by download indicators | Understand browser exploitation techniques |
-| Software Hygiene | Install only approved software | Verify software signatures and hashes | Maintain software bills of materials |
-| Incident Reporting | Know who to contact | Preserve forensic evidence | Document indicators of compromise |
+| Ransomware Response | Do not pay without consulting security team   | Isolate infected systems immediately         | Execute incident response playbooks        |
+| Safe Browsing       | Avoid suspicious websites                     | Recognize drive-by download indicators       | Understand browser exploitation techniques |
+| Software Hygiene    | Install only approved software                | Verify software signatures and hashes        | Maintain software bills of materials       |
+| Incident Reporting  | Know who to contact                           | Preserve forensic evidence                   | Document indicators of compromise          |
 
 #### 2.3.4 In-Game Mapping
 
 Malware maps to multiple game mechanics in "The DMZ: Archive Gate":
+
 - **Supply chain malware hidden in backups** is an explicit primary threat. When players accept data for storage, some of that data may contain embedded malware.
 - **Breach consequences** directly model ransomware: a successful breach triggers a ransom note costing total earnings divided by 10.
 - **Upgrade management** models patch management -- every upgrade introduces new threat vectors, just as new software introduces new vulnerabilities.
@@ -330,13 +331,13 @@ Password-based authentication remains the most common access control mechanism, 
 
 #### 2.4.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Password Creation | Use 12+ character passphrases | Understand entropy and password strength | Generate cryptographically strong passwords |
-| Password Management | Do not reuse passwords | Use a password manager for all accounts | Implement organizational password policies |
-| MFA Adoption | Enable MFA on all accounts | Understand MFA bypass techniques (MFA fatigue, SIM swapping) | Implement phishing-resistant MFA (FIDO2/WebAuthn) |
-| Credential Monitoring | Change passwords after known breaches | Monitor for credential exposure | Implement continuous credential screening |
-| Authentication Architecture | Understand why passwords matter | Understand SSO and federated identity | Design zero-trust authentication flows |
+| Skill Area                  | Beginner                              | Intermediate                                                 | Advanced                                          |
+| --------------------------- | ------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------- |
+| Password Creation           | Use 12+ character passphrases         | Understand entropy and password strength                     | Generate cryptographically strong passwords       |
+| Password Management         | Do not reuse passwords                | Use a password manager for all accounts                      | Implement organizational password policies        |
+| MFA Adoption                | Enable MFA on all accounts            | Understand MFA bypass techniques (MFA fatigue, SIM swapping) | Implement phishing-resistant MFA (FIDO2/WebAuthn) |
+| Credential Monitoring       | Change passwords after known breaches | Monitor for credential exposure                              | Implement continuous credential screening         |
+| Authentication Architecture | Understand why passwords matter       | Understand SSO and federated identity                        | Design zero-trust authentication flows            |
 
 #### 2.4.4 In-Game Mapping
 
@@ -390,13 +391,13 @@ Data is the asset that attackers ultimately seek to steal, encrypt, corrupt, or 
 
 #### 2.5.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Classification | Identify basic sensitivity levels | Apply classification to complex data types | Design and implement classification schemas |
-| Handling | Follow basic data handling rules | Understand DLP alerts and respond appropriately | Configure and tune DLP policies |
-| Encryption | Understand why encryption matters | Use encryption tools correctly | Manage encryption keys and certificates |
-| Privacy | Recognize PII and PHI | Comply with GDPR/CCPA requirements | Conduct privacy impact assessments |
-| Destruction | Shred sensitive paper documents | Securely wipe electronic media | Verify destruction through forensic analysis |
+| Skill Area     | Beginner                          | Intermediate                                    | Advanced                                     |
+| -------------- | --------------------------------- | ----------------------------------------------- | -------------------------------------------- |
+| Classification | Identify basic sensitivity levels | Apply classification to complex data types      | Design and implement classification schemas  |
+| Handling       | Follow basic data handling rules  | Understand DLP alerts and respond appropriately | Configure and tune DLP policies              |
+| Encryption     | Understand why encryption matters | Use encryption tools correctly                  | Manage encryption keys and certificates      |
+| Privacy        | Recognize PII and PHI             | Comply with GDPR/CCPA requirements              | Conduct privacy impact assessments           |
+| Destruction    | Shred sensitive paper documents   | Securely wipe electronic media                  | Verify destruction through forensic analysis |
 
 #### 2.5.4 In-Game Mapping
 
@@ -448,13 +449,13 @@ Physical security is the often-overlooked foundation of cybersecurity. The most 
 
 #### 2.6.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Clean Desk | Clear desk before leaving | Lock screen, secure documents, no sticky note passwords | Implement clean desk audits |
-| Badge Security | Never share badges | Report lost/stolen badges immediately | Understand badge cloning risks |
-| USB Safety | Never plug in unknown USB devices | Report found USB devices to security | Understand USB attack vectors |
-| Visitor Management | Escort all visitors | Verify visitor identity independently | Conduct physical security assessments |
-| Secure Disposal | Shred sensitive paper documents | Use approved electronic media destruction | Maintain chain-of-custody for disposal |
+| Skill Area         | Beginner                          | Intermediate                                            | Advanced                               |
+| ------------------ | --------------------------------- | ------------------------------------------------------- | -------------------------------------- |
+| Clean Desk         | Clear desk before leaving         | Lock screen, secure documents, no sticky note passwords | Implement clean desk audits            |
+| Badge Security     | Never share badges                | Report lost/stolen badges immediately                   | Understand badge cloning risks         |
+| USB Safety         | Never plug in unknown USB devices | Report found USB devices to security                    | Understand USB attack vectors          |
+| Visitor Management | Escort all visitors               | Verify visitor identity independently                   | Conduct physical security assessments  |
+| Secure Disposal    | Shred sensitive paper documents   | Use approved electronic media destruction               | Maintain chain-of-custody for disposal |
 
 #### 2.6.4 In-Game Mapping
 
@@ -508,13 +509,13 @@ Network security encompasses the policies, practices, and technologies designed 
 
 #### 2.7.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Wi-Fi Hygiene | Avoid public Wi-Fi for sensitive tasks | Verify network authenticity before connecting | Detect evil twin and rogue access points |
-| VPN Discipline | Always use VPN on untrusted networks | Understand split tunneling risks | Configure and verify VPN security settings |
-| MITM Awareness | Look for HTTPS padlock icon | Recognize certificate warnings | Understand SSL/TLS interception techniques |
-| Network Awareness | Recognize unusual network behavior | Report suspicious network activity | Perform basic network traffic analysis |
-| Segmentation | Understand why different networks exist | Comply with network access policies | Design network segmentation architectures |
+| Skill Area        | Beginner                                | Intermediate                                  | Advanced                                   |
+| ----------------- | --------------------------------------- | --------------------------------------------- | ------------------------------------------ |
+| Wi-Fi Hygiene     | Avoid public Wi-Fi for sensitive tasks  | Verify network authenticity before connecting | Detect evil twin and rogue access points   |
+| VPN Discipline    | Always use VPN on untrusted networks    | Understand split tunneling risks              | Configure and verify VPN security settings |
+| MITM Awareness    | Look for HTTPS padlock icon             | Recognize certificate warnings                | Understand SSL/TLS interception techniques |
+| Network Awareness | Recognize unusual network behavior      | Report suspicious network activity            | Perform basic network traffic analysis     |
+| Segmentation      | Understand why different networks exist | Comply with network access policies           | Design network segmentation architectures  |
 
 #### 2.7.4 In-Game Mapping
 
@@ -566,13 +567,13 @@ Cloud adoption has fundamentally transformed the attack surface. Organizations n
 
 #### 2.8.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Shadow IT Awareness | Use only approved applications | Report unauthorized tools and services | Conduct shadow IT discovery and assessment |
-| Cloud Configuration | Follow organization's cloud usage policies | Review and validate security settings | Implement cloud security posture management |
-| Data Storage | Store data only in approved locations | Understand cloud storage access controls | Design cloud data governance frameworks |
-| IAM Hygiene | Use unique credentials for each cloud service | Review and minimize access permissions | Implement least-privilege IAM policies |
-| Shared Responsibility | Understand that cloud security is shared | Know which controls are your responsibility | Design security architectures for cloud |
+| Skill Area            | Beginner                                      | Intermediate                                | Advanced                                    |
+| --------------------- | --------------------------------------------- | ------------------------------------------- | ------------------------------------------- |
+| Shadow IT Awareness   | Use only approved applications                | Report unauthorized tools and services      | Conduct shadow IT discovery and assessment  |
+| Cloud Configuration   | Follow organization's cloud usage policies    | Review and validate security settings       | Implement cloud security posture management |
+| Data Storage          | Store data only in approved locations         | Understand cloud storage access controls    | Design cloud data governance frameworks     |
+| IAM Hygiene           | Use unique credentials for each cloud service | Review and minimize access permissions      | Implement least-privilege IAM policies      |
+| Shared Responsibility | Understand that cloud security is shared      | Know which controls are your responsibility | Design security architectures for cloud     |
 
 #### 2.8.4 In-Game Mapping
 
@@ -620,13 +621,13 @@ Cyble recorded **6,604 ransomware attacks** in 2025, up 52% from 2024, with many
 
 #### 2.9.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Vendor Awareness | Understand that vendors can be attack vectors | Evaluate vendor security posture | Conduct third-party risk assessments |
-| Software Integrity | Install only from trusted sources | Verify software signatures and checksums | Implement SBOM and dependency scanning |
-| Update Hygiene | Apply patches promptly | Understand the risk/benefit of immediate patching | Test patches in staging before production |
-| Contract Security | Recognize security clauses in vendor contracts | Negotiate security requirements with vendors | Design vendor security programs |
-| Incident Response | Report suspected vendor compromises | Participate in vendor incident response | Coordinate multi-party incident response |
+| Skill Area         | Beginner                                       | Intermediate                                      | Advanced                                  |
+| ------------------ | ---------------------------------------------- | ------------------------------------------------- | ----------------------------------------- |
+| Vendor Awareness   | Understand that vendors can be attack vectors  | Evaluate vendor security posture                  | Conduct third-party risk assessments      |
+| Software Integrity | Install only from trusted sources              | Verify software signatures and checksums          | Implement SBOM and dependency scanning    |
+| Update Hygiene     | Apply patches promptly                         | Understand the risk/benefit of immediate patching | Test patches in staging before production |
+| Contract Security  | Recognize security clauses in vendor contracts | Negotiate security requirements with vendors      | Design vendor security programs           |
+| Incident Response  | Report suspected vendor compromises            | Participate in vendor incident response           | Coordinate multi-party incident response  |
 
 #### 2.9.4 In-Game Mapping
 
@@ -673,13 +674,13 @@ Insider threats originate from individuals who have legitimate access to organiz
 
 #### 2.10.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Self-Awareness | Recognize that you can be an accidental insider | Understand how your actions affect organizational security | Model secure behavior for others |
-| Anomaly Recognition | Report unusual colleague behavior | Identify indicators of insider compromise | Implement behavioral analytics |
-| Access Discipline | Use only the access you need | Report excessive permissions | Implement and enforce least privilege |
-| Reporting Culture | Know how to report concerns | Report without fear of retaliation | Foster a speak-up security culture |
-| Off-boarding Awareness | Return all equipment and credentials | Ensure access revocation is complete | Conduct off-boarding security audits |
+| Skill Area             | Beginner                                        | Intermediate                                               | Advanced                              |
+| ---------------------- | ----------------------------------------------- | ---------------------------------------------------------- | ------------------------------------- |
+| Self-Awareness         | Recognize that you can be an accidental insider | Understand how your actions affect organizational security | Model secure behavior for others      |
+| Anomaly Recognition    | Report unusual colleague behavior               | Identify indicators of insider compromise                  | Implement behavioral analytics        |
+| Access Discipline      | Use only the access you need                    | Report excessive permissions                               | Implement and enforce least privilege |
+| Reporting Culture      | Know how to report concerns                     | Report without fear of retaliation                         | Foster a speak-up security culture    |
+| Off-boarding Awareness | Return all equipment and credentials            | Ensure access revocation is complete                       | Conduct off-boarding security audits  |
 
 #### 2.10.4 In-Game Mapping
 
@@ -739,13 +740,13 @@ Artificial intelligence has fundamentally altered the balance of power in cybers
 
 #### 2.11.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Deepfake Awareness | Know that deepfakes exist | Identify common deepfake artifacts (glitches, lighting) | Use detection tools and verify through independent channels |
-| AI Phishing Recognition | Understand that AI can write perfect emails | Analyze email context and sender behavior, not just grammar | Detect AI-generated patterns and anomalies |
-| Voice Verification | Be suspicious of unexpected voice calls | Establish verbal code words for high-stakes transactions | Implement multi-factor voice verification |
-| AI Literacy | Understand basic AI capabilities | Recognize AI-generated content across modalities | Evaluate AI tool risks and implement governance |
-| Critical Thinking | Question extraordinary claims | Verify through multiple independent sources | Maintain skepticism even when evidence appears overwhelming |
+| Skill Area              | Beginner                                    | Intermediate                                                | Advanced                                                    |
+| ----------------------- | ------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| Deepfake Awareness      | Know that deepfakes exist                   | Identify common deepfake artifacts (glitches, lighting)     | Use detection tools and verify through independent channels |
+| AI Phishing Recognition | Understand that AI can write perfect emails | Analyze email context and sender behavior, not just grammar | Detect AI-generated patterns and anomalies                  |
+| Voice Verification      | Be suspicious of unexpected voice calls     | Establish verbal code words for high-stakes transactions    | Implement multi-factor voice verification                   |
+| AI Literacy             | Understand basic AI capabilities            | Recognize AI-generated content across modalities            | Evaluate AI tool risks and implement governance             |
+| Critical Thinking       | Question extraordinary claims               | Verify through multiple independent sources                 | Maintain skepticism even when evidence appears overwhelming |
 
 #### 2.11.4 In-Game Mapping
 
@@ -794,13 +795,13 @@ The Internet of Things encompasses billions of connected devices -- from industr
 
 #### 2.12.3 Training Content Requirements
 
-| Skill Area | Beginner | Intermediate | Advanced |
-|---|---|---|---|
-| Device Hygiene | Change default passwords on all devices | Regularly update device firmware | Implement IoT device management platforms |
-| Network Isolation | Connect IoT devices to separate networks | Understand IoT-specific network segmentation | Design IoT security architectures |
-| Inventory Management | Know what devices are on the network | Maintain an IoT asset inventory | Implement continuous IoT discovery and monitoring |
-| Procurement Security | Choose devices from reputable manufacturers | Evaluate device security features before purchase | Develop IoT security procurement standards |
-| Incident Response | Report unusual device behavior | Isolate compromised IoT devices | Conduct IoT-specific forensic analysis |
+| Skill Area           | Beginner                                    | Intermediate                                      | Advanced                                          |
+| -------------------- | ------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- |
+| Device Hygiene       | Change default passwords on all devices     | Regularly update device firmware                  | Implement IoT device management platforms         |
+| Network Isolation    | Connect IoT devices to separate networks    | Understand IoT-specific network segmentation      | Design IoT security architectures                 |
+| Inventory Management | Know what devices are on the network        | Maintain an IoT asset inventory                   | Implement continuous IoT discovery and monitoring |
+| Procurement Security | Choose devices from reputable manufacturers | Evaluate device security features before purchase | Develop IoT security procurement standards        |
+| Incident Response    | Report unusual device behavior              | Isolate compromised IoT devices                   | Conduct IoT-specific forensic analysis            |
 
 #### 2.12.4 In-Game Mapping
 
@@ -822,13 +823,13 @@ Cybersecurity awareness training fails when it treats knowledge as the end goal.
 
 **Target Behavior:** When receiving any request (email, phone, in-person, digital), the individual pauses and independently verifies the identity and authority of the requester before taking action.
 
-| Metric | Baseline (Pre-Training) | Target (Post-Training) | Measurement Method |
-|---|---|---|---|
-| Phishing simulation click rate | 25-35% | <5% | Simulated phishing campaigns |
-| Time to report suspicious email | >24 hours | <15 minutes | Email reporting analytics |
-| Percentage of requests verified independently | <20% | >80% | Behavioral observation and surveys |
-| False negative rate (failing to detect phishing) | 40-60% | <10% | Game scenario performance tracking |
-| False positive rate (reporting legitimate email as phishing) | 5-10% | <15% (acceptable over-reporting) | Reporting analytics |
+| Metric                                                       | Baseline (Pre-Training) | Target (Post-Training)           | Measurement Method                 |
+| ------------------------------------------------------------ | ----------------------- | -------------------------------- | ---------------------------------- |
+| Phishing simulation click rate                               | 25-35%                  | <5%                              | Simulated phishing campaigns       |
+| Time to report suspicious email                              | >24 hours               | <15 minutes                      | Email reporting analytics          |
+| Percentage of requests verified independently                | <20%                    | >80%                             | Behavioral observation and surveys |
+| False negative rate (failing to detect phishing)             | 40-60%                  | <10%                             | Game scenario performance tracking |
+| False positive rate (reporting legitimate email as phishing) | 5-10%                   | <15% (acceptable over-reporting) | Reporting analytics                |
 
 **In-Game Measurement:** Players who accept fraudulent access requests without full verification lose resources. The game tracks approval accuracy rate, verification thoroughness (how many verification steps were completed before decision), and time-to-decision patterns.
 
@@ -836,12 +837,12 @@ Cybersecurity awareness training fails when it treats knowledge as the end goal.
 
 **Target Behavior:** Individuals request, grant, and maintain only the minimum access necessary for the task at hand, and promptly revoke access when it is no longer needed.
 
-| Metric | Baseline | Target | Measurement Method |
-|---|---|---|---|
-| Excessive permission requests | Common | Rare | Access request analytics |
-| Time to revoke unnecessary access | Months/Never | Within 24 hours | IAM audit logs |
-| Shared account usage | >30% of accounts | <2% of accounts | Authentication analytics |
-| Orphaned account discovery rate | High | Low | Periodic access reviews |
+| Metric                            | Baseline         | Target          | Measurement Method       |
+| --------------------------------- | ---------------- | --------------- | ------------------------ |
+| Excessive permission requests     | Common           | Rare            | Access request analytics |
+| Time to revoke unnecessary access | Months/Never     | Within 24 hours | IAM audit logs           |
+| Shared account usage              | >30% of accounts | <2% of accounts | Authentication analytics |
+| Orphaned account discovery rate   | High             | Low             | Periodic access reviews  |
 
 **In-Game Measurement:** Players manage limited rack space and bandwidth. Over-provisioning (accepting too many clients) increases attack surface and can lead to breaches. The game rewards conservative, justified access decisions and penalizes over-extension.
 
@@ -849,12 +850,12 @@ Cybersecurity awareness training fails when it treats knowledge as the end goal.
 
 **Target Behavior:** Individuals use appropriate channels and encryption for sensitive communications, verify recipient identity before sharing sensitive information, and avoid discussing confidential matters in insecure contexts.
 
-| Metric | Baseline | Target | Measurement Method |
-|---|---|---|---|
-| Sensitive data sent via unencrypted channels | >40% | <5% | DLP monitoring |
-| Email sent to wrong recipient incidents | Monthly | Quarterly or less | Incident reporting |
-| Use of approved file-sharing services | <50% | >95% | Cloud access security broker logs |
-| Confidential discussions in public areas | Common | Rare | Physical security observation |
+| Metric                                       | Baseline | Target            | Measurement Method                |
+| -------------------------------------------- | -------- | ----------------- | --------------------------------- |
+| Sensitive data sent via unencrypted channels | >40%     | <5%               | DLP monitoring                    |
+| Email sent to wrong recipient incidents      | Monthly  | Quarterly or less | Incident reporting                |
+| Use of approved file-sharing services        | <50%     | >95%              | Cloud access security broker logs |
+| Confidential discussions in public areas     | Common   | Rare              | Physical security observation     |
 
 **In-Game Measurement:** Players communicate with applicants via email. Mishandling of applicant information, sharing verification details in insecure ways, or failing to compartmentalize information creates vulnerability. The game tracks information handling discipline throughout the interaction lifecycle.
 
@@ -862,12 +863,12 @@ Cybersecurity awareness training fails when it treats knowledge as the end goal.
 
 **Target Behavior:** When individuals observe, suspect, or experience a security incident, they report it immediately through the correct channels without attempting to investigate or resolve it independently.
 
-| Metric | Baseline | Target | Measurement Method |
-|---|---|---|---|
-| Mean time to report incidents | >72 hours | <1 hour | Incident management system |
-| Percentage of incidents self-reported | <30% | >70% | Incident reports vs. detection alerts |
-| False alarm tolerance | Low (fear of crying wolf) | High (encouraged reporting) | Reporting volume trends |
-| Incident report quality | Incomplete | Actionable (who, what, when, where, how) | Report review |
+| Metric                                | Baseline                  | Target                                   | Measurement Method                    |
+| ------------------------------------- | ------------------------- | ---------------------------------------- | ------------------------------------- |
+| Mean time to report incidents         | >72 hours                 | <1 hour                                  | Incident management system            |
+| Percentage of incidents self-reported | <30%                      | >70%                                     | Incident reports vs. detection alerts |
+| False alarm tolerance                 | Low (fear of crying wolf) | High (encouraged reporting)              | Reporting volume trends               |
+| Incident report quality               | Incomplete                | Actionable (who, what, when, where, how) | Report review                         |
 
 **In-Game Measurement:** The **Incident Log** mechanic tracks the player's response time and accuracy when attacks occur. Fast, accurate reporting (identifying the attack type, affected systems, and recommended action) improves outcomes. Delayed or inaccurate reporting leads to greater damage.
 
@@ -875,12 +876,12 @@ Cybersecurity awareness training fails when it treats knowledge as the end goal.
 
 **Target Behavior:** Individuals maintain analytical skepticism when facing urgent, emotional, or authoritative requests, resisting the natural human tendency to comply without verification.
 
-| Metric | Baseline | Target | Measurement Method |
-|---|---|---|---|
-| Compliance with urgent unverified requests | >60% | <10% | Social engineering simulations |
-| Resistance to authority-based manipulation | Low | High | Simulated whaling/BEC attacks |
-| Decision quality under time pressure | Degraded | Maintained | Timed scenario performance |
-| Emotional manipulation resistance | Low | Moderate-High | Social engineering test results |
+| Metric                                     | Baseline | Target        | Measurement Method              |
+| ------------------------------------------ | -------- | ------------- | ------------------------------- |
+| Compliance with urgent unverified requests | >60%     | <10%          | Social engineering simulations  |
+| Resistance to authority-based manipulation | Low      | High          | Simulated whaling/BEC attacks   |
+| Decision quality under time pressure       | Degraded | Maintained    | Timed scenario performance      |
+| Emotional manipulation resistance          | Low      | Moderate-High | Social engineering test results |
 
 **In-Game Measurement:** "The DMZ: Archive Gate" places players under constant time and resource pressure. Requests arrive with urgent narratives ("our university's entire research archive will be lost"), emotional manipulation ("children's hospital records"), and authority claims ("government mandate for emergency access"). The game directly measures whether players maintain verification discipline under these pressures.
 
@@ -888,12 +889,12 @@ Cybersecurity awareness training fails when it treats knowledge as the end goal.
 
 **Target Behavior:** When making decisions that involve trade-offs between convenience/speed and security, individuals consistently choose the more secure option unless explicitly authorized to accept the risk.
 
-| Metric | Baseline | Target | Measurement Method |
-|---|---|---|---|
-| Shadow IT adoption | 55% of employees | <10% | Cloud access monitoring |
-| Password reuse rate | 94% | <10% | Password audit tools |
-| MFA adoption rate | Variable | >99% for all critical systems | Authentication analytics |
-| Security bypass requests | Common | Rare and documented | Policy exception tracking |
+| Metric                   | Baseline         | Target                        | Measurement Method        |
+| ------------------------ | ---------------- | ----------------------------- | ------------------------- |
+| Shadow IT adoption       | 55% of employees | <10%                          | Cloud access monitoring   |
+| Password reuse rate      | 94%              | <10%                          | Password audit tools      |
+| MFA adoption rate        | Variable         | >99% for all critical systems | Authentication analytics  |
+| Security bypass requests | Common           | Rare and documented           | Policy exception tracking |
 
 **In-Game Measurement:** Every decision in the game is a security-first decision. Accepting a high-paying client increases revenue but also increases attack surface. Skipping verification to process more requests faster saves time but increases breach probability. The game's economic model makes the security trade-off visceral and immediate.
 
@@ -933,16 +934,16 @@ Keeping training content current with the evolving threat landscape requires a s
 
 #### 4.2.1 Primary Intelligence Sources
 
-| Source Category | Examples | Integration Method | Update Frequency |
-|---|---|---|---|
-| **Government Advisories** | CISA Alerts, ENISA Reports, NCSC Advisories | Automated RSS/API ingestion | As published |
-| **Vendor Threat Reports** | CrowdStrike Global Threat Report, Mandiant M-Trends, Sophos State of Ransomware | Manual analysis + scenario generation | Quarterly |
-| **ISAC/ISAO Feeds** | FS-ISAC, Health-ISAC, IT-ISAC | Sector-specific threat alerts | Daily |
-| **Open-Source Intelligence** | AlienVault OTX, Abuse.ch, PhishTank | Automated IOC feed ingestion | Real-time |
-| **Dark Web Monitoring** | Recorded Future, Flashpoint, DarkOwl | Emerging threat alerts | Daily |
-| **Vulnerability Databases** | NVD, CVE, Exploit-DB | Vulnerability-to-scenario mapping | As published |
-| **Academic Research** | ArXiv, IEEE, ACM | Novel attack technique analysis | Monthly |
-| **Industry Reports** | WEF Global Cybersecurity Outlook, Verizon DBIR, Ponemon | Trend analysis and scenario prioritization | Annual/Quarterly |
+| Source Category              | Examples                                                                        | Integration Method                         | Update Frequency |
+| ---------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------ | ---------------- |
+| **Government Advisories**    | CISA Alerts, ENISA Reports, NCSC Advisories                                     | Automated RSS/API ingestion                | As published     |
+| **Vendor Threat Reports**    | CrowdStrike Global Threat Report, Mandiant M-Trends, Sophos State of Ransomware | Manual analysis + scenario generation      | Quarterly        |
+| **ISAC/ISAO Feeds**          | FS-ISAC, Health-ISAC, IT-ISAC                                                   | Sector-specific threat alerts              | Daily            |
+| **Open-Source Intelligence** | AlienVault OTX, Abuse.ch, PhishTank                                             | Automated IOC feed ingestion               | Real-time        |
+| **Dark Web Monitoring**      | Recorded Future, Flashpoint, DarkOwl                                            | Emerging threat alerts                     | Daily            |
+| **Vulnerability Databases**  | NVD, CVE, Exploit-DB                                                            | Vulnerability-to-scenario mapping          | As published     |
+| **Academic Research**        | ArXiv, IEEE, ACM                                                                | Novel attack technique analysis            | Monthly          |
+| **Industry Reports**         | WEF Global Cybersecurity Outlook, Verizon DBIR, Ponemon                         | Trend analysis and scenario prioritization | Annual/Quarterly |
 
 #### 4.2.2 Feed Processing Pipeline
 
@@ -984,76 +985,76 @@ The MITRE ATT&CK framework provides a common language for structuring, comparing
 
 **Reconnaissance (TA0043)**
 
-| Technique | ID | Game Scenario |
-|---|---|---|
+| Technique                          | ID    | Game Scenario                                                                                   |
+| ---------------------------------- | ----- | ----------------------------------------------------------------------------------------------- |
 | Gather Victim Identity Information | T1589 | Adversaries research the data center's clients and operations before crafting targeted requests |
-| Search Open Websites/Domains | T1593 | Attackers reference publicly known information about the data center to build credibility |
-| Phishing for Information | T1598 | Pre-attack emails designed to extract information about security procedures |
+| Search Open Websites/Domains       | T1593 | Attackers reference publicly known information about the data center to build credibility       |
+| Phishing for Information           | T1598 | Pre-attack emails designed to extract information about security procedures                     |
 
 **Initial Access (TA0001)**
 
-| Technique | ID | Game Scenario |
-|---|---|---|
-| Phishing | T1566 | Fraudulent access requests via email (core game mechanic) |
-| Phishing: Spearphishing Attachment | T1566.001 | Verification documents containing embedded malware |
-| Phishing: Spearphishing Link | T1566.002 | Links in access requests leading to malicious sites |
-| Phishing: Spearphishing via Service | T1566.003 | Requests arriving through non-standard channels |
-| Supply Chain Compromise | T1195 | Malware hidden in client data backups |
-| Valid Accounts | T1078 | Compromised client credentials used for unauthorized access |
-| Trusted Relationship | T1199 | Exploiting existing client relationships to bypass verification |
+| Technique                           | ID        | Game Scenario                                                   |
+| ----------------------------------- | --------- | --------------------------------------------------------------- |
+| Phishing                            | T1566     | Fraudulent access requests via email (core game mechanic)       |
+| Phishing: Spearphishing Attachment  | T1566.001 | Verification documents containing embedded malware              |
+| Phishing: Spearphishing Link        | T1566.002 | Links in access requests leading to malicious sites             |
+| Phishing: Spearphishing via Service | T1566.003 | Requests arriving through non-standard channels                 |
+| Supply Chain Compromise             | T1195     | Malware hidden in client data backups                           |
+| Valid Accounts                      | T1078     | Compromised client credentials used for unauthorized access     |
+| Trusted Relationship                | T1199     | Exploiting existing client relationships to bypass verification |
 
 **Execution (TA0002)**
 
-| Technique | ID | Game Scenario |
-|---|---|---|
-| User Execution: Malicious File | T1204.002 | Players opening/accepting contaminated data payloads |
-| Command and Scripting Interpreter | T1059 | Malware in accepted backups executing on data center systems |
+| Technique                         | ID        | Game Scenario                                                |
+| --------------------------------- | --------- | ------------------------------------------------------------ |
+| User Execution: Malicious File    | T1204.002 | Players opening/accepting contaminated data payloads         |
+| Command and Scripting Interpreter | T1059     | Malware in accepted backups executing on data center systems |
 
 **Persistence (TA0003)**
 
-| Technique | ID | Game Scenario |
-|---|---|---|
+| Technique            | ID    | Game Scenario                                                              |
+| -------------------- | ----- | -------------------------------------------------------------------------- |
 | Account Manipulation | T1098 | Approved clients attempting to expand their access beyond contracted terms |
-| Create Account | T1136 | Attackers creating new identities after being blacklisted |
+| Create Account       | T1136 | Attackers creating new identities after being blacklisted                  |
 
 **Privilege Escalation (TA0004)**
 
-| Technique | ID | Game Scenario |
-|---|---|---|
-| Valid Accounts | T1078 | Legitimate accounts being used for unauthorized purposes |
-| Abuse Elevation Control Mechanism | T1548 | Clients attempting to access other clients' data |
+| Technique                         | ID    | Game Scenario                                            |
+| --------------------------------- | ----- | -------------------------------------------------------- |
+| Valid Accounts                    | T1078 | Legitimate accounts being used for unauthorized purposes |
+| Abuse Elevation Control Mechanism | T1548 | Clients attempting to access other clients' data         |
 
 **Defense Evasion (TA0005)**
 
-| Technique | ID | Game Scenario |
-|---|---|---|
-| Masquerading | T1036 | Fake identities mimicking legitimate organizations |
-| Impersonation | T1656 | Attackers impersonating known-good entities |
+| Technique         | ID    | Game Scenario                                                                |
+| ----------------- | ----- | ---------------------------------------------------------------------------- |
+| Masquerading      | T1036 | Fake identities mimicking legitimate organizations                           |
+| Impersonation     | T1656 | Attackers impersonating known-good entities                                  |
 | Indicator Removal | T1070 | Adversaries learning from failed attempts and removing detectable indicators |
 
 **Credential Access (TA0006)**
 
-| Technique | ID | Game Scenario |
-|---|---|---|
-| Brute Force | T1110 | Automated attacks against data center authentication |
-| Phishing | T1566 | Social engineering to extract operational credentials |
-| Steal Application Access Token | T1528 | Compromising access tokens or verification codes |
+| Technique                      | ID    | Game Scenario                                         |
+| ------------------------------ | ----- | ----------------------------------------------------- |
+| Brute Force                    | T1110 | Automated attacks against data center authentication  |
+| Phishing                       | T1566 | Social engineering to extract operational credentials |
+| Steal Application Access Token | T1528 | Compromising access tokens or verification codes      |
 
 **Collection (TA0009)**
 
-| Technique | ID | Game Scenario |
-|---|---|---|
-| Data from Information Repositories | T1213 | Attackers gaining access to stored client data |
-| Email Collection | T1114 | Compromising communication between the data center and clients |
+| Technique                          | ID    | Game Scenario                                                  |
+| ---------------------------------- | ----- | -------------------------------------------------------------- |
+| Data from Information Repositories | T1213 | Attackers gaining access to stored client data                 |
+| Email Collection                   | T1114 | Compromising communication between the data center and clients |
 
 **Impact (TA0040)**
 
-| Technique | ID | Game Scenario |
-|---|---|---|
+| Technique                 | ID    | Game Scenario                                              |
+| ------------------------- | ----- | ---------------------------------------------------------- |
 | Data Encrypted for Impact | T1486 | Ransomware encrypting the data center (breach consequence) |
-| Data Destruction | T1485 | Attackers attempting to destroy client data |
-| Service Stop | T1489 | Attacks disrupting data center operations |
-| Financial Theft | T1657 | Ransom demands (total earnings / 10) |
+| Data Destruction          | T1485 | Attackers attempting to destroy client data                |
+| Service Stop              | T1489 | Attacks disrupting data center operations                  |
+| Financial Theft           | T1657 | Ransom demands (total earnings / 10)                       |
 
 #### 4.3.2 ATT&CK Navigator Heat Map Integration
 
@@ -1104,14 +1105,14 @@ After deployment:
 
 ### 4.5 Content Freshness Standards
 
-| Content Type | Review Cycle | Update Trigger | Retirement Criteria |
-|---|---|---|---|
-| Core phishing scenarios | Monthly | New phishing technique reported | >95% detection rate sustained for 3 months |
-| Social engineering pretexts | Bi-weekly | New social engineering campaign documented | >90% detection rate sustained for 2 months |
-| Malware indicators | Weekly | New malware variant or campaign | Technique no longer in active use |
-| Threat actor profiles | Monthly | New attribution or campaign disclosure | Actor group disbanded or dormant >6 months |
-| Difficulty parameters | Continuous | Player population performance data | N/A (continuously adaptive) |
-| Compliance content | Quarterly | Regulatory change | Regulation repealed or superseded |
+| Content Type                | Review Cycle | Update Trigger                             | Retirement Criteria                        |
+| --------------------------- | ------------ | ------------------------------------------ | ------------------------------------------ |
+| Core phishing scenarios     | Monthly      | New phishing technique reported            | >95% detection rate sustained for 3 months |
+| Social engineering pretexts | Bi-weekly    | New social engineering campaign documented | >90% detection rate sustained for 2 months |
+| Malware indicators          | Weekly       | New malware variant or campaign            | Technique no longer in active use          |
+| Threat actor profiles       | Monthly      | New attribution or campaign disclosure     | Actor group disbanded or dormant >6 months |
+| Difficulty parameters       | Continuous   | Player population performance data         | N/A (continuously adaptive)                |
+| Compliance content          | Quarterly    | Regulatory change                          | Regulation repealed or superseded          |
 
 ---
 
@@ -1128,6 +1129,7 @@ After deployment:
 **Player Profile:** No prior cybersecurity awareness training. Cannot distinguish phishing from legitimate email. Does not understand basic security concepts.
 
 **Threat Characteristics:**
+
 - Obvious grammatical and spelling errors in fraudulent emails.
 - Mismatched sender names and email addresses (e.g., email claims to be from "Berlin University" but sent from freemail address).
 - Unrealistic urgency or too-good-to-be-true offers.
@@ -1135,6 +1137,7 @@ After deployment:
 - No attempt to match organizational formatting or terminology.
 
 **Game Parameters:**
+
 - Low request volume (1-3 per game day).
 - Long decision timers (no time pressure).
 - Explicit verification hints ("This sender's domain does not match their claimed organization").
@@ -1142,6 +1145,7 @@ After deployment:
 - Tutorial tooltips and guided analysis workflows.
 
 **Learning Objectives:**
+
 - Understand the concept of email verification.
 - Recognize blatant spoofing indicators.
 - Complete a basic phishing analysis workflow.
@@ -1156,6 +1160,7 @@ After deployment:
 **Player Profile:** Understands basic phishing concepts. Can detect obvious fraudulent emails. Beginning to develop verification habits.
 
 **Threat Characteristics:**
+
 - Grammatically correct but stylistically inconsistent emails.
 - Sender domain spoofing (similar but not exact domain names, e.g., uni-berlin.de vs. uni-berliin.de).
 - Plausible but unverifiable claims that require cross-referencing.
@@ -1163,6 +1168,7 @@ After deployment:
 - Mix of legitimate and fraudulent requests at roughly 60/40 ratio.
 
 **Game Parameters:**
+
 - Moderate request volume (3-5 per game day).
 - Moderate decision timers.
 - Partial verification hints (indicators without explicit explanations).
@@ -1170,6 +1176,7 @@ After deployment:
 - Verification tools available but must be actively used.
 
 **Learning Objectives:**
+
 - Analyze email domains and identify spoofing.
 - Cross-reference claims against verification documents.
 - Resist emotional manipulation in access requests.
@@ -1184,6 +1191,7 @@ After deployment:
 **Player Profile:** Solid understanding of common phishing techniques. Consistent verification habits. Beginning to recognize advanced social engineering.
 
 **Threat Characteristics:**
+
 - Professionally crafted emails with accurate organizational branding and terminology.
 - Legitimate-appearing domain names (registered domains mimicking real organizations).
 - Multi-step social engineering (initial benign contact followed by escalating requests).
@@ -1192,6 +1200,7 @@ After deployment:
 - Mix of legitimate and fraudulent requests at roughly 50/50 ratio.
 
 **Game Parameters:**
+
 - High request volume (5-8 per game day).
 - Short decision timers (time pressure).
 - No verification hints.
@@ -1200,6 +1209,7 @@ After deployment:
 - Simultaneous incidents (handling a suspicious request while managing a facility alert).
 
 **Learning Objectives:**
+
 - Detect sophisticated spoofing techniques.
 - Identify multi-stage social engineering campaigns.
 - Recognize supply chain risk indicators.
@@ -1215,6 +1225,7 @@ After deployment:
 **Player Profile:** Strong security analyst skills. Consistent detection of sophisticated attacks. Effective under pressure. Beginning to anticipate adversary behavior.
 
 **Threat Characteristics:**
+
 - AI-generated pretexts with deep personalization based on in-game intelligence.
 - Coordinated multi-vector attacks (simultaneous phishing, supply chain compromise, and insider activity).
 - Long-game adversaries that establish trust over multiple interactions before attacking.
@@ -1224,6 +1235,7 @@ After deployment:
 - Deliberate false flag operations designed to trigger false positive responses.
 
 **Game Parameters:**
+
 - Very high request volume (8-12 per game day).
 - Very short decision timers with concurrent tasks.
 - Active adversary counter-intelligence (attackers attempt to identify the player's detection methods and circumvent them).
@@ -1232,6 +1244,7 @@ After deployment:
 - Intelligence briefs require interpretation, not just reading.
 
 **Learning Objectives:**
+
 - Detect AI-enhanced social engineering.
 - Manage coordinated multi-vector attacks.
 - Identify long-term persistent threat campaigns.
@@ -1248,6 +1261,7 @@ After deployment:
 **Player Profile:** Expert-level security awareness. Proactive threat hunting mindset. Effective adversary modeling and anticipation.
 
 **Threat Characteristics:**
+
 - Near-perfect social engineering with minimal or no detectable indicators.
 - Strategic adversary operations (attackers with defined campaign objectives, not just opportunistic attempts).
 - Deep fake-style identity fraud (synthetic persons with complete fabricated verification histories).
@@ -1257,6 +1271,7 @@ After deployment:
 - Situations where available evidence is genuinely ambiguous and no "correct" answer exists.
 
 **Game Parameters:**
+
 - Maximum request volume and concurrent tasks.
 - Real-time decision requirements.
 - Adaptive adversary AI that learns player patterns.
@@ -1265,6 +1280,7 @@ After deployment:
 - Resource scarcity forces impossible trade-offs.
 
 **Learning Objectives:**
+
 - Operate effectively in ambiguous threat environments.
 - Make defensible decisions with incomplete information.
 - Balance security with operational requirements.
@@ -1279,13 +1295,13 @@ Within each tier, difficulty adapts dynamically based on player performance usin
 
 #### 5.3.1 Performance Metrics Tracked
 
-| Metric | Impact on Difficulty |
-|---|---|
-| Detection rate (last 10 decisions) | Low detection -> reduce difficulty within tier; High detection -> increase difficulty within tier |
-| False positive rate (last 10 decisions) | High false positive -> introduce more legitimate requests; Low false positive -> introduce more ambiguous scenarios |
-| Decision speed (average time per decision) | Consistently fast + accurate -> reduce timers; Slow -> extend timers |
-| Streak tracking (consecutive correct/incorrect) | 5+ correct streak -> difficulty bump; 3+ incorrect streak -> difficulty reduction |
-| Verification thoroughness | Consistently thorough -> present scenarios requiring deeper investigation; Cursory verification -> present scenarios where surface-level checks fail |
+| Metric                                          | Impact on Difficulty                                                                                                                                 |
+| ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Detection rate (last 10 decisions)              | Low detection -> reduce difficulty within tier; High detection -> increase difficulty within tier                                                    |
+| False positive rate (last 10 decisions)         | High false positive -> introduce more legitimate requests; Low false positive -> introduce more ambiguous scenarios                                  |
+| Decision speed (average time per decision)      | Consistently fast + accurate -> reduce timers; Slow -> extend timers                                                                                 |
+| Streak tracking (consecutive correct/incorrect) | 5+ correct streak -> difficulty bump; 3+ incorrect streak -> difficulty reduction                                                                    |
+| Verification thoroughness                       | Consistently thorough -> present scenarios requiring deeper investigation; Cursory verification -> present scenarios where surface-level checks fail |
 
 #### 5.3.2 Difficulty Adjustment Levers
 
@@ -1314,12 +1330,14 @@ DIFFICULTY PARAMETERS
 #### 5.3.3 Anti-Frustration and Anti-Complacency Mechanisms
 
 **Anti-Frustration:**
+
 - If a player fails the same scenario type three times consecutively, provide a targeted tutorial explaining the missed indicators.
 - If overall performance drops below 40% detection rate, temporarily reduce difficulty to rebuild confidence before resuming normal progression.
 - After a catastrophic breach, provide a detailed post-mortem showing exactly what was missed and why.
 - Never reduce difficulty across tiers -- once a tier is earned, it is not lost.
 
 **Anti-Complacency:**
+
 - If a player maintains >95% detection rate for an extended period, inject a "surprise" scenario using a novel technique.
 - Periodically introduce scenarios that superficially resemble previously defeated threats but use different underlying techniques.
 - Long periods of calm (no breach attempts) should be punctuated by high-sophistication attacks, mirroring real-world "quiet before the storm" patterns.
@@ -1329,13 +1347,13 @@ DIFFICULTY PARAMETERS
 
 Different organizational roles face different threat profiles. "The DMZ: Archive Gate" can support multiple difficulty tracks:
 
-| Role Track | Emphasis | Unique Scenarios |
-|---|---|---|
-| **General Staff** | Phishing detection, social engineering resistance, basic data protection | Standard email phishing, tailgating, USB safety |
-| **IT/Technical** | Technical threat indicators, incident response, system security | Supply chain analysis, malware indicators, network anomalies |
-| **Management** | Strategic decision-making, resource allocation, risk acceptance | Whaling attacks, business email compromise, vendor risk decisions |
-| **Executive** | High-value targeting, strategic deception, crisis management | CEO fraud, board-level social engineering, crisis resource allocation |
-| **Security Team** | Advanced threat detection, threat hunting, adversary modeling | APT campaigns, coordinated attacks, intelligence analysis |
+| Role Track        | Emphasis                                                                 | Unique Scenarios                                                      |
+| ----------------- | ------------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| **General Staff** | Phishing detection, social engineering resistance, basic data protection | Standard email phishing, tailgating, USB safety                       |
+| **IT/Technical**  | Technical threat indicators, incident response, system security          | Supply chain analysis, malware indicators, network anomalies          |
+| **Management**    | Strategic decision-making, resource allocation, risk acceptance          | Whaling attacks, business email compromise, vendor risk decisions     |
+| **Executive**     | High-value targeting, strategic deception, crisis management             | CEO fraud, board-level social engineering, crisis resource allocation |
+| **Security Team** | Advanced threat detection, threat hunting, adversary modeling            | APT campaigns, coordinated attacks, intelligence analysis             |
 
 ---
 
@@ -1355,15 +1373,15 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Sender identity analysis | Verify sender email address and domain | Phishing (all variants) |
-| Request narrative evaluation | Assess whether the story makes sense | Social engineering (pretexting) |
-| Urgency signals in requests | Resist urgency pressure | Social engineering (authority, urgency) |
-| Inconsistency detection | Spot contradictions in communication | Phishing, BEC |
-| Emotional appeal analysis | Maintain objectivity despite sympathetic narratives | Social engineering (reciprocity, sympathy) |
-| Volume management | Maintain vigilance despite high workload | Alert fatigue management |
-| Time pressure decisions | Make good decisions under deadline | Operational security |
+| Game Element                 | Real-World Skill                                    | Threat Category                            |
+| ---------------------------- | --------------------------------------------------- | ------------------------------------------ |
+| Sender identity analysis     | Verify sender email address and domain              | Phishing (all variants)                    |
+| Request narrative evaluation | Assess whether the story makes sense                | Social engineering (pretexting)            |
+| Urgency signals in requests  | Resist urgency pressure                             | Social engineering (authority, urgency)    |
+| Inconsistency detection      | Spot contradictions in communication                | Phishing, BEC                              |
+| Emotional appeal analysis    | Maintain objectivity despite sympathetic narratives | Social engineering (reciprocity, sympathy) |
+| Volume management            | Maintain vigilance despite high workload            | Alert fatigue management                   |
+| Time pressure decisions      | Make good decisions under deadline                  | Operational security                       |
 
 **Behavioral Outcome:** Players develop the habit of systematic email analysis -- checking sender, evaluating content, verifying claims, and resisting pressure -- that transfers directly to real-world email handling.
 
@@ -1377,12 +1395,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Red flag checklist | Indicator of Compromise (IOC) identification | All threat categories |
-| Legitimacy signal evaluation | True positive vs. false positive triage | Phishing, social engineering |
-| Evidence-based decision documentation | Incident documentation | Incident response |
-| Structured reasoning | Analytical rigor over intuition | Decision-making under uncertainty |
+| Game Element                          | Real-World Skill                             | Threat Category                   |
+| ------------------------------------- | -------------------------------------------- | --------------------------------- |
+| Red flag checklist                    | Indicator of Compromise (IOC) identification | All threat categories             |
+| Legitimacy signal evaluation          | True positive vs. false positive triage      | Phishing, social engineering      |
+| Evidence-based decision documentation | Incident documentation                       | Incident response                 |
+| Structured reasoning                  | Analytical rigor over intuition              | Decision-making under uncertainty |
 
 **Behavioral Outcome:** Players learn to use structured analysis tools rather than relying on instinct, building the habit of systematic threat assessment that is the foundation of professional security operations.
 
@@ -1396,13 +1414,13 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Identity proof evaluation | Identity proofing and KYC | Social engineering, identity fraud |
-| Ownership documentation review | Access authorization verification | Privilege escalation, insider threats |
-| Chain-of-custody validation | Trust chain verification | Supply chain attacks |
-| Document authenticity assessment | Certificate and credential validation | Deepfakes, forged credentials |
-| Cross-referencing multiple documents | Multi-factor verification | AI-powered threats |
+| Game Element                         | Real-World Skill                      | Threat Category                       |
+| ------------------------------------ | ------------------------------------- | ------------------------------------- |
+| Identity proof evaluation            | Identity proofing and KYC             | Social engineering, identity fraud    |
+| Ownership documentation review       | Access authorization verification     | Privilege escalation, insider threats |
+| Chain-of-custody validation          | Trust chain verification              | Supply chain attacks                  |
+| Document authenticity assessment     | Certificate and credential validation | Deepfakes, forged credentials         |
+| Cross-referencing multiple documents | Multi-factor verification             | AI-powered threats                    |
 
 **Behavioral Outcome:** Players develop the discipline of thorough identity verification before granting access, directly applicable to real-world IAM processes, vendor onboarding, and trust decisions.
 
@@ -1416,13 +1434,13 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Accept/reject decision | Allow/deny access control | All threat categories |
-| Risk/reward evaluation | Risk acceptance framework | Risk management |
-| Capacity consideration | Resource allocation and prioritization | Operational security |
-| Attack surface awareness | Understanding that each approval increases risk | Attack surface management |
-| Blacklist/whitelist management | Block/allow list maintenance | Threat hunting, incident response |
+| Game Element                   | Real-World Skill                                | Threat Category                   |
+| ------------------------------ | ----------------------------------------------- | --------------------------------- |
+| Accept/reject decision         | Allow/deny access control                       | All threat categories             |
+| Risk/reward evaluation         | Risk acceptance framework                       | Risk management                   |
+| Capacity consideration         | Resource allocation and prioritization          | Operational security              |
+| Attack surface awareness       | Understanding that each approval increases risk | Attack surface management         |
+| Blacklist/whitelist management | Block/allow list maintenance                    | Threat hunting, incident response |
 
 **Behavioral Outcome:** Players internalize the principle that every access decision is a security decision, and that granting access always increases risk. This mindset transfers directly to real-world decisions about permissions, network access, and vendor trust.
 
@@ -1436,14 +1454,14 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Upgrade cost/benefit analysis | Patch risk assessment | Vulnerability management |
-| New threat vectors from upgrades | Change-induced vulnerability awareness | All technical threats |
-| Upgrade prioritization | Patch prioritization (CVSS scoring) | Malware, exploitation |
-| Resource allocation for upgrades | Security budget management | Organizational security |
-| Timing of upgrades | Maintenance window planning | Operational security |
-| Security tooling purchases | Security tool selection and deployment | Defense in depth |
+| Game Element                     | Real-World Skill                       | Threat Category          |
+| -------------------------------- | -------------------------------------- | ------------------------ |
+| Upgrade cost/benefit analysis    | Patch risk assessment                  | Vulnerability management |
+| New threat vectors from upgrades | Change-induced vulnerability awareness | All technical threats    |
+| Upgrade prioritization           | Patch prioritization (CVSS scoring)    | Malware, exploitation    |
+| Resource allocation for upgrades | Security budget management             | Organizational security  |
+| Timing of upgrades               | Maintenance window planning            | Operational security     |
+| Security tooling purchases       | Security tool selection and deployment | Defense in depth         |
 
 **Behavioral Outcome:** Players learn that security is not a static state but a continuous process of improvement, adaptation, and risk management. Every change has security implications. This transfers directly to real-world change management discipline.
 
@@ -1457,14 +1475,14 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Ransom note event | Ransomware incident recognition | Ransomware |
-| Financial impact (earnings / 10) | Business impact assessment | Business continuity |
-| Operations lockout | Business disruption awareness | Operational resilience |
-| Pay or game over decision | Ransom payment decision framework | Crisis management |
-| Post-breach recovery | Incident recovery and lessons learned | Incident response |
-| Financial reserve management | Cyber insurance and reserve planning | Financial risk management |
+| Game Element                     | Real-World Skill                      | Threat Category           |
+| -------------------------------- | ------------------------------------- | ------------------------- |
+| Ransom note event                | Ransomware incident recognition       | Ransomware                |
+| Financial impact (earnings / 10) | Business impact assessment            | Business continuity       |
+| Operations lockout               | Business disruption awareness         | Operational resilience    |
+| Pay or game over decision        | Ransom payment decision framework     | Crisis management         |
+| Post-breach recovery             | Incident recovery and lessons learned | Incident response         |
+| Financial reserve management     | Cyber insurance and reserve planning  | Financial risk management |
 
 **Behavioral Outcome:** Players experience the visceral consequence of security failures -- lost resources, locked operations, potential game termination. This emotional impact creates strong associative learning: security failures cause real, painful consequences. The lesson transfers to real-world urgency around prevention.
 
@@ -1478,12 +1496,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Risk score evaluation | Threat severity assessment (CVSS, risk matrices) | All threats |
-| Known indicator matching | IOC correlation | Threat intelligence |
-| Recommended action selection | Response playbook execution | Incident response |
-| Threat pattern recognition | Threat hunting | Advanced persistent threats |
+| Game Element                 | Real-World Skill                                 | Threat Category             |
+| ---------------------------- | ------------------------------------------------ | --------------------------- |
+| Risk score evaluation        | Threat severity assessment (CVSS, risk matrices) | All threats                 |
+| Known indicator matching     | IOC correlation                                  | Threat intelligence         |
+| Recommended action selection | Response playbook execution                      | Incident response           |
+| Threat pattern recognition   | Threat hunting                                   | Advanced persistent threats |
 
 ---
 
@@ -1495,12 +1513,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Timeline review | Log analysis and event correlation | All threats |
-| Attack pattern identification | Threat hunting and trend analysis | APT campaigns |
-| Mitigation documentation | Incident response documentation | Incident response |
-| Historical analysis | Forensic investigation | Post-incident analysis |
+| Game Element                  | Real-World Skill                   | Threat Category        |
+| ----------------------------- | ---------------------------------- | ---------------------- |
+| Timeline review               | Log analysis and event correlation | All threats            |
+| Attack pattern identification | Threat hunting and trend analysis  | APT campaigns          |
+| Mitigation documentation      | Incident response documentation    | Incident response      |
+| Historical analysis           | Forensic investigation             | Post-incident analysis |
 
 ---
 
@@ -1512,12 +1530,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Terms evaluation | Contract security review | Supply chain, data protection |
-| Liability assessment | Risk transfer and acceptance | Risk management |
-| Fee structure analysis | Cost of security analysis | Resource management |
-| Service scope definition | Data handling scope limitation | Data protection |
+| Game Element             | Real-World Skill               | Threat Category               |
+| ------------------------ | ------------------------------ | ----------------------------- |
+| Terms evaluation         | Contract security review       | Supply chain, data protection |
+| Liability assessment     | Risk transfer and acceptance   | Risk management               |
+| Fee structure analysis   | Cost of security analysis      | Resource management           |
+| Service scope definition | Data handling scope limitation | Data protection               |
 
 ---
 
@@ -1529,12 +1547,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Capacity management | Storage and data volume governance | Data protection |
-| Term length decisions | Data retention period compliance | Regulatory compliance |
-| Renewal evaluation | Periodic access review | Insider threats |
-| Reclamation for resale | Secure data destruction | Data protection |
+| Game Element           | Real-World Skill                   | Threat Category       |
+| ---------------------- | ---------------------------------- | --------------------- |
+| Capacity management    | Storage and data volume governance | Data protection       |
+| Term length decisions  | Data retention period compliance   | Regulatory compliance |
+| Renewal evaluation     | Periodic access review             | Insider threats       |
+| Reclamation for resale | Secure data destruction            | Data protection       |
 
 ---
 
@@ -1546,12 +1564,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Blacklist criteria evaluation | Blocklist management and hygiene | All threats |
-| Rationale documentation | Threat documentation and justification | Incident response |
-| Blacklist evasion by adversaries | Adversary adaptation and evasion | Advanced persistent threats |
-| False blacklisting risk | False positive management | Operational efficiency |
+| Game Element                     | Real-World Skill                       | Threat Category             |
+| -------------------------------- | -------------------------------------- | --------------------------- |
+| Blacklist criteria evaluation    | Blocklist management and hygiene       | All threats                 |
+| Rationale documentation          | Threat documentation and justification | Incident response           |
+| Blacklist evasion by adversaries | Adversary adaptation and evasion       | Advanced persistent threats |
+| False blacklisting risk          | False positive management              | Operational efficiency      |
 
 ---
 
@@ -1563,12 +1581,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Emergency override decisions | Break-glass procedure execution | Crisis management |
-| Signature requirements | Multi-party authorization | Access control |
-| Exception documentation | Policy exception tracking | Compliance |
-| Override exploitation risk | Emergency access abuse awareness | Insider threats |
+| Game Element                 | Real-World Skill                 | Threat Category   |
+| ---------------------------- | -------------------------------- | ----------------- |
+| Emergency override decisions | Break-glass procedure execution  | Crisis management |
+| Signature requirements       | Multi-party authorization        | Access control    |
+| Exception documentation      | Policy exception tracking        | Compliance        |
+| Override exploitation risk   | Emergency access abuse awareness | Insider threats   |
 
 ---
 
@@ -1580,12 +1598,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Power monitoring | Infrastructure health monitoring | Physical security |
-| Cooling stability | Environmental threat monitoring | Physical security |
-| Utilization metrics | Capacity planning and overload prevention | Operational security |
-| Anomaly detection in metrics | Baseline deviation detection | All threats |
+| Game Element                 | Real-World Skill                          | Threat Category      |
+| ---------------------------- | ----------------------------------------- | -------------------- |
+| Power monitoring             | Infrastructure health monitoring          | Physical security    |
+| Cooling stability            | Environmental threat monitoring           | Physical security    |
+| Utilization metrics          | Capacity planning and overload prevention | Operational security |
+| Anomaly detection in metrics | Baseline deviation detection              | All threats          |
 
 ---
 
@@ -1597,12 +1615,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Attacker behavior analysis | Threat actor profiling | APT, organized crime |
-| Active campaign awareness | Threat landscape monitoring | All threats |
-| Intelligence-driven decision making | Intelligence-led security operations | Strategic security |
-| Information reliability assessment | Source reliability evaluation | Threat intelligence |
+| Game Element                        | Real-World Skill                     | Threat Category      |
+| ----------------------------------- | ------------------------------------ | -------------------- |
+| Attacker behavior analysis          | Threat actor profiling               | APT, organized crime |
+| Active campaign awareness           | Threat landscape monitoring          | All threats          |
+| Intelligence-driven decision making | Intelligence-led security operations | Strategic security   |
+| Information reliability assessment  | Source reliability evaluation        | Threat intelligence  |
 
 ---
 
@@ -1614,12 +1632,12 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 **Specific Training Mappings:**
 
-| Game Element | Real-World Skill | Threat Category |
-|---|---|---|
-| Payment demand evaluation | Ransom negotiation awareness | Ransomware |
-| Deadline pressure | Crisis decision-making under time pressure | Incident response |
-| Financial impact calculation | Business impact assessment | Business continuity |
-| Post-ransom recovery | Incident recovery and hardening | Resilience |
+| Game Element                 | Real-World Skill                           | Threat Category     |
+| ---------------------------- | ------------------------------------------ | ------------------- |
+| Payment demand evaluation    | Ransom negotiation awareness               | Ransomware          |
+| Deadline pressure            | Crisis decision-making under time pressure | Incident response   |
+| Financial impact calculation | Business impact assessment                 | Business continuity |
+| Post-ransom recovery         | Incident recovery and hardening            | Resilience          |
 
 ---
 
@@ -1658,20 +1676,20 @@ Every mechanic in "The DMZ: Archive Gate" has a direct analog in real-world cybe
 
 This matrix shows which game mechanics address which threat categories, enabling gap analysis and content planning.
 
-| Threat Category | Email Request | Phishing Worksheet | Verification Packet | Accept/Reject | Upgrade Mgmt | Breach System | Threat Sheet | Incident Log | Data Contract | Blacklist | Whitelist | Facility Report | Intel Brief | Ransom Note |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| Phishing | X | X | X | X | - | X | X | X | - | X | - | - | X | - |
-| Social Engineering | X | X | X | X | - | X | X | X | - | X | X | - | X | - |
-| Malware | - | - | X | X | X | X | X | X | X | X | - | X | X | X |
-| Password Security | - | - | X | X | X | X | X | X | - | - | - | - | X | - |
-| Data Protection | - | - | - | X | - | X | - | X | X | - | - | X | - | X |
-| Physical Security | - | - | - | - | X | X | - | X | - | - | - | X | X | - |
-| Network Security | - | - | - | X | X | X | X | X | - | X | - | X | X | - |
-| Cloud Security | - | - | - | X | X | X | X | X | X | - | - | X | X | - |
-| Supply Chain | - | X | X | X | X | X | X | X | X | X | - | - | X | - |
-| Insider Threats | - | - | X | X | - | X | X | X | X | X | X | X | X | - |
-| AI-Powered Threats | X | X | X | X | - | X | X | X | - | X | - | - | X | - |
-| IoT Security | - | - | - | - | X | X | X | X | - | - | - | X | X | - |
+| Threat Category    | Email Request | Phishing Worksheet | Verification Packet | Accept/Reject | Upgrade Mgmt | Breach System | Threat Sheet | Incident Log | Data Contract | Blacklist | Whitelist | Facility Report | Intel Brief | Ransom Note |
+| ------------------ | ------------- | ------------------ | ------------------- | ------------- | ------------ | ------------- | ------------ | ------------ | ------------- | --------- | --------- | --------------- | ----------- | ----------- |
+| Phishing           | X             | X                  | X                   | X             | -            | X             | X            | X            | -             | X         | -         | -               | X           | -           |
+| Social Engineering | X             | X                  | X                   | X             | -            | X             | X            | X            | -             | X         | X         | -               | X           | -           |
+| Malware            | -             | -                  | X                   | X             | X            | X             | X            | X            | X             | X         | -         | X               | X           | X           |
+| Password Security  | -             | -                  | X                   | X             | X            | X             | X            | X            | -             | -         | -         | -               | X           | -           |
+| Data Protection    | -             | -                  | -                   | X             | -            | X             | -            | X            | X             | -         | -         | X               | -           | X           |
+| Physical Security  | -             | -                  | -                   | -             | X            | X             | -            | X            | -             | -         | -         | X               | X           | -           |
+| Network Security   | -             | -                  | -                   | X             | X            | X             | X            | X            | -             | X         | -         | X               | X           | -           |
+| Cloud Security     | -             | -                  | -                   | X             | X            | X             | X            | X            | X             | -         | -         | X               | X           | -           |
+| Supply Chain       | -             | X                  | X                   | X             | X            | X             | X            | X            | X             | X         | -         | -               | X           | -           |
+| Insider Threats    | -             | -                  | X                   | X             | -            | X             | X            | X            | X             | X         | X         | X               | X           | -           |
+| AI-Powered Threats | X             | X                  | X                   | X             | -            | X             | X            | X            | -             | X         | -         | -               | X           | -           |
+| IoT Security       | -             | -                  | -                   | -             | X            | X             | X            | X            | -             | -         | -         | X               | X           | -           |
 
 Legend: X = primary coverage, - = not directly covered by this mechanic
 
@@ -1681,45 +1699,45 @@ Legend: X = primary coverage, - = not directly covered by this mechanic
 
 ### Priority 1: Techniques Directly Simulated by Game Mechanics
 
-| ATT&CK ID | Technique Name | Game Mechanic | Priority |
-|---|---|---|---|
-| T1566 | Phishing | Email Access Request | Critical |
-| T1566.001 | Spearphishing Attachment | Verification Packet (malicious docs) | Critical |
-| T1566.002 | Spearphishing Link | Email Access Request (embedded URLs) | Critical |
-| T1598 | Phishing for Information | Reconnaissance emails preceding requests | High |
-| T1195 | Supply Chain Compromise | Malware in client backups | Critical |
-| T1199 | Trusted Relationship | Client relationship exploitation | High |
-| T1078 | Valid Accounts | Compromised client credentials | High |
-| T1036 | Masquerading | Fake organizational identities | Critical |
-| T1656 | Impersonation | Identity fraud in access requests | Critical |
-| T1486 | Data Encrypted for Impact | Breach/Ransom system | Critical |
-| T1657 | Financial Theft | Ransom payment mechanic | High |
-| T1204.002 | User Execution: Malicious File | Accepting contaminated data | High |
+| ATT&CK ID | Technique Name                 | Game Mechanic                            | Priority |
+| --------- | ------------------------------ | ---------------------------------------- | -------- |
+| T1566     | Phishing                       | Email Access Request                     | Critical |
+| T1566.001 | Spearphishing Attachment       | Verification Packet (malicious docs)     | Critical |
+| T1566.002 | Spearphishing Link             | Email Access Request (embedded URLs)     | Critical |
+| T1598     | Phishing for Information       | Reconnaissance emails preceding requests | High     |
+| T1195     | Supply Chain Compromise        | Malware in client backups                | Critical |
+| T1199     | Trusted Relationship           | Client relationship exploitation         | High     |
+| T1078     | Valid Accounts                 | Compromised client credentials           | High     |
+| T1036     | Masquerading                   | Fake organizational identities           | Critical |
+| T1656     | Impersonation                  | Identity fraud in access requests        | Critical |
+| T1486     | Data Encrypted for Impact      | Breach/Ransom system                     | Critical |
+| T1657     | Financial Theft                | Ransom payment mechanic                  | High     |
+| T1204.002 | User Execution: Malicious File | Accepting contaminated data              | High     |
 
 ### Priority 2: Techniques Contextually Covered
 
-| ATT&CK ID | Technique Name | Game Context | Priority |
-|---|---|---|---|
-| T1589 | Gather Victim Identity Info | Adversary OSINT on data center | Medium |
-| T1593 | Search Open Websites/Domains | Adversary research of public info | Medium |
-| T1098 | Account Manipulation | Clients expanding access beyond terms | Medium |
-| T1136 | Create Account | Adversaries creating new fake identities | Medium |
-| T1548 | Abuse Elevation Control | Clients accessing unauthorized data | Medium |
-| T1070 | Indicator Removal | Adversaries adapting to avoid detection | Medium |
-| T1110 | Brute Force | Automated attacks on data center auth | Medium |
-| T1213 | Data from Information Repos | Attackers targeting stored client data | Medium |
-| T1485 | Data Destruction | Attacks intended to destroy client data | Medium |
-| T1489 | Service Stop | Attacks disrupting operations | Medium |
+| ATT&CK ID | Technique Name               | Game Context                             | Priority |
+| --------- | ---------------------------- | ---------------------------------------- | -------- |
+| T1589     | Gather Victim Identity Info  | Adversary OSINT on data center           | Medium   |
+| T1593     | Search Open Websites/Domains | Adversary research of public info        | Medium   |
+| T1098     | Account Manipulation         | Clients expanding access beyond terms    | Medium   |
+| T1136     | Create Account               | Adversaries creating new fake identities | Medium   |
+| T1548     | Abuse Elevation Control      | Clients accessing unauthorized data      | Medium   |
+| T1070     | Indicator Removal            | Adversaries adapting to avoid detection  | Medium   |
+| T1110     | Brute Force                  | Automated attacks on data center auth    | Medium   |
+| T1213     | Data from Information Repos  | Attackers targeting stored client data   | Medium   |
+| T1485     | Data Destruction             | Attacks intended to destroy client data  | Medium   |
+| T1489     | Service Stop                 | Attacks disrupting operations            | Medium   |
 
 ### Priority 3: Techniques for Future Content Development
 
-| ATT&CK ID | Technique Name | Planned Mechanic | Priority |
-|---|---|---|---|
-| T1583 | Acquire Infrastructure | Adversary infrastructure in game world | Low |
-| T1584 | Compromise Infrastructure | Compromised networks in game world | Low |
-| T1059 | Command and Scripting Interpreter | Advanced malware analysis scenarios | Low |
-| T1114 | Email Collection | Communication interception scenarios | Low |
-| T1528 | Steal Application Access Token | Token/credential theft scenarios | Medium |
+| ATT&CK ID | Technique Name                    | Planned Mechanic                       | Priority |
+| --------- | --------------------------------- | -------------------------------------- | -------- |
+| T1583     | Acquire Infrastructure            | Adversary infrastructure in game world | Low      |
+| T1584     | Compromise Infrastructure         | Compromised networks in game world     | Low      |
+| T1059     | Command and Scripting Interpreter | Advanced malware analysis scenarios    | Low      |
+| T1114     | Email Collection                  | Communication interception scenarios   | Low      |
+| T1528     | Steal Application Access Token    | Token/credential theft scenarios       | Medium   |
 
 ---
 
@@ -1727,71 +1745,71 @@ Legend: X = primary coverage, - = not directly covered by this mechanic
 
 ### Threat Landscape Reports
 
-- World Economic Forum. *Global Cybersecurity Outlook 2026*. January 2026.
-- CrowdStrike. *2025 Global Threat Report*. February 2025.
-- Deloitte. *Cybersecurity Report 2025: AI Threats, Email Server Security, and Advanced Threat Actors*. 2025.
-- Cyble. *Top 10 Threat Actor Trends of 2025 and Signals for 2026*. December 2025.
-- Sophos. *2025 State of Ransomware Report*. 2025.
-- Verizon. *2025 Data Breach Investigations Report*. 2025.
-- Ponemon Institute. *2025 Cost of Insider Threats Global Report*. 2025.
-- Forescout. *2025 Device Vulnerability Report*. 2025.
-- Cloud Security Alliance. *The State of SaaS Security: 2025-2026*. 2025.
-- Panorays. *2026 Study: Third-Party Threat Visibility*. January 2026.
-- Flashpoint. *Insider Threats: Turning 2025 Intelligence into a 2026 Defense Strategy*. January 2026.
+- World Economic Forum. _Global Cybersecurity Outlook 2026_. January 2026.
+- CrowdStrike. _2025 Global Threat Report_. February 2025.
+- Deloitte. _Cybersecurity Report 2025: AI Threats, Email Server Security, and Advanced Threat Actors_. 2025.
+- Cyble. _Top 10 Threat Actor Trends of 2025 and Signals for 2026_. December 2025.
+- Sophos. _2025 State of Ransomware Report_. 2025.
+- Verizon. _2025 Data Breach Investigations Report_. 2025.
+- Ponemon Institute. _2025 Cost of Insider Threats Global Report_. 2025.
+- Forescout. _2025 Device Vulnerability Report_. 2025.
+- Cloud Security Alliance. _The State of SaaS Security: 2025-2026_. 2025.
+- Panorays. _2026 Study: Third-Party Threat Visibility_. January 2026.
+- Flashpoint. _Insider Threats: Turning 2025 Intelligence into a 2026 Defense Strategy_. January 2026.
 
 ### Phishing and Social Engineering
 
-- APWG. *Phishing Activity Trends Report, Q1 2025*. 2025.
-- Keepnet Labs. *2025 Phishing Statistics (Updated January 2026)*. 2026.
-- Hornetsecurity. *Cybersecurity Report 2026: Malware, Email Security*. 2025.
-- DeepStrike. *Vishing Statistics 2025: AI Deepfakes & the $40B Voice Scam Surge*. 2025.
+- APWG. _Phishing Activity Trends Report, Q1 2025_. 2025.
+- Keepnet Labs. _2025 Phishing Statistics (Updated January 2026)_. 2026.
+- Hornetsecurity. _Cybersecurity Report 2026: Malware, Email Security_. 2025.
+- DeepStrike. _Vishing Statistics 2025: AI Deepfakes & the $40B Voice Scam Surge_. 2025.
 
 ### AI-Powered Threats
 
-- DeepStrike. *Deepfake Statistics 2025: The Data Behind the AI Fraud Wave*. 2025.
-- Cyble. *Deepfake-as-a-Service Exploded in 2025: 2026 Threats Ahead*. January 2026.
-- ZeroThreat. *Deepfake Attacks & AI-Generated Phishing: 2025 Statistics*. 2025.
-- Experian. *AI Takes Center Stage as the Major Threat to Cybersecurity in 2026*. 2025.
+- DeepStrike. _Deepfake Statistics 2025: The Data Behind the AI Fraud Wave_. 2025.
+- Cyble. _Deepfake-as-a-Service Exploded in 2025: 2026 Threats Ahead_. January 2026.
+- ZeroThreat. _Deepfake Attacks & AI-Generated Phishing: 2025 Statistics_. 2025.
+- Experian. _AI Takes Center Stage as the Major Threat to Cybersecurity in 2026_. 2025.
 
 ### Ransomware
 
-- VikingCloud. *46 Ransomware Statistics and Trends Report 2026*. 2026.
-- Recorded Future. *New Ransomware Tactics to Watch Out for in 2026*. 2026.
-- SOCRadar. *Top 10 Ransomware Attacks of 2025*. 2025.
-- GuidePoint Security. *Ransomware Victims Report 2025*. 2025.
+- VikingCloud. _46 Ransomware Statistics and Trends Report 2026_. 2026.
+- Recorded Future. _New Ransomware Tactics to Watch Out for in 2026_. 2026.
+- SOCRadar. _Top 10 Ransomware Attacks of 2025_. 2025.
+- GuidePoint Security. _Ransomware Victims Report 2025_. 2025.
 
 ### Supply Chain
 
-- Integrity360. *The Biggest Cyber Attacks of 2025 and What They Mean for 2026*. 2025.
-- Ethixbase360. *Supply Chain Cybersecurity 2026*. 2026.
-- Dark Reading. *Supply Chain Worms 2026*. 2026.
-- SOCRadar. *Top 10 Supply Chain Attacks of 2025*. 2025.
+- Integrity360. _The Biggest Cyber Attacks of 2025 and What They Mean for 2026_. 2025.
+- Ethixbase360. _Supply Chain Cybersecurity 2026_. 2026.
+- Dark Reading. _Supply Chain Worms 2026_. 2026.
+- SOCRadar. _Top 10 Supply Chain Attacks of 2025_. 2025.
 
 ### Password and Credential Security
 
-- DeepStrike. *70+ Password Statistics 2026: What the Numbers Really Say*. 2026.
-- CinchOps. *Password Leak Study: 94% of Passwords Reused*. 2025.
-- BlackFog. *Brute Force Attacks in 2025*. 2025.
+- DeepStrike. _70+ Password Statistics 2026: What the Numbers Really Say_. 2026.
+- CinchOps. _Password Leak Study: 94% of Passwords Reused_. 2025.
+- BlackFog. _Brute Force Attacks in 2025_. 2025.
 
 ### IoT Security
 
-- Industrial Cyber. *Forescout 2025 Report: Device Vulnerabilities*. 2025.
-- DeepStrike. *IoT Hacking Statistics 2025*. 2025.
-- Growth Acceleration Partners. *52 Hours Under Attack: IoT Security in 2025*. 2025.
+- Industrial Cyber. _Forescout 2025 Report: Device Vulnerabilities_. 2025.
+- DeepStrike. _IoT Hacking Statistics 2025_. 2025.
+- Growth Acceleration Partners. _52 Hours Under Attack: IoT Security in 2025_. 2025.
 
 ### Cloud Security
 
-- CheckRed. *2025 Breaches Recap and 2026 Cloud & SaaS Security Outlook*. 2026.
-- SentinelOne. *Shadow Data: Hidden Risks & Mitigation Strategies for 2026*. 2026.
-- SentinelOne. *17 Security Risks of Cloud Computing in 2026*. 2026.
-- Reco AI. *AI & Cloud Security Breaches: 2025 Year in Review*. 2025.
+- CheckRed. _2025 Breaches Recap and 2026 Cloud & SaaS Security Outlook_. 2026.
+- SentinelOne. _Shadow Data: Hidden Risks & Mitigation Strategies for 2026_. 2026.
+- SentinelOne. _17 Security Risks of Cloud Computing in 2026_. 2026.
+- Reco AI. _AI & Cloud Security Breaches: 2025 Year in Review_. 2025.
 
 ### Gamification and Training Effectiveness
 
-- Hoxhunt. *Does Gamified Cyber Security Training Actually Work?* 2025.
-- OutThink. *How Gamification Drives Adaptive Security Awareness Training*. 2025.
-- PMC/NIH. *A Systematic Mapping Study on Gamification within Information Security Awareness Programs*. 2024.
-- Keepnet Labs. *Gamification in Security Training*. 2025.
+- Hoxhunt. _Does Gamified Cyber Security Training Actually Work?_ 2025.
+- OutThink. _How Gamification Drives Adaptive Security Awareness Training_. 2025.
+- PMC/NIH. _A Systematic Mapping Study on Gamification within Information Security Awareness Programs_. 2024.
+- Keepnet Labs. _Gamification in Security Training_. 2025.
 
 ### Framework References
 
@@ -1801,6 +1819,6 @@ Legend: X = primary coverage, - = not directly covered by this mechanic
 
 ---
 
-*This document is a living artifact. It will be updated quarterly to reflect the evolving threat landscape, new game mechanics, and emerging training methodologies. Next scheduled review: 2026-05-05.*
+_This document is a living artifact. It will be updated quarterly to reflect the evolving threat landscape, new game mechanics, and emerging training methodologies. Next scheduled review: 2026-05-05._
 
-*Document prepared for Matrices GmbH -- The DMZ: Archive Gate development team.*
+_Document prepared for Matrices GmbH -- The DMZ: Archive Gate development team._

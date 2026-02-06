@@ -1,9 +1,9 @@
-import postgres, { type Sql } from "postgres";
-import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import postgres, { type Sql } from 'postgres';
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
-import { loadConfig, type AppConfig } from "../../config.js";
+import { loadConfig, type AppConfig } from '../../config.js';
 
-import * as schema from "./schema/index.js";
+import * as schema from './schema/index.js';
 
 export type DependencyHealth = {
   ok: boolean;
@@ -21,12 +21,10 @@ const createDatabasePool = (config: AppConfig): DatabasePool =>
     max: config.DATABASE_POOL_MAX,
     idle_timeout: config.DATABASE_POOL_IDLE_TIMEOUT,
     connect_timeout: config.DATABASE_POOL_CONNECT_TIMEOUT,
-    ssl: config.DATABASE_SSL ? "require" : false,
+    ssl: config.DATABASE_SSL ? 'require' : false,
   });
 
-export const getDatabasePool = (
-  config: AppConfig = loadConfig(),
-): DatabasePool => {
+export const getDatabasePool = (config: AppConfig = loadConfig()): DatabasePool => {
   if (!pool) {
     pool = createDatabasePool(config);
   }
@@ -34,9 +32,7 @@ export const getDatabasePool = (
   return pool;
 };
 
-export const getDatabaseClient = (
-  config: AppConfig = loadConfig(),
-): DatabaseClient => {
+export const getDatabaseClient = (config: AppConfig = loadConfig()): DatabaseClient => {
   if (!client) {
     const sql = getDatabasePool(config);
     client = drizzle(sql, { schema });
@@ -57,18 +53,18 @@ export const closeDatabase = async (): Promise<void> => {
 export async function checkDatabaseHealth(
   config: AppConfig = loadConfig(),
 ): Promise<DependencyHealth> {
-  if (config.NODE_ENV === "test") {
+  if (config.NODE_ENV === 'test') {
     return {
       ok: false,
-      message: "Database health check disabled for tests",
+      message: 'Database health check disabled for tests',
     };
   }
 
   try {
     const sql = getDatabasePool(config);
     await sql`select 1`;
-    return { ok: true, message: "Database connection ok" };
+    return { ok: true, message: 'Database connection ok' };
   } catch (_error) {
-    return { ok: false, message: "Database connection failed" };
+    return { ok: false, message: 'Database connection failed' };
   }
 }

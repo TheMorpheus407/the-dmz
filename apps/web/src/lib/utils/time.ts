@@ -1,2 +1,1 @@
-export const toIsoTimestamp = (date: Date = new Date()): string =>
-  date.toISOString();
+export const toIsoTimestamp = (date: Date = new Date()): string => date.toISOString();

@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable } from 'svelte/store';
 
 export interface ConnectivityState {
   online: boolean;
@@ -10,6 +10,4 @@ export const initialConnectivityState: ConnectivityState = {
   lastChange: null,
 };
 
-export const connectivityStore = writable<ConnectivityState>(
-  initialConnectivityState,
-);
+export const connectivityStore = writable<ConnectivityState>(initialConnectivityState);

@@ -1,3 +1,3 @@
-declare module "uuid" {
+declare module 'uuid' {
   export function v7(): string;
 }

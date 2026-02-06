@@ -1,7 +1,7 @@
-import { replayEvents } from "./replay";
+import { replayEvents } from './replay';
 
-import type { GameEvent } from "../state/events";
-import type { GameState } from "../state/reducer";
+import type { GameEvent } from '../state/events';
+import type { GameState } from '../state/reducer';
 
 export interface SyncResult {
   state: GameState;

@@ -1,1 +1,1 @@
-export const uiComponentPlaceholder = "ui-component-placeholder";
+export const uiComponentPlaceholder = 'ui-component-placeholder';

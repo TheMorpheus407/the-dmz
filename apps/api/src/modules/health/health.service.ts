@@ -1,29 +1,24 @@
-import { type AppConfig } from "../../config.js";
-import { checkDatabaseHealth } from "../../shared/database/connection.js";
-import { checkRedisHealth } from "../../shared/database/redis.js";
+import { type AppConfig } from '../../config.js';
+import { checkDatabaseHealth } from '../../shared/database/connection.js';
+import { checkRedisHealth } from '../../shared/database/redis.js';
 
 export type HealthResponse = {
-  status: "ok";
+  status: 'ok';
 };
 
 export type ReadinessResponse = {
-  status: "ok" | "degraded";
+  status: 'ok' | 'degraded';
   checks: {
     database: { ok: boolean; message: string };
     redis: { ok: boolean; message: string };
   };
 };
 
-export const getHealth = (): HealthResponse => ({ status: "ok" });
+export const getHealth = (): HealthResponse => ({ status: 'ok' });
 
-export const getReadiness = async (
-  config: AppConfig,
-): Promise<ReadinessResponse> => {
-  const [database, redis] = await Promise.all([
-    checkDatabaseHealth(config),
-    checkRedisHealth(),
-  ]);
-  const status = database.ok && redis.ok ? "ok" : "degraded";
+export const getReadiness = async (config: AppConfig): Promise<ReadinessResponse> => {
+  const [database, redis] = await Promise.all([checkDatabaseHealth(config), checkRedisHealth()]);
+  const status = database.ok && redis.ok ? 'ok' : 'degraded';
 
   return {
     status,

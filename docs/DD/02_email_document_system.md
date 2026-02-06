@@ -454,21 +454,21 @@ The document system is more than a set of static templates. It is a dynamic gene
 
 The system includes thirteen documents, each mapped to a specific security skill. These are authoritative across both consumer and enterprise modes.
 
-| Document Type | Purpose | Primary Skill | Key Signals |
-| --- | --- | --- | --- |
-| Email Access Request | Primary request narrative | Phishing detection | Sender identity, tone, urgency |
-| Phishing Analysis Worksheet | Player annotation space | Structured analysis | Indicator marking, reasoning |
-| Verification Packet | Identity evidence bundle | Identity verification | Consistency and authenticity |
-| Threat Assessment Sheet | Risk scoring and intel | Risk assessment | Threat tier, indicator summary |
-| Incident Log | Timeline of events | Incident response | Sequence and containment |
-| Data Salvage Contract | Terms and liabilities | Governance and legal | SLA, liability clauses |
-| Storage Lease Agreement | Capacity and term | Operations planning | Capacity, renewal, limits |
-| Upgrade Proposal | Tool and infra options | Security architecture | Cost, benefits, risk |
-| Blacklist Notice | Access denial policy | Access control | Rationale, signatures |
-| Whitelist Exception | Emergency access | Exception handling | Justification, approvals |
-| Facility Status Report | Infra telemetry | Monitoring | Power, cooling, utilization |
-| Intelligence Brief | Threat intel | Threat intelligence | Campaign indicators |
-| Ransom Note | Breach response | Incident response | Deadline, demand |
+| Document Type               | Purpose                   | Primary Skill         | Key Signals                    |
+| --------------------------- | ------------------------- | --------------------- | ------------------------------ |
+| Email Access Request        | Primary request narrative | Phishing detection    | Sender identity, tone, urgency |
+| Phishing Analysis Worksheet | Player annotation space   | Structured analysis   | Indicator marking, reasoning   |
+| Verification Packet         | Identity evidence bundle  | Identity verification | Consistency and authenticity   |
+| Threat Assessment Sheet     | Risk scoring and intel    | Risk assessment       | Threat tier, indicator summary |
+| Incident Log                | Timeline of events        | Incident response     | Sequence and containment       |
+| Data Salvage Contract       | Terms and liabilities     | Governance and legal  | SLA, liability clauses         |
+| Storage Lease Agreement     | Capacity and term         | Operations planning   | Capacity, renewal, limits      |
+| Upgrade Proposal            | Tool and infra options    | Security architecture | Cost, benefits, risk           |
+| Blacklist Notice            | Access denial policy      | Access control        | Rationale, signatures          |
+| Whitelist Exception         | Emergency access          | Exception handling    | Justification, approvals       |
+| Facility Status Report      | Infra telemetry           | Monitoring            | Power, cooling, utilization    |
+| Intelligence Brief          | Threat intel              | Threat intelligence   | Campaign indicators            |
+| Ransom Note                 | Breach response           | Incident response     | Deadline, demand               |
 
 The Email Access Request is both an email and a document artifact; it is represented in both systems. The other twelve are generated and rendered via the document system.
 
@@ -1283,9 +1283,7 @@ Indicator types.
     "spf": "PASS",
     "dkim": "PASS",
     "dmarc": "PASS",
-    "received": [
-      "from relay01.library-archive.invalid by mx.matrices.invalid"
-    ]
+    "received": ["from relay01.library-archive.invalid by mx.matrices.invalid"]
   },
   "subject": "Request for archival access - Northern Grid Logs",
   "preview": "We are requesting secure storage of recovered grid telemetry...",
@@ -1318,10 +1316,7 @@ Indicator types.
       }
     ]
   },
-  "attachments": [
-    "doc-verification-packet-2",
-    "doc-data-salvage-contract-7"
-  ],
+  "attachments": ["doc-verification-packet-2", "doc-data-salvage-contract-7"],
   "links": [
     {
       "label": "Verification portal",
@@ -1363,9 +1358,7 @@ Example template skeleton for a Verification Packet document.
     "signatory_name": "string",
     "signatory_role": "string",
     "signature_block": "image",
-    "hashes": [
-      {"file": "string", "sha256": "string"}
-    ]
+    "hashes": [{ "file": "string", "sha256": "string" }]
   },
   "metadata": {
     "document_id": "uuid",

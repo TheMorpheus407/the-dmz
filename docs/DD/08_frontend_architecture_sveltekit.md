@@ -882,8 +882,6 @@ export interface SessionStore {
 
 ---
 
-
-
 ## 32. Detailed Route Map and Navigation Rules
 
 This section expands the routing architecture into a concrete navigation map. The intent is to keep the game surface coherent while supporting admin workflows that can be bookmarked, shared, and audited. The approach relies on SvelteKit route groups with a small set of top-level entries. Each game route must preserve session context and panel state, and each admin route must make filter state visible in the URL.
@@ -1515,6 +1513,7 @@ Offline play relies on deterministic event replay with conflict resolution contr
 ---
 
 ## 40. Frontend Implementation Roadmap
+
 41. Detailed Data Flow Walkthrough
 42. Security Threat Model and Content Safety
 43. UX Feedback and Microinteractions
@@ -1559,8 +1558,6 @@ The frontend roadmap aligns with the BRD phases.
 - Prepare multiplayer UI scaffolding for cooperative play (2-6 players, BRD FR-MP-001) and competitive Red Team / Blue Team modes (BRD FR-MP-005 through FR-MP-010).
 
 ---
-
-
 
 ## 41. Detailed Data Flow Walkthrough
 
@@ -1714,6 +1711,7 @@ Microinteractions are essential for creating the "terminal operator" feel while 
 ---
 
 ## 44. Settings and Configuration Model
+
 45. API Interaction Examples and Error Handling
 46. Localization Pipeline and Content Governance
 
@@ -1745,8 +1743,6 @@ The frontend exposes a comprehensive settings system to support accessibility, p
 - Settings changes are reversible and logged for enterprise auditing when required.
 
 ---
-
-
 
 ## 45. API Interaction Examples and Error Handling
 
@@ -1840,8 +1836,6 @@ All formatting uses locale-aware functions. The game time system remains canonic
 
 ---
 
-
-
 ## 47. Telemetry and Learning Outcome Mapping
 
 The frontend plays a critical role in measuring learning outcomes without breaking immersion. This section defines the telemetry strategy and how it maps to the educational goals described in the BRD.
@@ -1907,8 +1901,6 @@ To reduce network overhead, telemetry events are batched and sent on a short int
 For enterprise dashboards, telemetry data flows into analytics pipelines that drive compliance reports, risk heat maps, and training effectiveness metrics. The frontend ensures that event metadata is consistent and well-formed to support these downstream workflows.
 
 ---
-
-
 
 ## 48. Frontend Glossary
 

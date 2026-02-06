@@ -162,6 +162,7 @@ The AI pipeline must:
 - Respect data protection and privacy mandates (GDPR, HIPAA, PCI-DSS, SOC 2, FedRAMP readiness, NIS2, DORA).
 
 ---
+
 ## 6. Content Taxonomy and Canonical Outputs
 
 The AI pipeline produces content in a constrained taxonomy so that generated items can be validated, localized, and rendered consistently in the UI. All AI outputs are structured JSON objects with strict schemas that map to document templates and gameplay widgets. Narrative text is only one part of the object; metadata, tags, and signal annotations are equally important for gameplay and analytics.
@@ -303,6 +304,7 @@ The AI pipeline supports a full lifecycle from generation to retirement, with go
 Every item includes a full provenance record: template version, model version, input context, generation latency, tokens, and reviewer decisions. This supports SOC 2 audits, PCI-DSS annual review requirements, and internal quality control.
 
 ---
+
 ## 9. Prompt System and Template Management
 
 Prompt design is the heart of the pipeline. To prevent drift, every prompt is versioned, structured, and audited. The system uses a template registry stored in `ai.prompt_templates` with explicit JSON schemas for output.
@@ -534,6 +536,7 @@ AI-generated variations adjust names, timing, and surface details while keeping 
 The threat engine uses the campaign beat definitions to select attacks, while the AI pipeline provides content payloads that match those selections. The two systems communicate via shared tags and identifiers to ensure consistency.
 
 ---
+
 ## 16. Document Generation Strategy
 
 The game features 13 in-game documents that serve dual purposes as gameplay artifacts and training instruments. The AI pipeline contributes selectively to document generation while maintaining deterministic structure for audit and UI consistency.
@@ -691,6 +694,7 @@ For EU customers, AI generation occurs within EU data centers or within self-hos
 All AI generation logs are append-only and hashed. This supports SOC 2 auditability and evidence for regulatory reviews. Templates and content items include immutable version histories.
 
 ---
+
 ## 23. Observability, Metrics, and SLOs
 
 The AI pipeline is a production system that must be observable and measurable. Observability is required for performance tuning, cost management, and compliance reporting.
@@ -915,13 +919,13 @@ Items scoring below 0.60 require review. Items below 0.45 are automatically reje
 
 ### Appendix C: Difficulty Tier Descriptor Table
 
-| Tier | Description | Indicator Density | Typical Use |
-|------|-------------|------------------|-------------|
-| 1 | Obvious, low sophistication | High | Onboarding, LOW threat levels |
-| 2 | Moderate cues, some realism | Medium-high | Early progression |
-| 3 | Professional tone, mixed cues | Medium | Core gameplay |
-| 4 | High realism, subtle indicators | Low-medium | Advanced play |
-| 5 | Near indistinguishable | Low | High and SEVERE threat levels |
+| Tier | Description                     | Indicator Density | Typical Use                   |
+| ---- | ------------------------------- | ----------------- | ----------------------------- |
+| 1    | Obvious, low sophistication     | High              | Onboarding, LOW threat levels |
+| 2    | Moderate cues, some realism     | Medium-high       | Early progression             |
+| 3    | Professional tone, mixed cues   | Medium            | Core gameplay                 |
+| 4    | High realism, subtle indicators | Low-medium        | Advanced play                 |
+| 5    | Near indistinguishable          | Low               | High and SEVERE threat levels |
 
 ### Appendix D: Content Tag Taxonomy (Excerpt)
 
@@ -946,14 +950,14 @@ Items scoring below 0.60 require review. Items below 0.45 are automatically reje
 
 ### Appendix E: Safety Rules Matrix (Excerpt)
 
-| Rule | Description | Enforcement Layer |
-|------|-------------|------------------|
-| No real brands | Block public brands and real orgs | Prompt + filter |
-| No real people | Use synthetic name registry | Prompt + filter |
-| No real URLs | Reserved TLDs only | Validator |
-| No phone numbers | Regex rejection | Validator |
-| No executable payloads | Attachment whitelist | Validator |
-| No real incidents | Canon-only references | Prompt + review |
+| Rule                   | Description                       | Enforcement Layer |
+| ---------------------- | --------------------------------- | ----------------- |
+| No real brands         | Block public brands and real orgs | Prompt + filter   |
+| No real people         | Use synthetic name registry       | Prompt + filter   |
+| No real URLs           | Reserved TLDs only                | Validator         |
+| No phone numbers       | Regex rejection                   | Validator         |
+| No executable payloads | Attachment whitelist              | Validator         |
+| No real incidents      | Canon-only references             | Prompt + review   |
 
 ### Appendix F: Example Prompt Template (Redacted)
 
@@ -964,7 +968,7 @@ Items scoring below 0.60 require review. Items below 0.45 are automatically reje
   "category": "email_phishing",
   "system_prompt": "You are generating a fictional email for a cybersecurity training game...",
   "user_template": "Generate a spear phishing email using the following context: {{context}}",
-  "output_schema": { "type": "object", "properties": { "headers": {"type": "object"} } },
+  "output_schema": { "type": "object", "properties": { "headers": { "type": "object" } } },
   "guardrails": { "no_real_urls": true, "no_real_people": true }
 }
 ```
@@ -974,15 +978,14 @@ Items scoring below 0.60 require review. Items below 0.45 are automatically reje
 Per BRD Section 8.6, the pre-generation strategy maintains a pool of 20-50 emails per difficulty tier:
 
 | Difficulty | Min Pool | Target Pool | Max Pool |
-|------------|----------|-------------|----------|
-| 1 | 20 | 35 | 50 |
-| 2 | 20 | 40 | 50 |
-| 3 | 20 | 50 | 50 |
-| 4 | 20 | 40 | 50 |
-| 5 | 20 | 35 | 50 |
+| ---------- | -------- | ----------- | -------- |
+| 1          | 20       | 35          | 50       |
+| 2          | 20       | 40          | 50       |
+| 3          | 20       | 50          | 50       |
+| 4          | 20       | 40          | 50       |
+| 5          | 20       | 35          | 50       |
 
 Note: Target pool values align with the BRD's 20-50 per-tier range. All per-tier maximums are capped at 50 per the BRD constraint. Mid-difficulty tiers (2-4) are weighted toward higher targets where most gameplay occurs. Total pool must always exceed 200 across all tiers (BRD FR-GAME-004).
-
 
 ### Appendix H: Synthetic Entity Registry and Canon Data
 

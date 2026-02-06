@@ -5,7 +5,7 @@ export type PaginationMeta = {
   totalPages: number;
 };
 
-export type SortOrder = "asc" | "desc";
+export type SortOrder = 'asc' | 'desc';
 
 export type DateRange = {
   start: string;

@@ -38,70 +38,70 @@ The design system serves two distinct interfaces from one foundational token set
 
 #### 1.1.1 Game Palette -- Core Colors
 
-| Token | Hex | RGB | Usage | Contrast vs. #0a0e14 |
-|---|---|---|---|---|
-| `--color-bg-primary` | `#0a0e14` | `10, 14, 20` | Main background (near-black blue) | -- |
-| `--color-bg-secondary` | `#141a22` | `20, 26, 34` | Panel backgrounds, surfaces | -- |
-| `--color-bg-tertiary` | `#1e2832` | `30, 40, 50` | Elevated surfaces, active states | -- |
-| `--color-bg-hover` | `#253040` | `37, 48, 64` | Hover/focus backgrounds | -- |
-| `--color-phosphor-green` | `#33ff33` | `51, 255, 51` | Primary terminal text | 13.2:1 |
-| `--color-phosphor-green-dim` | `#88aa88` | `136, 170, 136` | Secondary/muted text | 6.8:1 |
-| `--color-phosphor-green-dark` | `#334433` | `51, 68, 51` | Borders, dividers | -- |
-| `--color-amber` | `#ffb000` | `255, 176, 0` | Headings, emphasis, warnings | 9.6:1 |
-| `--color-amber-dim` | `#aa7700` | `170, 119, 0` | Secondary amber text | 5.1:1 |
-| `--color-document-white` | `#e0e0e0` | `224, 224, 224` | Document body text | 14.7:1 |
-| `--color-document-muted` | `#b0b0b0` | `176, 176, 176` | Document secondary text | 9.4:1 |
+| Token                         | Hex       | RGB             | Usage                             | Contrast vs. #0a0e14 |
+| ----------------------------- | --------- | --------------- | --------------------------------- | -------------------- |
+| `--color-bg-primary`          | `#0a0e14` | `10, 14, 20`    | Main background (near-black blue) | --                   |
+| `--color-bg-secondary`        | `#141a22` | `20, 26, 34`    | Panel backgrounds, surfaces       | --                   |
+| `--color-bg-tertiary`         | `#1e2832` | `30, 40, 50`    | Elevated surfaces, active states  | --                   |
+| `--color-bg-hover`            | `#253040` | `37, 48, 64`    | Hover/focus backgrounds           | --                   |
+| `--color-phosphor-green`      | `#33ff33` | `51, 255, 51`   | Primary terminal text             | 13.2:1               |
+| `--color-phosphor-green-dim`  | `#88aa88` | `136, 170, 136` | Secondary/muted text              | 6.8:1                |
+| `--color-phosphor-green-dark` | `#334433` | `51, 68, 51`    | Borders, dividers                 | --                   |
+| `--color-amber`               | `#ffb000` | `255, 176, 0`   | Headings, emphasis, warnings      | 9.6:1                |
+| `--color-amber-dim`           | `#aa7700` | `170, 119, 0`   | Secondary amber text              | 5.1:1                |
+| `--color-document-white`      | `#e0e0e0` | `224, 224, 224` | Document body text                | 14.7:1               |
+| `--color-document-muted`      | `#b0b0b0` | `176, 176, 176` | Document secondary text           | 9.4:1                |
 
 #### 1.1.2 Game Palette -- Semantic Colors
 
-| Token | Default Hex | CB-Safe Hex | Usage | Text Label | Icon |
-|---|---|---|---|---|---|
-| `--color-safe` | `#33cc66` | `#009E73` | Approved, low risk, success | SAFE / APPROVED | Checkmark / Shield |
-| `--color-warning` | `#ffcc00` | `#F0E442` | Pending, medium risk, caution | WARNING / PENDING | Triangle-exclamation |
-| `--color-danger` | `#ff5555` | `#D55E00` | Denied, high risk, error | DANGER / DENIED | X-circle |
-| `--color-info` | `#3399ff` | `#0072B2` | Informational, neutral | INFO / NEUTRAL | Info-circle |
-| `--color-critical` | `#ff3333` | `#CC79A7` | Breach, severe, critical | CRITICAL / BREACH | Skull-crossbones |
-| `--color-flagged` | `#ff9900` | `#E69F00` | Flagged, review needed | FLAGGED / REVIEW | Flag |
-| `--color-archived` | `#8a8a8a` | `#999999` | Archived, inactive, disabled | ARCHIVED / INACTIVE | Archive-box |
+| Token              | Default Hex | CB-Safe Hex | Usage                         | Text Label          | Icon                 |
+| ------------------ | ----------- | ----------- | ----------------------------- | ------------------- | -------------------- |
+| `--color-safe`     | `#33cc66`   | `#009E73`   | Approved, low risk, success   | SAFE / APPROVED     | Checkmark / Shield   |
+| `--color-warning`  | `#ffcc00`   | `#F0E442`   | Pending, medium risk, caution | WARNING / PENDING   | Triangle-exclamation |
+| `--color-danger`   | `#ff5555`   | `#D55E00`   | Denied, high risk, error      | DANGER / DENIED     | X-circle             |
+| `--color-info`     | `#3399ff`   | `#0072B2`   | Informational, neutral        | INFO / NEUTRAL      | Info-circle          |
+| `--color-critical` | `#ff3333`   | `#CC79A7`   | Breach, severe, critical      | CRITICAL / BREACH   | Skull-crossbones     |
+| `--color-flagged`  | `#ff9900`   | `#E69F00`   | Flagged, review needed        | FLAGGED / REVIEW    | Flag                 |
+| `--color-archived` | `#8a8a8a`   | `#999999`   | Archived, inactive, disabled  | ARCHIVED / INACTIVE | Archive-box          |
 
 **Contrast note:** Semantic label text uses these tokens tuned to meet ≥4.5:1 on the primary background (`#0a0e14`). If a label appears on lighter panels, keep text in a high-contrast color (e.g., `--color-document-white`) and reserve semantic colors for icons, borders, or badges.
 
 #### 1.1.3 Threat Level Colors
 
-| Level | Label | Default Color | CB-Safe Color | Shield Icon State |
-|---|---|---|---|---|
-| 1 | LOW | `#3366ff` (Blue) | `#0072B2` | Intact |
-| 2 | GUARDED | `#33cc66` (Green) | `#009E73` | Minor crack |
-| 3 | ELEVATED | `#ffcc00` (Yellow) | `#F0E442` | Cracked |
-| 4 | HIGH | `#ff6600` (Orange) | `#E69F00` | Broken |
-| 5 | SEVERE | `#cc0000` (Red) | `#D55E00` | Shattered |
+| Level | Label    | Default Color      | CB-Safe Color | Shield Icon State |
+| ----- | -------- | ------------------ | ------------- | ----------------- |
+| 1     | LOW      | `#3366ff` (Blue)   | `#0072B2`     | Intact            |
+| 2     | GUARDED  | `#33cc66` (Green)  | `#009E73`     | Minor crack       |
+| 3     | ELEVATED | `#ffcc00` (Yellow) | `#F0E442`     | Cracked           |
+| 4     | HIGH     | `#ff6600` (Orange) | `#E69F00`     | Broken            |
+| 5     | SEVERE   | `#cc0000` (Red)    | `#D55E00`     | Shattered         |
 
 Every threat level is encoded through four redundant channels: color, text label, shield icon damage state, and a segmented progress bar. This ensures accessibility regardless of color vision.
 
 #### 1.1.4 Faction Colors
 
-| Faction | Primary Color | Accent | Usage |
-|---|---|---|---|
-| The Sovereign Compact | `#4488cc` | `#6699dd` | Government-affiliated applicants |
-| Nexion Industries | `#cc8844` | `#ddaa66` | Corporate applicants |
-| The Librarians | `#44aa88` | `#66ccaa` | Academic/preservation applicants |
-| Hacktivist Collectives | `#aa44cc` | `#cc66dd` | Activist applicants |
-| Criminal Networks | `#cc4444` | `#dd6666` | Hostile/suspicious applicants |
+| Faction                | Primary Color | Accent    | Usage                            |
+| ---------------------- | ------------- | --------- | -------------------------------- |
+| The Sovereign Compact  | `#4488cc`     | `#6699dd` | Government-affiliated applicants |
+| Nexion Industries      | `#cc8844`     | `#ddaa66` | Corporate applicants             |
+| The Librarians         | `#44aa88`     | `#66ccaa` | Academic/preservation applicants |
+| Hacktivist Collectives | `#aa44cc`     | `#cc66dd` | Activist applicants              |
+| Criminal Networks      | `#cc4444`     | `#dd6666` | Hostile/suspicious applicants    |
 
 #### 1.1.5 Enterprise Admin Palette
 
-| Token | Light | Dark |
-|---|---|---|
-| `--admin-bg-primary` | `#ffffff` | `#1a1a2e` |
-| `--admin-bg-secondary` | `#f8f9fa` | `#16213e` |
-| `--admin-bg-tertiary` | `#e9ecef` | `#1f2b47` |
-| `--admin-text-primary` | `#212529` | `#e0e0e0` |
+| Token                    | Light     | Dark      |
+| ------------------------ | --------- | --------- |
+| `--admin-bg-primary`     | `#ffffff` | `#1a1a2e` |
+| `--admin-bg-secondary`   | `#f8f9fa` | `#16213e` |
+| `--admin-bg-tertiary`    | `#e9ecef` | `#1f2b47` |
+| `--admin-text-primary`   | `#212529` | `#e0e0e0` |
 | `--admin-text-secondary` | `#6c757d` | `#a0a0b0` |
-| `--admin-accent` | `#0d6efd` | `#4d9eff` |
-| `--admin-success` | `#198754` | `#2ea96e` |
-| `--admin-warning` | `#ffc107` | `#ffd44d` |
-| `--admin-danger` | `#dc3545` | `#e85d6a` |
-| `--admin-border` | `#dee2e6` | `#2a2a4a` |
+| `--admin-accent`         | `#0d6efd` | `#4d9eff` |
+| `--admin-success`        | `#198754` | `#2ea96e` |
+| `--admin-warning`        | `#ffc107` | `#ffd44d` |
+| `--admin-danger`         | `#dc3545` | `#e85d6a` |
+| `--admin-border`         | `#dee2e6` | `#2a2a4a` |
 
 ### 1.2 Typography
 
@@ -110,9 +110,9 @@ Every threat level is encoded through four redundant channels: color, text label
 **Game Interface -- Primary (Terminal/UI):**
 
 ```css
---font-terminal: 'JetBrains Mono', 'Fira Code', 'IBM Plex Mono',
-                 'Cascadia Code', 'Source Code Pro', 'Consolas',
-                 'Liberation Mono', monospace;
+--font-terminal:
+  'JetBrains Mono', 'Fira Code', 'IBM Plex Mono', 'Cascadia Code', 'Source Code Pro', 'Consolas',
+  'Liberation Mono', monospace;
 ```
 
 JetBrains Mono is the first choice for its excellent readability at small sizes, clear distinction between similar characters (0/O, 1/l/I), and ligature support. Fira Code provides a close alternative with a slightly different character. IBM Plex Mono is the fallback with broader system availability.
@@ -145,16 +145,16 @@ Available in Settings > Accessibility > Font for users who benefit from dyslexia
 
 All sizes in `rem` relative to `--base-font-size` (default 16px, adjustable 12px-32px).
 
-| Token | Size (rem) | Size (px@16) | Weight | Line Height | Usage |
-|---|---|---|---|---|---|
-| `--text-xs` | 0.75 | 12 | 400 | 1.4 | Timestamps, metadata labels |
-| `--text-sm` | 0.875 | 14 | 400 | 1.5 | Secondary info, captions |
-| `--text-base` | 1.0 | 16 | 400 | 1.6 | Body text, email content |
-| `--text-md` | 1.125 | 18 | 500 | 1.5 | Panel headers, emphasis |
-| `--text-lg` | 1.25 | 20 | 600 | 1.4 | Section headings |
-| `--text-xl` | 1.5 | 24 | 700 | 1.3 | Page titles, threat alerts |
-| `--text-2xl` | 2.0 | 32 | 700 | 1.2 | Ransom note header, breach alert |
-| `--text-3xl` | 2.5 | 40 | 800 | 1.1 | Full-screen takeover text |
+| Token         | Size (rem) | Size (px@16) | Weight | Line Height | Usage                            |
+| ------------- | ---------- | ------------ | ------ | ----------- | -------------------------------- |
+| `--text-xs`   | 0.75       | 12           | 400    | 1.4         | Timestamps, metadata labels      |
+| `--text-sm`   | 0.875      | 14           | 400    | 1.5         | Secondary info, captions         |
+| `--text-base` | 1.0        | 16           | 400    | 1.6         | Body text, email content         |
+| `--text-md`   | 1.125      | 18           | 500    | 1.5         | Panel headers, emphasis          |
+| `--text-lg`   | 1.25       | 20           | 600    | 1.4         | Section headings                 |
+| `--text-xl`   | 1.5        | 24           | 700    | 1.3         | Page titles, threat alerts       |
+| `--text-2xl`  | 2.0        | 32           | 700    | 1.2         | Ransom note header, breach alert |
+| `--text-3xl`  | 2.5        | 40           | 800    | 1.1         | Full-screen takeover text        |
 
 **Heading treatments (Game):**
 
@@ -166,15 +166,15 @@ All sizes in `rem` relative to `--base-font-size` (default 16px, adjustable 12px
 
 #### 1.2.3 Type Scale -- Enterprise Interface
 
-| Element | Font | Size | Weight | Line Height |
-|---|---|---|---|---|
-| H1 (Page Title) | Inter | 1.75rem (28px) | 700 | 1.3 |
-| H2 (Section) | Inter | 1.375rem (22px) | 600 | 1.35 |
-| H3 (Card Title) | Inter | 1.125rem (18px) | 600 | 1.4 |
-| Body | Inter | 1rem (16px) | 400 | 1.6 |
-| Small/Label | Inter | 0.875rem (14px) | 400 | 1.5 |
-| Data Table | Inter | 0.875rem (14px) | 400 | 1.5 |
-| Metric Value | Inter | 2rem (32px) | 700 | 1.2 |
+| Element         | Font  | Size            | Weight | Line Height |
+| --------------- | ----- | --------------- | ------ | ----------- |
+| H1 (Page Title) | Inter | 1.75rem (28px)  | 700    | 1.3         |
+| H2 (Section)    | Inter | 1.375rem (22px) | 600    | 1.35        |
+| H3 (Card Title) | Inter | 1.125rem (18px) | 600    | 1.4         |
+| Body            | Inter | 1rem (16px)     | 400    | 1.6         |
+| Small/Label     | Inter | 0.875rem (14px) | 400    | 1.5         |
+| Data Table      | Inter | 0.875rem (14px) | 400    | 1.5         |
+| Metric Value    | Inter | 2rem (32px)     | 700    | 1.2         |
 
 ### 1.3 CRT Effects Specification
 
@@ -216,8 +216,12 @@ Layer Stack (bottom to top):
 }
 
 @keyframes scanline-drift {
-  0%   { background-position: 0 0; }
-  100% { background-position: 0 4px; }
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 4px;
+  }
 }
 
 /* Respect reduced motion */
@@ -228,12 +232,13 @@ Layer Stack (bottom to top):
 }
 
 /* User toggle: disabled */
-[data-scanlines="off"] .crt-scanlines::after {
+[data-scanlines='off'] .crt-scanlines::after {
   display: none;
 }
 ```
 
 **Adjustable parameters:**
+
 - `--scanline-opacity`: 0 (off) to 0.15 (heavy). Default: 0.05
 - `--scanline-size`: 1px to 4px. Default: 2px (1px transparent + 1px dark)
 - Animation: on/off toggle. Default: on (subtle drift)
@@ -266,7 +271,7 @@ Layer Stack (bottom to top):
 }
 
 /* User toggle */
-[data-curvature="off"] .crt-curvature > .game-viewport {
+[data-curvature='off'] .crt-curvature > .game-viewport {
   transform: none;
   border-radius: 0;
   box-shadow: none;
@@ -301,8 +306,8 @@ Layer Stack (bottom to top):
 }
 
 /* Disabled in high-contrast and reduced-motion */
-[data-glow="off"] .crt-glow,
-[data-high-contrast="on"] .crt-glow {
+[data-glow='off'] .crt-glow,
+[data-high-contrast='on'] .crt-glow {
   text-shadow: none;
 }
 ```
@@ -326,11 +331,21 @@ Layer Stack (bottom to top):
 }
 
 @keyframes noise-shift {
-  0%   { background-position: 0 0; }
-  25%  { background-position: -32px -16px; }
-  50%  { background-position: 16px -32px; }
-  75%  { background-position: -16px 32px; }
-  100% { background-position: 0 0; }
+  0% {
+    background-position: 0 0;
+  }
+  25% {
+    background-position: -32px -16px;
+  }
+  50% {
+    background-position: 16px -32px;
+  }
+  75% {
+    background-position: -16px 32px;
+  }
+  100% {
+    background-position: 0 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -339,7 +354,7 @@ Layer Stack (bottom to top):
   }
 }
 
-[data-noise="off"] .crt-noise::before {
+[data-noise='off'] .crt-noise::before {
   display: none;
 }
 ```
@@ -363,7 +378,7 @@ Layer Stack (bottom to top):
   );
 }
 
-[data-vignette="off"] .crt-vignette::after {
+[data-vignette='off'] .crt-vignette::after {
   display: none;
 }
 ```
@@ -373,12 +388,24 @@ Layer Stack (bottom to top):
 ```css
 /* Flicker triggered by game events (breach, threat escalation) */
 @keyframes screen-flicker {
-  0%   { opacity: 1; }
-  5%   { opacity: 0.85; }
-  10%  { opacity: 1; }
-  15%  { opacity: 0.9; }
-  20%  { opacity: 1; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  5% {
+    opacity: 0.85;
+  }
+  10% {
+    opacity: 1;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .crt-flicker--active {
@@ -427,10 +454,10 @@ The game interface uses a character grid overlay to maintain the terminal aesthe
 
 ```css
 :root {
-  --char-width: 0.6em;   /* Approximate width of one monospace character */
-  --char-height: 1.6em;  /* Line height of terminal text */
-  --grid-columns: 80;    /* Standard terminal width */
-  --grid-rows: 40;       /* Approximate visible rows */
+  --char-width: 0.6em; /* Approximate width of one monospace character */
+  --char-height: 1.6em; /* Line height of terminal text */
+  --grid-columns: 80; /* Standard terminal width */
+  --grid-rows: 40; /* Approximate visible rows */
 }
 
 /* Terminal panels align to character boundaries */
@@ -449,10 +476,10 @@ In practice, the character grid is a conceptual guide. Actual layout uses CSS Gr
 .game-layout {
   display: grid;
   grid-template-areas:
-    "header header  header"
-    "inbox  viewer  status"
-    "action action  action"
-    "terminal terminal terminal";
+    'header header  header'
+    'inbox  viewer  status'
+    'action action  action'
+    'terminal terminal terminal';
   grid-template-columns: 250px 1fr 220px;
   grid-template-rows: auto 1fr auto auto;
   height: 100vh;
@@ -463,16 +490,16 @@ In practice, the character grid is a conceptual guide. Actual layout uses CSS Gr
 
 #### 1.4.2 Spacing Scale
 
-| Token | Value | Usage |
-|---|---|---|
-| `--space-0` | 0 | No spacing |
-| `--space-1` | 0.25rem (4px) | Tight inline spacing |
-| `--space-2` | 0.5rem (8px) | Compact element spacing |
-| `--space-3` | 0.75rem (12px) | Default element gap |
-| `--space-4` | 1rem (16px) | Standard section spacing |
-| `--space-5` | 1.5rem (24px) | Panel padding |
-| `--space-6` | 2rem (32px) | Major section dividers |
-| `--space-8` | 3rem (48px) | Page-level spacing |
+| Token       | Value          | Usage                    |
+| ----------- | -------------- | ------------------------ |
+| `--space-0` | 0              | No spacing               |
+| `--space-1` | 0.25rem (4px)  | Tight inline spacing     |
+| `--space-2` | 0.5rem (8px)   | Compact element spacing  |
+| `--space-3` | 0.75rem (12px) | Default element gap      |
+| `--space-4` | 1rem (16px)    | Standard section spacing |
+| `--space-5` | 1.5rem (24px)  | Panel padding            |
+| `--space-6` | 2rem (32px)    | Major section dividers   |
+| `--space-8` | 3rem (48px)    | Page-level spacing       |
 
 ### 1.5 Border Styles
 
@@ -535,29 +562,29 @@ Box-drawing characters are rendered as actual text characters in header bars and
 
 Sound is additive and fully optional. All sounds can be disabled globally or per-category.
 
-| Sound Category | Description | Example | Default State |
-|---|---|---|---|
-| **Ambient** | Data center background hum, varies with threat level | Low hum at LOW, tense drone at SEVERE | Off (opt-in) |
-| **UI Feedback** | Keyboard clicks on type, panel switches, button presses | Mechanical key click on terminal input | On |
-| **Alerts** | New email chime, threat escalation tone, breach alarm | Rising three-note chime for new email | On |
-| **Stamps** | Satisfying THUNK on approve/deny stamp | Heavy stamp impact sound | On |
-| **Narrative** | Musical stings for story moments, Morpheus messages | Low synth pad for intelligence briefs | On |
-| **Effects** | CRT power-on, static burst on high-threat events | Brief static crackle on breach detection | On |
+| Sound Category  | Description                                             | Example                                  | Default State |
+| --------------- | ------------------------------------------------------- | ---------------------------------------- | ------------- |
+| **Ambient**     | Data center background hum, varies with threat level    | Low hum at LOW, tense drone at SEVERE    | Off (opt-in)  |
+| **UI Feedback** | Keyboard clicks on type, panel switches, button presses | Mechanical key click on terminal input   | On            |
+| **Alerts**      | New email chime, threat escalation tone, breach alarm   | Rising three-note chime for new email    | On            |
+| **Stamps**      | Satisfying THUNK on approve/deny stamp                  | Heavy stamp impact sound                 | On            |
+| **Narrative**   | Musical stings for story moments, Morpheus messages     | Low synth pad for intelligence briefs    | On            |
+| **Effects**     | CRT power-on, static burst on high-threat events        | Brief static crackle on breach detection | On            |
 
 All sounds have visual equivalents (caption system, visual indicators) for deaf and hard-of-hearing players. Per BRD Section 7.5, captions are provided for all audio content and transcripts are available for any narrative audio or video sequences.
 
 ### 1.8 Animation Principles
 
-| Principle | Description | Implementation |
-|---|---|---|
-| **Typewriter text** | Narrative text appears character-by-character | CSS `@keyframes` with `steps()` timing, 30-50ms per character. Skippable with click/spacebar. |
-| **Screen flicker** | Brief brightness dip on significant events | CSS opacity animation, max 2 flashes, 0.4s total duration |
-| **Smooth transitions** | Panel switches, menu openings | CSS `transition: 200ms ease-out` on transforms and opacity |
-| **Stamp impact** | Approve/Deny stamp slams onto document | CSS transform scale(1.2) to scale(1) with slight bounce easing |
-| **Meter changes** | Resource bars animate on value change | CSS `transition: width 500ms ease-out` |
-| **Toast slide-in** | Notifications enter from screen edge | CSS `translateY` from offscreen, 300ms ease-out |
-| **Cursor blink** | Terminal cursor idle animation | CSS `@keyframes` opacity toggle, 530ms interval (matching real terminal) |
-| **Glow pulse** | Subtle brightness oscillation on active elements | CSS `@keyframes` text-shadow intensity, 2s ease-in-out infinite |
+| Principle              | Description                                      | Implementation                                                                                |
+| ---------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------------------- |
+| **Typewriter text**    | Narrative text appears character-by-character    | CSS `@keyframes` with `steps()` timing, 30-50ms per character. Skippable with click/spacebar. |
+| **Screen flicker**     | Brief brightness dip on significant events       | CSS opacity animation, max 2 flashes, 0.4s total duration                                     |
+| **Smooth transitions** | Panel switches, menu openings                    | CSS `transition: 200ms ease-out` on transforms and opacity                                    |
+| **Stamp impact**       | Approve/Deny stamp slams onto document           | CSS transform scale(1.2) to scale(1) with slight bounce easing                                |
+| **Meter changes**      | Resource bars animate on value change            | CSS `transition: width 500ms ease-out`                                                        |
+| **Toast slide-in**     | Notifications enter from screen edge             | CSS `translateY` from offscreen, 300ms ease-out                                               |
+| **Cursor blink**       | Terminal cursor idle animation                   | CSS `@keyframes` opacity toggle, 530ms interval (matching real terminal)                      |
+| **Glow pulse**         | Subtle brightness oscillation on active elements | CSS `@keyframes` text-shadow intensity, 2s ease-in-out infinite                               |
 
 **All animations respect `prefers-reduced-motion`:** When active, typewriter text appears instantly, transitions are instant, flicker becomes a single brief dim, and all looping animations stop.
 
@@ -605,13 +632,13 @@ The primary game screen. When no email is selected, the center panel shows the f
 
 **Responsive breakpoints for Main Terminal:**
 
-| Breakpoint | Layout | Notes |
-|---|---|---|
-| >= 1440px (XL) | Full 3-panel as shown | Optimal experience |
-| 1024-1439px (LG) | 3-panel, right panel narrower (180px) | Status panel condensed |
-| 768-1023px (MD) | 2-panel: Inbox + Viewer. Status in slide-out drawer | Toggle via status icon in header |
-| 600-767px (SM) | Single panel with tab bar | Tabs: Inbox / Document / Status / More |
-| 320-599px (XS) | Single panel with bottom tabs, condensed header | Minimal header: threat icon + day + credits |
+| Breakpoint       | Layout                                              | Notes                                       |
+| ---------------- | --------------------------------------------------- | ------------------------------------------- |
+| >= 1440px (XL)   | Full 3-panel as shown                               | Optimal experience                          |
+| 1024-1439px (LG) | 3-panel, right panel narrower (180px)               | Status panel condensed                      |
+| 768-1023px (MD)  | 2-panel: Inbox + Viewer. Status in slide-out drawer | Toggle via status icon in header            |
+| 600-767px (SM)   | Single panel with tab bar                           | Tabs: Inbox / Document / Status / More      |
+| 320-599px (XS)   | Single panel with bottom tabs, condensed header     | Minimal header: threat icon + day + credits |
 
 ### 2.2 Email Triage View
 
@@ -656,6 +683,7 @@ When an email is selected from the inbox, the center panel renders the email det
 ```
 
 **Interaction flow:**
+
 1. Player selects email from inbox (click/tap or Arrow keys)
 2. Email renders in center panel with full header, body, attachments
 3. Player reads email, clicks attachments to open in sub-panels
@@ -703,21 +731,21 @@ The document viewer is a generic renderer that adapts its layout per document ty
 
 **Document type adaptations:**
 
-| Document | Layout | Interactive Elements |
-|---|---|---|
-| Email Access Request | Header + body + attachments | Click attachments, highlight text, verify links |
-| Phishing Analysis Worksheet | Two-column: red flags / legitimacy | Toggle checkboxes, add notes per item |
-| Verification Packet | Tabbed view: Identity / Ownership / Chain | Compare tabs side-by-side, flag discrepancies |
-| Threat Assessment Sheet | Header with risk score + categorized indicators | Adjust weighting, override auto-score |
-| Incident Log | Chronological timeline with expandable entries | Filter by type, search, export |
-| Data Salvage Contract | Numbered clauses, signature block | Highlight suspicious clauses, stamp to sign |
-| Storage Lease Agreement | Terms grid, pricing table | Adjust terms, calculate costs |
-| Upgrade Proposal | Specs table, cost/benefit, timeline | Approve/defer/reject |
-| Blacklist Notice | Entity details, rationale, evidence | Review evidence, confirm or rescind |
-| Whitelist Exception | Justification, approver chain, conditions | Add justification, sign |
-| Facility Status Report | Visual meters, trend graphs, alert list | Drill into specific systems |
-| Intelligence Brief | Executive summary + detailed analysis | Redacted sections unlock with upgrades |
-| Ransom Note | Distorted text, countdown, payment | Pay or attempt countermeasures |
+| Document                    | Layout                                          | Interactive Elements                            |
+| --------------------------- | ----------------------------------------------- | ----------------------------------------------- |
+| Email Access Request        | Header + body + attachments                     | Click attachments, highlight text, verify links |
+| Phishing Analysis Worksheet | Two-column: red flags / legitimacy              | Toggle checkboxes, add notes per item           |
+| Verification Packet         | Tabbed view: Identity / Ownership / Chain       | Compare tabs side-by-side, flag discrepancies   |
+| Threat Assessment Sheet     | Header with risk score + categorized indicators | Adjust weighting, override auto-score           |
+| Incident Log                | Chronological timeline with expandable entries  | Filter by type, search, export                  |
+| Data Salvage Contract       | Numbered clauses, signature block               | Highlight suspicious clauses, stamp to sign     |
+| Storage Lease Agreement     | Terms grid, pricing table                       | Adjust terms, calculate costs                   |
+| Upgrade Proposal            | Specs table, cost/benefit, timeline             | Approve/defer/reject                            |
+| Blacklist Notice            | Entity details, rationale, evidence             | Review evidence, confirm or rescind             |
+| Whitelist Exception         | Justification, approver chain, conditions       | Add justification, sign                         |
+| Facility Status Report      | Visual meters, trend graphs, alert list         | Drill into specific systems                     |
+| Intelligence Brief          | Executive summary + detailed analysis           | Redacted sections unlock with upgrades          |
+| Ransom Note                 | Distorted text, countdown, payment              | Pay or attempt countermeasures                  |
 
 ### 2.4 Phishing Analysis Worksheet
 
@@ -956,6 +984,7 @@ Full-screen takeover. This is the most dramatic UI moment in the game.
 ```
 
 **Visual effects during lockout:**
+
 - Background: Deep red (#1a0000) replacing normal dark background
 - Text: Harsh white (#ffffff) and red (#ff3333), no green phosphor
 - CRT effects: Static noise increased to 0.08 opacity, flicker rate increased
@@ -1005,6 +1034,7 @@ The enterprise admin interface deliberately breaks the game's diegetic framing. 
 ```
 
 **Key differences from game UI:**
+
 - White/light background (with dark mode option)
 - Inter font family, no monospaced terminal text
 - Standard rounded corners (8px border-radius)
@@ -1032,19 +1062,19 @@ interface TerminalWindowProps {
   /** Unique identifier for state persistence */
   id: string;
   /** Whether the window can be dragged */
-  draggable?: boolean;          // default: false
+  draggable?: boolean; // default: false
   /** Whether the window can be resized */
-  resizable?: boolean;          // default: false
+  resizable?: boolean; // default: false
   /** Whether the window is currently minimized */
-  minimized?: boolean;          // default: false
+  minimized?: boolean; // default: false
   /** Whether the window can be closed */
-  closable?: boolean;           // default: true
+  closable?: boolean; // default: true
   /** Initial width in pixels or CSS value */
-  width?: string;               // default: '400px'
+  width?: string; // default: '400px'
   /** Initial height in pixels or CSS value */
-  height?: string;              // default: '300px'
+  height?: string; // default: '300px'
   /** Z-index layer */
-  layer?: number;               // default: 10
+  layer?: number; // default: 10
   /** CSS class for custom styling */
   class?: string;
   /** Callback when window is closed */
@@ -1059,6 +1089,7 @@ interface TerminalWindowProps {
 **States:** Default, Focused (bright border), Minimized (collapsed to title bar), Dragging (subtle opacity change), Resizing.
 
 **Accessibility:**
+
 - `role="dialog"` with `aria-labelledby` pointing to title
 - Title bar buttons have `aria-label`: "Minimize window", "Close window"
 - Draggable windows also movable via keyboard (Alt+Arrow keys)
@@ -1076,27 +1107,28 @@ interface TerminalTextProps {
   /** Text content to display */
   text: string;
   /** Enable typewriter animation */
-  typewriter?: boolean;         // default: false
+  typewriter?: boolean; // default: false
   /** Characters per second for typewriter */
-  speed?: number;               // default: 30
+  speed?: number; // default: 30
   /** Enable phosphor glow effect */
-  glow?: boolean;               // default: true
+  glow?: boolean; // default: true
   /** Text color variant */
-  variant?: 'green' | 'amber' | 'white' | 'red' | 'muted';  // default: 'green'
+  variant?: 'green' | 'amber' | 'white' | 'red' | 'muted'; // default: 'green'
   /** Apply syntax highlighting (for code/headers) */
-  highlight?: boolean;          // default: false
+  highlight?: boolean; // default: false
   /** Make text selectable */
-  selectable?: boolean;         // default: true
+  selectable?: boolean; // default: true
   /** Callback when typewriter animation completes */
   oncomplete?: () => void;
   /** Allow skipping typewriter with click */
-  skippable?: boolean;          // default: true
+  skippable?: boolean; // default: true
 }
 ```
 
 **States:** Typing (characters appearing), Complete (all text visible), Skipped (user interrupted typewriter).
 
 **Accessibility:**
+
 - Full text content is in the DOM immediately (visible to screen readers) even during typewriter animation; the animation is purely visual via CSS `clip-path` or `max-width` reveal
 - `aria-live="polite"` for dynamic text additions
 - `prefers-reduced-motion`: Text appears instantly, no animation
@@ -1112,13 +1144,13 @@ interface DocumentPanelProps {
   /** Document type determines layout */
   type: DocumentType;
   /** Enable text annotation */
-  annotatable?: boolean;        // default: true
+  annotatable?: boolean; // default: true
   /** Enable zoom controls */
-  zoomable?: boolean;           // default: true
+  zoomable?: boolean; // default: true
   /** Current zoom level (1.0 = 100%) */
-  zoom?: number;                // default: 1.0
+  zoom?: number; // default: 1.0
   /** Enable text highlighting */
-  highlightable?: boolean;      // default: true
+  highlightable?: boolean; // default: true
   /** Existing annotations */
   annotations?: Annotation[];
   /** Callback when annotation is added */
@@ -1128,10 +1160,18 @@ interface DocumentPanelProps {
 }
 
 type DocumentType =
-  | 'email' | 'phishing-worksheet' | 'verification-packet'
-  | 'threat-assessment' | 'incident-log' | 'salvage-contract'
-  | 'lease-agreement' | 'upgrade-proposal' | 'blacklist-notice'
-  | 'whitelist-exception' | 'facility-report' | 'intel-brief'
+  | 'email'
+  | 'phishing-worksheet'
+  | 'verification-packet'
+  | 'threat-assessment'
+  | 'incident-log'
+  | 'salvage-contract'
+  | 'lease-agreement'
+  | 'upgrade-proposal'
+  | 'blacklist-notice'
+  | 'whitelist-exception'
+  | 'facility-report'
+  | 'intel-brief'
   | 'ransom-note';
 
 interface Annotation {
@@ -1146,6 +1186,7 @@ interface Annotation {
 ```
 
 **Accessibility:**
+
 - Document content uses semantic HTML (headings, lists, tables)
 - `role="document"` on the container
 - Zoom controls have `aria-label` and announce current zoom level
@@ -1161,9 +1202,9 @@ interface ActionStampProps {
   /** Stamp action type (maps to BRD FR-GAME-005 decision options) */
   action: 'approve' | 'deny' | 'flag-for-review' | 'request-additional-verification';
   /** Whether the stamp is currently active/available */
-  disabled?: boolean;           // default: false
+  disabled?: boolean; // default: false
   /** Current request context for aria-label */
-  requestContext?: string;      // e.g., "Dr. Varga's request"
+  requestContext?: string; // e.g., "Dr. Varga's request"
   /** Show confirmation dialog before stamping */
   requireConfirmation?: boolean; // default: true
   /** Callback when stamp is applied */
@@ -1178,6 +1219,7 @@ type StampAction = {
 ```
 
 **Visual behavior:**
+
 1. Idle: Button shows stamp icon + text label, terminal styling
 2. Hover/Focus: Stamp icon enlarges slightly, glow intensifies
 3. Click: Stamp slams down animation (CSS `transform: scale(1.15)` then `scale(1.0)` with bounce easing, 200ms)
@@ -1185,6 +1227,7 @@ type StampAction = {
 5. Applied: Red/green ink stamp mark appears on the document, satisfying THUNK sound plays
 
 **Accessibility:**
+
 - `role="button"` with `aria-label="Approve request from Dr. Katarina Varga"`
 - Keyboard activation: Enter or Space
 - Keyboard shortcut: A (approve), D (deny), F (flag for review), V (request additional verification)
@@ -1206,13 +1249,13 @@ interface ResourceMeterProps {
   /** Unit label (e.g., 'U', 'kW', '%', 'Mbps') */
   unit?: string;
   /** Warning threshold (fraction 0-1) */
-  warningThreshold?: number;    // default: 0.8
+  warningThreshold?: number; // default: 0.8
   /** Critical threshold (fraction 0-1) */
-  criticalThreshold?: number;   // default: 0.9
+  criticalThreshold?: number; // default: 0.9
   /** Show numeric value beside bar */
-  showValue?: boolean;          // default: true
+  showValue?: boolean; // default: true
   /** Compact mode (no label, just bar + value) */
-  compact?: boolean;            // default: false
+  compact?: boolean; // default: false
   /** Tooltip with detailed breakdown */
   breakdown?: ResourceBreakdown[];
   /** Callback on click to drill down */
@@ -1227,11 +1270,13 @@ interface ResourceBreakdown {
 ```
 
 **Visual states:**
+
 - Normal (< warning): Green fill (`--color-phosphor-green`)
 - Warning (>= warning, < critical): Amber fill (`--color-amber`) + pulsing border
 - Critical (>= critical): Red fill (`--color-danger`) + steady glow + text "CRITICAL"
 
 **Accessibility:**
+
 - `role="meter"` with `aria-valuenow`, `aria-valuemin`, `aria-valuemax`
 - `aria-valuetext="Rack space: 8 of 12 available. 67 percent."`
 - Value changes announced via `aria-live="polite"` region
@@ -1246,19 +1291,20 @@ interface ThreatIndicatorProps {
   /** Current threat level (1-5) */
   level: 1 | 2 | 3 | 4 | 5;
   /** Show text label */
-  showLabel?: boolean;          // default: true
+  showLabel?: boolean; // default: true
   /** Show shield icon */
-  showIcon?: boolean;           // default: true
+  showIcon?: boolean; // default: true
   /** Show segmented bar */
-  showBar?: boolean;            // default: true
+  showBar?: boolean; // default: true
   /** Compact mode for mobile */
-  compact?: boolean;            // default: false
+  compact?: boolean; // default: false
   /** Callback on click to view threat details */
   onclick?: () => void;
 }
 ```
 
 **Encoding channels (all active by default):**
+
 1. Color: Background shifts across the threat palette
 2. Text: "LOW", "GUARDED", "ELEVATED", "HIGH", "SEVERE"
 3. Icon: Shield with progressive damage
@@ -1267,6 +1313,7 @@ interface ThreatIndicatorProps {
 6. Haptic: Vibration at HIGH/SEVERE (mobile, optional)
 
 **Accessibility:**
+
 - `role="status"` with `aria-live="assertive"`
 - Changes announced: "Threat level changed to ELEVATED, level 3 of 5"
 - All five encoding channels ensure information is conveyed regardless of disability
@@ -1282,13 +1329,13 @@ interface NotificationToastProps {
   /** Notification type */
   type: 'info' | 'success' | 'warning' | 'danger' | 'critical';
   /** Display duration in ms (0 = persistent) */
-  duration?: number;            // default: 5000
+  duration?: number; // default: 5000
   /** Whether user can dismiss */
-  dismissible?: boolean;        // default: true
+  dismissible?: boolean; // default: true
   /** Priority (higher = more prominent) */
   priority?: 'low' | 'normal' | 'high' | 'urgent';
   /** Source context */
-  source?: string;              // e.g., "SYSOP-7", "SYSTEM", "MORPHEUS"
+  source?: string; // e.g., "SYSOP-7", "SYSTEM", "MORPHEUS"
   /** Callback on dismiss */
   ondismiss?: () => void;
   /** Callback on click (if actionable) */
@@ -1297,6 +1344,7 @@ interface NotificationToastProps {
 ```
 
 **Visual treatment:**
+
 ```
 +--[ SYSOP-7 ]----------------------------------+
 |  Heads up. Three requests today used the same  |
@@ -1305,6 +1353,7 @@ interface NotificationToastProps {
 ```
 
 **Accessibility:**
+
 - Uses `role="alert"` for urgent, `role="status"` for others
 - Announced via `aria-live` regions (assertive for urgent, polite for info)
 - Does not steal focus from current task
@@ -1321,12 +1370,12 @@ interface DialogBoxProps {
   speaker: {
     name: string;
     role?: string;
-    portrait?: string;          // URL to character portrait image
+    portrait?: string; // URL to character portrait image
   };
   /** Dialog text content */
   text: string;
   /** Enable typewriter effect for dialog text */
-  typewriter?: boolean;         // default: true
+  typewriter?: boolean; // default: true
   /** Response choices (if branching) */
   choices?: DialogChoice[];
   /** Callback when dialog is dismissed or choice made */
@@ -1336,13 +1385,14 @@ interface DialogBoxProps {
 interface DialogChoice {
   id: string;
   text: string;
-  consequence?: string;         // Hint text shown on hover
+  consequence?: string; // Hint text shown on hover
   disabled?: boolean;
   disabledReason?: string;
 }
 ```
 
 **Visual layout:**
+
 ```
 +--[ MORPHEUS ]--------------------------------------+
 |  [PORTRAIT]  Good work today, Operator.            |
@@ -1358,6 +1408,7 @@ interface DialogChoice {
 ```
 
 **Accessibility:**
+
 - `role="dialog"` with `aria-labelledby` pointing to speaker name
 - Choices are a `role="listbox"` with `role="option"` items
 - Arrow keys navigate choices, Enter selects
@@ -1382,14 +1433,15 @@ interface NavigationBarProps {
 interface NavItem {
   id: string;
   label: string;
-  icon?: string;                // Icon identifier
-  badge?: number;               // Notification count
+  icon?: string; // Icon identifier
+  badge?: number; // Notification count
   disabled?: boolean;
-  shortcut?: string;            // e.g., "1", "2" for quick-nav
+  shortcut?: string; // e.g., "1", "2" for quick-nav
 }
 ```
 
 **Tab variant (game):**
+
 ```
 [NEW (3)] [PENDING (4)] [ARCHIVE (12)] [FLAGGED (1)]
  ^^^^^^^
@@ -1397,11 +1449,13 @@ interface NavItem {
 ```
 
 **Terminal variant (mobile bottom bar):**
+
 ```
 [INBOX] [DOCS] [STATUS] [MORE]
 ```
 
 **Accessibility:**
+
 - `role="tablist"` with `role="tab"` items
 - `aria-selected="true"` on active tab
 - Arrow keys navigate between tabs
@@ -1418,17 +1472,17 @@ interface DataTableProps<T> {
   /** Row data */
   data: T[];
   /** Enable sorting */
-  sortable?: boolean;           // default: true
+  sortable?: boolean; // default: true
   /** Enable filtering */
-  filterable?: boolean;         // default: true
+  filterable?: boolean; // default: true
   /** Rows per page (0 = no pagination) */
-  pageSize?: number;            // default: 25
+  pageSize?: number; // default: 25
   /** Current sort state */
   sortBy?: { column: string; direction: 'asc' | 'desc' };
   /** Enable row selection */
-  selectable?: boolean;         // default: false
+  selectable?: boolean; // default: false
   /** Variant styling */
-  variant?: 'game' | 'admin';  // default: 'game'
+  variant?: 'game' | 'admin'; // default: 'game'
   /** Callback on row click */
   onrowclick?: (row: T) => void;
   /** Callback on sort change */
@@ -1447,6 +1501,7 @@ interface Column<T> {
 ```
 
 **Accessibility:**
+
 - Semantic `<table>` with `<thead>`, `<tbody>`, proper `<th>` scope
 - Sort buttons in column headers with `aria-sort` attribute
 - `aria-label` on table describing content and current sort/filter state
@@ -1473,7 +1528,7 @@ interface TerminalInputProps {
   /** Disabled state */
   disabled?: boolean;
   /** Prompt character (e.g., ">", "$") */
-  prompt?: string;              // default: '>'
+  prompt?: string; // default: '>'
   /** Callback on value change */
   oninput?: (value: string) => void;
 }
@@ -1525,6 +1580,7 @@ Select/Dropdown:
 ```
 
 **All form elements:**
+
 - Visible `<label>` associated with input
 - Error messages in text, adjacent to field (not just color)
 - Required fields marked with text "(Required)", not just asterisk
@@ -1542,7 +1598,7 @@ interface ModalProps {
   /** Modal size */
   size?: 'sm' | 'md' | 'lg' | 'full';
   /** Whether clicking backdrop closes modal */
-  dismissible?: boolean;        // default: true
+  dismissible?: boolean; // default: true
   /** Variant styling */
   variant?: 'game' | 'admin';
   /** Callback on close */
@@ -1555,6 +1611,7 @@ interface ModalProps {
 ```
 
 **Accessibility:**
+
 - `role="dialog"` with `aria-modal="true"`
 - `aria-labelledby` pointing to title element
 - Focus trapped within modal (Tab cycles through focusable elements)
@@ -1569,11 +1626,11 @@ interface LoadingProps {
   /** Loading state active */
   loading: boolean;
   /** Loading message */
-  message?: string;             // default: 'Processing...'
+  message?: string; // default: 'Processing...'
   /** Visual variant */
   variant?: 'cursor' | 'progress' | 'spinner';
   /** Progress value (for progress variant) */
-  progress?: number;            // 0-100
+  progress?: number; // 0-100
 }
 ```
 
@@ -1593,6 +1650,7 @@ Terminal dots:
 ```
 
 **Accessibility:**
+
 - `role="progressbar"` with `aria-valuenow` for progress variant
 - `aria-busy="true"` on the content area being loaded
 - `aria-live="polite"` announces loading state changes
@@ -1635,6 +1693,7 @@ interface DragDropConfig {
 ```
 
 **Keyboard alternative for all drag-and-drop:**
+
 1. Focus on the document/attachment
 2. Press `C` to enter comparison mode
 3. Use Arrow keys to select second document
@@ -1645,39 +1704,39 @@ interface DragDropConfig {
 
 **Full shortcut map:**
 
-| Category | Shortcut | Action | Context |
-|---|---|---|---|
-| Navigation | `Tab` / `Shift+Tab` | Move focus forward/backward | Global |
-| Navigation | `I` | Focus inbox panel | Global |
-| Navigation | `R` | Focus resource panel | Global |
-| Navigation | `S` | Open search | Global |
-| Navigation | `T` | Toggle terminal overlay | Global |
-| Navigation | `?` | Open shortcut reference | Global |
-| Navigation | `1-5` | Jump to inbox category | Inbox focused |
-| Document | `Arrow Up/Down` | Navigate inbox items | Inbox panel |
-| Document | `Arrow Left/Right` | Navigate document tabs | Document viewer |
-| Document | `Enter` / `Space` | Activate focused element | Global |
-| Document | `C` | Compare: open side-by-side | Document viewer |
-| Document | `H` | Toggle highlight mode | Document viewer |
-| Document | `N` | Add note to selection | Document viewer |
-| Action | `A` | Approve current request | Request open |
-| Action | `D` | Deny current request | Request open |
-| Action | `F` | Flag current request | Request open |
-| Action | `V` | Request additional verification | Request open |
-| System | `Esc` | Close modal/panel/tooltip | Global |
-| System | `Ctrl+Z` | Undo last action (where applicable) | Global |
+| Category   | Shortcut            | Action                              | Context         |
+| ---------- | ------------------- | ----------------------------------- | --------------- |
+| Navigation | `Tab` / `Shift+Tab` | Move focus forward/backward         | Global          |
+| Navigation | `I`                 | Focus inbox panel                   | Global          |
+| Navigation | `R`                 | Focus resource panel                | Global          |
+| Navigation | `S`                 | Open search                         | Global          |
+| Navigation | `T`                 | Toggle terminal overlay             | Global          |
+| Navigation | `?`                 | Open shortcut reference             | Global          |
+| Navigation | `1-5`               | Jump to inbox category              | Inbox focused   |
+| Document   | `Arrow Up/Down`     | Navigate inbox items                | Inbox panel     |
+| Document   | `Arrow Left/Right`  | Navigate document tabs              | Document viewer |
+| Document   | `Enter` / `Space`   | Activate focused element            | Global          |
+| Document   | `C`                 | Compare: open side-by-side          | Document viewer |
+| Document   | `H`                 | Toggle highlight mode               | Document viewer |
+| Document   | `N`                 | Add note to selection               | Document viewer |
+| Action     | `A`                 | Approve current request             | Request open    |
+| Action     | `D`                 | Deny current request                | Request open    |
+| Action     | `F`                 | Flag current request                | Request open    |
+| Action     | `V`                 | Request additional verification     | Request open    |
+| System     | `Esc`               | Close modal/panel/tooltip           | Global          |
+| System     | `Ctrl+Z`            | Undo last action (where applicable) | Global          |
 
 **Vim-like keybindings (optional, enabled in Settings):**
 
-| Shortcut | Action |
-|---|---|
+| Shortcut  | Action                         |
+| --------- | ------------------------------ |
 | `j` / `k` | Navigate inbox items (down/up) |
-| `h` / `l` | Navigate tabs (left/right) |
-| `gg` | Go to first inbox item |
-| `G` | Go to last inbox item |
-| `/` | Open search |
-| `:q` | Close current panel |
-| `:help` | Open help |
+| `h` / `l` | Navigate tabs (left/right)     |
+| `gg`      | Go to first inbox item         |
+| `G`       | Go to last inbox item          |
+| `/`       | Open search                    |
+| `:q`      | Close current panel            |
+| `:help`   | Open help                      |
 
 All single-key shortcuts are disabled when focus is in a text input field.
 
@@ -1750,12 +1809,12 @@ VERIFICATION PROCEDURES
 
 Four priority levels with distinct visual treatments:
 
-| Priority | Persistence | Visual | Sound | Interrupt |
-|---|---|---|---|---|
-| Low | 3 seconds, auto-dismiss | Muted border, bottom stack | None | No |
-| Normal | 5 seconds, auto-dismiss | Standard border, bottom stack | Soft chime | No |
-| High | Persistent until dismissed | Amber border, top stack | Alert tone | Mild (banner appears) |
-| Urgent | Persistent, requires action | Red border, center overlay | Alarm sound | Yes (blocks view) |
+| Priority | Persistence                 | Visual                        | Sound       | Interrupt             |
+| -------- | --------------------------- | ----------------------------- | ----------- | --------------------- |
+| Low      | 3 seconds, auto-dismiss     | Muted border, bottom stack    | None        | No                    |
+| Normal   | 5 seconds, auto-dismiss     | Standard border, bottom stack | Soft chime  | No                    |
+| High     | Persistent until dismissed  | Amber border, top stack       | Alert tone  | Mild (banner appears) |
+| Urgent   | Persistent, requires action | Red border, center overlay    | Alarm sound | Yes (blocks view)     |
 
 **Notification stack:** Toasts stack from the bottom-right (desktop) or top (mobile). Maximum 3 visible at once; older notifications collapse into a counter.
 
@@ -1773,14 +1832,14 @@ This is a deliberate design constraint that mirrors real security workflows:
 
 Deliberate friction points that teach real security habits:
 
-| Friction Point | What It Teaches |
-|---|---|
-| Must open email to see full content | Do not judge by subject line alone |
+| Friction Point                             | What It Teaches                              |
+| ------------------------------------------ | -------------------------------------------- |
+| Must open email to see full content        | Do not judge by subject line alone           |
 | Verification packet is a separate document | Identity verification requires active effort |
-| Domain verification is a manual click | URL checking requires conscious action |
-| No "undo approve" without consequence | Decisions in security are consequential |
-| Capacity check before approval | Resource implications of access decisions |
-| Risk score requires worksheet interaction | Threat assessment is a structured process |
+| Domain verification is a manual click      | URL checking requires conscious action       |
+| No "undo approve" without consequence      | Decisions in security are consequential      |
+| Capacity check before approval             | Resource implications of access decisions    |
+| Risk score requires worksheet interaction  | Threat assessment is a structured process    |
 
 ---
 
@@ -1790,18 +1849,24 @@ Deliberate friction points that teach real security habits:
 
 ```css
 :root {
-  --bp-xs: 320px;   /* Phones */
-  --bp-sm: 600px;   /* Small tablets, large phones */
-  --bp-md: 768px;   /* Tablets (landscape) */
-  --bp-lg: 1024px;  /* Laptops, standard monitors */
-  --bp-xl: 1440px;  /* Large monitors */
+  --bp-xs: 320px; /* Phones */
+  --bp-sm: 600px; /* Small tablets, large phones */
+  --bp-md: 768px; /* Tablets (landscape) */
+  --bp-lg: 1024px; /* Laptops, standard monitors */
+  --bp-xl: 1440px; /* Large monitors */
   --bp-2xl: 1920px; /* Full HD and above */
 }
 
 /* Usage with container queries where possible, media queries as fallback */
-@media (min-width: 1024px) { /* Desktop: full 3-panel */ }
-@media (min-width: 768px) and (max-width: 1023px) { /* Tablet: 2-panel */ }
-@media (max-width: 767px) { /* Mobile: 1-panel + tabs */ }
+@media (min-width: 1024px) {
+  /* Desktop: full 3-panel */
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet: 2-panel */
+}
+@media (max-width: 767px) {
+  /* Mobile: 1-panel + tabs */
+}
 ```
 
 ### 5.2 Desktop Layout (Primary: 1920x1080, Minimum: 1024x768)
@@ -1812,10 +1877,10 @@ The full three-panel layout is the canonical game experience.
 .game-layout--desktop {
   display: grid;
   grid-template-areas:
-    "header header  header"
-    "inbox  viewer  status"
-    "action action  action"
-    "term   term    term";
+    'header header  header'
+    'inbox  viewer  status'
+    'action action  action'
+    'term   term    term';
   grid-template-columns: 250px 1fr 220px;
   grid-template-rows: auto 1fr auto auto;
   height: 100vh;
@@ -1838,6 +1903,7 @@ The full three-panel layout is the canonical game experience.
 ```
 
 **Desktop features:**
+
 - All three panels visible simultaneously
 - Comparison mode splits center panel horizontally
 - Terminal overlay can coexist with workspace (split bottom)
@@ -1853,9 +1919,9 @@ Two-panel layout with slide-out drawer for facility status.
 .game-layout--tablet {
   display: grid;
   grid-template-areas:
-    "header header"
-    "inbox  viewer"
-    "action action";
+    'header header'
+    'inbox  viewer'
+    'action action';
   grid-template-columns: 200px 1fr;
   grid-template-rows: auto 1fr auto;
   height: 100vh;
@@ -1879,6 +1945,7 @@ Two-panel layout with slide-out drawer for facility status.
 ```
 
 **Tablet adaptations:**
+
 - Right panel (facility status) is a slide-out drawer, toggled via icon in header
 - Left panel (inbox) narrowed: shows sender name + risk indicator only
 - Comparison mode stacks documents vertically
@@ -1895,9 +1962,9 @@ Single-panel with bottom tab navigation. This layout is critical because the con
 .game-layout--mobile {
   display: grid;
   grid-template-areas:
-    "header"
-    "content"
-    "tabs";
+    'header'
+    'content'
+    'tabs';
   grid-template-rows: auto 1fr auto;
   height: 100vh;
   height: 100dvh; /* Dynamic viewport height for mobile browsers */
@@ -1949,6 +2016,7 @@ Single-panel with bottom tab navigation. This layout is critical because the con
 ```
 
 **Mobile adaptations:**
+
 - Single panel visible at a time, switched via bottom tabs
 - Condensed header: threat level icon (tap for label), day number, abbreviated credits
 - Inbox items: sender + subject only, tap to open
@@ -1963,41 +2031,41 @@ Single-panel with bottom tab navigation. This layout is critical because the con
 
 ### 5.5 Touch Interaction Adaptations
 
-| Desktop Action | Touch Adaptation |
-|---|---|
-| Right-click context menu | Long-press context menu |
-| Hover tooltip | Tap-and-hold tooltip OR dedicated info button |
-| Drag-and-drop comparison | Select document A, tap "Compare", select document B |
-| Mouse scroll in panel | Touch scroll with momentum |
-| Double-click to zoom | Pinch-to-zoom on documents |
-| Keyboard shortcuts | Gesture shortcuts + bottom tab navigation |
-| Stamp click (with mouse press THUNK) | Tap stamp button + haptic feedback vibration |
+| Desktop Action                       | Touch Adaptation                                    |
+| ------------------------------------ | --------------------------------------------------- |
+| Right-click context menu             | Long-press context menu                             |
+| Hover tooltip                        | Tap-and-hold tooltip OR dedicated info button       |
+| Drag-and-drop comparison             | Select document A, tap "Compare", select document B |
+| Mouse scroll in panel                | Touch scroll with momentum                          |
+| Double-click to zoom                 | Pinch-to-zoom on documents                          |
+| Keyboard shortcuts                   | Gesture shortcuts + bottom tab navigation           |
+| Stamp click (with mouse press THUNK) | Tap stamp button + haptic feedback vibration        |
 
 **Swipe gestures (mobile/tablet):**
 
-| Gesture | Action | Context |
-|---|---|---|
-| Swipe left on inbox item | Reveal "Open / Flag / Snooze" quick actions (no decisions) | Inbox list |
-| Swipe right on inbox item | Open request detail (review view) | Inbox list |
-| Swipe down from top | Pull to refresh / load new emails | Inbox list |
-| Pinch zoom | Zoom document content | Document viewer |
-| Two-finger swipe left/right | Switch between tabs | Any view (tablet) |
+| Gesture                     | Action                                                     | Context           |
+| --------------------------- | ---------------------------------------------------------- | ----------------- |
+| Swipe left on inbox item    | Reveal "Open / Flag / Snooze" quick actions (no decisions) | Inbox list        |
+| Swipe right on inbox item   | Open request detail (review view)                          | Inbox list        |
+| Swipe down from top         | Pull to refresh / load new emails                          | Inbox list        |
+| Pinch zoom                  | Zoom document content                                      | Document viewer   |
+| Two-finger swipe left/right | Switch between tabs                                        | Any view (tablet) |
 
 All swipe gestures have button-based alternatives. Approve/Deny stamps are only available inside the request review view after opening the item; the inbox list never offers decision actions.
 
 ### 5.6 Layout Shift Summary
 
-| Feature | Desktop (1024+) | Tablet (768-1023) | Mobile (< 768) |
-|---|---|---|---|
-| Panel layout | 3-panel grid | 2-panel + drawer | 1-panel + tabs |
-| Inbox detail | Full metadata | Sender + risk | Sender + subject |
-| Comparison mode | Side-by-side | Stacked vertical | Not available |
-| Terminal | Inline + overlay | Full-screen overlay | Full-screen tab |
-| Resource meters | Always visible | Slide-out drawer | Status tab |
-| Action buttons | Fixed bottom bar | Fixed bottom bar | Floating bottom |
-| Keyboard shortcuts | Full set | Reduced set | Minimal |
-| Touch gestures | N/A | Swipe, pinch | Swipe, pinch, long-press |
-| CRT effects | Full | Reduced | Disabled |
+| Feature            | Desktop (1024+)  | Tablet (768-1023)   | Mobile (< 768)           |
+| ------------------ | ---------------- | ------------------- | ------------------------ |
+| Panel layout       | 3-panel grid     | 2-panel + drawer    | 1-panel + tabs           |
+| Inbox detail       | Full metadata    | Sender + risk       | Sender + subject         |
+| Comparison mode    | Side-by-side     | Stacked vertical    | Not available            |
+| Terminal           | Inline + overlay | Full-screen overlay | Full-screen tab          |
+| Resource meters    | Always visible   | Slide-out drawer    | Status tab               |
+| Action buttons     | Fixed bottom bar | Fixed bottom bar    | Floating bottom          |
+| Keyboard shortcuts | Full set         | Reduced set         | Minimal                  |
+| Touch gestures     | N/A              | Swipe, pinch        | Swipe, pinch, long-press |
+| CRT effects        | Full             | Reduced             | Disabled                 |
 
 ### 5.7 Internationalization and RTL Layout Considerations
 
@@ -2032,6 +2100,7 @@ Per BRD Section 7.6, the platform requires full support for 24 official EU langu
 WCAG 2.1 Level AA is the **baseline**, not a stretch goal. The game must be accessible to players with visual, auditory, motor, and cognitive disabilities. The terminal aesthetic is achievable without compromising accessibility because CRT effects are layered on top of a clean, semantic base.
 
 **Compliance standards (per BRD Section 7.5 and 9.5):**
+
 - **WCAG 2.1 Level AA** -- Baseline legal obligation across all markets
 - **Section 508** -- Required for US government market access (Priority 1, must-have at launch)
 - **EN 301 549** -- Required for EU market compliance (enforcement from June 28, 2025; Priority 3, within 12 months)
@@ -2069,6 +2138,7 @@ Tab Order (Main Terminal Screen):
 ```
 
 **Focus management rules:**
+
 - Modal dialogs trap focus and return it to trigger on close
 - Panel switches move focus to first interactive element in new panel
 - Dynamic content (new emails, threat changes) never steals focus
@@ -2080,24 +2150,32 @@ Tab Order (Main Terminal Screen):
 **ARIA Landmarks:**
 
 ```html
-<header role="banner">          <!-- Top bar: status, threat, funds -->
-<nav role="navigation">          <!-- Left panel: inbox categories -->
-<main role="main">               <!-- Center panel: document viewer -->
-<aside role="complementary">     <!-- Right panel: facility status -->
-<footer role="contentinfo">      <!-- Bottom bar: actions, terminal -->
+<header role="banner">
+  <!-- Top bar: status, threat, funds -->
+  <nav role="navigation">
+    <!-- Left panel: inbox categories -->
+    <main role="main">
+      <!-- Center panel: document viewer -->
+      <aside role="complementary">
+        <!-- Right panel: facility status -->
+        <footer role="contentinfo"><!-- Bottom bar: actions, terminal --></footer>
+      </aside>
+    </main>
+  </nav>
+</header>
 ```
 
 **Live Regions:**
 
-| Region | `aria-live` | `aria-atomic` | Content |
-|---|---|---|---|
-| Threat level | `assertive` | `true` | "Threat level changed to ELEVATED, level 3 of 5" |
-| Resource meters | `polite` | `false` | Only changed values |
-| Action confirmations | `polite` | `true` | "Request from Dr. Varga approved" |
-| Breach alerts | `assertive` | `true` | "Security breach detected. Operations locked." |
-| New email notifications | `polite` | `true` | "New request from Dr. Varga, Budapest Tech" |
-| Terminal output | `polite` | `false` | Latest command output |
-| Funds changes | `polite` | `true` | "Funds increased by 500 credits. Total: 12,950" |
+| Region                  | `aria-live` | `aria-atomic` | Content                                          |
+| ----------------------- | ----------- | ------------- | ------------------------------------------------ |
+| Threat level            | `assertive` | `true`        | "Threat level changed to ELEVATED, level 3 of 5" |
+| Resource meters         | `polite`    | `false`       | Only changed values                              |
+| Action confirmations    | `polite`    | `true`        | "Request from Dr. Varga approved"                |
+| Breach alerts           | `assertive` | `true`        | "Security breach detected. Operations locked."   |
+| New email notifications | `polite`    | `true`        | "New request from Dr. Varga, Budapest Tech"      |
+| Terminal output         | `polite`    | `false`       | Latest command output                            |
+| Funds changes           | `polite`    | `true`        | "Funds increased by 500 credits. Total: 12,950"  |
 
 **Screen reader announcement examples:**
 
@@ -2122,16 +2200,16 @@ Breach event:
 
 ### 6.3 Color Contrast Compliance
 
-| Element | Foreground | Background | Contrast Ratio | WCAG Level |
-|---|---|---|---|---|
-| Terminal text (green on dark) | `#33ff33` | `#0a0e14` | 13.2:1 | AAA |
-| Amber headings on dark | `#ffb000` | `#0a0e14` | 9.6:1 | AAA |
-| Document white on dark | `#e0e0e0` | `#0a0e14` | 14.7:1 | AAA |
-| Muted text on dark | `#88aa88` | `#0a0e14` | 6.8:1 | AA |
-| Admin text on white | `#212529` | `#ffffff` | 16.0:1 | AAA |
-| Admin link on white | `#0d6efd` | `#ffffff` | 4.6:1 | AA |
-| Focus indicator (green on dark) | `#33ff33` | `#0a0e14` | 13.2:1 | AAA |
-| High-contrast: white on black | `#ffffff` | `#000000` | 21.0:1 | AAA |
+| Element                         | Foreground | Background | Contrast Ratio | WCAG Level |
+| ------------------------------- | ---------- | ---------- | -------------- | ---------- |
+| Terminal text (green on dark)   | `#33ff33`  | `#0a0e14`  | 13.2:1         | AAA        |
+| Amber headings on dark          | `#ffb000`  | `#0a0e14`  | 9.6:1          | AAA        |
+| Document white on dark          | `#e0e0e0`  | `#0a0e14`  | 14.7:1         | AAA        |
+| Muted text on dark              | `#88aa88`  | `#0a0e14`  | 6.8:1          | AA         |
+| Admin text on white             | `#212529`  | `#ffffff`  | 16.0:1         | AAA        |
+| Admin link on white             | `#0d6efd`  | `#ffffff`  | 4.6:1          | AA         |
+| Focus indicator (green on dark) | `#33ff33`  | `#0a0e14`  | 13.2:1         | AAA        |
+| High-contrast: white on black   | `#ffffff`  | `#000000`  | 21.0:1         | AAA        |
 
 All contrast ratios exceed WCAG 2.1 AA minimums (4.5:1 for normal text, 3:1 for large text).
 
@@ -2139,13 +2217,13 @@ All contrast ratios exceed WCAG 2.1 AA minimums (4.5:1 for normal text, 3:1 for 
 
 Based on the Wong (2011) palette, validated for protanopia, deuteranopia, and tritanopia:
 
-| Semantic | Default | Protanopia | Deuteranopia | Tritanopia | Secondary Encoding |
-|---|---|---|---|---|---|
-| Safe | `#009E73` | `#009E73` | `#009E73` | `#009E73` | Checkmark icon, solid border, "SAFE" label |
-| Warning | `#F0E442` | `#F0E442` | `#E69F00` | `#E69F00` | Triangle icon, dashed border, "WARNING" label |
-| Danger | `#D55E00` | `#0072B2` | `#0072B2` | `#D55E00` | X-circle icon, double border, "DANGER" label |
-| Info | `#0072B2` | `#56B4E9` | `#56B4E9` | `#0072B2` | Info-circle icon, dotted border, "INFO" label |
-| Critical | `#CC79A7` | `#CC79A7` | `#CC79A7` | `#CC79A7` | Skull icon, wavy border, "CRITICAL" label |
+| Semantic | Default   | Protanopia | Deuteranopia | Tritanopia | Secondary Encoding                            |
+| -------- | --------- | ---------- | ------------ | ---------- | --------------------------------------------- |
+| Safe     | `#009E73` | `#009E73`  | `#009E73`    | `#009E73`  | Checkmark icon, solid border, "SAFE" label    |
+| Warning  | `#F0E442` | `#F0E442`  | `#E69F00`    | `#E69F00`  | Triangle icon, dashed border, "WARNING" label |
+| Danger   | `#D55E00` | `#0072B2`  | `#0072B2`    | `#D55E00`  | X-circle icon, double border, "DANGER" label  |
+| Info     | `#0072B2` | `#56B4E9`  | `#56B4E9`    | `#0072B2`  | Info-circle icon, dotted border, "INFO" label |
+| Critical | `#CC79A7` | `#CC79A7`  | `#CC79A7`    | `#CC79A7`  | Skull icon, wavy border, "CRITICAL" label     |
 
 Every color-coded element uses at least TWO non-color signals (text label + icon, or text label + border pattern).
 
@@ -2154,14 +2232,23 @@ Every color-coded element uses at least TWO non-color signals (text label + icon
 ```css
 @media (prefers-reduced-motion: reduce) {
   /* Disable ALL decorative animations */
-  .crt-scanlines::after { animation: none; }
-  .crt-noise::before { animation: none; }
+  .crt-scanlines::after {
+    animation: none;
+  }
+  .crt-noise::before {
+    animation: none;
+  }
 
   /* Typewriter text appears instantly */
-  .typewriter { animation: none; clip-path: none; }
+  .typewriter {
+    animation: none;
+    clip-path: none;
+  }
 
   /* Transitions become instant */
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
@@ -2173,14 +2260,20 @@ Every color-coded element uses at least TWO non-color signals (text label + icon
   }
 
   /* Loading indicators become static */
-  .loading-cursor { animation: none; opacity: 1; }
+  .loading-cursor {
+    animation: none;
+    opacity: 1;
+  }
 
   /* Charts render fully, no draw-in */
-  .chart-animate { animation: none; }
+  .chart-animate {
+    animation: none;
+  }
 }
 ```
 
 Additionally, the application provides a three-level motion setting:
+
 - **Full**: All animations active
 - **Reduced**: Essential transitions only (panel switching, focus movement)
 - **None**: Zero animations, all state changes instant
@@ -2200,16 +2293,16 @@ The architectural guarantee: all CRT effects are implemented as CSS pseudo-eleme
 }
 
 /* If ALL effects disabled, UI is a clean dark theme */
-[data-effects="none"] .crt-scanlines::after,
-[data-effects="none"] .crt-noise::before,
-[data-effects="none"] .crt-vignette::after,
-[data-effects="none"] .crt-curvature > .game-viewport {
+[data-effects='none'] .crt-scanlines::after,
+[data-effects='none'] .crt-noise::before,
+[data-effects='none'] .crt-vignette::after,
+[data-effects='none'] .crt-curvature > .game-viewport {
   display: none !important;
   transform: none !important;
   box-shadow: none !important;
 }
 
-[data-effects="none"] .crt-glow {
+[data-effects='none'] .crt-glow {
   text-shadow: none !important;
 }
 ```
@@ -2225,7 +2318,7 @@ The architectural guarantee: all CRT effects are implemented as CSS pseudo-eleme
 }
 
 /* High-contrast focus indicator */
-[data-high-contrast="on"] :focus-visible {
+[data-high-contrast='on'] :focus-visible {
   outline: 3px solid #ffffff;
   outline-offset: 2px;
   box-shadow: 0 0 0 5px #000000;
@@ -2290,27 +2383,27 @@ The game creates urgency through queue pressure, not per-item timers:
 
 Per BRD Section 9.5, game-based elements must have non-game alternatives for accessibility:
 
-| Game-Based Element | Non-Game Alternative |
-|---|---|
-| Stamp animation (Approve/Deny) | Standard button click with text confirmation |
-| ASCII art headers and decorations | Plain text equivalents in screen reader output |
-| CRT visual effects (scanlines, glow, noise) | Clean dark theme with all effects disabled |
-| Typewriter text animation | Instant text display (prefers-reduced-motion or settings toggle) |
-| Sound-based alerts | Visual notification toasts, screen flash (accessibility-safe), ARIA live region announcements |
-| Drag-and-drop document comparison | Keyboard-based comparison mode (select + press C) |
-| Resource gauge visualizations | Numeric text readouts with `role="meter"` and `aria-valuetext` |
-| Facility map (Canvas/PixiJS) | Accessible data table alternative listing facility status in text form |
+| Game-Based Element                          | Non-Game Alternative                                                                          |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Stamp animation (Approve/Deny)              | Standard button click with text confirmation                                                  |
+| ASCII art headers and decorations           | Plain text equivalents in screen reader output                                                |
+| CRT visual effects (scanlines, glow, noise) | Clean dark theme with all effects disabled                                                    |
+| Typewriter text animation                   | Instant text display (prefers-reduced-motion or settings toggle)                              |
+| Sound-based alerts                          | Visual notification toasts, screen flash (accessibility-safe), ARIA live region announcements |
+| Drag-and-drop document comparison           | Keyboard-based comparison mode (select + press C)                                             |
+| Resource gauge visualizations               | Numeric text readouts with `role="meter"` and `aria-valuetext`                                |
+| Facility map (Canvas/PixiJS)                | Accessible data table alternative listing facility status in text form                        |
 
 All game-based training content is also available via non-game presentation when accessed through enterprise LMS integrations (SCORM/xAPI/LTI), ensuring compliance with Section 508 and EN 301 549 requirements.
 
 ### 6.11 Alternative Game Modes for Accessibility
 
-| Mode | Description | Changes |
-|---|---|---|
-| **Relaxed** | Reduced pressure for new or accessibility-focused players | Slower queue rate, higher starting funds, reduced breach penalty, extended event timers |
-| **Practice** | Sandbox mode with no consequences | No breaches, infinite funds, all tools available. For learning the interface. |
-| **Screen Reader Optimized** | Streamlined for non-visual play | Simplified panel layout, enhanced announcements, auto-read document summaries, keyboard-only navigation emphasized |
-| **One-Switch** | Single-button scanning mode | Sequential focus through all interactive elements, single button to activate |
+| Mode                        | Description                                               | Changes                                                                                                            |
+| --------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| **Relaxed**                 | Reduced pressure for new or accessibility-focused players | Slower queue rate, higher starting funds, reduced breach penalty, extended event timers                            |
+| **Practice**                | Sandbox mode with no consequences                         | No breaches, infinite funds, all tools available. For learning the interface.                                      |
+| **Screen Reader Optimized** | Streamlined for non-visual play                           | Simplified panel layout, enhanced announcements, auto-read document summaries, keyboard-only navigation emphasized |
+| **One-Switch**              | Single-button scanning mode                               | Sequential focus through all interactive elements, single button to activate                                       |
 
 ---
 
@@ -2322,7 +2415,7 @@ Themes are implemented entirely through CSS Custom Properties (design tokens). A
 
 ```css
 /* Theme application via data attribute on root element */
-:root[data-theme="green"] {
+:root[data-theme='green'] {
   --color-phosphor: #33ff33;
   --color-phosphor-dim: #88aa88;
   --color-phosphor-dark: #334433;
@@ -2331,7 +2424,7 @@ Themes are implemented entirely through CSS Custom Properties (design tokens). A
   --color-glow-b: 51;
 }
 
-:root[data-theme="amber"] {
+:root[data-theme='amber'] {
   --color-phosphor: #ffb000;
   --color-phosphor-dim: #aa8844;
   --color-phosphor-dark: #443322;
@@ -2343,12 +2436,7 @@ Themes are implemented entirely through CSS Custom Properties (design tokens). A
 /* All components reference tokens, not hard-coded colors */
 .terminal-text {
   color: var(--color-phosphor);
-  text-shadow: 0 0 4px rgba(
-    var(--color-glow-r),
-    var(--color-glow-g),
-    var(--color-glow-b),
-    0.3
-  );
+  text-shadow: 0 0 4px rgba(var(--color-glow-r), var(--color-glow-g), var(--color-glow-b), 0.3);
 }
 ```
 
@@ -2358,57 +2446,57 @@ Themes are implemented entirely through CSS Custom Properties (design tokens). A
 
 The classic green-screen terminal. Evokes early IBM 5151 displays and the cultural imagery of "hacker screens."
 
-| Element | Color |
-|---|---|
-| Background | `#0a0e14` |
-| Primary text | `#33ff33` |
-| Secondary text | `#88aa88` |
-| Headings | `#ffb000` (amber accent) |
-| Borders | `#334433` |
-| Glow | Green phosphor |
+| Element        | Color                    |
+| -------------- | ------------------------ |
+| Background     | `#0a0e14`                |
+| Primary text   | `#33ff33`                |
+| Secondary text | `#88aa88`                |
+| Headings       | `#ffb000` (amber accent) |
+| Borders        | `#334433`                |
+| Glow           | Green phosphor           |
 
 #### Theme 2: Amber Terminal
 
 Warm amber CRT aesthetic. Evokes early Hercules displays and amber monochrome monitors.
 
-| Element | Color |
-|---|---|
-| Background | `#0e0a04` |
-| Primary text | `#ffb000` |
-| Secondary text | `#aa8844` |
-| Headings | `#ffcc44` (bright amber) |
-| Borders | `#443322` |
-| Glow | Amber/warm |
+| Element        | Color                    |
+| -------------- | ------------------------ |
+| Background     | `#0e0a04`                |
+| Primary text   | `#ffb000`                |
+| Secondary text | `#aa8844`                |
+| Headings       | `#ffcc44` (bright amber) |
+| Borders        | `#443322`                |
+| Glow           | Amber/warm               |
 
 #### Theme 3: High Contrast
 
 Maximum readability for users with visual impairments. All CRT effects disabled.
 
-| Element | Color |
-|---|---|
-| Background | `#000000` (pure black) |
-| Primary text | `#ffffff` (pure white) |
-| Secondary text | `#ffffff` |
-| Headings | `#ffffff` (bold weight differentiates) |
-| Borders | `#ffffff` |
-| Glow | None |
-| CRT effects | All disabled |
-| Contrast ratio | 21:1 throughout |
+| Element        | Color                                  |
+| -------------- | -------------------------------------- |
+| Background     | `#000000` (pure black)                 |
+| Primary text   | `#ffffff` (pure white)                 |
+| Secondary text | `#ffffff`                              |
+| Headings       | `#ffffff` (bold weight differentiates) |
+| Borders        | `#ffffff`                              |
+| Glow           | None                                   |
+| CRT effects    | All disabled                           |
+| Contrast ratio | 21:1 throughout                        |
 
 #### Theme 4: Enterprise Clean
 
 For corporate deployments where the terminal aesthetic may be unwelcome. Clean, professional, no game aesthetics. This theme is used for the admin dashboard regardless of game theme and is otherwise an explicit opt-in for players.
 
-| Element | Color (Light) | Color (Dark) |
-|---|---|---|
-| Background | `#ffffff` | `#1a1a2e` |
-| Primary text | `#212529` | `#e0e0e0` |
-| Secondary text | `#6c757d` | `#a0a0b0` |
-| Headings | `#212529` bold | `#e0e0e0` bold |
-| Borders | `#dee2e6` | `#2a2a4a` |
-| Font | Inter (proportional) | Inter |
-| CRT effects | All disabled | All disabled |
-| Border radius | 8px (rounded) | 8px |
+| Element        | Color (Light)        | Color (Dark)   |
+| -------------- | -------------------- | -------------- |
+| Background     | `#ffffff`            | `#1a1a2e`      |
+| Primary text   | `#212529`            | `#e0e0e0`      |
+| Secondary text | `#6c757d`            | `#a0a0b0`      |
+| Headings       | `#212529` bold       | `#e0e0e0` bold |
+| Borders        | `#dee2e6`            | `#2a2a4a`      |
+| Font           | Inter (proportional) | Inter          |
+| CRT effects    | All disabled         | All disabled   |
+| Border radius  | 8px (rounded)        | 8px            |
 
 #### Theme 5: Custom
 
@@ -2475,8 +2563,14 @@ function applyTheme(theme: ThemeState): void {
   root.dataset.noise = theme.effects.noise ? 'on' : 'off';
   root.dataset.vignette = theme.effects.vignette ? 'on' : 'off';
   root.dataset.highContrast = theme.current === 'high-contrast' ? 'on' : 'off';
-  root.dataset.effects = theme.effects.scanlines || theme.effects.curvature ||
-    theme.effects.glow || theme.effects.noise || theme.effects.vignette ? 'on' : 'none';
+  root.dataset.effects =
+    theme.effects.scanlines ||
+    theme.effects.curvature ||
+    theme.effects.glow ||
+    theme.effects.noise ||
+    theme.effects.vignette
+      ? 'on'
+      : 'none';
   root.style.setProperty('--base-font-size', `${theme.fontSize}px`);
   root.style.setProperty('--scanline-opacity', String(theme.effects.scanlineOpacity));
   root.style.setProperty('--glow-intensity', String(theme.effects.glowIntensity));
@@ -2485,6 +2579,7 @@ function applyTheme(theme: ThemeState): void {
 ```
 
 Theme preference is persisted to `localStorage` and synced to the user's server-side profile. The system respects OS-level preferences for accessibility, but does not override the terminal-first default theme:
+
 - `prefers-color-scheme: dark` -> Default (green phosphor)
 - `prefers-color-scheme: light` -> Default (green phosphor); may suggest Enterprise as an optional opt-in
 - `prefers-contrast: more` -> High-contrast theme
@@ -2498,33 +2593,33 @@ Theme preference is persisted to `localStorage` and synced to the user's server-
 
 Diegetic UI means that every interface element has a narrative justification. The player is not looking at a "game UI" -- they are looking at the screen of a terminal in the Matrices GmbH data center. This design philosophy, inspired by Dead Space (health meter on Isaac's suit) and Metro 2033 (Artyom's wristwatch and clipboard), creates immersion by eliminating the boundary between game world and interface.
 
-| UI Element | Diegetic Justification |
-|---|---|
-| Top status bar | Terminal system status display, standard on all Matrices GmbH workstations |
-| Inbox panel | Matrices GmbH Secure Mail Terminal -- the organization's email system |
-| Document viewer | Terminal document renderer -- processes incoming file transfers |
-| Resource meters | Facility monitoring dashboard -- connected to physical sensors |
-| Threat indicator | Threat Intelligence Feed -- aggregated from network monitoring |
-| Action buttons (Approve/Deny/Flag for Review/Request Additional Verification) | Standard Matrices GmbH access control interface |
-| Terminal input | Operator command line -- direct system access |
-| Upgrade shop | Procurement system -- Matrices GmbH's equipment ordering interface |
-| Notification toasts | System alerts -- pushed by monitoring daemons |
-| Ransom lockout | Actual screen takeover by malware (the attacker's message) |
-| CRT effects | Physical properties of the old CRT monitor the character uses |
-| Keyboard sounds | Physical properties of the mechanical keyboard |
+| UI Element                                                                    | Diegetic Justification                                                     |
+| ----------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Top status bar                                                                | Terminal system status display, standard on all Matrices GmbH workstations |
+| Inbox panel                                                                   | Matrices GmbH Secure Mail Terminal -- the organization's email system      |
+| Document viewer                                                               | Terminal document renderer -- processes incoming file transfers            |
+| Resource meters                                                               | Facility monitoring dashboard -- connected to physical sensors             |
+| Threat indicator                                                              | Threat Intelligence Feed -- aggregated from network monitoring             |
+| Action buttons (Approve/Deny/Flag for Review/Request Additional Verification) | Standard Matrices GmbH access control interface                            |
+| Terminal input                                                                | Operator command line -- direct system access                              |
+| Upgrade shop                                                                  | Procurement system -- Matrices GmbH's equipment ordering interface         |
+| Notification toasts                                                           | System alerts -- pushed by monitoring daemons                              |
+| Ransom lockout                                                                | Actual screen takeover by malware (the attacker's message)                 |
+| CRT effects                                                                   | Physical properties of the old CRT monitor the character uses              |
+| Keyboard sounds                                                               | Physical properties of the mechanical keyboard                             |
 
 ### 8.2 Breaking the Fourth Wall Selectively
 
 Some elements necessarily break diegesis. These are carefully limited and clearly marked:
 
-| Element | Why It Breaks Diegesis | How We Handle It |
-|---|---|---|
-| Settings menu | No in-world "settings" on a terminal | Framed as "Terminal Configuration" -- the operator adjusting their workstation |
-| Accessibility options | Real-world needs, not game-world | Placed in "Terminal Configuration > Display" -- justified as adjusting the CRT |
-| Tutorial messages | Meta-guidance for the player | Delivered by SYSOP-7 as workplace orientation -- diegetic wrapping |
-| Achievement notifications | Game-meta concept | Framed as "Operator Performance Commendation" from HR |
-| Loading screens | Technical limitation | Framed as "Establishing secure connection..." or "Loading data from archive..." |
-| Error messages | Technical failures | Framed as "Terminal Error: Connection timeout. Retrying..." |
+| Element                   | Why It Breaks Diegesis               | How We Handle It                                                                |
+| ------------------------- | ------------------------------------ | ------------------------------------------------------------------------------- |
+| Settings menu             | No in-world "settings" on a terminal | Framed as "Terminal Configuration" -- the operator adjusting their workstation  |
+| Accessibility options     | Real-world needs, not game-world     | Placed in "Terminal Configuration > Display" -- justified as adjusting the CRT  |
+| Tutorial messages         | Meta-guidance for the player         | Delivered by SYSOP-7 as workplace orientation -- diegetic wrapping              |
+| Achievement notifications | Game-meta concept                    | Framed as "Operator Performance Commendation" from HR                           |
+| Loading screens           | Technical limitation                 | Framed as "Establishing secure connection..." or "Loading data from archive..." |
+| Error messages            | Technical failures                   | Framed as "Terminal Error: Connection timeout. Retrying..."                     |
 
 ### 8.3 Immersion vs. Usability Trade-offs
 
@@ -2532,20 +2627,21 @@ The priority order is: **Usability > Accessibility > Immersion**
 
 When diegetic design conflicts with usability, usability wins:
 
-| Conflict | Resolution |
-|---|---|
-| CRT scanlines reduce text readability | Scanlines are extremely subtle (5% opacity) and fully disableable |
+| Conflict                                              | Resolution                                                               |
+| ----------------------------------------------------- | ------------------------------------------------------------------------ |
+| CRT scanlines reduce text readability                 | Scanlines are extremely subtle (5% opacity) and fully disableable        |
 | Terminal monospace font reduces long-text readability | Document bodies use proportional font (justified as "document renderer") |
-| Diegetic tooltips would require in-world text | Tooltips use standard behavior with terminal styling |
-| In-world email would not have "risk score" | Risk score justified as AI tool built into the terminal system |
-| Real CRT would not have smooth scrolling | Smooth scrolling is used because jerky scrolling is unpleasant |
-| Real terminal would not have drag-and-drop | Drag-and-drop is available because it improves document comparison |
+| Diegetic tooltips would require in-world text         | Tooltips use standard behavior with terminal styling                     |
+| In-world email would not have "risk score"            | Risk score justified as AI tool built into the terminal system           |
+| Real CRT would not have smooth scrolling              | Smooth scrolling is used because jerky scrolling is unpleasant           |
+| Real terminal would not have drag-and-drop            | Drag-and-drop is available because it improves document comparison       |
 
 ### 8.4 Enterprise Mode UI Differences
 
 The enterprise admin dashboard **intentionally breaks diegesis**. Administrators are not playing a character -- they are managing a training deployment. The admin UI is clean, professional, and follows standard SaaS conventions.
 
 **The boundary:**
+
 - Game interface (player-facing): Full terminal aesthetic, diegetic UI, CRT effects
 - Admin interface (admin-facing): Clean enterprise UI, Inter font, rounded corners, no effects
 - The two interfaces share no visual styling except the Matrices GmbH logo and accent color scheme
@@ -2557,12 +2653,14 @@ The enterprise admin dashboard **intentionally breaks diegesis**. Administrators
 ## 9. References
 
 ### Papers, Please UI/UX
+
 - [Papers, Please -- UX Review (Medium)](https://medium.com/@sam.cuevasp/papers-please-ux-review-672a151969e)
 - [Cramming Papers, Please Onto Phones -- Lucas Pope Development Log](https://dukope.com/devlogs/papers-please/mobile/)
 - [Designing the Bleak Genius of Papers, Please -- Game Developer](https://www.gamedeveloper.com/design/designing-the-bleak-genius-of-i-papers-please-i-)
 - [The Design of Oppression in Papers, Please (Medium)](https://medium.com/@ishikasoni50/the-design-of-oppression-in-papers-please-1b83b16a3079)
 
 ### CRT/Terminal CSS Effects
+
 - [Retro CRT Terminal Screen in CSS + JS -- DEV Community](https://dev.to/ekeijl/retro-crt-terminal-screen-in-css-js-4afh)
 - [Using CSS to Create a CRT -- Alec Lownes](https://aleclownes.com/2017/02/01/crt-display.html)
 - [CRTFilter WebGL Library -- CSS Script](https://www.cssscript.com/retro-crt-filter-webgl/)
@@ -2570,27 +2668,32 @@ The enterprise admin dashboard **intentionally breaks diegesis**. Administrators
 - [HairyDuck Terminal CRT Template -- GitHub](https://github.com/HairyDuck/terminal)
 
 ### Diegetic UI in Games
+
 - [Beyond the HUD: The Power of Diegetic Interfaces -- Wayline](https://www.wayline.io/blog/diegetic-interfaces-game-design)
 - [Designing Effective Diegetic UI: Dead Space vs. Callisto Protocol (Medium)](https://medium.com/@jaiwanthshan/designing-effective-diegetic-ui-lessons-learned-from-dead-spaces-success-and-the-callisto-dbf803639dd6)
 - [A Deep Dive Into Dead Space's UI -- Giant Bomb](https://www.giantbomb.com/profile/gamer_152/blog/markers-i-a-deep-dive-into-dead-spaces-ui/249377/)
 - [Types of UI in Gaming: Diegetic, Non-Diegetic, Spatial and Meta (Medium)](https://medium.com/@lorenzoardeni/types-of-ui-in-gaming-diegetic-non-diegetic-spatial-and-meta-5024ce6362d0)
 
 ### Cyberpunk/Terminal Web Design
+
 - [Cybercore CSS: Cyberpunk Design Framework -- DEV Community](https://dev.to/sebyx07/introducing-cybercore-css-a-cyberpunk-design-framework-for-futuristic-uis-2e6c)
 - [Terminal Aesthetics in Web Design -- DEV Community](https://dev.to/micronink/i-love-terminal-aesthetics-not-everyone-does-heres-how-i-solved-that-56ef)
 - [Cyberpunk UI Website Design Inspiration -- Wendy Zhou](https://www.wendyzhou.se/blog/cyberpunk-ui-website-design-inspiration/)
 
 ### WCAG 2.1 AA & Game Accessibility
+
 - [WCAG 2.1 Level AA Overview -- W3C WAI](https://www.w3.org/WAI/WCAG2AA-Conformance)
 - [WCAG 2.2 Complete Compliance Guide -- AllAccessible](https://www.allaccessible.org/blog/wcag-22-complete-guide-2025)
 - [WCAG Checklist 2.1 AA -- Accessible.org](https://accessible.org/wcag/)
 
 ### Svelte 5 Component Patterns
+
 - [$props Rune Documentation -- Svelte Docs](https://svelte.dev/docs/svelte/$props)
 - [Svelte 5 Migration Guide -- Svelte Docs](https://svelte.dev/docs/svelte/v5-migration-guide)
 - [Svelte 5 Refresher with Runes -- Luminary Blog](https://luminary.blog/techs/05-svelte5-refresher/)
 
 ### Mobile Game UI
+
 - [How to Create Seamless UI/UX in Mobile Games -- AppSamurai](https://appsamurai.com/blog/how-to-create-a-seamless-ui-ux-in-mobile-games/)
 - [Understanding UI/UX Design for Mobile Game Development -- Sumo Digital](https://www.sumo-digital.com/news-insights/understanding-ui-ux-design-for-mobile-game-development/)
 - [Game UI Database](https://www.gameuidatabase.com/)
@@ -2598,9 +2701,9 @@ The enterprise admin dashboard **intentionally breaks diegesis**. Administrators
 
 ---
 
-*This document defines the complete visual design system, interaction patterns, component library, and accessibility implementation for The DMZ: Archive Gate. It serves as the authoritative reference for frontend engineering and should be read alongside DD-06 (Technical Architecture), DD-08 (Narrative Design), and the BRD.*
+_This document defines the complete visual design system, interaction patterns, component library, and accessibility implementation for The DMZ: Archive Gate. It serves as the authoritative reference for frontend engineering and should be read alongside DD-06 (Technical Architecture), DD-08 (Narrative Design), and the BRD._
 
-*All specifications are subject to iteration based on user testing, accessibility audits, and technical feasibility assessment.*
+_All specifications are subject to iteration based on user testing, accessibility audits, and technical feasibility assessment._
 
 ---
 

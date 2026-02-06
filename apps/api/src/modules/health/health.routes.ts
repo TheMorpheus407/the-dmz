@@ -2,17 +2,15 @@ import {
   healthQueryJsonSchema,
   healthResponseJsonSchema,
   readinessResponseJsonSchema,
-} from "@the-dmz/shared/schemas";
+} from '@the-dmz/shared/schemas';
 
-import { getHealth, getReadiness } from "./health.service.js";
+import { getHealth, getReadiness } from './health.service.js';
 
-import type { FastifyInstance } from "fastify";
+import type { FastifyInstance } from 'fastify';
 
-export const registerHealthRoutes = async (
-  fastify: FastifyInstance,
-): Promise<void> => {
+export const registerHealthRoutes = async (fastify: FastifyInstance): Promise<void> => {
   fastify.get(
-    "/health",
+    '/health',
     {
       schema: {
         querystring: healthQueryJsonSchema,
@@ -25,7 +23,7 @@ export const registerHealthRoutes = async (
   );
 
   fastify.get(
-    "/ready",
+    '/ready',
     {
       schema: {
         querystring: healthQueryJsonSchema,
@@ -37,7 +35,7 @@ export const registerHealthRoutes = async (
     },
     async (_request, reply) => {
       const readiness = await getReadiness(fastify.config);
-      if (readiness.status !== "ok") {
+      if (readiness.status !== 'ok') {
         reply.code(503);
       }
 

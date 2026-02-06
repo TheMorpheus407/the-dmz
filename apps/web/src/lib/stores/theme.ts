@@ -1,6 +1,6 @@
-import { writable } from "svelte/store";
+import { writable } from 'svelte/store';
 
-export type ThemeName = "green" | "neutral";
+export type ThemeName = 'green' | 'neutral';
 
 export interface ThemeState {
   name: ThemeName;
@@ -8,7 +8,7 @@ export interface ThemeState {
 }
 
 export const initialThemeState: ThemeState = {
-  name: "green",
+  name: 'green',
   enableTerminalEffects: false,
 };
 

@@ -1,3 +1,3 @@
-import { sharedVersion } from "@the-dmz/shared";
+import { sharedVersion } from '@the-dmz/shared';
 
 export const apiSharedVersion = sharedVersion;

@@ -59,17 +59,17 @@ The regulatory landscape has intensified significantly in 2024-2026, with the en
 
 **Training Platform Obligations as Data Processor/Controller:**
 
-| Obligation | GDPR Article | Platform Requirement |
-|---|---|---|
-| Lawful basis for processing | Art. 6 | Document legal basis for processing employee training data (legitimate interest or contract performance) |
-| Data minimization | Art. 5(1)(c) | Collect only data necessary for training delivery and compliance reporting |
-| Storage limitation | Art. 5(1)(e) | Implement configurable retention periods; delete data when purpose is fulfilled |
-| Right to access | Art. 15 | Provide data export for individual training records |
-| Right to erasure | Art. 17 | Support deletion requests (subject to legal retention obligations) |
-| Data Protection Impact Assessment | Art. 35 | Required where processing involves systematic monitoring of employees |
-| Records of processing | Art. 30 | Maintain detailed records of all processing activities |
-| Data breach notification | Art. 33-34 | 72-hour breach notification capability |
-| Cross-border transfers | Chapter V | SCCs, BCRs, or adequacy decision required for non-EEA transfers |
+| Obligation                        | GDPR Article | Platform Requirement                                                                                     |
+| --------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------- |
+| Lawful basis for processing       | Art. 6       | Document legal basis for processing employee training data (legitimate interest or contract performance) |
+| Data minimization                 | Art. 5(1)(c) | Collect only data necessary for training delivery and compliance reporting                               |
+| Storage limitation                | Art. 5(1)(e) | Implement configurable retention periods; delete data when purpose is fulfilled                          |
+| Right to access                   | Art. 15      | Provide data export for individual training records                                                      |
+| Right to erasure                  | Art. 17      | Support deletion requests (subject to legal retention obligations)                                       |
+| Data Protection Impact Assessment | Art. 35      | Required where processing involves systematic monitoring of employees                                    |
+| Records of processing             | Art. 30      | Maintain detailed records of all processing activities                                                   |
+| Data breach notification          | Art. 33-34   | 72-hour breach notification capability                                                                   |
+| Cross-border transfers            | Chapter V    | SCCs, BCRs, or adequacy decision required for non-EEA transfers                                          |
 
 **Penalties:** Up to EUR 20 million or 4% of annual global turnover, whichever is higher.
 
@@ -113,12 +113,12 @@ The HIPAA Security Rule mandates a **security awareness and training program for
 
 **Addressable Implementation Specifications:**
 
-| Specification | Description | Platform Content Requirement |
-|---|---|---|
-| Security reminders | Periodic security updates | Push notification system; microlearning modules |
-| Protection from malicious software | Procedures for guarding against, detecting, and reporting malware | Malware awareness training modules |
-| Log-in monitoring | Procedures for monitoring log-in attempts and reporting discrepancies | Training on access monitoring and anomaly detection |
-| Password management | Procedures for creating, changing, and safeguarding passwords | Password hygiene training modules |
+| Specification                      | Description                                                           | Platform Content Requirement                        |
+| ---------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------- |
+| Security reminders                 | Periodic security updates                                             | Push notification system; microlearning modules     |
+| Protection from malicious software | Procedures for guarding against, detecting, and reporting malware     | Malware awareness training modules                  |
+| Log-in monitoring                  | Procedures for monitoring log-in attempts and reporting discrepancies | Training on access monitoring and anomaly detection |
+| Password management                | Procedures for creating, changing, and safeguarding passwords         | Password hygiene training modules                   |
 
 **Frequency:**
 
@@ -136,12 +136,12 @@ The HIPAA Security Rule mandates a **security awareness and training program for
 
 **Penalties:**
 
-| Tier | Knowledge Level | Penalty Per Violation | Annual Maximum |
-|---|---|---|---|
-| 1 | Unaware | $137 -- $68,928 | $2,067,813 |
-| 2 | Reasonable cause | $1,379 -- $68,928 | $2,067,813 |
-| 3 | Willful neglect (corrected) | $13,785 -- $68,928 | $2,067,813 |
-| 4 | Willful neglect (not corrected) | $68,928 | $2,067,813 |
+| Tier | Knowledge Level                 | Penalty Per Violation | Annual Maximum |
+| ---- | ------------------------------- | --------------------- | -------------- |
+| 1    | Unaware                         | $137 -- $68,928       | $2,067,813     |
+| 2    | Reasonable cause                | $1,379 -- $68,928     | $2,067,813     |
+| 3    | Willful neglect (corrected)     | $13,785 -- $68,928    | $2,067,813     |
+| 4    | Willful neglect (not corrected) | $68,928               | $2,067,813     |
 
 ---
 
@@ -181,14 +181,17 @@ PCI-DSS v4.0 significantly enhanced training requirements, with all future-dated
 **Requirement 12.6.1:** A formal security awareness program must be established.
 
 **Requirement 12.6.2:** The security awareness program must be:
+
 - Reviewed **at least once every 12 months**.
 - Updated as needed to address new threats and vulnerabilities that could impact cardholder data security.
 
 **Requirement 12.6.3:** Personnel must receive security awareness training:
+
 - Upon hire.
 - **At least once every 12 months.**
 
 **Requirement 12.6.3.1 (New in v4.0):** Security awareness training must include awareness of threats and vulnerabilities including but not limited to:
+
 - **Phishing and related attacks.**
 - **Social engineering.**
 
@@ -198,14 +201,14 @@ PCI-DSS v4.0 significantly enhanced training requirements, with all future-dated
 
 **Platform Implications:**
 
-| PCI-DSS Requirement | Platform Feature |
-|---|---|
-| 12.6.1 | Formal training program administration |
-| 12.6.2 | Annual program review workflow with audit trail |
-| 12.6.3 | Onboarding training assignment + annual recertification engine |
-| 12.6.3.1 | Phishing simulation module; social engineering awareness content |
-| 12.6.3.2 | Acceptable use policy training modules |
-| 12.6.3.2 | Personnel acknowledgment tracking |
+| PCI-DSS Requirement | Platform Feature                                                 |
+| ------------------- | ---------------------------------------------------------------- |
+| 12.6.1              | Formal training program administration                           |
+| 12.6.2              | Annual program review workflow with audit trail                  |
+| 12.6.3              | Onboarding training assignment + annual recertification engine   |
+| 12.6.3.1            | Phishing simulation module; social engineering awareness content |
+| 12.6.3.2            | Acceptable use policy training modules                           |
+| 12.6.3.2            | Personnel acknowledgment tracking                                |
 
 **Record Retention:** PCI-DSS requires training records to be retained and available for **at least 12 months**, with logs retained "hot" for 3 months and accessible for 12 months.
 
@@ -220,6 +223,7 @@ PCI-DSS v4.0 significantly enhanced training requirements, with all future-dated
 NIS2 establishes the most explicit and stringent cybersecurity training obligations in EU law.
 
 **Article 20(2) -- Management Body Training:**
+
 > "Member States shall ensure that the members of the management bodies of essential and important entities are required to follow training, and shall encourage essential and important entities to offer similar training to their employees on a regular basis, in order that they gain sufficient knowledge and skills to enable them to identify risks and assess cybersecurity risk management practices and their impact on the services provided by the entity."
 
 **Article 21(2)(g) -- Baseline Security Measures:**
@@ -227,12 +231,12 @@ Training and practice in "basic cyber hygiene" is explicitly listed as one of th
 
 **Key Training Obligations:**
 
-| Requirement | Target Audience | Frequency | Enforceability |
-|---|---|---|---|
-| Management body training | Board members, C-suite | Regular (mandatory) | Direct personal liability |
-| Employee cybersecurity training | All employees | Regular (encouraged, effectively mandatory) | Entity-level enforcement |
-| Basic cyber hygiene practices | All employees | Ongoing | Baseline security measure |
-| Incident response training | IT/security staff | Regular | Part of incident handling requirements |
+| Requirement                     | Target Audience        | Frequency                                   | Enforceability                         |
+| ------------------------------- | ---------------------- | ------------------------------------------- | -------------------------------------- |
+| Management body training        | Board members, C-suite | Regular (mandatory)                         | Direct personal liability              |
+| Employee cybersecurity training | All employees          | Regular (encouraged, effectively mandatory) | Entity-level enforcement               |
+| Basic cyber hygiene practices   | All employees          | Ongoing                                     | Baseline security measure              |
+| Incident response training      | IT/security staff      | Regular                                     | Part of incident handling requirements |
 
 **Personal Liability:**
 
@@ -261,6 +265,7 @@ DORA establishes comprehensive and prescriptive training requirements across mul
 Financial entities must establish security awareness programs and digital operational resilience training as part of their ICT risk management framework.
 
 **Article 13(6) -- Learning and Evolving:**
+
 > "Financial entities shall develop ICT security awareness programmes and digital operational resilience training as compulsory modules in their staff training schemes. Those programmes and training shall be applicable to all employees and to senior management staff."
 
 **Article 16(1) -- ICT Response and Recovery:**
@@ -271,13 +276,13 @@ ICT service providers must also implement security awareness programs, extending
 
 **Specific Training Requirements:**
 
-| Audience | Training Type | Frequency | Article |
-|---|---|---|---|
-| All employees | Security awareness programs | Compulsory, regular | Art. 13(6) |
-| Senior management | ICT risk understanding and assessment | Regular, commensurate with risk | Art. 5(4) |
-| ICT staff | Digital operational resilience training | Ongoing | Art. 13(6) |
-| Incident response personnel | Response and recovery procedures | Regular | Art. 16(1) |
-| ICT third-party providers | Security awareness programs | Per contractual arrangements | Art. 30 |
+| Audience                    | Training Type                           | Frequency                       | Article    |
+| --------------------------- | --------------------------------------- | ------------------------------- | ---------- |
+| All employees               | Security awareness programs             | Compulsory, regular             | Art. 13(6) |
+| Senior management           | ICT risk understanding and assessment   | Regular, commensurate with risk | Art. 5(4)  |
+| ICT staff                   | Digital operational resilience training | Ongoing                         | Art. 13(6) |
+| Incident response personnel | Response and recovery procedures        | Regular                         | Art. 16(1) |
+| ICT third-party providers   | Security awareness programs             | Per contractual arrangements    | Art. 30    |
 
 **Platform Implications:**
 
@@ -298,6 +303,7 @@ ICT service providers must also implement security awareness programs, extending
 
 **Clause 7.2 -- Competence:**
 Organizations must:
+
 - Determine the necessary competence of persons doing work that affects information security performance.
 - Ensure these persons are competent based on appropriate education, training, or experience.
 - Where applicable, take actions to acquire the necessary competence and evaluate the effectiveness of the actions taken.
@@ -305,11 +311,13 @@ Organizations must:
 
 **Clause 7.3 -- Awareness:**
 Persons doing work under the organization's control must be aware of:
+
 - The information security policy.
 - Their contribution to the effectiveness of the ISMS.
 - The implications of not conforming with ISMS requirements.
 
 **Annex A Control 6.3 (formerly A.7.2.2) -- Information Security Awareness, Education, and Training:**
+
 > "All personnel of the organization and, where relevant, interested parties shall receive appropriate information security awareness education and training and regular updates of the organization's information security policy, topic-specific policies and procedures, as relevant for their job function."
 
 **Annex A Control 6.6 -- Confidentiality or Non-Disclosure Agreements:**
@@ -347,10 +355,10 @@ NIST CSF 2.0 (published February 2024) identifies awareness and training within 
 
 **PR.AT -- Awareness and Training:**
 
-| Subcategory | Description |
-|---|---|
-| PR.AT-01 | Personnel are provided cybersecurity awareness and training so that they can perform their general tasks with necessary cybersecurity risks in mind. |
-| PR.AT-02 | Individuals in specialized roles are provided cybersecurity awareness and training so that they possess the knowledge and skills to perform relevant tasks with cybersecurity risks in mind. |
+| Subcategory | Description                                                                                                                                                                                  |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PR.AT-01    | Personnel are provided cybersecurity awareness and training so that they can perform their general tasks with necessary cybersecurity risks in mind.                                         |
+| PR.AT-02    | Individuals in specialized roles are provided cybersecurity awareness and training so that they possess the knowledge and skills to perform relevant tasks with cybersecurity risks in mind. |
 
 **GV.RR -- Roles, Responsibilities, and Authorities:**
 The new **Govern (GV)** function in CSF 2.0 emphasizes organizational governance, including ensuring personnel understand their cybersecurity responsibilities through training.
@@ -358,14 +366,15 @@ The new **Govern (GV)** function in CSF 2.0 emphasizes organizational governance
 **Implementation Tiers:**
 The framework's four implementation tiers (Partial, Risk-Informed, Repeatable, Adaptive) each imply increasing maturity of awareness and training programs:
 
-| Tier | Training Implication |
-|---|---|
-| Tier 1 (Partial) | Ad hoc, reactive training |
-| Tier 2 (Risk-Informed) | Training informed by risk assessment but not organization-wide |
-| Tier 3 (Repeatable) | Formal, repeatable training programs aligned with policy |
-| Tier 4 (Adaptive) | Continuous, adaptive training integrated with threat intelligence |
+| Tier                   | Training Implication                                              |
+| ---------------------- | ----------------------------------------------------------------- |
+| Tier 1 (Partial)       | Ad hoc, reactive training                                         |
+| Tier 2 (Risk-Informed) | Training informed by risk assessment but not organization-wide    |
+| Tier 3 (Repeatable)    | Formal, repeatable training programs aligned with policy          |
+| Tier 4 (Adaptive)      | Continuous, adaptive training integrated with threat intelligence |
 
 **NIST SP 800-50 Rev. 1 -- Building a Cybersecurity and Privacy Awareness and Training Program (2024 Update):**
+
 - Provides detailed guidance on building effective programs.
 - Recommends role-based training beyond general awareness.
 - Emphasizes metrics and continuous improvement.
@@ -390,14 +399,14 @@ The entity identifies, assesses, and manages risks, which includes training pers
 
 **Auditor Expectations:**
 
-| Evidence Required | Description |
-|---|---|
-| Training program documentation | Formal program with defined scope, content, and frequency |
-| Completion records | Evidence that all in-scope personnel completed training |
-| Acknowledgment records | Evidence that personnel acknowledged security policies |
-| Training content review | Evidence of periodic content updates |
-| New hire training | Evidence of onboarding training within defined timeframes |
-| Phishing test results | Results of simulated phishing campaigns (increasingly expected) |
+| Evidence Required              | Description                                                     |
+| ------------------------------ | --------------------------------------------------------------- |
+| Training program documentation | Formal program with defined scope, content, and frequency       |
+| Completion records             | Evidence that all in-scope personnel completed training         |
+| Acknowledgment records         | Evidence that personnel acknowledged security policies          |
+| Training content review        | Evidence of periodic content updates                            |
+| New hire training              | Evidence of onboarding training within defined timeframes       |
+| Phishing test results          | Results of simulated phishing campaigns (increasingly expected) |
 
 **Audit Period:** SOC 2 Type II examinations cover a minimum period of 6 months, requiring continuous compliance evidence throughout.
 
@@ -412,11 +421,13 @@ The entity identifies, assesses, and manages risks, which includes training pers
 FedRAMP inherits its security controls from **NIST SP 800-53 Rev. 5**, specifically the **Awareness and Training (AT)** control family:
 
 **AT-1 -- Policy and Procedures:**
+
 - Develop, document, and disseminate an awareness and training policy.
 - Review and update the policy at least every **3 years** (FedRAMP Moderate baseline).
 - Review and update procedures at least **annually**.
 
 **AT-2 -- Literacy Training and Awareness:**
+
 - Provide cybersecurity literacy training to all system users:
   - As part of initial training for new users.
   - When required by system changes.
@@ -430,12 +441,14 @@ Training on recognizing and reporting potential indicators of insider threat.
 Training on recognizing and reporting social engineering attempts.
 
 **AT-3 -- Role-Based Training:**
+
 - Provide role-based cybersecurity training to personnel with assigned security roles and responsibilities:
   - Before authorizing access to systems or performing assigned duties.
   - When required by system changes.
   - At least **annually** thereafter.
 
 **AT-4 -- Training Records:**
+
 - Document and monitor individual training activities including:
   - Cybersecurity literacy training.
   - Role-based training.
@@ -443,12 +456,12 @@ Training on recognizing and reporting social engineering attempts.
 
 **FedRAMP Impact Levels:**
 
-| Control | Low | Moderate | High |
-|---|---|---|---|
-| AT-1 | Required | Required | Required |
-| AT-2 | Required | Required + enhancements | Required + enhancements |
-| AT-3 | Required | Required | Required |
-| AT-4 | Required | Required | Required |
+| Control | Low      | Moderate                | High                    |
+| ------- | -------- | ----------------------- | ----------------------- |
+| AT-1    | Required | Required                | Required                |
+| AT-2    | Required | Required + enhancements | Required + enhancements |
+| AT-3    | Required | Required                | Required                |
+| AT-4    | Required | Required                | Required                |
 
 ---
 
@@ -458,21 +471,21 @@ Training on recognizing and reporting social engineering attempts.
 
 The following table provides a side-by-side comparison of mandatory training requirements across all major frameworks:
 
-| Framework | Training Mandated? | Frequency | Target Audience | Content Requirements | Phishing Sim Required? |
-|---|---|---|---|---|---|
-| **GDPR** | Yes (Art. 39, 47) | Annual minimum | All staff processing personal data | Data protection, breach reporting, security basics | No (recommended) |
-| **CCPA/CPRA** | Yes (Sec. 1798.130) | Annual recommended | Staff handling consumer inquiries | Privacy rights, data handling procedures | No |
-| **HIPAA** | Yes (45 CFR 164.308) | Ongoing; annual minimum | All workforce members including management | Malware, password management, login monitoring, security updates | No (recommended) |
-| **SOX** | Implicit | Annual (audit cycle) | Personnel accessing financial systems | Access controls, change management, incident reporting | No |
-| **PCI-DSS 4.0** | Yes (Req. 12.6) | Upon hire + annually | All personnel | Phishing, social engineering, acceptable use | Strongly implied |
-| **NIS2** | Yes (Art. 20, 21) | Regular (mandatory for management) | All employees + management bodies | Cyber hygiene, risk identification, incident response | Recommended |
-| **DORA** | Yes (Art. 5, 13, 16) | Compulsory, regular | All employees + senior management + ICT staff | ICT risk, operational resilience, incident response | Yes (implied by testing requirements) |
-| **ISO 27001** | Yes (Cl. 7.2, 7.3, A.6.3) | Regular + on policy change | All personnel + contractors | ISMS policy, role-specific procedures, incident reporting | No (recommended) |
-| **NIST CSF 2.0** | Recommended (PR.AT) | Per implementation tier | All personnel + specialized roles | General awareness + role-based | Recommended |
-| **SOC 2** | Yes (CC1.4) | At least annually | All personnel | Security policies, acceptable use, incident reporting | Increasingly expected |
-| **FedRAMP** | Yes (AT-2, AT-3) | Upon hire + annually | All system users + role-based | Social engineering, phishing, insider threat | Yes (AT-2(3)) |
-| **GLBA** | Yes (Safeguards Rule) | At least annually | All personnel accessing customer data | Information security risks, data handling | No (recommended) |
-| **FISMA** | Yes (NIST 800-53) | Upon hire + annually | All federal employees and contractors | Security awareness, role-based training | Yes (AT-2 enhancements) |
+| Framework        | Training Mandated?        | Frequency                          | Target Audience                               | Content Requirements                                             | Phishing Sim Required?                |
+| ---------------- | ------------------------- | ---------------------------------- | --------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------- |
+| **GDPR**         | Yes (Art. 39, 47)         | Annual minimum                     | All staff processing personal data            | Data protection, breach reporting, security basics               | No (recommended)                      |
+| **CCPA/CPRA**    | Yes (Sec. 1798.130)       | Annual recommended                 | Staff handling consumer inquiries             | Privacy rights, data handling procedures                         | No                                    |
+| **HIPAA**        | Yes (45 CFR 164.308)      | Ongoing; annual minimum            | All workforce members including management    | Malware, password management, login monitoring, security updates | No (recommended)                      |
+| **SOX**          | Implicit                  | Annual (audit cycle)               | Personnel accessing financial systems         | Access controls, change management, incident reporting           | No                                    |
+| **PCI-DSS 4.0**  | Yes (Req. 12.6)           | Upon hire + annually               | All personnel                                 | Phishing, social engineering, acceptable use                     | Strongly implied                      |
+| **NIS2**         | Yes (Art. 20, 21)         | Regular (mandatory for management) | All employees + management bodies             | Cyber hygiene, risk identification, incident response            | Recommended                           |
+| **DORA**         | Yes (Art. 5, 13, 16)      | Compulsory, regular                | All employees + senior management + ICT staff | ICT risk, operational resilience, incident response              | Yes (implied by testing requirements) |
+| **ISO 27001**    | Yes (Cl. 7.2, 7.3, A.6.3) | Regular + on policy change         | All personnel + contractors                   | ISMS policy, role-specific procedures, incident reporting        | No (recommended)                      |
+| **NIST CSF 2.0** | Recommended (PR.AT)       | Per implementation tier            | All personnel + specialized roles             | General awareness + role-based                                   | Recommended                           |
+| **SOC 2**        | Yes (CC1.4)               | At least annually                  | All personnel                                 | Security policies, acceptable use, incident reporting            | Increasingly expected                 |
+| **FedRAMP**      | Yes (AT-2, AT-3)          | Upon hire + annually               | All system users + role-based                 | Social engineering, phishing, insider threat                     | Yes (AT-2(3))                         |
+| **GLBA**         | Yes (Safeguards Rule)     | At least annually                  | All personnel accessing customer data         | Information security risks, data handling                        | No (recommended)                      |
+| **FISMA**        | Yes (NIST 800-53)         | Upon hire + annually               | All federal employees and contractors         | Security awareness, role-based training                          | Yes (AT-2 enhancements)               |
 
 ### 3.2 Training Content Requirements Matrix
 
@@ -480,51 +493,51 @@ Based on the aggregate of all frameworks, an enterprise training platform must s
 
 **Tier 1 -- Universal Awareness (All Employees):**
 
-| Content Area | Required By |
-|---|---|
-| Phishing recognition and reporting | PCI-DSS, FedRAMP, FISMA, NIS2, DORA, NIST CSF |
-| Social engineering awareness | PCI-DSS, FedRAMP, FISMA, NIS2, ISO 27001 |
-| Password management and authentication | HIPAA, ISO 27001, NIST, PCI-DSS |
-| Malware awareness and prevention | HIPAA, ISO 27001, NIST, PCI-DSS |
-| Data classification and handling | GDPR, CCPA, HIPAA, PCI-DSS, ISO 27001 |
-| Incident reporting procedures | All frameworks |
-| Acceptable use of technology | PCI-DSS, ISO 27001, SOC 2 |
-| Physical security awareness | ISO 27001, NIST, PCI-DSS |
-| Remote work and mobile security | GDPR, ISO 27001, NIST CSF |
-| Insider threat recognition | FedRAMP, FISMA, NIST |
-| Privacy principles and data subject rights | GDPR, CCPA, HIPAA |
-| Clean desk and screen lock | ISO 27001, NIST |
-| Removable media security | ISO 27001, NIST, HIPAA |
-| Wi-Fi and network security | PCI-DSS, ISO 27001 |
-| Business email compromise (BEC) awareness | PCI-DSS, DORA, NIS2 |
+| Content Area                               | Required By                                   |
+| ------------------------------------------ | --------------------------------------------- |
+| Phishing recognition and reporting         | PCI-DSS, FedRAMP, FISMA, NIS2, DORA, NIST CSF |
+| Social engineering awareness               | PCI-DSS, FedRAMP, FISMA, NIS2, ISO 27001      |
+| Password management and authentication     | HIPAA, ISO 27001, NIST, PCI-DSS               |
+| Malware awareness and prevention           | HIPAA, ISO 27001, NIST, PCI-DSS               |
+| Data classification and handling           | GDPR, CCPA, HIPAA, PCI-DSS, ISO 27001         |
+| Incident reporting procedures              | All frameworks                                |
+| Acceptable use of technology               | PCI-DSS, ISO 27001, SOC 2                     |
+| Physical security awareness                | ISO 27001, NIST, PCI-DSS                      |
+| Remote work and mobile security            | GDPR, ISO 27001, NIST CSF                     |
+| Insider threat recognition                 | FedRAMP, FISMA, NIST                          |
+| Privacy principles and data subject rights | GDPR, CCPA, HIPAA                             |
+| Clean desk and screen lock                 | ISO 27001, NIST                               |
+| Removable media security                   | ISO 27001, NIST, HIPAA                        |
+| Wi-Fi and network security                 | PCI-DSS, ISO 27001                            |
+| Business email compromise (BEC) awareness  | PCI-DSS, DORA, NIS2                           |
 
 **Tier 2 -- Role-Based Training (Specialized Roles):**
 
-| Content Area | Target Role | Required By |
-|---|---|---|
-| Secure software development (SDLC) | Developers | PCI-DSS (Req. 6.2.2), ISO 27001, NIST |
-| Incident response procedures | Security/IT teams | All frameworks |
-| Access control administration | System administrators | HIPAA, PCI-DSS, ISO 27001 |
-| Log monitoring and analysis | Security analysts | HIPAA, PCI-DSS, FedRAMP |
-| Third-party risk management | Vendor management | DORA, NIS2, ISO 27001 |
-| ICT operational resilience | Operations staff | DORA |
-| Data protection impact assessments | Privacy officers | GDPR |
-| Financial system security | Finance staff | SOX, PCI-DSS |
-| PHI handling and safeguards | Healthcare staff | HIPAA |
-| Change management procedures | IT operations | SOX, PCI-DSS, ISO 27001 |
-| Cryptographic controls | Security engineers | ISO 27001, PCI-DSS, NIST |
-| Business continuity planning | BCP team members | ISO 27001, DORA, NIS2 |
+| Content Area                       | Target Role           | Required By                           |
+| ---------------------------------- | --------------------- | ------------------------------------- |
+| Secure software development (SDLC) | Developers            | PCI-DSS (Req. 6.2.2), ISO 27001, NIST |
+| Incident response procedures       | Security/IT teams     | All frameworks                        |
+| Access control administration      | System administrators | HIPAA, PCI-DSS, ISO 27001             |
+| Log monitoring and analysis        | Security analysts     | HIPAA, PCI-DSS, FedRAMP               |
+| Third-party risk management        | Vendor management     | DORA, NIS2, ISO 27001                 |
+| ICT operational resilience         | Operations staff      | DORA                                  |
+| Data protection impact assessments | Privacy officers      | GDPR                                  |
+| Financial system security          | Finance staff         | SOX, PCI-DSS                          |
+| PHI handling and safeguards        | Healthcare staff      | HIPAA                                 |
+| Change management procedures       | IT operations         | SOX, PCI-DSS, ISO 27001               |
+| Cryptographic controls             | Security engineers    | ISO 27001, PCI-DSS, NIST              |
+| Business continuity planning       | BCP team members      | ISO 27001, DORA, NIS2                 |
 
 **Tier 3 -- Executive and Board Training:**
 
-| Content Area | Target Role | Required By |
-|---|---|---|
-| Cybersecurity risk governance | Board/C-suite | NIS2 (Art. 20), DORA (Art. 5), SEC rules |
-| Regulatory compliance obligations | Executives | All frameworks |
-| Incident disclosure and communication | C-suite/Legal | SEC, NIS2, GDPR, DORA |
-| Cyber insurance considerations | CFO/Risk officers | Best practice; SOX-adjacent |
-| Third-party and supply chain risk | C-suite | NIS2, DORA |
-| Fiduciary duties related to cyber risk | Board members | NIS2 (personal liability), SOX |
+| Content Area                           | Target Role       | Required By                              |
+| -------------------------------------- | ----------------- | ---------------------------------------- |
+| Cybersecurity risk governance          | Board/C-suite     | NIS2 (Art. 20), DORA (Art. 5), SEC rules |
+| Regulatory compliance obligations      | Executives        | All frameworks                           |
+| Incident disclosure and communication  | C-suite/Legal     | SEC, NIS2, GDPR, DORA                    |
+| Cyber insurance considerations         | CFO/Risk officers | Best practice; SOX-adjacent              |
+| Third-party and supply chain risk      | C-suite           | NIS2, DORA                               |
+| Fiduciary duties related to cyber risk | Board members     | NIS2 (personal liability), SOX           |
 
 ### 3.3 Training Frequency Requirements
 
@@ -566,27 +579,27 @@ Event-Driven:
 
 An enterprise cybersecurity awareness training platform processes the following categories of personal data:
 
-| Data Category | Examples | Sensitivity Level |
-|---|---|---|
-| **Identity data** | Name, employee ID, email address, department, job title | Standard personal data |
-| **Authentication data** | Login credentials, SSO tokens, session data | High sensitivity |
-| **Training performance data** | Scores, completion rates, quiz answers, time spent | Standard personal data (may reveal competence) |
-| **Phishing simulation data** | Click rates, report rates, susceptibility scores | High sensitivity (may impact employment) |
-| **Behavioral analytics** | Learning patterns, engagement metrics, device/browser data | High sensitivity (profiling risk) |
-| **Communication data** | Support tickets, forum posts, feedback | Standard personal data |
-| **Technical data** | IP address, device identifiers, access logs | Standard personal data |
+| Data Category                 | Examples                                                   | Sensitivity Level                              |
+| ----------------------------- | ---------------------------------------------------------- | ---------------------------------------------- |
+| **Identity data**             | Name, employee ID, email address, department, job title    | Standard personal data                         |
+| **Authentication data**       | Login credentials, SSO tokens, session data                | High sensitivity                               |
+| **Training performance data** | Scores, completion rates, quiz answers, time spent         | Standard personal data (may reveal competence) |
+| **Phishing simulation data**  | Click rates, report rates, susceptibility scores           | High sensitivity (may impact employment)       |
+| **Behavioral analytics**      | Learning patterns, engagement metrics, device/browser data | High sensitivity (profiling risk)              |
+| **Communication data**        | Support tickets, forum posts, feedback                     | Standard personal data                         |
+| **Technical data**            | IP address, device identifiers, access logs                | Standard personal data                         |
 
 ### 4.2 GDPR Data Protection Requirements
 
 **Lawful Basis for Processing:**
 
-| Processing Activity | Likely Lawful Basis | Justification |
-|---|---|---|
-| Mandatory training delivery | Art. 6(1)(c) -- Legal obligation | Regulatory mandate to provide training |
-| Training completion tracking | Art. 6(1)(c) -- Legal obligation | Compliance record-keeping requirement |
-| Phishing simulations | Art. 6(1)(f) -- Legitimate interest | Security testing with appropriate safeguards |
-| Performance analytics | Art. 6(1)(f) -- Legitimate interest | Requires balancing test and DPIA |
-| Behavioral profiling | Art. 6(1)(a) -- Consent OR Art. 6(1)(f) | High risk; DPIA mandatory |
+| Processing Activity          | Likely Lawful Basis                     | Justification                                |
+| ---------------------------- | --------------------------------------- | -------------------------------------------- |
+| Mandatory training delivery  | Art. 6(1)(c) -- Legal obligation        | Regulatory mandate to provide training       |
+| Training completion tracking | Art. 6(1)(c) -- Legal obligation        | Compliance record-keeping requirement        |
+| Phishing simulations         | Art. 6(1)(f) -- Legitimate interest     | Security testing with appropriate safeguards |
+| Performance analytics        | Art. 6(1)(f) -- Legitimate interest     | Requires balancing test and DPIA             |
+| Behavioral profiling         | Art. 6(1)(a) -- Consent OR Art. 6(1)(f) | High risk; DPIA mandatory                    |
 
 **Data Minimization Requirements:**
 
@@ -603,16 +616,17 @@ An enterprise cybersecurity awareness training platform processes the following 
 
 **Employee Privacy Considerations:**
 
-| Concern | Mitigation | Legal Basis |
-|---|---|---|
-| Performance surveillance | Aggregate reporting; no individual disciplinary use without separate policy | Art. 5(1)(b) purpose limitation |
-| Phishing simulation deception | Transparent policy disclosure; opt-out for sensitive individuals | Art. 13/14 information requirements |
-| Competence profiling | Avoid linking training performance to HR decisions without explicit policy | Art. 22 automated decision-making |
-| Cross-border data exposure | Data residency controls; transfer impact assessments | Chapter V GDPR |
+| Concern                       | Mitigation                                                                  | Legal Basis                         |
+| ----------------------------- | --------------------------------------------------------------------------- | ----------------------------------- |
+| Performance surveillance      | Aggregate reporting; no individual disciplinary use without separate policy | Art. 5(1)(b) purpose limitation     |
+| Phishing simulation deception | Transparent policy disclosure; opt-out for sensitive individuals            | Art. 13/14 information requirements |
+| Competence profiling          | Avoid linking training performance to HR decisions without explicit policy  | Art. 22 automated decision-making   |
+| Cross-border data exposure    | Data residency controls; transfer impact assessments                        | Chapter V GDPR                      |
 
 **Data Protection Impact Assessment (DPIA) Triggers:**
 
 A DPIA is **mandatory** under GDPR Article 35 when the training platform involves:
+
 - Systematic monitoring of employee behavior (phishing simulations, engagement tracking).
 - Processing on a large scale (enterprise-wide deployment).
 - Evaluation or scoring of individuals (training scores, susceptibility ratings).
@@ -623,6 +637,7 @@ A DPIA is **mandatory** under GDPR Article 35 when the training platform involve
 **Anonymization (GDPR-Exempt):**
 
 Truly anonymized data falls outside GDPR scope. For training analytics:
+
 - Remove all direct identifiers (name, employee ID, email).
 - Remove or generalize quasi-identifiers (department, role, location) to prevent re-identification.
 - Apply k-anonymity, l-diversity, or differential privacy techniques.
@@ -631,6 +646,7 @@ Truly anonymized data falls outside GDPR scope. For training analytics:
 **Pseudonymization (GDPR-Regulated but Preferred):**
 
 Pseudonymized data remains within GDPR scope but is a recommended safeguard:
+
 - Replace direct identifiers with pseudonymous keys.
 - Store the key-identity mapping separately with strict access controls.
 - Implement technical controls to prevent unauthorized re-identification.
@@ -669,6 +685,7 @@ Data in Transit:
 ### 4.5 HIPAA Data Protection Requirements (When Training Data Includes PHI)
 
 If the training platform processes any Protected Health Information (PHI):
+
 - **Administrative safeguards:** Access management, security officer designation, workforce training.
 - **Physical safeguards:** Facility access controls, workstation security.
 - **Technical safeguards:** Access controls, audit controls, integrity controls, transmission security.
@@ -686,39 +703,40 @@ Compliance officers require the following reports from a training platform:
 
 **Operational Reports:**
 
-| Report | Content | Frequency | Required By |
-|---|---|---|---|
-| Training completion dashboard | Overall and per-department completion rates | Real-time | All frameworks |
-| Overdue training report | Personnel with expired or incomplete training | Real-time/Weekly | HIPAA, PCI-DSS, FedRAMP |
-| New hire training status | Onboarding training completion tracking | Real-time | HIPAA, FedRAMP, PCI-DSS |
-| Phishing simulation results | Campaign results, click rates, report rates | Per campaign | PCI-DSS, FedRAMP |
-| Policy acknowledgment status | Personnel who have/have not acknowledged policies | Real-time | SOC 2, ISO 27001, PCI-DSS |
+| Report                        | Content                                           | Frequency        | Required By               |
+| ----------------------------- | ------------------------------------------------- | ---------------- | ------------------------- |
+| Training completion dashboard | Overall and per-department completion rates       | Real-time        | All frameworks            |
+| Overdue training report       | Personnel with expired or incomplete training     | Real-time/Weekly | HIPAA, PCI-DSS, FedRAMP   |
+| New hire training status      | Onboarding training completion tracking           | Real-time        | HIPAA, FedRAMP, PCI-DSS   |
+| Phishing simulation results   | Campaign results, click rates, report rates       | Per campaign     | PCI-DSS, FedRAMP          |
+| Policy acknowledgment status  | Personnel who have/have not acknowledged policies | Real-time        | SOC 2, ISO 27001, PCI-DSS |
 
 **Compliance Reports:**
 
-| Report | Content | Frequency | Required By |
-|---|---|---|---|
-| Regulatory compliance status | Framework-by-framework compliance posture | Monthly/Quarterly | All frameworks |
-| Training effectiveness metrics | Score trends, repeat failure analysis, improvement rates | Quarterly | ISO 27001, NIST CSF |
-| Annual training program review | Year-over-year program assessment | Annually | PCI-DSS (12.6.2), ISO 27001 |
-| Risk-based training gap analysis | Identified gaps between required and delivered training | Quarterly | NIS2, DORA, NIST CSF |
-| Management training attestation | Evidence of board/executive training completion | Annually | NIS2 (Art. 20), DORA (Art. 5), SEC |
+| Report                           | Content                                                  | Frequency         | Required By                        |
+| -------------------------------- | -------------------------------------------------------- | ----------------- | ---------------------------------- |
+| Regulatory compliance status     | Framework-by-framework compliance posture                | Monthly/Quarterly | All frameworks                     |
+| Training effectiveness metrics   | Score trends, repeat failure analysis, improvement rates | Quarterly         | ISO 27001, NIST CSF                |
+| Annual training program review   | Year-over-year program assessment                        | Annually          | PCI-DSS (12.6.2), ISO 27001        |
+| Risk-based training gap analysis | Identified gaps between required and delivered training  | Quarterly         | NIS2, DORA, NIST CSF               |
+| Management training attestation  | Evidence of board/executive training completion          | Annually          | NIS2 (Art. 20), DORA (Art. 5), SEC |
 
 **Audit-Ready Reports:**
 
-| Report | Content | Retention Period | Required By |
-|---|---|---|---|
-| Individual training transcript | Complete training history per employee | Duration of employment + retention period | All frameworks |
-| Training completion certificates | Dated, signed certificates of completion | Per framework retention requirement | ISO 27001, SOC 2, FedRAMP |
-| Training content version history | Audit trail of all content changes and reviews | Per framework retention requirement | PCI-DSS, ISO 27001 |
-| Access logs | Who accessed what training data and when | 1-7 years depending on framework | All frameworks |
-| Program modification log | Changes to training assignments, policies, and configurations | Duration of program + retention period | SOX, SOC 2 |
+| Report                           | Content                                                       | Retention Period                          | Required By               |
+| -------------------------------- | ------------------------------------------------------------- | ----------------------------------------- | ------------------------- |
+| Individual training transcript   | Complete training history per employee                        | Duration of employment + retention period | All frameworks            |
+| Training completion certificates | Dated, signed certificates of completion                      | Per framework retention requirement       | ISO 27001, SOC 2, FedRAMP |
+| Training content version history | Audit trail of all content changes and reviews                | Per framework retention requirement       | PCI-DSS, ISO 27001        |
+| Access logs                      | Who accessed what training data and when                      | 1-7 years depending on framework          | All frameworks            |
+| Program modification log         | Changes to training assignments, policies, and configurations | Duration of program + retention period    | SOX, SOC 2                |
 
 ### 5.2 Audit Trail Requirements
 
 The platform must maintain comprehensive, tamper-evident audit trails for:
 
 **Training Delivery Events:**
+
 - Training module assignment (who assigned, to whom, when, deadline).
 - Training module commencement (timestamp, IP address, device).
 - Training module completion (timestamp, score, time spent, attempts).
@@ -726,6 +744,7 @@ The platform must maintain comprehensive, tamper-evident audit trails for:
 - Certificate generation and delivery.
 
 **Administrative Events:**
+
 - Training content creation, modification, and deletion (full version history).
 - Training program configuration changes.
 - User account creation, modification, and deactivation.
@@ -734,6 +753,7 @@ The platform must maintain comprehensive, tamper-evident audit trails for:
 - Data access by administrators and compliance officers.
 
 **Security Events:**
+
 - Authentication attempts (successful and failed).
 - Phishing simulation deployment and results.
 - Data export and download events.
@@ -742,33 +762,33 @@ The platform must maintain comprehensive, tamper-evident audit trails for:
 
 **Audit Trail Technical Requirements:**
 
-| Requirement | Specification |
-|---|---|
-| Immutability | Append-only logging; no modification or deletion of audit records |
-| Integrity | Cryptographic hashing (SHA-256 minimum) of log entries |
-| Timestamp accuracy | NTP-synchronized, ISO 8601 format with timezone |
-| Retention | Configurable per framework; minimum 1 year, maximum 7+ years |
-| Searchability | Full-text search and filtered queries across all audit dimensions |
-| Export | Machine-readable export (CSV, JSON, XML) for external audit tools |
-| Access control | Role-based access; audit logs accessible only to authorized personnel |
-| Tamper detection | Automated alerting on detected tampering attempts |
+| Requirement        | Specification                                                         |
+| ------------------ | --------------------------------------------------------------------- |
+| Immutability       | Append-only logging; no modification or deletion of audit records     |
+| Integrity          | Cryptographic hashing (SHA-256 minimum) of log entries                |
+| Timestamp accuracy | NTP-synchronized, ISO 8601 format with timezone                       |
+| Retention          | Configurable per framework; minimum 1 year, maximum 7+ years          |
+| Searchability      | Full-text search and filtered queries across all audit dimensions     |
+| Export             | Machine-readable export (CSV, JSON, XML) for external audit tools     |
+| Access control     | Role-based access; audit logs accessible only to authorized personnel |
+| Tamper detection   | Automated alerting on detected tampering attempts                     |
 
 ### 5.3 Training Records Retention Requirements
 
-| Framework | Minimum Retention Period | Specific Requirements |
-|---|---|---|
-| **GDPR** | Duration of employment + legitimate retention period | Must justify retention; delete when purpose is fulfilled |
-| **CCPA/CPRA** | Duration disclosed to consumers; minimum reasonable period | Must disclose retention periods at collection |
-| **HIPAA** | **6 years** from date of creation or last effective date | Applies to all documentation of training policies and records |
-| **SOX** | **7 years** | Applies to all audit-relevant records including training |
-| **PCI-DSS** | **1 year** (minimum; longer recommended) | Training records must be available for assessor review |
-| **NIS2** | Per member state transposition; typically **3-5 years** | Must be available for supervisory authority review |
-| **DORA** | **5 years** minimum (per DORA Art. 45) | Financial supervisory authorities may request at any time |
-| **ISO 27001** | **3 years** minimum (certification cycle) | Must be available during surveillance and recertification audits |
-| **SOC 2** | **1 year** minimum (audit period); **3 years** recommended | Evidence must cover the full examination period |
-| **FedRAMP** | **3 years** minimum | Per NIST SP 800-53 AT-4 requirements |
-| **FISMA** | **3 years** minimum | Per NIST SP 800-53 AT-4 and agency-specific requirements |
-| **GLBA** | **5 years** | Per FTC Safeguards Rule |
+| Framework     | Minimum Retention Period                                   | Specific Requirements                                            |
+| ------------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
+| **GDPR**      | Duration of employment + legitimate retention period       | Must justify retention; delete when purpose is fulfilled         |
+| **CCPA/CPRA** | Duration disclosed to consumers; minimum reasonable period | Must disclose retention periods at collection                    |
+| **HIPAA**     | **6 years** from date of creation or last effective date   | Applies to all documentation of training policies and records    |
+| **SOX**       | **7 years**                                                | Applies to all audit-relevant records including training         |
+| **PCI-DSS**   | **1 year** (minimum; longer recommended)                   | Training records must be available for assessor review           |
+| **NIS2**      | Per member state transposition; typically **3-5 years**    | Must be available for supervisory authority review               |
+| **DORA**      | **5 years** minimum (per DORA Art. 45)                     | Financial supervisory authorities may request at any time        |
+| **ISO 27001** | **3 years** minimum (certification cycle)                  | Must be available during surveillance and recertification audits |
+| **SOC 2**     | **1 year** minimum (audit period); **3 years** recommended | Evidence must cover the full examination period                  |
+| **FedRAMP**   | **3 years** minimum                                        | Per NIST SP 800-53 AT-4 requirements                             |
+| **FISMA**     | **3 years** minimum                                        | Per NIST SP 800-53 AT-4 and agency-specific requirements         |
+| **GLBA**      | **5 years**                                                | Per FTC Safeguards Rule                                          |
 
 **Platform Design Implication:** The system must support **configurable retention policies per regulatory framework**, with the ability to apply multiple retention requirements to the same record. The longest applicable retention period governs.
 
@@ -776,19 +796,19 @@ The platform must maintain comprehensive, tamper-evident audit trails for:
 
 Training completion certificates must include:
 
-| Field | Purpose | Required By |
-|---|---|---|
-| Trainee full name | Identification | All frameworks |
-| Employee ID or unique identifier | Audit traceability | All frameworks |
-| Training module title and version | Content identification | ISO 27001, SOC 2, PCI-DSS |
-| Completion date and time | Temporal evidence | All frameworks |
-| Score achieved (where applicable) | Competence evidence | ISO 27001, FedRAMP |
-| Passing threshold | Standard documentation | ISO 27001, NIST |
-| Certificate unique ID | Tamper prevention and verification | All frameworks |
-| Issuing organization | Authority identification | All frameworks |
-| Digital signature or seal | Integrity verification | Best practice; required by some auditors |
-| Regulatory framework reference | Compliance mapping | Best practice for multi-framework environments |
-| Expiration date | Recertification tracking | FedRAMP, PCI-DSS, ISO 27001 |
+| Field                             | Purpose                            | Required By                                    |
+| --------------------------------- | ---------------------------------- | ---------------------------------------------- |
+| Trainee full name                 | Identification                     | All frameworks                                 |
+| Employee ID or unique identifier  | Audit traceability                 | All frameworks                                 |
+| Training module title and version | Content identification             | ISO 27001, SOC 2, PCI-DSS                      |
+| Completion date and time          | Temporal evidence                  | All frameworks                                 |
+| Score achieved (where applicable) | Competence evidence                | ISO 27001, FedRAMP                             |
+| Passing threshold                 | Standard documentation             | ISO 27001, NIST                                |
+| Certificate unique ID             | Tamper prevention and verification | All frameworks                                 |
+| Issuing organization              | Authority identification           | All frameworks                                 |
+| Digital signature or seal         | Integrity verification             | Best practice; required by some auditors       |
+| Regulatory framework reference    | Compliance mapping                 | Best practice for multi-framework environments |
+| Expiration date                   | Recertification tracking           | FedRAMP, PCI-DSS, ISO 27001                    |
 
 ---
 
@@ -801,18 +821,19 @@ Training completion certificates must include:
 Training requirements as detailed in Section 2.3 above, with the following additional healthcare-specific considerations:
 
 **HITECH Act Enhancements:**
+
 - Extended HIPAA training requirements to business associates.
 - Increased penalties for non-compliance.
 - Required breach notification for unsecured PHI.
 
 **State Healthcare Privacy Laws:**
 
-| State | Additional Requirements |
-|---|---|
-| California (CMIA) | Confidentiality of Medical Information Act requires additional training on state-specific patient privacy rights |
-| New York (SHIELD Act) | Requires "reasonable safeguards" including employee training for businesses holding private information of NY residents |
-| Massachusetts (201 CMR 17.00) | Requires comprehensive security programs including employee training |
-| Texas (HB 300) | Requires training within 60 days of hire and every 2 years thereafter for covered entities |
+| State                         | Additional Requirements                                                                                                 |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| California (CMIA)             | Confidentiality of Medical Information Act requires additional training on state-specific patient privacy rights        |
+| New York (SHIELD Act)         | Requires "reasonable safeguards" including employee training for businesses holding private information of NY residents |
+| Massachusetts (201 CMR 17.00) | Requires comprehensive security programs including employee training                                                    |
+| Texas (HB 300)                | Requires training within 60 days of hire and every 2 years thereafter for covered entities                              |
 
 **Healthcare-Specific Training Content:**
 
@@ -831,6 +852,7 @@ Training requirements as detailed in Section 2.3 above, with the following addit
 **OCR Enforcement Considerations (2025-2026):**
 
 The Office for Civil Rights has significantly increased enforcement focus on training adequacy. In breach investigations, OCR now routinely examines:
+
 - Whether a formal training program existed at the time of the breach.
 - Whether the training was current and comprehensive.
 - Whether the training covered the specific attack vector that caused the breach.
@@ -847,6 +869,7 @@ The Office for Civil Rights has significantly increased enforcement focus on tra
 Financial institutions must provide personnel with security awareness training that is "updated as necessary to reflect risks identified by the risk assessment."
 
 **Specific Requirements:**
+
 - All personnel with access to customer information must complete training at least **annually**.
 - Information security personnel must receive additional specialized training "sufficient to address relevant security risks."
 - Training must be updated to reflect current risk assessment findings.
@@ -877,6 +900,7 @@ While not prescribing specific training content, the SEC rules create **indirect
 **NYDFS Cybersecurity Regulation (23 NYCRR 500):**
 
 New York's Department of Financial Services regulation imposes additional requirements:
+
 - **Section 500.14:** Cybersecurity awareness training for all personnel, updated to address current cybersecurity risks.
 - **Section 500.10:** Cybersecurity personnel must receive adequate training to address relevant cybersecurity risks.
 - **2023 Amendments:** Enhanced training requirements including annual training on social engineering and notification requirements within 72 hours for cybersecurity events.
@@ -896,26 +920,27 @@ FISMA requires each federal agency to develop, document, and implement an agency
 
 **NIST SP 800-53 Rev. 5 -- Awareness and Training Controls:**
 
-| Control ID | Control Name | Requirement |
-|---|---|---|
-| AT-1 | Policy and Procedures | Document, disseminate, review policy (annually); review procedures (annually) |
-| AT-2 | Literacy Training and Awareness | Initial + annual + event-driven training for all users |
-| AT-2(1) | Practical Exercises | Include practical exercises in literacy training |
-| AT-2(2) | Insider Threat | Include insider threat awareness |
-| AT-2(3) | Social Engineering and Mining | Include social engineering awareness |
-| AT-2(4) | Suspicious Communications and Anomalous System Behavior | Report suspicious communications |
-| AT-2(5) | Advanced Persistent Threat | Advanced threat awareness for key personnel |
-| AT-3 | Role-Based Training | Role-specific training before access + annual |
-| AT-3(1) | Environmental Controls | Training on environmental controls (physical security) |
-| AT-3(2) | Physical Security Controls | Training on physical security |
-| AT-3(3) | Practical Exercises | Include practical exercises in role-based training |
-| AT-4 | Training Records | Document and retain individual training records |
-| AT-5 | Contacts with Security Groups and Associations | Maintain contacts for threat intelligence sharing |
-| AT-6 | Training Feedback | Provide feedback on training effectiveness |
+| Control ID | Control Name                                            | Requirement                                                                   |
+| ---------- | ------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| AT-1       | Policy and Procedures                                   | Document, disseminate, review policy (annually); review procedures (annually) |
+| AT-2       | Literacy Training and Awareness                         | Initial + annual + event-driven training for all users                        |
+| AT-2(1)    | Practical Exercises                                     | Include practical exercises in literacy training                              |
+| AT-2(2)    | Insider Threat                                          | Include insider threat awareness                                              |
+| AT-2(3)    | Social Engineering and Mining                           | Include social engineering awareness                                          |
+| AT-2(4)    | Suspicious Communications and Anomalous System Behavior | Report suspicious communications                                              |
+| AT-2(5)    | Advanced Persistent Threat                              | Advanced threat awareness for key personnel                                   |
+| AT-3       | Role-Based Training                                     | Role-specific training before access + annual                                 |
+| AT-3(1)    | Environmental Controls                                  | Training on environmental controls (physical security)                        |
+| AT-3(2)    | Physical Security Controls                              | Training on physical security                                                 |
+| AT-3(3)    | Practical Exercises                                     | Include practical exercises in role-based training                            |
+| AT-4       | Training Records                                        | Document and retain individual training records                               |
+| AT-5       | Contacts with Security Groups and Associations          | Maintain contacts for threat intelligence sharing                             |
+| AT-6       | Training Feedback                                       | Provide feedback on training effectiveness                                    |
 
 **Cybersecurity Maturity Model Certification (CMMC) 2.0:**
 
 For defense contractors:
+
 - **Level 1 (Foundational):** Basic cybersecurity hygiene; 17 practices including awareness.
 - **Level 2 (Advanced):** Aligns with NIST SP 800-171 Rev. 2; includes AT controls.
 - **Level 3 (Expert):** Aligns with NIST SP 800-172; enhanced training requirements.
@@ -923,6 +948,7 @@ For defense contractors:
 **International Traffic in Arms Regulations (ITAR):**
 
 For organizations handling defense-related technical data:
+
 - Training on ITAR compliance, export controls, and data handling restrictions.
 - All personnel with access must complete training before access is granted.
 - Annual refresher training on evolving regulations.
@@ -946,25 +972,26 @@ For organizations handling defense-related technical data:
 
 **NIS2 Sector-Specific Requirements:**
 
-| Sector | Annex | Additional Training Focus |
-|---|---|---|
-| Energy | Annex I | OT/ICS security, SCADA awareness |
-| Transport | Annex I | Safety-critical system security |
-| Banking | Annex I | Financial fraud, transaction security |
-| Healthcare | Annex I | Medical device security, patient data |
-| Digital infrastructure | Annex I | DNS, cloud, data center security |
-| Public administration | Annex I | Government data classification |
-| Space | Annex I | Space system cybersecurity |
-| Postal/courier | Annex II | Supply chain security |
-| Waste management | Annex II | SCADA/OT security |
-| Chemicals | Annex II | Industrial control system security |
-| Food | Annex II | Supply chain integrity |
-| Manufacturing | Annex II | OT/IT convergence security |
-| Digital providers | Annex II | Platform and marketplace security |
+| Sector                 | Annex    | Additional Training Focus             |
+| ---------------------- | -------- | ------------------------------------- |
+| Energy                 | Annex I  | OT/ICS security, SCADA awareness      |
+| Transport              | Annex I  | Safety-critical system security       |
+| Banking                | Annex I  | Financial fraud, transaction security |
+| Healthcare             | Annex I  | Medical device security, patient data |
+| Digital infrastructure | Annex I  | DNS, cloud, data center security      |
+| Public administration  | Annex I  | Government data classification        |
+| Space                  | Annex I  | Space system cybersecurity            |
+| Postal/courier         | Annex II | Supply chain security                 |
+| Waste management       | Annex II | SCADA/OT security                     |
+| Chemicals              | Annex II | Industrial control system security    |
+| Food                   | Annex II | Supply chain integrity                |
+| Manufacturing          | Annex II | OT/IT convergence security            |
+| Digital providers      | Annex II | Platform and marketplace security     |
 
 **EU Cyber Solidarity Act (2024):**
 
 Complements NIS2 with:
+
 - European Cybersecurity Alert System for cross-border threat detection.
 - Cybersecurity Emergency Mechanism including training components.
 - Large-scale incident review mechanism.
@@ -992,29 +1019,29 @@ Accessibility is not optional for an enterprise training platform. Multiple lega
 
 **United States:**
 
-| Law/Standard | Scope | Technical Standard | Enforcement |
-|---|---|---|---|
-| **Section 508 of the Rehabilitation Act** | Federal agencies and their vendors | WCAG 2.0 Level AA (aligned via 2017 Refresh) | Procurement requirements; administrative complaints |
-| **Americans with Disabilities Act (ADA)** | All places of public accommodation; employers with 15+ employees | Courts increasingly reference WCAG 2.1 AA | Private lawsuits; DOJ enforcement |
-| **Section 504 of the Rehabilitation Act** | Recipients of federal funding | Consistent with Section 508 | Administrative complaints; funding withdrawal |
+| Law/Standard                              | Scope                                                            | Technical Standard                           | Enforcement                                         |
+| ----------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------- |
+| **Section 508 of the Rehabilitation Act** | Federal agencies and their vendors                               | WCAG 2.0 Level AA (aligned via 2017 Refresh) | Procurement requirements; administrative complaints |
+| **Americans with Disabilities Act (ADA)** | All places of public accommodation; employers with 15+ employees | Courts increasingly reference WCAG 2.1 AA    | Private lawsuits; DOJ enforcement                   |
+| **Section 504 of the Rehabilitation Act** | Recipients of federal funding                                    | Consistent with Section 508                  | Administrative complaints; funding withdrawal       |
 
 **European Union:**
 
-| Law/Standard | Scope | Technical Standard | Enforcement |
-|---|---|---|---|
-| **European Accessibility Act (EAA)** | Products and services in the EU market, including e-learning | EN 301 549 (WCAG 2.1 AA + additional requirements) | Enforcement from June 28, 2025; per member state |
-| **Web Accessibility Directive (2016/2102)** | Public sector bodies | EN 301 549 | Per member state |
-| **EN 301 549 v3.2.1 (2021)** | ICT products and services | Incorporates WCAG 2.1 AA by reference + additional ICT requirements | Referenced by EAA and Web Accessibility Directive |
-| **EN 301 549 v4.1.1 (planned 2026)** | Updated standard | Will incorporate WCAG 2.2 AA | Future reference for EAA |
+| Law/Standard                                | Scope                                                        | Technical Standard                                                  | Enforcement                                       |
+| ------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- | ------------------------------------------------- |
+| **European Accessibility Act (EAA)**        | Products and services in the EU market, including e-learning | EN 301 549 (WCAG 2.1 AA + additional requirements)                  | Enforcement from June 28, 2025; per member state  |
+| **Web Accessibility Directive (2016/2102)** | Public sector bodies                                         | EN 301 549                                                          | Per member state                                  |
+| **EN 301 549 v3.2.1 (2021)**                | ICT products and services                                    | Incorporates WCAG 2.1 AA by reference + additional ICT requirements | Referenced by EAA and Web Accessibility Directive |
+| **EN 301 549 v4.1.1 (planned 2026)**        | Updated standard                                             | Will incorporate WCAG 2.2 AA                                        | Future reference for EAA                          |
 
 **International:**
 
-| Jurisdiction | Law/Standard | Technical Standard |
-|---|---|---|
-| Canada | Accessible Canada Act (ACA) | WCAG 2.1 AA |
-| United Kingdom | Equality Act 2010; Public Sector Bodies Accessibility Regulations 2018 | WCAG 2.1 AA |
-| Australia | Disability Discrimination Act (DDA) | WCAG 2.1 AA |
-| Japan | JIS X 8341-3:2016 | Based on WCAG 2.0 |
+| Jurisdiction   | Law/Standard                                                           | Technical Standard |
+| -------------- | ---------------------------------------------------------------------- | ------------------ |
+| Canada         | Accessible Canada Act (ACA)                                            | WCAG 2.1 AA        |
+| United Kingdom | Equality Act 2010; Public Sector Bodies Accessibility Regulations 2018 | WCAG 2.1 AA        |
+| Australia      | Disability Discrimination Act (DDA)                                    | WCAG 2.1 AA        |
+| Japan          | JIS X 8341-3:2016                                                      | Based on WCAG 2.0  |
 
 ### 7.2 WCAG 2.1 Level AA Requirements
 
@@ -1022,54 +1049,54 @@ WCAG 2.1 Level AA is the **minimum** standard. The following principles and thei
 
 **Principle 1: Perceivable**
 
-| Criterion | ID | Requirement for Training Platform |
-|---|---|---|
-| Non-text Content | 1.1.1 | All images, icons, charts, and infographics must have text alternatives |
-| Audio/Video Content | 1.2.x | Captions for all pre-recorded audio/video; audio descriptions; sign language (AAA recommended) |
-| Adaptable Content | 1.3.x | Content structure conveyed programmatically; meaningful sequence maintained; sensory characteristics not sole instruction method |
-| Orientation | 1.3.4 | Content not restricted to single display orientation |
-| Input Purpose | 1.3.5 | Autocomplete attributes for user input fields |
-| Distinguishable | 1.4.x | Minimum 4.5:1 contrast ratio for text (3:1 for large text); text resizable to 200%; no images of text; content reflows at 320px width; non-text contrast 3:1; text spacing adjustable; content on hover/focus dismissible |
+| Criterion           | ID    | Requirement for Training Platform                                                                                                                                                                                         |
+| ------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Non-text Content    | 1.1.1 | All images, icons, charts, and infographics must have text alternatives                                                                                                                                                   |
+| Audio/Video Content | 1.2.x | Captions for all pre-recorded audio/video; audio descriptions; sign language (AAA recommended)                                                                                                                            |
+| Adaptable Content   | 1.3.x | Content structure conveyed programmatically; meaningful sequence maintained; sensory characteristics not sole instruction method                                                                                          |
+| Orientation         | 1.3.4 | Content not restricted to single display orientation                                                                                                                                                                      |
+| Input Purpose       | 1.3.5 | Autocomplete attributes for user input fields                                                                                                                                                                             |
+| Distinguishable     | 1.4.x | Minimum 4.5:1 contrast ratio for text (3:1 for large text); text resizable to 200%; no images of text; content reflows at 320px width; non-text contrast 3:1; text spacing adjustable; content on hover/focus dismissible |
 
 **Principle 2: Operable**
 
-| Criterion | ID | Requirement for Training Platform |
-|---|---|---|
-| Keyboard Accessible | 2.1.x | All functionality available via keyboard; no keyboard traps; character key shortcuts can be turned off or remapped |
-| Enough Time | 2.2.x | Timing adjustable for timed assessments; pause/stop/hide for moving content |
-| Seizures and Physical Reactions | 2.3.x | No content flashing more than 3 times per second |
-| Navigable | 2.4.x | Skip navigation links; meaningful page titles; logical focus order; link purpose clear; multiple ways to navigate; headings and labels descriptive; focus visible |
-| Input Modalities | 2.5.x | Pointer gestures have single-pointer alternatives; pointer cancellation supported; label in name matches visual label; motion actuation has alternatives |
+| Criterion                       | ID    | Requirement for Training Platform                                                                                                                                 |
+| ------------------------------- | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Keyboard Accessible             | 2.1.x | All functionality available via keyboard; no keyboard traps; character key shortcuts can be turned off or remapped                                                |
+| Enough Time                     | 2.2.x | Timing adjustable for timed assessments; pause/stop/hide for moving content                                                                                       |
+| Seizures and Physical Reactions | 2.3.x | No content flashing more than 3 times per second                                                                                                                  |
+| Navigable                       | 2.4.x | Skip navigation links; meaningful page titles; logical focus order; link purpose clear; multiple ways to navigate; headings and labels descriptive; focus visible |
+| Input Modalities                | 2.5.x | Pointer gestures have single-pointer alternatives; pointer cancellation supported; label in name matches visual label; motion actuation has alternatives          |
 
 **Principle 3: Understandable**
 
-| Criterion | ID | Requirement for Training Platform |
-|---|---|---|
-| Readable | 3.1.x | Page language declared; language of parts declared |
-| Predictable | 3.2.x | No unexpected context changes on focus or input; consistent navigation; consistent identification |
+| Criterion        | ID    | Requirement for Training Platform                                                                                           |
+| ---------------- | ----- | --------------------------------------------------------------------------------------------------------------------------- |
+| Readable         | 3.1.x | Page language declared; language of parts declared                                                                          |
+| Predictable      | 3.2.x | No unexpected context changes on focus or input; consistent navigation; consistent identification                           |
 | Input Assistance | 3.3.x | Error identification; labels/instructions provided; error suggestion; error prevention for legal/financial/data submissions |
 
 **Principle 4: Robust**
 
-| Criterion | ID | Requirement for Training Platform |
-|---|---|---|
+| Criterion  | ID    | Requirement for Training Platform                                                                      |
+| ---------- | ----- | ------------------------------------------------------------------------------------------------------ |
 | Compatible | 4.1.x | Valid HTML parsing; name/role/value for all UI components; status messages programmatically determined |
 
 ### 7.3 EN 301 549 Additional Requirements (Beyond WCAG)
 
 EN 301 549 is "WCAG plus" -- it incorporates WCAG 2.1 AA by reference and adds additional requirements for ICT products and services:
 
-| Clause | Requirement | Training Platform Implication |
-|---|---|---|
-| 5 -- Generic requirements | Closed functionality alternatives | Platform features must work without assistive technology where AT cannot be installed |
-| 6 -- ICT with two-way voice communication | Real-time text (RTT) support | Live training sessions must support text alternatives to voice |
-| 7 -- ICT with video capabilities | Captioning and audio description | All video content must have synchronized captions and audio description |
-| 8 -- Hardware | Physical accessibility | Kiosk or terminal-based training must meet physical access requirements |
-| 9 -- Web | WCAG 2.1 AA (by reference) | Full WCAG 2.1 AA compliance |
-| 10 -- Non-web documents | Accessible documents | Training materials (PDFs, SCORM packages) must be accessible |
-| 11 -- Software | Accessible software | Platform software (including mobile apps) must meet accessibility requirements |
-| 12 -- Documentation and support | Accessible documentation | Help documentation, user guides must be accessible |
-| 13 -- ICT providing relay or emergency services | Communication accessibility | Relevant if platform includes communication features |
+| Clause                                          | Requirement                       | Training Platform Implication                                                         |
+| ----------------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------- |
+| 5 -- Generic requirements                       | Closed functionality alternatives | Platform features must work without assistive technology where AT cannot be installed |
+| 6 -- ICT with two-way voice communication       | Real-time text (RTT) support      | Live training sessions must support text alternatives to voice                        |
+| 7 -- ICT with video capabilities                | Captioning and audio description  | All video content must have synchronized captions and audio description               |
+| 8 -- Hardware                                   | Physical accessibility            | Kiosk or terminal-based training must meet physical access requirements               |
+| 9 -- Web                                        | WCAG 2.1 AA (by reference)        | Full WCAG 2.1 AA compliance                                                           |
+| 10 -- Non-web documents                         | Accessible documents              | Training materials (PDFs, SCORM packages) must be accessible                          |
+| 11 -- Software                                  | Accessible software               | Platform software (including mobile apps) must meet accessibility requirements        |
+| 12 -- Documentation and support                 | Accessible documentation          | Help documentation, user guides must be accessible                                    |
+| 13 -- ICT providing relay or emergency services | Communication accessibility       | Relevant if platform includes communication features                                  |
 
 ### 7.4 Section 508 Specific Requirements
 
@@ -1135,6 +1162,7 @@ Testing:
 Multi-language support is a **regulatory requirement**, not merely a feature enhancement:
 
 **GDPR (Recital 58, Article 12):**
+
 > "Information addressed to the public or to the data subject [must be] concise, easily accessible and easy to understand, and... clear and plain language."
 
 In practice, this means privacy notices, consent mechanisms, and training content touching on data protection must be provided in the language understood by the data subjects -- typically the local language of each jurisdiction.
@@ -1143,19 +1171,20 @@ In practice, this means privacy notices, consent mechanisms, and training conten
 As implemented through national transposition, training must be delivered in the local language to be effective. Supervisory authorities will assess training in the language of their jurisdiction.
 
 **Accessibility Requirements (WCAG 3.1.1, 3.1.2):**
+
 - The human language of each page must be programmatically determinable.
 - The human language of each passage or phrase must be programmatically determinable where it differs from the page language.
 
 **Practical Language Requirements:**
 
-| Region | Required Languages | Framework Driver |
-|---|---|---|
-| European Union (27 states) | All 24 official EU languages for maximum coverage | GDPR, NIS2, DORA, EAA |
-| United States | English; Spanish recommended | ADA, Section 508, Executive Order 13166 |
-| United Kingdom | English; Welsh (for Welsh public bodies) | UK GDPR, Equality Act |
-| Canada | English and French | Official Languages Act, PIPEDA |
-| Switzerland | German, French, Italian, Romansh | FADP |
-| Asia-Pacific | Japanese, Mandarin, Korean, Hindi (per deployment) | Local privacy laws |
+| Region                     | Required Languages                                 | Framework Driver                        |
+| -------------------------- | -------------------------------------------------- | --------------------------------------- |
+| European Union (27 states) | All 24 official EU languages for maximum coverage  | GDPR, NIS2, DORA, EAA                   |
+| United States              | English; Spanish recommended                       | ADA, Section 508, Executive Order 13166 |
+| United Kingdom             | English; Welsh (for Welsh public bodies)           | UK GDPR, Equality Act                   |
+| Canada                     | English and French                                 | Official Languages Act, PIPEDA          |
+| Switzerland                | German, French, Italian, Romansh                   | FADP                                    |
+| Asia-Pacific               | Japanese, Mandarin, Korean, Hindi (per deployment) | Local privacy laws                      |
 
 **Platform Language Architecture:**
 
@@ -1172,19 +1201,19 @@ Data residency refers to the legal requirement that certain data must be stored 
 
 **Binding Data Residency Requirements:**
 
-| Jurisdiction | Requirement | Applicable Data | Legal Basis |
-|---|---|---|---|
-| **EU/EEA** | Data must remain within EEA unless adequate transfer mechanisms exist | All personal data of EU residents | GDPR Chapter V |
-| **Russia** | Personal data of Russian citizens must be stored in Russia | All personal data | Federal Law 242-FZ |
-| **China** | Critical data and important data must undergo security assessment for transfer | Personal data exceeding thresholds; critical information infrastructure data | PIPL, DSL, CSL |
-| **India** | Critical personal data must be processed only in India (proposed) | Critical personal data (category TBD) | DPDP Act 2023 |
-| **Vietnam** | Data localization for important data | Personal data in specific categories | Decree 13/2023/ND-CP |
-| **Turkey** | Explicit consent or adequacy finding required for transfers | All personal data | KVKK Law No. 6698 |
-| **Brazil** | Transfer only to countries with adequate protection or with safeguards | All personal data | LGPD Art. 33 |
-| **Saudi Arabia** | Transfer restrictions with exceptions | Personal data | PDPL |
-| **Australia** | APP 8 requires reasonable steps to ensure overseas recipients comply with APPs | All personal data | Privacy Act 1988 |
-| **Japan** | Consent or equivalent protection required for cross-border transfer | All personal data | APPI |
-| **South Korea** | Consent required for cross-border transfer | All personal data | PIPA |
+| Jurisdiction     | Requirement                                                                    | Applicable Data                                                              | Legal Basis          |
+| ---------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- | -------------------- |
+| **EU/EEA**       | Data must remain within EEA unless adequate transfer mechanisms exist          | All personal data of EU residents                                            | GDPR Chapter V       |
+| **Russia**       | Personal data of Russian citizens must be stored in Russia                     | All personal data                                                            | Federal Law 242-FZ   |
+| **China**        | Critical data and important data must undergo security assessment for transfer | Personal data exceeding thresholds; critical information infrastructure data | PIPL, DSL, CSL       |
+| **India**        | Critical personal data must be processed only in India (proposed)              | Critical personal data (category TBD)                                        | DPDP Act 2023        |
+| **Vietnam**      | Data localization for important data                                           | Personal data in specific categories                                         | Decree 13/2023/ND-CP |
+| **Turkey**       | Explicit consent or adequacy finding required for transfers                    | All personal data                                                            | KVKK Law No. 6698    |
+| **Brazil**       | Transfer only to countries with adequate protection or with safeguards         | All personal data                                                            | LGPD Art. 33         |
+| **Saudi Arabia** | Transfer restrictions with exceptions                                          | Personal data                                                                | PDPL                 |
+| **Australia**    | APP 8 requires reasonable steps to ensure overseas recipients comply with APPs | All personal data                                                            | Privacy Act 1988     |
+| **Japan**        | Consent or equivalent protection required for cross-border transfer            | All personal data                                                            | APPI                 |
+| **South Korea**  | Consent required for cross-border transfer                                     | All personal data                                                            | PIPA                 |
 
 **Platform Architecture Implications:**
 
@@ -1223,14 +1252,14 @@ Multi-Region Deployment Model:
 
 **EU to Third Countries (GDPR Chapter V):**
 
-| Mechanism | Description | Use Case |
-|---|---|---|
-| **Adequacy Decision** | European Commission determination that a country provides adequate data protection | Transfers to countries with adequacy (e.g., Japan, UK, South Korea, US under EU-US Data Privacy Framework) |
-| **Standard Contractual Clauses (SCCs)** | Pre-approved contractual clauses between data exporter and importer | Most common mechanism for transfers to non-adequate countries |
-| **Binding Corporate Rules (BCRs)** | Approved internal policies for intra-group transfers | Multinational enterprises transferring data between subsidiaries |
-| **Codes of Conduct** | Approved industry codes with binding commitments | Sector-specific transfers |
-| **Certification Mechanisms** | Approved certification schemes | Vendor qualification |
-| **Derogations (Art. 49)** | Explicit consent, contract necessity, public interest, legal claims, vital interests | Limited, case-by-case transfers; not for systematic or bulk transfers |
+| Mechanism                               | Description                                                                          | Use Case                                                                                                   |
+| --------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| **Adequacy Decision**                   | European Commission determination that a country provides adequate data protection   | Transfers to countries with adequacy (e.g., Japan, UK, South Korea, US under EU-US Data Privacy Framework) |
+| **Standard Contractual Clauses (SCCs)** | Pre-approved contractual clauses between data exporter and importer                  | Most common mechanism for transfers to non-adequate countries                                              |
+| **Binding Corporate Rules (BCRs)**      | Approved internal policies for intra-group transfers                                 | Multinational enterprises transferring data between subsidiaries                                           |
+| **Codes of Conduct**                    | Approved industry codes with binding commitments                                     | Sector-specific transfers                                                                                  |
+| **Certification Mechanisms**            | Approved certification schemes                                                       | Vendor qualification                                                                                       |
+| **Derogations (Art. 49)**               | Explicit consent, contract necessity, public interest, legal claims, vital interests | Limited, case-by-case transfers; not for systematic or bulk transfers                                      |
 
 **EU-US Data Privacy Framework (DPF):**
 
@@ -1243,40 +1272,41 @@ Multi-Region Deployment Model:
 **Transfer Impact Assessments (TIAs):**
 
 When relying on SCCs, organizations must conduct TIAs to assess:
+
 - The laws and practices of the destination country.
 - Whether the destination country's legal framework provides "essentially equivalent" protection.
 - Whether supplementary measures are needed (encryption, pseudonymization, contractual guarantees).
 
 **Platform Technical Measures for Cross-Border Compliance:**
 
-| Measure | Implementation |
-|---|---|
-| Data residency controls | Geo-fencing of personal data storage and processing |
-| Transfer logging | Automated logging of all cross-border data transfers |
-| Encryption in transit | TLS 1.2+ with strong cipher suites for all transfers |
-| Encryption at rest | AES-256 with jurisdiction-specific key management |
-| Pseudonymization before transfer | Automatic pseudonymization for analytics data transferred across borders |
-| Consent management | Granular consent mechanisms for data transfer where consent is the legal basis |
-| Data localization overrides | Customer-configurable data residency preferences |
-| Transfer impact assessment templates | Built-in TIA workflow for compliance officers |
+| Measure                              | Implementation                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------------------ |
+| Data residency controls              | Geo-fencing of personal data storage and processing                            |
+| Transfer logging                     | Automated logging of all cross-border data transfers                           |
+| Encryption in transit                | TLS 1.2+ with strong cipher suites for all transfers                           |
+| Encryption at rest                   | AES-256 with jurisdiction-specific key management                              |
+| Pseudonymization before transfer     | Automatic pseudonymization for analytics data transferred across borders       |
+| Consent management                   | Granular consent mechanisms for data transfer where consent is the legal basis |
+| Data localization overrides          | Customer-configurable data residency preferences                               |
+| Transfer impact assessment templates | Built-in TIA workflow for compliance officers                                  |
 
 ### 8.4 International Privacy Law Considerations
 
 **Emerging Privacy Regulations (2025-2026):**
 
-| Jurisdiction | Law | Status | Training Platform Impact |
-|---|---|---|---|
-| US -- Indiana | ICDPA | Effective January 1, 2026 | Consumer rights for training platform users |
-| US -- Kentucky | KCDPA | Effective January 1, 2026 | Consumer rights for training platform users |
-| US -- Rhode Island | RIDPA | Effective January 1, 2026 | Consumer rights for training platform users |
-| US -- Nebraska | NDPA | Effective January 1, 2026 | Consumer rights for training platform users |
-| US -- New Hampshire | NHPA | Effective January 1, 2025 | Consumer rights for training platform users |
-| US -- New Jersey | NJDPA | Effective January 15, 2025 | Consumer rights for training platform users |
-| EU -- AI Act | Regulation 2024/1689 | Phased enforcement 2024-2027 | If platform uses AI for adaptive learning or risk scoring, AI Act obligations may apply |
-| UK -- Data Protection Reform | DPDI Bill | Ongoing | May modify UK GDPR training data requirements |
-| Brazil -- LGPD | Lei 13.709/2018 | Fully enforced | Privacy rights for Brazilian employees |
-| Japan -- APPI | 2022 amendments | Fully enforced | Consent and transfer requirements for Japanese data |
-| South Korea -- PIPA | 2023 amendments | Fully enforced | Enhanced employee data protections |
+| Jurisdiction                 | Law                  | Status                       | Training Platform Impact                                                                |
+| ---------------------------- | -------------------- | ---------------------------- | --------------------------------------------------------------------------------------- |
+| US -- Indiana                | ICDPA                | Effective January 1, 2026    | Consumer rights for training platform users                                             |
+| US -- Kentucky               | KCDPA                | Effective January 1, 2026    | Consumer rights for training platform users                                             |
+| US -- Rhode Island           | RIDPA                | Effective January 1, 2026    | Consumer rights for training platform users                                             |
+| US -- Nebraska               | NDPA                 | Effective January 1, 2026    | Consumer rights for training platform users                                             |
+| US -- New Hampshire          | NHPA                 | Effective January 1, 2025    | Consumer rights for training platform users                                             |
+| US -- New Jersey             | NJDPA                | Effective January 15, 2025   | Consumer rights for training platform users                                             |
+| EU -- AI Act                 | Regulation 2024/1689 | Phased enforcement 2024-2027 | If platform uses AI for adaptive learning or risk scoring, AI Act obligations may apply |
+| UK -- Data Protection Reform | DPDI Bill            | Ongoing                      | May modify UK GDPR training data requirements                                           |
+| Brazil -- LGPD               | Lei 13.709/2018      | Fully enforced               | Privacy rights for Brazilian employees                                                  |
+| Japan -- APPI                | 2022 amendments      | Fully enforced               | Consent and transfer requirements for Japanese data                                     |
+| South Korea -- PIPA          | 2023 amendments      | Fully enforced               | Enhanced employee data protections                                                      |
 
 ---
 
@@ -1286,37 +1316,38 @@ When relying on SCCs, organizations must conduct TIAs to assess:
 
 The following matrix maps regulatory requirements to required platform features:
 
-| Platform Feature | GDPR | CCPA | HIPAA | SOX | PCI-DSS | NIS2 | DORA | ISO 27001 | NIST CSF | SOC 2 | FedRAMP |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| Training module delivery | R | R | R | I | R | R | R | R | R | R | R |
-| Role-based training assignment | R | -- | R | I | R | R | R | R | R | R | R |
-| Phishing simulation | -- | -- | R* | -- | R | R* | I | R* | R | R* | R |
-| Training completion tracking | R | R | R | R | R | R | R | R | R | R | R |
-| Certificate generation | R | -- | R | R | R | R | R | R | R | R | R |
-| Audit trail / logging | R | R | R | R | R | R | R | R | R | R | R |
-| Configurable retention policies | R | R | R | R | R | R | R | R | -- | R | R |
-| Data export (individual) | R | R | R | -- | -- | R | -- | -- | -- | -- | -- |
-| Data deletion capability | R | R | -- | -- | -- | R | -- | -- | -- | -- | -- |
-| Multi-language support | R | -- | -- | -- | -- | R | R | R | -- | -- | -- |
-| Accessibility (WCAG 2.1 AA) | R | -- | -- | -- | -- | R | -- | -- | -- | -- | R |
-| Data residency controls | R | -- | -- | -- | R | R | R | -- | -- | -- | R |
-| DPIA support | R | -- | -- | -- | -- | R | -- | -- | -- | -- | -- |
-| Consent management | R | R | -- | -- | -- | R | -- | -- | -- | -- | -- |
-| Breach notification | R | R | R | -- | R | R | R | R | R | -- | R |
-| Management training tracking | R | -- | R | R | -- | R | R | R | R | R | R |
-| Third-party training tracking | -- | -- | R | -- | R | R | R | R | -- | R | -- |
-| Training effectiveness metrics | -- | -- | -- | -- | R | R | R | R | R | R | R |
-| Annual program review workflow | -- | -- | -- | -- | R | R | R | R | R | R | R |
-| SSO / directory integration | R | -- | R | R | R | -- | -- | R | -- | R | R |
-| API for compliance integration | R | R | R | R | R | R | R | R | R | R | R |
+| Platform Feature                | GDPR | CCPA | HIPAA | SOX | PCI-DSS | NIS2 | DORA | ISO 27001 | NIST CSF | SOC 2 | FedRAMP |
+| ------------------------------- | ---- | ---- | ----- | --- | ------- | ---- | ---- | --------- | -------- | ----- | ------- |
+| Training module delivery        | R    | R    | R     | I   | R       | R    | R    | R         | R        | R     | R       |
+| Role-based training assignment  | R    | --   | R     | I   | R       | R    | R    | R         | R        | R     | R       |
+| Phishing simulation             | --   | --   | R\*   | --  | R       | R\*  | I    | R\*       | R        | R\*   | R       |
+| Training completion tracking    | R    | R    | R     | R   | R       | R    | R    | R         | R        | R     | R       |
+| Certificate generation          | R    | --   | R     | R   | R       | R    | R    | R         | R        | R     | R       |
+| Audit trail / logging           | R    | R    | R     | R   | R       | R    | R    | R         | R        | R     | R       |
+| Configurable retention policies | R    | R    | R     | R   | R       | R    | R    | R         | --       | R     | R       |
+| Data export (individual)        | R    | R    | R     | --  | --      | R    | --   | --        | --       | --    | --      |
+| Data deletion capability        | R    | R    | --    | --  | --      | R    | --   | --        | --       | --    | --      |
+| Multi-language support          | R    | --   | --    | --  | --      | R    | R    | R         | --       | --    | --      |
+| Accessibility (WCAG 2.1 AA)     | R    | --   | --    | --  | --      | R    | --   | --        | --       | --    | R       |
+| Data residency controls         | R    | --   | --    | --  | R       | R    | R    | --        | --       | --    | R       |
+| DPIA support                    | R    | --   | --    | --  | --      | R    | --   | --        | --       | --    | --      |
+| Consent management              | R    | R    | --    | --  | --      | R    | --   | --        | --       | --    | --      |
+| Breach notification             | R    | R    | R     | --  | R       | R    | R    | R         | R        | --    | R       |
+| Management training tracking    | R    | --   | R     | R   | --      | R    | R    | R         | R        | R     | R       |
+| Third-party training tracking   | --   | --   | R     | --  | R       | R    | R    | R         | --       | R     | --      |
+| Training effectiveness metrics  | --   | --   | --    | --  | R       | R    | R    | R         | R        | R     | R       |
+| Annual program review workflow  | --   | --   | --    | --  | R       | R    | R    | R         | R        | R     | R       |
+| SSO / directory integration     | R    | --   | R     | R   | R       | --   | --   | R         | --       | R     | R       |
+| API for compliance integration  | R    | R    | R     | R   | R       | R    | R    | R         | R        | R     | R       |
 
-**Legend:** R = Required, I = Implied/Recommended, R* = Recommended/Best Practice, -- = Not specifically required
+**Legend:** R = Required, I = Implied/Recommended, R\* = Recommended/Best Practice, -- = Not specifically required
 
 ### 9.2 Compliance Priority Matrix
 
 For an enterprise platform entering the market, prioritization based on market impact and regulatory severity:
 
 **Priority 1 -- Must-Have at Launch:**
+
 - GDPR full compliance (broadest scope, highest penalties).
 - HIPAA training delivery and record-keeping (healthcare market access).
 - PCI-DSS 4.0 training requirements (financial/retail market access).
@@ -1326,6 +1357,7 @@ For an enterprise platform entering the market, prioritization based on market i
 - Section 508 compliance (US government market access).
 
 **Priority 2 -- Required Within 6 Months:**
+
 - NIS2 compliance features (EU market obligation, enforced from 2024-2026).
 - DORA compliance features (EU financial sector, applicable from January 2025).
 - FedRAMP authorization pathway (US government cloud market).
@@ -1333,6 +1365,7 @@ For an enterprise platform entering the market, prioritization based on market i
 - SOX internal controls evidence (publicly traded company customers).
 
 **Priority 3 -- Required Within 12 Months:**
+
 - NIST CSF 2.0 alignment (US market credibility).
 - GLBA Safeguards Rule compliance (financial institution customers).
 - CMMC alignment (defense contractor customers).
@@ -1349,6 +1382,7 @@ For an enterprise platform entering the market, prioritization based on market i
 Based on the analysis above, the platform architecture must incorporate:
 
 **Data Architecture:**
+
 - Multi-tenant architecture with logical data isolation per customer.
 - Configurable data residency (per customer, per regulation).
 - Encryption at rest (AES-256) and in transit (TLS 1.2+).
@@ -1357,6 +1391,7 @@ Based on the analysis above, the platform architecture must incorporate:
 - Immutable audit log storage with cryptographic integrity verification.
 
 **Application Architecture:**
+
 - Role-based access control (RBAC) with principle of least privilege.
 - Configurable training workflows per regulatory framework.
 - Multi-language content management system.
@@ -1367,6 +1402,7 @@ Based on the analysis above, the platform architecture must incorporate:
 - Phishing simulation engine with configurable campaigns.
 
 **Integration Architecture:**
+
 - SSO/SAML/OIDC integration for enterprise identity providers.
 - HR system integration (HRIS, HCM) for automated user provisioning.
 - SIEM integration for security event correlation.
@@ -1375,6 +1411,7 @@ Based on the analysis above, the platform architecture must incorporate:
 - API-first design for custom compliance integrations.
 
 **Reporting Architecture:**
+
 - Real-time compliance dashboards per regulatory framework.
 - Scheduled report generation and distribution.
 - Ad hoc report builder for compliance officers.
@@ -1385,18 +1422,21 @@ Based on the analysis above, the platform architecture must incorporate:
 ### 10.2 Content Management Requirements
 
 **Content Versioning:**
+
 - Full version history for all training content.
 - Audit trail of content creation, review, approval, and publication.
 - Annual review workflow with sign-off (PCI-DSS 12.6.2).
 - Regulatory change tracking with content impact analysis.
 
 **Content Localization:**
+
 - Professional translation management workflow.
 - Cultural adaptation capabilities.
 - Locale-specific phishing simulation templates.
 - Regulatory content localization (local law references, local reporting procedures).
 
 **Content Accessibility:**
+
 - Accessible authoring tools.
 - Automated accessibility checking in content pipeline.
 - Alternative format generation (audio, simplified text, sign language video).
@@ -1408,43 +1448,48 @@ Based on the analysis above, the platform architecture must incorporate:
 
 ### 11.1 Maximum Penalty Exposure by Framework
 
-| Framework | Maximum Penalty | Penalty Basis | Personal Liability |
-|---|---|---|---|
-| **GDPR** | EUR 20M or 4% global turnover | Per violation | No (entity-level) |
-| **CCPA/CPRA** | $7,500 per intentional violation | Per violation | No (entity-level) |
-| **HIPAA** | $2,067,813 per violation category annually | Per violation category | Criminal penalties possible |
-| **SOX** | $5M fine + 20 years imprisonment | Per false certification | **Yes** (officers) |
-| **PCI-DSS** | $100,000/month non-compliance | Per month | No (contractual) |
-| **NIS2** | EUR 10M or 2% global turnover | Per violation | **Yes** (management bodies) |
-| **DORA** | 1% daily global turnover (periodic penalty) | Per day of non-compliance | **Yes** (management bodies) |
-| **ISO 27001** | Loss of certification; contractual penalties | Certification loss | No |
-| **SOC 2** | Loss of attestation; customer contract breach | Attestation loss | No |
-| **FedRAMP** | Loss of authorization; contract termination | Authorization revocation | No |
-| **GLBA** | $100,000 per violation | Per violation | $10,000 per violation for individuals |
+| Framework     | Maximum Penalty                               | Penalty Basis             | Personal Liability                    |
+| ------------- | --------------------------------------------- | ------------------------- | ------------------------------------- |
+| **GDPR**      | EUR 20M or 4% global turnover                 | Per violation             | No (entity-level)                     |
+| **CCPA/CPRA** | $7,500 per intentional violation              | Per violation             | No (entity-level)                     |
+| **HIPAA**     | $2,067,813 per violation category annually    | Per violation category    | Criminal penalties possible           |
+| **SOX**       | $5M fine + 20 years imprisonment              | Per false certification   | **Yes** (officers)                    |
+| **PCI-DSS**   | $100,000/month non-compliance                 | Per month                 | No (contractual)                      |
+| **NIS2**      | EUR 10M or 2% global turnover                 | Per violation             | **Yes** (management bodies)           |
+| **DORA**      | 1% daily global turnover (periodic penalty)   | Per day of non-compliance | **Yes** (management bodies)           |
+| **ISO 27001** | Loss of certification; contractual penalties  | Certification loss        | No                                    |
+| **SOC 2**     | Loss of attestation; customer contract breach | Attestation loss          | No                                    |
+| **FedRAMP**   | Loss of authorization; contract termination   | Authorization revocation  | No                                    |
+| **GLBA**      | $100,000 per violation                        | Per violation             | $10,000 per violation for individuals |
 
 ### 11.2 Enforcement Trends (2024-2026)
 
 **GDPR:**
+
 - Record fines in 2023-2025 (Meta: EUR 1.2B; TikTok: EUR 530M).
 - Increasing focus on data transfer violations.
 - Training adequacy scrutinized in breach investigations.
 
 **HIPAA:**
+
 - 300% increase in healthcare cyberattacks (2022-2024).
 - OCR explicitly requiring annual cybersecurity awareness training.
 - Training failure cited as evidence of willful neglect in enforcement actions.
 
 **NIS2:**
+
 - Enforcement ramping up as member states transpose directive.
 - Personal liability provisions creating C-suite urgency.
 - Germany's December 2025 implementation law setting enforcement precedent.
 
 **PCI-DSS 4.0:**
+
 - All future-dated requirements mandatory since March 31, 2025.
 - Assessors actively evaluating enhanced training requirements.
 - Social engineering and phishing awareness now mandatory content areas.
 
 **SEC:**
+
 - Cybersecurity incident disclosure rules fully effective.
 - Board competency disclosures creating documented training incentive.
 - Material incident 4-day reporting deadline requiring trained response teams.
@@ -1455,21 +1500,21 @@ Based on the analysis above, the platform architecture must incorporate:
 
 ### Appendix A: Regulatory Reference Table
 
-| Framework | Primary Legal Text | Key Training Section | Issuing Authority |
-|---|---|---|---|
-| GDPR | Regulation (EU) 2016/679 | Art. 39(1)(b), Art. 47(2)(n) | European Parliament & Council |
-| CCPA/CPRA | Cal. Civ. Code 1798.100-199.100 | Sec. 1798.130(a)(6) | California Legislature |
-| HIPAA | 45 CFR Parts 160, 164 | 45 CFR 164.308(a)(5), 164.530(b) | HHS (OCR) |
-| SOX | Pub. L. 107-204 | Sec. 302, 404 | SEC |
-| PCI-DSS | PCI DSS v4.0.1 | Req. 12.6 | PCI SSC |
-| NIS2 | Directive (EU) 2022/2555 | Art. 20(2), Art. 21(2)(g) | European Parliament & Council |
-| DORA | Regulation (EU) 2022/2554 | Art. 5(4), 13(6), 16(1), 30 | European Parliament & Council |
-| ISO 27001 | ISO/IEC 27001:2022 | Cl. 7.2, 7.3; Annex A 6.3 | ISO/IEC |
-| NIST CSF | NIST CSWP 29 (CSF 2.0) | PR.AT-01, PR.AT-02 | NIST |
-| SOC 2 | Trust Services Criteria (2017) | CC1.4, CC2.2, CC9.9 | AICPA |
-| FedRAMP | NIST SP 800-53 Rev. 5 | AT-1 through AT-6 | FedRAMP PMO / NIST |
-| GLBA | 16 CFR Part 314 | Sec. 314.4(e) | FTC |
-| FISMA | 44 U.S.C. 3551-3558 | NIST SP 800-53 AT family | OMB / NIST |
+| Framework | Primary Legal Text              | Key Training Section             | Issuing Authority             |
+| --------- | ------------------------------- | -------------------------------- | ----------------------------- |
+| GDPR      | Regulation (EU) 2016/679        | Art. 39(1)(b), Art. 47(2)(n)     | European Parliament & Council |
+| CCPA/CPRA | Cal. Civ. Code 1798.100-199.100 | Sec. 1798.130(a)(6)              | California Legislature        |
+| HIPAA     | 45 CFR Parts 160, 164           | 45 CFR 164.308(a)(5), 164.530(b) | HHS (OCR)                     |
+| SOX       | Pub. L. 107-204                 | Sec. 302, 404                    | SEC                           |
+| PCI-DSS   | PCI DSS v4.0.1                  | Req. 12.6                        | PCI SSC                       |
+| NIS2      | Directive (EU) 2022/2555        | Art. 20(2), Art. 21(2)(g)        | European Parliament & Council |
+| DORA      | Regulation (EU) 2022/2554       | Art. 5(4), 13(6), 16(1), 30      | European Parliament & Council |
+| ISO 27001 | ISO/IEC 27001:2022              | Cl. 7.2, 7.3; Annex A 6.3        | ISO/IEC                       |
+| NIST CSF  | NIST CSWP 29 (CSF 2.0)          | PR.AT-01, PR.AT-02               | NIST                          |
+| SOC 2     | Trust Services Criteria (2017)  | CC1.4, CC2.2, CC9.9              | AICPA                         |
+| FedRAMP   | NIST SP 800-53 Rev. 5           | AT-1 through AT-6                | FedRAMP PMO / NIST            |
+| GLBA      | 16 CFR Part 314                 | Sec. 314.4(e)                    | FTC                           |
+| FISMA     | 44 U.S.C. 3551-3558             | NIST SP 800-53 AT family         | OMB / NIST                    |
 
 ### Appendix B: Training Frequency Quick Reference
 
@@ -1543,9 +1588,9 @@ Tier 5 -- Indirect/Reputational:
 
 ## Document Control
 
-| Version | Date | Author | Change Description |
-|---|---|---|---|
-| 1.0 | 2026-02-05 | Compliance & Regulatory Analysis Team | Initial comprehensive analysis |
+| Version | Date       | Author                                | Change Description             |
+| ------- | ---------- | ------------------------------------- | ------------------------------ |
+| 1.0     | 2026-02-05 | Compliance & Regulatory Analysis Team | Initial comprehensive analysis |
 
 **Review Schedule:** This document must be reviewed and updated at least quarterly to reflect evolving regulatory requirements. Material regulatory changes (new legislation, significant enforcement actions, framework version updates) should trigger an immediate review.
 
@@ -1553,4 +1598,4 @@ Tier 5 -- Indirect/Reputational:
 
 ---
 
-*End of Document*
+_End of Document_

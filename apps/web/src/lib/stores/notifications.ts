@@ -1,6 +1,6 @@
-import { writable } from "svelte/store";
+import { writable } from 'svelte/store';
 
-export type NotificationLevel = "info" | "warning" | "error";
+export type NotificationLevel = 'info' | 'warning' | 'error';
 
 export interface NotificationItem {
   id: string;

@@ -1,40 +1,41 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import js from "@eslint/js";
-import globals from "globals";
-import tsParser from "@typescript-eslint/parser";
-import tsPlugin from "@typescript-eslint/eslint-plugin";
-import sveltePlugin from "eslint-plugin-svelte";
-import svelteParser from "svelte-eslint-parser";
-import importX from "eslint-plugin-import-x";
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import js from '@eslint/js';
+import globals from 'globals';
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import sveltePlugin from 'eslint-plugin-svelte';
+import svelteParser from 'svelte-eslint-parser';
+import importX from 'eslint-plugin-import-x';
+import prettierConfig from 'eslint-config-prettier';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const isCI = Boolean(process.env.CI);
-const unusedVarsLevel = isCI ? "error" : "warn";
+const unusedVarsLevel = isCI ? 'error' : 'warn';
 
 const tsconfigProjects = [
-  path.join(rootDir, "apps", "api", "tsconfig.json"),
-  path.join(rootDir, "apps", "web", "tsconfig.json"),
-  path.join(rootDir, "packages", "shared", "tsconfig.json"),
-  path.join(rootDir, "packages", "shared", "tsconfig.esm.json"),
-  path.join(rootDir, "packages", "shared", "tsconfig.cjs.json"),
+  path.join(rootDir, 'apps', 'api', 'tsconfig.json'),
+  path.join(rootDir, 'apps', 'web', 'tsconfig.json'),
+  path.join(rootDir, 'packages', 'shared', 'tsconfig.json'),
+  path.join(rootDir, 'packages', 'shared', 'tsconfig.esm.json'),
+  path.join(rootDir, 'packages', 'shared', 'tsconfig.cjs.json'),
 ];
 
 const importResolverSettings = {
-  "import-x/resolver": {
+  'import-x/resolver': {
     typescript: {
       project: tsconfigProjects,
       tsconfigRootDir: rootDir,
     },
     node: {
-      extensions: [".js", ".cjs", ".mjs", ".ts", ".tsx", ".d.ts", ".svelte"],
+      extensions: ['.js', '.cjs', '.mjs', '.ts', '.tsx', '.d.ts', '.svelte'],
     },
   },
 };
 
 const buildModuleBoundaryZones = () => {
-  const modulesRoot = path.join(rootDir, "apps", "api", "src", "modules");
+  const modulesRoot = path.join(rootDir, 'apps', 'api', 'src', 'modules');
   if (!fs.existsSync(modulesRoot)) {
     return [];
   }
@@ -54,8 +55,8 @@ const buildModuleBoundaryZones = () => {
         target: path.join(modulesRoot, target),
         from: path.join(modulesRoot, from),
         except: [
-          path.join(modulesRoot, target, "index.ts"),
-          path.join(modulesRoot, target, "index.js"),
+          path.join(modulesRoot, target, 'index.ts'),
+          path.join(modulesRoot, target, 'index.js'),
         ],
       });
     }
@@ -67,59 +68,45 @@ const buildModuleBoundaryZones = () => {
 const moduleBoundaryZones = buildModuleBoundaryZones();
 
 const importOrderRule = [
-  "error",
+  'error',
   {
-    groups: [
-      "builtin",
-      "external",
-      "internal",
-      "parent",
-      "sibling",
-      "index",
-      "object",
-      "type",
-    ],
+    groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index', 'object', 'type'],
     pathGroups: [
-      { pattern: "@the-dmz/**", group: "internal" },
-      { pattern: "$lib/**", group: "internal" },
-      { pattern: "$api/**", group: "internal" },
-      { pattern: "$ui/**", group: "internal" },
-      { pattern: "$stores/**", group: "internal" },
-      { pattern: "$utils/**", group: "internal" },
-      { pattern: "$game/**", group: "internal" },
+      { pattern: '@the-dmz/**', group: 'internal' },
+      { pattern: '$lib/**', group: 'internal' },
+      { pattern: '$api/**', group: 'internal' },
+      { pattern: '$ui/**', group: 'internal' },
+      { pattern: '$stores/**', group: 'internal' },
+      { pattern: '$utils/**', group: 'internal' },
+      { pattern: '$game/**', group: 'internal' },
     ],
-    pathGroupsExcludedImportTypes: ["builtin"],
-    "newlines-between": "always",
+    pathGroupsExcludedImportTypes: ['builtin'],
+    'newlines-between': 'always',
   },
 ];
 
 const mergeConfigRules = (configs) =>
-  configs.reduce(
-    (acc, config) => (config?.rules ? { ...acc, ...config.rules } : acc),
-    {},
-  );
+  configs.reduce((acc, config) => (config?.rules ? { ...acc, ...config.rules } : acc), {});
 
-const svelteRecommendedRules = mergeConfigRules(
-  sveltePlugin.configs["flat/recommended"],
-);
+const svelteRecommendedRules = mergeConfigRules(sveltePlugin.configs['flat/recommended']);
 
 const svelteA11yRules = {
-  "svelte/button-has-type": "error",
-  "svelte/no-target-blank": "error",
+  'svelte/button-has-type': 'error',
+  'svelte/no-target-blank': 'error',
 };
 
 const baseRules = {
   ...js.configs.recommended.rules,
-  "no-console": ["warn", { allow: ["warn", "error"] }],
-  "prefer-const": "error",
-  "consistent-return": "error",
-  "import-x/no-cycle": "error",
-  "import-x/no-duplicates": "error",
-  "import-x/order": importOrderRule,
+  'no-console': ['warn', { allow: ['warn', 'error'] }],
+  'prefer-const': 'error',
+  'consistent-return': 'error',
+  'import-x/no-cycle': 'error',
+  'import-x/no-duplicates': 'error',
+  'import-x/order': importOrderRule,
   ...(moduleBoundaryZones.length > 0
     ? {
-        "import-x/no-restricted-paths": [
-          "error",
+        'import-x/no-restricted-paths': [
+          'error',
           {
             zones: moduleBoundaryZones,
             basePath: rootDir,
@@ -131,98 +118,98 @@ const baseRules = {
 
 const nonTypeAwareRules = {
   ...tsPlugin.configs.recommended.rules,
-  "@typescript-eslint/no-redeclare": "off",
-  "@typescript-eslint/no-explicit-any": "error",
-  "@typescript-eslint/require-await": "off",
-  "@typescript-eslint/consistent-type-imports": [
-    "error",
-    { prefer: "type-imports", fixStyle: "inline-type-imports" },
+  '@typescript-eslint/no-redeclare': 'off',
+  '@typescript-eslint/no-explicit-any': 'error',
+  '@typescript-eslint/require-await': 'off',
+  '@typescript-eslint/consistent-type-imports': [
+    'error',
+    { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
   ],
-  "@typescript-eslint/no-unused-vars": [
+  '@typescript-eslint/no-unused-vars': [
     unusedVarsLevel,
     {
-      argsIgnorePattern: "^_",
-      varsIgnorePattern: "^_",
-      caughtErrorsIgnorePattern: "^_",
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_',
+      caughtErrorsIgnorePattern: '^_',
     },
   ],
-  "no-unused-vars": "off",
-  "no-undef": "off",
-  "no-redeclare": "off",
+  'no-unused-vars': 'off',
+  'no-undef': 'off',
+  'no-redeclare': 'off',
 };
 
 const typeAwareRules = {
-  ...tsPlugin.configs["recommended-type-checked"].rules,
-  "@typescript-eslint/no-redeclare": "off",
-  "@typescript-eslint/no-explicit-any": "error",
-  "@typescript-eslint/consistent-return": "error",
-  "@typescript-eslint/require-await": "off",
-  "@typescript-eslint/consistent-type-imports": [
-    "error",
-    { prefer: "type-imports", fixStyle: "inline-type-imports" },
+  ...tsPlugin.configs['recommended-type-checked'].rules,
+  '@typescript-eslint/no-redeclare': 'off',
+  '@typescript-eslint/no-explicit-any': 'error',
+  '@typescript-eslint/consistent-return': 'error',
+  '@typescript-eslint/require-await': 'off',
+  '@typescript-eslint/consistent-type-imports': [
+    'error',
+    { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
   ],
-  "@typescript-eslint/no-unused-vars": [
+  '@typescript-eslint/no-unused-vars': [
     unusedVarsLevel,
     {
-      argsIgnorePattern: "^_",
-      varsIgnorePattern: "^_",
-      caughtErrorsIgnorePattern: "^_",
+      argsIgnorePattern: '^_',
+      varsIgnorePattern: '^_',
+      caughtErrorsIgnorePattern: '^_',
     },
   ],
-  "no-unused-vars": "off",
-  "no-undef": "off",
-  "no-redeclare": "off",
-  "consistent-return": "off",
+  'no-unused-vars': 'off',
+  'no-undef': 'off',
+  'no-redeclare': 'off',
+  'consistent-return': 'off',
 };
 
 export default [
   {
     ignores: [
-      "**/dist/**",
-      "**/build/**",
-      "**/.svelte-kit/**",
-      "**/.turbo/**",
-      "**/coverage/**",
-      "**/node_modules/**",
+      '**/dist/**',
+      '**/build/**',
+      '**/.svelte-kit/**',
+      '**/.turbo/**',
+      '**/coverage/**',
+      '**/node_modules/**',
     ],
   },
   {
-    files: ["**/*.{js,cjs,mjs}"],
+    files: ['**/*.{js,cjs,mjs}'],
     languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       globals: {
         ...globals.node,
         ...globals.browser,
       },
     },
     plugins: {
-      "import-x": importX,
+      'import-x': importX,
     },
     settings: importResolverSettings,
     rules: baseRules,
   },
   {
-    files: ["**/*.{ts,tsx}"],
+    files: ['**/*.{ts,tsx}'],
     ignores: [
-      "apps/api/drizzle.config.ts",
-      "apps/web/vitest.config.ts",
-      "**/*.test.{ts,tsx}",
-      "**/__tests__/**/*.{ts,tsx}",
-      "packages/shared/scripts/**/*.{ts,tsx}",
+      'apps/api/drizzle.config.ts',
+      'apps/web/vitest.config.ts',
+      '**/*.test.{ts,tsx}',
+      '**/__tests__/**/*.{ts,tsx}',
+      'packages/shared/scripts/**/*.{ts,tsx}',
     ],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
+        ecmaVersion: 'latest',
+        sourceType: 'module',
         projectService: true,
         tsconfigRootDir: rootDir,
       },
     },
     plugins: {
-      "@typescript-eslint": tsPlugin,
-      "import-x": importX,
+      '@typescript-eslint': tsPlugin,
+      'import-x': importX,
     },
     settings: importResolverSettings,
     rules: {
@@ -232,21 +219,21 @@ export default [
   },
   {
     files: [
-      "**/*.test.{ts,tsx}",
-      "**/__tests__/**/*.{ts,tsx}",
-      "packages/shared/scripts/**/*.{ts,tsx}",
-      "apps/web/vitest.config.ts",
+      '**/*.test.{ts,tsx}',
+      '**/__tests__/**/*.{ts,tsx}',
+      'packages/shared/scripts/**/*.{ts,tsx}',
+      'apps/web/vitest.config.ts',
     ],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
+        ecmaVersion: 'latest',
+        sourceType: 'module',
       },
     },
     plugins: {
-      "@typescript-eslint": tsPlugin,
-      "import-x": importX,
+      '@typescript-eslint': tsPlugin,
+      'import-x': importX,
     },
     settings: importResolverSettings,
     rules: {
@@ -255,17 +242,17 @@ export default [
     },
   },
   {
-    files: ["apps/api/drizzle.config.ts"],
+    files: ['apps/api/drizzle.config.ts'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        ecmaVersion: "latest",
-        sourceType: "module",
+        ecmaVersion: 'latest',
+        sourceType: 'module',
       },
     },
     plugins: {
-      "@typescript-eslint": tsPlugin,
-      "import-x": importX,
+      '@typescript-eslint': tsPlugin,
+      'import-x': importX,
     },
     settings: importResolverSettings,
     rules: {
@@ -274,31 +261,31 @@ export default [
     },
   },
   {
-    files: ["**/*.d.ts"],
+    files: ['**/*.d.ts'],
     rules: {
-      "@typescript-eslint/no-empty-object-type": "off",
+      '@typescript-eslint/no-empty-object-type': 'off',
     },
   },
   {
-    files: ["**/*.svelte"],
+    files: ['**/*.svelte'],
     languageOptions: {
       parser: svelteParser,
       parserOptions: {
         parser: tsParser,
-        extraFileExtensions: [".svelte"],
-        ecmaVersion: "latest",
-        sourceType: "module",
+        extraFileExtensions: ['.svelte'],
+        ecmaVersion: 'latest',
+        sourceType: 'module',
         projectService: true,
         tsconfigRootDir: rootDir,
       },
     },
     plugins: {
       svelte: sveltePlugin,
-      "@typescript-eslint": tsPlugin,
-      "import-x": importX,
+      '@typescript-eslint': tsPlugin,
+      'import-x': importX,
     },
     settings: importResolverSettings,
-    processor: "svelte/svelte",
+    processor: 'svelte/svelte',
     rules: {
       ...baseRules,
       ...typeAwareRules,
@@ -308,12 +295,13 @@ export default [
   },
   {
     files: [
-      "**/*.test.{js,cjs,mjs,ts,tsx}",
-      "**/__tests__/**/*.{js,cjs,mjs,ts,tsx}",
-      "**/scripts/**/*.{js,cjs,mjs,ts,tsx}",
+      '**/*.test.{js,cjs,mjs,ts,tsx}',
+      '**/__tests__/**/*.{js,cjs,mjs,ts,tsx}',
+      '**/scripts/**/*.{js,cjs,mjs,ts,tsx}',
     ],
     rules: {
-      "no-console": "off",
+      'no-console': 'off',
     },
   },
+  prettierConfig,
 ];

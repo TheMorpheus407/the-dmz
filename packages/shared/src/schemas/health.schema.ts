@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const serviceCheckSchema = z
   .object({
@@ -9,7 +9,7 @@ const serviceCheckSchema = z
 
 export const healthQuerySchema = z
   .object({
-    probe: z.enum(["liveness", "readiness"]).optional(),
+    probe: z.enum(['liveness', 'readiness']).optional(),
   })
   .strict();
 
@@ -17,7 +17,7 @@ export type HealthQuery = z.infer<typeof healthQuerySchema>;
 
 export const healthResponseSchema = z
   .object({
-    status: z.literal("ok"),
+    status: z.literal('ok'),
   })
   .strict();
 
@@ -25,7 +25,7 @@ export type HealthResponse = z.infer<typeof healthResponseSchema>;
 
 export const readinessResponseSchema = z
   .object({
-    status: z.enum(["ok", "degraded"]),
+    status: z.enum(['ok', 'degraded']),
     checks: z
       .object({
         database: serviceCheckSchema,

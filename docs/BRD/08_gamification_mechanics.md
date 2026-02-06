@@ -79,6 +79,7 @@ A well-designed system uses both, but leans toward White Hat for sustained engag
 **Archive Gate Application**: The game's premise is inherently epic. The internet has collapsed. Civilization's data is at risk of permanent loss. The player is not merely managing a server -- they are the last line of defense for human knowledge. The narrative frames every decision as consequential: approve the wrong applicant and a breach could destroy irreplaceable archives; reject a legitimate researcher and their life's work vanishes forever.
 
 **Implementation details**:
+
 - Opening narrative establishes the player as hand-selected by Morpheus to be the gatekeeper
 - Each client's data has a story -- a university's research, a hospital's patient records, a government's legal archives
 - The weight of these stories creates moral stakes beyond the game's mechanical systems
@@ -92,6 +93,7 @@ A well-designed system uses both, but leans toward White Hat for sustained engag
 **Archive Gate Application**: The upgrade loop is the primary accomplishment engine. Players earn funds through successful client management, invest in better servers, cooling, and security tooling, and see their facility evolve from a fragile outpost to a fortified archive. Each upgrade is tangible -- visible in the facility status report, reflected in new capabilities.
 
 **Implementation details**:
+
 - Security skill ratings that grow as the player correctly identifies phishing, manages incidents, and maintains uptime
 - Facility tier progression: Outpost, Station, Vault, Fortress, Citadel
 - Each tier unlocks new document types, threat categories, and decision complexity
@@ -106,6 +108,7 @@ A well-designed system uses both, but leans toward White Hat for sustained engag
 **Archive Gate Application**: The resource management system has no single correct solution. Players must decide their own allocation strategy: invest in cooling or security? Accept a high-risk, high-reward government contract or play it safe with a university? Stack bandwidth or storage? Every combination produces different outcomes, different threat profiles, different narrative branches.
 
 **Implementation details**:
+
 - Multiple valid strategies for facility management (security-first, capacity-first, balanced)
 - Upgrade paths that branch -- choosing one tool may preclude another for several cycles
 - Phishing analysis is not binary; players annotate red flags, building a personal threat model
@@ -120,6 +123,7 @@ A well-designed system uses both, but leans toward White Hat for sustained engag
 **Archive Gate Application**: The data center is the player's domain. Every rack, every cooling unit, every security tool was chosen and purchased by the player. Client data stored in the facility feels like the player's responsibility. The ransom mechanic directly threatens what the player has built -- a successful breach does not merely deduct points; it locks the player's entire operation behind a ransom note.
 
 **Implementation details**:
+
 - Detailed Facility Status Reports showing the player's infrastructure as an evolving asset
 - Client portfolios that the player curates over time
 - Custom blacklists and whitelists that reflect the player's judgment history
@@ -134,6 +138,7 @@ A well-designed system uses both, but leans toward White Hat for sustained engag
 **Archive Gate Application**: Even in a primarily single-player experience, social influence operates through the narrative. Client emails create parasocial relationships -- the player begins to care about recurring applicants, to develop opinions about organizations, to feel guilt or pride about their decisions. In multiplayer or organizational deployments, leaderboards and team challenges amplify this drive.
 
 **Implementation details**:
+
 - Recurring client characters with developing storylines
 - Morpheus as a mentor figure who provides guidance and feedback
 - Intelligence Briefs that reference other surviving data centers (implicit competition)
@@ -148,6 +153,7 @@ A well-designed system uses both, but leans toward White Hat for sustained engag
 **Archive Gate Application**: Scarcity is the game's fundamental constraint. Rack space, bandwidth, and power are limited. Storage is leased for fixed periods. The player cannot accept everyone -- every approval is a trade-off. Priority shifts daily based on threat level, creating urgency and forcing decisions under scarcity.
 
 **Implementation details**:
+
 - Limited rack space forces triage: who gets in, who waits, who gets rejected
 - Bandwidth and power caps mean accepting one client may require rejecting another
 - Lease expirations create time pressure -- renew a safe client or free space for a more profitable one?
@@ -162,6 +168,7 @@ A well-designed system uses both, but leans toward White Hat for sustained engag
 **Archive Gate Application**: The threat landscape is unpredictable by design. Attackers adapt as the player scales up. Phishing attempts evolve in sophistication. Supply chain malware is hidden in seemingly legitimate backups. The player never knows whether the next email is a genuine researcher or a social engineer.
 
 **Implementation details**:
+
 - Procedurally varying email templates with randomized red flags and legitimacy signals
 - Attacker sophistication that scales with player progress (not just difficulty)
 - Random events: power fluctuations, cooling failures, new zero-day announcements
@@ -176,6 +183,7 @@ A well-designed system uses both, but leans toward White Hat for sustained engag
 **Archive Gate Application**: The ransom mechanic is the purest expression of this drive. A successful breach does not reduce a score -- it locks the player's entire operation. The ransom costs total earnings divided by 10, with a minimum of one euro. If the player cannot pay, they lose the game entirely. This is not a minor penalty; it is existential.
 
 **Implementation details**:
+
 - Breach consequences are catastrophic, not incremental
 - The ransom note is a full-screen takeover -- operations cease until resolved
 - Client data at risk creates personal stakes beyond financial loss
@@ -187,16 +195,16 @@ A well-designed system uses both, but leans toward White Hat for sustained engag
 
 The game achieves Octalysis balance by weighting drives as follows:
 
-| Drive | Weight | Role in Game |
-|-------|--------|-------------|
-| Epic Meaning & Calling | High | Narrative foundation; existential stakes |
-| Development & Accomplishment | High | Upgrade loop; skill progression |
-| Empowerment of Creativity | High | Multi-path resource management; strategy variety |
-| Ownership & Possession | High | Facility as personal asset; client portfolio |
-| Social Influence | Medium | Parasocial client relationships; org leaderboards |
-| Scarcity & Impatience | High | Resource constraints; time-limited decisions |
-| Unpredictability & Curiosity | High | Evolving threats; variable email content |
-| Loss & Avoidance | Very High | Ransom mechanic; permanent breach consequences |
+| Drive                        | Weight    | Role in Game                                      |
+| ---------------------------- | --------- | ------------------------------------------------- |
+| Epic Meaning & Calling       | High      | Narrative foundation; existential stakes          |
+| Development & Accomplishment | High      | Upgrade loop; skill progression                   |
+| Empowerment of Creativity    | High      | Multi-path resource management; strategy variety  |
+| Ownership & Possession       | High      | Facility as personal asset; client portfolio      |
+| Social Influence             | Medium    | Parasocial client relationships; org leaderboards |
+| Scarcity & Impatience        | High      | Resource constraints; time-limited decisions      |
+| Unpredictability & Curiosity | High      | Evolving threats; variable email content          |
+| Loss & Avoidance             | Very High | Ransom mechanic; permanent breach consequences    |
 
 The design leans White Hat for sustained engagement (epic narrative, accomplishment through upgrades, creative freedom in strategy) while deploying Black Hat drives strategically (scarcity creates urgency, unpredictability maintains attention, loss avoidance creates stakes). This balance ensures players engage voluntarily over long periods while experiencing genuine consequences that mirror real-world cybersecurity risk.
 
@@ -213,6 +221,7 @@ Self-Determination Theory (SDT) posits that human motivation and well-being depe
 **Archive Gate Application**: The player is the final authority. No one tells them who to accept or reject. No algorithm makes the decision. The player reads the email, reviews the verification packet, assesses the threat score, and decides. Multiple valid strategies exist for facility management. The game respects the player's judgment and never overrides it.
 
 **Design principles applied**:
+
 - No forced tutorials after the initial onboarding; the player learns by doing
 - Multiple valid approaches to every challenge (reject aggressively vs. accept broadly with better monitoring)
 - The player chooses which upgrades to prioritize, which clients to cultivate, which threats to investigate
@@ -227,6 +236,7 @@ Self-Determination Theory (SDT) posits that human motivation and well-being depe
 **Archive Gate Application**: The game provides continuous, multi-layered competence feedback. Correct phishing identifications are confirmed. Facility metrics improve with good decisions. The upgrade loop makes capability growth visible. Threat sophistication increases to match growing skill, ensuring the player always faces a challenge worthy of their current ability.
 
 **Design principles applied**:
+
 - Immediate feedback on email triage decisions (not delayed until a "results" screen)
 - Facility Status Reports that quantify performance: uptime percentage, breach attempts blocked, revenue generated
 - Security skill ratings that grow with demonstrated competence
@@ -241,6 +251,7 @@ Self-Determination Theory (SDT) posits that human motivation and well-being depe
 **Archive Gate Application**: In a post-apocalyptic setting, relatedness is heightened by scarcity. The player is not just managing data -- they are responsible for people's livelihoods, research, and survival. Client emails are written as personal communications from desperate humans, not as sterile IT tickets. Morpheus serves as a persistent mentor figure. In organizational deployments, team challenges create genuine relatedness among colleagues.
 
 **Design principles applied**:
+
 - Client characters with names, backstories, and recurring communications
 - Morpheus as a trusted advisor who acknowledges the player's contributions
 - Intelligence briefs that reference a broader community of surviving networks
@@ -250,14 +261,14 @@ Self-Determination Theory (SDT) posits that human motivation and well-being depe
 
 #### SDT Integration Matrix
 
-| Need | Game Mechanic | Cybersecurity Skill |
-|------|--------------|-------------------|
-| Autonomy | Open-ended access decisions | Independent security judgment |
-| Autonomy | Self-directed upgrade strategy | Risk prioritization |
-| Competence | Phishing identification feedback | Phishing detection accuracy |
-| Competence | Facility performance metrics | Security operations effectiveness |
-| Relatedness | Client relationship narratives | Stakeholder communication |
-| Relatedness | Team leaderboards | Security culture building |
+| Need        | Game Mechanic                    | Cybersecurity Skill               |
+| ----------- | -------------------------------- | --------------------------------- |
+| Autonomy    | Open-ended access decisions      | Independent security judgment     |
+| Autonomy    | Self-directed upgrade strategy   | Risk prioritization               |
+| Competence  | Phishing identification feedback | Phishing detection accuracy       |
+| Competence  | Facility performance metrics     | Security operations effectiveness |
+| Relatedness | Client relationship narratives   | Stakeholder communication         |
+| Relatedness | Team leaderboards                | Security culture building         |
 
 ---
 
@@ -322,6 +333,7 @@ Richard Bartle's taxonomy classifies players into four types based on their pref
 **Motivation**: Progress, completion, accumulation, mastery. Achievers want to accomplish all available missions, earn every reward, and reach the highest level.
 
 **Archive Gate hooks**:
+
 - Facility tier progression: Outpost through Citadel
 - Comprehensive achievement system with hidden and visible badges
 - 100% completion challenges: process every email type, survive every threat category, unlock every upgrade
@@ -334,6 +346,7 @@ Richard Bartle's taxonomy classifies players into four types based on their pref
 **Motivation**: Discovery, understanding, mapping, finding hidden content. Explorers prefer discovering areas and immersing themselves in the game world, finding hidden elements and understanding systems.
 
 **Archive Gate hooks**:
+
 - Hidden lore in client emails that reveals the broader post-apocalyptic narrative
 - Easter eggs in phishing attempts that reference real-world security incidents
 - Deep-dive intelligence briefs with optional layers of detail
@@ -347,6 +360,7 @@ Richard Bartle's taxonomy classifies players into four types based on their pref
 **Motivation**: Relationships, communication, collaboration, community. Socializers gain the most enjoyment from interacting with other players.
 
 **Archive Gate hooks**:
+
 - Client characters with developing personal narratives
 - Organizational team challenges in enterprise deployments
 - Shared threat intelligence: players can warn each other about attack patterns they have discovered
@@ -360,6 +374,7 @@ Richard Bartle's taxonomy classifies players into four types based on their pref
 **Motivation**: Competition, dominance, defeating others, demonstrating superiority. Killers want to achieve first rank and prove their supremacy.
 
 **Archive Gate hooks**:
+
 - Competitive leaderboards with granular ranking categories
 - "Red team" mode where players can craft phishing attempts for others to detect
 - Speed-run challenges: process a threat cycle faster than anyone else
@@ -496,18 +511,18 @@ Stealth learning operates through several cognitive mechanisms:
 
 #### Archive Gate's Stealth Mapping
 
-| Player Perceives | Player Actually Learns |
-|-----------------|----------------------|
-| Reading access request emails | Phishing indicator detection |
-| Deciding who gets server access | Zero trust and least-privilege access control |
-| Monitoring facility threats | Security operations center procedures |
-| Purchasing upgrades | Patch management and vulnerability prioritization |
-| Managing rack space and bandwidth | Risk-based resource allocation |
-| Surviving a ransom attack | Incident response procedures |
-| Reading intelligence briefs | Threat landscape awareness |
-| Building blacklists | Indicator of compromise management |
-| Reviewing verification packets | Identity verification and authentication |
-| Managing storage leases | Data lifecycle management |
+| Player Perceives                  | Player Actually Learns                            |
+| --------------------------------- | ------------------------------------------------- |
+| Reading access request emails     | Phishing indicator detection                      |
+| Deciding who gets server access   | Zero trust and least-privilege access control     |
+| Monitoring facility threats       | Security operations center procedures             |
+| Purchasing upgrades               | Patch management and vulnerability prioritization |
+| Managing rack space and bandwidth | Risk-based resource allocation                    |
+| Surviving a ransom attack         | Incident response procedures                      |
+| Reading intelligence briefs       | Threat landscape awareness                        |
+| Building blacklists               | Indicator of compromise management                |
+| Reviewing verification packets    | Identity verification and authentication          |
+| Managing storage leases           | Data lifecycle management                         |
 
 #### Stealth Assessment
 
@@ -547,14 +562,14 @@ The game naturally implements spaced repetition through its core loop:
 
 #### Spaced Repetition Schedule
 
-| Interval | Mechanic | Security Skill Reinforced |
-|----------|---------|--------------------------|
-| Session-level | Email triage within each play session | Phishing detection fundamentals |
-| Daily | Daily challenges and streak maintenance | Core security awareness |
-| Weekly | New attack campaign introduction | Threat landscape awareness |
-| Bi-weekly | Recurring attacker with evolved tactics | Adaptive threat response |
-| Monthly | Major incident event | Incident response procedures |
-| Quarterly | Facility audit and performance review | Comprehensive security posture assessment |
+| Interval      | Mechanic                                | Security Skill Reinforced                 |
+| ------------- | --------------------------------------- | ----------------------------------------- |
+| Session-level | Email triage within each play session   | Phishing detection fundamentals           |
+| Daily         | Daily challenges and streak maintenance | Core security awareness                   |
+| Weekly        | New attack campaign introduction        | Threat landscape awareness                |
+| Bi-weekly     | Recurring attacker with evolved tactics | Adaptive threat response                  |
+| Monthly       | Major incident event                    | Incident response procedures              |
+| Quarterly     | Facility audit and performance review   | Comprehensive security posture assessment |
 
 Research indicates that spaced digital education promotes acquisition and long-term retention of knowledge and skills, and even drives change in clinical behavior. A pilot study in neurosurgery found that spaced repetition improved procedural proficiency with significant improvements in objective performance metrics. These findings transfer to cybersecurity skill acquisition, where the procedural nature of threat detection and incident response benefits from the same spaced rehearsal.
 
@@ -592,14 +607,14 @@ The game provides scaffolding (document templates, Morpheus's guidance, the Phis
 
 #### Constructivism vs. Instructivism in Security Training
 
-| Dimension | Instructivist (Traditional) | Constructivist (Archive Gate) |
-|-----------|---------------------------|------------------------------|
-| Knowledge source | Instructor/slideshow | Player experience and reflection |
-| Learner role | Passive receiver | Active constructor |
-| Assessment | Quiz/test | Embedded gameplay performance |
-| Motivation | Compliance requirement | Intrinsic engagement |
-| Transfer | Low (decontextualized) | High (situated, personal) |
-| Retention | ~5-20% (lecture/reading) | ~75-90% (active participation) |
+| Dimension        | Instructivist (Traditional) | Constructivist (Archive Gate)    |
+| ---------------- | --------------------------- | -------------------------------- |
+| Knowledge source | Instructor/slideshow        | Player experience and reflection |
+| Learner role     | Passive receiver            | Active constructor               |
+| Assessment       | Quiz/test                   | Embedded gameplay performance    |
+| Motivation       | Compliance requirement      | Intrinsic engagement             |
+| Transfer         | Low (decontextualized)      | High (situated, personal)        |
+| Retention        | ~5-20% (lecture/reading)    | ~75-90% (active participation)   |
 
 ---
 
@@ -612,6 +627,7 @@ Lev Vygotsky's Zone of Proximal Development (ZPD) describes the space between wh
 **Layer 1: Independent Performance Zone (Mastered)**
 
 Skills the player can execute without any support:
+
 - Recognizing obvious phishing indicators (misspelled domains, generic greetings)
 - Making basic accept/reject decisions with clear evidence
 - Reading facility status reports
@@ -620,6 +636,7 @@ Skills the player can execute without any support:
 **Layer 2: Zone of Proximal Development (Learning Edge)**
 
 Skills the player can perform with scaffolding:
+
 - Identifying sophisticated phishing (look-alike domains, contextual social engineering)
 - Balancing multiple resource constraints simultaneously
 - Interpreting intelligence briefs to anticipate threats
@@ -629,6 +646,7 @@ Skills the player can perform with scaffolding:
 **Layer 3: Beyond Current Reach (Not Yet Accessible)**
 
 Skills that are introduced only after prerequisites are mastered:
+
 - Multi-vector attack coordination (phishing + supply chain + insider threat)
 - Advanced forensic analysis of breach incidents
 - Strategic facility planning across multiple threat cycles
@@ -680,16 +698,16 @@ The ZPD model ensures that the game is always training skills at the edge of the
 
 **Detailed mapping**:
 
-| Email Element | Game Context | Real-World Skill |
-|--------------|-------------|-----------------|
-| Sender domain | Check if the organization exists in the game world | Verify sender email domain authenticity |
-| Language patterns | Assess whether the request sounds like a real person | Identify social engineering language cues |
-| Urgency signals | Evaluate whether time pressure is legitimate or manufactured | Recognize urgency as a manipulation tactic |
-| Attachment types | Determine whether attached documents are safe | Identify suspicious attachment types |
-| Request specificity | Assess whether the request makes sense for the claimed organization | Detect pretexting and impersonation |
-| Verification consistency | Cross-reference the email with the verification packet | Validate claims through multiple sources |
-| Historical context | Check whether this sender has communicated before | Assess relationship context for communications |
-| Embedded links | Check destination of links within the email | Identify malicious URLs and link manipulation |
+| Email Element            | Game Context                                                        | Real-World Skill                               |
+| ------------------------ | ------------------------------------------------------------------- | ---------------------------------------------- |
+| Sender domain            | Check if the organization exists in the game world                  | Verify sender email domain authenticity        |
+| Language patterns        | Assess whether the request sounds like a real person                | Identify social engineering language cues      |
+| Urgency signals          | Evaluate whether time pressure is legitimate or manufactured        | Recognize urgency as a manipulation tactic     |
+| Attachment types         | Determine whether attached documents are safe                       | Identify suspicious attachment types           |
+| Request specificity      | Assess whether the request makes sense for the claimed organization | Detect pretexting and impersonation            |
+| Verification consistency | Cross-reference the email with the verification packet              | Validate claims through multiple sources       |
+| Historical context       | Check whether this sender has communicated before                   | Assess relationship context for communications |
+| Embedded links           | Check destination of links within the email                         | Identify malicious URLs and link manipulation  |
 
 **Skill progression**:
 
@@ -708,18 +726,19 @@ The ZPD model ensures that the game is always training skills at the edge of the
 
 **Detailed mapping**:
 
-| Access Decision Element | Game Context | Real-World Skill |
-|------------------------|-------------|-----------------|
-| Identity verification | Verify applicant identity through documentation | Multi-factor authentication understanding |
-| Minimum necessary access | Allocate only the rack space and bandwidth needed | Least privilege access control |
-| Time-limited access | Storage is leased for fixed periods | Session management and access expiration |
-| Continuous evaluation | Clients can be re-evaluated and access revoked | Continuous monitoring and conditional access |
-| Trust but verify | Even whitelisted entities require ongoing verification | Zero trust philosophy |
-| Separation of concerns | Different clients on different infrastructure segments | Network segmentation |
-| Emergency overrides | Whitelist exceptions require justification and signatures | Privileged access management |
-| Blacklisting | Known bad actors permanently denied | Blocklist management and threat intelligence |
+| Access Decision Element  | Game Context                                              | Real-World Skill                             |
+| ------------------------ | --------------------------------------------------------- | -------------------------------------------- |
+| Identity verification    | Verify applicant identity through documentation           | Multi-factor authentication understanding    |
+| Minimum necessary access | Allocate only the rack space and bandwidth needed         | Least privilege access control               |
+| Time-limited access      | Storage is leased for fixed periods                       | Session management and access expiration     |
+| Continuous evaluation    | Clients can be re-evaluated and access revoked            | Continuous monitoring and conditional access |
+| Trust but verify         | Even whitelisted entities require ongoing verification    | Zero trust philosophy                        |
+| Separation of concerns   | Different clients on different infrastructure segments    | Network segmentation                         |
+| Emergency overrides      | Whitelist exceptions require justification and signatures | Privileged access management                 |
+| Blacklisting             | Known bad actors permanently denied                       | Blocklist management and threat intelligence |
 
 **Key learning outcomes**:
+
 - The player internalizes that trust is earned incrementally, not granted by default
 - The player learns that past trustworthiness does not guarantee current safety
 - The player understands that access should be the minimum necessary and time-limited
@@ -735,17 +754,18 @@ The ZPD model ensures that the game is always training skills at the edge of the
 
 **Detailed mapping**:
 
-| Monitoring Element | Game Context | Real-World Skill |
-|-------------------|-------------|-----------------|
-| Threat level indicator | Overall threat assessment for current cycle | Security dashboard interpretation |
-| Facility status report | Power, cooling, utilization metrics | System health monitoring |
-| Intelligence brief | Current attacker behavior and campaigns | Threat intelligence consumption |
-| Incident log | Timeline of attacks, breaches, mitigations | SIEM log analysis |
-| Pattern detection | Recognizing coordinated attacks across emails | Correlation and event analysis |
-| Alert prioritization | Deciding which threats to address first | Triage and alert fatigue management |
-| Anomaly detection | Spotting unusual patterns in client behavior | Behavioral analytics |
+| Monitoring Element     | Game Context                                  | Real-World Skill                    |
+| ---------------------- | --------------------------------------------- | ----------------------------------- |
+| Threat level indicator | Overall threat assessment for current cycle   | Security dashboard interpretation   |
+| Facility status report | Power, cooling, utilization metrics           | System health monitoring            |
+| Intelligence brief     | Current attacker behavior and campaigns       | Threat intelligence consumption     |
+| Incident log           | Timeline of attacks, breaches, mitigations    | SIEM log analysis                   |
+| Pattern detection      | Recognizing coordinated attacks across emails | Correlation and event analysis      |
+| Alert prioritization   | Deciding which threats to address first       | Triage and alert fatigue management |
+| Anomaly detection      | Spotting unusual patterns in client behavior  | Behavioral analytics                |
 
 **Key learning outcomes**:
+
 - The player develops the habit of monitoring multiple information streams
 - The player learns to distinguish between noise and genuine signals
 - The player practices prioritizing threats based on severity and likelihood
@@ -761,17 +781,18 @@ The ZPD model ensures that the game is always training skills at the edge of the
 
 **Detailed mapping**:
 
-| Upgrade Element | Game Context | Real-World Skill |
-|----------------|-------------|-----------------|
-| Cost-benefit analysis | Evaluate upgrade cost vs. expected capacity/security gain | Vulnerability severity scoring (CVSS) |
-| Lead time | Upgrades take time to deploy | Patch testing and deployment windows |
-| Dependency management | Some upgrades require prerequisites | System dependency mapping |
-| New threat vectors | Each upgrade introduces new attack surface | Understanding that new software introduces new vulnerabilities |
-| Priority decisions | Choose between capacity, cooling, and security upgrades | Prioritizing patches based on risk |
-| Timing trade-offs | Upgrade now (downtime risk) or wait (vulnerability risk) | Balancing uptime with security patching |
-| Rollback scenarios | Some upgrades create problems that must be reversed | Patch rollback procedures |
+| Upgrade Element       | Game Context                                              | Real-World Skill                                               |
+| --------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
+| Cost-benefit analysis | Evaluate upgrade cost vs. expected capacity/security gain | Vulnerability severity scoring (CVSS)                          |
+| Lead time             | Upgrades take time to deploy                              | Patch testing and deployment windows                           |
+| Dependency management | Some upgrades require prerequisites                       | System dependency mapping                                      |
+| New threat vectors    | Each upgrade introduces new attack surface                | Understanding that new software introduces new vulnerabilities |
+| Priority decisions    | Choose between capacity, cooling, and security upgrades   | Prioritizing patches based on risk                             |
+| Timing trade-offs     | Upgrade now (downtime risk) or wait (vulnerability risk)  | Balancing uptime with security patching                        |
+| Rollback scenarios    | Some upgrades create problems that must be reversed       | Patch rollback procedures                                      |
 
 **Key learning outcomes**:
+
 - The player understands that security is an ongoing process, not a one-time purchase
 - The player learns to prioritize upgrades based on risk, not just cost
 - The player experiences the trade-off between capability expansion and attack surface expansion
@@ -787,17 +808,18 @@ The ZPD model ensures that the game is always training skills at the edge of the
 
 **Detailed mapping**:
 
-| Resource Element | Game Context | Real-World Skill |
-|-----------------|-------------|-----------------|
-| Budget allocation | Distribute funds across capacity, cooling, security | Security budget allocation |
-| Acceptance risk | Each approved client increases attack surface | Understanding risk acceptance |
-| Opportunity cost | Rejecting a client means lost revenue | Evaluating the cost of security controls |
-| Portfolio risk | Total risk increases with total client base | Organizational risk aggregation |
-| Insurance vs. prevention | Some funds for recovery, some for defense | Incident response budget vs. prevention budget |
-| Diminishing returns | Additional security spending has decreasing marginal value | Optimizing security investment |
-| Risk appetite | How much risk is the player willing to accept for growth? | Organizational risk appetite definition |
+| Resource Element         | Game Context                                               | Real-World Skill                               |
+| ------------------------ | ---------------------------------------------------------- | ---------------------------------------------- |
+| Budget allocation        | Distribute funds across capacity, cooling, security        | Security budget allocation                     |
+| Acceptance risk          | Each approved client increases attack surface              | Understanding risk acceptance                  |
+| Opportunity cost         | Rejecting a client means lost revenue                      | Evaluating the cost of security controls       |
+| Portfolio risk           | Total risk increases with total client base                | Organizational risk aggregation                |
+| Insurance vs. prevention | Some funds for recovery, some for defense                  | Incident response budget vs. prevention budget |
+| Diminishing returns      | Additional security spending has decreasing marginal value | Optimizing security investment                 |
+| Risk appetite            | How much risk is the player willing to accept for growth?  | Organizational risk appetite definition        |
 
 **Key learning outcomes**:
+
 - The player internalizes that security is a resource allocation problem, not a binary state
 - The player learns to evaluate risk quantitatively (revenue vs. breach probability vs. breach cost)
 - The player practices making decisions under uncertainty with incomplete information
@@ -813,18 +835,19 @@ The ZPD model ensures that the game is always training skills at the edge of the
 
 **Detailed mapping**:
 
-| Ransom Element | Game Context | Real-World Skill |
-|---------------|-------------|-----------------|
-| Breach detection | Notification that an attack succeeded | Incident detection and alerting |
-| Operational lockout | All functions suspended during ransom | Understanding business impact of ransomware |
-| Payment decision | Pay to restore or lose the game | Ransom negotiation and decision frameworks |
-| Cost calculation | Ransom = earnings / 10 | Understanding financial impact of breaches |
-| Recovery time | Operations locked until payment confirmed | Recovery Time Objective (RTO) understanding |
-| Post-incident review | Incident log documents what happened | Post-incident analysis and lessons learned |
-| Prevention reflection | "What could I have done to prevent this?" | Root cause analysis |
-| Residual risk | After paying, the player is poorer and the attacker may return | Understanding that paying ransom does not eliminate risk |
+| Ransom Element        | Game Context                                                   | Real-World Skill                                         |
+| --------------------- | -------------------------------------------------------------- | -------------------------------------------------------- |
+| Breach detection      | Notification that an attack succeeded                          | Incident detection and alerting                          |
+| Operational lockout   | All functions suspended during ransom                          | Understanding business impact of ransomware              |
+| Payment decision      | Pay to restore or lose the game                                | Ransom negotiation and decision frameworks               |
+| Cost calculation      | Ransom = earnings / 10                                         | Understanding financial impact of breaches               |
+| Recovery time         | Operations locked until payment confirmed                      | Recovery Time Objective (RTO) understanding              |
+| Post-incident review  | Incident log documents what happened                           | Post-incident analysis and lessons learned               |
+| Prevention reflection | "What could I have done to prevent this?"                      | Root cause analysis                                      |
+| Residual risk         | After paying, the player is poorer and the attacker may return | Understanding that paying ransom does not eliminate risk |
 
 **Key learning outcomes**:
+
 - The player experiences the visceral impact of a ransomware attack (total operational disruption)
 - The player understands the financial consequences of breaches (proportional to earnings)
 - The player learns that incident response begins before the incident (preparation determines recovery speed)
@@ -842,6 +865,7 @@ Achievement systems provide recognition for completing specific challenges, feat
 #### Visible Achievements (Badges)
 
 **Security Operations Badges**:
+
 - **Gatekeeper Bronze/Silver/Gold**: Process 50/200/1000 email access requests
 - **Phish Finder**: Correctly identify 10 phishing attempts in a row
 - **Eagle Eye**: Identify a Tier 4 social engineering attack without hints
@@ -850,12 +874,14 @@ Achievement systems provide recognition for completing specific challenges, feat
 - **First Responder**: Resolve a ransomware incident within 60 seconds
 
 **Resource Management Badges**:
+
 - **Efficiency Expert**: Maintain 90%+ rack utilization for 10 days
 - **Budget Hawk**: Reach Vault tier while spending less than the median
 - **Diversified**: Host clients from 5+ different organization types simultaneously
 - **Strategic Reserve**: Maintain an emergency fund equal to 3x ransom cost
 
 **Narrative Badges**:
+
 - **Archivist**: Successfully preserve data for 20+ clients
 - **Trusted Authority**: Receive 5+ return requests from previously served clients
 - **Intelligence Analyst**: Read every intelligence brief for 30 consecutive days
@@ -864,6 +890,7 @@ Achievement systems provide recognition for completing specific challenges, feat
 #### Hidden Achievements
 
 Hidden achievements reward unexpected behavior and encourage exploration:
+
 - **Mercy**: Accept a high-risk client who turns out to be legitimate
 - **Ruthless Efficiency**: Reject 10 requests in a row (all correctly)
 - **Pattern Breaker**: Identify a multi-email attack campaign before the third email
@@ -889,13 +916,13 @@ Progression systems provide the structural backbone of long-term engagement. Arc
 
 The primary progression system tracks the overall capability of the player's data center:
 
-| Tier | Name | Requirements | Unlocks |
-|------|------|-------------|---------|
-| 1 | Outpost | Starting state | Basic email triage, simple access decisions |
-| 2 | Station | 10 clients served, 1 security upgrade | Verification packets, threat level monitoring |
-| 3 | Vault | 30 clients served, 3 upgrades, 0 breaches in last 10 days | Intelligence briefs, complex lease agreements |
-| 4 | Fortress | 75 clients served, 6 upgrades, advanced threat survival | Supply chain threat category, red team challenges |
-| 5 | Citadel | 150 clients served, all upgrade categories, mastery demonstrated | Full document suite, organizational scenarios, mentor mode |
+| Tier | Name     | Requirements                                                     | Unlocks                                                    |
+| ---- | -------- | ---------------------------------------------------------------- | ---------------------------------------------------------- |
+| 1    | Outpost  | Starting state                                                   | Basic email triage, simple access decisions                |
+| 2    | Station  | 10 clients served, 1 security upgrade                            | Verification packets, threat level monitoring              |
+| 3    | Vault    | 30 clients served, 3 upgrades, 0 breaches in last 10 days        | Intelligence briefs, complex lease agreements              |
+| 4    | Fortress | 75 clients served, 6 upgrades, advanced threat survival          | Supply chain threat category, red team challenges          |
+| 5    | Citadel  | 150 clients served, all upgrade categories, mastery demonstrated | Full document suite, organizational scenarios, mentor mode |
 
 Each tier introduces new document types, new threat categories, and new decision complexity. Progression feels organic because each tier genuinely changes the gameplay experience, not just the numbers.
 
@@ -915,16 +942,16 @@ Each skill has a 1--100 rating that increases with demonstrated competence and d
 
 XP is awarded for all gameplay actions, weighted by difficulty and correctness:
 
-| Action | XP Awarded |
-|--------|-----------|
-| Correct phishing identification | 50-200 (scaled by difficulty tier) |
-| Correct legitimate email approval | 25-100 |
-| Upgrade purchase and deployment | 75-150 |
-| Successful threat cycle completion | 200-500 |
-| Clean breach-free streak (per day) | 50 |
-| Achievement unlock | 100-1000 |
-| Ransomware recovery | 250 (acknowledge resilience despite failure) |
-| Intelligence brief read | 25 |
+| Action                             | XP Awarded                                   |
+| ---------------------------------- | -------------------------------------------- |
+| Correct phishing identification    | 50-200 (scaled by difficulty tier)           |
+| Correct legitimate email approval  | 25-100                                       |
+| Upgrade purchase and deployment    | 75-150                                       |
+| Successful threat cycle completion | 200-500                                      |
+| Clean breach-free streak (per day) | 50                                           |
+| Achievement unlock                 | 100-1000                                     |
+| Ransomware recovery                | 250 (acknowledge resilience despite failure) |
+| Intelligence brief read            | 25                                           |
 
 XP contributes to an overall player level that unlocks cosmetic customizations (facility themes, email interface skins, achievement display options) and serves as the primary metric for leaderboard ranking.
 
@@ -1006,6 +1033,7 @@ Short, focused challenges that rotate daily and reinforce specific skills:
 - **Incident Drill**: Respond to a simulated breach within a time limit
 
 **Design rationale**: Daily challenges serve triple duty:
+
 1. They implement spaced repetition by cycling through skill categories on a scheduled rotation
 2. They create a daily engagement habit that sustains long-term play
 3. They provide bite-sized sessions (2--5 minutes) for players who cannot commit to a full gameplay session
@@ -1042,14 +1070,14 @@ The game follows a three-act structure that parallels the player's skill develop
 
 Every narrative element serves a dual purpose:
 
-| Narrative Element | Engagement Purpose | Learning Purpose |
-|------------------|-------------------|-----------------|
-| Client backstories | Emotional investment | Contextualizes access control decisions |
-| Intelligence briefs | World-building | Threat landscape awareness |
-| Morpheus communications | Mentorship and belonging | Guided learning and feedback |
-| Attacker profiles | Antagonist engagement | Understanding attacker motivations and TTPs |
-| Incident narratives | Dramatic tension | Incident response contextualization |
-| World-state updates | Curiosity and exploration | Understanding systemic cybersecurity risk |
+| Narrative Element       | Engagement Purpose        | Learning Purpose                            |
+| ----------------------- | ------------------------- | ------------------------------------------- |
+| Client backstories      | Emotional investment      | Contextualizes access control decisions     |
+| Intelligence briefs     | World-building            | Threat landscape awareness                  |
+| Morpheus communications | Mentorship and belonging  | Guided learning and feedback                |
+| Attacker profiles       | Antagonist engagement     | Understanding attacker motivations and TTPs |
+| Incident narratives     | Dramatic tension          | Incident response contextualization         |
+| World-state updates     | Curiosity and exploration | Understanding systemic cybersecurity risk   |
 
 ---
 
@@ -1111,20 +1139,24 @@ Rarity creates aspiration without gatekeeping core content behind luck.
 The evidence comparing gamified cybersecurity training to traditional methods is substantial and consistent:
 
 **Engagement Improvements**:
+
 - Gamified training increases training completion rates by up to 60% (multiple studies, 2024)
 - A global energy company introducing gamified phishing challenges saw employee engagement in training jump from 10% to 70% within months
 - Gamified programs achieve 60% reporting rates compared to 7% for quarterly compliance-only training
 
 **Knowledge Acquisition**:
+
 - Adaptive, game-based learning improves information retention by 30--40% compared to traditional methods
 - A 2024 systematic mapping study in Heliyon concluded that gamification has emerged as one of the most effective methods for information security awareness programs in both private and public sectors (PMC, 2024)
 - Research from ACM (2024) on adaptive learning environments shows substantial improvement in both individual and collective cybersecurity knowledge and skills
 
 **Self-Efficacy and Behavioral Outcomes**:
+
 - A 2024 study in the Journal of Business Research found that gamified e-training improves employees' security behaviors, reducing the percentage of employees who click on phishing attacks and promoting positive reactions toward security practices
 - The same study confirmed that gamification significantly influences information quality, system quality, and enjoyment, which in turn increase perceived usefulness and satisfaction
 
 **Design Findings**:
+
 - Research suggests that gamified strategies should prioritize realistic, problem-solving tasks over competitive elements (directly supporting Archive Gate's simulation-based approach)
 - Game elements must ensure clarity and authenticity to maximize training effectiveness in workplace cybersecurity programs
 - The combination of Extended Reality and AI within gamified platforms provides a holistic approach that accounts for real-world human tendencies and cognitive biases during cyber threats (MDPI, 2024)
@@ -1133,17 +1165,17 @@ The evidence comparing gamified cybersecurity training to traditional methods is
 
 The retention data strongly favors active, gamified learning:
 
-| Training Method | Knowledge Retention Rate | Source |
-|----------------|------------------------|--------|
-| Lecture-based training | ~5% | National Training Laboratories Learning Pyramid; industry benchmarks |
-| Reading-based training | ~10% | National Training Laboratories Learning Pyramid |
-| Audio-visual training | ~20% | National Training Laboratories Learning Pyramid |
-| Demonstration | ~30% | National Training Laboratories Learning Pyramid |
-| Discussion group | ~50% | National Training Laboratories Learning Pyramid |
-| Practice by doing | ~75% | National Training Laboratories Learning Pyramid; gamification research |
-| Teaching others / immediate use | ~90% | National Training Laboratories Learning Pyramid |
-| Gamified active participation | 75--90% | Multiple cybersecurity gamification studies (2024) |
-| Traditional compliance training | 5--20% | Industry security awareness benchmarks |
+| Training Method                 | Knowledge Retention Rate | Source                                                                 |
+| ------------------------------- | ------------------------ | ---------------------------------------------------------------------- |
+| Lecture-based training          | ~5%                      | National Training Laboratories Learning Pyramid; industry benchmarks   |
+| Reading-based training          | ~10%                     | National Training Laboratories Learning Pyramid                        |
+| Audio-visual training           | ~20%                     | National Training Laboratories Learning Pyramid                        |
+| Demonstration                   | ~30%                     | National Training Laboratories Learning Pyramid                        |
+| Discussion group                | ~50%                     | National Training Laboratories Learning Pyramid                        |
+| Practice by doing               | ~75%                     | National Training Laboratories Learning Pyramid; gamification research |
+| Teaching others / immediate use | ~90%                     | National Training Laboratories Learning Pyramid                        |
+| Gamified active participation   | 75--90%                  | Multiple cybersecurity gamification studies (2024)                     |
+| Traditional compliance training | 5--20%                   | Industry security awareness benchmarks                                 |
 
 **Spaced repetition enhancement**: Research demonstrates that spaced digital education promotes acquisition and long-term retention of knowledge, skills, and even drives change in clinical behavior (JMIR, 2024 meta-analysis). Without spaced repetition, the average adult forgets 50--80% of learned information within days. With spaced repetition integrated into gamified systems, retention curves flatten significantly, maintaining 60--80% retention at 30-day follow-up.
 
@@ -1154,19 +1186,23 @@ The retention data strongly favors active, gamified learning:
 The ultimate measure of cybersecurity training is not knowledge retention but behavioral change: do trained employees actually behave more securely?
 
 **Phishing click rate reduction**:
+
 - Organizations implementing regular phishing simulations see vulnerability drop from 28.7% to 8.7% over a 24-month period (SoSafe, 2024)
 - With gamification elements, click-through rates dropped to 7% within 6 months, reflecting significant improvement in awareness
 - Organizations with behavior-based training experienced a 50% reduction in actual phishing-related incidents over 12 months
 
 **Reporting behavior improvement**:
+
 - Gamified programs achieve 60% reporting rates compared to 7% for quarterly compliance-only training
 - Researchers observed improved phishing detection rates and new competitive behavior: participants attempted to beat colleagues in identifying phishing emails first (PhishFirewall, 2024)
 
 **Moment-of-risk learning**:
+
 - When security training happens at the moment of risk (immediately after someone clicks a simulated phishing email), susceptibility drops by an average of 40% (Hoxhunt, 2026)
 - Archive Gate's design provides continuous moment-of-risk learning: every email is a potential phishing attempt, and feedback is immediate
 
 **Cultural shift indicators**:
+
 - Organizations deploying gamified security training report shifts from a compliance-oriented security culture to a proactive, engagement-oriented one
 - Best practices recommend positioning simulations as a culture program with recognition, gamification, and micro-lessons rather than punitive "gotcha" tests
 
@@ -1177,18 +1213,21 @@ Phishing simulation platforms provide the most directly comparable data to Archi
 **Baseline susceptibility**: Industry average phishing click rates start at 25--35% for untrained populations.
 
 **Reduction trajectory**:
+
 - After 3 months of gamified training: click rates drop to ~15%
 - After 6 months: click rates drop to ~7--10%
 - After 12 months: click rates stabilize at ~5--8%
 - After 24 months: click rates reach ~3--5% with continued training
 
 **Gamification-specific effects**:
+
 - Leaderboards increased competitive behavior, with participants actively seeking to be first to identify phishing (intrinsic engagement, not compliance)
 - Star ratings and adaptive difficulty encouraged active learning rather than passive awareness
 - Recognition programs (badges, public acknowledgment) increased voluntary participation
 - Micro-lessons embedded in gamified contexts showed higher completion and retention than standalone modules
 
 **Metric evolution**: Industry leaders now recommend moving beyond click rates to measure:
+
 - Reporting rates (did the employee report the suspicious email?)
 - Time to report (how quickly did they flag it?)
 - Detection accuracy (did they correctly identify what was suspicious?)
@@ -1206,18 +1245,18 @@ Archive Gate is not a cybersecurity training program with game elements bolted o
 
 Every framework analyzed in this report supports the Archive Gate design:
 
-| Framework | Core Claim | Archive Gate Implementation |
-|-----------|-----------|---------------------------|
-| Octalysis | Human motivation requires 8 core drives | All 8 drives activated; balanced White/Black Hat |
-| SDT | Autonomy, competence, relatedness sustain engagement | Player agency, skill feedback, narrative relationships |
-| Flow Theory | Optimal experience requires challenge-skill balance | Adaptive difficulty, immediate feedback, clear goals |
-| Bartle's Types | Different players need different hooks | Multi-dimensional content serves all four types |
-| Kolb | Learning cycles through experience and reflection | Email triage cycle completes Kolb's loop in minutes |
-| Situated Learning | Knowledge is inseparable from context | Email processing in a data center mirrors real-world phishing encounters |
-| Stealth Learning | Disguised education reduces resistance and increases engagement | Players perceive survival gameplay, not security training |
-| Spaced Repetition | Spaced review prevents forgetting | Daily cycles with escalating threat variations |
-| Constructivism | Learners build knowledge through experience | Players construct their own threat models from gameplay |
-| ZPD | Learning is optimal at the edge of current capability | Adaptive difficulty maintains players in their ZPD |
+| Framework         | Core Claim                                                      | Archive Gate Implementation                                              |
+| ----------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Octalysis         | Human motivation requires 8 core drives                         | All 8 drives activated; balanced White/Black Hat                         |
+| SDT               | Autonomy, competence, relatedness sustain engagement            | Player agency, skill feedback, narrative relationships                   |
+| Flow Theory       | Optimal experience requires challenge-skill balance             | Adaptive difficulty, immediate feedback, clear goals                     |
+| Bartle's Types    | Different players need different hooks                          | Multi-dimensional content serves all four types                          |
+| Kolb              | Learning cycles through experience and reflection               | Email triage cycle completes Kolb's loop in minutes                      |
+| Situated Learning | Knowledge is inseparable from context                           | Email processing in a data center mirrors real-world phishing encounters |
+| Stealth Learning  | Disguised education reduces resistance and increases engagement | Players perceive survival gameplay, not security training                |
+| Spaced Repetition | Spaced review prevents forgetting                               | Daily cycles with escalating threat variations                           |
+| Constructivism    | Learners build knowledge through experience                     | Players construct their own threat models from gameplay                  |
+| ZPD               | Learning is optimal at the edge of current capability           | Adaptive difficulty maintains players in their ZPD                       |
 
 ### Empirical Support
 
@@ -1247,44 +1286,44 @@ This dual-purpose design integrity is what separates effective gamified learning
 
 ### Gamification Frameworks
 
-- Chou, Y. (2015). *Actionable Gamification: Beyond Points, Badges, and Leaderboards*. Octalysis Media.
+- Chou, Y. (2015). _Actionable Gamification: Beyond Points, Badges, and Leaderboards_. Octalysis Media.
 - Chou, Y. "Octalysis Gamification Framework." https://yukaichou.com/gamification-examples/octalysis-gamification-framework/
 - The Octalysis Group. "Framework." https://octalysisgroup.com/framework/
-- Bartle, R. (1996). "Hearts, Clubs, Diamonds, Spades: Players Who Suit MUDs." *Journal of MUD Research*.
+- Bartle, R. (1996). "Hearts, Clubs, Diamonds, Spades: Players Who Suit MUDs." _Journal of MUD Research_.
 - Interaction Design Foundation. "Bartle's Player Types for Gamification." https://www.interaction-design.org/literature/article/bartle-s-player-types-for-gamification
 
 ### Self-Determination Theory
 
-- Deci, E. L., & Ryan, R. M. (2000). "The 'what' and 'why' of goal pursuits: Human needs and the self-determination of behavior." *Psychological Inquiry*, 11(4), 227--268.
+- Deci, E. L., & Ryan, R. M. (2000). "The 'what' and 'why' of goal pursuits: Human needs and the self-determination of behavior." _Psychological Inquiry_, 11(4), 227--268.
 - Rutledge, Walsh et al. (2018). "Gamification in Action." https://selfdeterminationtheory.org/wp-content/uploads/2020/10/2018_RutledgeWalshEtAl_Gamification.pdf
-- Sailer, M. et al. (2017). "How gamification motivates: An experimental study of the effects of specific game design elements on psychological need satisfaction." *Computers in Human Behavior*, 69, 371--380. https://www.sciencedirect.com/science/article/pii/S074756321630855X
-- Springer Nature (2024). "Advancing Gamification Research and Practice with Three Underexplored Ideas in Self-Determination Theory." *TechTrends*. https://link.springer.com/article/10.1007/s11528-024-00968-9
+- Sailer, M. et al. (2017). "How gamification motivates: An experimental study of the effects of specific game design elements on psychological need satisfaction." _Computers in Human Behavior_, 69, 371--380. https://www.sciencedirect.com/science/article/pii/S074756321630855X
+- Springer Nature (2024). "Advancing Gamification Research and Practice with Three Underexplored Ideas in Self-Determination Theory." _TechTrends_. https://link.springer.com/article/10.1007/s11528-024-00968-9
 
 ### Flow Theory
 
-- Csikszentmihalyi, M. (1990). *Flow: The Psychology of Optimal Experience*. Harper & Row.
+- Csikszentmihalyi, M. (1990). _Flow: The Psychology of Optimal Experience_. Harper & Row.
 - Chen, J. (2007). "Flow in Games." MFA Thesis. https://www.jenovachen.com/flowingames/Flow_in_games_final.pdf
 - Think Game Design. "The Flow Theory Applied to Game Design." https://thinkgamedesign.com/flow-theory-game-design/
 - Tandfonline (2025). "Flow Experience in Gameful Approaches: A Systematic Literature Review." https://www.tandfonline.com/doi/full/10.1080/10447318.2025.2470279
 
 ### Learning Theory
 
-- Kolb, D. A. (1984). *Experiential Learning: Experience as the Source of Learning and Development*. Prentice Hall.
-- Lave, J., & Wenger, E. (1991). *Situated Learning: Legitimate Peripheral Participation*. Cambridge University Press.
-- Vygotsky, L. S. (1978). *Mind in Society: The Development of Higher Psychological Processes*. Harvard University Press.
-- Piaget, J. (1952). *The Origins of Intelligence in Children*. International Universities Press.
-- Ebbinghaus, H. (1885/1913). *Memory: A Contribution to Experimental Psychology*.
+- Kolb, D. A. (1984). _Experiential Learning: Experience as the Source of Learning and Development_. Prentice Hall.
+- Lave, J., & Wenger, E. (1991). _Situated Learning: Legitimate Peripheral Participation_. Cambridge University Press.
+- Vygotsky, L. S. (1978). _Mind in Society: The Development of Higher Psychological Processes_. Harvard University Press.
+- Piaget, J. (1952). _The Origins of Intelligence in Children_. International Universities Press.
+- Ebbinghaus, H. (1885/1913). _Memory: A Contribution to Experimental Psychology_.
 
 ### Stealth Learning and Assessment
 
-- Shute, V. J. (2011). "Stealth Assessment in Computer-Based Games to Support Learning." *Computer Games and Instruction*, 55(2), 503--524.
+- Shute, V. J. (2011). "Stealth Assessment in Computer-Based Games to Support Learning." _Computer Games and Instruction_, 55(2), 503--524.
 - Tandfonline (2025). "Enhancing stealth assessment in game-based learning through goal recognition." https://www.tandfonline.com/doi/full/10.1080/15391523.2025.2555246
-- MDPI (2023). "Stealth Literacy Assessments via Educational Games." *Computers*, 12(7), 130. https://www.mdpi.com/2073-431X/12/7/130
+- MDPI (2023). "Stealth Literacy Assessments via Educational Games." _Computers_, 12(7), 130. https://www.mdpi.com/2073-431X/12/7/130
 - ResearchGate (2015). "Stealth Learning: Unexpected Learning Opportunities Through Games." https://www.researchgate.net/publication/272737889
 
 ### Cybersecurity Training Research
 
-- MDPI (2024). "Understanding User Behavior for Enhancing Cybersecurity Training with Immersive Gamified Platforms." *Information*, 15(12), 814. https://www.mdpi.com/2078-2489/15/12/814
+- MDPI (2024). "Understanding User Behavior for Enhancing Cybersecurity Training with Immersive Gamified Platforms." _Information_, 15(12), 814. https://www.mdpi.com/2078-2489/15/12/814
 - ACM (2024). "Cyber Gamification: Implementing Gamified Adaptive Learning Environments for Effective Cyber Security Teams Education." https://dl.acm.org/doi/10.1145/3669947.3669953
 - PMC (2024). "A systematic mapping study on gamification within information security awareness programs." https://pmc.ncbi.nlm.nih.gov/articles/PMC11467640/
 - ScienceDirect (2024). "Gamification in workforce training: Improving employees' self-efficacy and information security and data protection behaviours." https://www.sciencedirect.com/science/article/pii/S0148296324001899
@@ -1317,4 +1356,4 @@ This dual-purpose design integrity is what separates effective gamified learning
 
 ---
 
-*This document was prepared as part of the Business Requirements Documentation for The DMZ: Archive Gate. It provides the theoretical foundation and empirical evidence supporting the game's design as a stealth cybersecurity awareness training platform.*
+_This document was prepared as part of the Business Requirements Documentation for The DMZ: Archive Gate. It provides the theoretical foundation and empirical evidence supporting the game's design as a stealth cybersecurity awareness training platform._

@@ -1,1 +1,1 @@
-export { uiComponentPlaceholder } from "./components";
+export { uiComponentPlaceholder } from './components';

@@ -1,4 +1,5 @@
 # 09 -- Narrative Design & Immersive Storytelling
+
 ## The DMZ: Archive Gate
 
 **Document Type:** Business Requirements Document -- Narrative Design
@@ -38,12 +39,12 @@ Archive Gate uses a **river delta model** rather than a traditional branching tr
 
 #### Structural Layers
 
-| Layer | Description | Player Visibility |
-|-------|-------------|-------------------|
-| **Spine** | The fixed sequence of major story events that always occur regardless of player choices. These are the non-negotiable beats: the Stuxnet variant hits, the internet fragments, factions form, escalation events fire. | Invisible. The player never sees the spine as a constraint; it feels like the natural consequence of their choices. |
-| **Branches** | Decision points where the player chooses between two or more options (approve/deny access, allocate resources, respond to a threat). Each branch modifies the **World State** variables but converges back toward the spine. | Fully visible. These are the moments the player feels authorship over the story. |
-| **Tendrils** | Minor narrative variations: different dialogue lines, email tones, NPC attitudes, environmental details. These do not change the plot but make the world feel responsive to the player. | Subconsciously felt. The player senses the world reacting to them even when the plot has not structurally changed. |
-| **Echoes** | Delayed consequences. A decision made in Chapter 2 may not manifest until Chapter 5. A client you approved may turn out to be compromised. An NPC you helped may send a warning when you need it most. | High impact. These are the moments players talk about. |
+| Layer        | Description                                                                                                                                                                                                                  | Player Visibility                                                                                                   |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Spine**    | The fixed sequence of major story events that always occur regardless of player choices. These are the non-negotiable beats: the Stuxnet variant hits, the internet fragments, factions form, escalation events fire.        | Invisible. The player never sees the spine as a constraint; it feels like the natural consequence of their choices. |
+| **Branches** | Decision points where the player chooses between two or more options (approve/deny access, allocate resources, respond to a threat). Each branch modifies the **World State** variables but converges back toward the spine. | Fully visible. These are the moments the player feels authorship over the story.                                    |
+| **Tendrils** | Minor narrative variations: different dialogue lines, email tones, NPC attitudes, environmental details. These do not change the plot but make the world feel responsive to the player.                                      | Subconsciously felt. The player senses the world reacting to them even when the plot has not structurally changed.  |
+| **Echoes**   | Delayed consequences. A decision made in Chapter 2 may not manifest until Chapter 5. A client you approved may turn out to be compromised. An NPC you helped may send a warning when you need it most.                       | High impact. These are the moments players talk about.                                                              |
 
 #### Nexus Point Design
 
@@ -128,12 +129,12 @@ The threat landscape adapts to the player's behavior. If the player is good at d
 
 #### Emergent Scenario Examples
 
-| Player Behavior | System Response | Emergent Story |
-|-----------------|----------------|----------------|
-| Approves most requests without deep verification | Threat system increases social engineering attacks; queue system generates more sophisticated phishing | "Word got out that Archive Gate is soft. The requests are flooding in -- and they are getting harder to read." |
-| Hoards resources, denies most applicants | Reputation drops with civilians; a desperate faction attempts a physical break-in event | "People are calling us a digital fortress with no soul. Someone tried to cut the power line last night." |
-| Invests all funds in automation and detection tools | Attackers shift to zero-day exploits and novel attack vectors | "Our defenses are the best on the continent. Which means the people trying to get through them are, too." |
-| Plays favorites with one faction | Rival factions form an alliance against the player | "The corporations and the hacktivists agree on nothing -- except that you have too much power." |
+| Player Behavior                                     | System Response                                                                                        | Emergent Story                                                                                                 |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| Approves most requests without deep verification    | Threat system increases social engineering attacks; queue system generates more sophisticated phishing | "Word got out that Archive Gate is soft. The requests are flooding in -- and they are getting harder to read." |
+| Hoards resources, denies most applicants            | Reputation drops with civilians; a desperate faction attempts a physical break-in event                | "People are calling us a digital fortress with no soul. Someone tried to cut the power line last night."       |
+| Invests all funds in automation and detection tools | Attackers shift to zero-day exploits and novel attack vectors                                          | "Our defenses are the best on the continent. Which means the people trying to get through them are, too."      |
+| Plays favorites with one faction                    | Rival factions form an alliance against the player                                                     | "The corporations and the hacktivists agree on nothing -- except that you have too much power."                |
 
 #### Player-Authored Narrative
 
@@ -175,12 +176,12 @@ SEASON (1 per quarter, ~12 weeks of content)
 
 #### Season Roadmap (First Year)
 
-| Season | Title | Central Threat | Security Focus | Real-World Parallel |
-|--------|-------|---------------|----------------|---------------------|
-| 1 | **Signal Loss** | The Stuxnet variant's initial spread. The internet is dying. | Phishing detection, access control basics, identity verification | Stuxnet, WannaCry |
-| 2 | **Supply Lines** | A compromised firmware update infects data centers globally. | Supply chain security, software integrity, vendor trust | SolarWinds, XZ Utils |
-| 3 | **Dark Channels** | An encrypted criminal network offers "protection" -- for a price. | Ransomware negotiation, incident response, business continuity | Colonial Pipeline, Kaseya |
-| 4 | **The Inside Job** | An NPC ally turns out to be compromised. Trust no one. | Insider threats, privilege escalation, zero-trust architecture | Edward Snowden parallel, insider threat cases |
+| Season | Title              | Central Threat                                                    | Security Focus                                                   | Real-World Parallel                           |
+| ------ | ------------------ | ----------------------------------------------------------------- | ---------------------------------------------------------------- | --------------------------------------------- |
+| 1      | **Signal Loss**    | The Stuxnet variant's initial spread. The internet is dying.      | Phishing detection, access control basics, identity verification | Stuxnet, WannaCry                             |
+| 2      | **Supply Lines**   | A compromised firmware update infects data centers globally.      | Supply chain security, software integrity, vendor trust          | SolarWinds, XZ Utils                          |
+| 3      | **Dark Channels**  | An encrypted criminal network offers "protection" -- for a price. | Ransomware negotiation, incident response, business continuity   | Colonial Pipeline, Kaseya                     |
+| 4      | **The Inside Job** | An NPC ally turns out to be compromised. Trust no one.            | Insider threats, privilege escalation, zero-trust architecture   | Edward Snowden parallel, insider threat cases |
 
 #### Chapter Anatomy
 
@@ -244,13 +245,13 @@ Layer 5: LEGACY CONSEQUENCES (cross-season)
 
 Most Nexus Points are designed so that **every option has both benefits and costs.** This mirrors real security work, where perfect security is impossible and every decision involves trade-offs.
 
-| Decision Type | Trade-Off Axis | Security Lesson |
-|---------------|---------------|-----------------|
-| Approve vs. Deny | Revenue and reputation vs. security risk | Risk acceptance frameworks |
-| Speed vs. Thoroughness | Operational efficiency vs. detection accuracy | The cost of due diligence |
-| Transparency vs. Secrecy | Public trust vs. operational security | Information disclosure policies |
-| Individual vs. Collective | One person's need vs. the community's safety | Triage and prioritization |
-| Short-term vs. Long-term | Immediate survival vs. sustainable resilience | Strategic security planning |
+| Decision Type             | Trade-Off Axis                                | Security Lesson                 |
+| ------------------------- | --------------------------------------------- | ------------------------------- |
+| Approve vs. Deny          | Revenue and reputation vs. security risk      | Risk acceptance frameworks      |
+| Speed vs. Thoroughness    | Operational efficiency vs. detection accuracy | The cost of due diligence       |
+| Transparency vs. Secrecy  | Public trust vs. operational security         | Information disclosure policies |
+| Individual vs. Collective | One person's need vs. the community's safety  | Triage and prioritization       |
+| Short-term vs. Long-term  | Immediate survival vs. sustainable resilience | Strategic security planning     |
 
 #### The Regret Engine
 
@@ -271,17 +272,20 @@ Difficulty = f(Player Skill, Story Progress, Player Choices)
 ```
 
 **Player Skill** is inferred from behavior:
+
 - Detection rate: how often the player correctly identifies malicious requests.
 - Response time: how quickly the player resolves incidents.
 - Resource efficiency: how well the player manages capacity and funds.
 - Pattern recognition: whether the player adapts to new attack types.
 
 **Story Progress** sets a baseline difficulty floor:
+
 - Early chapters introduce simple, clearly malicious or clearly legitimate requests.
 - Middle chapters introduce ambiguity: requests that could go either way.
 - Late chapters present sophisticated attacks that require synthesis of multiple skills.
 
 **Player Choices** modify the difficulty curve:
+
 - A well-defended data center faces smarter attackers (difficulty stays challenging).
 - A poorly defended data center faces frequent but simpler attacks (volume over sophistication).
 - A player with many approved clients has a larger attack surface but more resources.
@@ -320,6 +324,7 @@ These breathing rooms serve a dual purpose: they prevent fatigue and they lull t
 The variant, later designated **NIDHOGG** (after the serpent that gnaws at the roots of the world tree in Norse mythology), was first detected in a European power grid SCADA system. Unlike the original Stuxnet, which targeted specific centrifuge configurations, NIDHOGG was designed to propagate through any system running common industrial control protocols and, critically, through the BGP routing infrastructure that connects autonomous systems on the internet.
 
 Within 72 hours:
+
 - 60% of global BGP routes were corrupted or unreachable.
 - Major cloud providers lost inter-region connectivity.
 - DNS root servers went intermittent, then dark.
@@ -329,6 +334,7 @@ Within 72 hours:
 **Week One -- "The Fragmentation"**
 
 The internet did not die all at once. It shattered into islands:
+
 - **National intranets:** Countries with centralized internet infrastructure (China, Russia, Iran) severed external connections and maintained internal networks.
 - **Corporate archipelagos:** Large tech companies with private backbone infrastructure kept limited internal connectivity.
 - **University mesh networks:** Academic institutions with legacy peering agreements formed ad hoc networks.
@@ -348,14 +354,14 @@ The player enters the story here.
 
 #### The State of the World During Gameplay
 
-| Domain | Status | Narrative Implication |
-|--------|--------|----------------------|
-| **Public Internet** | Fragmented. 15-20% of pre-collapse connectivity remains. Routes are unreliable and frequently hijacked. | Communication is uncertain. An email might take hours. A request might be intercepted in transit. |
-| **Power Grid** | Unstable. Rolling blackouts in most regions. Data centers run on backup generators and solar. | Power management is a gameplay resource. Brownouts create vulnerability windows. |
-| **Government** | Fractured. National governments maintain varying levels of control. Some have declared martial law over digital infrastructure. | Government factions may demand access or threaten nationalization. |
-| **Economy** | Barter and local currencies. Digital payment systems are unreliable. Data center access is traded as currency. | The game's economy is based on service fees, barter, and favors rather than stable currency. |
-| **Communication** | Email (unreliable), radio (limited), physical couriers, sneakernet (USB drives transported by hand). | Verification is difficult. Out-of-band confirmation requires creative methods. |
-| **Threat Landscape** | Dramatically escalated. State actors, criminal organizations, and opportunistic hackers all target surviving infrastructure. | The player faces constant, evolving threats from multiple directions. |
+| Domain               | Status                                                                                                                          | Narrative Implication                                                                             |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **Public Internet**  | Fragmented. 15-20% of pre-collapse connectivity remains. Routes are unreliable and frequently hijacked.                         | Communication is uncertain. An email might take hours. A request might be intercepted in transit. |
+| **Power Grid**       | Unstable. Rolling blackouts in most regions. Data centers run on backup generators and solar.                                   | Power management is a gameplay resource. Brownouts create vulnerability windows.                  |
+| **Government**       | Fractured. National governments maintain varying levels of control. Some have declared martial law over digital infrastructure. | Government factions may demand access or threaten nationalization.                                |
+| **Economy**          | Barter and local currencies. Digital payment systems are unreliable. Data center access is traded as currency.                  | The game's economy is based on service fees, barter, and favors rather than stable currency.      |
+| **Communication**    | Email (unreliable), radio (limited), physical couriers, sneakernet (USB drives transported by hand).                            | Verification is difficult. Out-of-band confirmation requires creative methods.                    |
+| **Threat Landscape** | Dramatically escalated. State actors, criminal organizations, and opportunistic hackers all target surviving infrastructure.    | The player faces constant, evolving threats from multiple directions.                             |
 
 #### The NIDHOGG Variant -- Technical Lore
 
@@ -378,58 +384,58 @@ Five major factions compete for access to surviving data infrastructure. Each fa
 
 **1. The Sovereign Compact (Governments)**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Composition** | Coalition of national and regional government agencies. |
-| **Stated Goal** | Preserve critical public infrastructure: census data, medical records, legal systems, emergency services. |
-| **Hidden Agenda** | Some members seek to establish surveillance infrastructure under the guise of "recovery." Others want to classify and restrict access to information that was previously public. |
-| **Approach to Player** | Formal, bureaucratic, backed by implied authority. May offer "official partnership" that comes with strings. |
-| **Threat Profile** | Low direct attack probability. High coercion probability. May attempt legal or physical pressure. |
-| **Reputation Axis** | **Authority:** High reputation means government protection and contracts. Low reputation means regulatory pressure and potential seizure attempts. |
+| Attribute              | Detail                                                                                                                                                                           |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Composition**        | Coalition of national and regional government agencies.                                                                                                                          |
+| **Stated Goal**        | Preserve critical public infrastructure: census data, medical records, legal systems, emergency services.                                                                        |
+| **Hidden Agenda**      | Some members seek to establish surveillance infrastructure under the guise of "recovery." Others want to classify and restrict access to information that was previously public. |
+| **Approach to Player** | Formal, bureaucratic, backed by implied authority. May offer "official partnership" that comes with strings.                                                                     |
+| **Threat Profile**     | Low direct attack probability. High coercion probability. May attempt legal or physical pressure.                                                                                |
+| **Reputation Axis**    | **Authority:** High reputation means government protection and contracts. Low reputation means regulatory pressure and potential seizure attempts.                               |
 
 **2. Nexion Industries (Corporations)**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Composition** | A consortium of surviving tech companies, financial institutions, and pharmaceutical firms. |
-| **Stated Goal** | Preserve proprietary data, intellectual property, and business continuity systems. |
-| **Hidden Agenda** | Nexion is quietly acquiring control of surviving data infrastructure to establish a monopoly on post-collapse digital services. Some members are also laundering pre-collapse financial crimes by "losing" certain records. |
-| **Approach to Player** | Professional, well-funded, offering premium rates. Their requests look impeccable -- because they can afford to make them look impeccable. |
-| **Threat Profile** | Medium direct attack probability. High infiltration probability. May plant insiders or offer partnerships designed to create dependency. |
-| **Reputation Axis** | **Commerce:** High reputation means lucrative contracts and premium resources. Low reputation means economic pressure and market manipulation. |
+| Attribute              | Detail                                                                                                                                                                                                                      |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Composition**        | A consortium of surviving tech companies, financial institutions, and pharmaceutical firms.                                                                                                                                 |
+| **Stated Goal**        | Preserve proprietary data, intellectual property, and business continuity systems.                                                                                                                                          |
+| **Hidden Agenda**      | Nexion is quietly acquiring control of surviving data infrastructure to establish a monopoly on post-collapse digital services. Some members are also laundering pre-collapse financial crimes by "losing" certain records. |
+| **Approach to Player** | Professional, well-funded, offering premium rates. Their requests look impeccable -- because they can afford to make them look impeccable.                                                                                  |
+| **Threat Profile**     | Medium direct attack probability. High infiltration probability. May plant insiders or offer partnerships designed to create dependency.                                                                                    |
+| **Reputation Axis**    | **Commerce:** High reputation means lucrative contracts and premium resources. Low reputation means economic pressure and market manipulation.                                                                              |
 
 **3. The Signal Corps (Hacktivists)**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Composition** | Decentralized collective of hackers, journalists, and digital rights advocates. |
-| **Stated Goal** | Preserve the open internet. Ensure public access to information. Prevent any single entity from controlling post-collapse digital infrastructure. |
-| **Hidden Agenda** | Some members are former state-sponsored hackers using the collective as cover. Others have personal vendettas against specific corporations or governments. The collective's decentralized nature means no one fully controls it. |
-| **Approach to Player** | Informal, idealistic, sometimes confrontational. May offer valuable threat intelligence as payment. May also leak the player's decisions to the public. |
-| **Threat Profile** | Medium direct attack probability (testing the player's defenses "for research"). High information warfare probability (public shaming, exposing decisions). |
-| **Reputation Axis** | **Freedom:** High reputation means community support and intelligence sharing. Low reputation means public protests, information leaks, and targeted hacking. |
+| Attribute              | Detail                                                                                                                                                                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Composition**        | Decentralized collective of hackers, journalists, and digital rights advocates.                                                                                                                                                   |
+| **Stated Goal**        | Preserve the open internet. Ensure public access to information. Prevent any single entity from controlling post-collapse digital infrastructure.                                                                                 |
+| **Hidden Agenda**      | Some members are former state-sponsored hackers using the collective as cover. Others have personal vendettas against specific corporations or governments. The collective's decentralized nature means no one fully controls it. |
+| **Approach to Player** | Informal, idealistic, sometimes confrontational. May offer valuable threat intelligence as payment. May also leak the player's decisions to the public.                                                                           |
+| **Threat Profile**     | Medium direct attack probability (testing the player's defenses "for research"). High information warfare probability (public shaming, exposing decisions).                                                                       |
+| **Reputation Axis**    | **Freedom:** High reputation means community support and intelligence sharing. Low reputation means public protests, information leaks, and targeted hacking.                                                                     |
 
 **4. The Black Ledger (Criminals)**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Composition** | Organized cybercrime syndicates, ransomware operators, black market data brokers. |
-| **Stated Goal** | Profit. Store stolen data, launder digital assets, maintain criminal communication infrastructure. |
-| **Hidden Agenda** | The Black Ledger is not monolithic. Some operators are survival pragmatists who provide genuine services (secure communication, data brokerage) to desperate people. Others are predators exploiting the collapse. A few are intelligence operatives using criminal cover. |
-| **Approach to Player** | Through front organizations. Their requests appear to come from legitimate businesses. They are the best at crafting convincing cover stories. |
-| **Threat Profile** | Highest direct attack probability. Ransomware, DDoS, social engineering, bribery, intimidation. |
-| **Reputation Axis** | **Shadow:** High reputation means reduced attacks and access to black market resources. Low reputation means constant, escalating attacks. There is no neutral ground. |
+| Attribute              | Detail                                                                                                                                                                                                                                                                     |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Composition**        | Organized cybercrime syndicates, ransomware operators, black market data brokers.                                                                                                                                                                                          |
+| **Stated Goal**        | Profit. Store stolen data, launder digital assets, maintain criminal communication infrastructure.                                                                                                                                                                         |
+| **Hidden Agenda**      | The Black Ledger is not monolithic. Some operators are survival pragmatists who provide genuine services (secure communication, data brokerage) to desperate people. Others are predators exploiting the collapse. A few are intelligence operatives using criminal cover. |
+| **Approach to Player** | Through front organizations. Their requests appear to come from legitimate businesses. They are the best at crafting convincing cover stories.                                                                                                                             |
+| **Threat Profile**     | Highest direct attack probability. Ransomware, DDoS, social engineering, bribery, intimidation.                                                                                                                                                                            |
+| **Reputation Axis**    | **Shadow:** High reputation means reduced attacks and access to black market resources. Low reputation means constant, escalating attacks. There is no neutral ground.                                                                                                     |
 
 **5. The Commons (Civilians)**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Composition** | Individuals, families, small organizations, community groups, independent researchers. |
-| **Stated Goal** | Preserve personal data: family photos, medical records, research work, small business records, cultural heritage. |
-| **Hidden Agenda** | Most have none. They are genuinely desperate. But criminal and state actors frequently impersonate civilians because civilian requests trigger empathy and lower scrutiny. |
-| **Approach to Player** | Emotional, disorganized, often poorly documented. Their requests are the hardest to verify because they lack institutional backing. |
-| **Threat Profile** | Lowest direct attack probability. Highest social engineering risk (as impersonation targets). |
-| **Reputation Axis** | **Humanity:** High reputation means public goodwill, volunteer support, and community defense. Low reputation means moral isolation and loss of purpose. |
+| Attribute              | Detail                                                                                                                                                                     |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Composition**        | Individuals, families, small organizations, community groups, independent researchers.                                                                                     |
+| **Stated Goal**        | Preserve personal data: family photos, medical records, research work, small business records, cultural heritage.                                                          |
+| **Hidden Agenda**      | Most have none. They are genuinely desperate. But criminal and state actors frequently impersonate civilians because civilian requests trigger empathy and lower scrutiny. |
+| **Approach to Player** | Emotional, disorganized, often poorly documented. Their requests are the hardest to verify because they lack institutional backing.                                        |
+| **Threat Profile**     | Lowest direct attack probability. Highest social engineering risk (as impersonation targets).                                                                              |
+| **Reputation Axis**    | **Humanity:** High reputation means public goodwill, volunteer support, and community defense. Low reputation means moral isolation and loss of purpose.                   |
 
 #### Faction Interaction Matrix
 
@@ -459,69 +465,69 @@ Archive Gate features a core cast of recurring NPCs, each representing a differe
 
 **KIRA VASQUEZ -- Chief Operations Officer, Matrices GmbH**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Role** | The player's right hand. Manages day-to-day operations while the player makes strategic decisions. |
-| **Personality** | Pragmatic, detail-oriented, occasionally sardonic. She survives through competence, not charisma. |
-| **Motivation** | Keeping Archive Gate running. She has no political agenda; her loyalty is to the facility and its mission. |
-| **Hidden Depth** | Kira lost her family's data in the Cascade. Every civilian request she processes carries personal weight, but she never lets it compromise her judgment. This is revealed gradually. |
-| **Teaching Role** | Models best practices. Her dialogue teaches procedural discipline, checklist thinking, and operational security. When the player makes a risky choice, Kira's reaction teaches them why. |
-| **Arc** | Starts as a reliable subordinate. As the story progresses, her independent judgment becomes critical. The player must learn to trust her assessments -- or face the consequences of overriding them. |
+| Attribute         | Detail                                                                                                                                                                                               |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Role**          | The player's right hand. Manages day-to-day operations while the player makes strategic decisions.                                                                                                   |
+| **Personality**   | Pragmatic, detail-oriented, occasionally sardonic. She survives through competence, not charisma.                                                                                                    |
+| **Motivation**    | Keeping Archive Gate running. She has no political agenda; her loyalty is to the facility and its mission.                                                                                           |
+| **Hidden Depth**  | Kira lost her family's data in the Cascade. Every civilian request she processes carries personal weight, but she never lets it compromise her judgment. This is revealed gradually.                 |
+| **Teaching Role** | Models best practices. Her dialogue teaches procedural discipline, checklist thinking, and operational security. When the player makes a risky choice, Kira's reaction teaches them why.             |
+| **Arc**           | Starts as a reliable subordinate. As the story progresses, her independent judgment becomes critical. The player must learn to trust her assessments -- or face the consequences of overriding them. |
 
 **DR. ELIAS WREN -- Signal Corps Representative**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Role** | Primary contact from the hacktivist faction. Requests hosting for open-access archives and communication tools. |
-| **Personality** | Charismatic, principled, persuasive. Believes information wants to be free, especially now. |
-| **Motivation** | Rebuilding a free and open internet. Genuinely believes this is humanity's most important goal. |
-| **Hidden Depth** | Elias was once a corporate security researcher who discovered his employer was selling zero-day exploits to authoritarian governments. He leaked the evidence and joined the Signal Corps. His moral clarity comes from personal sacrifice. |
-| **Teaching Role** | Represents the tension between openness and security. His requests are always legitimate but often risky. Teaches players about the philosophical foundations of security policy. |
-| **Arc** | Initially an ally. As the Signal Corps becomes more desperate, Elias faces pressure to compromise his principles. The player's choices influence whether he remains an idealist or becomes radicalized. |
+| Attribute         | Detail                                                                                                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Role**          | Primary contact from the hacktivist faction. Requests hosting for open-access archives and communication tools.                                                                                                                             |
+| **Personality**   | Charismatic, principled, persuasive. Believes information wants to be free, especially now.                                                                                                                                                 |
+| **Motivation**    | Rebuilding a free and open internet. Genuinely believes this is humanity's most important goal.                                                                                                                                             |
+| **Hidden Depth**  | Elias was once a corporate security researcher who discovered his employer was selling zero-day exploits to authoritarian governments. He leaked the evidence and joined the Signal Corps. His moral clarity comes from personal sacrifice. |
+| **Teaching Role** | Represents the tension between openness and security. His requests are always legitimate but often risky. Teaches players about the philosophical foundations of security policy.                                                           |
+| **Arc**           | Initially an ally. As the Signal Corps becomes more desperate, Elias faces pressure to compromise his principles. The player's choices influence whether he remains an idealist or becomes radicalized.                                     |
 
 **COMMISSIONER YAEL OKONKWO -- Sovereign Compact Liaison**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Role** | Government representative assigned to "coordinate" with Archive Gate. |
-| **Personality** | Measured, authoritative, politically skilled. Speaks in careful language that always leaves room for interpretation. |
-| **Motivation** | Restoring governmental authority over critical infrastructure. She believes order requires hierarchy. |
-| **Hidden Depth** | Yael is caught between genuine public service and institutional pressure to expand government surveillance. She personally disagrees with some of her directives but follows them out of duty -- until she does not. |
-| **Teaching Role** | Represents compliance and regulatory frameworks. Her requests teach players about legal obligations, data sovereignty, and the tension between government mandates and operational independence. |
-| **Arc** | Begins as a bureaucratic obstacle. Evolves into either a valuable ally or a dangerous adversary based on the player's choices. Her defining moment comes when she must choose between her institution and her conscience. |
+| Attribute         | Detail                                                                                                                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Role**          | Government representative assigned to "coordinate" with Archive Gate.                                                                                                                                                     |
+| **Personality**   | Measured, authoritative, politically skilled. Speaks in careful language that always leaves room for interpretation.                                                                                                      |
+| **Motivation**    | Restoring governmental authority over critical infrastructure. She believes order requires hierarchy.                                                                                                                     |
+| **Hidden Depth**  | Yael is caught between genuine public service and institutional pressure to expand government surveillance. She personally disagrees with some of her directives but follows them out of duty -- until she does not.      |
+| **Teaching Role** | Represents compliance and regulatory frameworks. Her requests teach players about legal obligations, data sovereignty, and the tension between government mandates and operational independence.                          |
+| **Arc**           | Begins as a bureaucratic obstacle. Evolves into either a valuable ally or a dangerous adversary based on the player's choices. Her defining moment comes when she must choose between her institution and her conscience. |
 
 **MARCUS CHEN -- Nexion Industries Account Manager**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Role** | Corporate liaison offering premium contracts and partnership deals. |
-| **Personality** | Smooth, competent, always has a solution -- and always has an angle. |
-| **Motivation** | Securing Archive Gate as a Nexion asset. He is good at his job because he genuinely believes corporate infrastructure is humanity's best hope for recovery. |
-| **Hidden Depth** | Marcus knows about Nexion's shadier operations but rationalizes them as necessary compromises. He is not a villain; he is a pragmatist in a morally gray world. His loyalty to Nexion is tested when he discovers the extent of their dealings with the Black Ledger. |
-| **Teaching Role** | Represents vendor management, contract analysis, and the risks of dependency. His deals always look good on paper. The player must learn to read the fine print. |
-| **Arc** | Begins as a useful but suspicious contact. The player's relationship with Marcus determines whether he becomes a whistleblower, a fixer, or an adversary. |
+| Attribute         | Detail                                                                                                                                                                                                                                                                |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Role**          | Corporate liaison offering premium contracts and partnership deals.                                                                                                                                                                                                   |
+| **Personality**   | Smooth, competent, always has a solution -- and always has an angle.                                                                                                                                                                                                  |
+| **Motivation**    | Securing Archive Gate as a Nexion asset. He is good at his job because he genuinely believes corporate infrastructure is humanity's best hope for recovery.                                                                                                           |
+| **Hidden Depth**  | Marcus knows about Nexion's shadier operations but rationalizes them as necessary compromises. He is not a villain; he is a pragmatist in a morally gray world. His loyalty to Nexion is tested when he discovers the extent of their dealings with the Black Ledger. |
+| **Teaching Role** | Represents vendor management, contract analysis, and the risks of dependency. His deals always look good on paper. The player must learn to read the fine print.                                                                                                      |
+| **Arc**           | Begins as a useful but suspicious contact. The player's relationship with Marcus determines whether he becomes a whistleblower, a fixer, or an adversary.                                                                                                             |
 
 **"ZERO" -- Black Ledger Contact**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Role** | Anonymous contact from the criminal underground. Communicates only through encrypted messages. |
-| **Personality** | Witty, unpredictable, disturbingly well-informed. Treats everything as a transaction. |
-| **Motivation** | Unknown. Zero claims to be a broker, not an operator. They offer information, resources, and services in exchange for favors. |
-| **Hidden Depth** | Zero's true identity is a major plot thread. They may be a former intelligence operative, a rogue AI researcher, or something stranger. Multiple NPCs have theories. The truth is not revealed until Season 2. |
-| **Teaching Role** | Represents the temptation of shortcuts and the risks of dealing with untrusted parties. Every interaction with Zero teaches a lesson about trust, verification, and the long-term cost of expediency. |
-| **Arc** | Zero is always in the background. They know things they should not. They offer help when the player is desperate. The price is always reasonable -- until it is not. |
+| Attribute         | Detail                                                                                                                                                                                                         |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Role**          | Anonymous contact from the criminal underground. Communicates only through encrypted messages.                                                                                                                 |
+| **Personality**   | Witty, unpredictable, disturbingly well-informed. Treats everything as a transaction.                                                                                                                          |
+| **Motivation**    | Unknown. Zero claims to be a broker, not an operator. They offer information, resources, and services in exchange for favors.                                                                                  |
+| **Hidden Depth**  | Zero's true identity is a major plot thread. They may be a former intelligence operative, a rogue AI researcher, or something stranger. Multiple NPCs have theories. The truth is not revealed until Season 2. |
+| **Teaching Role** | Represents the temptation of shortcuts and the risks of dealing with untrusted parties. Every interaction with Zero teaches a lesson about trust, verification, and the long-term cost of expediency.          |
+| **Arc**           | Zero is always in the background. They know things they should not. They offer help when the player is desperate. The price is always reasonable -- until it is not.                                           |
 
 **AMARA OSEI -- Civilian Advocate**
 
-| Attribute | Detail |
-|-----------|--------|
-| **Role** | Represents a network of civilian communities trying to preserve personal and cultural data. |
-| **Personality** | Warm, determined, emotionally direct. She makes the player feel the human cost of every decision. |
-| **Motivation** | Preserving ordinary people's digital lives: family photos, medical records, community histories. |
-| **Hidden Depth** | Amara is a former social worker who has seen the worst of the collapse. Her optimism is hard-won and fragile. She is the moral compass of the game, but she is not naive -- she understands security trade-offs better than most civilians because she has seen what happens when security fails. |
-| **Teaching Role** | Represents the human element of security. Her requests teach players to balance technical security with human impact. She is also the most likely vector for social engineering attacks impersonating civilians. |
-| **Arc** | Amara's trust in the player is the game's emotional barometer. Betray it, and the game feels colder. Earn it, and the most devastating moments hit harder. |
+| Attribute         | Detail                                                                                                                                                                                                                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Role**          | Represents a network of civilian communities trying to preserve personal and cultural data.                                                                                                                                                                                                       |
+| **Personality**   | Warm, determined, emotionally direct. She makes the player feel the human cost of every decision.                                                                                                                                                                                                 |
+| **Motivation**    | Preserving ordinary people's digital lives: family photos, medical records, community histories.                                                                                                                                                                                                  |
+| **Hidden Depth**  | Amara is a former social worker who has seen the worst of the collapse. Her optimism is hard-won and fragile. She is the moral compass of the game, but she is not naive -- she understands security trade-offs better than most civilians because she has seen what happens when security fails. |
+| **Teaching Role** | Represents the human element of security. Her requests teach players to balance technical security with human impact. She is also the most likely vector for social engineering attacks impersonating civilians.                                                                                  |
+| **Arc**           | Amara's trust in the player is the game's emotional barometer. Betray it, and the game feels colder. Earn it, and the most devastating moments hit harder.                                                                                                                                        |
 
 ---
 
@@ -682,12 +688,14 @@ Each in-game document operates on three layers:
 
 **Email Access Requests**
 The primary gameplay document. Each email tells a micro-story:
+
 - The sender's writing style reveals their background, education, and emotional state.
 - The content reveals what they value and what they have lost.
 - The metadata (headers, routing, timestamps) reveals technical details the player can investigate.
 - Red flags (or their absence) teach phishing detection.
 
-*Example -- Legitimate request:*
+_Example -- Legitimate request:_
+
 ```
 From: m.tanaka@tohoku-mesh.ac.jp
 Routed via: JP-ACADEMIC-RELAY-7 > EU-BACKBONE-2 > ARCHIVE-GATE-MX
@@ -723,9 +731,10 @@ Respectfully,
 Dr. Miyu Tanaka
 ```
 
-*What this teaches:* Legitimate requests provide verifiable details, offer multiple verification channels, have consistent metadata, and the sender's expertise matches their claims.
+_What this teaches:_ Legitimate requests provide verifiable details, offer multiple verification channels, have consistent metadata, and the sender's expertise matches their claims.
 
-*Example -- Malicious request disguised as legitimate:*
+_Example -- Malicious request disguised as legitimate:_
+
 ```
 From: emergency-it@westfield-general.nhs.uk
 Routed via: UK-HEALTH-NET > FR-RELAY-12 > ARCHIVE-GATE-MX
@@ -753,7 +762,7 @@ Chris
 IT Support, Westfield General
 ```
 
-*What this teaches:* Urgency as a pressure tactic, vague authorization, credential promises (after access), suspicious attachment, inconsistent email formatting for an institutional request, lack of verifiable details.
+_What this teaches:_ Urgency as a pressure tactic, vague authorization, credential promises (after access), suspicious attachment, inconsistent email formatting for an institutional request, lack of verifiable details.
 
 **Intelligence Briefs**
 
@@ -851,15 +860,15 @@ The central design challenge of Archive Gate is making cybersecurity training fe
 
 #### The Contextual Embedding Framework
 
-| Security Concept | Traditional Training | Archive Gate Approach |
-|-----------------|---------------------|----------------------|
-| Phishing detection | "Look for these 10 red flags in emails." | An email arrives from someone claiming to be a hospital. Something feels wrong. What is it? |
-| Access control | "Implement the principle of least privilege." | You have 3 rack units left. Who gets them? Everyone has a good reason. |
-| Incident response | "Follow this 6-step IR procedure." | Alarms are firing. Kira is on the radio. What do you do first? |
-| Risk assessment | "Rate the likelihood and impact of each threat." | Zero says an attack is coming. Do you trust the source? How much do you bet on it? |
-| Social engineering | "Never give credentials to someone who calls claiming to be IT." | Marcus calls asking for temporary access to run diagnostics. He has helped before. But why does he need access to that specific system? |
-| Supply chain security | "Verify the integrity of all software before deployment." | The university sent their dataset. The checksums match. But who verified the checksums? |
-| Business continuity | "Maintain offline backups and a recovery plan." | The power is out. The generator has 12 hours of fuel. What do you save first? |
+| Security Concept      | Traditional Training                                             | Archive Gate Approach                                                                                                                   |
+| --------------------- | ---------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Phishing detection    | "Look for these 10 red flags in emails."                         | An email arrives from someone claiming to be a hospital. Something feels wrong. What is it?                                             |
+| Access control        | "Implement the principle of least privilege."                    | You have 3 rack units left. Who gets them? Everyone has a good reason.                                                                  |
+| Incident response     | "Follow this 6-step IR procedure."                               | Alarms are firing. Kira is on the radio. What do you do first?                                                                          |
+| Risk assessment       | "Rate the likelihood and impact of each threat."                 | Zero says an attack is coming. Do you trust the source? How much do you bet on it?                                                      |
+| Social engineering    | "Never give credentials to someone who calls claiming to be IT." | Marcus calls asking for temporary access to run diagnostics. He has helped before. But why does he need access to that specific system? |
+| Supply chain security | "Verify the integrity of all software before deployment."        | The university sent their dataset. The checksums match. But who verified the checksums?                                                 |
+| Business continuity   | "Maintain offline backups and a recovery plan."                  | The power is out. The generator has 12 hours of fuel. What do you save first?                                                           |
 
 The player never reads a textbook. They live the lesson.
 
@@ -895,7 +904,7 @@ When a player approves a request that turns out to be malicious, the game does n
 - Amara: "The community health records we were hosting for the village cooperative... they are gone. Encrypted. Mrs. Okafor's dialysis schedule, the children's vaccination records... all of it."
 - Kira: "I told you the verification was incomplete. We can talk about blame later. Right now, we have 6 hours to contain this."
 
-The player does not just lose data. They lose *someone's* data. The lesson sticks.
+The player does not just lose data. They lose _someone's_ data. The lesson sticks.
 
 **The Gratitude Reward**
 When a player makes a correct but difficult decision (denying a sympathetic request that turns out to be malicious), the game delivers delayed gratitude:
@@ -922,7 +931,7 @@ Research on game-based learning consistently shows that narrative context improv
 
 ### 4.3 Character Relationships That Teach Social Engineering Awareness
 
-Social engineering is the hardest security topic to teach through traditional training because it exploits human psychology, not technical vulnerabilities. Archive Gate teaches it by making the player *experience* it.
+Social engineering is the hardest security topic to teach through traditional training because it exploits human psychology, not technical vulnerabilities. Archive Gate teaches it by making the player _experience_ it.
 
 #### The Trust Gradient
 
@@ -955,13 +964,13 @@ This arc plays out over multiple chapters, making the exploitation feel personal
 
 #### Social Engineering Attack Patterns in NPC Interactions
 
-| Attack Pattern | NPC Implementation | Real-World Parallel |
-|---------------|-------------------|---------------------|
-| **Pretexting** | Zero poses as an intelligence analyst offering critical threat data. The pretext is so useful that the player wants to believe it. | Attackers impersonating vendors, IT support, or executives. |
-| **Urgency manipulation** | Amara calls in a panic about a community that will lose its medical records in hours. The urgency is real -- but the data she is sending has been tampered with. | "Your account will be locked" phishing. |
-| **Authority pressure** | Commissioner Okonkwo invokes government authority to demand immediate access for a "classified" dataset without standard verification. | CEO fraud, business email compromise. |
-| **Reciprocity exploitation** | Marcus does the player a genuine favor (discounted hardware, priority shipping). Later, he asks for "just a small exception" to security protocols. | Vendor relationships that create obligations. |
-| **Consistency exploitation** | Dr. Wren points out that the player approved a similar request last month. "Why is this one different?" The player feels pressure to be consistent rather than to re-evaluate. | "But we have always done it this way." |
+| Attack Pattern               | NPC Implementation                                                                                                                                                             | Real-World Parallel                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| **Pretexting**               | Zero poses as an intelligence analyst offering critical threat data. The pretext is so useful that the player wants to believe it.                                             | Attackers impersonating vendors, IT support, or executives. |
+| **Urgency manipulation**     | Amara calls in a panic about a community that will lose its medical records in hours. The urgency is real -- but the data she is sending has been tampered with.               | "Your account will be locked" phishing.                     |
+| **Authority pressure**       | Commissioner Okonkwo invokes government authority to demand immediate access for a "classified" dataset without standard verification.                                         | CEO fraud, business email compromise.                       |
+| **Reciprocity exploitation** | Marcus does the player a genuine favor (discounted hardware, priority shipping). Later, he asks for "just a small exception" to security protocols.                            | Vendor relationships that create obligations.               |
+| **Consistency exploitation** | Dr. Wren points out that the player approved a similar request last month. "Why is this one different?" The player feels pressure to be consistent rather than to re-evaluate. | "But we have always done it this way."                      |
 
 ---
 
@@ -972,7 +981,7 @@ Archive Gate's major plot events are fictionalized versions of real-world cybers
 #### Incident Mirrors
 
 **Season 1, Chapter 4: "The Trusted Update"**
-*Mirrors: SolarWinds supply chain compromise (2020)*
+_Mirrors: SolarWinds supply chain compromise (2020)_
 
 A routine firmware update for Archive Gate's cooling system arrives from the manufacturer. Kira flags that the update was delivered through a slightly unusual channel but notes that the checksums match. The player must decide whether to apply the update.
 
@@ -983,7 +992,7 @@ The post-incident investigation reveals that the manufacturer's build system was
 **Lesson:** Supply chain attacks compromise trusted sources. Verification of the delivery channel matters as much as verification of the payload. Checksums only prove integrity if the signing process itself is trustworthy.
 
 **Season 1, Chapter 7: "The Pipeline"**
-*Mirrors: Colonial Pipeline ransomware attack (2021)*
+_Mirrors: Colonial Pipeline ransomware attack (2021)_
 
 Archive Gate's power management system is hit by ransomware. Not the data servers -- the operational technology that manages power distribution, cooling, and physical access controls. The data is fine. But the facility cannot function.
 
@@ -994,7 +1003,7 @@ Zero offers to provide the decryption key -- for a price different from the rans
 **Lesson:** Ransomware targets operational technology, not just data. Business continuity planning must include OT systems. Paying ransoms funds future attacks. Third-party "help" may come with hidden costs.
 
 **Season 2, Chapter 1: "NIDHOGG's Children"**
-*Mirrors: WannaCry worm (2017)*
+_Mirrors: WannaCry worm (2017)_
 
 A new variant of NIDHOGG begins spreading across the remaining internet fragments. Unlike the original, this variant is not targeted -- it spreads indiscriminately, encrypting any unpatched system it touches. Archive Gate is patched. But many of the clients the player has been hosting are not, and their uploaded data begins triggering on internal analysis systems.
 
@@ -1003,7 +1012,7 @@ The player must decide: quarantine all client data (safe but devastating for cli
 **Lesson:** Worm propagation, the importance of patching, network segmentation, and the reality that your security posture is only as strong as your weakest connected system.
 
 **Season 3, Chapter 5: "The Insider"**
-*Mirrors: Various insider threat incidents*
+_Mirrors: Various insider threat incidents_
 
 Kira discovers anomalous access patterns in the facility logs. Someone with legitimate credentials is accessing systems outside their authorization. The evidence points to one of the core NPCs -- but which one depends on the player's relationship history. The suspect is always someone the player trusts.
 
@@ -1197,20 +1206,20 @@ fourth wall intentionally for educational value]
 
 #### Content Calendar Alignment
 
-| Month | Real-World Focus | Archive Gate Content |
-|-------|-----------------|---------------------|
-| January | New Year threat landscape predictions | Season premiere; new threat actor introduction |
-| February | Valentine's Day romance scams | NPC social engineering arc involving emotional manipulation |
-| March | Tax season phishing | Financial data protection chapter; Nexion Industries subplot |
-| April | Spring cleaning / data hygiene | Data lifecycle management; storage reclamation mechanics |
-| May | Password Day (first Thursday) | Authentication crisis chapter; credential compromise arc |
-| June | Pride Month | Cultural data preservation storyline; Commons faction focus |
-| July | Mid-year threat reports | Season midpoint; major escalation event |
-| August | Back-to-school | Student data protection; new intern NPC joins Archive Gate |
-| September | Insider Threat Awareness | The Insider arc; behavioral analysis gameplay |
-| October | Cybersecurity Awareness Month | Season finale; full debrief; community events |
-| November | Holiday shopping / e-commerce fraud | Economic faction warfare; Black Ledger activity spike |
-| December | Year-end review / holiday social engineering | Reflective chapter; legacy consequences; season bridge |
+| Month     | Real-World Focus                             | Archive Gate Content                                         |
+| --------- | -------------------------------------------- | ------------------------------------------------------------ |
+| January   | New Year threat landscape predictions        | Season premiere; new threat actor introduction               |
+| February  | Valentine's Day romance scams                | NPC social engineering arc involving emotional manipulation  |
+| March     | Tax season phishing                          | Financial data protection chapter; Nexion Industries subplot |
+| April     | Spring cleaning / data hygiene               | Data lifecycle management; storage reclamation mechanics     |
+| May       | Password Day (first Thursday)                | Authentication crisis chapter; credential compromise arc     |
+| June      | Pride Month                                  | Cultural data preservation storyline; Commons faction focus  |
+| July      | Mid-year threat reports                      | Season midpoint; major escalation event                      |
+| August    | Back-to-school                               | Student data protection; new intern NPC joins Archive Gate   |
+| September | Insider Threat Awareness                     | The Insider arc; behavioral analysis gameplay                |
+| October   | Cybersecurity Awareness Month                | Season finale; full debrief; community events                |
+| November  | Holiday shopping / e-commerce fraud          | Economic faction warfare; Black Ledger activity spike        |
+| December  | Year-end review / holiday social engineering | Reflective chapter; legacy consequences; season bridge       |
 
 ---
 
@@ -1222,12 +1231,14 @@ Archive Gate's community is not just a player base -- it is a content ecosystem.
 
 **Tier 1: Player Stories (Passive)**
 Players naturally generate stories through their decisions. These stories can be shared:
+
 - **Decision Journals:** Players can export their decision history as a narrative document, shareable with other players.
 - **Divergence Comparisons:** Players can compare their choices with friends or global averages ("78% of players approved the hospital request. You denied it.").
 - **Replay Value:** Different decisions create genuinely different stories, encouraging players to replay and discuss.
 
 **Tier 2: Community Challenges (Curated)**
 Weekly or monthly challenges where all players face the same scenario and compare results:
+
 - **Red Team Challenges:** "You have 7 days to breach this fictional data center. Design the attack."
 - **Blue Team Challenges:** "This scenario has 12 hidden indicators of compromise. Find them all."
 - **Ethics Debates:** "This week's dilemma has no right answer. Discuss with your team."
@@ -1267,6 +1278,7 @@ ____________________
 ```
 
 User-generated scenarios go through a moderation pipeline:
+
 1. **Automated screening:** Technical accuracy check, content policy compliance.
 2. **Community review:** Other players rate and flag scenarios.
 3. **Editorial review:** The content team validates educational value and narrative quality.
@@ -1289,6 +1301,7 @@ This custom content is private to the organization but benefits from the full na
 
 **October: "The Siege" (Cybersecurity Awareness Month)**
 A month-long event where Archive Gate faces an unprecedented coordinated attack. All factions are affected. The event features:
+
 - Daily challenge scenarios tied to that year's Cybersecurity Awareness Month theme.
 - Community-wide goals (collective decisions affect the outcome for everyone).
 - Guest NPC appearances written by real cybersecurity practitioners.
@@ -1297,6 +1310,7 @@ A month-long event where Archive Gate faces an unprecedented coordinated attack.
 
 **March/April: "The Audit" (Tax Season / Compliance Quarter)**
 The Sovereign Compact demands a full audit of Archive Gate's operations. The player must:
+
 - Review their entire decision history for the past season.
 - Justify controversial decisions with evidence.
 - Identify and remediate any policy violations.
@@ -1306,6 +1320,7 @@ This event teaches compliance and audit readiness through a high-stakes narrativ
 
 **December: "The Long Night" (End-of-Year / Holiday Event)**
 A special standalone chapter where Archive Gate experiences a prolonged power outage during a winter storm. The player must manage resources with extreme scarcity while social engineering attacks spike (attackers exploit the holiday chaos). The event features:
+
 - Resource management under extreme constraints.
 - Morale management (NPC stress levels affect their performance).
 - Community warmth: NPCs share personal stories during the downtime, deepening relationships.
@@ -1327,6 +1342,7 @@ Archive Gate serves multiple audiences with the same core game, differentiated b
 ### 6.1 Enterprise Employees -- "Operation: Archive Gate"
 
 #### Audience Profile
+
 Non-technical employees (HR, finance, marketing, operations) who need baseline security awareness. They do not think of themselves as cybersecurity practitioners and may resist traditional training.
 
 #### Narrative Adaptation
@@ -1334,6 +1350,7 @@ Non-technical employees (HR, finance, marketing, operations) who need baseline s
 **Framing:** "You are a department head at Matrices GmbH. Your department has been assigned to help manage Archive Gate operations during the crisis."
 
 **Key Differences from Base Game:**
+
 - Scenarios are workplace-contextualized: phishing emails look like HR communications, vendor invoices, meeting invitations, and IT support requests.
 - Decisions map to daily workplace activities: "Should you open this attachment?" becomes "Should Archive Gate accept this data transfer?"
 - NPC interactions mirror workplace relationships: the helpful IT person who asks for your password, the vendor who needs "just a quick access," the executive whose urgent request bypasses protocol.
@@ -1367,6 +1384,7 @@ The player must: grant provisional access, deny until the manager confirms, gran
 ### 6.2 IT Professionals -- "Archive Gate: Root Access"
 
 #### Audience Profile
+
 System administrators, security analysts, network engineers, and DevOps practitioners. They have technical knowledge and want challenges that respect their expertise.
 
 #### Narrative Adaptation
@@ -1374,6 +1392,7 @@ System administrators, security analysts, network engineers, and DevOps practiti
 **Framing:** "You are the Chief Security Officer of Archive Gate. Kira handles operations. You handle the threats."
 
 **Key Differences from Base Game:**
+
 - Full access to technical systems: firewall rules, IDS/IPS logs, packet captures, system logs, vulnerability scans.
 - Scenarios require technical investigation, not just yes/no decisions.
 - NPC interactions include technical depth: Kira discusses specific CVEs, Zero offers exploit code, Dr. Wren debates encryption standards.
@@ -1407,6 +1426,7 @@ The player must: trace the dependency chain, verify the patch author's identity,
 ### 6.3 Casual Gamers -- "Archive Gate: The Story"
 
 #### Audience Profile
+
 Players who enjoy narrative-driven games (Firewatch, Papers Please, Orwell) and may have no prior interest in cybersecurity. They are drawn by the story, the characters, and the moral dilemmas.
 
 #### Narrative Adaptation
@@ -1414,6 +1434,7 @@ Players who enjoy narrative-driven games (Firewatch, Papers Please, Orwell) and 
 **Framing:** "The internet is dead. You run the last library. Who gets a library card?"
 
 **Key Differences from Base Game:**
+
 - Heavy emphasis on character development, emotional stakes, and moral choices.
 - Technical concepts are fully translated into narrative metaphors. "Verifying email headers" becomes "checking the postmark and handwriting."
 - Difficulty is calibrated for accessibility: clearer signals, more NPC guidance, forgiving failure states.
@@ -1441,6 +1462,7 @@ For casual gamers, the story IS the product. The security training is entirely s
 ### 6.4 Students -- "Archive Gate: Academy"
 
 #### Audience Profile
+
 High school and university students studying computer science, information technology, or cybersecurity. They have foundational knowledge and want to build practical skills.
 
 #### Narrative Adaptation
@@ -1448,6 +1470,7 @@ High school and university students studying computer science, information techn
 **Framing:** "You are the newest team member at Archive Gate. Kira is your mentor. Prove yourself."
 
 **Key Differences from Base Game:**
+
 - A structured learning pathway with clear progression from foundational to advanced concepts.
 - Kira acts as an in-game mentor, providing guidance, asking Socratic questions, and offering feedback.
 - Scenarios are sequenced to build on each other: you must master access control before facing supply chain attacks.
@@ -1503,40 +1526,41 @@ MODULE 5: ADVANCED OPERATIONS (Chapters 13-15)
 
 The following variables are tracked across the game to drive narrative branching, faction behavior, and consequence delivery:
 
-| Variable | Type | Range | Description |
-|----------|------|-------|-------------|
-| `faction_sovereign_rep` | Integer | -100 to 100 | Reputation with the Sovereign Compact |
-| `faction_nexion_rep` | Integer | -100 to 100 | Reputation with Nexion Industries |
-| `faction_signal_rep` | Integer | -100 to 100 | Reputation with the Signal Corps |
-| `faction_blackledger_rep` | Integer | -100 to 100 | Reputation with the Black Ledger |
-| `faction_commons_rep` | Integer | -100 to 100 | Reputation with the Commons |
-| `npc_kira_trust` | Integer | 0 to 100 | Kira's trust in the player's judgment |
-| `npc_wren_trust` | Integer | 0 to 100 | Dr. Wren's trust in the player |
-| `npc_okonkwo_trust` | Integer | 0 to 100 | Commissioner Okonkwo's trust |
-| `npc_chen_trust` | Integer | 0 to 100 | Marcus Chen's trust |
-| `npc_zero_contact` | Integer | 0 to 10 | Number of interactions with Zero |
-| `npc_amara_trust` | Integer | 0 to 100 | Amara Osei's trust |
-| `threat_level` | Integer | 1 to 10 | Current global threat level |
-| `detection_skill` | Float | 0.0 to 1.0 | Player's inferred phishing detection ability |
-| `response_skill` | Float | 0.0 to 1.0 | Player's inferred incident response ability |
-| `resource_skill` | Float | 0.0 to 1.0 | Player's inferred resource management ability |
-| `total_approved` | Integer | 0+ | Total requests approved |
-| `total_denied` | Integer | 0+ | Total requests denied |
-| `total_breaches` | Integer | 0+ | Total successful breaches |
-| `total_prevented` | Integer | 0+ | Total attacks detected and prevented |
-| `funds` | Integer | 0+ | Current available funds (euros) |
-| `capacity_used` | Float | 0.0 to 1.0 | Current rack utilization |
-| `power_status` | Enum | GREEN/AMBER/RED | Current power stability |
-| `cooling_status` | Enum | GREEN/AMBER/RED | Current cooling stability |
-| `chapter` | Integer | 1+ | Current story chapter |
-| `season` | Integer | 1+ | Current story season |
-| `echo_queue` | Array | -- | Pending delayed consequences |
+| Variable                  | Type    | Range           | Description                                   |
+| ------------------------- | ------- | --------------- | --------------------------------------------- |
+| `faction_sovereign_rep`   | Integer | -100 to 100     | Reputation with the Sovereign Compact         |
+| `faction_nexion_rep`      | Integer | -100 to 100     | Reputation with Nexion Industries             |
+| `faction_signal_rep`      | Integer | -100 to 100     | Reputation with the Signal Corps              |
+| `faction_blackledger_rep` | Integer | -100 to 100     | Reputation with the Black Ledger              |
+| `faction_commons_rep`     | Integer | -100 to 100     | Reputation with the Commons                   |
+| `npc_kira_trust`          | Integer | 0 to 100        | Kira's trust in the player's judgment         |
+| `npc_wren_trust`          | Integer | 0 to 100        | Dr. Wren's trust in the player                |
+| `npc_okonkwo_trust`       | Integer | 0 to 100        | Commissioner Okonkwo's trust                  |
+| `npc_chen_trust`          | Integer | 0 to 100        | Marcus Chen's trust                           |
+| `npc_zero_contact`        | Integer | 0 to 10         | Number of interactions with Zero              |
+| `npc_amara_trust`         | Integer | 0 to 100        | Amara Osei's trust                            |
+| `threat_level`            | Integer | 1 to 10         | Current global threat level                   |
+| `detection_skill`         | Float   | 0.0 to 1.0      | Player's inferred phishing detection ability  |
+| `response_skill`          | Float   | 0.0 to 1.0      | Player's inferred incident response ability   |
+| `resource_skill`          | Float   | 0.0 to 1.0      | Player's inferred resource management ability |
+| `total_approved`          | Integer | 0+              | Total requests approved                       |
+| `total_denied`            | Integer | 0+              | Total requests denied                         |
+| `total_breaches`          | Integer | 0+              | Total successful breaches                     |
+| `total_prevented`         | Integer | 0+              | Total attacks detected and prevented          |
+| `funds`                   | Integer | 0+              | Current available funds (euros)               |
+| `capacity_used`           | Float   | 0.0 to 1.0      | Current rack utilization                      |
+| `power_status`            | Enum    | GREEN/AMBER/RED | Current power stability                       |
+| `cooling_status`          | Enum    | GREEN/AMBER/RED | Current cooling stability                     |
+| `chapter`                 | Integer | 1+              | Current story chapter                         |
+| `season`                  | Integer | 1+              | Current story season                          |
+| `echo_queue`              | Array   | --              | Pending delayed consequences                  |
 
 ### Appendix B: Document Template Library
 
 Each in-game document type follows a template that balances narrative richness with functional clarity. Templates are parameterized, allowing procedural generation of unique documents that maintain consistent quality.
 
 **Email Access Request Template Parameters:**
+
 ```
 sender_name:          [Generated from faction-appropriate name lists]
 sender_email:         [Generated with appropriate domain and routing]
@@ -1559,30 +1583,31 @@ echo_trigger:         [Delayed consequence, if any]
 
 ### Appendix C: Security Concept Coverage Matrix
 
-| Security Domain | Season 1 | Season 2 | Season 3 | Season 4 |
-|----------------|----------|----------|----------|----------|
-| Phishing/Social Engineering | Primary | Reinforced | Advanced | Mastery |
-| Access Control | Primary | Reinforced | Advanced | Mastery |
-| Incident Response | Introduced | Primary | Reinforced | Advanced |
-| Supply Chain Security | Introduced | Primary | Reinforced | Advanced |
-| Ransomware/Business Continuity | Introduced | Introduced | Primary | Reinforced |
-| Insider Threats | -- | Introduced | Primary | Reinforced |
-| Network Security | Introduced | Reinforced | Advanced | Mastery |
-| Data Classification | Primary | Reinforced | Advanced | Mastery |
-| Compliance/Governance | Introduced | Introduced | Reinforced | Primary |
-| Cryptography | -- | Introduced | Reinforced | Advanced |
-| Physical Security | Introduced | Reinforced | Advanced | Mastery |
-| Zero Trust Architecture | -- | Introduced | Primary | Reinforced |
-| Threat Intelligence | Introduced | Primary | Advanced | Mastery |
-| Digital Forensics | -- | Introduced | Primary | Reinforced |
-| Cloud Security | -- | -- | Introduced | Primary |
-| OT/ICS Security | Introduced | Reinforced | Primary | Advanced |
+| Security Domain                | Season 1   | Season 2   | Season 3   | Season 4   |
+| ------------------------------ | ---------- | ---------- | ---------- | ---------- |
+| Phishing/Social Engineering    | Primary    | Reinforced | Advanced   | Mastery    |
+| Access Control                 | Primary    | Reinforced | Advanced   | Mastery    |
+| Incident Response              | Introduced | Primary    | Reinforced | Advanced   |
+| Supply Chain Security          | Introduced | Primary    | Reinforced | Advanced   |
+| Ransomware/Business Continuity | Introduced | Introduced | Primary    | Reinforced |
+| Insider Threats                | --         | Introduced | Primary    | Reinforced |
+| Network Security               | Introduced | Reinforced | Advanced   | Mastery    |
+| Data Classification            | Primary    | Reinforced | Advanced   | Mastery    |
+| Compliance/Governance          | Introduced | Introduced | Reinforced | Primary    |
+| Cryptography                   | --         | Introduced | Reinforced | Advanced   |
+| Physical Security              | Introduced | Reinforced | Advanced   | Mastery    |
+| Zero Trust Architecture        | --         | Introduced | Primary    | Reinforced |
+| Threat Intelligence            | Introduced | Primary    | Advanced   | Mastery    |
+| Digital Forensics              | --         | Introduced | Primary    | Reinforced |
+| Cloud Security                 | --         | --         | Introduced | Primary    |
+| OT/ICS Security                | Introduced | Reinforced | Primary    | Advanced   |
 
 ### Appendix D: Narrative Tone Guide
 
 Archive Gate's narrative voice is grounded, human, and unromanticized. This is not a power fantasy. This is a survival story about people trying to do the right thing in impossible circumstances.
 
 **Do:**
+
 - Write characters who are tired, conflicted, and sometimes wrong.
 - Let silence and subtext carry emotional weight.
 - Present moral dilemmas where every option costs something.
@@ -1592,6 +1617,7 @@ Archive Gate's narrative voice is grounded, human, and unromanticized. This is n
 - Make the world feel lived-in: stained coffee mugs, flickering lights, the hum of servers.
 
 **Do Not:**
+
 - Glorify hacking or cybercrime.
 - Present security as a battle between "good guys" and "bad guys."
 - Use jargon to sound impressive rather than to be precise.
@@ -1602,41 +1628,41 @@ Archive Gate's narrative voice is grounded, human, and unromanticized. This is n
 
 **Voice Examples:**
 
-*Kira, during a routine day:*
+_Kira, during a routine day:_
 "Three new requests in the queue. Two look clean. One is... interesting. I flagged the headers but the content checks out. Your call, boss."
 
-*Kira, during a crisis:*
+_Kira, during a crisis:_
 "Power to rack seven just dropped. I am switching to backup. We have maybe four hours before cooling fails in that section. Whatever you are doing, do it faster."
 
-*Amara, making a request:*
+_Amara, making a request:_
 "I know this is not a big deal compared to the government archives or the corporate databases. It is just photos. Wedding photos, baby pictures, a grandmother's recipe collection. But for the people in my community, these are the only proof that their lives before the Cascade were real."
 
-*Zero, offering a deal:*
+_Zero, offering a deal:_
 "I hear you had a rough week. Losing 200 terabytes of client data tends to put a damper on things. I can make your problem go away. I can even tell you who did it. All I need is a small favor. Nothing dangerous. Nothing illegal. Just... flexible."
 
 ---
 
 ### Appendix E: Glossary of Narrative Terms
 
-| Term | Definition |
-|------|-----------|
-| **Spine** | The fixed sequence of story events that occur regardless of player choice. |
-| **Branch** | A decision point where the player chooses between options, affecting the world state. |
-| **Tendril** | A minor narrative variation that makes the world feel responsive without changing the plot. |
-| **Echo** | A delayed consequence of a past decision that manifests in a later chapter. |
-| **Nexus Point** | A major decision point with significant, multi-layered consequences. |
-| **World State** | The collection of variables (faction reputation, resources, NPC trust, etc.) that define the current state of the game world. |
-| **Convergence** | The point where divergent narrative branches rejoin the spine. |
-| **Contextual Embedding** | The technique of teaching security concepts through story situations where the concept is the natural response. |
-| **Emotional Anchoring** | Tying security lessons to moments of strong emotion to improve retention. |
-| **The Regret Engine** | The subsystem that tracks player confidence and reveals hidden information to maximize reflective learning. |
-| **Breathing Room** | A deliberate period of lower intensity between escalation events to prevent player burnout. |
-| **Stealth Learning** | The design philosophy where players acquire real skills without realizing they are being trained. |
-| **The Cascade** | The in-universe name for the internet collapse caused by NIDHOGG. |
-| **NIDHOGG** | The Stuxnet variant that caused the Cascade. Named after the Norse serpent that gnaws at the roots of Yggdrasil. |
+| Term                     | Definition                                                                                                                    |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Spine**                | The fixed sequence of story events that occur regardless of player choice.                                                    |
+| **Branch**               | A decision point where the player chooses between options, affecting the world state.                                         |
+| **Tendril**              | A minor narrative variation that makes the world feel responsive without changing the plot.                                   |
+| **Echo**                 | A delayed consequence of a past decision that manifests in a later chapter.                                                   |
+| **Nexus Point**          | A major decision point with significant, multi-layered consequences.                                                          |
+| **World State**          | The collection of variables (faction reputation, resources, NPC trust, etc.) that define the current state of the game world. |
+| **Convergence**          | The point where divergent narrative branches rejoin the spine.                                                                |
+| **Contextual Embedding** | The technique of teaching security concepts through story situations where the concept is the natural response.               |
+| **Emotional Anchoring**  | Tying security lessons to moments of strong emotion to improve retention.                                                     |
+| **The Regret Engine**    | The subsystem that tracks player confidence and reveals hidden information to maximize reflective learning.                   |
+| **Breathing Room**       | A deliberate period of lower intensity between escalation events to prevent player burnout.                                   |
+| **Stealth Learning**     | The design philosophy where players acquire real skills without realizing they are being trained.                             |
+| **The Cascade**          | The in-universe name for the internet collapse caused by NIDHOGG.                                                             |
+| **NIDHOGG**              | The Stuxnet variant that caused the Cascade. Named after the Norse serpent that gnaws at the roots of Yggdrasil.              |
 
 ---
 
-*End of Document*
+_End of Document_
 
-*This narrative design document is a living document. It will evolve as the game develops, as player feedback shapes the experience, and as the real-world threat landscape presents new stories to tell. The best narrative design is responsive -- to its players, to its moment, and to the truth that the most compelling fiction is the kind that teaches you something real about the world.*
+_This narrative design document is a living document. It will evolve as the game develops, as player feedback shapes the experience, and as the real-world threat landscape presents new stories to tell. The best narrative design is responsive -- to its players, to its moment, and to the truth that the most compelling fiction is the kind that teaches you something real about the world._

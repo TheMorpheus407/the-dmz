@@ -1,1 +1,1 @@
-export { healthPlugin } from "./health.plugin.js";
+export { healthPlugin } from './health.plugin.js';

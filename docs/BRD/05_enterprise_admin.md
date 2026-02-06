@@ -58,15 +58,15 @@ This BRD covers:
 
 ### 1.3 Success Criteria
 
-| Metric | Target |
-|--------|--------|
-| Tenant provisioning time | < 5 minutes (automated) |
-| SSO integration time | < 2 hours (self-service) |
-| SCIM user sync latency | < 60 seconds |
-| Admin dashboard load time | < 2 seconds (P95) |
-| API response time | < 200ms (P95) |
-| Tenant data isolation violations | Zero |
-| SOC 2 Type II audit findings (admin controls) | Zero critical |
+| Metric                                        | Target                   |
+| --------------------------------------------- | ------------------------ |
+| Tenant provisioning time                      | < 5 minutes (automated)  |
+| SSO integration time                          | < 2 hours (self-service) |
+| SCIM user sync latency                        | < 60 seconds             |
+| Admin dashboard load time                     | < 2 seconds (P95)        |
+| API response time                             | < 200ms (P95)            |
+| Tenant data isolation violations              | Zero                     |
+| SOC 2 Type II audit findings (admin controls) | Zero critical            |
 
 ---
 
@@ -82,11 +82,11 @@ The DMZ must support full multi-tenancy where each customer organization operate
 
 The platform shall implement a **hybrid isolation model** with three tiers:
 
-| Tier | Database Strategy | Compute Strategy | Target Segment |
-|------|------------------|-------------------|----------------|
-| Standard | Shared database, schema-level isolation via `tenant_id` foreign key on every table | Shared application instances | SMB (< 500 users) |
-| Professional | Shared database cluster, dedicated schema per tenant | Shared application instances with tenant-aware resource limits | Mid-market (500 -- 10,000 users) |
-| Enterprise | Dedicated database instance per tenant, optional dedicated cluster | Dedicated application instances in isolated namespace | Enterprise (> 10,000 users), regulated industries |
+| Tier         | Database Strategy                                                                  | Compute Strategy                                               | Target Segment                                    |
+| ------------ | ---------------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------- |
+| Standard     | Shared database, schema-level isolation via `tenant_id` foreign key on every table | Shared application instances                                   | SMB (< 500 users)                                 |
+| Professional | Shared database cluster, dedicated schema per tenant                               | Shared application instances with tenant-aware resource limits | Mid-market (500 -- 10,000 users)                  |
+| Enterprise   | Dedicated database instance per tenant, optional dedicated cluster                 | Dedicated application instances in isolated namespace          | Enterprise (> 10,000 users), regulated industries |
 
 **REQ-MT-001:** Every database table containing tenant-scoped data SHALL include a non-nullable `tenant_id` column. All queries SHALL include tenant filtering enforced at the ORM/query-builder level, not at the application logic level. Row-level security (RLS) policies SHALL be applied as a defense-in-depth measure at the database level.
 
@@ -134,21 +134,21 @@ Tenant context SHALL be resolved on every inbound request through the following 
 
 Each tenant SHALL be able to customize the following visual and textual elements:
 
-| Element | Customization | Constraints |
-|---------|--------------|-------------|
-| Primary Logo | Upload (SVG, PNG) | Max 2MB, min 100x100px, max 2000x2000px |
-| Favicon | Upload (ICO, PNG, SVG) | Max 256KB |
-| Primary Color | Hex code | Must meet WCAG 2.1 AA contrast ratio |
-| Secondary Color | Hex code | Must meet WCAG 2.1 AA contrast ratio |
-| Accent Color | Hex code | -- |
-| Background Color | Hex code | -- |
-| Font Family | Selection from approved set or custom upload (WOFF2) | Max 1MB per font file, max 4 variants |
-| Login Page Background | Upload (JPG, PNG, WebP) or CSS gradient | Max 5MB |
-| Email Header/Footer | Rich text + images | Max 500KB total |
-| Platform Name Override | Text | Max 64 characters |
-| Copyright Notice | Text | Max 256 characters |
-| Support Contact | Email, URL, phone | Validated formats |
-| Custom CSS | Raw CSS | Sandboxed, max 100KB, no `@import` |
+| Element                | Customization                                        | Constraints                             |
+| ---------------------- | ---------------------------------------------------- | --------------------------------------- |
+| Primary Logo           | Upload (SVG, PNG)                                    | Max 2MB, min 100x100px, max 2000x2000px |
+| Favicon                | Upload (ICO, PNG, SVG)                               | Max 256KB                               |
+| Primary Color          | Hex code                                             | Must meet WCAG 2.1 AA contrast ratio    |
+| Secondary Color        | Hex code                                             | Must meet WCAG 2.1 AA contrast ratio    |
+| Accent Color           | Hex code                                             | --                                      |
+| Background Color       | Hex code                                             | --                                      |
+| Font Family            | Selection from approved set or custom upload (WOFF2) | Max 1MB per font file, max 4 variants   |
+| Login Page Background  | Upload (JPG, PNG, WebP) or CSS gradient              | Max 5MB                                 |
+| Email Header/Footer    | Rich text + images                                   | Max 500KB total                         |
+| Platform Name Override | Text                                                 | Max 64 characters                       |
+| Copyright Notice       | Text                                                 | Max 256 characters                      |
+| Support Contact        | Email, URL, phone                                    | Validated formats                       |
+| Custom CSS             | Raw CSS                                              | Sandboxed, max 100KB, no `@import`      |
 
 **REQ-WL-001:** Branding changes SHALL take effect within 60 seconds of saving without requiring a deployment or cache purge by platform operators.
 
@@ -161,6 +161,7 @@ Each tenant SHALL be able to customize the following visual and textual elements
 **REQ-WL-004:** Each tenant SHALL be able to configure one or more custom domains (e.g., `training.acme.com`) that serve the fully branded experience.
 
 **REQ-WL-005:** Custom domain setup SHALL require:
+
 1. DNS CNAME or A record verification (automated check with retry).
 2. Automated TLS certificate provisioning via Let's Encrypt or tenant-provided certificate upload.
 3. Certificate renewal handled automatically with 30-day advance warnings on failure.
@@ -219,15 +220,15 @@ The platform SHALL implement a hybrid RBAC (Role-Based Access Control) and ABAC 
 
 **Scope:** Entire platform, all tenants.
 
-| Permission Category | Capabilities |
-|---------------------|-------------|
-| Tenant Management | Create, read, update, suspend, delete tenants. Migrate tenant tiers. |
-| Platform Configuration | Feature flags, global rate limits, maintenance windows, platform branding. |
-| Billing & Licensing | View and modify all tenant subscriptions, apply credits, manage invoices. |
-| Security Operations | View cross-tenant security events, initiate platform-wide incident response, force-expire all sessions. |
-| Impersonation | Impersonate any user in any tenant with full audit trail. |
-| Data Operations | Execute cross-tenant analytics (aggregated, anonymized), trigger data exports for compliance requests. |
-| System Health | Access platform-wide metrics, error rates, queue depths, database performance. |
+| Permission Category    | Capabilities                                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| Tenant Management      | Create, read, update, suspend, delete tenants. Migrate tenant tiers.                                    |
+| Platform Configuration | Feature flags, global rate limits, maintenance windows, platform branding.                              |
+| Billing & Licensing    | View and modify all tenant subscriptions, apply credits, manage invoices.                               |
+| Security Operations    | View cross-tenant security events, initiate platform-wide incident response, force-expire all sessions. |
+| Impersonation          | Impersonate any user in any tenant with full audit trail.                                               |
+| Data Operations        | Execute cross-tenant analytics (aggregated, anonymized), trigger data exports for compliance requests.  |
+| System Health          | Access platform-wide metrics, error rates, queue depths, database performance.                          |
 
 **REQ-RBAC-001:** Super Admin access SHALL require hardware-backed MFA (FIDO2/WebAuthn) and SHALL be restricted to named individuals. Shared Super Admin accounts are prohibited.
 
@@ -237,18 +238,18 @@ The platform SHALL implement a hybrid RBAC (Role-Based Access Control) and ABAC 
 
 **Scope:** Single tenant.
 
-| Permission Category | Capabilities |
-|---------------------|-------------|
-| User Management | Create, read, update, deactivate, delete users within the tenant. Assign roles. Reset passwords. Force MFA enrollment. |
-| Organization Structure | Create and manage departments, teams, locations, cost centers. |
-| Training Configuration | Create training campaigns, assign content, set deadlines, configure phishing simulations. |
-| Reporting | Access all tenant-level reports, export data, schedule reports. |
-| Integrations | Configure SSO, SCIM, HRIS integrations, webhooks, API keys. |
-| Branding | Manage all white-label settings, custom domains, email templates. |
-| Compliance | Configure data retention policies, execute data subject requests, manage consent records. |
-| Billing | View subscription details, manage payment methods, download invoices. |
-| Audit | View complete audit log for the tenant. |
-| Security Policy | Set password policies, MFA requirements, session timeouts, IP allowlists. |
+| Permission Category    | Capabilities                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| User Management        | Create, read, update, deactivate, delete users within the tenant. Assign roles. Reset passwords. Force MFA enrollment. |
+| Organization Structure | Create and manage departments, teams, locations, cost centers.                                                         |
+| Training Configuration | Create training campaigns, assign content, set deadlines, configure phishing simulations.                              |
+| Reporting              | Access all tenant-level reports, export data, schedule reports.                                                        |
+| Integrations           | Configure SSO, SCIM, HRIS integrations, webhooks, API keys.                                                            |
+| Branding               | Manage all white-label settings, custom domains, email templates.                                                      |
+| Compliance             | Configure data retention policies, execute data subject requests, manage consent records.                              |
+| Billing                | View subscription details, manage payment methods, download invoices.                                                  |
+| Audit                  | View complete audit log for the tenant.                                                                                |
+| Security Policy        | Set password policies, MFA requirements, session timeouts, IP allowlists.                                              |
 
 **REQ-RBAC-003:** Tenant Admin SHALL be the highest-privileged role within a tenant. Only Tenant Admins can create other Tenant Admins. The system SHALL enforce a minimum of one active Tenant Admin per tenant at all times (prevent last-admin deletion).
 
@@ -256,13 +257,13 @@ The platform SHALL implement a hybrid RBAC (Role-Based Access Control) and ABAC 
 
 **Scope:** Assigned departments, teams, or organizational units within a tenant.
 
-| Permission Category | Capabilities |
-|---------------------|-------------|
-| User Oversight | View user profiles, training status, risk scores, and compliance status for direct and indirect reports. |
+| Permission Category | Capabilities                                                                                               |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| User Oversight      | View user profiles, training status, risk scores, and compliance status for direct and indirect reports.   |
 | Training Management | Assign training content to their teams, set deadlines, send reminders. Cannot create new training content. |
-| Reporting | Access reports scoped to their organizational units. Export scoped data. |
-| Escalation | Escalate non-compliant users to Tenant Admin. |
-| Approval | Approve training completion exceptions, deadline extensions (if policy allows). |
+| Reporting           | Access reports scoped to their organizational units. Export scoped data.                                   |
+| Escalation          | Escalate non-compliant users to Tenant Admin.                                                              |
+| Approval            | Approve training completion exceptions, deadline extensions (if policy allows).                            |
 
 **REQ-RBAC-004:** Manager visibility SHALL be strictly scoped to their assigned organizational units. A manager of "Engineering" SHALL NOT see data from "Finance" unless explicitly granted cross-department access.
 
@@ -270,13 +271,13 @@ The platform SHALL implement a hybrid RBAC (Role-Based Access Control) and ABAC 
 
 **Scope:** Training content and simulation management within a tenant.
 
-| Permission Category | Capabilities |
-|---------------------|-------------|
-| Content Authoring | Create, edit, publish, archive training modules, quizzes, and interactive scenarios. |
-| Simulation Design | Design and configure phishing simulation campaigns, social engineering scenarios, and breach response exercises. |
-| Template Management | Create and manage email templates, landing pages, and reporting templates for simulations. |
-| Analytics (Content) | View engagement metrics, completion rates, and effectiveness scores for their content. |
-| Content Library | Manage the tenant's content library, import from the platform marketplace. |
+| Permission Category | Capabilities                                                                                                     |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Content Authoring   | Create, edit, publish, archive training modules, quizzes, and interactive scenarios.                             |
+| Simulation Design   | Design and configure phishing simulation campaigns, social engineering scenarios, and breach response exercises. |
+| Template Management | Create and manage email templates, landing pages, and reporting templates for simulations.                       |
+| Analytics (Content) | View engagement metrics, completion rates, and effectiveness scores for their content.                           |
+| Content Library     | Manage the tenant's content library, import from the platform marketplace.                                       |
 
 **REQ-RBAC-005:** Trainers SHALL NOT have access to individual user performance data. They see aggregated, anonymized content effectiveness metrics only. Trainers who also need user-level visibility must be granted the Manager role additionally.
 
@@ -284,13 +285,13 @@ The platform SHALL implement a hybrid RBAC (Role-Based Access Control) and ABAC 
 
 **Scope:** Own profile and assigned training.
 
-| Permission Category | Capabilities |
-|---------------------|-------------|
-| Training | Access and complete assigned training modules, quizzes, and simulations. |
-| Profile | View and update own profile (name, avatar, notification preferences). |
-| Progress | View own training history, scores, certifications, and compliance status. |
-| Reporting (Self) | Download own training transcripts and certificates. |
-| Feedback | Submit feedback on training content, report issues. |
+| Permission Category | Capabilities                                                              |
+| ------------------- | ------------------------------------------------------------------------- |
+| Training            | Access and complete assigned training modules, quizzes, and simulations.  |
+| Profile             | View and update own profile (name, avatar, notification preferences).     |
+| Progress            | View own training history, scores, certifications, and compliance status. |
+| Reporting (Self)    | Download own training transcripts and certificates.                       |
+| Feedback            | Submit feedback on training content, report issues.                       |
 
 **REQ-RBAC-006:** Learners SHALL NOT be able to view other learners' data, scores, or compliance status. Leaderboards, if enabled, SHALL be opt-in and anonymizable.
 
@@ -345,12 +346,12 @@ api.keys              list, read, create, revoke
 
 Beyond static RBAC, the platform SHALL support policy rules based on dynamic attributes:
 
-| Attribute Source | Example Attributes | Example Policy |
-|-----------------|-------------------|----------------|
-| User | department, location, risk_score, hire_date | "Managers can only view users in their own location" |
-| Resource | sensitivity_level, owner, created_date | "Only content owners can edit unpublished modules" |
-| Environment | time_of_day, ip_address, device_type | "Admin operations blocked outside business hours from unknown IPs" |
-| Action Context | bulk_operation, export_size | "Exports exceeding 10,000 records require Tenant Admin approval" |
+| Attribute Source | Example Attributes                          | Example Policy                                                     |
+| ---------------- | ------------------------------------------- | ------------------------------------------------------------------ |
+| User             | department, location, risk_score, hire_date | "Managers can only view users in their own location"               |
+| Resource         | sensitivity_level, owner, created_date      | "Only content owners can edit unpublished modules"                 |
+| Environment      | time_of_day, ip_address, device_type        | "Admin operations blocked outside business hours from unknown IPs" |
+| Action Context   | bulk_operation, export_size                 | "Exports exceeding 10,000 records require Tenant Admin approval"   |
 
 **REQ-RBAC-010:** ABAC policies SHALL be evaluated in under 10ms per request (P99). Policies SHALL be cached and invalidated on relevant attribute changes.
 
@@ -473,15 +474,15 @@ The platform SHALL support multiple authentication methods simultaneously, with 
 
 #### 5.1.1 Authentication Methods
 
-| Method | Use Case | Priority |
-|--------|----------|----------|
-| Email + Password | Default for non-federated tenants, fallback | Baseline |
-| SAML 2.0 SSO | Enterprise IdP integration (ADFS, Azure AD, Okta, OneLogin, PingFederate) | High |
-| OAuth 2.0 / OpenID Connect | Modern IdP integration, social login (if applicable) | High |
-| FIDO2 / WebAuthn | Passwordless authentication, hardware key support | Medium |
-| Magic Link (Email) | Low-friction authentication for infrequent users | Medium |
-| Certificate-Based (mTLS) | Government/defense environments, API authentication | Medium |
-| Kerberos / IWA | On-premises deployments with Active Directory | Low (on-prem only) |
+| Method                     | Use Case                                                                  | Priority           |
+| -------------------------- | ------------------------------------------------------------------------- | ------------------ |
+| Email + Password           | Default for non-federated tenants, fallback                               | Baseline           |
+| SAML 2.0 SSO               | Enterprise IdP integration (ADFS, Azure AD, Okta, OneLogin, PingFederate) | High               |
+| OAuth 2.0 / OpenID Connect | Modern IdP integration, social login (if applicable)                      | High               |
+| FIDO2 / WebAuthn           | Passwordless authentication, hardware key support                         | Medium             |
+| Magic Link (Email)         | Low-friction authentication for infrequent users                          | Medium             |
+| Certificate-Based (mTLS)   | Government/defense environments, API authentication                       | Medium             |
+| Kerberos / IWA             | On-premises deployments with Active Directory                             | Low (on-prem only) |
 
 ### 5.2 Single Sign-On (SSO)
 
@@ -527,6 +528,7 @@ custom_attribute_*     --> user.metadata.*
 **REQ-IAM-004:** The platform SHALL support OpenID Connect (OIDC) as both a Relying Party (RP) and, optionally, an OpenID Provider (OP) for downstream integrations.
 
 As a Relying Party:
+
 - Authorization Code Flow with PKCE (required for all clients).
 - Support for `response_type=code`, `scope=openid profile email groups`.
 - Token validation using JWKS endpoint with key rotation support.
@@ -534,30 +536,30 @@ As a Relying Party:
 
 **REQ-IAM-005:** Pre-built OIDC integration templates SHALL be provided for:
 
-| Provider | Configuration Complexity | Notes |
-|----------|------------------------|-------|
-| Microsoft Azure AD / Entra ID | Guided wizard | Including group claim mapping, conditional access |
-| Okta | Guided wizard | Including Universal Directory attribute mapping |
-| OneLogin | Guided wizard | Including SmartHooks support |
-| Google Workspace | Guided wizard | Including organizational unit mapping |
-| Auth0 | Guided wizard | Including Actions/Rules passthrough |
-| PingFederate | Advanced | Manual configuration with documentation |
-| Keycloak | Advanced | For on-premises deployments |
-| AWS Cognito | Advanced | For AWS-native deployments |
-| Custom OIDC Provider | Manual | Any standards-compliant provider |
+| Provider                      | Configuration Complexity | Notes                                             |
+| ----------------------------- | ------------------------ | ------------------------------------------------- |
+| Microsoft Azure AD / Entra ID | Guided wizard            | Including group claim mapping, conditional access |
+| Okta                          | Guided wizard            | Including Universal Directory attribute mapping   |
+| OneLogin                      | Guided wizard            | Including SmartHooks support                      |
+| Google Workspace              | Guided wizard            | Including organizational unit mapping             |
+| Auth0                         | Guided wizard            | Including Actions/Rules passthrough               |
+| PingFederate                  | Advanced                 | Manual configuration with documentation           |
+| Keycloak                      | Advanced                 | For on-premises deployments                       |
+| AWS Cognito                   | Advanced                 | For AWS-native deployments                        |
+| Custom OIDC Provider          | Manual                   | Any standards-compliant provider                  |
 
 ### 5.3 Multi-Factor Authentication (MFA)
 
 **REQ-IAM-006:** The platform SHALL support the following MFA methods:
 
-| Method | Security Level | User Experience |
-|--------|---------------|-----------------|
-| TOTP (Authenticator App) | High | Standard |
-| FIDO2 / WebAuthn (Hardware Key) | Very High | Excellent (passwordless capable) |
-| Push Notification (via mobile app) | High | Excellent |
-| SMS OTP | Medium | Standard (not recommended for high-security) |
-| Email OTP | Medium | Standard (fallback only) |
-| Recovery Codes | N/A (backup) | One-time use, 10 codes generated |
+| Method                             | Security Level | User Experience                              |
+| ---------------------------------- | -------------- | -------------------------------------------- |
+| TOTP (Authenticator App)           | High           | Standard                                     |
+| FIDO2 / WebAuthn (Hardware Key)    | Very High      | Excellent (passwordless capable)             |
+| Push Notification (via mobile app) | High           | Excellent                                    |
+| SMS OTP                            | Medium         | Standard (not recommended for high-security) |
+| Email OTP                          | Medium         | Standard (fallback only)                     |
+| Recovery Codes                     | N/A (backup)   | One-time use, 10 codes generated             |
 
 **REQ-IAM-007:** MFA policies SHALL be configurable at the tenant level with the following granularity:
 
@@ -583,14 +585,14 @@ As a Relying Party:
 
 **REQ-IAM-010:** SCIM provisioning SHALL support the following user lifecycle operations:
 
-| IdP Event | Platform Action |
-|-----------|-----------------|
-| User created in IdP | User created in platform, assigned default role, onboarding triggered |
-| User updated in IdP | User profile updated, organizational membership recalculated |
-| User disabled in IdP | User deactivated, sessions revoked, license released |
-| User deleted in IdP | User deactivated (soft delete), data retained per policy |
-| User re-enabled in IdP | User reactivated, license re-assigned (if available) |
-| Group membership changed | Role and scope assignments recalculated |
+| IdP Event                | Platform Action                                                       |
+| ------------------------ | --------------------------------------------------------------------- |
+| User created in IdP      | User created in platform, assigned default role, onboarding triggered |
+| User updated in IdP      | User profile updated, organizational membership recalculated          |
+| User disabled in IdP     | User deactivated, sessions revoked, license released                  |
+| User deleted in IdP      | User deactivated (soft delete), data retained per policy              |
+| User re-enabled in IdP   | User reactivated, license re-assigned (if available)                  |
+| Group membership changed | Role and scope assignments recalculated                               |
 
 **REQ-IAM-011:** SCIM attribute mapping SHALL be configurable per tenant. Conflict resolution rules SHALL be defined for when SCIM updates conflict with manual admin changes (SCIM wins, Admin wins, or Last Write wins, configurable per attribute).
 
@@ -639,14 +641,14 @@ As a Relying Party:
 
 **REQ-IAM-016:** Session management SHALL support the following configuration options per tenant:
 
-| Setting | Default | Range |
-|---------|---------|-------|
-| Session Timeout (Idle) | 30 minutes | 5 minutes -- 24 hours |
-| Session Timeout (Absolute) | 12 hours | 1 hour -- 72 hours |
-| Concurrent Sessions per User | Unlimited | 1 -- Unlimited |
-| Session Binding | None | None, IP, Device Fingerprint, IP + Device |
-| Force Logout on Password Change | Yes | Yes, No |
-| Force Logout on Role Change | Yes | Yes, No |
+| Setting                         | Default    | Range                                     |
+| ------------------------------- | ---------- | ----------------------------------------- |
+| Session Timeout (Idle)          | 30 minutes | 5 minutes -- 24 hours                     |
+| Session Timeout (Absolute)      | 12 hours   | 1 hour -- 72 hours                        |
+| Concurrent Sessions per User    | Unlimited  | 1 -- Unlimited                            |
+| Session Binding                 | None       | None, IP, Device Fingerprint, IP + Device |
+| Force Logout on Password Change | Yes        | Yes, No                                   |
+| Force Logout on Role Change     | Yes        | Yes, No                                   |
 
 **REQ-IAM-017:** The system SHALL maintain a session registry that allows administrators to:
 
@@ -658,16 +660,16 @@ As a Relying Party:
 
 **REQ-IAM-018:** For tenants using password-based authentication, the following policies SHALL be configurable:
 
-| Policy | Default | Range |
-|--------|---------|-------|
-| Minimum Length | 12 | 8 -- 128 |
-| Complexity Requirements | At least 3 of 4 character classes | Configurable |
-| Password History | 12 previous passwords | 0 -- 50 |
-| Maximum Age | 90 days | 0 (never expires) -- 365 days |
-| Minimum Age | 1 day | 0 -- 30 days |
-| Lockout Threshold | 10 failed attempts | 3 -- 100 |
-| Lockout Duration | 30 minutes | 1 minute -- 24 hours or until admin unlock |
-| Breach Database Check | Enabled (Have I Been Pwned API) | Enabled / Disabled |
+| Policy                  | Default                           | Range                                      |
+| ----------------------- | --------------------------------- | ------------------------------------------ |
+| Minimum Length          | 12                                | 8 -- 128                                   |
+| Complexity Requirements | At least 3 of 4 character classes | Configurable                               |
+| Password History        | 12 previous passwords             | 0 -- 50                                    |
+| Maximum Age             | 90 days                           | 0 (never expires) -- 365 days              |
+| Minimum Age             | 1 day                             | 0 -- 30 days                               |
+| Lockout Threshold       | 10 failed attempts                | 3 -- 100                                   |
+| Lockout Duration        | 30 minutes                        | 1 minute -- 24 hours or until admin unlock |
+| Breach Database Check   | Enabled (Have I Been Pwned API)   | Enabled / Disabled                         |
 
 ---
 
@@ -740,14 +742,14 @@ User Created
 
 **REQ-ULM-006:** User offboarding SHALL be automated through the following triggers:
 
-| Trigger | Action | Timing |
-|---------|--------|--------|
-| SCIM delete/disable | Deactivate user, revoke sessions | Immediate |
-| AD/LDAP sync (user disabled/deleted) | Deactivate user, revoke sessions | Next sync cycle (configurable: 15 min -- 24 hrs) |
-| Manual admin deactivation | Deactivate user, revoke sessions | Immediate |
-| License expiration | Suspend user (read-only access to own data) | On expiration date |
-| Scheduled offboarding date | Deactivate user, revoke sessions | On scheduled date |
-| Inactivity timeout | Notify admin, optionally deactivate | After configurable period (30-365 days) |
+| Trigger                              | Action                                      | Timing                                           |
+| ------------------------------------ | ------------------------------------------- | ------------------------------------------------ |
+| SCIM delete/disable                  | Deactivate user, revoke sessions            | Immediate                                        |
+| AD/LDAP sync (user disabled/deleted) | Deactivate user, revoke sessions            | Next sync cycle (configurable: 15 min -- 24 hrs) |
+| Manual admin deactivation            | Deactivate user, revoke sessions            | Immediate                                        |
+| License expiration                   | Suspend user (read-only access to own data) | On expiration date                               |
+| Scheduled offboarding date           | Deactivate user, revoke sessions            | On scheduled date                                |
+| Inactivity timeout                   | Notify admin, optionally deactivate         | After configurable period (30-365 days)          |
 
 **REQ-ULM-007:** Upon offboarding, the system SHALL:
 
@@ -767,14 +769,14 @@ User Created
 
 The platform SHALL support the following licensing models:
 
-| Model | Description | Billing Basis |
-|-------|-------------|---------------|
-| Seat-Based (Named User) | Each active user consumes one license seat. Deactivated users release seats. | Monthly/Annual per seat |
-| Seat-Based (Concurrent) | A pool of seats shared across users. Only users with active sessions consume seats. | Monthly/Annual per concurrent seat |
-| Usage-Based | Charged per training completion, simulation sent, or API call. | Monthly metered billing |
-| Tiered | Flat fee per tier (e.g., 1-100 users, 101-500 users, 501+ users). | Monthly/Annual per tier |
-| Unlimited (Site License) | All users in the tenant covered. No seat management required. | Annual flat fee |
-| Hybrid | Combination (e.g., seat-based for core platform + usage-based for simulations). | Monthly/Annual + metered |
+| Model                    | Description                                                                         | Billing Basis                      |
+| ------------------------ | ----------------------------------------------------------------------------------- | ---------------------------------- |
+| Seat-Based (Named User)  | Each active user consumes one license seat. Deactivated users release seats.        | Monthly/Annual per seat            |
+| Seat-Based (Concurrent)  | A pool of seats shared across users. Only users with active sessions consume seats. | Monthly/Annual per concurrent seat |
+| Usage-Based              | Charged per training completion, simulation sent, or API call.                      | Monthly metered billing            |
+| Tiered                   | Flat fee per tier (e.g., 1-100 users, 101-500 users, 501+ users).                   | Monthly/Annual per tier            |
+| Unlimited (Site License) | All users in the tenant covered. No seat management required.                       | Annual flat fee                    |
+| Hybrid                   | Combination (e.g., seat-based for core platform + usage-based for simulations).     | Monthly/Annual + metered           |
 
 #### 6.3.2 License Enforcement
 
@@ -822,15 +824,15 @@ The admin dashboard SHALL be a real-time, role-aware interface that presents act
 
 **REQ-DASH-001:** The Super Admin dashboard SHALL display:
 
-| Widget | Data | Refresh Rate |
-|--------|------|-------------|
-| Platform Health | Service status, error rates, latency percentiles, queue depths | Real-time (5s) |
-| Tenant Overview | Total tenants, active/suspended/trial, new this period | Real-time (1m) |
-| Global User Metrics | Total users, active sessions, new registrations, churn | Real-time (1m) |
-| Revenue Metrics | MRR, ARR, seat utilization across all tenants | Hourly |
-| System Alerts | Critical events: failed provisioning, sync errors, security incidents | Real-time |
-| Feature Adoption | Usage rates per feature across tenants | Daily |
-| Support Escalations | Open tickets, SLA compliance, trending issues | Real-time (5m) |
+| Widget              | Data                                                                  | Refresh Rate   |
+| ------------------- | --------------------------------------------------------------------- | -------------- |
+| Platform Health     | Service status, error rates, latency percentiles, queue depths        | Real-time (5s) |
+| Tenant Overview     | Total tenants, active/suspended/trial, new this period                | Real-time (1m) |
+| Global User Metrics | Total users, active sessions, new registrations, churn                | Real-time (1m) |
+| Revenue Metrics     | MRR, ARR, seat utilization across all tenants                         | Hourly         |
+| System Alerts       | Critical events: failed provisioning, sync errors, security incidents | Real-time      |
+| Feature Adoption    | Usage rates per feature across tenants                                | Daily          |
+| Support Escalations | Open tickets, SLA compliance, trending issues                         | Real-time (5m) |
 
 ### 7.3 Tenant Admin Dashboard
 
@@ -927,15 +929,15 @@ The notification system SHALL be a centralized, multi-channel delivery platform 
 
 **Notification Types (Email):**
 
-| Category | Examples |
-|----------|---------|
-| Account | Welcome, password reset, MFA setup, account locked, session from new device |
-| Training | Assignment notification, deadline reminder, completion confirmation, certificate available |
-| Simulation | (Intentionally NOT notified -- phishing simulations must be covert) |
-| Compliance | Policy acknowledgment required, certification expiring, compliance deadline approaching |
-| Administrative | Role change, organizational change, license warning, system maintenance |
-| Reports | Scheduled report delivery, export ready for download |
-| Security | Suspicious login detected, MFA recovery codes used, API key created |
+| Category       | Examples                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------ |
+| Account        | Welcome, password reset, MFA setup, account locked, session from new device                |
+| Training       | Assignment notification, deadline reminder, completion confirmation, certificate available |
+| Simulation     | (Intentionally NOT notified -- phishing simulations must be covert)                        |
+| Compliance     | Policy acknowledgment required, certification expiring, compliance deadline approaching    |
+| Administrative | Role change, organizational change, license warning, system maintenance                    |
+| Reports        | Scheduled report delivery, export ready for download                                       |
+| Security       | Suspicious login detected, MFA recovery codes used, API key created                        |
 
 #### 8.2.2 In-App Notifications
 
@@ -957,6 +959,7 @@ The notification system SHALL be a centralized, multi-channel delivery platform 
 - **Incoming Webhooks (fallback):** Simple webhook-based posting to designated channels.
 
 Configurable routing:
+
 - Map notification categories to specific Slack channels (e.g., security alerts to `#security-ops`, training reminders to `#training`, compliance to `#compliance`).
 - Direct message delivery for user-specific notifications.
 - Thread replies for related notification sequences.
@@ -971,6 +974,7 @@ Configurable routing:
 - **Incoming Webhook (fallback):** Simple webhook-based posting to designated channels.
 
 Adaptive Card support for:
+
 - Training assignment with "Start Now" button.
 - Compliance acknowledgment with inline approval.
 - Risk score alerts with drill-down link.
@@ -1137,12 +1141,12 @@ The API SHALL provide full CRUD operations for the following resources:
 
 **REQ-API-002:** The API SHALL support the following authentication methods:
 
-| Method | Use Case | Token Lifetime |
-|--------|----------|---------------|
-| API Key (Bearer Token) | Server-to-server integrations | No expiry (revocable) |
-| OAuth 2.0 Client Credentials | Machine-to-machine with scoped access | Configurable (1 hour default) |
+| Method                              | Use Case                                    | Token Lifetime                   |
+| ----------------------------------- | ------------------------------------------- | -------------------------------- |
+| API Key (Bearer Token)              | Server-to-server integrations               | No expiry (revocable)            |
+| OAuth 2.0 Client Credentials        | Machine-to-machine with scoped access       | Configurable (1 hour default)    |
 | OAuth 2.0 Authorization Code + PKCE | User-context integrations, third-party apps | Access: 1 hour, Refresh: 30 days |
-| Personal Access Token (PAT) | Developer/admin scripting | Configurable (max 1 year) |
+| Personal Access Token (PAT)         | Developer/admin scripting                   | Configurable (max 1 year)        |
 
 **REQ-API-003:** API keys and PATs SHALL support scope restrictions. An API key can be limited to specific resources and actions (e.g., `users:read`, `reports:export`). This prevents over-privileged integrations.
 
@@ -1152,12 +1156,12 @@ The API SHALL provide full CRUD operations for the following resources:
 
 **REQ-API-005:** Rate limits SHALL be configurable per tenant tier:
 
-| Tier | Requests/Minute | Requests/Hour | Burst |
-|------|-----------------|---------------|-------|
-| Standard | 60 | 1,000 | 20 |
-| Professional | 300 | 10,000 | 50 |
-| Enterprise | 1,000 | 100,000 | 200 |
-| Custom | Negotiated | Negotiated | Negotiated |
+| Tier         | Requests/Minute | Requests/Hour | Burst      |
+| ------------ | --------------- | ------------- | ---------- |
+| Standard     | 60              | 1,000         | 20         |
+| Professional | 300             | 10,000        | 50         |
+| Enterprise   | 1,000           | 100,000       | 200        |
+| Custom       | Negotiated      | Negotiated    | Negotiated |
 
 Rate limits SHALL be applied per API key. Enterprise tenants SHALL be able to request rate limit increases for specific integration use cases.
 
@@ -1292,14 +1296,14 @@ DELETE /api/v1/bulk/users         - Deactivate up to 1,000 users
 
 **REQ-DATA-001:** The platform SHALL support data export in the following formats:
 
-| Format | Use Case | Max Records |
-|--------|----------|-------------|
-| CSV | Spreadsheet analysis, HRIS import, simple data exchange | 1,000,000 |
-| Excel (XLSX) | Business reporting, formatted tables with multiple sheets | 500,000 |
-| PDF | Compliance documentation, executive summaries, certificates | N/A (report-based) |
-| JSON | API integration, programmatic consumption | 1,000,000 |
-| JSON Lines (JSONL) | Streaming ingestion, large dataset processing | Unlimited (streaming) |
-| XML | Legacy system integration | 500,000 |
+| Format             | Use Case                                                    | Max Records           |
+| ------------------ | ----------------------------------------------------------- | --------------------- |
+| CSV                | Spreadsheet analysis, HRIS import, simple data exchange     | 1,000,000             |
+| Excel (XLSX)       | Business reporting, formatted tables with multiple sheets   | 500,000               |
+| PDF                | Compliance documentation, executive summaries, certificates | N/A (report-based)    |
+| JSON               | API integration, programmatic consumption                   | 1,000,000             |
+| JSON Lines (JSONL) | Streaming ingestion, large dataset processing               | Unlimited (streaming) |
+| XML                | Legacy system integration                                   | 500,000               |
 
 #### 10.1.2 Export Mechanisms
 
@@ -1348,18 +1352,18 @@ DataRetentionPolicy {
 
 **REQ-DATA-006:** Default retention periods SHALL be:
 
-| Data Category | Default Retention | Minimum Allowed | Regulatory Driver |
-|---------------|------------------|-----------------|-------------------|
-| User Profiles (Active) | Duration of account | N/A | -- |
-| User Profiles (Deactivated) | 90 days | 30 days | GDPR Art. 17 |
-| Training Records | 7 years | 1 year | SOC 2, ISO 27001 |
-| Simulation Results | 3 years | 6 months | -- |
-| Compliance Records | 7 years | 3 years | HIPAA, PCI DSS |
-| Audit Logs | 7 years | 1 year | SOC 2, ISO 27001 |
-| Session Logs | 90 days | 30 days | -- |
-| Notification Logs | 90 days | 30 days | -- |
-| API Logs | 90 days | 30 days | -- |
-| Exported Files | 30 days | 7 days | -- |
+| Data Category               | Default Retention   | Minimum Allowed | Regulatory Driver |
+| --------------------------- | ------------------- | --------------- | ----------------- |
+| User Profiles (Active)      | Duration of account | N/A             | --                |
+| User Profiles (Deactivated) | 90 days             | 30 days         | GDPR Art. 17      |
+| Training Records            | 7 years             | 1 year          | SOC 2, ISO 27001  |
+| Simulation Results          | 3 years             | 6 months        | --                |
+| Compliance Records          | 7 years             | 3 years         | HIPAA, PCI DSS    |
+| Audit Logs                  | 7 years             | 1 year          | SOC 2, ISO 27001  |
+| Session Logs                | 90 days             | 30 days         | --                |
+| Notification Logs           | 90 days             | 30 days         | --                |
+| API Logs                    | 90 days             | 30 days         | --                |
+| Exported Files              | 30 days             | 7 days          | --                |
 
 **REQ-DATA-007:** The platform SHALL execute retention policy enforcement as an automated background process that runs daily. Expired data SHALL be processed according to the configured action (delete, anonymize, or archive). The process SHALL generate an execution report available to Tenant Admins.
 
@@ -1428,18 +1432,18 @@ Data Subject Request Workflow:
 
 **REQ-DATA-012:** The platform SHALL support data anonymization as an alternative to deletion:
 
-| Data Field | Anonymization Method |
-|------------|---------------------|
-| Name | Replaced with "Anonymous User [hash]" |
-| Email | Replaced with "[hash]@anonymized.invalid" |
-| Phone | Deleted |
-| IP Address | Truncated to /24 (IPv4) or /48 (IPv6) |
-| Location | Generalized to country level |
-| Department | Retained (for aggregate reporting) |
-| Training Scores | Retained (for aggregate reporting) |
-| Free-Text Responses | Deleted |
-| Profile Photo | Replaced with default avatar |
-| Custom Attributes | Deleted or generalized based on configuration |
+| Data Field          | Anonymization Method                          |
+| ------------------- | --------------------------------------------- |
+| Name                | Replaced with "Anonymous User [hash]"         |
+| Email               | Replaced with "[hash]@anonymized.invalid"     |
+| Phone               | Deleted                                       |
+| IP Address          | Truncated to /24 (IPv4) or /48 (IPv6)         |
+| Location            | Generalized to country level                  |
+| Department          | Retained (for aggregate reporting)            |
+| Training Scores     | Retained (for aggregate reporting)            |
+| Free-Text Responses | Deleted                                       |
+| Profile Photo       | Replaced with default avatar                  |
+| Custom Attributes   | Deleted or generalized based on configuration |
 
 **REQ-DATA-013:** Anonymization SHALL be irreversible. The system SHALL verify that no combination of retained anonymized attributes can be used to re-identify the individual (k-anonymity with k >= 5 within the tenant's dataset).
 
@@ -1447,14 +1451,14 @@ Data Subject Request Workflow:
 
 **REQ-DATA-014:** Data protection SHALL be implemented at multiple layers:
 
-| Layer | Encryption | Standard |
-|-------|-----------|----------|
-| Data in Transit | TLS 1.2+ (TLS 1.3 preferred) | All communications |
-| Data at Rest (Storage) | AES-256-GCM | All persistent storage |
-| Data at Rest (Database) | Transparent Data Encryption (TDE) or application-level encryption | All database instances |
-| Sensitive Fields | Application-level field encryption with tenant-specific keys | PII, credentials, API keys |
-| Backup Encryption | AES-256-GCM with separate key hierarchy | All backups |
-| Key Management | Hardware Security Module (HSM) or cloud KMS | FIPS 140-2 Level 2+ |
+| Layer                   | Encryption                                                        | Standard                   |
+| ----------------------- | ----------------------------------------------------------------- | -------------------------- |
+| Data in Transit         | TLS 1.2+ (TLS 1.3 preferred)                                      | All communications         |
+| Data at Rest (Storage)  | AES-256-GCM                                                       | All persistent storage     |
+| Data at Rest (Database) | Transparent Data Encryption (TDE) or application-level encryption | All database instances     |
+| Sensitive Fields        | Application-level field encryption with tenant-specific keys      | PII, credentials, API keys |
+| Backup Encryption       | AES-256-GCM with separate key hierarchy                           | All backups                |
+| Key Management          | Hardware Security Module (HSM) or cloud KMS                       | FIPS 140-2 Level 2+        |
 
 **REQ-DATA-015:** Enterprise-tier tenants SHALL be able to provide their own encryption keys (Bring Your Own Key / BYOK) or manage keys through their own KMS (Hold Your Own Key / HYOK). The platform SHALL support AWS KMS, Azure Key Vault, Google Cloud KMS, and HashiCorp Vault as external key management providers.
 
@@ -1537,14 +1541,14 @@ Terraform Module: dmz-private-cloud
 
 #### 11.4.1 System Requirements
 
-| Component | Minimum (< 1,000 users) | Recommended (1,000 -- 10,000 users) | Large (> 10,000 users) |
-|-----------|------------------------|--------------------------------------|----------------------|
-| Application Servers | 2 x 4 vCPU, 16GB RAM | 4 x 8 vCPU, 32GB RAM | 8+ x 16 vCPU, 64GB RAM |
-| Database | 1 x 4 vCPU, 32GB RAM, 500GB SSD | 2 x 8 vCPU, 64GB RAM, 1TB SSD (primary + replica) | Clustered, 3+ nodes, 128GB+ RAM |
-| Object Storage | 100GB | 1TB | 10TB+ |
-| Load Balancer | 1 (software) | 2 (HA pair) | Hardware or cloud-native |
-| Redis/Cache | 1 x 2 vCPU, 8GB RAM | 2 x 4 vCPU, 16GB RAM (HA) | Clustered, 3+ nodes |
-| Message Queue | Included in app server | 2 x 2 vCPU, 8GB RAM (HA) | Clustered, 3+ nodes |
+| Component           | Minimum (< 1,000 users)         | Recommended (1,000 -- 10,000 users)               | Large (> 10,000 users)          |
+| ------------------- | ------------------------------- | ------------------------------------------------- | ------------------------------- |
+| Application Servers | 2 x 4 vCPU, 16GB RAM            | 4 x 8 vCPU, 32GB RAM                              | 8+ x 16 vCPU, 64GB RAM          |
+| Database            | 1 x 4 vCPU, 32GB RAM, 500GB SSD | 2 x 8 vCPU, 64GB RAM, 1TB SSD (primary + replica) | Clustered, 3+ nodes, 128GB+ RAM |
+| Object Storage      | 100GB                           | 1TB                                               | 10TB+                           |
+| Load Balancer       | 1 (software)                    | 2 (HA pair)                                       | Hardware or cloud-native        |
+| Redis/Cache         | 1 x 2 vCPU, 8GB RAM             | 2 x 4 vCPU, 16GB RAM (HA)                         | Clustered, 3+ nodes             |
+| Message Queue       | Included in app server          | 2 x 2 vCPU, 8GB RAM (HA)                          | Clustered, 3+ nodes             |
 
 #### 11.4.2 Supported Platforms
 
@@ -1590,18 +1594,18 @@ Terraform Module: dmz-private-cloud
 
 #### 11.6.1 Air-Gap Requirements
 
-| Requirement | Implementation |
-|-------------|----------------|
-| No Internet Connectivity | All components function without any outbound network access |
-| Content Delivery | Training content, simulation templates, and platform updates delivered via physical media (encrypted USB, DVD) or one-way data diode |
-| License Validation | Offline license validation using cryptographic license files (no phone-home) |
-| Time Synchronization | Supports NTP from internal time servers; no dependency on public NTP |
-| DNS | Internal DNS only; no external DNS resolution required |
-| Certificate Management | Internal CA support; no Let's Encrypt or external CA dependency |
-| Update Mechanism | Manual update via signed, encrypted offline bundles. Integrity verification via SHA-256 checksums and GPG signatures |
-| Telemetry | All telemetry disabled. No usage data leaves the environment |
-| Authentication | Local authentication, internal LDAP/AD, or on-premises IdP only. No cloud SSO |
-| Content Updates | Quarterly content packs delivered as encrypted archives with digital signatures |
+| Requirement              | Implementation                                                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| No Internet Connectivity | All components function without any outbound network access                                                                          |
+| Content Delivery         | Training content, simulation templates, and platform updates delivered via physical media (encrypted USB, DVD) or one-way data diode |
+| License Validation       | Offline license validation using cryptographic license files (no phone-home)                                                         |
+| Time Synchronization     | Supports NTP from internal time servers; no dependency on public NTP                                                                 |
+| DNS                      | Internal DNS only; no external DNS resolution required                                                                               |
+| Certificate Management   | Internal CA support; no Let's Encrypt or external CA dependency                                                                      |
+| Update Mechanism         | Manual update via signed, encrypted offline bundles. Integrity verification via SHA-256 checksums and GPG signatures                 |
+| Telemetry                | All telemetry disabled. No usage data leaves the environment                                                                         |
+| Authentication           | Local authentication, internal LDAP/AD, or on-premises IdP only. No cloud SSO                                                        |
+| Content Updates          | Quarterly content packs delivered as encrypted archives with digital signatures                                                      |
 
 #### 11.6.2 Air-Gap Content Management
 
@@ -1636,19 +1640,19 @@ The platform code itself SHALL NOT process or store classified data -- it provid
 
 ### 11.7 Deployment Configuration Matrix
 
-| Capability | SaaS | Private Cloud | On-Premises | Hybrid | Air-Gapped |
-|-----------|------|--------------|------------|--------|-----------|
-| Auto-scaling | Yes | Yes | Manual | Partial | Manual |
-| Zero-downtime updates | Yes | Yes | Rolling | Partial | Maintenance window |
-| Automatic backups | Yes | Yes | Customer-managed | Partial | Customer-managed |
-| SSO (Cloud IdP) | Yes | Yes | Yes (via network) | Yes | No |
-| SSO (On-Prem IdP) | Via agent | Via agent | Yes | Yes | Yes |
-| SCIM Provisioning | Yes | Yes | Yes | Yes | Limited (AD sync) |
-| Webhook Delivery | Yes | Yes | Yes (internal only) | Yes | Internal only |
-| Platform Telemetry | Yes | Opt-in | Opt-in | Opt-in | Disabled |
-| Multi-region | Yes | Per customer | N/A | Partial | N/A |
-| Custom Domain | Yes | Yes | Yes | Yes | Internal DNS |
-| Content Updates | Automatic | Automatic | Semi-automatic | Automatic (cloud) | Manual (offline) |
+| Capability            | SaaS      | Private Cloud | On-Premises         | Hybrid            | Air-Gapped         |
+| --------------------- | --------- | ------------- | ------------------- | ----------------- | ------------------ |
+| Auto-scaling          | Yes       | Yes           | Manual              | Partial           | Manual             |
+| Zero-downtime updates | Yes       | Yes           | Rolling             | Partial           | Maintenance window |
+| Automatic backups     | Yes       | Yes           | Customer-managed    | Partial           | Customer-managed   |
+| SSO (Cloud IdP)       | Yes       | Yes           | Yes (via network)   | Yes               | No                 |
+| SSO (On-Prem IdP)     | Via agent | Via agent     | Yes                 | Yes               | Yes                |
+| SCIM Provisioning     | Yes       | Yes           | Yes                 | Yes               | Limited (AD sync)  |
+| Webhook Delivery      | Yes       | Yes           | Yes (internal only) | Yes               | Internal only      |
+| Platform Telemetry    | Yes       | Opt-in        | Opt-in              | Opt-in            | Disabled           |
+| Multi-region          | Yes       | Per customer  | N/A                 | Partial           | N/A                |
+| Custom Domain         | Yes       | Yes           | Yes                 | Yes               | Internal DNS       |
+| Content Updates       | Automatic | Automatic     | Semi-automatic      | Automatic (cloud) | Manual (offline)   |
 
 ---
 
@@ -1656,41 +1660,41 @@ The platform code itself SHALL NOT process or store classified data -- it provid
 
 ### 12.1 Performance
 
-| Metric | Target |
-|--------|--------|
-| Page load time (dashboard) | < 2s (P95) |
-| API response time (CRUD) | < 200ms (P95) |
-| API response time (reports) | < 5s (P95) |
-| SSO authentication flow | < 3s (P95) |
-| SCIM sync event processing | < 60s |
-| Webhook delivery latency | < 5s (P95) |
-| Search (users, content) | < 500ms (P95) |
-| Bulk import (1,000 users) | < 60s |
-| Bulk import (100,000 users) | < 30 minutes |
-| Real-time dashboard updates | < 5s latency |
-| Report generation (standard) | < 30s |
-| Report generation (complex/large) | < 5 minutes |
-| Concurrent users per tenant | 10,000+ (Enterprise tier) |
+| Metric                            | Target                    |
+| --------------------------------- | ------------------------- |
+| Page load time (dashboard)        | < 2s (P95)                |
+| API response time (CRUD)          | < 200ms (P95)             |
+| API response time (reports)       | < 5s (P95)                |
+| SSO authentication flow           | < 3s (P95)                |
+| SCIM sync event processing        | < 60s                     |
+| Webhook delivery latency          | < 5s (P95)                |
+| Search (users, content)           | < 500ms (P95)             |
+| Bulk import (1,000 users)         | < 60s                     |
+| Bulk import (100,000 users)       | < 30 minutes              |
+| Real-time dashboard updates       | < 5s latency              |
+| Report generation (standard)      | < 30s                     |
+| Report generation (complex/large) | < 5 minutes               |
+| Concurrent users per tenant       | 10,000+ (Enterprise tier) |
 
 ### 12.2 Scalability
 
-| Dimension | Target |
-|-----------|--------|
-| Total platform users | 10,000,000+ |
-| Tenants per platform instance | 10,000+ |
-| Users per tenant | 500,000+ |
-| Organizational units per tenant | 50,000+ |
-| Training modules per tenant | 10,000+ |
-| Concurrent simulations (platform) | 1,000+ campaigns |
-| API requests per second (platform) | 50,000+ |
+| Dimension                          | Target           |
+| ---------------------------------- | ---------------- |
+| Total platform users               | 10,000,000+      |
+| Tenants per platform instance      | 10,000+          |
+| Users per tenant                   | 500,000+         |
+| Organizational units per tenant    | 50,000+          |
+| Training modules per tenant        | 10,000+          |
+| Concurrent simulations (platform)  | 1,000+ campaigns |
+| API requests per second (platform) | 50,000+          |
 
 ### 12.3 Availability
 
-| Tier | Uptime SLA | RPO | RTO |
-|------|-----------|-----|-----|
-| Standard | 99.9% (8.76 hrs/yr downtime) | 1 hour | 4 hours |
+| Tier         | Uptime SLA                    | RPO        | RTO     |
+| ------------ | ----------------------------- | ---------- | ------- |
+| Standard     | 99.9% (8.76 hrs/yr downtime)  | 1 hour     | 4 hours |
 | Professional | 99.95% (4.38 hrs/yr downtime) | 30 minutes | 2 hours |
-| Enterprise | 99.99% (52.6 min/yr downtime) | 15 minutes | 1 hour |
+| Enterprise   | 99.99% (52.6 min/yr downtime) | 15 minutes | 1 hour  |
 
 ### 12.4 Security
 
@@ -1744,84 +1748,84 @@ AuditLogEntry {
 
 ### Appendix A: Glossary
 
-| Term | Definition |
-|------|-----------|
-| ABAC | Attribute-Based Access Control. Authorization model using user, resource, and environmental attributes. |
-| BYOK | Bring Your Own Key. Customer provides their own encryption keys. |
-| CMMC | Cybersecurity Maturity Model Certification. DoD contractor requirement. |
-| CUI | Controlled Unclassified Information. US government data classification. |
-| DSR | Data Subject Request. GDPR mechanism for individuals to exercise data rights. |
-| FIDO2 | Fast Identity Online 2. Passwordless authentication standard. |
-| HYOK | Hold Your Own Key. Customer retains full control of encryption keys in their KMS. |
-| IdP | Identity Provider. System that authenticates users (e.g., Azure AD, Okta). |
-| JIT | Just-In-Time provisioning. Creating user accounts on first SSO login. |
-| OIDC | OpenID Connect. Identity layer on top of OAuth 2.0. |
-| RBAC | Role-Based Access Control. Authorization model based on assigned roles. |
-| RLS | Row-Level Security. Database-enforced data isolation. |
-| RPO | Recovery Point Objective. Maximum acceptable data loss duration. |
-| RTO | Recovery Time Objective. Maximum acceptable service restoration time. |
-| SAML | Security Assertion Markup Language. XML-based SSO protocol. |
-| SBOM | Software Bill of Materials. List of all software components. |
-| SCIM | System for Cross-domain Identity Management. User provisioning protocol. |
-| SLO | Single Logout. Terminating sessions across all connected systems. |
-| SP | Service Provider. Application that relies on an IdP for authentication. |
-| STIG | Security Technical Implementation Guide. DoD security configuration standard. |
-| TDE | Transparent Data Encryption. Database-level encryption at rest. |
+| Term  | Definition                                                                                              |
+| ----- | ------------------------------------------------------------------------------------------------------- |
+| ABAC  | Attribute-Based Access Control. Authorization model using user, resource, and environmental attributes. |
+| BYOK  | Bring Your Own Key. Customer provides their own encryption keys.                                        |
+| CMMC  | Cybersecurity Maturity Model Certification. DoD contractor requirement.                                 |
+| CUI   | Controlled Unclassified Information. US government data classification.                                 |
+| DSR   | Data Subject Request. GDPR mechanism for individuals to exercise data rights.                           |
+| FIDO2 | Fast Identity Online 2. Passwordless authentication standard.                                           |
+| HYOK  | Hold Your Own Key. Customer retains full control of encryption keys in their KMS.                       |
+| IdP   | Identity Provider. System that authenticates users (e.g., Azure AD, Okta).                              |
+| JIT   | Just-In-Time provisioning. Creating user accounts on first SSO login.                                   |
+| OIDC  | OpenID Connect. Identity layer on top of OAuth 2.0.                                                     |
+| RBAC  | Role-Based Access Control. Authorization model based on assigned roles.                                 |
+| RLS   | Row-Level Security. Database-enforced data isolation.                                                   |
+| RPO   | Recovery Point Objective. Maximum acceptable data loss duration.                                        |
+| RTO   | Recovery Time Objective. Maximum acceptable service restoration time.                                   |
+| SAML  | Security Assertion Markup Language. XML-based SSO protocol.                                             |
+| SBOM  | Software Bill of Materials. List of all software components.                                            |
+| SCIM  | System for Cross-domain Identity Management. User provisioning protocol.                                |
+| SLO   | Single Logout. Terminating sessions across all connected systems.                                       |
+| SP    | Service Provider. Application that relies on an IdP for authentication.                                 |
+| STIG  | Security Technical Implementation Guide. DoD security configuration standard.                           |
+| TDE   | Transparent Data Encryption. Database-level encryption at rest.                                         |
 
 ### Appendix B: Compliance Framework Mapping
 
-| Requirement ID | SOC 2 | ISO 27001 | NIST CSF | HIPAA | GDPR | FedRAMP |
-|---------------|-------|-----------|----------|-------|------|---------|
-| REQ-MT-001 (Tenant isolation) | CC6.1 | A.8.3 | PR.DS-5 | 164.312(a) | Art. 32 | AC-4 |
-| REQ-RBAC-001 (Super admin MFA) | CC6.1 | A.9.4 | PR.AC-7 | 164.312(d) | Art. 32 | IA-2 |
-| REQ-IAM-006 (MFA) | CC6.1 | A.9.4 | PR.AC-7 | 164.312(d) | Art. 32 | IA-2 |
-| REQ-IAM-009 (SCIM) | CC6.2 | A.9.2 | PR.AC-1 | 164.312(a) | Art. 25 | AC-2 |
-| REQ-DATA-005 (Retention) | CC6.5 | A.8.10 | PR.DS-3 | 164.530(j) | Art. 5(1)(e) | SI-12 |
-| REQ-DATA-009 (DSR/Erasure) | -- | A.18.1 | -- | -- | Art. 17 | -- |
-| REQ-NFR-001 (Audit logging) | CC7.2 | A.8.15 | DE.CM-3 | 164.312(b) | Art. 30 | AU-2 |
-| REQ-DEPLOY-012 (Air-gap hardening) | -- | A.8.9 | PR.IP-1 | -- | -- | CM-6 |
+| Requirement ID                     | SOC 2 | ISO 27001 | NIST CSF | HIPAA      | GDPR         | FedRAMP |
+| ---------------------------------- | ----- | --------- | -------- | ---------- | ------------ | ------- |
+| REQ-MT-001 (Tenant isolation)      | CC6.1 | A.8.3     | PR.DS-5  | 164.312(a) | Art. 32      | AC-4    |
+| REQ-RBAC-001 (Super admin MFA)     | CC6.1 | A.9.4     | PR.AC-7  | 164.312(d) | Art. 32      | IA-2    |
+| REQ-IAM-006 (MFA)                  | CC6.1 | A.9.4     | PR.AC-7  | 164.312(d) | Art. 32      | IA-2    |
+| REQ-IAM-009 (SCIM)                 | CC6.2 | A.9.2     | PR.AC-1  | 164.312(a) | Art. 25      | AC-2    |
+| REQ-DATA-005 (Retention)           | CC6.5 | A.8.10    | PR.DS-3  | 164.530(j) | Art. 5(1)(e) | SI-12   |
+| REQ-DATA-009 (DSR/Erasure)         | --    | A.18.1    | --       | --         | Art. 17      | --      |
+| REQ-NFR-001 (Audit logging)        | CC7.2 | A.8.15    | DE.CM-3  | 164.312(b) | Art. 30      | AU-2    |
+| REQ-DEPLOY-012 (Air-gap hardening) | --    | A.8.9     | PR.IP-1  | --         | --           | CM-6    |
 
 ### Appendix C: Integration Priority Matrix
 
-| Integration | Priority | Complexity | Customer Demand |
-|-------------|----------|-----------|-----------------|
-| Azure AD / Entra ID (SSO + SCIM) | P0 | Medium | Very High |
-| Okta (SSO + SCIM) | P0 | Medium | Very High |
-| Google Workspace | P1 | Low | High |
-| OneLogin | P1 | Medium | Medium |
-| Active Directory (on-prem sync) | P1 | High | High |
-| Slack notifications | P1 | Low | High |
-| Microsoft Teams notifications | P1 | Medium | High |
-| Zapier | P2 | Medium | Medium |
-| Power Automate | P2 | Medium | Medium |
-| Workday (HRIS) | P2 | High | Medium |
-| BambooHR (HRIS) | P2 | Medium | Medium |
-| SAP SuccessFactors (HRIS) | P3 | High | Low-Medium |
-| Splunk (SIEM) | P2 | Medium | High |
-| PingFederate | P3 | Medium | Low |
-| Keycloak | P3 | Low | Low |
+| Integration                      | Priority | Complexity | Customer Demand |
+| -------------------------------- | -------- | ---------- | --------------- |
+| Azure AD / Entra ID (SSO + SCIM) | P0       | Medium     | Very High       |
+| Okta (SSO + SCIM)                | P0       | Medium     | Very High       |
+| Google Workspace                 | P1       | Low        | High            |
+| OneLogin                         | P1       | Medium     | Medium          |
+| Active Directory (on-prem sync)  | P1       | High       | High            |
+| Slack notifications              | P1       | Low        | High            |
+| Microsoft Teams notifications    | P1       | Medium     | High            |
+| Zapier                           | P2       | Medium     | Medium          |
+| Power Automate                   | P2       | Medium     | Medium          |
+| Workday (HRIS)                   | P2       | High       | Medium          |
+| BambooHR (HRIS)                  | P2       | Medium     | Medium          |
+| SAP SuccessFactors (HRIS)        | P3       | High       | Low-Medium      |
+| Splunk (SIEM)                    | P2       | Medium     | High            |
+| PingFederate                     | P3       | Medium     | Low             |
+| Keycloak                         | P3       | Low        | Low             |
 
 ### Appendix D: Requirement Traceability
 
 Total requirements defined in this document: 78
 
-| Category | Count | IDs |
-|----------|-------|-----|
-| Multi-Tenancy | 10 | REQ-MT-001 through REQ-MT-010 |
-| White-Labeling | 8 | REQ-WL-001 through REQ-WL-008 |
-| Roles & Permissions | 10 | REQ-RBAC-001 through REQ-RBAC-010 |
-| Organization Structure | 8 | REQ-ORG-001 through REQ-ORG-008 |
-| Identity & Access Management | 18 | REQ-IAM-001 through REQ-IAM-018 |
-| User Lifecycle Management | 11 | REQ-ULM-001 through REQ-ULM-011 |
-| Admin Dashboard | 5 | REQ-DASH-001 through REQ-DASH-005 |
-| Notification System | 10 | REQ-NOTIF-001 through REQ-NOTIF-010 |
-| API & Automation | 12 | REQ-API-001 through REQ-API-012 |
-| Data Management | 15 | REQ-DATA-001 through REQ-DATA-015 |
-| Deployment | 13 | REQ-DEPLOY-001 through REQ-DEPLOY-013 |
-| Non-Functional | 2 | REQ-NFR-001 through REQ-NFR-002 |
+| Category                     | Count | IDs                                   |
+| ---------------------------- | ----- | ------------------------------------- |
+| Multi-Tenancy                | 10    | REQ-MT-001 through REQ-MT-010         |
+| White-Labeling               | 8     | REQ-WL-001 through REQ-WL-008         |
+| Roles & Permissions          | 10    | REQ-RBAC-001 through REQ-RBAC-010     |
+| Organization Structure       | 8     | REQ-ORG-001 through REQ-ORG-008       |
+| Identity & Access Management | 18    | REQ-IAM-001 through REQ-IAM-018       |
+| User Lifecycle Management    | 11    | REQ-ULM-001 through REQ-ULM-011       |
+| Admin Dashboard              | 5     | REQ-DASH-001 through REQ-DASH-005     |
+| Notification System          | 10    | REQ-NOTIF-001 through REQ-NOTIF-010   |
+| API & Automation             | 12    | REQ-API-001 through REQ-API-012       |
+| Data Management              | 15    | REQ-DATA-001 through REQ-DATA-015     |
+| Deployment                   | 13    | REQ-DEPLOY-001 through REQ-DEPLOY-013 |
+| Non-Functional               | 2     | REQ-NFR-001 through REQ-NFR-002       |
 
 ---
 
-*End of Document*
-*BRD-05: Enterprise User Management, Administration & Multi-Tenancy*
-*Version 1.0 -- 2026-02-05*
+_End of Document_
+_BRD-05: Enterprise User Management, Administration & Multi-Tenancy_
+_Version 1.0 -- 2026-02-05_

@@ -70,7 +70,7 @@ The specification prioritizes determinism, clarity, and narrative justification.
 
 **Out of scope (depth), but in-scope for alignment**
 
-This document does not replace other design documents, but it must remain aligned with all BRD-required capabilities. The following areas are treated as *interfaces* or *touchpoints* in DD-01, with full detail specified elsewhere:
+This document does not replace other design documents, but it must remain aligned with all BRD-required capabilities. The following areas are treated as _interfaces_ or _touchpoints_ in DD-01, with full detail specified elsewhere:
 
 - Full narrative script details, handled by narrative design.
 - Full threat engine design details, covered in DD-05.
@@ -805,23 +805,23 @@ Each action is validated against the current phase. For example, SUBMIT_DECISION
 
 The following payload shapes establish baseline expectations for implementation. These are not exhaustive schemas, but they define the minimum fields required for determinism and analytics. Fields marked optional are used for deeper analytics and coaching but are not mandatory for core logic.
 
-| Action | Required Payload Fields | Optional Fields | Notes |
-|--------|-------------------------|----------------|-------|
-| ACK_DAY_START | none | none | Confirms the daily brief and allows inbox generation. |
-| ADVANCE_DAY | none | none | Only legal in DAY_END. |
-| OPEN_EMAIL | `emailId` | `viewMode` | Records that the email was opened. |
-| MARK_INDICATOR | `emailId`, `indicatorType` | `location`, `note` | `indicatorType` must be one of the indicator registry values. |
-| REQUEST_VERIFICATION | `emailId` | none | Initiates verification packet creation or retrieval. |
-| OPEN_VERIFICATION | `emailId` | `packetId` | Opens the verification view for a specific email. |
-| SUBMIT_DECISION | `emailId`, `decision`, `timeSpentMs` | `indicators`, `notes` | `decision` is one of approve, deny, flag, request_verification, defer. |
-| APPLY_CONSEQUENCES | `dayNumber` | `summaryId` | System action emitted at the end of decision resolution. |
-| PROCESS_THREATS | `dayNumber` | `threatSeed` | System action that invokes the Threat Engine. |
-| RESOLVE_INCIDENT | `incidentId`, `responseActions` | `notes` | `responseActions` is an array of action IDs. |
-| PURCHASE_UPGRADE | `upgradeId` | `purchaseContext` | Context may include maintenance vs new purchase. |
-| ADJUST_RESOURCE | `resourceId`, `delta` | `reason` | `delta` can be negative or positive within bounds. |
-| PAUSE_SESSION | none | none | Pauses without changing micro state. |
-| RESUME_SESSION | none | none | Resumes at the same micro state. |
-| ABANDON_SESSION | none | `reason` | Used for user-initiated or admin-initiated termination. |
+| Action               | Required Payload Fields              | Optional Fields       | Notes                                                                  |
+| -------------------- | ------------------------------------ | --------------------- | ---------------------------------------------------------------------- |
+| ACK_DAY_START        | none                                 | none                  | Confirms the daily brief and allows inbox generation.                  |
+| ADVANCE_DAY          | none                                 | none                  | Only legal in DAY_END.                                                 |
+| OPEN_EMAIL           | `emailId`                            | `viewMode`            | Records that the email was opened.                                     |
+| MARK_INDICATOR       | `emailId`, `indicatorType`           | `location`, `note`    | `indicatorType` must be one of the indicator registry values.          |
+| REQUEST_VERIFICATION | `emailId`                            | none                  | Initiates verification packet creation or retrieval.                   |
+| OPEN_VERIFICATION    | `emailId`                            | `packetId`            | Opens the verification view for a specific email.                      |
+| SUBMIT_DECISION      | `emailId`, `decision`, `timeSpentMs` | `indicators`, `notes` | `decision` is one of approve, deny, flag, request_verification, defer. |
+| APPLY_CONSEQUENCES   | `dayNumber`                          | `summaryId`           | System action emitted at the end of decision resolution.               |
+| PROCESS_THREATS      | `dayNumber`                          | `threatSeed`          | System action that invokes the Threat Engine.                          |
+| RESOLVE_INCIDENT     | `incidentId`, `responseActions`      | `notes`               | `responseActions` is an array of action IDs.                           |
+| PURCHASE_UPGRADE     | `upgradeId`                          | `purchaseContext`     | Context may include maintenance vs new purchase.                       |
+| ADJUST_RESOURCE      | `resourceId`, `delta`                | `reason`              | `delta` can be negative or positive within bounds.                     |
+| PAUSE_SESSION        | none                                 | none                  | Pauses without changing micro state.                                   |
+| RESUME_SESSION       | none                                 | none                  | Resumes at the same micro state.                                       |
+| ABANDON_SESSION      | none                                 | `reason`              | Used for user-initiated or admin-initiated termination.                |
 
 ### 17.4 Event Types
 
@@ -902,7 +902,6 @@ The following baseline parameters are intended to make implementation concrete a
 |------|-------|
 | Max indicators per email | 6 |
 | Max indicators per verification packet | 4 |
-
 
 ---
 
@@ -1147,19 +1146,19 @@ This flow demonstrates how actions and system outcomes are interleaved within a 
 
 The following table summarizes key states, legal actions, and exit conditions. This is not exhaustive but defines the minimum required behavior.
 
-| State | Legal Actions | Exit Condition | Next State |
-|-------|---------------|----------------|------------|
-| DAY_START | ACK_DAY_START | Brief acknowledged | INBOX_INTAKE |
-| INBOX_INTAKE | None (system) | Inbox generated | EMAIL_TRIAGE |
-| EMAIL_TRIAGE | OPEN_EMAIL, MARK_INDICATOR, REQUEST_VERIFICATION, SUBMIT_DECISION | All emails have explicit outcomes (approve, deny, flag, request verification, or defer) | DECISION_RESOLUTION |
-| VERIFICATION_REVIEW | OPEN_VERIFICATION, MARK_INDICATOR | Verification closed | EMAIL_TRIAGE |
-| DECISION_RESOLUTION | SUBMIT_DECISION | Decisions validated | CONSEQUENCE_APPLICATION |
-| CONSEQUENCE_APPLICATION | APPLY_CONSEQUENCES | Consequences applied | THREAT_PROCESSING |
-| THREAT_PROCESSING | PROCESS_THREATS | Threats applied | INCIDENT_RESPONSE or RESOURCE_MANAGEMENT |
-| INCIDENT_RESPONSE | RESOLVE_INCIDENT | No active incidents | RESOURCE_MANAGEMENT |
-| RESOURCE_MANAGEMENT | ADJUST_RESOURCE | Player exits dashboard | UPGRADE_PHASE |
-| UPGRADE_PHASE | PURCHASE_UPGRADE | Player exits catalog | DAY_END |
-| DAY_END | ADVANCE_DAY | Player confirms advance | DAY_START |
+| State                   | Legal Actions                                                     | Exit Condition                                                                          | Next State                               |
+| ----------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- |
+| DAY_START               | ACK_DAY_START                                                     | Brief acknowledged                                                                      | INBOX_INTAKE                             |
+| INBOX_INTAKE            | None (system)                                                     | Inbox generated                                                                         | EMAIL_TRIAGE                             |
+| EMAIL_TRIAGE            | OPEN_EMAIL, MARK_INDICATOR, REQUEST_VERIFICATION, SUBMIT_DECISION | All emails have explicit outcomes (approve, deny, flag, request verification, or defer) | DECISION_RESOLUTION                      |
+| VERIFICATION_REVIEW     | OPEN_VERIFICATION, MARK_INDICATOR                                 | Verification closed                                                                     | EMAIL_TRIAGE                             |
+| DECISION_RESOLUTION     | SUBMIT_DECISION                                                   | Decisions validated                                                                     | CONSEQUENCE_APPLICATION                  |
+| CONSEQUENCE_APPLICATION | APPLY_CONSEQUENCES                                                | Consequences applied                                                                    | THREAT_PROCESSING                        |
+| THREAT_PROCESSING       | PROCESS_THREATS                                                   | Threats applied                                                                         | INCIDENT_RESPONSE or RESOURCE_MANAGEMENT |
+| INCIDENT_RESPONSE       | RESOLVE_INCIDENT                                                  | No active incidents                                                                     | RESOURCE_MANAGEMENT                      |
+| RESOURCE_MANAGEMENT     | ADJUST_RESOURCE                                                   | Player exits dashboard                                                                  | UPGRADE_PHASE                            |
+| UPGRADE_PHASE           | PURCHASE_UPGRADE                                                  | Player exits catalog                                                                    | DAY_END                                  |
+| DAY_END                 | ADVANCE_DAY                                                       | Player confirms advance                                                                 | DAY_START                                |
 
 ---
 

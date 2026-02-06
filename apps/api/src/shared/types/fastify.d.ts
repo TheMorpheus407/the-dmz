@@ -1,6 +1,6 @@
-import type { AppConfig } from "../../config.js";
+import type { AppConfig } from '../../config.js';
 
-declare module "fastify" {
+declare module 'fastify' {
   interface FastifyInstance {
     config: AppConfig;
   }

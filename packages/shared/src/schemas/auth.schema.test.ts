@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from 'vitest';
 
 import {
   loginJsonSchema,
@@ -7,7 +7,7 @@ import {
   refreshTokenSchema,
   registerJsonSchema,
   registerSchema,
-} from "./index.js";
+} from './index.js';
 
 type JsonSchemaShape = {
   type?: string;
@@ -16,80 +16,71 @@ type JsonSchemaShape = {
   additionalProperties?: boolean;
 };
 
-describe("auth schemas", () => {
-  it("accepts valid login payloads", () => {
+describe('auth schemas', () => {
+  it('accepts valid login payloads', () => {
     const result = loginSchema.parse({
-      email: "user@example.com",
-      password: "hunter2-password",
+      email: 'user@example.com',
+      password: 'hunter2-password',
     });
 
-    expect(result.email).toBe("user@example.com");
+    expect(result.email).toBe('user@example.com');
   });
 
-  it("rejects invalid login payloads", () => {
+  it('rejects invalid login payloads', () => {
     expect(() =>
       loginSchema.parse({
-        email: "not-an-email",
-        password: "short",
+        email: 'not-an-email',
+        password: 'short',
       }),
     ).toThrow();
   });
 
-  it("accepts valid registration payloads", () => {
+  it('accepts valid registration payloads', () => {
     const result = registerSchema.parse({
-      email: "new@example.com",
-      password: "longer-password-123",
-      displayName: "Operator",
+      email: 'new@example.com',
+      password: 'longer-password-123',
+      displayName: 'Operator',
     });
 
-    expect(result.displayName).toBe("Operator");
+    expect(result.displayName).toBe('Operator');
   });
 
-  it("rejects invalid registration payloads", () => {
+  it('rejects invalid registration payloads', () => {
     expect(() =>
       registerSchema.parse({
-        email: "bad",
-        password: "short",
-        displayName: "O",
+        email: 'bad',
+        password: 'short',
+        displayName: 'O',
       }),
     ).toThrow();
   });
 
-  it("accepts valid refresh tokens", () => {
+  it('accepts valid refresh tokens', () => {
     const result = refreshTokenSchema.parse({
-      refreshToken: "token-value",
+      refreshToken: 'token-value',
     });
 
-    expect(result.refreshToken).toBe("token-value");
+    expect(result.refreshToken).toBe('token-value');
   });
 });
 
-describe("auth json schemas", () => {
+describe('auth json schemas', () => {
   const assertObjectSchema = (schema: JsonSchemaShape, required: string[]) => {
-    expect(schema.type).toBe("object");
+    expect(schema.type).toBe('object');
     expect(schema.properties).toBeTruthy();
     expect(schema.required).toEqual(expect.arrayContaining(required));
     expect(schema.additionalProperties).toBe(false);
   };
 
-  it("creates a login json schema", () => {
-    assertObjectSchema(loginJsonSchema as JsonSchemaShape, [
-      "email",
-      "password",
-    ]);
+  it('creates a login json schema', () => {
+    assertObjectSchema(loginJsonSchema as JsonSchemaShape, ['email', 'password']);
   });
 
-  it("creates a register json schema", () => {
-    assertObjectSchema(registerJsonSchema as JsonSchemaShape, [
-      "email",
-      "password",
-      "displayName",
-    ]);
+  it('creates a register json schema', () => {
+    assertObjectSchema(registerJsonSchema as JsonSchemaShape, ['email', 'password', 'displayName']);
   });
 
-  it("creates a refresh token json schema", () => {
-    assertObjectSchema(refreshTokenJsonSchema as JsonSchemaShape, [
-      "refreshToken",
-    ]);
+  it('creates a refresh token json schema', () => {
+    assertObjectSchema(refreshTokenJsonSchema as JsonSchemaShape, ['refreshToken']);
   });
 });

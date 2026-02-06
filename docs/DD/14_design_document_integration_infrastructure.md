@@ -463,12 +463,12 @@ Phase 2 is single-region with multi-region readiness. The BRD roadmap defers dat
 
 Phase 4 enables at least four regions per BRD Section 7.7:
 
-| Region | Location | Data Stored | Compliance Driver |
-|--------|----------|-------------|-------------------|
-| **EU** | Frankfurt / Ireland | EU/EEA resident training data, NIS2/DORA compliance data | GDPR Chapter V, NIS2, DORA |
-| **US** | US-East / US-West (GovCloud where required) | US resident data, FedRAMP/FISMA/SOX/HIPAA data | FedRAMP, FISMA, CCPA |
-| **UK** | London | UK resident training data | UK GDPR |
-| **APAC** | Singapore / Tokyo / Sydney | APAC resident data | APPI, PIPA, local privacy laws |
+| Region   | Location                                    | Data Stored                                              | Compliance Driver              |
+| -------- | ------------------------------------------- | -------------------------------------------------------- | ------------------------------ |
+| **EU**   | Frankfurt / Ireland                         | EU/EEA resident training data, NIS2/DORA compliance data | GDPR Chapter V, NIS2, DORA     |
+| **US**   | US-East / US-West (GovCloud where required) | US resident data, FedRAMP/FISMA/SOX/HIPAA data           | FedRAMP, FISMA, CCPA           |
+| **UK**   | London                                      | UK resident training data                                | UK GDPR                        |
+| **APAC** | Singapore / Tokyo / Sydney                  | APAC resident data                                       | APPI, PIPA, local privacy laws |
 
 Each region has its own PostgreSQL primary and analytics warehouse (ClickHouse or TimescaleDB) cluster to satisfy data residency requirements. Customer-configurable data residency preferences with automated logging of all cross-border data transfers per BRD Section 7.7.
 
@@ -1224,11 +1224,11 @@ Capacity planning is driven by the BRD's Year 1 targets:
 
 BRD scalability phases (Section 7.2):
 
-| Phase | Concurrent Users | Architecture |
-|-------|-----------------|--------------|
-| Launch | 10,000 | Modular monolith, single-region |
-| Growth | 50,000 | Modular monolith with extracted AI pipeline and analytics services |
-| Scale | 100,000+ | Microservices with NATS JetStream or Kafka; multi-region deployment |
+| Phase  | Concurrent Users | Architecture                                                        |
+| ------ | ---------------- | ------------------------------------------------------------------- |
+| Launch | 10,000           | Modular monolith, single-region                                     |
+| Growth | 50,000           | Modular monolith with extracted AI pipeline and analytics services  |
+| Scale  | 100,000+         | Microservices with NATS JetStream or Kafka; multi-region deployment |
 
 Service extraction triggers per BRD: AI pipeline extracted when LLM latency affects game loop; analytics extracted when write volume exceeds game DB capacity; threat engine extracted when simulation complexity demands dedicated compute; notification service extracted when WebSocket connections exceed single-process limits.
 

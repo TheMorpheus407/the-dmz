@@ -1,10 +1,10 @@
-version: "3.9"
+version: '3.9'
 
 services:
   postgres:
     image: postgres:16-alpine
     ports:
-      - "5432:5432"
+      - '5432:5432'
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-dmz}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dmz_dev}
@@ -13,11 +13,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-dmz} -d ${POSTGRES_DB:-dmz_dev}",
-        ]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-dmz} -d ${POSTGRES_DB:-dmz_dev}']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -26,19 +22,19 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+      - '6379:6379'
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 5
 
   adminer:
     image: adminer:latest
-    profiles: ["tools"]
+    profiles: ['tools']
     ports:
-      - "8080:8080"
+      - '8080:8080'
     depends_on:
       - postgres
 

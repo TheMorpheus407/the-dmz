@@ -1,6 +1,6 @@
-import { z } from "zod";
+import { z } from 'zod';
 
-export const sortOrderSchema = z.enum(["asc", "desc"]);
+export const sortOrderSchema = z.enum(['asc', 'desc']);
 
 export type SortOrderInput = z.infer<typeof sortOrderSchema>;
 
@@ -9,7 +9,7 @@ export const paginationSchema = z
     page: z.coerce.number().int().positive().default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
     sortBy: z.string().optional(),
-    sortOrder: sortOrderSchema.default("desc"),
+    sortOrder: sortOrderSchema.default('desc'),
   })
   .strict();
 

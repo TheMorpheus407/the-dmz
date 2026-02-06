@@ -1,4 +1,4 @@
-import { closeDatabase, getDatabasePool } from "./connection.js";
+import { closeDatabase, getDatabasePool } from './connection.js';
 
 const run = async (): Promise<void> => {
   const sql = getDatabasePool();
@@ -7,6 +7,6 @@ const run = async (): Promise<void> => {
 };
 
 run().catch((error) => {
-  console.error("Database smoke test failed", error);
+  console.error('Database smoke test failed', error);
   process.exit(1);
 });

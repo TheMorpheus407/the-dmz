@@ -1022,13 +1022,13 @@ Matchmaking Ticket
 
 ### Appendix C: Sample Role Action Mapping
 
-| Phase | Intake Analyst (SOC T1) | Crypto Warden (PKI) | Comms Officer (IC) | Authority |
-|-------|------------------------|--------------------|--------------------|----------|
-| Inbox | Review, tag            | --                 | --                 | --       |
-| Verification | --              | Review packets     | --                 | --       |
-| Decision | Propose             | Propose            | --                 | Finalize |
-| Incident | --                  | --                 | Respond            | Approve  |
-| Resources | --                 | --                 | --                 | Finalize |
+| Phase        | Intake Analyst (SOC T1) | Crypto Warden (PKI) | Comms Officer (IC) | Authority |
+| ------------ | ----------------------- | ------------------- | ------------------ | --------- |
+| Inbox        | Review, tag             | --                  | --                 | --        |
+| Verification | --                      | Review packets      | --                 | --        |
+| Decision     | Propose                 | Propose             | --                 | Finalize  |
+| Incident     | --                      | --                  | Respond            | Approve   |
+| Resources    | --                      | --                  | --                 | Finalize  |
 
 This table is illustrative. Actual role permissions are defined in the permission matrix.
 
@@ -1849,21 +1849,21 @@ This addendum provides a more detailed permission matrix and policy configuratio
 
 ### N.1 Permission Matrix by Role
 
-| Action | Intake Analyst (SOC T1) | Crypto Warden (PKI) | Comms Officer (IC) | Threat Hunter (SOC T2/3) | Systems Keeper (SysAdmin) | Perimeter Warden (NetSec) | Authority |
-|--------|------------------------|--------------------|--------------------|-------------------------|--------------------------|--------------------------|----------|
-| View inbox | Yes | Read-only | Read-only | Read-only | Read-only | Read-only | Yes |
-| Mark indicators | Yes | Yes | No | Yes | No | Yes | Yes |
-| Request verification | Yes | Yes | No | No | No | No | Yes |
-| View verification packets | Read-only | Yes | No | No | No | No | Yes |
-| Propose decision | Yes | Yes | No | No | No | No | Yes |
-| Finalize decision | No | No | No | No | No | No | Yes |
-| Initiate incident response | No | No | Yes | No | No | No | Yes |
-| Interpret intelligence | No | No | No | Yes | No | No | Yes |
-| Monitor network boundaries | No | No | No | No | No | Yes | Yes |
-| Allocate resources | No | No | No | No | Yes | No | Yes |
-| Purchase upgrades | No | No | No | No | Yes | No | Yes |
-| Annotate audit log | Read-only | Read-only | Read-only | Read-only | Read-only | Read-only | Yes |
-| Advance day | No | No | No | No | No | No | Yes |
+| Action                     | Intake Analyst (SOC T1) | Crypto Warden (PKI) | Comms Officer (IC) | Threat Hunter (SOC T2/3) | Systems Keeper (SysAdmin) | Perimeter Warden (NetSec) | Authority |
+| -------------------------- | ----------------------- | ------------------- | ------------------ | ------------------------ | ------------------------- | ------------------------- | --------- |
+| View inbox                 | Yes                     | Read-only           | Read-only          | Read-only                | Read-only                 | Read-only                 | Yes       |
+| Mark indicators            | Yes                     | Yes                 | No                 | Yes                      | No                        | Yes                       | Yes       |
+| Request verification       | Yes                     | Yes                 | No                 | No                       | No                        | No                        | Yes       |
+| View verification packets  | Read-only               | Yes                 | No                 | No                       | No                        | No                        | Yes       |
+| Propose decision           | Yes                     | Yes                 | No                 | No                       | No                        | No                        | Yes       |
+| Finalize decision          | No                      | No                  | No                 | No                       | No                        | No                        | Yes       |
+| Initiate incident response | No                      | No                  | Yes                | No                       | No                        | No                        | Yes       |
+| Interpret intelligence     | No                      | No                  | No                 | Yes                      | No                        | No                        | Yes       |
+| Monitor network boundaries | No                      | No                  | No                 | No                       | No                        | Yes                       | Yes       |
+| Allocate resources         | No                      | No                  | No                 | No                       | Yes                       | No                        | Yes       |
+| Purchase upgrades          | No                      | No                  | No                 | No                       | Yes                       | No                        | Yes       |
+| Annotate audit log         | Read-only               | Read-only           | Read-only          | Read-only                | Read-only                 | Read-only                 | Yes       |
+| Advance day                | No                      | No                  | No                 | No                       | No                        | No                        | Yes       |
 
 This matrix is configurable. Smaller co-op sessions use a simplified matrix with merged roles.
 

@@ -69,13 +69,13 @@ Cybersecurity is inherently a team discipline. Incident response, threat hunting
 
 ### Core Multiplayer Pillars
 
-| Pillar | Real-World Mapping | Primary Mode |
-|--------|-------------------|--------------|
-| Cooperative Defense | SOC team coordination | Co-op missions |
-| Adversarial Thinking | Red team / blue team exercises | Competitive PvP |
-| Persistent Threat Modeling | Continuous security posture management | Async multiplayer |
-| Organizational Resilience | Enterprise-wide security culture | Guild / Corporation systems |
-| Incident Response Drills | Tabletop exercises at scale | Raid events |
+| Pillar                     | Real-World Mapping                     | Primary Mode                |
+| -------------------------- | -------------------------------------- | --------------------------- |
+| Cooperative Defense        | SOC team coordination                  | Co-op missions              |
+| Adversarial Thinking       | Red team / blue team exercises         | Competitive PvP             |
+| Persistent Threat Modeling | Continuous security posture management | Async multiplayer           |
+| Organizational Resilience  | Enterprise-wide security culture       | Guild / Corporation systems |
+| Incident Response Drills   | Tabletop exercises at scale            | Raid events                 |
 
 ---
 
@@ -136,14 +136,14 @@ A government agency requests emergency migration of a massive dataset across all
 
 In cooperative play, each player can adopt a specialization that maps to a real-world cybersecurity role:
 
-| In-Game Role | Real-World Equivalent | Primary Responsibility |
-|-------------|----------------------|----------------------|
-| Perimeter Warden | Network Security Engineer | Firewall rules, IDS/IPS tuning, traffic analysis |
-| Intake Analyst | SOC Tier 1 Analyst | Email triage, phishing detection, access request review |
-| Threat Hunter | SOC Tier 2/3 Analyst | IOC correlation, threat intelligence, lateral movement detection |
-| Systems Keeper | Systems Administrator | Patching, configuration hardening, backup verification |
-| Crypto Warden | Cryptography / PKI Specialist | Certificate management, encryption, key rotation |
-| Comms Officer | Incident Commander | Team coordination, status reporting, decision authority |
+| In-Game Role     | Real-World Equivalent         | Primary Responsibility                                           |
+| ---------------- | ----------------------------- | ---------------------------------------------------------------- |
+| Perimeter Warden | Network Security Engineer     | Firewall rules, IDS/IPS tuning, traffic analysis                 |
+| Intake Analyst   | SOC Tier 1 Analyst            | Email triage, phishing detection, access request review          |
+| Threat Hunter    | SOC Tier 2/3 Analyst          | IOC correlation, threat intelligence, lateral movement detection |
+| Systems Keeper   | Systems Administrator         | Patching, configuration hardening, backup verification           |
+| Crypto Warden    | Cryptography / PKI Specialist | Certificate management, encryption, key rotation                 |
+| Comms Officer    | Incident Commander            | Team coordination, status reporting, decision authority          |
 
 Specialization is not mandatory. Solo players can generalize. In cooperative play, specialization unlocks synergy bonuses that reward division of labor.
 
@@ -183,23 +183,27 @@ The defining competitive mode. One team (Red) attempts to breach a target data c
 #### 3.2.2 Mode Variants
 
 **Classic Red vs. Blue (Symmetric)**
+
 - Teams of 2-4 players each.
 - Red team has a fixed time window (e.g., 20 minutes) to achieve objectives: exfiltrate data, plant ransomware, establish persistence.
 - Blue team must detect, contain, and eradicate the attack within the same window.
 - After the round, teams swap sides. The team with the better aggregate score wins.
 
 **Asymmetric Assault**
+
 - Red team is a single highly skilled player (or AI-augmented player) with advanced tools.
 - Blue team is 3-5 players operating a full SOC.
 - This mode simulates the real-world asymmetry where a single sophisticated attacker can occupy an entire security team.
 
 **Purple Team (Cooperative-Competitive Hybrid)**
+
 - Both teams work toward a shared goal but from different angles.
 - The Red team probes for vulnerabilities and reports them. The Blue team patches them in real time.
 - Scoring rewards both discovery (Red) and remediation speed (Blue).
 - This mode is especially valuable for enterprise training because it teaches collaboration between offensive and defensive security teams.
 
 **King of the Rack**
+
 - Free-for-all mode. Each player defends their own single rack while attempting to compromise rivals.
 - Last rack standing wins.
 - Teaches simultaneous offensive and defensive thinking.
@@ -208,41 +212,43 @@ The defining competitive mode. One team (Red) attempts to breach a target data c
 
 Red team players are provided with in-game equivalents of real attack tools, abstracted to the game's fiction:
 
-| In-Game Tool | Real-World Equivalent | Function |
-|-------------|----------------------|----------|
-| Signal Scanner | Nmap / Masscan | Port scanning and service enumeration |
-| Packet Sniffer | Wireshark / tcpdump | Traffic interception and analysis |
-| Exploit Compiler | Metasploit | Exploit selection and delivery |
-| Social Probe | SET (Social Engineering Toolkit) | Phishing email crafting and delivery |
-| Persistence Kit | Cobalt Strike / C2 frameworks | Establishing and maintaining backdoor access |
-| Crypto Breaker | Hashcat / John the Ripper | Password cracking and hash analysis |
-| Lateral Crawler | BloodHound / Mimikatz | Privilege escalation and lateral movement |
+| In-Game Tool     | Real-World Equivalent            | Function                                     |
+| ---------------- | -------------------------------- | -------------------------------------------- |
+| Signal Scanner   | Nmap / Masscan                   | Port scanning and service enumeration        |
+| Packet Sniffer   | Wireshark / tcpdump              | Traffic interception and analysis            |
+| Exploit Compiler | Metasploit                       | Exploit selection and delivery               |
+| Social Probe     | SET (Social Engineering Toolkit) | Phishing email crafting and delivery         |
+| Persistence Kit  | Cobalt Strike / C2 frameworks    | Establishing and maintaining backdoor access |
+| Crypto Breaker   | Hashcat / John the Ripper        | Password cracking and hash analysis          |
+| Lateral Crawler  | BloodHound / Mimikatz            | Privilege escalation and lateral movement    |
 
 Red team tools are unlocked progressively based on player skill tier. Beginners start with Signal Scanner and Social Probe. Advanced tools require demonstrated competency.
 
 #### 3.2.4 Defense Tooling for Blue Team
 
-| In-Game Tool | Real-World Equivalent | Function |
-|-------------|----------------------|----------|
-| Perimeter Shield | Firewall / WAF | Traffic filtering and rule management |
-| Alert Console | SIEM (Splunk, QRadar) | Log aggregation and alert triage |
-| Threat Feed | Threat Intelligence Platform | IOC ingestion and correlation |
-| Quarantine Module | EDR / Sandboxing | Isolating suspicious processes or hosts |
-| Forensics Kit | Volatility / Autopsy | Memory and disk forensic analysis |
-| Patch Deployer | Configuration Management | Applying security patches under pressure |
-| Deception Grid | Honeypots / Honey Tokens | Deploying decoys to detect lateral movement |
+| In-Game Tool      | Real-World Equivalent        | Function                                    |
+| ----------------- | ---------------------------- | ------------------------------------------- |
+| Perimeter Shield  | Firewall / WAF               | Traffic filtering and rule management       |
+| Alert Console     | SIEM (Splunk, QRadar)        | Log aggregation and alert triage            |
+| Threat Feed       | Threat Intelligence Platform | IOC ingestion and correlation               |
+| Quarantine Module | EDR / Sandboxing             | Isolating suspicious processes or hosts     |
+| Forensics Kit     | Volatility / Autopsy         | Memory and disk forensic analysis           |
+| Patch Deployer    | Configuration Management     | Applying security patches under pressure    |
+| Deception Grid    | Honeypots / Honey Tokens     | Deploying decoys to detect lateral movement |
 
 #### 3.2.5 Scoring
 
 Competitive scoring reflects real-world security metrics:
 
 **Red Team Scoring:**
+
 - +Points for each objective completed (data exfiltration, persistence established, ransomware deployed).
 - +Points for stealth (achieving objectives without triggering alerts).
 - +Points for speed (faster completion = higher score).
 - -Points for detection (each alert generated reduces score).
 
 **Blue Team Scoring:**
+
 - +Points for detection (each true-positive alert).
 - +Points for containment speed (time from detection to isolation).
 - +Points for eradication (fully removing attacker presence).
@@ -278,6 +284,7 @@ This maps to the real-world concept of **continuous security monitoring** -- you
 #### 3.3.2 Mechanics
 
 **Offense (Scripted Attacks)**
+
 - Players design attack sequences using a visual scripting tool (node-based graph editor).
 - Each node represents an attack phase: reconnaissance, initial access, execution, persistence, exfiltration.
 - The player defines conditional logic: "If port 443 is open, attempt exploit X. If that fails, attempt social engineering Y."
@@ -285,6 +292,7 @@ This maps to the real-world concept of **continuous security monitoring** -- you
 - Scripts run against a snapshot of the target's data center configuration at the time of execution.
 
 **Defense (Automated Response Playbooks)**
+
 - Players configure automated response playbooks using a similar visual scripting tool.
 - Playbooks define: alert thresholds, automatic quarantine rules, escalation procedures, and failover protocols.
 - This directly trains players in SOAR (Security Orchestration, Automation, and Response) concepts.
@@ -348,15 +356,15 @@ Corporation (Organization)
 
 **Corporation Roles:**
 
-| Role | Permissions | Enterprise Mapping |
-|------|-----------|-------------------|
-| CEO / Director | Full administrative control, treasury management, alliance diplomacy | CISO / VP of Security |
-| Division Lead | Manage division membership, assign squad leaders, set division objectives | Department Manager |
-| Squad Commander | Manage squad membership, assign missions, run training sessions | Team Lead |
-| Operator | Participate in missions, contribute to corporation resources | Individual Contributor |
-| Recruit | Limited access, probationary period, assigned a mentor | New Hire |
-| Intelligence Officer | Access to cross-division threat intelligence, can issue advisories | Threat Intel Analyst |
-| Quartermaster | Manage corporation inventory, handle resource allocation | IT Operations |
+| Role                 | Permissions                                                               | Enterprise Mapping     |
+| -------------------- | ------------------------------------------------------------------------- | ---------------------- |
+| CEO / Director       | Full administrative control, treasury management, alliance diplomacy      | CISO / VP of Security  |
+| Division Lead        | Manage division membership, assign squad leaders, set division objectives | Department Manager     |
+| Squad Commander      | Manage squad membership, assign missions, run training sessions           | Team Lead              |
+| Operator             | Participate in missions, contribute to corporation resources              | Individual Contributor |
+| Recruit              | Limited access, probationary period, assigned a mentor                    | New Hire               |
+| Intelligence Officer | Access to cross-division threat intelligence, can issue advisories        | Threat Intel Analyst   |
+| Quartermaster        | Manage corporation inventory, handle resource allocation                  | IT Operations          |
 
 #### 3.4.3 Corporation Progression
 
@@ -370,16 +378,16 @@ Corporations level up by earning **Trust Score**, which is accumulated through:
 
 Corporation level unlocks:
 
-| Level | Unlock |
-|-------|--------|
-| 1 | Corporation founded, basic shared chat |
-| 3 | Shared threat intelligence feed |
-| 5 | Corporation-wide alert system |
-| 8 | Joint defense operations (cross-squad raids) |
-| 10 | Corporation war declarations (competitive inter-Corp events) |
-| 15 | Alliance formation (multi-Corporation coalitions) |
-| 20 | Custom Corporation scenarios and private tournament hosting |
-| 25 | Corporation emblem on global leaderboard, prestige cosmetics |
+| Level | Unlock                                                       |
+| ----- | ------------------------------------------------------------ |
+| 1     | Corporation founded, basic shared chat                       |
+| 3     | Shared threat intelligence feed                              |
+| 5     | Corporation-wide alert system                                |
+| 8     | Joint defense operations (cross-squad raids)                 |
+| 10    | Corporation war declarations (competitive inter-Corp events) |
+| 15    | Alliance formation (multi-Corporation coalitions)            |
+| 20    | Custom Corporation scenarios and private tournament hosting  |
+| 25    | Corporation emblem on global leaderboard, prestige cosmetics |
 
 #### 3.4.4 Corporation Treasury & Shared Resources
 
@@ -418,27 +426,32 @@ This directly simulates real-world APT campaigns, which unfold over weeks or mon
 A full Raid consists of five phases, each lasting 12-48 hours of real-world time:
 
 **Phase 1: Reconnaissance**
+
 - The APT begins scanning Corporation infrastructure.
 - Players who detect the scanning activity earn early-warning bonuses.
 - Shared intelligence contribution is critical: each detected scan signature improves the Corporation's collective detection capability.
 
 **Phase 2: Initial Access**
+
 - The APT launches targeted phishing campaigns against individual operators.
 - Social engineering attempts arrive via the in-game email system, crafted to be highly convincing.
 - Players must triage phishing attempts individually and share findings with their Squad.
 - Each successful phish gives the APT a foothold in that operator's facility.
 
 **Phase 3: Lateral Movement**
+
 - The APT leverages compromised facilities to probe connected facilities.
 - The Corporation must identify which facilities are compromised and isolate them without severing critical supply chains.
 - This phase tests the Corporation's ability to balance security with operational continuity.
 
 **Phase 4: Objective Execution**
+
 - The APT attempts to exfiltrate priority data, deploy ransomware, or sabotage critical systems.
 - The Corporation must mount an active defense: deploying countermeasures, hunting for persistence mechanisms, and protecting high-value assets.
 - This phase features a real-time countdown and is the most intense cooperative experience in the game.
 
 **Phase 5: Attribution & Recovery**
+
 - The APT withdraws (or is expelled).
 - The Corporation must compile a forensic report: what was the attack chain, what was compromised, what was the attacker's likely identity and motivation.
 - Quality of the forensic report determines bonus rewards.
@@ -446,12 +459,12 @@ A full Raid consists of five phases, each lasting 12-48 hours of real-world time
 
 #### 3.5.3 Raid Difficulty Tiers
 
-| Tier | APT Name | Sophistication | Real-World Analogue |
-|------|----------|---------------|---------------------|
-| Tier 1 | Script Kiddies Collective | Low | Opportunistic attackers using public exploits |
-| Tier 2 | Shadow Syndicate | Medium | Organized cybercrime group |
-| Tier 3 | Nation-State Ghost | High | State-sponsored APT (APT28, APT29 style) |
-| Tier 4 | The Architect | Extreme | Hypothetical super-APT with zero-day chain and insider access |
+| Tier   | APT Name                  | Sophistication | Real-World Analogue                                           |
+| ------ | ------------------------- | -------------- | ------------------------------------------------------------- |
+| Tier 1 | Script Kiddies Collective | Low            | Opportunistic attackers using public exploits                 |
+| Tier 2 | Shadow Syndicate          | Medium         | Organized cybercrime group                                    |
+| Tier 3 | Nation-State Ghost        | High           | State-sponsored APT (APT28, APT29 style)                      |
+| Tier 4 | The Architect             | Extreme        | Hypothetical super-APT with zero-day chain and insider access |
 
 #### 3.5.4 Raid Rewards
 
@@ -483,12 +496,12 @@ A full Raid consists of five phases, each lasting 12-48 hours of real-world time
 
 Beyond binary friendship, the system supports relationship tiers that unlock different levels of visibility and interaction:
 
-| Tier | Name | Unlock Condition | Permissions |
-|------|------|-----------------|-------------|
-| 0 | Stranger | Default | See public profile only |
-| 1 | Contact | Mutual acceptance | See online status, send direct messages |
-| 2 | Ally | 3+ cooperative missions completed together | Share threat intelligence feed, view facility stats |
-| 3 | Trusted | 10+ cooperative missions + mutual endorsement | Joint facility operations, shared inventory access |
+| Tier | Name     | Unlock Condition                              | Permissions                                         |
+| ---- | -------- | --------------------------------------------- | --------------------------------------------------- |
+| 0    | Stranger | Default                                       | See public profile only                             |
+| 1    | Contact  | Mutual acceptance                             | See online status, send direct messages             |
+| 2    | Ally     | 3+ cooperative missions completed together    | Share threat intelligence feed, view facility stats |
+| 3    | Trusted  | 10+ cooperative missions + mutual endorsement | Joint facility operations, shared inventory access  |
 
 This tiered system mirrors the real-world concept of **trust establishment** in cybersecurity -- access is earned, not assumed.
 
@@ -517,15 +530,15 @@ The system suggests potential friends based on:
 
 The chat system is modeled on real-world incident response communication structures:
 
-| Channel Type | Equivalent | Scope | Persistence |
-|-------------|-----------|-------|-------------|
-| Direct Message | Peer-to-peer | Two players | Persistent (90-day retention) |
-| Squad Channel | Team chat | Squad members | Persistent |
-| Division Channel | Department chat | Division members | Persistent |
-| Corporation Channel | Org-wide broadcast | All Corp members | Persistent |
-| Mission Channel | Incident bridge | Active mission participants | Mission duration only |
-| Global Channel | Public forum | All online players | Ephemeral (no history) |
-| Whisper | Secure DM | Two players, end-to-end conceptual privacy | Ephemeral |
+| Channel Type        | Equivalent         | Scope                                      | Persistence                   |
+| ------------------- | ------------------ | ------------------------------------------ | ----------------------------- |
+| Direct Message      | Peer-to-peer       | Two players                                | Persistent (90-day retention) |
+| Squad Channel       | Team chat          | Squad members                              | Persistent                    |
+| Division Channel    | Department chat    | Division members                           | Persistent                    |
+| Corporation Channel | Org-wide broadcast | All Corp members                           | Persistent                    |
+| Mission Channel     | Incident bridge    | Active mission participants                | Mission duration only         |
+| Global Channel      | Public forum       | All online players                         | Ephemeral (no history)        |
+| Whisper             | Secure DM          | Two players, end-to-end conceptual privacy | Ephemeral                     |
 
 #### 4.2.2 Structured Communication Tools
 
@@ -580,13 +593,13 @@ Mentees are matched to mentors based on:
 
 #### 4.3.4 Mentorship Activities
 
-| Activity | Description | Training Value |
-|----------|-------------|---------------|
-| Guided Missions | Mentor observes mentee's facility and provides real-time advice via a spectator overlay | On-the-job training |
-| Scenario Reviews | Mentor and mentee replay a recorded mission and discuss decisions | Post-incident review |
-| Skill Challenges | Mentor assigns specific challenges (e.g., "Detect 5 phishing emails in 10 minutes") | Targeted skill development |
-| Knowledge Quizzes | Mentor quizzes mentee on cybersecurity concepts using the in-game quiz tool | Knowledge assessment |
-| Co-Piloting | Mentor and mentee operate the same facility simultaneously, with the mentor observing and the mentee making decisions | Supervised practice |
+| Activity          | Description                                                                                                           | Training Value             |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| Guided Missions   | Mentor observes mentee's facility and provides real-time advice via a spectator overlay                               | On-the-job training        |
+| Scenario Reviews  | Mentor and mentee replay a recorded mission and discuss decisions                                                     | Post-incident review       |
+| Skill Challenges  | Mentor assigns specific challenges (e.g., "Detect 5 phishing emails in 10 minutes")                                   | Targeted skill development |
+| Knowledge Quizzes | Mentor quizzes mentee on cybersecurity concepts using the in-game quiz tool                                           | Knowledge assessment       |
+| Co-Piloting       | Mentor and mentee operate the same facility simultaneously, with the mentor observing and the mentee making decisions | Supervised practice        |
 
 #### 4.3.5 Mentor Rewards
 
@@ -644,44 +657,49 @@ A wiki-style knowledge base maintained collaboratively by the player community, 
 
 #### 4.5.1 Profile Components
 
-| Component | Description | Privacy Setting |
-|-----------|-------------|----------------|
-| Operator Name | Display name (not necessarily real name) | Always visible |
-| Operator Title | Earned through rank and achievements | Always visible |
-| Facility Overview | Visual representation of the player's data center | Configurable (public / friends / private) |
-| Rank Badges | Current competitive ranks (Red and Blue) | Configurable |
-| Achievement Wall | Earned achievements displayed as virtual plaques | Configurable |
-| Statistics Dashboard | Win/loss, missions completed, uptime record, response time avg | Configurable |
-| Specialization Radar | Radar chart showing proficiency across cybersecurity domains | Configurable |
-| Corporation Affiliation | Current Corporation and role | Configurable |
-| Mentor Status | Mentor rank and mentee count | Configurable |
-| Recent Activity | Last 10 completed missions with outcomes | Friends only or private |
+| Component               | Description                                                    | Privacy Setting                           |
+| ----------------------- | -------------------------------------------------------------- | ----------------------------------------- |
+| Operator Name           | Display name (not necessarily real name)                       | Always visible                            |
+| Operator Title          | Earned through rank and achievements                           | Always visible                            |
+| Facility Overview       | Visual representation of the player's data center              | Configurable (public / friends / private) |
+| Rank Badges             | Current competitive ranks (Red and Blue)                       | Configurable                              |
+| Achievement Wall        | Earned achievements displayed as virtual plaques               | Configurable                              |
+| Statistics Dashboard    | Win/loss, missions completed, uptime record, response time avg | Configurable                              |
+| Specialization Radar    | Radar chart showing proficiency across cybersecurity domains   | Configurable                              |
+| Corporation Affiliation | Current Corporation and role                                   | Configurable                              |
+| Mentor Status           | Mentor rank and mentee count                                   | Configurable                              |
+| Recent Activity         | Last 10 completed missions with outcomes                       | Friends only or private                   |
 
 #### 4.5.2 Achievement System
 
 Achievements are grouped into categories that map to cybersecurity competency areas:
 
 **Detection & Analysis:**
+
 - "Eagle Eye" -- Detect 100 phishing emails with zero false positives.
 - "Signal in the Noise" -- Identify a hidden attack in a high-volume alert stream.
 - "Pattern Recognition" -- Correctly correlate 3 seemingly unrelated IOCs into a single campaign.
 
 **Defense & Hardening:**
+
 - "Fortress" -- Maintain 99.9% uptime for 30 consecutive days.
 - "Zero Day Survivor" -- Successfully defend against a zero-day exploit scenario.
 - "Patch Perfect" -- Apply all critical patches within 1 hour of release for 10 consecutive cycles.
 
 **Offense & Red Teaming:**
+
 - "Ghost in the Machine" -- Complete a red team mission without triggering a single alert.
 - "Social Engineer" -- Successfully craft a phishing email that bypasses the target's defenses.
 - "Persistent Threat" -- Maintain access to a target facility for an entire async cycle undetected.
 
 **Cooperation & Leadership:**
+
 - "Trust Network" -- Complete 50 cooperative missions with a 90%+ success rate.
 - "Incident Commander" -- Successfully coordinate a 6-player cooperative defense.
 - "Mentor of the Year" -- Graduate 10 mentees from the mentorship program.
 
 **Enterprise-Specific:**
+
 - "Team Player" -- Complete all assigned training scenarios within the deadline.
 - "Department Champion" -- Achieve the highest score in a department challenge.
 - "Security Culture" -- Engage with The DMZ at least once per week for 12 consecutive weeks.
@@ -729,15 +747,15 @@ To prevent unfair competition between departments with different baseline cybers
 
 #### 5.2.1 Leaderboard Types
 
-| Leaderboard | Metric | Scope | Update Frequency |
-|------------|--------|-------|-----------------|
-| Individual Skill | Composite cybersecurity skill score | Organization | Real-time |
-| Department Performance | Aggregated department score (normalized) | Organization | Weekly |
-| Phishing Resilience | Phishing detection accuracy rate | Organization | Per campaign |
-| Incident Response Time | Average time to detect and respond to simulated incidents | Organization | Per event |
-| Training Completion | Percentage of assigned training completed | Organization / Department | Real-time |
-| Most Improved | Largest skill improvement over rolling 30-day window | Organization | Weekly |
-| Cooperation Index | Frequency and quality of cross-department collaboration | Organization | Monthly |
+| Leaderboard            | Metric                                                    | Scope                     | Update Frequency |
+| ---------------------- | --------------------------------------------------------- | ------------------------- | ---------------- |
+| Individual Skill       | Composite cybersecurity skill score                       | Organization              | Real-time        |
+| Department Performance | Aggregated department score (normalized)                  | Organization              | Weekly           |
+| Phishing Resilience    | Phishing detection accuracy rate                          | Organization              | Per campaign     |
+| Incident Response Time | Average time to detect and respond to simulated incidents | Organization              | Per event        |
+| Training Completion    | Percentage of assigned training completed                 | Organization / Department | Real-time        |
+| Most Improved          | Largest skill improvement over rolling 30-day window      | Organization              | Weekly           |
+| Cooperation Index      | Frequency and quality of cross-department collaboration   | Organization              | Monthly          |
 
 #### 5.2.2 Leaderboard Display
 
@@ -794,18 +812,21 @@ Departments compete to identify the most vulnerabilities in a simulated software
 Organization administrators and designated managers receive access to a dedicated dashboard providing:
 
 **Engagement Metrics:**
+
 - Login frequency per team member (daily/weekly/monthly active usage).
 - Average session duration.
 - Training scenario completion rate.
 - Participation in cooperative and competitive events.
 
 **Skill Metrics:**
+
 - Individual skill progression over time (radar chart across cybersecurity domains).
 - Team average skill level compared to organizational baseline.
 - Weakest competency areas for the team (highlighting training gaps).
 - Pre/post assessment score comparisons.
 
 **Behavioral Metrics:**
+
 - Phishing email detection rate per individual (anonymized aggregation available).
 - Average incident response time.
 - False positive/negative rates.
@@ -871,14 +892,14 @@ Organizations want to know how their cybersecurity readiness compares to peers. 
 
 #### 5.6.2 Benchmarking Metrics
 
-| Metric | Description | Anonymization Level |
-|--------|-------------|-------------------|
-| Phishing Detection Rate | % of phishing emails correctly identified | Industry average, percentile rank |
-| Mean Time to Detect (MTTD) | Average time to detect simulated incidents | Industry average, percentile rank |
-| Mean Time to Respond (MTTR) | Average time to respond to simulated incidents | Industry average, percentile rank |
-| Training Completion Rate | % of assigned training completed | Industry average, percentile rank |
-| Skill Distribution | Distribution of skill levels across the org | Comparison to industry distribution curve |
-| Raid Survival Rate | % of raids successfully completed | Tier-specific percentile rank |
+| Metric                      | Description                                    | Anonymization Level                       |
+| --------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| Phishing Detection Rate     | % of phishing emails correctly identified      | Industry average, percentile rank         |
+| Mean Time to Detect (MTTD)  | Average time to detect simulated incidents     | Industry average, percentile rank         |
+| Mean Time to Respond (MTTR) | Average time to respond to simulated incidents | Industry average, percentile rank         |
+| Training Completion Rate    | % of assigned training completed               | Industry average, percentile rank         |
+| Skill Distribution          | Distribution of skill levels across the org    | Comparison to industry distribution curve |
+| Raid Survival Rate          | % of raids successfully completed              | Tier-specific percentile rank             |
 
 #### 5.6.3 Anonymization Protocol
 
@@ -907,18 +928,21 @@ Classic CTF events adapted to The DMZ's fiction. Players or teams solve cybersec
 #### 6.1.2 CTF Formats
 
 **Jeopardy-Style CTF**
+
 - Challenges organized in categories: Cryptography, Web Security, Network Analysis, Reverse Engineering, Forensics, OSINT (Open-Source Intelligence).
 - Each challenge has a point value based on difficulty.
 - Hints available for reduced points.
 - Time-limited (typically 24-48 hours for a major event).
 
 **Attack-Defense CTF**
+
 - Each team has a vulnerable server.
 - Teams must simultaneously patch their own server's vulnerabilities and exploit other teams' servers.
 - Flags are rotated periodically to prevent hoarding.
 - This is the most operationally complex format and reserved for major seasonal events.
 
 **King of the Hill CTF**
+
 - A single contested server.
 - Teams compete to control the server by planting their flag and defending it.
 - Control time is the primary scoring metric.
@@ -935,12 +959,12 @@ CTF challenges are framed within the game's narrative:
 
 CTF events run in parallel tiers to prevent mismatched competition:
 
-| Tier | Eligible Ranks | Challenge Difficulty |
-|------|---------------|---------------------|
-| Novice | Intern - Analyst | Fundamentals: basic encoding, simple web vulnerabilities, clear-text credentials |
-| Intermediate | Engineer - Architect | Moderate: chained exploits, encrypted payloads, multi-step forensics |
-| Expert | Director - CISO | Advanced: zero-day simulation, custom binary exploitation, APT-level forensics |
-| Open | All ranks | Mixed difficulty, handicap scoring based on rank |
+| Tier         | Eligible Ranks       | Challenge Difficulty                                                             |
+| ------------ | -------------------- | -------------------------------------------------------------------------------- |
+| Novice       | Intern - Analyst     | Fundamentals: basic encoding, simple web vulnerabilities, clear-text credentials |
+| Intermediate | Engineer - Architect | Moderate: chained exploits, encrypted payloads, multi-step forensics             |
+| Expert       | Director - CISO      | Advanced: zero-day simulation, custom binary exploitation, APT-level forensics   |
+| Open         | All ranks            | Mixed difficulty, handicap scoring based on rank                                 |
 
 ---
 
@@ -950,14 +974,14 @@ CTF events run in parallel tiers to prevent mismatched competition:
 
 Each season lasts 12 weeks and follows a thematic narrative arc:
 
-| Week | Phase | Activity |
-|------|-------|----------|
-| 1-2 | Qualification | Open ranked matches, top performers qualify for bracket |
-| 3-4 | Group Stage | Qualified players/teams placed in round-robin groups |
-| 5-8 | Bracket Stage | Single-elimination bracket with best-of-3 matches |
-| 9-10 | Semifinals | Best-of-5 matches, streamed with commentary |
-| 11 | Finals | Best-of-7 championship match |
-| 12 | Off-Season | Replay review, community voting on next season's theme, balance patches |
+| Week | Phase         | Activity                                                                |
+| ---- | ------------- | ----------------------------------------------------------------------- |
+| 1-2  | Qualification | Open ranked matches, top performers qualify for bracket                 |
+| 3-4  | Group Stage   | Qualified players/teams placed in round-robin groups                    |
+| 5-8  | Bracket Stage | Single-elimination bracket with best-of-3 matches                       |
+| 9-10 | Semifinals    | Best-of-5 matches, streamed with commentary                             |
+| 11   | Finals        | Best-of-7 championship match                                            |
+| 12   | Off-Season    | Replay review, community voting on next season's theme, balance patches |
 
 #### 6.2.2 Season Themes
 
@@ -1016,13 +1040,13 @@ Horde-mode style events. Players defend their data center against escalating wav
 
 #### 6.4.2 Wave Structure
 
-| Wave | Attack Type | Volume | Sophistication |
-|------|-----------|--------|---------------|
-| 1-5 | Automated scans, basic phishing | Low | Script-level |
-| 6-10 | Targeted exploits, spear-phishing | Medium | Intermediate |
-| 11-15 | Multi-vector attacks, encrypted payloads | High | Advanced |
-| 16-20 | APT-level campaigns with lateral movement | Very High | Expert |
-| 21+ (Endless) | Randomized with increasing intensity | Extreme | Randomized elite |
+| Wave          | Attack Type                               | Volume    | Sophistication   |
+| ------------- | ----------------------------------------- | --------- | ---------------- |
+| 1-5           | Automated scans, basic phishing           | Low       | Script-level     |
+| 6-10          | Targeted exploits, spear-phishing         | Medium    | Intermediate     |
+| 11-15         | Multi-vector attacks, encrypted payloads  | High      | Advanced         |
+| 16-20         | APT-level campaigns with lateral movement | Very High | Expert           |
+| 21+ (Endless) | Randomized with increasing intensity      | Extreme   | Randomized elite |
 
 #### 6.4.3 Modifiers
 
@@ -1051,14 +1075,14 @@ Timed challenges where players must complete a specific objective as quickly as 
 
 #### 6.5.2 Speed-Run Categories
 
-| Category | Objective | Typical Time |
-|----------|-----------|-------------|
-| Lockdown Sprint | Fully harden a bare data center from scratch | 5-15 minutes |
-| Incident Blitz | Resolve 10 security incidents in sequence | 10-20 minutes |
-| Phishing Gauntlet | Correctly classify 50 emails (phishing vs. legitimate) | 5-10 minutes |
-| Forensic Dash | Complete a full forensic investigation of a compromised system | 15-30 minutes |
-| Patch Marathon | Apply 20 patches in the correct priority order | 8-15 minutes |
-| Red Team Rush | Compromise a target facility from initial access to exfiltration | 10-25 minutes |
+| Category          | Objective                                                        | Typical Time  |
+| ----------------- | ---------------------------------------------------------------- | ------------- |
+| Lockdown Sprint   | Fully harden a bare data center from scratch                     | 5-15 minutes  |
+| Incident Blitz    | Resolve 10 security incidents in sequence                        | 10-20 minutes |
+| Phishing Gauntlet | Correctly classify 50 emails (phishing vs. legitimate)           | 5-10 minutes  |
+| Forensic Dash     | Complete a full forensic investigation of a compromised system   | 15-30 minutes |
+| Patch Marathon    | Apply 20 patches in the correct priority order                   | 8-15 minutes  |
+| Red Team Rush     | Compromise a target facility from initial access to exfiltration | 10-25 minutes |
 
 #### 6.5.3 Speed-Run Validation
 
@@ -1152,15 +1176,15 @@ The game provides a modding SDK that allows deeper customization than the built-
 
 #### 7.3.1 Marketplace Contents
 
-| Content Type | Creator | Currency | Enterprise Policy |
-|-------------|---------|----------|------------------|
-| Custom Scenarios | Players | In-game currency (free or priced) | Configurable (allow/deny) |
-| Phishing Email Templates | Players | Free (community contribution) | Review-gated |
-| Detection Rules | Players | Free (community contribution) | Review-gated |
-| Automated Playbooks | Players | In-game currency | Configurable |
-| Facility Skins / Cosmetics | Players & Official | Premium currency or in-game currency | Cosmetic-only; always allowed |
-| Campaign Packs | Verified Creators | Premium currency | Configurable |
-| Training Modules | Enterprise / Verified Creators | License-based | Admin-controlled |
+| Content Type               | Creator                        | Currency                             | Enterprise Policy             |
+| -------------------------- | ------------------------------ | ------------------------------------ | ----------------------------- |
+| Custom Scenarios           | Players                        | In-game currency (free or priced)    | Configurable (allow/deny)     |
+| Phishing Email Templates   | Players                        | Free (community contribution)        | Review-gated                  |
+| Detection Rules            | Players                        | Free (community contribution)        | Review-gated                  |
+| Automated Playbooks        | Players                        | In-game currency                     | Configurable                  |
+| Facility Skins / Cosmetics | Players & Official             | Premium currency or in-game currency | Cosmetic-only; always allowed |
+| Campaign Packs             | Verified Creators              | Premium currency                     | Configurable                  |
+| Training Modules           | Enterprise / Verified Creators | License-based                        | Admin-controlled              |
 
 #### 7.3.2 Creator Economy
 
@@ -1225,25 +1249,25 @@ This is a deliberate meta-layer: The DMZ is a cybersecurity training game, and t
 
 #### 7.5.2 Scope
 
-| In Scope | Out of Scope |
-|----------|-------------|
-| Web application vulnerabilities (XSS, CSRF, SQLi, etc.) | Social engineering of Matrices GmbH employees |
-| API security issues | Physical attacks on infrastructure |
-| Authentication/authorization bypasses | Denial of service (testing must not degrade service) |
-| Data exposure or leakage | Third-party service vulnerabilities |
-| Game logic exploits that provide unfair advantage | Automated scanning without prior approval |
-| Client-side code injection | |
-| Privilege escalation within the game | |
+| In Scope                                                | Out of Scope                                         |
+| ------------------------------------------------------- | ---------------------------------------------------- |
+| Web application vulnerabilities (XSS, CSRF, SQLi, etc.) | Social engineering of Matrices GmbH employees        |
+| API security issues                                     | Physical attacks on infrastructure                   |
+| Authentication/authorization bypasses                   | Denial of service (testing must not degrade service) |
+| Data exposure or leakage                                | Third-party service vulnerabilities                  |
+| Game logic exploits that provide unfair advantage       | Automated scanning without prior approval            |
+| Client-side code injection                              |                                                      |
+| Privilege escalation within the game                    |                                                      |
 
 #### 7.5.3 Rewards
 
-| Severity | In-Game Reward | Recognition |
-|----------|---------------|-------------|
-| Critical | 10,000 premium currency + exclusive "Bug Hunter" title | Hall of Fame listing, name in patch notes |
-| High | 5,000 premium currency + exclusive cosmetic | Hall of Fame listing |
-| Medium | 2,000 premium currency | Acknowledgment in patch notes |
-| Low | 500 premium currency | Thank-you message |
-| Informational | 100 premium currency | -- |
+| Severity      | In-Game Reward                                         | Recognition                               |
+| ------------- | ------------------------------------------------------ | ----------------------------------------- |
+| Critical      | 10,000 premium currency + exclusive "Bug Hunter" title | Hall of Fame listing, name in patch notes |
+| High          | 5,000 premium currency + exclusive cosmetic            | Hall of Fame listing                      |
+| Medium        | 2,000 premium currency                                 | Acknowledgment in patch notes             |
+| Low           | 500 premium currency                                   | Thank-you message                         |
+| Informational | 100 premium currency                                   | --                                        |
 
 Real-world monetary rewards may be offered for critical vulnerabilities (subject to separate responsible disclosure agreement).
 
@@ -1312,13 +1336,13 @@ The DMZ serves both consumer gaming and enterprise training audiences. Content m
 
 #### 8.2.1 Cheat Categories
 
-| Category | Description | Detection Method |
-|----------|-------------|-----------------|
-| Information Cheats | Accessing information not available to the player (wall hacks, reading opponent's cards) | Server-side validation; client never receives data the player should not see |
-| Automation Cheats | Bots or macros that automate gameplay actions | Behavioral analysis, CAPTCHA-like challenges, input pattern detection |
-| Exploitation Cheats | Exploiting game bugs for unfair advantage | Anomaly detection on game state, bug bounty program incentivizes reporting over exploiting |
-| Collusion Cheats | Players on opposing teams sharing information | Communication channel monitoring between opponents, statistical analysis of suspicious win patterns |
-| Account Manipulation | Smurfing (high-skill player on low-skill account), account sharing, boosting | Login pattern analysis, skill trajectory anomaly detection, hardware fingerprinting (consumer only, not enterprise) |
+| Category             | Description                                                                              | Detection Method                                                                                                    |
+| -------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Information Cheats   | Accessing information not available to the player (wall hacks, reading opponent's cards) | Server-side validation; client never receives data the player should not see                                        |
+| Automation Cheats    | Bots or macros that automate gameplay actions                                            | Behavioral analysis, CAPTCHA-like challenges, input pattern detection                                               |
+| Exploitation Cheats  | Exploiting game bugs for unfair advantage                                                | Anomaly detection on game state, bug bounty program incentivizes reporting over exploiting                          |
+| Collusion Cheats     | Players on opposing teams sharing information                                            | Communication channel monitoring between opponents, statistical analysis of suspicious win patterns                 |
+| Account Manipulation | Smurfing (high-skill player on low-skill account), account sharing, boosting             | Login pattern analysis, skill trajectory anomaly detection, hardware fingerprinting (consumer only, not enterprise) |
 
 #### 8.2.2 Server-Authoritative Architecture
 
@@ -1349,11 +1373,11 @@ This architecture eliminates the majority of client-side cheats by design.
 
 #### 8.2.5 Penalties
 
-| Offense | First Violation | Second Violation | Third Violation |
-|---------|----------------|-----------------|----------------|
-| Minor (automation, minor exploits) | Warning + 24-hour competitive ban | 7-day competitive ban | 30-day competitive ban |
-| Major (information cheats, collusion) | 30-day competitive ban | Season ban | Permanent ban |
-| Severe (real-world exploitation, hacking other players) | Permanent ban | -- | -- |
+| Offense                                                 | First Violation                   | Second Violation      | Third Violation        |
+| ------------------------------------------------------- | --------------------------------- | --------------------- | ---------------------- |
+| Minor (automation, minor exploits)                      | Warning + 24-hour competitive ban | 7-day competitive ban | 30-day competitive ban |
+| Major (information cheats, collusion)                   | 30-day competitive ban            | Season ban            | Permanent ban          |
+| Severe (real-world exploitation, hacking other players) | Permanent ban                     | --                    | --                     |
 
 Enterprise administrators can configure custom penalty policies for their organization.
 
@@ -1400,17 +1424,17 @@ Enterprise administrators can configure custom penalty policies for their organi
 
 #### 8.4.2 Age-Based Restrictions
 
-| Feature | 13-17 | 18+ |
-|---------|-------|-----|
-| Global Chat | Disabled | Enabled |
-| Direct Messages | Friends only, filtered | Enabled |
-| Voice Chat | Disabled by default, parent-enabled | Enabled |
-| User-Generated Content Creation | Allowed (moderated) | Allowed |
-| User-Generated Content Consumption | Curated/Verified only | All |
-| Bug Bounty Participation | Not allowed (liability) | Allowed |
-| Competitive Ranked Play | Allowed (age-appropriate matchmaking) | Allowed |
-| Friend Requests | Requires mutual acceptance, parent notification | Mutual acceptance |
-| Profile Visibility | Minimal by default (name and rank only) | Configurable |
+| Feature                            | 13-17                                           | 18+               |
+| ---------------------------------- | ----------------------------------------------- | ----------------- |
+| Global Chat                        | Disabled                                        | Enabled           |
+| Direct Messages                    | Friends only, filtered                          | Enabled           |
+| Voice Chat                         | Disabled by default, parent-enabled             | Enabled           |
+| User-Generated Content Creation    | Allowed (moderated)                             | Allowed           |
+| User-Generated Content Consumption | Curated/Verified only                           | All               |
+| Bug Bounty Participation           | Not allowed (liability)                         | Allowed           |
+| Competitive Ranked Play            | Allowed (age-appropriate matchmaking)           | Allowed           |
+| Friend Requests                    | Requires mutual acceptance, parent notification | Mutual acceptance |
+| Profile Visibility                 | Minimal by default (name and rank only)         | Configurable      |
 
 #### 8.4.3 Parental Controls
 
@@ -1439,15 +1463,15 @@ Enterprise administrators can configure custom penalty policies for their organi
 
 #### 8.5.2 Enterprise Privacy Architecture
 
-| Data Category | Visible to Self | Visible to Team | Visible to Manager | Visible to Org Admin | Visible Outside Org |
-|--------------|----------------|----------------|-------------------|--------------------|-------------------|
-| Gameplay Actions (detailed) | Yes | No | No | No | No |
-| Skill Scores | Yes | Configurable | Aggregate by default | Aggregate by default | Never (except anonymized benchmarking) |
-| Training Completion | Yes | Configurable | Yes (audit requirement) | Yes | Never |
-| Chat Messages | Yes (own) | Squad/Division members | No (unless escalated) | No (unless escalated) | No |
-| Login Activity | Yes | No | Aggregate | Aggregate | Never |
-| Friend List | Yes | No | No | No | No |
-| Achievement History | Yes | Configurable | Configurable | Aggregate | Never |
+| Data Category               | Visible to Self | Visible to Team        | Visible to Manager      | Visible to Org Admin  | Visible Outside Org                    |
+| --------------------------- | --------------- | ---------------------- | ----------------------- | --------------------- | -------------------------------------- |
+| Gameplay Actions (detailed) | Yes             | No                     | No                      | No                    | No                                     |
+| Skill Scores                | Yes             | Configurable           | Aggregate by default    | Aggregate by default  | Never (except anonymized benchmarking) |
+| Training Completion         | Yes             | Configurable           | Yes (audit requirement) | Yes                   | Never                                  |
+| Chat Messages               | Yes (own)       | Squad/Division members | No (unless escalated)   | No (unless escalated) | No                                     |
+| Login Activity              | Yes             | No                     | Aggregate               | Aggregate             | Never                                  |
+| Friend List                 | Yes             | No                     | No                      | No                    | No                                     |
+| Achievement History         | Yes             | Configurable           | Configurable            | Aggregate             | Never                                  |
 
 #### 8.5.3 Data Residency
 
@@ -1552,15 +1576,15 @@ Enterprise administrators can configure custom penalty policies for their organi
 
 ### 9.4 Key Technical Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Game state authority | Server-authoritative | Anti-cheat, consistency, enterprise security |
-| Real-time communication | WebSocket with fallback to SSE | Low latency for chat and game state sync |
-| Async attack execution | Serverless compute (isolated per execution) | Cost-efficient, scalable, sandboxed |
-| Social graph storage | Graph database (e.g., Neo4j) | Efficient traversal for friend-of-friend, Corporation hierarchy, matchmaking |
-| Content moderation | ML pipeline + human escalation | Balance speed with accuracy |
-| Enterprise data isolation | Logical isolation with encryption at rest per tenant | Compliance requirement; physical isolation available as premium option |
-| Matchmaking algorithm | Modified Glicko-2 with role and latency factors | Better uncertainty modeling than Elo for the variable team compositions |
+| Decision                  | Choice                                               | Rationale                                                                    |
+| ------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Game state authority      | Server-authoritative                                 | Anti-cheat, consistency, enterprise security                                 |
+| Real-time communication   | WebSocket with fallback to SSE                       | Low latency for chat and game state sync                                     |
+| Async attack execution    | Serverless compute (isolated per execution)          | Cost-efficient, scalable, sandboxed                                          |
+| Social graph storage      | Graph database (e.g., Neo4j)                         | Efficient traversal for friend-of-friend, Corporation hierarchy, matchmaking |
+| Content moderation        | ML pipeline + human escalation                       | Balance speed with accuracy                                                  |
+| Enterprise data isolation | Logical isolation with encryption at rest per tenant | Compliance requirement; physical isolation available as premium option       |
+| Matchmaking algorithm     | Modified Glicko-2 with role and latency factors      | Better uncertainty modeling than Elo for the variable team compositions      |
 
 ---
 
@@ -1569,18 +1593,22 @@ Enterprise administrators can configure custom penalty policies for their organi
 ### Phase 1: Foundation (Months 1-3)
 
 **Multiplayer:**
+
 - 2-player cooperative play (single scenario: Cascade Failure).
 - Basic matchmaking (skill-based, region-aware).
 
 **Social:**
+
 - Friend list and direct messaging.
 - Basic player profiles.
 
 **Enterprise:**
+
 - SSO integration.
 - Basic team structure (Corporation with Divisions).
 
 **Trust & Safety:**
+
 - Automated text moderation.
 - In-game reporting (Quick Report).
 - Server-authoritative architecture (anti-cheat by design).
@@ -1588,25 +1616,30 @@ Enterprise administrators can configure custom penalty policies for their organi
 ### Phase 2: Competition (Months 4-6)
 
 **Multiplayer:**
+
 - Red Team vs. Blue Team (Classic format, 2v2).
 - Ranked play with placement matches.
 - Asynchronous multiplayer (basic attack scripts).
 
 **Social:**
+
 - Squad and Division chat channels.
 - Achievement system (first wave of achievements).
 - Replay sharing.
 
 **Enterprise:**
+
 - Department leaderboards.
 - Manager dashboard (aggregate metrics only).
 - Training completion tracking.
 
 **Competitive Events:**
+
 - First Jeopardy-style CTF event.
 - First defense challenge (waves 1-10 only).
 
 **Trust & Safety:**
+
 - Voice chat with moderation.
 - Anti-cheat statistical analysis (first models deployed).
 - Age gate and parental controls.
@@ -1614,26 +1647,31 @@ Enterprise administrators can configure custom penalty policies for their organi
 ### Phase 3: Community (Months 7-9)
 
 **Multiplayer:**
+
 - 6-player cooperative play (full scenario library).
 - Asymmetric competitive modes.
 - Full async multiplayer with visual scripting.
 
 **Social:**
+
 - Mentorship system.
 - The Archive (community knowledge base).
 - Discussion forums.
 
 **Enterprise:**
+
 - Inter-department challenges.
 - Peer recognition (Kudos system).
 - Compliance reporting.
 
 **Community:**
+
 - Scenario editor (beta).
 - Detection rule authoring.
 - Community marketplace (beta).
 
 **Trust & Safety:**
+
 - Community moderator program.
 - Appeal process.
 - UGC moderation pipeline.
@@ -1641,31 +1679,37 @@ Enterprise administrators can configure custom penalty policies for their organi
 ### Phase 4: Scale (Months 10-12)
 
 **Multiplayer:**
+
 - Corporation systems (full hierarchy, diplomacy, treasury).
 - Raid events (Tier 1 and Tier 2).
 - Purple Team mode.
 
 **Social:**
+
 - Social graph tiers.
 - Streaming overlay and spectator mode.
 - Clip system.
 
 **Enterprise:**
+
 - Cross-organization benchmarking.
 - LMS integration (SCORM/xAPI).
 - Enterprise reward integration.
 
 **Competitive Events:**
+
 - First seasonal tournament.
 - Attack-Defense CTF.
 - Hackathon events.
 
 **Community:**
+
 - Modding SDK (beta).
 - Bug bounty program launch.
 - Creator economy (revenue sharing for verified creators).
 
 **Trust & Safety:**
+
 - Full GDPR/CCPA compliance audit.
 - Enterprise data residency options.
 - Advanced anti-cheat (ML models v2).
@@ -1686,43 +1730,43 @@ Enterprise administrators can configure custom penalty policies for their organi
 
 ### 11.1 Engagement Metrics
 
-| Metric | Target (Phase 2) | Target (Phase 4) | Measurement |
-|--------|------------------|------------------|-------------|
-| DAU / MAU ratio | 25% | 40% | Daily/monthly active users |
-| Average session length | 25 min | 35 min | Time from login to logout |
-| Multiplayer participation rate | 30% of sessions | 60% of sessions | Sessions including any multiplayer mode |
-| Friend list utilization | 3 avg friends per player | 8 avg friends per player | Friends added and interacted with |
-| Corporation membership | 20% of active players | 50% of active players | Players in a Corporation |
-| Retention (D30) | 30% | 45% | Players returning after 30 days |
+| Metric                         | Target (Phase 2)         | Target (Phase 4)         | Measurement                             |
+| ------------------------------ | ------------------------ | ------------------------ | --------------------------------------- |
+| DAU / MAU ratio                | 25%                      | 40%                      | Daily/monthly active users              |
+| Average session length         | 25 min                   | 35 min                   | Time from login to logout               |
+| Multiplayer participation rate | 30% of sessions          | 60% of sessions          | Sessions including any multiplayer mode |
+| Friend list utilization        | 3 avg friends per player | 8 avg friends per player | Friends added and interacted with       |
+| Corporation membership         | 20% of active players    | 50% of active players    | Players in a Corporation                |
+| Retention (D30)                | 30%                      | 45%                      | Players returning after 30 days         |
 
 ### 11.2 Training Effectiveness Metrics
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Phishing detection improvement | 40% improvement from baseline after 4 weeks | Pre/post assessment scores |
-| Incident response time improvement | 30% reduction after 8 weeks | Average MTTD and MTTR in-game |
-| Knowledge retention (90-day) | 70% of skills retained | Re-assessment scores at 90 days |
-| Cross-skill transfer | Measurable improvement in related real-world metrics | Enterprise customer surveys and phishing simulation results |
+| Metric                             | Target                                               | Measurement                                                 |
+| ---------------------------------- | ---------------------------------------------------- | ----------------------------------------------------------- |
+| Phishing detection improvement     | 40% improvement from baseline after 4 weeks          | Pre/post assessment scores                                  |
+| Incident response time improvement | 30% reduction after 8 weeks                          | Average MTTD and MTTR in-game                               |
+| Knowledge retention (90-day)       | 70% of skills retained                               | Re-assessment scores at 90 days                             |
+| Cross-skill transfer               | Measurable improvement in related real-world metrics | Enterprise customer surveys and phishing simulation results |
 
 ### 11.3 Enterprise Metrics
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| Enterprise employee participation rate | 70% monthly active | MAU / total provisioned accounts |
-| Training completion rate | 85% within deadline | Assigned vs. completed scenarios |
-| Manager dashboard usage | 60% of managers weekly | Manager login frequency |
-| License renewal rate | 90% | Annual renewal vs. new licenses |
-| NPS (enterprise buyer) | 50+ | Quarterly survey |
+| Metric                                 | Target                 | Measurement                      |
+| -------------------------------------- | ---------------------- | -------------------------------- |
+| Enterprise employee participation rate | 70% monthly active     | MAU / total provisioned accounts |
+| Training completion rate               | 85% within deadline    | Assigned vs. completed scenarios |
+| Manager dashboard usage                | 60% of managers weekly | Manager login frequency          |
+| License renewal rate                   | 90%                    | Annual renewal vs. new licenses  |
+| NPS (enterprise buyer)                 | 50+                    | Quarterly survey                 |
 
 ### 11.4 Community Health Metrics
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| UGC creation rate | 100+ new scenarios per month (Phase 4) | Submissions to marketplace |
-| Mentor-mentee matches | 500+ active pairs (Phase 4) | Active mentorship relationships |
-| Community knowledge base articles | 1000+ articles (Phase 4) | Archive article count |
-| Report resolution time | < 24 hours (median) | Time from report to resolution |
-| False positive moderation rate | < 5% | Moderation actions overturned on appeal |
+| Metric                            | Target                                 | Measurement                             |
+| --------------------------------- | -------------------------------------- | --------------------------------------- |
+| UGC creation rate                 | 100+ new scenarios per month (Phase 4) | Submissions to marketplace              |
+| Mentor-mentee matches             | 500+ active pairs (Phase 4)            | Active mentorship relationships         |
+| Community knowledge base articles | 1000+ articles (Phase 4)               | Archive article count                   |
+| Report resolution time            | < 24 hours (median)                    | Time from report to resolution          |
+| False positive moderation rate    | < 5%                                   | Moderation actions overturned on appeal |
 
 ---
 
@@ -1730,29 +1774,29 @@ Enterprise administrators can configure custom penalty policies for their organi
 
 ### Appendix A: Glossary
 
-| Term | Definition |
-|------|-----------|
-| APT | Advanced Persistent Threat -- a sophisticated, long-term cyberattack campaign |
-| BEC | Business Email Compromise -- a phishing variant targeting financial transactions |
-| C2 | Command and Control -- infrastructure used by attackers to communicate with compromised systems |
-| COPPA | Children's Online Privacy Protection Act |
-| CTF | Capture the Flag -- a cybersecurity competition format |
-| DSL | Domain-Specific Language -- a programming language designed for a specific problem domain |
-| EDR | Endpoint Detection and Response -- a security tool for monitoring endpoints |
-| IOC | Indicator of Compromise -- an artifact that indicates a security breach |
-| ISAC | Information Sharing and Analysis Center -- a sector-specific threat intelligence organization |
-| LMS | Learning Management System |
-| MTTD | Mean Time to Detect |
-| MTTR | Mean Time to Respond |
-| OIDC | OpenID Connect -- an authentication protocol |
-| PII | Personally Identifiable Information |
-| SAML | Security Assertion Markup Language -- an authentication standard |
-| SCORM | Sharable Content Object Reference Model -- an e-learning standard |
-| SIEM | Security Information and Event Management |
-| SOAR | Security Orchestration, Automation, and Response |
-| SOC | Security Operations Center |
-| SSO | Single Sign-On |
-| xAPI | Experience API -- a modern e-learning data standard |
+| Term  | Definition                                                                                      |
+| ----- | ----------------------------------------------------------------------------------------------- |
+| APT   | Advanced Persistent Threat -- a sophisticated, long-term cyberattack campaign                   |
+| BEC   | Business Email Compromise -- a phishing variant targeting financial transactions                |
+| C2    | Command and Control -- infrastructure used by attackers to communicate with compromised systems |
+| COPPA | Children's Online Privacy Protection Act                                                        |
+| CTF   | Capture the Flag -- a cybersecurity competition format                                          |
+| DSL   | Domain-Specific Language -- a programming language designed for a specific problem domain       |
+| EDR   | Endpoint Detection and Response -- a security tool for monitoring endpoints                     |
+| IOC   | Indicator of Compromise -- an artifact that indicates a security breach                         |
+| ISAC  | Information Sharing and Analysis Center -- a sector-specific threat intelligence organization   |
+| LMS   | Learning Management System                                                                      |
+| MTTD  | Mean Time to Detect                                                                             |
+| MTTR  | Mean Time to Respond                                                                            |
+| OIDC  | OpenID Connect -- an authentication protocol                                                    |
+| PII   | Personally Identifiable Information                                                             |
+| SAML  | Security Assertion Markup Language -- an authentication standard                                |
+| SCORM | Sharable Content Object Reference Model -- an e-learning standard                               |
+| SIEM  | Security Information and Event Management                                                       |
+| SOAR  | Security Orchestration, Automation, and Response                                                |
+| SOC   | Security Operations Center                                                                      |
+| SSO   | Single Sign-On                                                                                  |
+| xAPI  | Experience API -- a modern e-learning data standard                                             |
 
 ### Appendix B: Competitive Mode Balance Considerations
 
@@ -1786,22 +1830,22 @@ Red team / blue team balance is critical for competitive integrity. Key consider
 
 ### Appendix D: Dependencies on Other BRD Documents
 
-| BRD | Dependency Description |
-|-----|----------------------|
-| BRD-01 (Core Gameplay) | Multiplayer modes extend the single-player facility management loop |
-| BRD-02 (Email System) | Phishing simulation system must support multi-player scenarios (shared inboxes, targeted campaigns) |
-| BRD-03 (Upgrade System) | Cooperative upgrades and Corporation-shared infrastructure extend the upgrade tree |
-| BRD-04 (Threat System) | Raid events and competitive modes require the full threat model library |
-| BRD-05 (Economy) | Corporation treasury, marketplace currency, and creator revenue share integrate with the economy |
-| BRD-06 (UI/UX) | Multiplayer UI (lobbies, spectator, overlay) must follow the established design language |
-| BRD-07 (Narrative) | Seasonal themes and raid narratives must align with the world-building bible |
-| BRD-08 (Audio) | Voice chat infrastructure, multiplayer audio cues, and raid event soundscapes |
-| BRD-09 (Analytics) | All multiplayer and social metrics feed into the analytics pipeline |
-| BRD-10 (Onboarding) | Multiplayer onboarding flow (first cooperative mission, first friend, first Corporation) |
+| BRD                     | Dependency Description                                                                              |
+| ----------------------- | --------------------------------------------------------------------------------------------------- |
+| BRD-01 (Core Gameplay)  | Multiplayer modes extend the single-player facility management loop                                 |
+| BRD-02 (Email System)   | Phishing simulation system must support multi-player scenarios (shared inboxes, targeted campaigns) |
+| BRD-03 (Upgrade System) | Cooperative upgrades and Corporation-shared infrastructure extend the upgrade tree                  |
+| BRD-04 (Threat System)  | Raid events and competitive modes require the full threat model library                             |
+| BRD-05 (Economy)        | Corporation treasury, marketplace currency, and creator revenue share integrate with the economy    |
+| BRD-06 (UI/UX)          | Multiplayer UI (lobbies, spectator, overlay) must follow the established design language            |
+| BRD-07 (Narrative)      | Seasonal themes and raid narratives must align with the world-building bible                        |
+| BRD-08 (Audio)          | Voice chat infrastructure, multiplayer audio cues, and raid event soundscapes                       |
+| BRD-09 (Analytics)      | All multiplayer and social metrics feed into the analytics pipeline                                 |
+| BRD-10 (Onboarding)     | Multiplayer onboarding flow (first cooperative mission, first friend, first Corporation)            |
 
 ---
 
-*This document is a living specification. It will be updated as features are implemented, playtested, and refined based on player feedback and enterprise customer requirements.*
+_This document is a living specification. It will be updated as features are implemented, playtested, and refined based on player feedback and enterprise customer requirements._
 
-*Last review: 2026-02-05*
-*Next scheduled review: 2026-03-05*
+_Last review: 2026-02-05_
+_Next scheduled review: 2026-03-05_

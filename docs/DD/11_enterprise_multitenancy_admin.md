@@ -112,24 +112,24 @@ Dependencies and assumptions used in this design.
 
 ## 4. Terminology and Definitions
 
-| Term | Definition |
-|---|---|
-| Tenant | A single enterprise customer instance, representing one organization with users, data, and configuration isolated from other organizations. |
-| Tenant Isolation | The technical and procedural controls that prevent data access across tenants and enforce separation. |
-| Shared Schema | Multi-tenant database model where tenants share a schema and data is separated by `tenant_id` with RLS enforcement. |
-| Dedicated Schema | Multi-tenant database model where each tenant has its own schema in a shared database server. |
-| Dedicated Database | Single-tenant database instance (and optionally server) isolated per enterprise tenant. |
-| Tenant Admin | A user within a tenant who administers their organization, including configuration, users, and campaigns. |
-| Super Admin | Platform operator with tenant metadata visibility for support and provisioning. Access to tenant data is always performed with an explicit tenant context and never via cross-tenant queries. |
-| Trainer | A role responsible for creating training campaigns and reviewing user performance. |
-| Learner | A standard end user participating in training through the game experience. |
-| RBAC | Role-based access control using predefined or custom roles. |
-| ABAC | Attribute-based access control using attributes like department, location, or time. |
-| JIT Provisioning | Just-in-time account creation on first SSO login. |
-| SCIM | System for Cross-domain Identity Management used for automated provisioning. |
-| White-labeling | Tenant-specific branding across admin and optionally in-game interfaces. |
-| Audit Log | Immutable record of administrative actions and evidence events. |
-| Evidence | Reports, certificates, or logs that demonstrate training compliance to regulators. |
+| Term               | Definition                                                                                                                                                                                    |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Tenant             | A single enterprise customer instance, representing one organization with users, data, and configuration isolated from other organizations.                                                   |
+| Tenant Isolation   | The technical and procedural controls that prevent data access across tenants and enforce separation.                                                                                         |
+| Shared Schema      | Multi-tenant database model where tenants share a schema and data is separated by `tenant_id` with RLS enforcement.                                                                           |
+| Dedicated Schema   | Multi-tenant database model where each tenant has its own schema in a shared database server.                                                                                                 |
+| Dedicated Database | Single-tenant database instance (and optionally server) isolated per enterprise tenant.                                                                                                       |
+| Tenant Admin       | A user within a tenant who administers their organization, including configuration, users, and campaigns.                                                                                     |
+| Super Admin        | Platform operator with tenant metadata visibility for support and provisioning. Access to tenant data is always performed with an explicit tenant context and never via cross-tenant queries. |
+| Trainer            | A role responsible for creating training campaigns and reviewing user performance.                                                                                                            |
+| Learner            | A standard end user participating in training through the game experience.                                                                                                                    |
+| RBAC               | Role-based access control using predefined or custom roles.                                                                                                                                   |
+| ABAC               | Attribute-based access control using attributes like department, location, or time.                                                                                                           |
+| JIT Provisioning   | Just-in-time account creation on first SSO login.                                                                                                                                             |
+| SCIM               | System for Cross-domain Identity Management used for automated provisioning.                                                                                                                  |
+| White-labeling     | Tenant-specific branding across admin and optionally in-game interfaces.                                                                                                                      |
+| Audit Log          | Immutable record of administrative actions and evidence events.                                                                                                                               |
+| Evidence           | Reports, certificates, or logs that demonstrate training compliance to regulators.                                                                                                            |
 
 ---
 
@@ -717,12 +717,12 @@ This appendix provides a detailed data model reference that expands on the tenan
 
 The tenant tables define the top-level organizational record and its configuration.
 
-| Table | Purpose | Key Fields |
-|---|---|---|
-| `public.tenants` | Canonical tenant record for all tenants. | `tenant_id`, `name`, `slug`, `domain`, `plan_id`, `data_region`, `branding`, `settings`, `is_active`, `created_at`, `updated_at` |
-| `public.tenant_domains` | Stores custom domains and verification status. | `tenant_id`, `domain`, `status`, `verification_token`, `verified_at` |
-| `public.tenant_branding_versions` | Versioned history of branding changes. | `tenant_id`, `version`, `branding`, `created_by`, `created_at` |
-| `public.tenant_feature_flags` | Per-tenant feature toggles tied to plan or pilot programs. | `tenant_id`, `feature`, `enabled`, `source` |
+| Table                             | Purpose                                                    | Key Fields                                                                                                                       |
+| --------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `public.tenants`                  | Canonical tenant record for all tenants.                   | `tenant_id`, `name`, `slug`, `domain`, `plan_id`, `data_region`, `branding`, `settings`, `is_active`, `created_at`, `updated_at` |
+| `public.tenant_domains`           | Stores custom domains and verification status.             | `tenant_id`, `domain`, `status`, `verification_token`, `verified_at`                                                             |
+| `public.tenant_branding_versions` | Versioned history of branding changes.                     | `tenant_id`, `version`, `branding`, `created_by`, `created_at`                                                                   |
+| `public.tenant_feature_flags`     | Per-tenant feature toggles tied to plan or pilot programs. | `tenant_id`, `feature`, `enabled`, `source`                                                                                      |
 
 The `public.tenants` table is the single source of truth for tenant identity. The domain and branding tables are intentionally separated to allow faster update and caching of branding changes without forcing updates to the core tenant row.
 
@@ -730,14 +730,14 @@ The `public.tenants` table is the single source of truth for tenant identity. Th
 
 Identity tables are tenant-scoped and must always contain a `tenant_id`. The schema supports multiple authentication modes and a flexible RBAC system.
 
-| Table | Purpose | Key Fields |
-|---|---|---|
-| `auth.users` | Stores user records with tenant scoping. | `user_id`, `tenant_id`, `email`, `display_name`, `status`, `password_hash`, `last_login_at` |
-| `auth.sessions` | Active session records for audit and security. | `session_id`, `tenant_id`, `user_id`, `created_at`, `expires_at` |
-| `auth.roles` | Role definitions scoped to a tenant. | `role_id`, `tenant_id`, `name`, `description` |
-| `auth.role_permissions` | Mapping of roles to permission strings. | `role_id`, `tenant_id`, `permission` |
-| `auth.user_roles` | Role assignments with optional scope and expiration. | `user_id`, `tenant_id`, `role_id`, `scope_json`, `expires_at` |
-| `auth.api_keys` | Scoped API keys for service access. | `key_id`, `tenant_id`, `name`, `scopes`, `created_at`, `revoked_at` |
+| Table                   | Purpose                                              | Key Fields                                                                                  |
+| ----------------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `auth.users`            | Stores user records with tenant scoping.             | `user_id`, `tenant_id`, `email`, `display_name`, `status`, `password_hash`, `last_login_at` |
+| `auth.sessions`         | Active session records for audit and security.       | `session_id`, `tenant_id`, `user_id`, `created_at`, `expires_at`                            |
+| `auth.roles`            | Role definitions scoped to a tenant.                 | `role_id`, `tenant_id`, `name`, `description`                                               |
+| `auth.role_permissions` | Mapping of roles to permission strings.              | `role_id`, `tenant_id`, `permission`                                                        |
+| `auth.user_roles`       | Role assignments with optional scope and expiration. | `user_id`, `tenant_id`, `role_id`, `scope_json`, `expires_at`                               |
+| `auth.api_keys`         | Scoped API keys for service access.                  | `key_id`, `tenant_id`, `name`, `scopes`, `created_at`, `revoked_at`                         |
 
 System roles are defined as templates in code (or a non-tenant configuration catalog) and are materialized into each tenant during provisioning so that every auth table remains tenant-scoped with non-null `tenant_id`. The `scope_json` field stores ABAC scoping information such as department or location filters.
 
@@ -745,12 +745,12 @@ System roles are defined as templates in code (or a non-tenant configuration cat
 
 SSO configuration and SCIM mapping data must be separated from core user tables for security and operational clarity.
 
-| Table | Purpose | Key Fields |
-|---|---|---|
-| `auth.sso_connections` | SAML or OIDC configuration per tenant. | `tenant_id`, `provider`, `metadata`, `certificate`, `created_at` |
-| `auth.scim_tokens` | SCIM bearer tokens for provisioning. | `tenant_id`, `token_hash`, `created_at`, `revoked_at` |
-| `auth.scim_group_mappings` | Mapping of IdP groups to roles and scopes. | `tenant_id`, `external_group_id`, `role_id`, `scope_json` |
-| `auth.idp_audit` | Logs of SSO assertions and SCIM operations for auditing. | `tenant_id`, `event_type`, `subject`, `details`, `created_at` |
+| Table                      | Purpose                                                  | Key Fields                                                       |
+| -------------------------- | -------------------------------------------------------- | ---------------------------------------------------------------- |
+| `auth.sso_connections`     | SAML or OIDC configuration per tenant.                   | `tenant_id`, `provider`, `metadata`, `certificate`, `created_at` |
+| `auth.scim_tokens`         | SCIM bearer tokens for provisioning.                     | `tenant_id`, `token_hash`, `created_at`, `revoked_at`            |
+| `auth.scim_group_mappings` | Mapping of IdP groups to roles and scopes.               | `tenant_id`, `external_group_id`, `role_id`, `scope_json`        |
+| `auth.idp_audit`           | Logs of SSO assertions and SCIM operations for auditing. | `tenant_id`, `event_type`, `subject`, `details`, `created_at`    |
 
 These tables allow admins to configure multiple IdPs per tenant, rotate certificates, and map IdP groups to roles without modifying user records directly.
 
@@ -758,14 +758,14 @@ These tables allow admins to configure multiple IdPs per tenant, rotate certific
 
 The organization model enables ABAC scoping, reporting, and campaign targeting.
 
-| Table | Purpose | Key Fields |
-|---|---|---|
-| `org.departments` | Department definitions. | `department_id`, `tenant_id`, `name`, `parent_id` |
-| `org.locations` | Location definitions. | `location_id`, `tenant_id`, `name`, `country_code`, `timezone` |
-| `org.teams` | Team definitions, optionally nested under departments. | `team_id`, `tenant_id`, `department_id`, `name` |
-| `org.user_attributes` | Attribute assignments for each user. | `user_id`, `tenant_id`, `department_id`, `location_id`, `manager_id` |
-| `org.groups` | Dynamic or static groups for campaign targeting. | `group_id`, `tenant_id`, `name`, `type`, `rule_json` |
-| `org.group_memberships` | Explicit group membership records. | `group_id`, `user_id`, `tenant_id`, `created_at` |
+| Table                   | Purpose                                                | Key Fields                                                           |
+| ----------------------- | ------------------------------------------------------ | -------------------------------------------------------------------- |
+| `org.departments`       | Department definitions.                                | `department_id`, `tenant_id`, `name`, `parent_id`                    |
+| `org.locations`         | Location definitions.                                  | `location_id`, `tenant_id`, `name`, `country_code`, `timezone`       |
+| `org.teams`             | Team definitions, optionally nested under departments. | `team_id`, `tenant_id`, `department_id`, `name`                      |
+| `org.user_attributes`   | Attribute assignments for each user.                   | `user_id`, `tenant_id`, `department_id`, `location_id`, `manager_id` |
+| `org.groups`            | Dynamic or static groups for campaign targeting.       | `group_id`, `tenant_id`, `name`, `type`, `rule_json`                 |
+| `org.group_memberships` | Explicit group membership records.                     | `group_id`, `user_id`, `tenant_id`, `created_at`                     |
 
 Dynamic groups store rules in `rule_json`, which are evaluated by the campaign engine to update membership. Static groups store explicit memberships. The admin UI must support both models without conflating them.
 
@@ -773,13 +773,13 @@ Dynamic groups store rules in `rule_json`, which are evaluated by the campaign e
 
 Campaign tables support the training and phishing simulation engines. These tables are owned by the `admin` module but are strongly tied to analytics and compliance reporting.
 
-| Table | Purpose | Key Fields |
-|---|---|---|
-| `admin.campaigns` | Stores campaign definitions and status. | `campaign_id`, `tenant_id`, `type`, `config`, `schedule`, `status`, `created_by` |
-| `admin.campaign_enrollments` | Enrollment records for campaign participants. | `campaign_id`, `tenant_id`, `user_id`, `status`, `enrolled_at` |
-| `admin.campaign_events` | Event log for campaign state changes. | `campaign_id`, `tenant_id`, `event_type`, `details`, `created_at` |
-| `admin.phishing_simulations` | Template and configuration for phishing simulations. | `simulation_id`, `tenant_id`, `template_id`, `channel`, `config` |
-| `admin.phishing_results` | Outcomes of phishing simulations. | `simulation_id`, `tenant_id`, `user_id`, `result`, `timestamp` |
+| Table                        | Purpose                                              | Key Fields                                                                       |
+| ---------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `admin.campaigns`            | Stores campaign definitions and status.              | `campaign_id`, `tenant_id`, `type`, `config`, `schedule`, `status`, `created_by` |
+| `admin.campaign_enrollments` | Enrollment records for campaign participants.        | `campaign_id`, `tenant_id`, `user_id`, `status`, `enrolled_at`                   |
+| `admin.campaign_events`      | Event log for campaign state changes.                | `campaign_id`, `tenant_id`, `event_type`, `details`, `created_at`                |
+| `admin.phishing_simulations` | Template and configuration for phishing simulations. | `simulation_id`, `tenant_id`, `template_id`, `channel`, `config`                 |
+| `admin.phishing_results`     | Outcomes of phishing simulations.                    | `simulation_id`, `tenant_id`, `user_id`, `result`, `timestamp`                   |
 
 Campaign configuration is stored in JSON to allow flexibility while maintaining strict validation schemas at the application layer.
 
@@ -787,13 +787,13 @@ Campaign configuration is stored in JSON to allow flexibility while maintaining 
 
 Compliance tables store evidence, certificates, and reporting snapshots required by regulatory frameworks.
 
-| Table | Purpose | Key Fields |
-|---|---|---|
-| `compliance.frameworks` | Enabled frameworks per tenant. | `tenant_id`, `framework_id`, `enabled_at` |
-| `compliance.reports` | Generated compliance reports. | `report_id`, `tenant_id`, `framework_id`, `format`, `generated_at` |
-| `compliance.certificates` | Training certificates for users. | `certificate_id`, `tenant_id`, `user_id`, `framework_id`, `expires_at` |
-| `compliance.attestations` | Management attestation records. | `tenant_id`, `attestor_id`, `framework_id`, `signed_at` |
-| `compliance.retention_policies` | Retention policy configuration. | `tenant_id`, `policy_json`, `effective_from` |
+| Table                           | Purpose                          | Key Fields                                                             |
+| ------------------------------- | -------------------------------- | ---------------------------------------------------------------------- |
+| `compliance.frameworks`         | Enabled frameworks per tenant.   | `tenant_id`, `framework_id`, `enabled_at`                              |
+| `compliance.reports`            | Generated compliance reports.    | `report_id`, `tenant_id`, `framework_id`, `format`, `generated_at`     |
+| `compliance.certificates`       | Training certificates for users. | `certificate_id`, `tenant_id`, `user_id`, `framework_id`, `expires_at` |
+| `compliance.attestations`       | Management attestation records.  | `tenant_id`, `attestor_id`, `framework_id`, `signed_at`                |
+| `compliance.retention_policies` | Retention policy configuration.  | `tenant_id`, `policy_json`, `effective_from`                           |
 
 Reports are stored with integrity hashes and optional digital signatures. Certificates include reference to the underlying training event that produced them.
 
@@ -801,10 +801,10 @@ Reports are stored with integrity hashes and optional digital signatures. Certif
 
 Audit logs provide immutable evidence of admin actions and system events.
 
-| Table | Purpose | Key Fields |
-|---|---|---|
-| `admin.audit_log` | Append-only admin audit events. | `log_id`, `tenant_id`, `user_id`, `action`, `resource_type`, `resource_id`, `details`, `created_at` |
-| `admin.audit_hash_chain` | SHA-256 chain-of-hash material for tamper detection per BRD FR-ENT-030. | `log_id`, `prev_hash`, `hash` |
+| Table                    | Purpose                                                                 | Key Fields                                                                                          |
+| ------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `admin.audit_log`        | Append-only admin audit events.                                         | `log_id`, `tenant_id`, `user_id`, `action`, `resource_type`, `resource_id`, `details`, `created_at` |
+| `admin.audit_hash_chain` | SHA-256 chain-of-hash material for tamper detection per BRD FR-ENT-030. | `log_id`, `prev_hash`, `hash`                                                                       |
 
 Audit logs are retained per policy and support export. The hash chain is validated by periodic integrity checks, and any mismatch triggers an alert to the security team.
 
@@ -812,11 +812,11 @@ Audit logs are retained per policy and support export. The hash chain is validat
 
 Integration tables store tenant-specific configuration and health status for external systems.
 
-| Table | Purpose | Key Fields |
-|---|---|---|
-| `integrations.connections` | Generic integration configuration. | `connection_id`, `tenant_id`, `type`, `config`, `status`, `created_at` |
-| `integrations.webhooks` | Webhook endpoints and secrets. | `webhook_id`, `tenant_id`, `url`, `secret_hash`, `status` |
-| `integrations.delivery_log` | Delivery records for webhooks and outbound events. | `tenant_id`, `connection_id`, `status`, `response_code`, `created_at` |
+| Table                       | Purpose                                            | Key Fields                                                             |
+| --------------------------- | -------------------------------------------------- | ---------------------------------------------------------------------- |
+| `integrations.connections`  | Generic integration configuration.                 | `connection_id`, `tenant_id`, `type`, `config`, `status`, `created_at` |
+| `integrations.webhooks`     | Webhook endpoints and secrets.                     | `webhook_id`, `tenant_id`, `url`, `secret_hash`, `status`              |
+| `integrations.delivery_log` | Delivery records for webhooks and outbound events. | `tenant_id`, `connection_id`, `status`, `response_code`, `created_at`  |
 
 Integration secrets are stored encrypted. Delivery logs are retained for troubleshooting and compliance evidence.
 
@@ -824,12 +824,12 @@ Integration secrets are stored encrypted. Delivery logs are retained for trouble
 
 Analytics data is large and time-series oriented. It is stored in ClickHouse or TimescaleDB with tenant scoping on each record.
 
-| Table | Purpose | Key Fields |
-|---|---|---|
-| `analytics.events` | Raw event stream from game and training. | `tenant_id`, `event_type`, `event_ts`, `payload` |
-| `analytics.user_metrics` | Aggregated metrics per user. | `tenant_id`, `user_id`, `metric`, `value`, `period_start` |
-| `analytics.department_metrics` | Aggregated metrics per department or group. | `tenant_id`, `department_id`, `metric`, `value`, `period_start` |
-| `analytics.compliance_snapshots` | Point in time snapshots for audit. | `tenant_id`, `framework_id`, `snapshot_ts`, `summary` |
+| Table                            | Purpose                                     | Key Fields                                                      |
+| -------------------------------- | ------------------------------------------- | --------------------------------------------------------------- |
+| `analytics.events`               | Raw event stream from game and training.    | `tenant_id`, `event_type`, `event_ts`, `payload`                |
+| `analytics.user_metrics`         | Aggregated metrics per user.                | `tenant_id`, `user_id`, `metric`, `value`, `period_start`       |
+| `analytics.department_metrics`   | Aggregated metrics per department or group. | `tenant_id`, `department_id`, `metric`, `value`, `period_start` |
+| `analytics.compliance_snapshots` | Point in time snapshots for audit.          | `tenant_id`, `framework_id`, `snapshot_ts`, `summary`           |
 
 These tables are used to generate dashboards and compliance reports. Aggregations are computed via scheduled jobs that are tenant-scoped.
 
@@ -859,23 +859,23 @@ Navigation items are role-aware. Users only see the items permitted by their rol
 
 ### B.2 Page Specifications
 
-| Page | Purpose | Primary Actions | Primary Data Sources |
-|---|---|---|---|
-| Dashboard | Overview of program health and compliance posture. | Filter by time range, download summary. | Analytics, compliance snapshots |
-| Campaigns | Manage training campaigns. | Create, edit, start, pause. | Admin campaigns, enrollment tables |
-| Campaign Detail | View campaign performance and participant status. | Export results, send reminders. | Campaign results, analytics |
-| Users | Manage tenant users and roles. | Invite, suspend, assign roles. | Auth users, org attributes |
-| User Detail | View user training history and performance. | Assign campaign, reset progress. | Analytics user metrics |
-| Groups | Manage dynamic and static groups. | Create group, edit rules. | Org groups, memberships |
-| Phishing Sim | Configure phishing simulations. | Create template, schedule test. | Admin phishing templates and results |
-| Compliance | View compliance framework status. | Generate report, schedule export. | Compliance snapshots, reports |
-| Reports | Archive of generated reports and evidence. | Download, regenerate. | Compliance reports |
-| Integrations | Configure SSO, SCIM, LMS, SIEM, SOAR, HRIS. | Add connection, test, rotate secrets. | Integration connections |
-| Competitions | Manage team competitions and leaderboards. | Create event, configure privacy, view results. | Campaign data, analytics |
-| Localization | Manage language settings and translations. | Enable languages, review translations. | Tenant settings, content |
-| Settings | Tenant profile, branding, and localization. | Update branding, configure retention. | Tenant settings |
-| Billing | Seat counts and plan details. | Upgrade plan, download invoice. | Billing module |
-| Help and Docs | Documentation and support. | Open support ticket. | External docs |
+| Page            | Purpose                                            | Primary Actions                                | Primary Data Sources                 |
+| --------------- | -------------------------------------------------- | ---------------------------------------------- | ------------------------------------ |
+| Dashboard       | Overview of program health and compliance posture. | Filter by time range, download summary.        | Analytics, compliance snapshots      |
+| Campaigns       | Manage training campaigns.                         | Create, edit, start, pause.                    | Admin campaigns, enrollment tables   |
+| Campaign Detail | View campaign performance and participant status.  | Export results, send reminders.                | Campaign results, analytics          |
+| Users           | Manage tenant users and roles.                     | Invite, suspend, assign roles.                 | Auth users, org attributes           |
+| User Detail     | View user training history and performance.        | Assign campaign, reset progress.               | Analytics user metrics               |
+| Groups          | Manage dynamic and static groups.                  | Create group, edit rules.                      | Org groups, memberships              |
+| Phishing Sim    | Configure phishing simulations.                    | Create template, schedule test.                | Admin phishing templates and results |
+| Compliance      | View compliance framework status.                  | Generate report, schedule export.              | Compliance snapshots, reports        |
+| Reports         | Archive of generated reports and evidence.         | Download, regenerate.                          | Compliance reports                   |
+| Integrations    | Configure SSO, SCIM, LMS, SIEM, SOAR, HRIS.        | Add connection, test, rotate secrets.          | Integration connections              |
+| Competitions    | Manage team competitions and leaderboards.         | Create event, configure privacy, view results. | Campaign data, analytics             |
+| Localization    | Manage language settings and translations.         | Enable languages, review translations.         | Tenant settings, content             |
+| Settings        | Tenant profile, branding, and localization.        | Update branding, configure retention.          | Tenant settings                      |
+| Billing         | Seat counts and plan details.                      | Upgrade plan, download invoice.                | Billing module                       |
+| Help and Docs   | Documentation and support.                         | Open support ticket.                           | External docs                        |
 
 ### B.3 Dashboard Widgets
 
@@ -1015,7 +1015,6 @@ Training exports, certificates, and report PDFs are stored in object storage wit
 These examples are intended to be used as a reference for code reviews and security audits.
 
 ---
-
 
 ## Appendix E: Operational Playbooks and Risk Controls
 
@@ -1192,4 +1191,5 @@ Not all risks can be eliminated. Residual risks include:
 These risks are monitored through quarterly reviews and are documented in the compliance risk register.
 
 ---
-*End of Document*
+
+_End of Document_

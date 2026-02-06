@@ -1,4 +1,4 @@
-import type { PaginationMeta } from "./common.js";
+import type { PaginationMeta } from './common.js';
 
 export type ApiError = {
   code: string;

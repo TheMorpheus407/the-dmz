@@ -1,2 +1,2 @@
-export { createLocalId } from "./id";
-export { toIsoTimestamp } from "./time";
+export { createLocalId } from './id';
+export { toIsoTimestamp } from './time';

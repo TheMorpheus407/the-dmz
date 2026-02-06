@@ -1,5 +1,5 @@
 :root {
-  --font-ui: "DMZ Terminal", "DMZ Mono", ui-monospace, monospace;
+  --font-ui: 'DMZ Terminal', 'DMZ Mono', ui-monospace, monospace;
   --color-bg: #050a08;
   --color-surface: #0b1511;
   --color-text: #d4f5e1;
@@ -12,7 +12,7 @@
   --shadow-soft: 0 18px 40px rgba(3, 12, 8, 0.5);
 }
 
-[data-theme="green"] {
+[data-theme='green'] {
   --color-bg: #050a08;
   --color-surface: #0c1a14;
   --color-text: #d7fbe5;

@@ -1,5 +1,5 @@
-import type { GameEvent } from "./events";
-import type { GamePhase } from "./state-machine";
+import type { GameEvent } from './events';
+import type { GamePhase } from './state-machine';
 
 export interface GameState {
   phase: GamePhase;
@@ -8,15 +8,12 @@ export interface GameState {
 }
 
 export const initialGameState: GameState = {
-  phase: "DAY_START",
+  phase: 'DAY_START',
   events: [],
   lastEventId: null,
 };
 
-export const reduceGameState = (
-  state: GameState,
-  event: GameEvent,
-): GameState => ({
+export const reduceGameState = (state: GameState, event: GameEvent): GameState => ({
   ...state,
   events: [...state.events, event],
   lastEventId: event.id,

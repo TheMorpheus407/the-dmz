@@ -31,14 +31,14 @@ This report defines the technical architecture required to deliver the game as a
 
 ### Key Architectural Drivers
 
-| Driver | Constraint |
-|--------|-----------|
-| Platform | Web-first (browser); desktop/mobile responsive |
-| Core loop | Email triage, phishing analysis, resource management |
-| Content model | AI-generated + handcrafted hybrid |
-| Scale target | 10K concurrent users at launch, 100K+ at maturity |
-| Monetization | Subscription + enterprise licensing (multi-tenant) |
-| Regulatory | GDPR, SOC 2 alignment (training platform handling PII) |
+| Driver        | Constraint                                             |
+| ------------- | ------------------------------------------------------ |
+| Platform      | Web-first (browser); desktop/mobile responsive         |
+| Core loop     | Email triage, phishing analysis, resource management   |
+| Content model | AI-generated + handcrafted hybrid                      |
+| Scale target  | 10K concurrent users at launch, 100K+ at maturity      |
+| Monetization  | Subscription + enterprise licensing (multi-tenant)     |
+| Regulatory    | GDPR, SOC 2 alignment (training platform handling PII) |
 
 ---
 
@@ -56,11 +56,11 @@ The frontend is built on modern web standards:
 
 **Primary recommendation: SvelteKit** (with Svelte 5 runes)
 
-| Framework | Pros | Cons | Verdict |
-|-----------|------|------|---------|
-| **React** | Massive ecosystem, hiring pool, mature tooling | Virtual DOM overhead, bundle size, boilerplate for game state | Viable but not optimal |
-| **Vue 3** | Good DX, Composition API, lighter than React | Smaller game-dev ecosystem, two-way binding can obscure state flow | Viable |
-| **SvelteKit** | No virtual DOM (compiled), smallest bundle, built-in SSR/routing, native reactivity model, excellent animation primitives | Smaller ecosystem, fewer hires | **Recommended** |
+| Framework     | Pros                                                                                                                      | Cons                                                               | Verdict                |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------------- |
+| **React**     | Massive ecosystem, hiring pool, mature tooling                                                                            | Virtual DOM overhead, bundle size, boilerplate for game state      | Viable but not optimal |
+| **Vue 3**     | Good DX, Composition API, lighter than React                                                                              | Smaller game-dev ecosystem, two-way binding can obscure state flow | Viable                 |
+| **SvelteKit** | No virtual DOM (compiled), smallest bundle, built-in SSR/routing, native reactivity model, excellent animation primitives | Smaller ecosystem, fewer hires                                     | **Recommended**        |
 
 **Rationale:** Archive Gate is a UI-heavy game — the core loop involves reading emails, filling worksheets, clicking through documents, and monitoring dashboards. This is fundamentally a DOM application, not a canvas game. Svelte's compiled reactivity model eliminates virtual DOM diffing overhead, producing the snappiest possible UI transitions for document inspection and panel switching. SvelteKit provides file-based routing, SSR for initial loads, and API routes — a complete full-stack solution in one framework.
 
@@ -100,13 +100,13 @@ The game has two distinct rendering needs:
 
 2. **Visualization layer (Canvas/WebGL):** Facility status map, network topology visualization, attack animation overlays, real-time threat radar. This is where a lightweight engine adds value.
 
-| Engine | Use Case | Recommendation |
-|--------|----------|----------------|
-| **PixiJS** | 2D facility map, network graph, particle effects for attacks | **Use for visualization layer** |
-| **Phaser** | Full 2D game engine | Overkill — we do not need physics, tilemaps, or sprite-based gameplay |
-| **Three.js** | 3D server room visualization | Future consideration for "walk the data center" mode; not MVP |
-| **D3.js** | Data visualization (threat metrics, analytics) | **Use for dashboards and charts** |
-| **Pure Canvas** | Lightweight custom rendering | Viable for very simple overlays, but PixiJS's WebGL batching is worth the 200KB |
+| Engine          | Use Case                                                     | Recommendation                                                                  |
+| --------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------- |
+| **PixiJS**      | 2D facility map, network graph, particle effects for attacks | **Use for visualization layer**                                                 |
+| **Phaser**      | Full 2D game engine                                          | Overkill — we do not need physics, tilemaps, or sprite-based gameplay           |
+| **Three.js**    | 3D server room visualization                                 | Future consideration for "walk the data center" mode; not MVP                   |
+| **D3.js**       | Data visualization (threat metrics, analytics)               | **Use for dashboards and charts**                                               |
+| **Pure Canvas** | Lightweight custom rendering                                 | Viable for very simple overlays, but PixiJS's WebGL batching is worth the 200KB |
 
 **Integration pattern:** Mount PixiJS `Application` instances inside Svelte components using `bind:this` and `onMount`. The PixiJS canvas receives game state via Svelte stores and renders the visual layer, while the DOM handles all interactive UI. This avoids the "everything in canvas" trap that kills accessibility and increases development cost.
 
@@ -124,7 +124,7 @@ The game has two distinct rendering needs:
     app = new Application();
     await app.init({ canvas, resizeTo: canvas.parentElement });
     // Subscribe to facility state changes and update PixiJS scene
-    const unsub = facilityState.subscribe(state => renderFacility(app, state));
+    const unsub = facilityState.subscribe((state) => renderFacility(app, state));
     return unsub;
   });
 
@@ -153,8 +153,8 @@ export const terminalOpen = writable(false);
 // Core game state — persisted, server-validated
 interface GameState {
   day: number;
-  funds: number;                    // euros
-  threatLevel: number;              // 0-100
+  funds: number; // euros
+  threatLevel: number; // 0-100
   facility: FacilityState;
   inbox: Email[];
   clients: Client[];
@@ -175,6 +175,7 @@ export const gameState = derived(eventLog, ($events) => {
 **Layer 3 — Event Sourcing (Canonical State)**
 
 All game actions are events. State is derived by reducing the event log. This provides:
+
 - Full replay capability
 - Undo/redo
 - Deterministic saves
@@ -197,6 +198,7 @@ type GameEvent =
 ```
 
 **State Persistence Strategy:**
+
 - Event log snapshots saved to IndexedDB every 30 seconds
 - Full state synced to server on day transitions and critical events
 - Server maintains authoritative event log; client log is optimistic
@@ -226,9 +228,7 @@ const CACHE_NAME = `dmz-cache-${version}`;
 const ASSETS = [...build, ...files];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
-  );
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)));
 });
 ```
 
@@ -251,6 +251,7 @@ self.addEventListener('install', (event) => {
 ### 2.6 WebSocket for Real-Time Features
 
 Real-time communication is needed for:
+
 - Live threat alerts and attack notifications
 - Multiplayer/co-op scenarios (future)
 - Real-time facility status updates (power draw, temperature)
@@ -303,6 +304,7 @@ class GameSocket {
 **Recommendation: Start with a modular monolith; extract services when scale demands.**
 
 Premature microservice decomposition is the leading cause of death in early-stage game backends. A modular monolith provides:
+
 - Single deployment unit (simpler ops)
 - In-process communication (no network latency between modules)
 - Shared database with schema-level isolation
@@ -333,6 +335,7 @@ src/
 **Runtime:** Node.js with TypeScript (matches frontend language, shared types, large async ecosystem) or, if performance-critical simulation is required, a Go or Rust service for the threat engine with Node.js for the API layer.
 
 **Recommended stack:**
+
 - **Runtime:** Node.js 22 LTS with TypeScript 5.x
 - **Framework:** Fastify (fastest Node HTTP framework, schema-based validation, plugin system maps to modules)
 - **ORM:** Drizzle ORM (type-safe, SQL-first, excellent migration story)
@@ -340,13 +343,13 @@ src/
 
 **Service extraction triggers:**
 
-| Module | Extract when... |
-|--------|-----------------|
-| `ai-pipeline` | LLM latency affects game loop; needs GPU-backed infrastructure |
-| `analytics` | Write volume exceeds game DB capacity; needs dedicated time-series store |
+| Module          | Extract when...                                                             |
+| --------------- | --------------------------------------------------------------------------- |
+| `ai-pipeline`   | LLM latency affects game loop; needs GPU-backed infrastructure              |
+| `analytics`     | Write volume exceeds game DB capacity; needs dedicated time-series store    |
 | `threat-engine` | Simulation complexity requires dedicated compute; needs independent scaling |
-| `notification` | WebSocket connection count exceeds single-process limits |
-| `billing` | Regulatory or compliance requires isolation |
+| `notification`  | WebSocket connection count exceeds single-process limits                    |
+| `billing`       | Regulatory or compliance requires isolation                                 |
 
 ### 3.2 Game State Management and Persistence
 
@@ -408,14 +411,14 @@ The game operates as a day-based state machine with real-time sub-states:
 
 **Persistence strategy:**
 
-| Data Type | Store | Rationale |
-|-----------|-------|-----------|
-| Event log (canonical) | PostgreSQL (append-only table) | ACID, queryable, proven at scale |
-| Current state snapshot | PostgreSQL (JSONB column) | Fast reads, no event replay needed for current state |
-| Session data | Redis | Ephemeral, fast, auto-expiring |
-| Asset metadata | PostgreSQL | Relational, joins with player data |
-| Real-time metrics | Redis Streams | Sub-millisecond reads, time-windowed |
-| Long-term analytics | ClickHouse or TimescaleDB | Columnar, optimized for time-series aggregation |
+| Data Type              | Store                          | Rationale                                            |
+| ---------------------- | ------------------------------ | ---------------------------------------------------- |
+| Event log (canonical)  | PostgreSQL (append-only table) | ACID, queryable, proven at scale                     |
+| Current state snapshot | PostgreSQL (JSONB column)      | Fast reads, no event replay needed for current state |
+| Session data           | Redis                          | Ephemeral, fast, auto-expiring                       |
+| Asset metadata         | PostgreSQL                     | Relational, joins with player data                   |
+| Real-time metrics      | Redis Streams                  | Sub-millisecond reads, time-windowed                 |
+| Long-term analytics    | ClickHouse or TimescaleDB      | Columnar, optimized for time-series aggregation      |
 
 ### 3.3 Event Sourcing for Game Actions
 
@@ -443,6 +446,7 @@ CREATE INDEX idx_events_type ON game_events(event_type, server_time);
 ```
 
 **Benefits for a training game:**
+
 - **Audit trail:** Enterprise clients can review exactly what decisions a trainee made and in what order
 - **Replay:** Instructors can replay a session to debrief with the trainee
 - **Analytics:** Compute metrics like "average time to identify phishing" by querying event streams
@@ -489,9 +493,7 @@ class EventBus {
   async publish(event: GameEvent): Promise<void> {
     const handlers = this.handlers.get(event.type) ?? new Set();
     const wildcardHandlers = this.handlers.get('*') ?? new Set();
-    await Promise.all(
-      [...handlers, ...wildcardHandlers].map(h => h(event))
-    );
+    await Promise.all([...handlers, ...wildcardHandlers].map((h) => h(event)));
   }
 }
 ```
@@ -502,14 +504,14 @@ class EventBus {
 
 Certain operations should not block the game loop:
 
-| Operation | Queue Strategy | Latency Tolerance |
-|-----------|---------------|-------------------|
-| AI-generated phishing emails | Job queue with priority | 2-10 seconds (pre-generate pool) |
-| Analytics event ingestion | Batched write queue | 30 seconds |
-| Email delivery simulation | Delayed queue (simulates network delay) | 1-30 seconds (in-game time) |
-| Threat scenario compilation | Background job | Minutes (pre-computed) |
-| PDF report generation (enterprise) | Background job | Minutes |
-| Notification dispatch | Priority queue | < 1 second |
+| Operation                          | Queue Strategy                          | Latency Tolerance                |
+| ---------------------------------- | --------------------------------------- | -------------------------------- |
+| AI-generated phishing emails       | Job queue with priority                 | 2-10 seconds (pre-generate pool) |
+| Analytics event ingestion          | Batched write queue                     | 30 seconds                       |
+| Email delivery simulation          | Delayed queue (simulates network delay) | 1-30 seconds (in-game time)      |
+| Threat scenario compilation        | Background job                          | Minutes (pre-computed)           |
+| PDF report generation (enterprise) | Background job                          | Minutes                          |
+| Notification dispatch              | Priority queue                          | < 1 second                       |
 
 **Implementation: BullMQ on Redis**
 
@@ -526,15 +528,19 @@ const emailGenQueue = new Queue('email-generation', {
 });
 
 // Pre-generate email pool
-const worker = new Worker('email-generation', async (job) => {
-  const { difficulty, threatProfile, day } = job.data;
-  const email = await aiPipeline.generatePhishingEmail({
-    difficulty,
-    threatProfile,
-    day,
-  });
-  await emailPool.insert(email);
-}, { connection: redisConnection, concurrency: 5 });
+const worker = new Worker(
+  'email-generation',
+  async (job) => {
+    const { difficulty, threatProfile, day } = job.data;
+    const email = await aiPipeline.generatePhishingEmail({
+      difficulty,
+      threatProfile,
+      day,
+    });
+    await emailPool.insert(email);
+  },
+  { connection: redisConnection, concurrency: 5 },
+);
 ```
 
 **Pre-generation strategy:** Maintain a pool of 20-50 pre-generated emails per difficulty tier. When pool drops below threshold, queue generation jobs. This eliminates player-perceived latency for AI content.
@@ -556,15 +562,15 @@ Application Cache (Redis)
 Database (PostgreSQL)
 ```
 
-| Data | Cache Layer | TTL | Invalidation |
-|------|-------------|-----|-------------|
-| Static assets (JS, CSS, images) | CDN + Browser | 1 year (content-hashed filenames) | Deploy new hash |
-| Game content templates | CDN + Redis | 1 hour | Publish event |
-| Player state snapshot | Redis | Session duration | Write-through on state change |
-| Leaderboards | Redis sorted sets | 30 seconds | Scheduled refresh |
-| AI email pool | Redis | Until consumed | Consumed = deleted |
-| Session tokens | Redis | 24 hours | Logout = delete |
-| Configuration / feature flags | Redis + local | 60 seconds | Admin publish |
+| Data                            | Cache Layer       | TTL                               | Invalidation                  |
+| ------------------------------- | ----------------- | --------------------------------- | ----------------------------- |
+| Static assets (JS, CSS, images) | CDN + Browser     | 1 year (content-hashed filenames) | Deploy new hash               |
+| Game content templates          | CDN + Redis       | 1 hour                            | Publish event                 |
+| Player state snapshot           | Redis             | Session duration                  | Write-through on state change |
+| Leaderboards                    | Redis sorted sets | 30 seconds                        | Scheduled refresh             |
+| AI email pool                   | Redis             | Until consumed                    | Consumed = deleted            |
+| Session tokens                  | Redis             | 24 hours                          | Logout = delete               |
+| Configuration / feature flags   | Redis + local     | 60 seconds                        | Admin publish                 |
 
 **Redis data structures:**
 
@@ -631,15 +637,21 @@ This is the core training mechanic. The AI must generate phishing emails that ar
 ```typescript
 interface PhishingEmailRequest {
   difficulty: 1 | 2 | 3 | 4 | 5;
-  category: 'legitimate' | 'spear_phish' | 'bec' | 'credential_harvest'
-          | 'malware_delivery' | 'pretexting' | 'whaling';
+  category:
+    | 'legitimate'
+    | 'spear_phish'
+    | 'bec'
+    | 'credential_harvest'
+    | 'malware_delivery'
+    | 'pretexting'
+    | 'whaling';
   worldContext: {
     day: number;
     knownClients: string[];
     recentIncidents: string[];
     threatLevel: number;
   };
-  pedagogicalFocus?: string[];  // e.g., ['urgency_cues', 'domain_spoofing']
+  pedagogicalFocus?: string[]; // e.g., ['urgency_cues', 'domain_spoofing']
 }
 ```
 
@@ -651,34 +663,44 @@ interface GeneratedEmail {
   to: { name: string; address: string };
   subject: string;
   body: string;
-  headers: Record<string, string>;   // Includes spoofed headers for analysis
+  headers: Record<string, string>; // Includes spoofed headers for analysis
   attachments?: { name: string; type: string; isMalicious: boolean }[];
   metadata: {
     isPhishing: boolean;
     difficulty: number;
-    indicators: PhishingIndicator[];  // Ground truth for scoring
+    indicators: PhishingIndicator[]; // Ground truth for scoring
     category: string;
-    educationalNotes: string[];       // Shown post-decision
+    educationalNotes: string[]; // Shown post-decision
   };
 }
 
 interface PhishingIndicator {
-  type: 'urgency' | 'domain_mismatch' | 'grammar' | 'spoofed_header'
-      | 'suspicious_link' | 'attachment_risk' | 'impersonation'
-      | 'emotional_manipulation' | 'too_good_to_be_true' | 'authority_claim';
-  location: string;    // Where in the email
+  type:
+    | 'urgency'
+    | 'domain_mismatch'
+    | 'grammar'
+    | 'spoofed_header'
+    | 'suspicious_link'
+    | 'attachment_risk'
+    | 'impersonation'
+    | 'emotional_manipulation'
+    | 'too_good_to_be_true'
+    | 'authority_claim';
+  location: string; // Where in the email
   description: string; // Human-readable explanation
   severity: 'low' | 'medium' | 'high';
 }
 ```
 
 **LLM provider strategy:**
+
 - **Primary:** Anthropic Claude API (Claude Sonnet for generation, Claude Haiku for classification/scoring)
 - **Fallback:** Self-hosted open-source model (Mistral/Llama variant) for offline enterprise deployments
 - **Pre-generation:** Batch generate during off-peak; maintain pool of 200+ emails across difficulty tiers
 - **Cost control:** Cache-friendly prompts; avoid per-player generation for common scenarios; use template hydration for simple variations
 
 **Safety guardrails:**
+
 - Generated emails must not contain real company names, real people, or functional malicious payloads
 - Output validation rejects emails containing real URLs, real phone numbers, or PII
 - Content policy layer filters outputs before pool insertion
@@ -695,7 +717,7 @@ interface ThreatScenario {
   description: string;
   phases: ScenarioPhase[];
   difficulty: number;
-  duration: number;         // in game days
+  duration: number; // in game days
   triggerConditions: {
     minDay: number;
     minThreatLevel: number;
@@ -705,14 +727,15 @@ interface ThreatScenario {
 }
 
 interface ScenarioPhase {
-  day: number;              // relative to scenario start
-  events: GameEvent[];      // emails, attacks, intel briefs
+  day: number; // relative to scenario start
+  events: GameEvent[]; // emails, attacks, intel briefs
   successCondition: string; // what the player must do
   failureConsequence: string;
 }
 ```
 
 **Generation approach:**
+
 - Core scenarios are hand-authored by cybersecurity experts (30-50 scenarios)
 - AI generates variations: different sender names, altered email text, shuffled indicators, new pretexts
 - AI combines scenario building blocks into novel multi-phase attacks
@@ -724,13 +747,13 @@ The game must feel challenging but not overwhelming. The difficulty engine adjus
 
 ```typescript
 interface PlayerSkillProfile {
-  phishingDetectionRate: number;    // 0-1
-  falsePositiveRate: number;        // 0-1
-  averageDecisionTime: number;      // seconds
+  phishingDetectionRate: number; // 0-1
+  falsePositiveRate: number; // 0-1
+  averageDecisionTime: number; // seconds
   indicatorIdentificationRate: Record<IndicatorType, number>;
   scenariosCompleted: number;
-  currentStreak: number;            // correct decisions in a row
-  recentAccuracy: number[];         // last 20 decisions
+  currentStreak: number; // correct decisions in a row
+  recentAccuracy: number[]; // last 20 decisions
 }
 
 function computeDifficulty(profile: PlayerSkillProfile): DifficultyParams {
@@ -740,17 +763,17 @@ function computeDifficulty(profile: PlayerSkillProfile): DifficultyParams {
   if (currentSuccessRate > 0.85) {
     // Player is coasting: increase difficulty
     return {
-      phishingRatio: increase(),       // more phishing emails
-      subtlety: increase(),            // fewer obvious indicators
-      newIndicatorTypes: introduce(),  // introduce unseen attack patterns
-      timePresure: increase(),         // more emails per day
+      phishingRatio: increase(), // more phishing emails
+      subtlety: increase(), // fewer obvious indicators
+      newIndicatorTypes: introduce(), // introduce unseen attack patterns
+      timePresure: increase(), // more emails per day
     };
-  } else if (currentSuccessRate < 0.60) {
+  } else if (currentSuccessRate < 0.6) {
     // Player is struggling: decrease difficulty
     return {
       phishingRatio: decrease(),
       subtlety: decrease(),
-      hints: enable(),                 // show tutorial hints
+      hints: enable(), // show tutorial hints
       timePresure: decrease(),
     };
   }
@@ -759,6 +782,7 @@ function computeDifficulty(profile: PlayerSkillProfile): DifficultyParams {
 ```
 
 **Difficulty dimensions:**
+
 1. **Phishing subtlety:** Number and obviousness of indicators
 2. **Volume:** Emails per game day
 3. **Time pressure:** Urgency of decisions (client deadlines, active attacks)
@@ -777,16 +801,22 @@ interface ClientProfile {
   id: string;
   name: string;
   organization: string;
-  archetype: 'university_researcher' | 'government_official' | 'startup_founder'
-           | 'hospital_admin' | 'journalist' | 'military_contractor'
-           | 'elderly_citizen' | 'competing_datacenter';
+  archetype:
+    | 'university_researcher'
+    | 'government_official'
+    | 'startup_founder'
+    | 'hospital_admin'
+    | 'journalist'
+    | 'military_contractor'
+    | 'elderly_citizen'
+    | 'competing_datacenter';
   communicationStyle: {
-    formality: number;      // 0 (casual) to 1 (very formal)
-    urgency: number;        // 0 (patient) to 1 (desperate)
+    formality: number; // 0 (casual) to 1 (very formal)
+    urgency: number; // 0 (patient) to 1 (desperate)
     technicalLevel: number; // 0 (non-technical) to 1 (expert)
-    emotionality: number;   // 0 (stoic) to 1 (emotional)
+    emotionality: number; // 0 (stoic) to 1 (emotional)
   };
-  trustScore: number;       // internal, hidden from player
+  trustScore: number; // internal, hidden from player
   backstory: string;
   dataAtRisk: string;
   isLegitimate: boolean;
@@ -794,6 +824,7 @@ interface ClientProfile {
 ```
 
 **Adversary NPC behavior:**
+
 - Adversaries adapt to player patterns (if player always checks headers, adversaries improve header spoofing)
 - Adversaries share intelligence (if one attack vector fails, they try different vectors)
 - Adversary sophistication scales with player progression and game day
@@ -818,8 +849,8 @@ For enterprise deployments, the AI generates personalized training recommendatio
 interface LearningRecommendation {
   playerId: string;
   weakAreas: {
-    category: string;          // e.g., "Business Email Compromise"
-    proficiency: number;       // 0-1
+    category: string; // e.g., "Business Email Compromise"
+    proficiency: number; // 0-1
     recommendedScenarios: string[];
     externalResources: string[];
   }[];
@@ -828,7 +859,7 @@ interface LearningRecommendation {
     difficulty: number;
     estimatedDuration: number; // minutes
   };
-  progressSummary: string;     // Natural language summary for managers
+  progressSummary: string; // Natural language summary for managers
 }
 ```
 
@@ -929,17 +960,17 @@ CREATE TABLE analytics_events (
 
 **Key analytics events:**
 
-| Event Name | Properties | Purpose |
-|------------|-----------|---------|
-| `session.started` | `{difficulty, seed}` | Funnel analysis |
-| `session.ended` | `{day, funds, reason}` | Retention, completion rates |
-| `email.viewed` | `{emailId, timeSpent}` | Engagement analysis |
-| `email.decided` | `{emailId, decision, correct, timeToDecide}` | Core training metric |
-| `indicator.identified` | `{indicatorType, correct}` | Skill decomposition |
-| `upgrade.purchased` | `{upgradeId, cost}` | Game economy analytics |
-| `breach.occurred` | `{day, attackVector}` | Difficulty tuning |
-| `hint.requested` | `{context}` | Struggling player detection |
-| `tutorial.completed` | `{tutorialId, timeSpent}` | Onboarding analysis |
+| Event Name             | Properties                                   | Purpose                     |
+| ---------------------- | -------------------------------------------- | --------------------------- |
+| `session.started`      | `{difficulty, seed}`                         | Funnel analysis             |
+| `session.ended`        | `{day, funds, reason}`                       | Retention, completion rates |
+| `email.viewed`         | `{emailId, timeSpent}`                       | Engagement analysis         |
+| `email.decided`        | `{emailId, decision, correct, timeToDecide}` | Core training metric        |
+| `indicator.identified` | `{indicatorType, correct}`                   | Skill decomposition         |
+| `upgrade.purchased`    | `{upgradeId, cost}`                          | Game economy analytics      |
+| `breach.occurred`      | `{day, attackVector}`                        | Difficulty tuning           |
+| `hint.requested`       | `{context}`                                  | Struggling player detection |
+| `tutorial.completed`   | `{tutorialId, timeSpent}`                    | Onboarding analysis         |
 
 ### 5.3 Multi-Tenant Data Isolation
 
@@ -981,9 +1012,7 @@ CREATE POLICY tenant_isolation ON game_events
 async function tenantMiddleware(req: FastifyRequest, reply: FastifyReply) {
   const tenantId = req.user?.tenantId;
   if (!tenantId) throw new UnauthorizedError();
-  await req.server.db.execute(
-    sql`SET LOCAL app.current_tenant_id = ${tenantId}`
-  );
+  await req.server.db.execute(sql`SET LOCAL app.current_tenant_id = ${tenantId}`);
 }
 ```
 
@@ -1049,8 +1078,14 @@ Game content (emails, documents, scenarios, upgrade definitions) is managed thro
 // All content is versioned and tagged
 interface ContentItem {
   id: string;
-  type: 'email_template' | 'scenario' | 'upgrade' | 'document_template'
-      | 'achievement' | 'intel_brief' | 'tutorial';
+  type:
+    | 'email_template'
+    | 'scenario'
+    | 'upgrade'
+    | 'document_template'
+    | 'achievement'
+    | 'intel_brief'
+    | 'tutorial';
   version: number;
   status: 'draft' | 'review' | 'published' | 'archived';
   tags: string[];
@@ -1087,6 +1122,7 @@ CREATE INDEX idx_content_fts ON content_items
 ```
 
 **Admin interface:** SvelteKit admin routes (`/admin/content`) with:
+
 - Content editor with live preview
 - Version comparison (diff view)
 - Bulk publish/archive
@@ -1099,7 +1135,7 @@ Game balance (economy values, difficulty curves, upgrade costs, threat parameter
 
 ```typescript
 interface BalanceConfig {
-  version: string;           // semver
+  version: string; // semver
   effectiveFrom: Date;
   description: string;
   economy: {
@@ -1107,8 +1143,8 @@ interface BalanceConfig {
     baseClientPayment: [number, number]; // min, max
     storageLeaseCostPerDay: number;
     upgradeCosts: Record<string, number>;
-    ransomDivisor: number;     // currently 10
-    ransomMinimum: number;     // currently 1
+    ransomDivisor: number; // currently 10
+    ransomMinimum: number; // currently 1
   };
   difficulty: {
     basePhishingRatio: number;
@@ -1170,8 +1206,8 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm ci
-      - run: npm run lint          # ESLint + Prettier check
-      - run: npm run typecheck     # tsc --noEmit
+      - run: npm run lint # ESLint + Prettier check
+      - run: npm run typecheck # tsc --noEmit
 
   test:
     runs-on: ubuntu-latest
@@ -1189,9 +1225,9 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm ci
-      - run: npm run test:unit     # Vitest
+      - run: npm run test:unit # Vitest
       - run: npm run test:integration
-      - run: npm run test:e2e      # Playwright
+      - run: npm run test:e2e # Playwright
 
   build:
     needs: [lint, test]
@@ -1219,7 +1255,7 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: production     # requires manual approval
+    environment: production # requires manual approval
     steps:
       - uses: actions/download-artifact@v4
       - run: ./scripts/deploy.sh production
@@ -1270,7 +1306,7 @@ const vpc = new aws.ec2.Vpc('dmz-vpc', {
 // EKS Cluster
 const cluster = new aws.eks.Cluster('dmz-cluster', {
   vpcConfig: {
-    subnetIds: privateSubnets.map(s => s.id),
+    subnetIds: privateSubnets.map((s) => s.id),
     securityGroupIds: [clusterSg.id],
   },
   version: '1.29',
@@ -1301,17 +1337,17 @@ const redis = new aws.elasticache.ReplicationGroup('dmz-redis', {
 
 **Infrastructure components:**
 
-| Component | Service | Staging | Production |
-|-----------|---------|---------|------------|
-| Compute | EKS (Kubernetes) | 2 nodes, t3.large | 4-8 nodes, m6i.xlarge, auto-scaling |
-| Database | RDS PostgreSQL 16 + TimescaleDB | Single AZ, db.t4g.medium | Multi-AZ, db.r6g.xlarge |
-| Cache | ElastiCache Redis 7 | Single node | 3-node replication group |
-| CDN | CloudFront | Single distribution | Multi-origin with failover |
-| Object Storage | S3 | Single bucket | Cross-region replication |
-| DNS | Route 53 | Subdomain | Primary domain with health checks |
-| Secrets | AWS Secrets Manager | Shared | Per-environment |
-| Monitoring | CloudWatch + Grafana Cloud | Basic | Full observability stack |
-| AI | Claude API | Shared key | Dedicated throughput |
+| Component      | Service                         | Staging                  | Production                          |
+| -------------- | ------------------------------- | ------------------------ | ----------------------------------- |
+| Compute        | EKS (Kubernetes)                | 2 nodes, t3.large        | 4-8 nodes, m6i.xlarge, auto-scaling |
+| Database       | RDS PostgreSQL 16 + TimescaleDB | Single AZ, db.t4g.medium | Multi-AZ, db.r6g.xlarge             |
+| Cache          | ElastiCache Redis 7             | Single node              | 3-node replication group            |
+| CDN            | CloudFront                      | Single distribution      | Multi-origin with failover          |
+| Object Storage | S3                              | Single bucket            | Cross-region replication            |
+| DNS            | Route 53                        | Subdomain                | Primary domain with health checks   |
+| Secrets        | AWS Secrets Manager             | Shared                   | Per-environment                     |
+| Monitoring     | CloudWatch + Grafana Cloud      | Basic                    | Full observability stack            |
+| AI             | Claude API                      | Shared key               | Dedicated throughput                |
 
 ### 6.3 Container Orchestration
 
@@ -1457,6 +1493,7 @@ const emailPoolSize = new Gauge({
 ```
 
 **Key dashboards:**
+
 - **Game Health:** Active sessions, decisions/minute, error rate, WebSocket connections
 - **AI Pipeline:** Generation latency, pool sizes, LLM API costs, fallback rate
 - **Infrastructure:** CPU/memory, database connections, Redis memory, queue depths
@@ -1483,15 +1520,18 @@ const logger = pino({
 });
 
 // Game event logging
-logger.info({
-  event: 'email_decision',
-  playerId: player.id,
-  sessionId: session.id,
-  emailId: email.id,
-  decision: 'approve',
-  correct: true,
-  timeMs: 4200,
-}, 'Player made email decision');
+logger.info(
+  {
+    event: 'email_decision',
+    playerId: player.id,
+    sessionId: session.id,
+    emailId: email.id,
+    decision: 'approve',
+    correct: true,
+    timeMs: 4200,
+  },
+  'Player made email decision',
+);
 ```
 
 **3. Traces (OpenTelemetry)**
@@ -1525,15 +1565,15 @@ async function handleEmailDecision(req: Request) {
 
 **Alerting rules:**
 
-| Alert | Condition | Severity |
-|-------|-----------|----------|
-| High error rate | 5xx rate > 1% for 5 min | Critical |
-| Slow decisions | p99 API latency > 500ms for 10 min | Warning |
-| Email pool depleted | Pool size < 5 for any difficulty tier | Critical |
-| Database connections exhausted | Active connections > 80% of max | Critical |
-| WebSocket storm | Connections spike > 200% in 1 min | Warning |
-| AI API failure | LLM API error rate > 10% | Critical |
-| Breach rate anomaly | Player breach rate > 80% (difficulty miscalibration) | Warning |
+| Alert                          | Condition                                            | Severity |
+| ------------------------------ | ---------------------------------------------------- | -------- |
+| High error rate                | 5xx rate > 1% for 5 min                              | Critical |
+| Slow decisions                 | p99 API latency > 500ms for 10 min                   | Warning  |
+| Email pool depleted            | Pool size < 5 for any difficulty tier                | Critical |
+| Database connections exhausted | Active connections > 80% of max                      | Critical |
+| WebSocket storm                | Connections spike > 200% in 1 min                    | Warning  |
+| AI API failure                 | LLM API error rate > 10%                             | Critical |
+| Breach rate anomaly            | Player breach rate > 80% (difficulty miscalibration) | Warning  |
 
 ### 6.5 Feature Flags for A/B Testing
 
@@ -1545,34 +1585,30 @@ import { OpenFeature } from '@openfeature/server-sdk';
 const client = OpenFeature.getClient();
 
 // Check feature flag with context
-const showNewThreatRadar = await client.getBooleanValue(
-  'new-threat-radar',
-  false,
-  {
-    targetingKey: player.id,
-    tenantId: player.tenantId,
-    plan: tenant.plan,
-    playerSkill: profile.skillRating,
-  }
-);
+const showNewThreatRadar = await client.getBooleanValue('new-threat-radar', false, {
+  targetingKey: player.id,
+  tenantId: player.tenantId,
+  plan: tenant.plan,
+  playerSkill: profile.skillRating,
+});
 
 // Numeric variant for A/B testing balance
 const ransomDivisor = await client.getNumberValue(
   'ransom-divisor',
-  10,  // default from story.md
-  { targetingKey: player.id }
+  10, // default from story.md
+  { targetingKey: player.id },
 );
 ```
 
 **Feature flag categories:**
 
-| Category | Examples | Rollout Strategy |
-|----------|----------|-----------------|
-| **Kill switches** | `ai-generation-enabled`, `websocket-enabled` | 100% or 0% |
-| **Gradual rollouts** | `new-email-viewer`, `threat-radar-v2` | 5% -> 25% -> 50% -> 100% |
-| **A/B tests** | `ransom-divisor-variant`, `difficulty-curve-v2` | 50/50 split |
-| **Enterprise toggles** | `custom-branding`, `sso-enabled`, `data-export` | Per-tenant |
-| **Dev/debug** | `show-phishing-indicators`, `skip-tutorial` | Dev environment only |
+| Category               | Examples                                        | Rollout Strategy         |
+| ---------------------- | ----------------------------------------------- | ------------------------ |
+| **Kill switches**      | `ai-generation-enabled`, `websocket-enabled`    | 100% or 0%               |
+| **Gradual rollouts**   | `new-email-viewer`, `threat-radar-v2`           | 5% -> 25% -> 50% -> 100% |
+| **A/B tests**          | `ransom-divisor-variant`, `difficulty-curve-v2` | 50/50 split              |
+| **Enterprise toggles** | `custom-branding`, `sso-enabled`, `data-export` | Per-tenant               |
+| **Dev/debug**          | `show-phishing-indicators`, `skip-tutorial`     | Dev environment only     |
 
 ### 6.6 Blue-Green / Canary Deployments
 
@@ -1589,9 +1625,9 @@ spec:
   strategy:
     canary:
       steps:
-        - setWeight: 10          # 10% traffic to canary
+        - setWeight: 10 # 10% traffic to canary
         - pause: { duration: 5m } # observe for 5 minutes
-        - analysis:               # automated analysis
+        - analysis: # automated analysis
             templates:
               - templateName: success-rate
               - templateName: latency-check
@@ -1599,7 +1635,7 @@ spec:
         - pause: { duration: 5m }
         - setWeight: 60
         - pause: { duration: 5m }
-        - setWeight: 100          # full rollout
+        - setWeight: 100 # full rollout
       canaryMetadata:
         labels:
           deployment: canary
@@ -1636,6 +1672,7 @@ spec:
 7. Zero-downtime guaranteed; WebSocket connections gracefully drained
 
 **Database migrations:**
+
 - Forward-only migrations (no destructive changes in production)
 - Expand-contract pattern: add new column -> backfill -> update code -> drop old column
 - Migrations run as a pre-deployment Kubernetes Job
@@ -1647,13 +1684,13 @@ spec:
 
 ### 7.1 Page Load Time Targets
 
-| Metric | Target | Strategy |
-|--------|--------|----------|
-| First Contentful Paint (FCP) | < 1.0s | SSR via SvelteKit, critical CSS inlined |
-| Largest Contentful Paint (LCP) | < 2.0s | Preload hero assets, optimize images |
-| Time to Interactive (TTI) | < 3.0s | Code splitting, deferred non-critical JS |
-| Cumulative Layout Shift (CLS) | < 0.1 | Reserved dimensions for dynamic content |
-| First Input Delay (FID) | < 50ms | Minimal main-thread work on load |
+| Metric                         | Target | Strategy                                 |
+| ------------------------------ | ------ | ---------------------------------------- |
+| First Contentful Paint (FCP)   | < 1.0s | SSR via SvelteKit, critical CSS inlined  |
+| Largest Contentful Paint (LCP) | < 2.0s | Preload hero assets, optimize images     |
+| Time to Interactive (TTI)      | < 3.0s | Code splitting, deferred non-critical JS |
+| Cumulative Layout Shift (CLS)  | < 0.1  | Reserved dimensions for dynamic content  |
+| First Input Delay (FID)        | < 50ms | Minimal main-thread work on load         |
 
 **Strategies:**
 
@@ -1665,27 +1702,27 @@ spec:
 
 **Bundle budget:**
 
-| Chunk | Budget | Contents |
-|-------|--------|----------|
-| Framework runtime | < 15 KB gzipped | Svelte runtime |
-| App shell | < 50 KB gzipped | Layout, navigation, auth |
-| Inbox module | < 40 KB gzipped | Email viewer, list, decision UI |
-| Facility module | < 60 KB gzipped | PixiJS visualization, dashboard |
-| Intel module | < 30 KB gzipped | Intelligence briefs, D3 charts |
-| Shared utilities | < 20 KB gzipped | State management, API client, formatters |
-| **Total initial load** | **< 100 KB gzipped** | Shell + first route |
+| Chunk                  | Budget               | Contents                                 |
+| ---------------------- | -------------------- | ---------------------------------------- |
+| Framework runtime      | < 15 KB gzipped      | Svelte runtime                           |
+| App shell              | < 50 KB gzipped      | Layout, navigation, auth                 |
+| Inbox module           | < 40 KB gzipped      | Email viewer, list, decision UI          |
+| Facility module        | < 60 KB gzipped      | PixiJS visualization, dashboard          |
+| Intel module           | < 30 KB gzipped      | Intelligence briefs, D3 charts           |
+| Shared utilities       | < 20 KB gzipped      | State management, API client, formatters |
+| **Total initial load** | **< 100 KB gzipped** | Shell + first route                      |
 
 ### 7.2 Game Action Response Time
 
-| Action | Target | Architecture |
-|--------|--------|-------------|
-| Email list load | < 100ms | Pre-fetched, cached in store |
-| Email decision (approve/reject) | < 100ms | Optimistic UI update; server confirms async |
-| Phishing indicator selection | < 50ms | Pure client-side state |
-| Upgrade purchase | < 150ms | Optimistic with server validation |
-| Day advance | < 500ms | Server computes next day, streams events via WebSocket |
-| Facility status poll | < 50ms | WebSocket push, no request needed |
-| Save game | < 200ms | Background IndexedDB write + async server sync |
+| Action                          | Target  | Architecture                                           |
+| ------------------------------- | ------- | ------------------------------------------------------ |
+| Email list load                 | < 100ms | Pre-fetched, cached in store                           |
+| Email decision (approve/reject) | < 100ms | Optimistic UI update; server confirms async            |
+| Phishing indicator selection    | < 50ms  | Pure client-side state                                 |
+| Upgrade purchase                | < 150ms | Optimistic with server validation                      |
+| Day advance                     | < 500ms | Server computes next day, streams events via WebSocket |
+| Facility status poll            | < 50ms  | WebSocket push, no request needed                      |
+| Save game                       | < 200ms | Background IndexedDB write + async server sync         |
 
 **Optimistic updates pattern:**
 
@@ -1696,7 +1733,7 @@ async function approveEmail(emailId: string) {
     type: 'EMAIL_APPROVED',
     payload: { emailId, clientId: email.clientId },
   };
-  localEventLog.append(event);  // Triggers derived store recomputation
+  localEventLog.append(event); // Triggers derived store recomputation
 
   // 2. Send to server (fire and forget with retry)
   try {
@@ -1716,23 +1753,23 @@ async function approveEmail(emailId: string) {
 
 **Scaling tiers:**
 
-| Tier | Users | Infrastructure |
-|------|-------|---------------|
-| Launch | 1K-10K | 3 API pods, 1 worker pod, single RDS, single Redis |
-| Growth | 10K-50K | 6-10 API pods, 3 worker pods, RDS read replicas, Redis cluster |
-| Scale | 50K-100K | 15-20 API pods, 5+ worker pods, RDS multi-region, Redis cluster mode |
-| Enterprise | 100K+ | Regional deployments, database sharding, dedicated tenant clusters |
+| Tier       | Users    | Infrastructure                                                       |
+| ---------- | -------- | -------------------------------------------------------------------- |
+| Launch     | 1K-10K   | 3 API pods, 1 worker pod, single RDS, single Redis                   |
+| Growth     | 10K-50K  | 6-10 API pods, 3 worker pods, RDS read replicas, Redis cluster       |
+| Scale      | 50K-100K | 15-20 API pods, 5+ worker pods, RDS multi-region, Redis cluster mode |
+| Enterprise | 100K+    | Regional deployments, database sharding, dedicated tenant clusters   |
 
 **Connection budget per API pod:**
 
-| Resource | Budget |
-|----------|--------|
-| HTTP connections | 1,000 concurrent |
-| WebSocket connections | 5,000 concurrent |
-| Database connections | 20 (pooled via PgBouncer) |
-| Redis connections | 50 |
-| Memory | 1 GB |
-| CPU | 1 vCPU |
+| Resource              | Budget                    |
+| --------------------- | ------------------------- |
+| HTTP connections      | 1,000 concurrent          |
+| WebSocket connections | 5,000 concurrent          |
+| Database connections  | 20 (pooled via PgBouncer) |
+| Redis connections     | 50                        |
+| Memory                | 1 GB                      |
+| CPU                   | 1 vCPU                    |
 
 **WebSocket scaling:** Use Redis pub/sub to broadcast events across API pods. Each pod subscribes to channels for its connected sessions. Alternatively, use a dedicated WebSocket gateway (e.g., Centrifugo or Soketi) that handles connections at scale and publishes to the API via HTTP.
 
@@ -1758,12 +1795,14 @@ async function approveEmail(emailId: string) {
 ```
 
 **CDN strategy:**
+
 - Static assets served from CDN edge (< 50ms globally)
 - API requests routed to nearest region via GeoDNS or Cloudflare Workers
 - WebSocket connections pinned to nearest region
 - Database writes route to primary region; reads are regional
 
 **Edge computing (future):** Use Cloudflare Workers or AWS Lambda@Edge for:
+
 - Authentication token validation
 - Feature flag evaluation
 - Simple game state reads (from regional KV store)
@@ -1814,14 +1853,14 @@ Source Assets
 
 ```html
 <!-- Preload critical assets -->
-<link rel="preload" href="/fonts/mono-subset.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/api/game/state" as="fetch" crossorigin>
+<link rel="preload" href="/fonts/mono-subset.woff2" as="font" type="font/woff2" crossorigin />
+<link rel="preload" href="/api/game/state" as="fetch" crossorigin />
 
 <!-- Prefetch likely next routes -->
-<link rel="prefetch" href="/game/facility">
+<link rel="prefetch" href="/game/facility" />
 
 <!-- DNS prefetch for AI API -->
-<link rel="dns-prefetch" href="https://api.anthropic.com">
+<link rel="dns-prefetch" href="https://api.anthropic.com" />
 ```
 
 ---
@@ -1834,18 +1873,18 @@ A cybersecurity training game must itself be exceptionally secure. A breach of t
 
 ### 8.1 OWASP Top 10 Mitigation
 
-| OWASP Category | Risk in Archive Gate | Mitigation |
-|---------------|---------------------|------------|
-| **A01: Broken Access Control** | Tenant data leakage; admin escalation | RLS in PostgreSQL, RBAC middleware, tenant ID in JWT, comprehensive access control tests |
-| **A02: Cryptographic Failures** | Player PII exposure; session hijacking | TLS 1.3 everywhere, AES-256 for data at rest, bcrypt/argon2 for passwords, no secrets in client bundles |
-| **A03: Injection** | SQL injection via game content; XSS via AI-generated email display | Parameterized queries (Drizzle ORM), CSP headers, DOMPurify for AI content rendering, no `innerHTML` |
-| **A04: Insecure Design** | Game state manipulation; economy exploits | Server-authoritative state, event validation, rate limiting on game actions, anomaly detection |
-| **A05: Security Misconfiguration** | Default credentials; exposed debug endpoints | IaC enforces configurations, no default passwords, debug endpoints behind feature flags, security headers |
-| **A06: Vulnerable Components** | Supply chain attack via npm packages | Dependabot, `npm audit`, lockfile integrity, minimal dependency policy, Snyk in CI |
-| **A07: Authentication Failures** | Account takeover; session fixation | OAuth 2.0 / OIDC (enterprise SSO), MFA support, secure session management, password complexity rules |
-| **A08: Data Integrity Failures** | Tampered game state; modified client code | Event sourcing with server validation, SRI for CDN assets, signed API responses for critical state |
-| **A09: Logging Failures** | Undetected breaches; missing audit trail | Structured logging, immutable audit log, alert on anomalous patterns, SIEM integration for enterprise |
-| **A10: SSRF** | AI pipeline fetching malicious URLs | AI-generated content never triggers server-side fetches, URL allowlisting, network segmentation |
+| OWASP Category                     | Risk in Archive Gate                                               | Mitigation                                                                                                |
+| ---------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| **A01: Broken Access Control**     | Tenant data leakage; admin escalation                              | RLS in PostgreSQL, RBAC middleware, tenant ID in JWT, comprehensive access control tests                  |
+| **A02: Cryptographic Failures**    | Player PII exposure; session hijacking                             | TLS 1.3 everywhere, AES-256 for data at rest, bcrypt/argon2 for passwords, no secrets in client bundles   |
+| **A03: Injection**                 | SQL injection via game content; XSS via AI-generated email display | Parameterized queries (Drizzle ORM), CSP headers, DOMPurify for AI content rendering, no `innerHTML`      |
+| **A04: Insecure Design**           | Game state manipulation; economy exploits                          | Server-authoritative state, event validation, rate limiting on game actions, anomaly detection            |
+| **A05: Security Misconfiguration** | Default credentials; exposed debug endpoints                       | IaC enforces configurations, no default passwords, debug endpoints behind feature flags, security headers |
+| **A06: Vulnerable Components**     | Supply chain attack via npm packages                               | Dependabot, `npm audit`, lockfile integrity, minimal dependency policy, Snyk in CI                        |
+| **A07: Authentication Failures**   | Account takeover; session fixation                                 | OAuth 2.0 / OIDC (enterprise SSO), MFA support, secure session management, password complexity rules      |
+| **A08: Data Integrity Failures**   | Tampered game state; modified client code                          | Event sourcing with server validation, SRI for CDN assets, signed API responses for critical state        |
+| **A09: Logging Failures**          | Undetected breaches; missing audit trail                           | Structured logging, immutable audit log, alert on anomalous patterns, SIEM integration for enterprise     |
+| **A10: SSRF**                      | AI pipeline fetching malicious URLs                                | AI-generated content never triggers server-side fetches, URL allowlisting, network segmentation           |
 
 ### 8.2 API Security
 
@@ -1887,8 +1926,8 @@ A cybersecurity training game must itself be exceptionally secure. A breach of t
 ```typescript
 // JWT with short-lived access tokens
 const accessTokenConfig = {
-  algorithm: 'ES256',          // ECDSA, not RSA (faster, smaller)
-  expiresIn: '15m',            // Short-lived
+  algorithm: 'ES256', // ECDSA, not RSA (faster, smaller)
+  expiresIn: '15m', // Short-lived
   issuer: 'archive-gate',
   audience: 'archive-gate-api',
 };
@@ -1898,8 +1937,8 @@ const refreshTokenConfig = {
   httpOnly: true,
   secure: true,
   sameSite: 'Strict' as const,
-  maxAge: 7 * 24 * 60 * 60,   // 7 days
-  path: '/api/auth/refresh',   // Scoped to refresh endpoint only
+  maxAge: 7 * 24 * 60 * 60, // 7 days
+  path: '/api/auth/refresh', // Scoped to refresh endpoint only
 };
 ```
 
@@ -1911,10 +1950,14 @@ import { z } from 'zod';
 const emailDecisionSchema = z.object({
   emailId: z.string().uuid(),
   decision: z.enum(['approve', 'reject']),
-  indicators: z.array(z.object({
-    type: z.enum(['urgency', 'domain_mismatch', 'grammar', /* ... */]),
-    location: z.string().max(200),
-  })).optional(),
+  indicators: z
+    .array(
+      z.object({
+        type: z.enum(['urgency', 'domain_mismatch', 'grammar' /* ... */]),
+        location: z.string().max(200),
+      }),
+    )
+    .optional(),
   notes: z.string().max(1000).optional(),
 });
 
@@ -1928,14 +1971,14 @@ app.post('/api/game/email/decide', {
 
 ### 8.3 Data Encryption
 
-| Data State | Method | Key Management |
-|-----------|--------|---------------|
-| **In transit** | TLS 1.3 (minimum TLS 1.2) | Managed certificates via ACM or Let's Encrypt |
-| **At rest (database)** | AES-256 (RDS encryption) | AWS KMS managed keys |
-| **At rest (Redis)** | ElastiCache encryption | AWS KMS managed keys |
-| **At rest (S3)** | SSE-S3 or SSE-KMS | AWS KMS with key rotation |
-| **Player PII** | Application-level encryption (AES-256-GCM) | Customer-managed keys (enterprise) |
-| **Backups** | Encrypted at rest | Same KMS keys as source |
+| Data State             | Method                                     | Key Management                                |
+| ---------------------- | ------------------------------------------ | --------------------------------------------- |
+| **In transit**         | TLS 1.3 (minimum TLS 1.2)                  | Managed certificates via ACM or Let's Encrypt |
+| **At rest (database)** | AES-256 (RDS encryption)                   | AWS KMS managed keys                          |
+| **At rest (Redis)**    | ElastiCache encryption                     | AWS KMS managed keys                          |
+| **At rest (S3)**       | SSE-S3 or SSE-KMS                          | AWS KMS with key rotation                     |
+| **Player PII**         | Application-level encryption (AES-256-GCM) | Customer-managed keys (enterprise)            |
+| **Backups**            | Encrypted at rest                          | Same KMS keys as source                       |
 
 **Application-level encryption for PII:**
 
@@ -1959,10 +2002,7 @@ class FieldEncryption {
   }
 
   decrypt(field: EncryptedField, key: Buffer): string {
-    const decipher = createDecipheriv(
-      this.algorithm, key,
-      Buffer.from(field.iv, 'base64')
-    );
+    const decipher = createDecipheriv(this.algorithm, key, Buffer.from(field.iv, 'base64'));
     decipher.setAuthTag(Buffer.from(field.tag, 'base64'));
     return decipher.update(field.ciphertext, 'base64', 'utf8') + decipher.final('utf8');
   }
@@ -2007,16 +2047,16 @@ const rateLimitConfig = {
 ```typescript
 async function slidingWindowRateLimit(
   key: string,
-  window: number,  // seconds
+  window: number, // seconds
   max: number,
 ): Promise<{ allowed: boolean; remaining: number; resetAt: number }> {
   const now = Date.now();
   const windowStart = now - window * 1000;
 
   const pipeline = redis.pipeline();
-  pipeline.zremrangebyscore(key, 0, windowStart);  // Remove expired
-  pipeline.zadd(key, now, `${now}:${Math.random()}`);  // Add current
-  pipeline.zcard(key);  // Count in window
+  pipeline.zremrangebyscore(key, 0, windowStart); // Remove expired
+  pipeline.zadd(key, now, `${now}:${Math.random()}`); // Add current
+  pipeline.zcard(key); // Count in window
   pipeline.expire(key, window);
 
   const results = await pipeline.exec();
@@ -2031,6 +2071,7 @@ async function slidingWindowRateLimit(
 ```
 
 **Abuse prevention beyond rate limiting:**
+
 - **Bot detection:** Challenge suspicious clients with CAPTCHA on authentication
 - **Session fingerprinting:** Detect session sharing/token theft via device fingerprint changes
 - **Game state validation:** Server rejects impossible state transitions
@@ -2045,20 +2086,20 @@ app.register(helmet, {
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'strict-dynamic'"],  // CSP Level 3 with nonces
-      styleSrc: ["'self'", "'unsafe-inline'"],     // Required for Svelte scoped styles
+      scriptSrc: ["'self'", "'strict-dynamic'"], // CSP Level 3 with nonces
+      styleSrc: ["'self'", "'unsafe-inline'"], // Required for Svelte scoped styles
       imgSrc: ["'self'", 'data:', 'blob:'],
       fontSrc: ["'self'"],
       connectSrc: [
         "'self'",
-        'wss://*.archivedmz.io',                   // WebSocket
-        'https://api.anthropic.com',                // AI API (if client-side)
+        'wss://*.archivedmz.io', // WebSocket
+        'https://api.anthropic.com', // AI API (if client-side)
       ],
       frameSrc: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
-      frameAncestors: ["'none'"],                   // Prevent clickjacking
+      frameAncestors: ["'none'"], // Prevent clickjacking
       upgradeInsecureRequests: [],
     },
   },
@@ -2067,13 +2108,13 @@ app.register(helmet, {
   crossOriginResourcePolicy: { policy: 'same-origin' },
   referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
   strictTransportSecurity: {
-    maxAge: 63072000,          // 2 years
+    maxAge: 63072000, // 2 years
     includeSubDomains: true,
     preload: true,
   },
-  xContentTypeOptions: true,   // nosniff
+  xContentTypeOptions: true, // nosniff
   xFrameOptions: { action: 'deny' },
-  xXssProtection: false,       // Deprecated; CSP is the modern protection
+  xXssProtection: false, // Deprecated; CSP is the modern protection
 });
 ```
 
@@ -2089,18 +2130,19 @@ Cache-Control: no-store        // For API responses with game state
 
 **Security testing cadence:**
 
-| Test Type | Frequency | Scope |
-|-----------|-----------|-------|
-| Automated SAST (Semgrep, CodeQL) | Every PR | All source code |
-| Automated DAST (OWASP ZAP) | Weekly (CI) | Staging environment |
-| Dependency audit (npm audit, Snyk) | Every build | All dependencies |
-| Container scan (Trivy) | Every build | Docker images |
-| Infrastructure scan (Checkov) | Every IaC change | Pulumi/Terraform configs |
-| Manual penetration test | Quarterly | Full application |
-| Bug bounty program | Continuous | Production (with rules of engagement) |
-| Red team exercise | Annually | Full infrastructure + social engineering |
+| Test Type                          | Frequency        | Scope                                    |
+| ---------------------------------- | ---------------- | ---------------------------------------- |
+| Automated SAST (Semgrep, CodeQL)   | Every PR         | All source code                          |
+| Automated DAST (OWASP ZAP)         | Weekly (CI)      | Staging environment                      |
+| Dependency audit (npm audit, Snyk) | Every build      | All dependencies                         |
+| Container scan (Trivy)             | Every build      | Docker images                            |
+| Infrastructure scan (Checkov)      | Every IaC change | Pulumi/Terraform configs                 |
+| Manual penetration test            | Quarterly        | Full application                         |
+| Bug bounty program                 | Continuous       | Production (with rules of engagement)    |
+| Red team exercise                  | Annually         | Full infrastructure + social engineering |
 
 **Specific game-security concerns to test:**
+
 - Can a player manipulate their game state to achieve impossible outcomes?
 - Can a player access another player's session or another tenant's data?
 - Can AI-generated content be poisoned via prompt injection in game inputs?
@@ -2115,56 +2157,56 @@ Cache-Control: no-store        // For API responses with game state
 
 ### Core Stack
 
-| Layer | Technology | Version | Rationale |
-|-------|-----------|---------|-----------|
-| **Frontend framework** | SvelteKit | 2.x (Svelte 5) | Compiled reactivity, smallest bundle, SSR built-in |
-| **Language** | TypeScript | 5.x | Type safety across full stack |
-| **Visualization** | PixiJS | 8.x | WebGL 2D rendering for facility map and effects |
-| **Charts** | D3.js | 7.x | Flexible data visualization for dashboards |
-| **Backend runtime** | Node.js | 22 LTS | Async I/O, shared language with frontend |
-| **HTTP framework** | Fastify | 5.x | Performance, schema validation, plugin system |
-| **ORM** | Drizzle | Latest | Type-safe SQL, excellent migration story |
-| **Database** | PostgreSQL + TimescaleDB | 16 + latest | Relational + time-series in one engine |
-| **Cache/Queue** | Redis | 7.x | Caching, queues (BullMQ), pub/sub, rate limiting |
-| **AI** | Anthropic Claude API | Latest | Phishing email generation, content scoring |
-| **Real-time** | WebSocket (native) + SSE fallback | - | Server push for game events |
-| **Testing** | Vitest + Playwright | Latest | Unit/integration + E2E |
-| **CI/CD** | GitHub Actions | - | Integrated with repository |
-| **IaC** | Pulumi (TypeScript) | Latest | Same language as application |
-| **Container** | Docker + Kubernetes | Latest | Standardized deployment |
-| **CDN** | Cloudflare | - | Global edge, DDoS protection, Workers |
-| **Monitoring** | Prometheus + Grafana + OpenTelemetry | - | Open-source observability stack |
-| **Feature flags** | Unleash (or OpenFeature-compatible) | - | A/B testing, gradual rollouts |
+| Layer                  | Technology                           | Version        | Rationale                                          |
+| ---------------------- | ------------------------------------ | -------------- | -------------------------------------------------- |
+| **Frontend framework** | SvelteKit                            | 2.x (Svelte 5) | Compiled reactivity, smallest bundle, SSR built-in |
+| **Language**           | TypeScript                           | 5.x            | Type safety across full stack                      |
+| **Visualization**      | PixiJS                               | 8.x            | WebGL 2D rendering for facility map and effects    |
+| **Charts**             | D3.js                                | 7.x            | Flexible data visualization for dashboards         |
+| **Backend runtime**    | Node.js                              | 22 LTS         | Async I/O, shared language with frontend           |
+| **HTTP framework**     | Fastify                              | 5.x            | Performance, schema validation, plugin system      |
+| **ORM**                | Drizzle                              | Latest         | Type-safe SQL, excellent migration story           |
+| **Database**           | PostgreSQL + TimescaleDB             | 16 + latest    | Relational + time-series in one engine             |
+| **Cache/Queue**        | Redis                                | 7.x            | Caching, queues (BullMQ), pub/sub, rate limiting   |
+| **AI**                 | Anthropic Claude API                 | Latest         | Phishing email generation, content scoring         |
+| **Real-time**          | WebSocket (native) + SSE fallback    | -              | Server push for game events                        |
+| **Testing**            | Vitest + Playwright                  | Latest         | Unit/integration + E2E                             |
+| **CI/CD**              | GitHub Actions                       | -              | Integrated with repository                         |
+| **IaC**                | Pulumi (TypeScript)                  | Latest         | Same language as application                       |
+| **Container**          | Docker + Kubernetes                  | Latest         | Standardized deployment                            |
+| **CDN**                | Cloudflare                           | -              | Global edge, DDoS protection, Workers              |
+| **Monitoring**         | Prometheus + Grafana + OpenTelemetry | -              | Open-source observability stack                    |
+| **Feature flags**      | Unleash (or OpenFeature-compatible)  | -              | A/B testing, gradual rollouts                      |
 
 ### Development Tools
 
-| Tool | Purpose |
-|------|---------|
-| **Biome** | Fast linter + formatter (replacing ESLint + Prettier) |
-| **Turborepo** | Monorepo build orchestration (if monorepo) |
-| **Docker Compose** | Local development environment |
-| **Playwright** | E2E testing, visual regression |
-| **Storybook** | Component development and documentation |
-| **pgAdmin / Drizzle Studio** | Database management |
+| Tool                         | Purpose                                               |
+| ---------------------------- | ----------------------------------------------------- |
+| **Biome**                    | Fast linter + formatter (replacing ESLint + Prettier) |
+| **Turborepo**                | Monorepo build orchestration (if monorepo)            |
+| **Docker Compose**           | Local development environment                         |
+| **Playwright**               | E2E testing, visual regression                        |
+| **Storybook**                | Component development and documentation               |
+| **pgAdmin / Drizzle Studio** | Database management                                   |
 
 ---
 
 ## 10. Risk Matrix
 
-| Risk | Probability | Impact | Mitigation |
-|------|------------|--------|------------|
-| AI-generated content quality is inconsistent | High | Medium | Pre-generation pool + human review pipeline + quality scoring |
-| LLM API cost exceeds budget | Medium | High | Aggressive caching, pre-generation batching, cost caps, fallback to templates |
-| WebSocket scaling hits limits | Medium | Medium | Dedicated WS gateway (Centrifugo), Redis pub/sub for cross-pod |
-| Player state desync (client vs. server) | Medium | High | Server-authoritative state, conflict resolution protocol, periodic full-state sync |
-| AI prompt injection via player inputs | Medium | Medium | Input sanitization, output validation, sandboxed AI context |
-| Supply chain vulnerability in npm dependencies | Medium | High | Minimal dependencies, lockfile integrity, automated scanning |
-| Database performance degradation at scale | Low | Critical | Read replicas, connection pooling, query optimization, partitioning |
-| Multi-tenant data leakage | Low | Critical | RLS, automated isolation tests, penetration testing |
-| CDN cache poisoning | Low | High | Cache key validation, origin shielding, signed URLs for sensitive content |
-| Game economy exploits | High | Low | Server validation, anomaly detection, balance config hot-patching |
-| Browser compatibility issues | Medium | Medium | Progressive enhancement, feature detection, automated cross-browser testing |
-| Developer productivity loss from over-engineering | Medium | Medium | Start simple (modular monolith), extract complexity only when measured need arises |
+| Risk                                              | Probability | Impact   | Mitigation                                                                         |
+| ------------------------------------------------- | ----------- | -------- | ---------------------------------------------------------------------------------- |
+| AI-generated content quality is inconsistent      | High        | Medium   | Pre-generation pool + human review pipeline + quality scoring                      |
+| LLM API cost exceeds budget                       | Medium      | High     | Aggressive caching, pre-generation batching, cost caps, fallback to templates      |
+| WebSocket scaling hits limits                     | Medium      | Medium   | Dedicated WS gateway (Centrifugo), Redis pub/sub for cross-pod                     |
+| Player state desync (client vs. server)           | Medium      | High     | Server-authoritative state, conflict resolution protocol, periodic full-state sync |
+| AI prompt injection via player inputs             | Medium      | Medium   | Input sanitization, output validation, sandboxed AI context                        |
+| Supply chain vulnerability in npm dependencies    | Medium      | High     | Minimal dependencies, lockfile integrity, automated scanning                       |
+| Database performance degradation at scale         | Low         | Critical | Read replicas, connection pooling, query optimization, partitioning                |
+| Multi-tenant data leakage                         | Low         | Critical | RLS, automated isolation tests, penetration testing                                |
+| CDN cache poisoning                               | Low         | High     | Cache key validation, origin shielding, signed URLs for sensitive content          |
+| Game economy exploits                             | High        | Low      | Server validation, anomaly detection, balance config hot-patching                  |
+| Browser compatibility issues                      | Medium      | Medium   | Progressive enhancement, feature detection, automated cross-browser testing        |
+| Developer productivity loss from over-engineering | Medium      | Medium   | Start simple (modular monolith), extract complexity only when measured need arises |
 
 ---
 
@@ -2255,31 +2297,31 @@ pnpm run typecheck
 
 ### Appendix C: API Endpoint Map (Core)
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/login` | Authenticate player |
-| POST | `/api/auth/register` | Create account |
-| POST | `/api/auth/refresh` | Refresh access token |
-| GET | `/api/game/session` | Get current session state |
-| POST | `/api/game/session/new` | Start new game session |
-| GET | `/api/game/inbox` | Get current day's emails |
-| GET | `/api/game/email/:id` | Get email detail |
-| POST | `/api/game/email/:id/decide` | Submit email decision |
-| POST | `/api/game/day/advance` | Advance to next day |
-| GET | `/api/game/facility` | Get facility status |
-| POST | `/api/game/upgrade/purchase` | Purchase upgrade |
-| GET | `/api/game/upgrades` | List available upgrades |
-| GET | `/api/game/intel` | Get intelligence briefs |
-| POST | `/api/game/ransom/pay` | Pay ransom (after breach) |
-| GET | `/api/player/profile` | Get player skill profile |
-| GET | `/api/player/achievements` | Get player achievements |
-| GET | `/api/leaderboard` | Get leaderboard |
-| WS | `/ws` | WebSocket connection for real-time events |
-| GET | `/api/admin/sessions` | Admin: list active sessions |
-| GET | `/api/admin/analytics` | Admin: analytics dashboard data |
-| POST | `/api/admin/content` | Admin: create/update content |
-| GET | `/api/health` | Health check |
-| GET | `/api/ready` | Readiness check |
+| Method | Endpoint                     | Description                               |
+| ------ | ---------------------------- | ----------------------------------------- |
+| POST   | `/api/auth/login`            | Authenticate player                       |
+| POST   | `/api/auth/register`         | Create account                            |
+| POST   | `/api/auth/refresh`          | Refresh access token                      |
+| GET    | `/api/game/session`          | Get current session state                 |
+| POST   | `/api/game/session/new`      | Start new game session                    |
+| GET    | `/api/game/inbox`            | Get current day's emails                  |
+| GET    | `/api/game/email/:id`        | Get email detail                          |
+| POST   | `/api/game/email/:id/decide` | Submit email decision                     |
+| POST   | `/api/game/day/advance`      | Advance to next day                       |
+| GET    | `/api/game/facility`         | Get facility status                       |
+| POST   | `/api/game/upgrade/purchase` | Purchase upgrade                          |
+| GET    | `/api/game/upgrades`         | List available upgrades                   |
+| GET    | `/api/game/intel`            | Get intelligence briefs                   |
+| POST   | `/api/game/ransom/pay`       | Pay ransom (after breach)                 |
+| GET    | `/api/player/profile`        | Get player skill profile                  |
+| GET    | `/api/player/achievements`   | Get player achievements                   |
+| GET    | `/api/leaderboard`           | Get leaderboard                           |
+| WS     | `/ws`                        | WebSocket connection for real-time events |
+| GET    | `/api/admin/sessions`        | Admin: list active sessions               |
+| GET    | `/api/admin/analytics`       | Admin: analytics dashboard data           |
+| POST   | `/api/admin/content`         | Admin: create/update content              |
+| GET    | `/api/health`                | Health check                              |
+| GET    | `/api/ready`                 | Readiness check                           |
 
 ### Appendix D: Game Event Type Catalog
 
@@ -2291,13 +2333,16 @@ type GameEvent =
   | { type: 'SESSION_ENDED'; payload: { reason: 'completed' | 'abandoned' | 'breached' } }
 
   // Email triage
-  | { type: 'EMAIL_RECEIVED'; payload: { emailId: string; isPhishing: boolean; difficulty: number } }
+  | {
+      type: 'EMAIL_RECEIVED';
+      payload: { emailId: string; isPhishing: boolean; difficulty: number };
+    }
   | { type: 'EMAIL_VIEWED'; payload: { emailId: string; timestamp: number } }
   | { type: 'EMAIL_APPROVED'; payload: { emailId: string; clientId: string } }
   | { type: 'EMAIL_REJECTED'; payload: { emailId: string; reason: string } }
   | { type: 'PHISHING_IDENTIFIED'; payload: { emailId: string; indicators: string[] } }
   | { type: 'PHISHING_MISSED'; payload: { emailId: string; indicators: string[] } }
-  | { type: 'LEGITIMATE_REJECTED'; payload: { emailId: string } }  // false positive
+  | { type: 'LEGITIMATE_REJECTED'; payload: { emailId: string } } // false positive
 
   // Facility management
   | { type: 'CLIENT_ONBOARDED'; payload: { clientId: string; payment: number; duration: number } }
@@ -2312,7 +2357,7 @@ type GameEvent =
   | { type: 'ATTACK_SUCCEEDED'; payload: { attackId: string } }
   | { type: 'BREACH_OCCURRED'; payload: { attackId: string; ransomAmount: number } }
   | { type: 'RANSOM_PAID'; payload: { amount: number } }
-  | { type: 'RANSOM_DEFAULTED'; payload: {} }  // game over
+  | { type: 'RANSOM_DEFAULTED'; payload: {} } // game over
 
   // Day progression
   | { type: 'DAY_STARTED'; payload: { day: number; threatLevel: number } }

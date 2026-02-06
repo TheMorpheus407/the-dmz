@@ -1,27 +1,20 @@
-import { dirname, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { migrate } from "drizzle-orm/postgres-js/migrator";
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
 
-import { loadConfig } from "../../config.js";
+import { loadConfig } from '../../config.js';
 
-import {
-  closeDatabase,
-  getDatabaseClient,
-  getDatabasePool,
-} from "./connection.js";
-import { seedDatabase } from "./seed.js";
+import { closeDatabase, getDatabaseClient, getDatabasePool } from './connection.js';
+import { seedDatabase } from './seed.js';
 
-const migrationsFolder = resolve(
-  dirname(fileURLToPath(import.meta.url)),
-  "migrations",
-);
+const migrationsFolder = resolve(dirname(fileURLToPath(import.meta.url)), 'migrations');
 
 const run = async () => {
   const config = loadConfig();
 
-  if (config.NODE_ENV === "production") {
-    throw new Error("db:reset is disabled in production");
+  if (config.NODE_ENV === 'production') {
+    throw new Error('db:reset is disabled in production');
   }
 
   const sql = getDatabasePool(config);
@@ -35,6 +28,6 @@ const run = async () => {
 };
 
 run().catch((error) => {
-  console.error("Database reset failed", error);
+  console.error('Database reset failed', error);
   process.exit(1);
 });

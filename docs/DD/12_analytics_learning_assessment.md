@@ -86,39 +86,39 @@ The design includes a full telemetry taxonomy and event schema, data processing 
 
 This design maps directly to the BRD functional requirements for analytics and reporting and to the learning outcome goals defined in the success metrics. The table below shows traceability from BRD analytics requirements to the elements in this design.
 
-| BRD Requirement | Design Element in This Document |
-| --- | --- |
-| FR-AN-001 Phishing simulation click rate and reporting rate tracking | Section 10 metrics definitions, Section 11 dashboards, Section 18 exports |
-| FR-AN-002 Knowledge retention measurement via spaced repetition | Section 6 assessment architecture, Section 12 adaptive learning |
-| FR-AN-003 Behavioral change metrics | Section 10 metrics and calculations, Section 11 dashboards |
-| FR-AN-004 Competency mapping across domains | Section 5 competency framework, Section 9 data model |
-| FR-AN-005 Cost of breach avoidance calculator | Section 10 ROI metrics, Section 11 executive dashboard |
-| FR-AN-006 Phishing susceptibility reduction tracking | Section 10 baseline and trend model |
-| FR-AN-007 Training cost per employee vs benchmarks | Section 11 executive dashboard and benchmarks |
-| FR-AN-008 Cyber insurance premium impact tracking | Section 10 ROI metrics and export support |
-| FR-AN-009 CISO dashboard with board-ready visualizations | Section 11.1 dashboard specification with board-ready visualizations |
-| FR-AN-010 Organizational risk heat map | Section 11.2 risk heat map |
-| FR-AN-011 Trend analysis with predictive risk indicators | Section 11.1 CISO dashboard trend analysis, Section 12 adaptive learning and prediction signals |
-| FR-AN-012 Industry benchmarking | Section 11.4 benchmarking and anonymization |
-| FR-AN-013 Framework specific compliance reports | Section 11.3 compliance reporting |
-| FR-AN-014 Automated compliance gap identification | Section 11.3 compliance reporting logic |
-| FR-AN-015 Training completion certificates | Section 11 and Section 18 export integration |
-| FR-AN-016 Policy acknowledgment tracking | Section 10 and Section 18 LMS alignment |
-| FR-AN-017 Retention curves | Section 10 consumer analytics, Section 11 retention views |
-| FR-AN-018 Session duration and frequency | Section 10 consumer analytics |
-| FR-AN-019 Content effectiveness scoring | Section 10 module effectiveness metrics |
-| FR-AN-020 A/B testing framework | Section 13 experimentation |
-| FR-AN-021 Predictive analytics for at risk players | Section 12 adaptive learning and risk modeling |
-| FR-ENT-028 Real-time compliance dashboards per regulatory framework | Section 11.3 compliance reporting |
-| FR-ENT-029 Audit-ready report generation (PDF, CSV, JSON) | Section 11.1 and Section 18.4 report export formats |
-| FR-ENT-030 Immutable audit logs with SHA-256 integrity | Section 15.2 audit logging |
-| FR-ENT-031 Configurable retention policies (1-7 years) | Section 8.5 data retention and archival |
-| FR-ENT-032 Individual training transcripts with audit trail | Section 11.3 compliance reporting |
-| FR-ENT-033 Certificate generation with digital signature | Section 6.4 summative assessment, Section 11.3 compliance reporting |
-| FR-ENT-034 Management training attestation (NIS2 Art. 20, DORA Art. 5) | Section 11.3 compliance reporting |
-| BRD Section 16 Security awareness quiz score | Section 10.8 security awareness quiz score |
-| BRD Section 16 NPS tracking (enterprise and consumer) | Section 10.9 NPS tracking |
-| BRD Section 16 Retention targets (D1, D7, D30) | Section 10.10 consumer game analytics |
+| BRD Requirement                                                        | Design Element in This Document                                                                 |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| FR-AN-001 Phishing simulation click rate and reporting rate tracking   | Section 10 metrics definitions, Section 11 dashboards, Section 18 exports                       |
+| FR-AN-002 Knowledge retention measurement via spaced repetition        | Section 6 assessment architecture, Section 12 adaptive learning                                 |
+| FR-AN-003 Behavioral change metrics                                    | Section 10 metrics and calculations, Section 11 dashboards                                      |
+| FR-AN-004 Competency mapping across domains                            | Section 5 competency framework, Section 9 data model                                            |
+| FR-AN-005 Cost of breach avoidance calculator                          | Section 10 ROI metrics, Section 11 executive dashboard                                          |
+| FR-AN-006 Phishing susceptibility reduction tracking                   | Section 10 baseline and trend model                                                             |
+| FR-AN-007 Training cost per employee vs benchmarks                     | Section 11 executive dashboard and benchmarks                                                   |
+| FR-AN-008 Cyber insurance premium impact tracking                      | Section 10 ROI metrics and export support                                                       |
+| FR-AN-009 CISO dashboard with board-ready visualizations               | Section 11.1 dashboard specification with board-ready visualizations                            |
+| FR-AN-010 Organizational risk heat map                                 | Section 11.2 risk heat map                                                                      |
+| FR-AN-011 Trend analysis with predictive risk indicators               | Section 11.1 CISO dashboard trend analysis, Section 12 adaptive learning and prediction signals |
+| FR-AN-012 Industry benchmarking                                        | Section 11.4 benchmarking and anonymization                                                     |
+| FR-AN-013 Framework specific compliance reports                        | Section 11.3 compliance reporting                                                               |
+| FR-AN-014 Automated compliance gap identification                      | Section 11.3 compliance reporting logic                                                         |
+| FR-AN-015 Training completion certificates                             | Section 11 and Section 18 export integration                                                    |
+| FR-AN-016 Policy acknowledgment tracking                               | Section 10 and Section 18 LMS alignment                                                         |
+| FR-AN-017 Retention curves                                             | Section 10 consumer analytics, Section 11 retention views                                       |
+| FR-AN-018 Session duration and frequency                               | Section 10 consumer analytics                                                                   |
+| FR-AN-019 Content effectiveness scoring                                | Section 10 module effectiveness metrics                                                         |
+| FR-AN-020 A/B testing framework                                        | Section 13 experimentation                                                                      |
+| FR-AN-021 Predictive analytics for at risk players                     | Section 12 adaptive learning and risk modeling                                                  |
+| FR-ENT-028 Real-time compliance dashboards per regulatory framework    | Section 11.3 compliance reporting                                                               |
+| FR-ENT-029 Audit-ready report generation (PDF, CSV, JSON)              | Section 11.1 and Section 18.4 report export formats                                             |
+| FR-ENT-030 Immutable audit logs with SHA-256 integrity                 | Section 15.2 audit logging                                                                      |
+| FR-ENT-031 Configurable retention policies (1-7 years)                 | Section 8.5 data retention and archival                                                         |
+| FR-ENT-032 Individual training transcripts with audit trail            | Section 11.3 compliance reporting                                                               |
+| FR-ENT-033 Certificate generation with digital signature               | Section 6.4 summative assessment, Section 11.3 compliance reporting                             |
+| FR-ENT-034 Management training attestation (NIS2 Art. 20, DORA Art. 5) | Section 11.3 compliance reporting                                                               |
+| BRD Section 16 Security awareness quiz score                           | Section 10.8 security awareness quiz score                                                      |
+| BRD Section 16 NPS tracking (enterprise and consumer)                  | Section 10.9 NPS tracking                                                                       |
+| BRD Section 16 Retention targets (D1, D7, D30)                         | Section 10.10 consumer game analytics                                                           |
 
 Additional cross references:
 
@@ -178,15 +178,15 @@ Each domain is further broken into measurable subskills. Subskills are not expos
 
 ### 5.2 Subskills and Evidence Types
 
-| Domain | Subskills | Primary Evidence Types |
-| --- | --- | --- |
-| Phishing detection | Header analysis, URL inspection, attachment scrutiny, urgency cue recognition, brand spoof detection | Indicator selection, decision accuracy, verification usage |
-| Password security | Strong password recognition, credential handling, MFA awareness | Training prompts, policy acknowledgements, response to credential harvesting |
-| Data handling | Data classification, retention decisions, contract clause analysis, least privilege | Lease decisions, contract review accuracy, data disposal choices |
-| Social engineering resistance | Pretext validation, authority pressure resistance, emotional manipulation detection | Decision accuracy under pretext, escalation to verification |
-| Incident response | Containment decisions, recovery sequencing, reporting timeliness | Incident log actions, response time, tool deployment |
-| Physical security | Access badge validation, facility entry exceptions | Physical access decisions in narrative events |
-| Compliance awareness | Policy acknowledgement, framework specific knowledge | Policy prompts, compliance quizzes embedded in intel briefs |
+| Domain                        | Subskills                                                                                            | Primary Evidence Types                                                       |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Phishing detection            | Header analysis, URL inspection, attachment scrutiny, urgency cue recognition, brand spoof detection | Indicator selection, decision accuracy, verification usage                   |
+| Password security             | Strong password recognition, credential handling, MFA awareness                                      | Training prompts, policy acknowledgements, response to credential harvesting |
+| Data handling                 | Data classification, retention decisions, contract clause analysis, least privilege                  | Lease decisions, contract review accuracy, data disposal choices             |
+| Social engineering resistance | Pretext validation, authority pressure resistance, emotional manipulation detection                  | Decision accuracy under pretext, escalation to verification                  |
+| Incident response             | Containment decisions, recovery sequencing, reporting timeliness                                     | Incident log actions, response time, tool deployment                         |
+| Physical security             | Access badge validation, facility entry exceptions                                                   | Physical access decisions in narrative events                                |
+| Compliance awareness          | Policy acknowledgement, framework specific knowledge                                                 | Policy prompts, compliance quizzes embedded in intel briefs                  |
 
 ### 5.3 Competency Scale
 
@@ -213,15 +213,15 @@ The weighting model uses three multiplicative factors.
 
 The competency model aligns with the BRD mechanic to skill mapping and the detailed mapping in Appendix D of the BRD.
 
-| Game Mechanic | Evidence for Competency | Primary Domain |
-| --- | --- | --- |
-| Email triage and worksheet | Indicator accuracy, false positive rate | Phishing detection |
-| Verification packet review | Identity validation rate | Social engineering resistance |
-| Threat assessment sheet | Risk score calibration | Compliance awareness, incident response |
-| Approve deny decision | Risk acceptance alignment | Phishing detection, data handling |
-| Incident log actions | Response sequence correctness | Incident response |
-| Data salvage contract | Clause analysis accuracy | Data handling and compliance |
-| Facility status review | Resource planning behavior | Incident response readiness |
+| Game Mechanic              | Evidence for Competency                 | Primary Domain                          |
+| -------------------------- | --------------------------------------- | --------------------------------------- |
+| Email triage and worksheet | Indicator accuracy, false positive rate | Phishing detection                      |
+| Verification packet review | Identity validation rate                | Social engineering resistance           |
+| Threat assessment sheet    | Risk score calibration                  | Compliance awareness, incident response |
+| Approve deny decision      | Risk acceptance alignment               | Phishing detection, data handling       |
+| Incident log actions       | Response sequence correctness           | Incident response                       |
+| Data salvage contract      | Clause analysis accuracy                | Data handling and compliance            |
+| Facility status review     | Resource planning behavior              | Incident response readiness             |
 
 ### 5.6 Skill Profile Data Structure
 
@@ -1148,29 +1148,29 @@ Decision log entries will be appended as these questions are resolved.
 
 The following dictionary defines commonly referenced metrics.
 
-| Metric Name | Definition | Calculation | Primary Use |
-| --- | --- | --- | --- |
-| Phishing Click Rate | Rate of harmful action on simulated phishing emails | clicks / delivered | CISO dashboard, ROI |
-| Phishing Report Rate | Rate of correct reporting of phishing attempts | reports / delivered | Trainer dashboard |
-| Verification Usage Rate | Frequency of verification actions before approval | verification_actions / decisions | Behavioral change |
-| False Positive Rate | Legitimate emails incorrectly flagged | false_reports / legit_emails | Training quality |
-| Detection Accuracy | Weighted correctness of triage decisions | weighted_correct / total | Learning assessment |
-| Incident Response Score | Quality of incident response actions | weighted_response_score | Readiness |
-| Mean Time to Report | Mean time from email receipt to report | mean(report_time - received_time) | Behavioral change |
-| Knowledge Retention 30D | Recall accuracy after 30 days | correct / total | Learning effectiveness |
-| Risk Heat Map Score | Department level composite risk | composite formula | Executive reporting |
-| Content Effectiveness | Improvement after exposure to content | pre vs post delta | Content tuning |
-| D1 Retention | Percentage of users returning after 1 day | returning / cohort | Consumer analytics |
-| D7 Retention | Percentage of users returning after 7 days | returning / cohort | Consumer analytics |
-| D30 Retention | Percentage of users returning after 30 days | returning / cohort | Consumer analytics |
-| D60 Retention | Percentage of users returning after 60 days | returning / cohort | Consumer analytics |
-| D90 Retention | Percentage of users returning after 90 days | returning / cohort | Consumer analytics |
-| Churn Risk Score | Predicted probability of non return in next 14 days | model output | Consumer re engagement |
-| Security Awareness Quiz Score | Composite score across all competency domains | weighted_domain_avg | Enterprise learning outcomes |
-| Password Hygiene Score | Score for password practices and credential handling | behavior_signals / total | Behavioral change |
-| NPS (Enterprise) | Net Promoter Score for enterprise users | standard NPS formula | Engagement tracking |
-| NPS (Consumer) | Net Promoter Score for consumer players | standard NPS formula | Engagement tracking |
-| Cyber Insurance Impact | Estimated premium reduction from improved posture | model output | ROI reporting |
+| Metric Name                   | Definition                                           | Calculation                       | Primary Use                  |
+| ----------------------------- | ---------------------------------------------------- | --------------------------------- | ---------------------------- |
+| Phishing Click Rate           | Rate of harmful action on simulated phishing emails  | clicks / delivered                | CISO dashboard, ROI          |
+| Phishing Report Rate          | Rate of correct reporting of phishing attempts       | reports / delivered               | Trainer dashboard            |
+| Verification Usage Rate       | Frequency of verification actions before approval    | verification_actions / decisions  | Behavioral change            |
+| False Positive Rate           | Legitimate emails incorrectly flagged                | false_reports / legit_emails      | Training quality             |
+| Detection Accuracy            | Weighted correctness of triage decisions             | weighted_correct / total          | Learning assessment          |
+| Incident Response Score       | Quality of incident response actions                 | weighted_response_score           | Readiness                    |
+| Mean Time to Report           | Mean time from email receipt to report               | mean(report_time - received_time) | Behavioral change            |
+| Knowledge Retention 30D       | Recall accuracy after 30 days                        | correct / total                   | Learning effectiveness       |
+| Risk Heat Map Score           | Department level composite risk                      | composite formula                 | Executive reporting          |
+| Content Effectiveness         | Improvement after exposure to content                | pre vs post delta                 | Content tuning               |
+| D1 Retention                  | Percentage of users returning after 1 day            | returning / cohort                | Consumer analytics           |
+| D7 Retention                  | Percentage of users returning after 7 days           | returning / cohort                | Consumer analytics           |
+| D30 Retention                 | Percentage of users returning after 30 days          | returning / cohort                | Consumer analytics           |
+| D60 Retention                 | Percentage of users returning after 60 days          | returning / cohort                | Consumer analytics           |
+| D90 Retention                 | Percentage of users returning after 90 days          | returning / cohort                | Consumer analytics           |
+| Churn Risk Score              | Predicted probability of non return in next 14 days  | model output                      | Consumer re engagement       |
+| Security Awareness Quiz Score | Composite score across all competency domains        | weighted_domain_avg               | Enterprise learning outcomes |
+| Password Hygiene Score        | Score for password practices and credential handling | behavior_signals / total          | Behavioral change            |
+| NPS (Enterprise)              | Net Promoter Score for enterprise users              | standard NPS formula              | Engagement tracking          |
+| NPS (Consumer)                | Net Promoter Score for consumer players              | standard NPS formula              | Engagement tracking          |
+| Cyber Insurance Impact        | Estimated premium reduction from improved posture    | model output                      | ROI reporting                |
 
 ---
 
@@ -1255,17 +1255,18 @@ This rubric guides scoring for common decision types. It ensures consistency and
 
 ## 25. Appendix D: Glossary (Analytics and Learning)
 
-| Term | Definition |
-| --- | --- |
-| Adaptive Learning | Real time adjustment of content based on observed competency |
-| Competency Map | Multi domain profile of observed skill levels |
-| Evidence | A recorded action used to infer skill |
+| Term              | Definition                                                        |
+| ----------------- | ----------------------------------------------------------------- |
+| Adaptive Learning | Real time adjustment of content based on observed competency      |
+| Competency Map    | Multi domain profile of observed skill levels                     |
+| Evidence          | A recorded action used to infer skill                             |
 | Spaced Repetition | Review scheduling algorithm that increases intervals with mastery |
-| Retention Curve | Plot of user return rates over time |
-| Risk Heat Map | Visualization of composite risk by department or role |
-| Assessment Item | A single prompt or decision used for learning measurement |
+| Retention Curve   | Plot of user return rates over time                               |
+| Risk Heat Map     | Visualization of composite risk by department or role             |
+| Assessment Item   | A single prompt or decision used for learning measurement         |
 
 ---
+
 ## 26. Appendix E: Sample Reports and Data Contracts
 
 This appendix provides sample narratives and data contracts for key analytics outputs. The intent is not to define the final UI, but to clarify the information architecture that reports must satisfy.
@@ -1284,16 +1285,16 @@ The report includes specific recommendations for continued improvement. The sale
 
 The data contract defines the fields required by the CISO dashboard. Each field includes an expected format and allowable aggregation level.
 
-| Field | Type | Description | Aggregation | Update Cadence |
-| --- | --- | --- | --- | --- |
-| org_risk_score | float | Composite risk score 0 to 1 | org, department | daily |
-| risk_heat_map | object | Composite risk heat map slices | org, department, location, role | daily |
-| phishing_click_rate | float | Click rate for phishing simulations | org, department, role | daily |
-| phishing_report_rate | float | Reporting rate for phishing simulations | org, department, role | daily |
-| incident_response_score | float | Weighted readiness score | org, department | weekly |
-| compliance_completion | object | Completion status per framework | org | daily |
-| top_risk_indicators | array | List of highest risk signals | org | daily |
-| roi_estimate | object | Annual cost avoidance and ROI | org | monthly |
+| Field                   | Type   | Description                             | Aggregation                     | Update Cadence |
+| ----------------------- | ------ | --------------------------------------- | ------------------------------- | -------------- |
+| org_risk_score          | float  | Composite risk score 0 to 1             | org, department                 | daily          |
+| risk_heat_map           | object | Composite risk heat map slices          | org, department, location, role | daily          |
+| phishing_click_rate     | float  | Click rate for phishing simulations     | org, department, role           | daily          |
+| phishing_report_rate    | float  | Reporting rate for phishing simulations | org, department, role           | daily          |
+| incident_response_score | float  | Weighted readiness score                | org, department                 | weekly         |
+| compliance_completion   | object | Completion status per framework         | org                             | daily          |
+| top_risk_indicators     | array  | List of highest risk signals            | org                             | daily          |
+| roi_estimate            | object | Annual cost avoidance and ROI           | org                             | monthly        |
 
 The dashboard must support exporting the same data in PDF, CSV, and JSON for board reporting, consistent with BRD FR-ENT-029.
 
@@ -1390,13 +1391,13 @@ Benchmarking compares a tenant to a peer group of similar size and industry. The
 
 Exports are delivered as bundles that include metadata, data files, and integrity signatures. The manifest defines the files included.
 
-| File | Description |
-| --- | --- |
+| File          | Description                                      |
+| ------------- | ------------------------------------------------ |
 | manifest.json | Export metadata, timestamps, and schema versions |
-| report.pdf | Human readable report |
-| data.csv | Raw report data |
-| data.json | JSON format data |
-| signature.sig | Digital signature for integrity verification |
+| report.pdf    | Human readable report                            |
+| data.csv      | Raw report data                                  |
+| data.json     | JSON format data                                 |
+| signature.sig | Digital signature for integrity verification     |
 
 Each bundle includes a verification hash in the manifest. The export service retains a copy of the manifest for audit purposes.
 
