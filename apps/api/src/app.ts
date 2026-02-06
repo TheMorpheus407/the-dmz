@@ -7,12 +7,17 @@ import { AppError, createErrorHandler, ErrorCodes } from './shared/middleware/er
 import { requestLogger } from './shared/middleware/request-logger.js';
 import { generateId } from './shared/utils/id.js';
 
-const localOrigins = new Set([
-  'http://localhost:5173',
-  'http://127.0.0.1:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:3000',
-]);
+const buildCorsOriginSet = (corsOriginsList: string[]): Set<string> => {
+  const origins = new Set<string>();
+  for (const origin of corsOriginsList) {
+    origins.add(origin);
+    // Also allow 127.0.0.1 variant of localhost origins
+    if (origin.includes('localhost')) {
+      origins.add(origin.replace('localhost', '127.0.0.1'));
+    }
+  }
+  return origins;
+};
 
 const resolveRequestId = (value: string | string[] | undefined): string | undefined => {
   if (typeof value === 'string') {
@@ -27,6 +32,8 @@ const resolveRequestId = (value: string | string[] | undefined): string | undefi
 };
 
 export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
+  const allowedOrigins = buildCorsOriginSet(config.CORS_ORIGINS_LIST);
+
   const app = fastify({
     disableRequestLogging: true,
     logger: {
@@ -58,7 +65,7 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
         return;
       }
 
-      if (config.NODE_ENV !== 'production' && localOrigins.has(origin)) {
+      if (config.NODE_ENV !== 'production' && allowedOrigins.has(origin)) {
         callback(null, true);
         return;
       }

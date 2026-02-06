@@ -30,7 +30,7 @@ process.on('SIGTERM', () => {
 });
 
 try {
-  await app.listen({ port: app.config.PORT, host: '0.0.0.0' });
+  await app.listen({ port: app.config.PORT, host: app.config.API_HOST });
 } catch (error) {
   app.log.error({ err: error }, 'failed to start server');
   process.exit(1);
