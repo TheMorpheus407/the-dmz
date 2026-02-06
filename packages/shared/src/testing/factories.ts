@@ -13,8 +13,8 @@ export type TenantSeed = {
 };
 
 /**
- * Shape of a user row for seeding. Placeholder until the users table
- * is created by issue #18.
+ * Shape of a user row for seeding. Matches the Drizzle `users` table
+ * insert type without importing drizzle-orm (keeps shared package DB-free).
  */
 export type UserSeed = {
   userId: string;
@@ -40,9 +40,6 @@ export const createTestTenant = (overrides: Partial<TenantSeed> = {}): TenantSee
 /**
  * Build a user seed object with sensible defaults.
  * Does NOT insert into the database — pure data factory.
- *
- * Note: The users table does not exist yet (blocked by issue #18).
- * This factory is ready for use once the migration lands.
  */
 export const createTestUser = (overrides: Partial<UserSeed> = {}): UserSeed => ({
   userId: overrides.userId ?? SEED_USER_IDS.acmeCorp.learner,
@@ -85,5 +82,68 @@ export const SEED_TENANTS: readonly TenantSeed[] = [
     slug: 'inactive-co',
     status: 'suspended',
     settings: {},
+  },
+] as const;
+
+/**
+ * The canonical set of users used by the seed script.
+ * Exported so both the API seed and E2E setup can reference the same data.
+ */
+export const SEED_USERS: readonly UserSeed[] = [
+  {
+    userId: SEED_USER_IDS.acmeCorp.superAdmin,
+    tenantId: SEED_TENANT_IDS.acmeCorp,
+    email: 'admin@acme.test',
+    displayName: 'Acme Admin',
+    role: 'super_admin',
+    isActive: true,
+  },
+  {
+    userId: SEED_USER_IDS.acmeCorp.tenantAdmin,
+    tenantId: SEED_TENANT_IDS.acmeCorp,
+    email: 'tenant-admin@acme.test',
+    displayName: 'Acme Tenant Admin',
+    role: 'tenant_admin',
+    isActive: true,
+  },
+  {
+    userId: SEED_USER_IDS.acmeCorp.manager,
+    tenantId: SEED_TENANT_IDS.acmeCorp,
+    email: 'manager@acme.test',
+    displayName: 'Acme Manager',
+    role: 'manager',
+    isActive: true,
+  },
+  {
+    userId: SEED_USER_IDS.acmeCorp.learner,
+    tenantId: SEED_TENANT_IDS.acmeCorp,
+    email: 'learner@acme.test',
+    displayName: 'Acme Learner',
+    role: 'learner',
+    isActive: true,
+  },
+  {
+    userId: SEED_USER_IDS.consumerPlatform.superAdmin,
+    tenantId: SEED_TENANT_IDS.consumerPlatform,
+    email: 'admin@consumer.test',
+    displayName: 'Consumer Admin',
+    role: 'super_admin',
+    isActive: true,
+  },
+  {
+    userId: SEED_USER_IDS.consumerPlatform.learner,
+    tenantId: SEED_TENANT_IDS.consumerPlatform,
+    email: 'player@consumer.test',
+    displayName: 'Consumer Player',
+    role: 'learner',
+    isActive: true,
+  },
+  {
+    userId: SEED_USER_IDS.inactiveCo.superAdmin,
+    tenantId: SEED_TENANT_IDS.inactiveCo,
+    email: 'admin@inactive.test',
+    displayName: 'Inactive Admin',
+    role: 'super_admin',
+    isActive: false,
   },
 ] as const;

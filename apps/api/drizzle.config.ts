@@ -1,7 +1,7 @@
 import type { Config } from 'drizzle-kit';
 
 const config = {
-  schema: './src/shared/database/schema/tenants.ts',
+  schema: ['./src/shared/database/schema/tenants.ts', './src/shared/database/schema/users.ts'],
   out: './src/shared/database/migrations',
   dialect: 'postgresql',
   dbCredentials: {

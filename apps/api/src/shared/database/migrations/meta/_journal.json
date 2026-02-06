@@ -8,6 +8,13 @@
       "when": 1770328843561,
       "tag": "0000_rich_fantastic_four",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1770413627156,
+      "tag": "0001_initial_schema",
+      "breakpoints": true
     }
   ]
 }

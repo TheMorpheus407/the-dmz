@@ -29,8 +29,6 @@ export type SeedTenantKey = keyof typeof SEED_TENANT_IDS;
 
 /**
  * Deterministic user UUIDs per tenant.
- * Added as a placeholder — will be populated once the users table
- * is created by issue #18.
  */
 export const SEED_USER_IDS = {
   acmeCorp: {

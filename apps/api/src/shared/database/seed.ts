@@ -2,20 +2,18 @@ import { pathToFileURL } from 'node:url';
 
 import { eq, sql } from 'drizzle-orm';
 
-import { SEED_TENANT_IDS, SEED_TENANTS } from '@the-dmz/shared/testing';
+import { SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS } from '@the-dmz/shared/testing';
 
 import { closeDatabase, getDatabaseClient } from './connection.js';
-import { tenants } from './schema/index.js';
+import { tenants, users } from './schema/index.js';
 
-export { SEED_TENANT_IDS, SEED_TENANTS };
+export { SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS };
 
 /**
- * Seed the database with deterministic tenant data.
+ * Seed the database with deterministic tenant and user data.
  *
- * Idempotent: uses `ON CONFLICT (slug) DO UPDATE` so running the seed
+ * Idempotent: uses `ON CONFLICT ... DO UPDATE` so running the seed
  * multiple times always converges to the canonical seed state.
- *
- * User seeding is deferred until the `users` table lands (issue #18).
  */
 export const seedDatabase = async (): Promise<void> => {
   const db = getDatabaseClient();
@@ -42,17 +40,42 @@ export const seedDatabase = async (): Promise<void> => {
   }
 
   // Verify the system tenant exists
-  const result = await db
+  const tenantResult = await db
     .select({ tenantId: tenants.tenantId })
     .from(tenants)
     .where(eq(tenants.slug, 'system'))
     .limit(1);
 
-  if (result.length === 0) {
+  if (tenantResult.length === 0) {
     throw new Error('System tenant seeding failed');
   }
 
-  console.warn(`Seeded ${SEED_TENANTS.length} tenants successfully.`);
+  for (const user of SEED_USERS) {
+    await db
+      .insert(users)
+      .values({
+        userId: user.userId,
+        tenantId: user.tenantId,
+        email: user.email,
+        displayName: user.displayName,
+        role: user.role,
+        isActive: user.isActive,
+      })
+      .onConflictDoUpdate({
+        target: [users.userId],
+        set: {
+          email: sql`excluded.email`,
+          displayName: sql`excluded.display_name`,
+          role: sql`excluded.role`,
+          isActive: sql`excluded.is_active`,
+          updatedAt: sql`now()`,
+        },
+      });
+  }
+
+  console.warn(
+    `Seeded ${SEED_TENANTS.length} tenants and ${SEED_USERS.length} users successfully.`,
+  );
 };
 
 const isDirectRun = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
