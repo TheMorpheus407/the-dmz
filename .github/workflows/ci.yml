@@ -33,6 +33,10 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build shared package
+        run: pnpm --filter @the-dmz/shared build
+      - name: Sync SvelteKit generated files
+        run: pnpm --filter @the-dmz/web exec svelte-kit sync
       - name: Lint
         run: pnpm lint
       - name: Typecheck
@@ -145,6 +149,7 @@ jobs:
       - name: Run Playwright E2E tests
         env:
           CI: true
+          HOME: /root
           NODE_ENV: test
           DATABASE_TEST_URL: postgres://dmz:dmz_dev@postgres:5432/dmz_test
           REDIS_URL: redis://redis:6379
@@ -233,6 +238,8 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Build shared package
+        run: pnpm --filter @the-dmz/shared build
       - name: Run migrations (placeholder)
         env:
           NODE_ENV: test

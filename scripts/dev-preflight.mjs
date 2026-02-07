@@ -46,11 +46,7 @@ export const parsePort = (value, fallbackPort, envVarName) => {
 
 export const resolveDevPorts = (env = process.env) => ({
   webPort: parsePort(env.WEB_PORT, DEFAULT_WEB_PORT, 'WEB_PORT'),
-  apiPort: parsePort(
-    firstDefinedNonBlank(env.API_PORT, env.PORT),
-    DEFAULT_API_PORT,
-    'API_PORT',
-  ),
+  apiPort: parsePort(firstDefinedNonBlank(env.API_PORT, env.PORT), DEFAULT_API_PORT, 'API_PORT'),
 });
 
 export const isPortAvailable = (port, host = '127.0.0.1') =>

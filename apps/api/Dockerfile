@@ -17,7 +17,6 @@ RUN pnpm --filter @the-dmz/api build
 FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-RUN addgroup -S nodejs -g 1001 && adduser -S node -u 1001 -G nodejs
 COPY --from=deps /app/node_modules /app/node_modules
 COPY --from=deps /app/package.json /app/package.json
 COPY --from=deps /app/pnpm-workspace.yaml /app/pnpm-workspace.yaml
