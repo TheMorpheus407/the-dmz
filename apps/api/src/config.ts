@@ -2,27 +2,26 @@ import { type BackendEnv, parseBackendEnv } from '@the-dmz/shared';
 
 export type AppConfig = BackendEnv;
 
-const firstDefinedNonBlank = (...values: Array<string | undefined>): string | undefined => {
-  for (const value of values) {
-    if (typeof value !== 'string') {
-      continue;
-    }
+/**
+ * Load and validate backend configuration from environment variables.
+ *
+ * API_PORT takes precedence over PORT when both are set. The override is
+ * applied *before* Zod validation so that a valid API_PORT can compensate
+ * for an absent or malformed PORT (e.g. PORT="" with API_PORT=3001).
+ */
+export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
+  const effective: Record<string, string | undefined> = { ...env };
 
-    if (value.trim().length === 0) {
-      continue;
-    }
-
-    return value;
+  // Normalize blank values to undefined so Zod defaults apply
+  if (!effective['PORT']?.trim()) {
+    effective['PORT'] = undefined;
   }
 
-  return undefined;
-};
+  // API_PORT takes precedence over PORT when set
+  const apiPort = effective['API_PORT']?.trim();
+  if (apiPort) {
+    effective['PORT'] = apiPort;
+  }
 
-export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  const normalizedEnv: Record<string, string | undefined> = {
-    ...env,
-    PORT: firstDefinedNonBlank(env['API_PORT'], env['PORT']),
-  };
-
-  return parseBackendEnv(normalizedEnv);
+  return parseBackendEnv(effective);
 }

@@ -23,7 +23,7 @@ cp .env.example .env        # or: pnpm env:setup
 docker compose up -d         # start PostgreSQL + Redis
 pnpm db:migrate              # run database migrations
 pnpm db:seed                 # seed development data
-pnpm dev                     # start web (localhost:5173) + API (localhost:3000)
+pnpm dev                     # start web (localhost:5173) + API (localhost:3001)
 ```
 
 `pnpm dev` runs a preflight check that verifies Docker services are running and required ports are available. If something is wrong, you'll get a clear error message.
@@ -57,7 +57,7 @@ Run from the repo root:
 | --------------------- | ---------------------------------------------------------- |
 | `pnpm dev`            | Start frontend + backend dev servers (Turborepo, parallel) |
 | `pnpm dev:web`        | Start only SvelteKit (port 5173)                           |
-| `pnpm dev:api`        | Start only Fastify (port 3000)                             |
+| `pnpm dev:api`        | Start only Fastify (port 3001)                             |
 | `pnpm dev:services`   | Start Docker Compose services                              |
 | `pnpm build`          | Production build all packages                              |
 | `pnpm lint`           | ESLint check across all packages                           |
@@ -80,6 +80,13 @@ Run from the repo root:
 | `pnpm services:reset` | Stop, remove volumes, restart (clean slate)                |
 | `pnpm services:logs`  | Tail Docker Compose logs                                   |
 
+Database commands that target the API workspace directly:
+
+| Command                         | Description                            |
+| ------------------------------- | -------------------------------------- |
+| `pnpm --filter api db:generate` | Generate migration from schema changes |
+| `pnpm --filter api db:studio`   | Open Drizzle Studio (database GUI)     |
+
 Target a specific workspace with `pnpm --filter`:
 
 ```bash
@@ -94,7 +101,7 @@ Copy `.env.example` to `.env` and review the values. All variables are documente
 
 | Variable       | Default                                           | Description               |
 | -------------- | ------------------------------------------------- | ------------------------- |
-| `API_PORT`     | `3000`                                            | Fastify server port       |
+| `API_PORT`     | `3001`                                            | Fastify server port       |
 | `WEB_PORT`     | `5173`                                            | SvelteKit dev server port |
 | `DATABASE_URL` | `postgresql://dmz:dmz_dev@localhost:5432/dmz_dev` | PostgreSQL connection     |
 | `REDIS_URL`    | `redis://localhost:6379`                          | Redis connection          |

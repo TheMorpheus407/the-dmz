@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
-import { createTestTenant, createTestUser, SEED_TENANTS } from './factories.js';
+import { createTestTenant, createTestUser, SEED_TENANTS, SEED_USERS } from './factories.js';
 
 import type { TenantSeed, UserSeed } from './factories.js';
 
@@ -133,6 +133,84 @@ describe('SEED_TENANTS', () => {
   it('has deterministic UUIDs matching SEED_TENANT_IDS', () => {
     for (const tenant of SEED_TENANTS) {
       expect(tenant.tenantId).toMatch(UUID_REGEX);
+    }
+  });
+});
+
+describe('SEED_USERS', () => {
+  it('has at least 4 users per non-system tenant', () => {
+    const nonSystemTenantIds = [
+      SEED_TENANT_IDS.acmeCorp,
+      SEED_TENANT_IDS.consumerPlatform,
+      SEED_TENANT_IDS.inactiveCo,
+    ];
+
+    for (const tenantId of nonSystemTenantIds) {
+      const tenantUsers = SEED_USERS.filter((u) => u.tenantId === tenantId);
+      expect(
+        tenantUsers.length,
+        `tenant ${tenantId} should have at least 4 users`,
+      ).toBeGreaterThanOrEqual(4);
+    }
+  });
+
+  it('includes all 4 roles for each tenant', () => {
+    const expectedRoles = ['super_admin', 'tenant_admin', 'manager', 'learner'];
+    const nonSystemTenantIds = [
+      SEED_TENANT_IDS.acmeCorp,
+      SEED_TENANT_IDS.consumerPlatform,
+      SEED_TENANT_IDS.inactiveCo,
+    ];
+
+    for (const tenantId of nonSystemTenantIds) {
+      const tenantRoles = SEED_USERS.filter((u) => u.tenantId === tenantId).map((u) => u.role);
+      for (const role of expectedRoles) {
+        expect(tenantRoles, `tenant ${tenantId} should include role ${role}`).toContain(role);
+      }
+    }
+  });
+
+  it('has valid UUID format for all user IDs', () => {
+    for (const user of SEED_USERS) {
+      expect(user.userId, `${user.email} should have valid UUID`).toMatch(UUID_REGEX);
+    }
+  });
+
+  it('has unique user IDs', () => {
+    const ids = SEED_USERS.map((u) => u.userId);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('has unique emails', () => {
+    const emails = SEED_USERS.map((u) => u.email);
+    expect(new Set(emails).size).toBe(emails.length);
+  });
+
+  it('references only tenant IDs from SEED_TENANT_IDS', () => {
+    const validTenantIds = new Set(Object.values(SEED_TENANT_IDS));
+    for (const user of SEED_USERS) {
+      expect(
+        validTenantIds.has(user.tenantId),
+        `${user.email} should reference a known tenant`,
+      ).toBe(true);
+    }
+  });
+
+  it('has all required fields on every user', () => {
+    for (const user of SEED_USERS) {
+      expect(user).toHaveProperty('userId');
+      expect(user).toHaveProperty('tenantId');
+      expect(user).toHaveProperty('email');
+      expect(user).toHaveProperty('displayName');
+      expect(user).toHaveProperty('role');
+      expect(user).toHaveProperty('isActive');
+    }
+  });
+
+  it('sets inactive users for the suspended tenant', () => {
+    const inactiveUsers = SEED_USERS.filter((u) => u.tenantId === SEED_TENANT_IDS.inactiveCo);
+    for (const user of inactiveUsers) {
+      expect(user.isActive, `${user.email} in inactive tenant should be inactive`).toBe(false);
     }
   });
 });

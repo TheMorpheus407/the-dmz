@@ -3,7 +3,7 @@ import net from 'node:net';
 import { pathToFileURL } from 'node:url';
 
 export const DEFAULT_WEB_PORT = 5173;
-export const DEFAULT_API_PORT = 3000;
+export const DEFAULT_API_PORT = 3001;
 export const REQUIRED_DOCKER_SERVICES = ['postgres', 'redis'];
 
 const isBlank = (value) => typeof value === 'string' && value.trim() === '';

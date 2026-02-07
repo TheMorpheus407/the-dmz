@@ -26,5 +26,5 @@ COPY --from=build /app/apps/api/package.json /app/apps/api/package.json
 COPY --from=build /app/packages/shared/dist /app/packages/shared/dist
 COPY --from=build /app/packages/shared/package.json /app/packages/shared/package.json
 USER node
-EXPOSE 3000
+EXPOSE 3001
 CMD ["node", "apps/api/dist/server.js"]

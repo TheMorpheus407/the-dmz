@@ -144,11 +144,11 @@ test('assertPortsAvailable reports conflict details', async () => {
       assertPortsAvailable(
         [
           { name: 'WEB_PORT', port: 5173 },
-          { name: 'API_PORT', port: 3000 },
+          { name: 'API_PORT', port: 3001 },
         ],
-        async (port) => port !== 3000,
+        async (port) => port !== 3001,
       ),
-    /API_PORT port 3000 is already in use/,
+    /API_PORT port 3001 is already in use/,
   );
 });
 
@@ -157,12 +157,12 @@ test('assertPortsAvailable rejects duplicate configured ports', async () => {
     () =>
       assertPortsAvailable(
         [
-          { name: 'WEB_PORT', port: 3000 },
-          { name: 'API_PORT', port: 3000 },
+          { name: 'WEB_PORT', port: 3001 },
+          { name: 'API_PORT', port: 3001 },
         ],
         async () => true,
       ),
-    /WEB_PORT and API_PORT both resolve to port 3000/,
+    /WEB_PORT and API_PORT both resolve to port 3001/,
   );
 });
 
@@ -215,12 +215,12 @@ test('runDevPreflight rejects duplicate WEB_PORT and API_PORT values', async () 
     () =>
       runDevPreflight({
         env: {
-          WEB_PORT: '3000',
-          API_PORT: '3000',
+          WEB_PORT: '3001',
+          API_PORT: '3001',
         },
         listServices: () => new Set(['postgres', 'redis']),
         checkPort: async () => true,
       }),
-    /WEB_PORT and API_PORT both resolve to port 3000/,
+    /WEB_PORT and API_PORT both resolve to port 3001/,
   );
 });

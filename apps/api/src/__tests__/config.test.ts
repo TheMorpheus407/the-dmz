@@ -12,14 +12,14 @@ const baseEnv = {
 
 describe('loadConfig', () => {
   describe('port resolution', () => {
-    it('defaults API server port to 3000', () => {
+    it('defaults API server port to 3001', () => {
       const config = loadConfig({
         ...baseEnv,
         PORT: undefined,
         API_PORT: undefined,
       });
 
-      expect(config.PORT).toBe(3000);
+      expect(config.PORT).toBe(3001);
     });
 
     it('uses API_PORT when PORT is not set', () => {
@@ -52,7 +52,7 @@ describe('loadConfig', () => {
       expect(config.PORT).toBe(3200);
     });
 
-    it('rejects malformed API_PORT values', () => {
+    it('rejects malformed API_PORT values with a clear error', () => {
       expect(() =>
         loadConfig({
           ...baseEnv,
@@ -60,6 +60,35 @@ describe('loadConfig', () => {
           API_PORT: '3000abc',
         }),
       ).toThrow(/Invalid backend environment configuration/);
+    });
+
+    it('rejects API_PORT=0 (ephemeral port)', () => {
+      expect(() =>
+        loadConfig({
+          ...baseEnv,
+          API_PORT: '0',
+        }),
+      ).toThrow(/API_PORT must be a positive integer/);
+    });
+
+    it('honors API_PORT when PORT is empty or invalid', () => {
+      const config = loadConfig({
+        ...baseEnv,
+        PORT: '',
+        API_PORT: '3001',
+      });
+
+      expect(config.PORT).toBe(3001);
+    });
+
+    it('falls back to default when PORT is blank and API_PORT is unset', () => {
+      const config = loadConfig({
+        ...baseEnv,
+        PORT: '',
+        API_PORT: undefined,
+      });
+
+      expect(config.PORT).toBe(3001);
     });
   });
 

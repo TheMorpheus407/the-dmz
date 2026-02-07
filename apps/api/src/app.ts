@@ -7,13 +7,17 @@ import { AppError, createErrorHandler, ErrorCodes } from './shared/middleware/er
 import { requestLogger } from './shared/middleware/request-logger.js';
 import { generateId } from './shared/utils/id.js';
 
-const buildCorsOriginSet = (corsOriginsList: string[]): Set<string> => {
+const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {
   const origins = new Set<string>();
   for (const origin of corsOriginsList) {
     origins.add(origin);
-    // Also allow 127.0.0.1 variant of localhost origins
-    if (origin.includes('localhost')) {
-      origins.add(origin.replace('localhost', '127.0.0.1'));
+  }
+  // In non-production environments, also allow 127.0.0.1 variant of localhost origins
+  if (nodeEnv !== 'production') {
+    for (const origin of corsOriginsList) {
+      if (origin.includes('localhost')) {
+        origins.add(origin.replace('localhost', '127.0.0.1'));
+      }
     }
   }
   return origins;
@@ -32,7 +36,7 @@ const resolveRequestId = (value: string | string[] | undefined): string | undefi
 };
 
 export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
-  const allowedOrigins = buildCorsOriginSet(config.CORS_ORIGINS_LIST);
+  const allowedOrigins = buildCorsOriginSet(config.CORS_ORIGINS_LIST, config.NODE_ENV);
 
   const app = fastify({
     disableRequestLogging: true,
@@ -65,7 +69,7 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
         return;
       }
 
-      if (config.NODE_ENV !== 'production' && allowedOrigins.has(origin)) {
+      if (allowedOrigins.has(origin)) {
         callback(null, true);
         return;
       }

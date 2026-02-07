@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node -e \"const n=require('net'),r=process.env.WEB_PORT||'5173',p=Number(r);if(!Number.isInteger(p)||p<1||p>65535){console.error('Invalid WEB_PORT: '+r+'. Expected integer 1-65535.');process.exit(1)}const s=n.createServer();s.once('error',()=>{console.error('Port '+p+' in use');process.exit(1)});s.listen(p,()=>s.close())\"",
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",

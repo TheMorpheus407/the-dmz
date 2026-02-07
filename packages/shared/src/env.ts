@@ -32,7 +32,17 @@ const booleanFromString = z.preprocess((value) => {
 export const backendEnvSchema = z
   .object({
     NODE_ENV: z.enum(nodeEnvValues).default('development'),
-    PORT: z.coerce.number().int().positive().default(3000),
+    PORT: z.coerce.number().int().positive().default(3001),
+    // Optional alias for PORT. When set, takes precedence over PORT in loadConfig().
+    // Empty strings are treated as unset (mapped to undefined via preprocess).
+    API_PORT: z.preprocess(
+      (val) => (typeof val === 'string' && val.trim() === '' ? undefined : val),
+      z.coerce
+        .number()
+        .int()
+        .positive({ message: 'API_PORT must be a positive integer' })
+        .optional(),
+    ),
     API_HOST: z.string().min(1).default('0.0.0.0'),
     DATABASE_URL: z.string().min(1).default('postgres://localhost:5432/the_dmz'),
     DATABASE_POOL_MIN: z.coerce.number().int().positive().optional(),

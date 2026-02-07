@@ -4,6 +4,7 @@
 #   postgres  — PostgreSQL 16 on localhost:5432
 #   redis     — Redis 7 on localhost:6379
 #   adminer   — Database UI on localhost:8080 (opt-in via --profile tools)
+#   migrate   — Run Drizzle database migrations (opt-in via --profile migrate)
 #
 # Connection strings:
 #   PostgreSQL: postgresql://dmz:dmz_dev@localhost:5432/dmz_dev
@@ -12,12 +13,23 @@
 # Database tools (pgAdmin, TablePlus, DBeaver, Adminer):
 #   Host: localhost | Port: 5432 | User: dmz | Password: dmz_dev | Database: dmz_dev
 #
+# Startup ordering (enforced via depends_on + condition: service_healthy):
+#   1. postgres (healthy when pg_isready succeeds)
+#   2. redis (healthy when redis-cli ping succeeds)
+#   3. migrate (runs Drizzle migrations against healthy postgres, then exits)
+#   4. api/web application services (added in issue #32, depend on all above)
+#
+# Migration state tracking:
+#   Drizzle ORM tracks applied migrations in the database itself via its
+#   __drizzle_migrations journal table. No separate volume is needed.
+#
 # Usage:
 #   pnpm services:up       — start infrastructure in background
 #   pnpm services:down     — stop infrastructure
 #   pnpm services:reset    — stop, remove volumes, restart (clean slate)
 #   pnpm services:logs     — tail service logs
-#   docker compose --profile tools up -d  — include Adminer
+#   docker compose --profile tools up -d    — include Adminer
+#   docker compose --profile migrate up migrate  — run database migrations
 
 services:
   postgres:
@@ -58,6 +70,56 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+
+  # Run Drizzle ORM database migrations.
+  # Opt-in via: docker compose --profile migrate up migrate
+  # This service starts only after postgres is healthy, runs migrations, then exits.
+  migrate:
+    image: node:22-slim
+    working_dir: /app
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD:-dmz_dev}@postgres:5432/${POSTGRES_DB:-dmz_dev}
+    command: ['sh', '-c', 'corepack enable && pnpm --filter api db:migrate']
+    profiles: ['migrate']
+
+  # -------------------------------------------------------------------------
+  # Application services (issue #32 — Application Dockerfiles for API and Web)
+  # -------------------------------------------------------------------------
+  # When adding application services, use the following dependency structure
+  # to enforce the startup ordering: postgres -> redis -> migrate -> app
+  #
+  #   api:
+  #     build:
+  #       context: .
+  #       dockerfile: apps/api/Dockerfile
+  #     depends_on:
+  #       postgres:
+  #         condition: service_healthy
+  #       redis:
+  #         condition: service_healthy
+  #       migrate:
+  #         condition: service_completed_successfully
+  #     environment:
+  #       DATABASE_URL: postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD:-dmz_dev}@postgres:5432/${POSTGRES_DB:-dmz_dev}
+  #       REDIS_URL: redis://redis:6379
+  #     ports:
+  #       - '3001:3001'
+  #
+  #   web:
+  #     build:
+  #       context: .
+  #       dockerfile: apps/web/Dockerfile
+  #     depends_on:
+  #       api:
+  #         condition: service_healthy
+  #     ports:
+  #       - '3000:3000'
+  # -------------------------------------------------------------------------
 
 volumes:
   postgres_data:

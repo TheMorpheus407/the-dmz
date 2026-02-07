@@ -2,7 +2,9 @@ import { sql } from 'drizzle-orm';
 import { boolean, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 export const tenants = pgTable('tenants', {
-  tenantId: uuid('tenant_id').defaultRandom().primaryKey(),
+  tenantId: uuid('tenant_id')
+    .default(sql`uuid_generate_v7()`)
+    .primaryKey(),
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 63 }).notNull().unique(),
   domain: varchar('domain', { length: 255 }),

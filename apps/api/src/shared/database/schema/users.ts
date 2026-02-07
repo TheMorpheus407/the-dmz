@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -13,7 +14,9 @@ import { tenants } from './tenants.js';
 export const users = pgTable(
   'users',
   {
-    userId: uuid('user_id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .default(sql`uuid_generate_v7()`)
+      .primaryKey(),
     tenantId: uuid('tenant_id')
       .notNull()
       .references(() => tenants.tenantId, { onDelete: 'restrict' }),

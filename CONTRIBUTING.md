@@ -23,7 +23,22 @@ fix/port-conflict-preflight
 
 ## Commit Convention
 
-This project uses [Conventional Commits](https://www.conventionalcommits.org/) enforced by commitlint. The `commit-msg` git hook validates every commit.
+This project accepts two commit message formats. Use whichever fits the context.
+
+### Issue-Linked Commits (preferred when working on a GitHub issue)
+
+When working on a specific GitHub issue -- including all commits produced by `auto-develop.sh` -- use the issue-linked format:
+
+```
+Issue #42: Add JWT validation middleware
+Issue #18: Create initial database schema migration
+```
+
+This is the format prescribed by `AGENTS.md` for automated and issue-driven development.
+
+### Conventional Commits (for general work)
+
+For commits not tied to a specific issue, use [Conventional Commits](https://www.conventionalcommits.org/) enforced by commitlint. The `commit-msg` git hook validates these commits.
 
 **Format:** `type(scope): description`
 
@@ -31,22 +46,22 @@ This project uses [Conventional Commits](https://www.conventionalcommits.org/) e
 
 **Scopes (enforced):** `web`, `api`, `shared`, `infra`, `ci`, `deps`, `db`, `e2e`, `docker`, `auth`, `docs`, `config`
 
-**Rules:**
-
-- Header max length: 100 characters
-- Subject must not be sentence-case, start-case, PascalCase, or UPPER_CASE
-- One concern per commit — do not mix unrelated changes
-
 **Examples:**
 
 ```
-feat(api): add JWT validation middleware
+feat(api): add rate limiting to public endpoints
 fix(web): resolve hydration error on login page
 docs(docs): add developer documentation
 test(e2e): add accessibility smoke tests
 chore(deps): update SvelteKit to 2.x
 refactor(shared): extract Zod schemas to separate module
 ```
+
+### General Rules
+
+- Header max length: 100 characters
+- Subject must not be sentence-case, start-case, PascalCase, or UPPER_CASE
+- One concern per commit — do not mix unrelated changes
 
 ## Pull Request Workflow
 

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "predev": "node -e \"const n=require('net'),r=process.env.API_PORT||process.env.PORT||'3001',p=Number(r);if(!Number.isInteger(p)||p<1||p>65535){console.error('Invalid port: '+r+'. Expected integer 1-65535.');process.exit(1)}const s=n.createServer();s.once('error',()=>{console.error('Port '+p+' in use');process.exit(1)});s.listen(p,()=>s.close())\"",
     "dev": "node --watch --import tsx src/server.ts",
     "start": "node dist/server.js",
     "lint": "eslint .",

@@ -37,7 +37,7 @@ const assertTestDatabase = (databaseUrl: string): void => {
 const ensureE2ETestUsersTable = async (sql: ReturnType<typeof postgres>): Promise<void> => {
   await sql`
     create table if not exists e2e_test_users (
-      user_id uuid primary key default gen_random_uuid() not null,
+      user_id uuid primary key default uuid_generate_v7() not null,
       tenant_slug varchar(63) not null references tenants(slug) on delete cascade,
       email varchar(255) not null unique,
       password varchar(255) not null,

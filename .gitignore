@@ -45,3 +45,4 @@ logs/issues/
 
 # TypeScript
 *.tsbuildinfo
+/logs/reviews/

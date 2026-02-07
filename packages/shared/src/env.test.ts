@@ -4,7 +4,7 @@ import { parseBackendEnv, parseFrontendEnv } from './env.js';
 
 const validBackendEnv = {
   NODE_ENV: 'development',
-  PORT: '3000',
+  PORT: '3001',
   API_HOST: '0.0.0.0',
   DATABASE_URL: 'postgres://localhost:5432/the_dmz',
   REDIS_URL: 'redis://localhost:6379',
@@ -19,7 +19,7 @@ describe('parseBackendEnv', () => {
     const config = parseBackendEnv(validBackendEnv);
 
     expect(config.NODE_ENV).toBe('development');
-    expect(config.PORT).toBe(3000);
+    expect(config.PORT).toBe(3001);
     expect(config.API_HOST).toBe('0.0.0.0');
     expect(config.DATABASE_URL).toBe('postgres://localhost:5432/the_dmz');
     expect(config.REDIS_URL).toBe('redis://localhost:6379');
@@ -33,7 +33,7 @@ describe('parseBackendEnv', () => {
     const config = parseBackendEnv({});
 
     expect(config.NODE_ENV).toBe('development');
-    expect(config.PORT).toBe(3000);
+    expect(config.PORT).toBe(3001);
     expect(config.API_HOST).toBe('0.0.0.0');
     expect(config.LOG_LEVEL).toBe('info');
     expect(config.JWT_EXPIRES_IN).toBe('7d');
