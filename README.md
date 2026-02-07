@@ -156,6 +156,7 @@ Scripts fail if `.env` is absent. Run `pnpm env:setup` or `cp .env.example .env`
 | [docs/BRD.md](docs/BRD.md)               | Business Requirements Document                                     |
 | [docs/MILESTONES.md](docs/MILESTONES.md) | Development roadmap (M0 through M16)                               |
 | [docs/DD/](docs/DD/)                     | 14 Design Documents covering all major systems                     |
+| [docs/adr/](docs/adr/)                   | Architecture Decision Records (template + accepted decisions)      |
 | [docs/story.md](docs/story.md)           | Game premise and narrative                                         |
 | [.env.example](.env.example)             | Environment variable reference                                     |
 
