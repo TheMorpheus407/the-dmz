@@ -1,0 +1,90 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [master]
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run dependency audit (high+)
+        id: dependency-audit
+        continue-on-error: true
+        run: |
+          mkdir -p security-reports
+          pnpm audit --audit-level high --json > security-reports/dependency-audit.json 2>&1
+      - name: Upload dependency audit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-${{ github.run_id }}-${{ matrix.node }}
+          path: security-reports/dependency-audit.json
+          if-no-files-found: warn
+      - name: Enforce dependency audit threshold
+        if: steps.dependency-audit.outcome == 'failure'
+        run: |
+          echo "Dependency audit failed due to high/critical vulnerabilities."
+          exit 1
+
+  license-check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run license compliance check
+        id: license-check
+        continue-on-error: true
+        run: |
+          mkdir -p security-reports
+          npx license-checker --json --failOn 'GPL-3.0;GPL-3.0-only;GPL-3.0-or-later;AGPL-3.0;AGPL-3.0-only;AGPL-3.0-or-later' > security-reports/license-check.json 2>&1
+      - name: Upload license compliance artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-check-${{ github.run_id }}-${{ matrix.node }}
+          path: security-reports/license-check.json
+          if-no-files-found: warn
+      - name: Enforce license compliance policy
+        if: steps.license-check.outcome == 'failure'
+        run: |
+          echo "License check failed due to disallowed GPL/AGPL dependency."
+          exit 1

@@ -172,11 +172,11 @@ All jobs must pass before merge.
 
 These hooks run automatically via Husky:
 
-| Hook         | Runs             | Purpose                           |
-| ------------ | ---------------- | --------------------------------- |
-| `pre-commit` | `lint-staged`    | ESLint + Prettier on staged files |
-| `commit-msg` | `commitlint`     | Validates commit message format   |
-| `pre-push`   | `pnpm typecheck` | Full TypeScript strict check      |
+| Hook         | Runs                         | Purpose                                            |
+| ------------ | ---------------------------- | -------------------------------------------------- |
+| `pre-commit` | `secretlint` + `lint-staged` | Secret detection + ESLint/Prettier on staged files |
+| `commit-msg` | `commitlint`                 | Validates commit message format                    |
+| `pre-push`   | `pnpm typecheck`             | Full TypeScript strict check                       |
 
 ## Project Documentation
 

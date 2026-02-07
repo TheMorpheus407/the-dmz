@@ -1,2 +1,9 @@
 #!/usr/bin/env sh
+set -e
+
+if ! git diff --cached --quiet --name-only --diff-filter=ACMR; then
+  git diff --cached --name-only --diff-filter=ACMR -z \
+    | xargs -0 pnpm exec secretlint --secretlintignore .secretlintignore --
+fi
+
 pnpm exec lint-staged

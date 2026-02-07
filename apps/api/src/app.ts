@@ -1,4 +1,5 @@
 import cors from '@fastify/cors';
+import helmet from '@fastify/helmet';
 import fastify, { type FastifyInstance } from 'fastify';
 
 import { loadConfig, type AppConfig } from './config.js';
@@ -33,6 +34,45 @@ const resolveRequestId = (value: string | string[] | undefined): string | undefi
   }
 
   return undefined;
+};
+
+const buildCspDirectives = (nodeEnv: string) => {
+  if (nodeEnv === 'production') {
+    return {
+      defaultSrc: ["'self'"],
+      baseUri: ["'self'"],
+      connectSrc: ["'self'"],
+      formAction: ["'self'"],
+      frameAncestors: ["'none'"],
+      imgSrc: ["'self'", 'data:'],
+      objectSrc: ["'none'"],
+      scriptSrc: ["'self'"],
+      styleSrc: ["'self'"],
+      upgradeInsecureRequests: [],
+    };
+  }
+
+  return {
+    defaultSrc: ["'self'"],
+    baseUri: ["'self'"],
+    connectSrc: [
+      "'self'",
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+      'ws://localhost:5173',
+      'ws://127.0.0.1:5173',
+      'http://localhost:3001',
+      'http://127.0.0.1:3001',
+      'ws://localhost:3001',
+      'ws://127.0.0.1:3001',
+    ],
+    formAction: ["'self'"],
+    frameAncestors: ["'none'"],
+    imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
+    objectSrc: ["'none'"],
+    scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+    styleSrc: ["'self'", "'unsafe-inline'", 'https:'],
+  };
 };
 
 export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
@@ -77,6 +117,21 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
       callback(null, false);
     },
     credentials: true,
+  });
+
+  app.register(helmet, {
+    contentSecurityPolicy: {
+      directives: buildCspDirectives(config.NODE_ENV),
+    },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    xContentTypeOptions: true,
+    xFrameOptions: { action: 'deny' },
+    xXssProtection: true,
+  });
+
+  app.addHook('onSend', async (_request, reply, payload) => {
+    reply.header('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    return payload;
   });
 
   app.setNotFoundHandler(() => {

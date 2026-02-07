@@ -15,6 +15,43 @@ permissions:
   actions: write
 
 jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Run dependency audit (high+)
+        id: dependency-audit
+        continue-on-error: true
+        run: |
+          mkdir -p security-reports
+          pnpm audit --audit-level high --json > security-reports/dependency-audit.json 2>&1
+      - name: Upload dependency audit artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-audit-${{ matrix.node }}
+          path: security-reports/dependency-audit.json
+          if-no-files-found: warn
+      - name: Enforce dependency audit threshold
+        if: steps.dependency-audit.outcome == 'failure'
+        run: |
+          echo "Dependency audit failed due to high/critical vulnerabilities."
+          exit 1
+
   lint-and-typecheck:
     runs-on: ubuntu-latest
     strategy:
