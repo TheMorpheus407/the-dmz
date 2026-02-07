@@ -39,8 +39,9 @@ Thumbs.db
 *.sql.bak
 pgdata/
 
-# Logs (runtime log files only — logs/issues/ pipeline artifacts stay tracked)
+# Logs
 *.log
+logs/issues/
 
 # TypeScript
 *.tsbuildinfo
