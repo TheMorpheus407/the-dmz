@@ -1,4 +1,19 @@
 {
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "typescript.tsdk": "apps/web/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "svelte.enable-ts-plugin": true,
+  "files.eol": "\n",
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/.svelte-kit": true,
+    "**/dist": true,
+    "**/.turbo": true
+  },
   "eslint.experimental.useFlatConfig": true,
   "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact", "svelte"],
   "eslint.workingDirectories": [{ "mode": "auto" }]

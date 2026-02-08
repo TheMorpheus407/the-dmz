@@ -28,6 +28,20 @@ pnpm dev                     # start web (localhost:5173) + API (localhost:3001)
 
 `pnpm dev` runs a preflight check that verifies Docker services are running and required ports are available. If something is wrong, you'll get a clear error message.
 
+## VS Code Setup and Debugging
+
+Open the workspace in VS Code. Accept recommended extensions when prompted.
+
+Use **Run and Debug** with these launch configurations:
+
+- `Debug SvelteKit (frontend)`: opens Chrome DevTools against the Vite dev server (`http://localhost:5173`).
+- `Debug Fastify (backend)`: attaches to Fastify started with Node inspector.
+- `Debug Both (frontend + backend)`: starts and attaches frontend plus backend sessions together.
+- `Debug Vitest (current file)`: runs the currently open test file with Vitest debug flags.
+- `Debug Playwright (current file, headed)`: runs the currently open E2E test in headed debug mode.
+
+If backend attach fails initially, start `Start Fastify with Inspector` first and rerun `Debug Fastify (backend)`.
+
 ## Project Structure
 
 ```

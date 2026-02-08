@@ -38,7 +38,7 @@
     "services:down": "docker compose down",
     "services:reset": "docker compose down -v && docker compose up -d",
     "services:logs": "docker compose logs -f",
-    "test:scripts": "node --test scripts/dev-preflight.test.mjs"
+    "test:scripts": "node --test scripts/*.test.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

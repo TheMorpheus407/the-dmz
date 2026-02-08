@@ -1,0 +1,63 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Start SvelteKit Dev Server",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev:web",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Debug SvelteKit (frontend)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/apps/web/src"
+    },
+    {
+      "name": "Start Fastify with Inspector",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "node --inspect=9230 --watch --import tsx src/server.ts",
+      "cwd": "${workspaceFolder}/apps/api"
+    },
+    {
+      "name": "Debug Fastify (backend)",
+      "type": "node",
+      "request": "attach",
+      "address": "localhost",
+      "port": 9230,
+      "cwd": "${workspaceFolder}/apps/api",
+      "restart": true,
+      "timeout": 30000,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Debug Vitest (current file)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "node scripts/debug-vitest-current.mjs \"${relativeFile}\"",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Debug Playwright (current file, headed)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm run test:e2e:prepare && pnpm exec playwright test --headed --debug \"${relativeFile}\"",
+      "cwd": "${workspaceFolder}"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Both (frontend + backend)",
+      "configurations": [
+        "Start SvelteKit Dev Server",
+        "Start Fastify with Inspector",
+        "Debug SvelteKit (frontend)",
+        "Debug Fastify (backend)"
+      ],
+      "stopAll": true
+    }
+  ]
+}
