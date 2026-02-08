@@ -130,10 +130,10 @@ describe('loadConfig', () => {
       const config = loadConfig({
         ...baseEnv,
         NODE_ENV: 'production',
-        JWT_SECRET: 'a-real-production-secret-key-here',
+        JWT_SECRET: 'prod-jwt-value',
       });
 
-      expect(config.JWT_SECRET).toBe('a-real-production-secret-key-here');
+      expect(config.JWT_SECRET).toBe('prod-jwt-value');
     });
   });
 
@@ -148,6 +148,49 @@ describe('loadConfig', () => {
       const config = loadConfig({ ...baseEnv, JWT_EXPIRES_IN: '24h' });
 
       expect(config.JWT_EXPIRES_IN).toBe('24h');
+    });
+  });
+
+  describe('API_VERSION', () => {
+    it('defaults to package-compatible version', () => {
+      const config = loadConfig({ ...baseEnv });
+
+      expect(config.API_VERSION).toBe('0.0.0');
+    });
+
+    it('accepts custom version values', () => {
+      const config = loadConfig({ ...baseEnv, API_VERSION: '1.0.0' });
+
+      expect(config.API_VERSION).toBe('1.0.0');
+    });
+  });
+
+  describe('ENABLE_SWAGGER', () => {
+    it('defaults to enabled outside production', () => {
+      const config = loadConfig({ ...baseEnv, NODE_ENV: 'test' });
+
+      expect(config.ENABLE_SWAGGER).toBe(true);
+    });
+
+    it('defaults to disabled in production', () => {
+      const config = loadConfig({
+        ...baseEnv,
+        NODE_ENV: 'production',
+        JWT_SECRET: 'prod-jwt-value',
+      });
+
+      expect(config.ENABLE_SWAGGER).toBe(false);
+    });
+
+    it('honors explicit ENABLE_SWAGGER override', () => {
+      const config = loadConfig({
+        ...baseEnv,
+        NODE_ENV: 'production',
+        JWT_SECRET: 'prod-jwt-value',
+        ENABLE_SWAGGER: 'true',
+      });
+
+      expect(config.ENABLE_SWAGGER).toBe(true);
     });
   });
 
@@ -185,7 +228,7 @@ describe('loadConfig', () => {
       const config = loadConfig({
         ...baseEnv,
         NODE_ENV: 'production',
-        JWT_SECRET: 'a-real-production-secret-key-here',
+        JWT_SECRET: 'prod-jwt-value',
       });
 
       expect(config.DATABASE_POOL_MIN).toBe(5);

@@ -21,11 +21,13 @@ describe('parseBackendEnv', () => {
     expect(config.NODE_ENV).toBe('development');
     expect(config.PORT).toBe(3001);
     expect(config.API_HOST).toBe('0.0.0.0');
+    expect(config.API_VERSION).toBe('0.0.0');
     expect(config.DATABASE_URL).toBe('postgres://localhost:5432/the_dmz');
     expect(config.REDIS_URL).toBe('redis://localhost:6379');
     expect(config.LOG_LEVEL).toBe('info');
     expect(config.JWT_SECRET).toBe('dev-secret-change-in-production');
     expect(config.JWT_EXPIRES_IN).toBe('7d');
+    expect(config.ENABLE_SWAGGER).toBe(true);
     expect(config.CORS_ORIGINS).toBe('http://localhost:5173');
   });
 
@@ -35,8 +37,10 @@ describe('parseBackendEnv', () => {
     expect(config.NODE_ENV).toBe('development');
     expect(config.PORT).toBe(3001);
     expect(config.API_HOST).toBe('0.0.0.0');
+    expect(config.API_VERSION).toBe('0.0.0');
     expect(config.LOG_LEVEL).toBe('info');
     expect(config.JWT_EXPIRES_IN).toBe('7d');
+    expect(config.ENABLE_SWAGGER).toBe(true);
     expect(config.DATABASE_POOL_MIN).toBe(2);
     expect(config.DATABASE_POOL_MAX).toBe(10);
     expect(config.DATABASE_SSL).toBe(false);
@@ -46,7 +50,7 @@ describe('parseBackendEnv', () => {
     const config = parseBackendEnv({
       ...validBackendEnv,
       NODE_ENV: 'production',
-      JWT_SECRET: 'a-real-production-secret-key-here',
+      JWT_SECRET: 'prod-jwt-value',
     });
 
     expect(config.DATABASE_POOL_MIN).toBe(5);
@@ -70,6 +74,15 @@ describe('parseBackendEnv', () => {
     });
 
     expect(config.CORS_ORIGINS_LIST).toEqual(['http://localhost:5173']);
+  });
+
+  it('accepts custom API_VERSION', () => {
+    const config = parseBackendEnv({
+      ...validBackendEnv,
+      API_VERSION: '1.2.3',
+    });
+
+    expect(config.API_VERSION).toBe('1.2.3');
   });
 
   it('rejects non-numeric PORT values', () => {
@@ -104,10 +117,10 @@ describe('parseBackendEnv', () => {
     const config = parseBackendEnv({
       ...validBackendEnv,
       NODE_ENV: 'production',
-      JWT_SECRET: 'a-real-production-secret-key-that-is-strong',
+      JWT_SECRET: 'prod',
     });
 
-    expect(config.JWT_SECRET).toBe('a-real-production-secret-key-that-is-strong');
+    expect(config.JWT_SECRET).toBe('prod');
   });
 
   it('allows dev JWT_SECRET in development', () => {
@@ -127,6 +140,30 @@ describe('parseBackendEnv', () => {
     });
 
     expect(config.DATABASE_SSL).toBe(true);
+  });
+
+  it('parses ENABLE_SWAGGER boolean from string', () => {
+    const enabled = parseBackendEnv({
+      ...validBackendEnv,
+      ENABLE_SWAGGER: 'true',
+    });
+    const disabled = parseBackendEnv({
+      ...validBackendEnv,
+      ENABLE_SWAGGER: 'false',
+    });
+
+    expect(enabled.ENABLE_SWAGGER).toBe(true);
+    expect(disabled.ENABLE_SWAGGER).toBe(false);
+  });
+
+  it('defaults ENABLE_SWAGGER to false in production', () => {
+    const config = parseBackendEnv({
+      ...validBackendEnv,
+      NODE_ENV: 'production',
+      JWT_SECRET: 'prod-jwt-value',
+    });
+
+    expect(config.ENABLE_SWAGGER).toBe(false);
   });
 
   it('overrides pool defaults with explicit values', () => {

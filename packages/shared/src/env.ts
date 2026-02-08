@@ -44,6 +44,7 @@ export const backendEnvSchema = z
         .optional(),
     ),
     API_HOST: z.string().min(1).default('0.0.0.0'),
+    API_VERSION: z.string().min(1).default('0.0.0'),
     DATABASE_URL: z.string().min(1).default('postgres://localhost:5432/the_dmz'),
     DATABASE_POOL_MIN: z.coerce.number().int().positive().optional(),
     DATABASE_POOL_MAX: z.coerce.number().int().positive().optional(),
@@ -54,6 +55,7 @@ export const backendEnvSchema = z
     LOG_LEVEL: z.enum(logLevelValues).default('info'),
     JWT_SECRET: z.string().min(1).default('dev-secret-change-in-production'),
     JWT_EXPIRES_IN: z.string().min(1).default('7d'),
+    ENABLE_SWAGGER: booleanFromString.optional(),
     CORS_ORIGINS: z.string().min(1).default('http://localhost:5173'),
   })
   .transform((config) => {
@@ -66,6 +68,7 @@ export const backendEnvSchema = z
       DATABASE_POOL_IDLE_TIMEOUT: config.DATABASE_POOL_IDLE_TIMEOUT ?? 10,
       DATABASE_POOL_CONNECT_TIMEOUT: config.DATABASE_POOL_CONNECT_TIMEOUT ?? 30,
       DATABASE_SSL: config.DATABASE_SSL ?? isProd,
+      ENABLE_SWAGGER: config.ENABLE_SWAGGER ?? config.NODE_ENV !== 'production',
       CORS_ORIGINS_LIST: config.CORS_ORIGINS.split(',').map((o) => o.trim()),
     };
   })
