@@ -14,6 +14,9 @@ export const logLevelValues = [
 ] as const;
 export type LogLevel = (typeof logLevelValues)[number];
 
+export const coepPolicyValues = ['require-corp', 'credentialless'] as const;
+export type CoepPolicy = (typeof coepPolicyValues)[number];
+
 const booleanFromString = z.preprocess((value) => {
   if (typeof value === 'string') {
     const normalized = value.trim().toLowerCase();
@@ -57,6 +60,10 @@ export const backendEnvSchema = z
     JWT_EXPIRES_IN: z.string().min(1).default('7d'),
     ENABLE_SWAGGER: booleanFromString.optional(),
     CORS_ORIGINS: z.string().min(1).default('http://localhost:5173'),
+    CSP_FRAME_ANCESTORS: z.string().min(1).default('none'),
+    CSP_CONNECT_SRC: z.string().optional().default(''),
+    CSP_IMG_SRC: z.string().optional().default(''),
+    COEP_POLICY: z.enum(coepPolicyValues).default('require-corp'),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';

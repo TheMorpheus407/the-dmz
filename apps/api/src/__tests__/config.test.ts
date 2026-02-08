@@ -212,6 +212,32 @@ describe('loadConfig', () => {
     });
   });
 
+  describe('security header settings', () => {
+    it('defaults CSP security settings', () => {
+      const config = loadConfig({ ...baseEnv });
+
+      expect(config.CSP_FRAME_ANCESTORS).toBe('none');
+      expect(config.CSP_CONNECT_SRC).toBe('');
+      expect(config.CSP_IMG_SRC).toBe('');
+      expect(config.COEP_POLICY).toBe('require-corp');
+    });
+
+    it('accepts security header overrides', () => {
+      const config = loadConfig({
+        ...baseEnv,
+        CSP_FRAME_ANCESTORS: 'https://lms.example.com',
+        CSP_CONNECT_SRC: 'https://api.example.com,wss://socket.example.com',
+        CSP_IMG_SRC: 'https://cdn.example.com',
+        COEP_POLICY: 'credentialless',
+      });
+
+      expect(config.CSP_FRAME_ANCESTORS).toBe('https://lms.example.com');
+      expect(config.CSP_CONNECT_SRC).toBe('https://api.example.com,wss://socket.example.com');
+      expect(config.CSP_IMG_SRC).toBe('https://cdn.example.com');
+      expect(config.COEP_POLICY).toBe('credentialless');
+    });
+  });
+
   describe('database pool', () => {
     it('uses development defaults', () => {
       const config = loadConfig({

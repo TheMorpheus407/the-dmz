@@ -29,6 +29,10 @@ describe('parseBackendEnv', () => {
     expect(config.JWT_EXPIRES_IN).toBe('7d');
     expect(config.ENABLE_SWAGGER).toBe(true);
     expect(config.CORS_ORIGINS).toBe('http://localhost:5173');
+    expect(config.CSP_FRAME_ANCESTORS).toBe('none');
+    expect(config.CSP_CONNECT_SRC).toBe('');
+    expect(config.CSP_IMG_SRC).toBe('');
+    expect(config.COEP_POLICY).toBe('require-corp');
   });
 
   it('applies development defaults when env is empty', () => {
@@ -44,6 +48,10 @@ describe('parseBackendEnv', () => {
     expect(config.DATABASE_POOL_MIN).toBe(2);
     expect(config.DATABASE_POOL_MAX).toBe(10);
     expect(config.DATABASE_SSL).toBe(false);
+    expect(config.CSP_FRAME_ANCESTORS).toBe('none');
+    expect(config.CSP_CONNECT_SRC).toBe('');
+    expect(config.CSP_IMG_SRC).toBe('');
+    expect(config.COEP_POLICY).toBe('require-corp');
   });
 
   it('applies production defaults for pool settings', () => {
@@ -85,6 +93,35 @@ describe('parseBackendEnv', () => {
     expect(config.API_VERSION).toBe('1.2.3');
   });
 
+  it('accepts configurable frame ancestors for LMS embedding', () => {
+    const config = parseBackendEnv({
+      ...validBackendEnv,
+      CSP_FRAME_ANCESTORS: 'https://lms.example.com,https://canvas.example.com',
+    });
+
+    expect(config.CSP_FRAME_ANCESTORS).toBe('https://lms.example.com,https://canvas.example.com');
+  });
+
+  it('accepts configurable extra CSP sources', () => {
+    const config = parseBackendEnv({
+      ...validBackendEnv,
+      CSP_CONNECT_SRC: 'https://api.example.com,wss://realtime.example.com',
+      CSP_IMG_SRC: 'https://cdn.example.com',
+    });
+
+    expect(config.CSP_CONNECT_SRC).toBe('https://api.example.com,wss://realtime.example.com');
+    expect(config.CSP_IMG_SRC).toBe('https://cdn.example.com');
+  });
+
+  it('accepts COEP credentialless fallback policy', () => {
+    const config = parseBackendEnv({
+      ...validBackendEnv,
+      COEP_POLICY: 'credentialless',
+    });
+
+    expect(config.COEP_POLICY).toBe('credentialless');
+  });
+
   it('rejects non-numeric PORT values', () => {
     expect(() => parseBackendEnv({ ...validBackendEnv, PORT: 'abc' })).toThrow(
       /Invalid backend environment configuration/,
@@ -93,6 +130,12 @@ describe('parseBackendEnv', () => {
 
   it('rejects invalid LOG_LEVEL values', () => {
     expect(() => parseBackendEnv({ ...validBackendEnv, LOG_LEVEL: 'verbose' })).toThrow(
+      /Invalid backend environment configuration/,
+    );
+  });
+
+  it('rejects invalid COEP_POLICY values', () => {
+    expect(() => parseBackendEnv({ ...validBackendEnv, COEP_POLICY: 'unsafe-none' })).toThrow(
       /Invalid backend environment configuration/,
     );
   });
