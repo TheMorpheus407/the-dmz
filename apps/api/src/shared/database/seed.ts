@@ -5,9 +5,58 @@ import { eq, sql } from 'drizzle-orm';
 import { SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS } from '@the-dmz/shared/testing';
 
 import { closeDatabase, getDatabaseClient } from './connection.js';
-import { tenants, users } from './schema/index.js';
+import { permissions, rolePermissions, roles, tenants, userRoles, users } from './schema/index.js';
 
 export { SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS };
+
+const BASE_PERMISSIONS = [
+  { resource: 'users', action: 'read', description: 'View user profiles' },
+  { resource: 'users', action: 'write', description: 'Create and update users' },
+  { resource: 'users', action: 'delete', description: 'Deactivate or remove users' },
+  { resource: 'roles', action: 'read', description: 'View role definitions' },
+  { resource: 'roles', action: 'write', description: 'Create and modify roles' },
+  { resource: 'reports', action: 'read', description: 'View reports and analytics' },
+  { resource: 'reports', action: 'export', description: 'Export report data' },
+  { resource: 'settings', action: 'read', description: 'View tenant settings' },
+  { resource: 'settings', action: 'write', description: 'Modify tenant settings' },
+  { resource: 'campaigns', action: 'read', description: 'View training campaigns' },
+  { resource: 'campaigns', action: 'write', description: 'Create and manage campaigns' },
+] as const;
+
+const DEFAULT_ROLES = [
+  { name: 'admin', description: 'Full tenant administration' },
+  { name: 'manager', description: 'Team and reporting management' },
+  { name: 'learner', description: 'Standard learner access' },
+] as const;
+
+const PRIMARY_ROLE_TO_DEFAULT_ROLE = {
+  admin: 'admin',
+  super_admin: 'admin',
+  tenant_admin: 'admin',
+  manager: 'manager',
+  learner: 'learner',
+} as const satisfies Record<
+  'admin' | 'super_admin' | 'tenant_admin' | 'manager' | 'learner',
+  (typeof DEFAULT_ROLES)[number]['name']
+>;
+
+const MANAGER_PERMISSION_KEYS = [
+  'users:read',
+  'users:write',
+  'roles:read',
+  'reports:read',
+  'reports:export',
+  'campaigns:read',
+  'campaigns:write',
+] as const;
+
+const resolveDefaultRoleName = (role: string): (typeof DEFAULT_ROLES)[number]['name'] => {
+  if (role in PRIMARY_ROLE_TO_DEFAULT_ROLE) {
+    return PRIMARY_ROLE_TO_DEFAULT_ROLE[role as keyof typeof PRIMARY_ROLE_TO_DEFAULT_ROLE];
+  }
+
+  return 'learner';
+};
 
 /**
  * Seed the database with deterministic tenant and user data.
@@ -38,6 +87,46 @@ export const seedDatabase = async (): Promise<void> => {
         },
       });
   }
+
+  for (const permission of BASE_PERMISSIONS) {
+    await db
+      .insert(permissions)
+      .values({
+        resource: permission.resource,
+        action: permission.action,
+        description: permission.description,
+      })
+      .onConflictDoUpdate({
+        target: [permissions.resource, permissions.action],
+        set: {
+          description: sql`excluded.description`,
+        },
+      });
+  }
+
+  const tenantRows = await db.select({ tenantId: tenants.tenantId }).from(tenants);
+  const seedUsersByTenant = new Map<string, (typeof SEED_USERS)[number][]>();
+
+  for (const seedUser of SEED_USERS) {
+    const tenantUsers = seedUsersByTenant.get(seedUser.tenantId) ?? [];
+    tenantUsers.push(seedUser);
+    seedUsersByTenant.set(seedUser.tenantId, tenantUsers);
+  }
+
+  const permissionRows = await db
+    .select({
+      id: permissions.id,
+      resource: permissions.resource,
+      action: permissions.action,
+    })
+    .from(permissions);
+
+  const permissionByKey = new Map(
+    permissionRows.map((permission) => [
+      `${permission.resource}:${permission.action}`,
+      permission.id,
+    ]),
+  );
 
   // Verify the system tenant exists
   const tenantResult = await db
@@ -73,8 +162,97 @@ export const seedDatabase = async (): Promise<void> => {
       });
   }
 
+  for (const tenant of tenantRows) {
+    await db.transaction(async (transaction) => {
+      // Keep both keys in sync while the codebase transitions to a single tenant context variable.
+      await transaction.execute(
+        sql`select set_config('app.current_tenant_id', ${tenant.tenantId}, true)`,
+      );
+      await transaction.execute(sql`select set_config('app.tenant_id', ${tenant.tenantId}, true)`);
+
+      for (const role of DEFAULT_ROLES) {
+        await transaction
+          .insert(roles)
+          .values({
+            tenantId: tenant.tenantId,
+            name: role.name,
+            description: role.description,
+            isSystem: true,
+          })
+          .onConflictDoUpdate({
+            target: [roles.tenantId, roles.name],
+            set: {
+              description: sql`excluded.description`,
+              isSystem: true,
+              updatedAt: sql`now()`,
+            },
+          });
+      }
+
+      const tenantRoleRows = await transaction
+        .select({ id: roles.id, name: roles.name })
+        .from(roles)
+        .where(eq(roles.tenantId, tenant.tenantId));
+
+      const roleIdByName = new Map(tenantRoleRows.map((role) => [role.name, role.id]));
+      const adminRoleId = roleIdByName.get('admin');
+      const managerRoleId = roleIdByName.get('manager');
+
+      if (adminRoleId) {
+        for (const permission of permissionRows) {
+          await transaction
+            .insert(rolePermissions)
+            .values({
+              roleId: adminRoleId,
+              permissionId: permission.id,
+            })
+            .onConflictDoNothing();
+        }
+      }
+
+      if (managerRoleId) {
+        for (const permissionKey of MANAGER_PERMISSION_KEYS) {
+          const permissionId = permissionByKey.get(permissionKey);
+
+          if (!permissionId) {
+            continue;
+          }
+
+          await transaction
+            .insert(rolePermissions)
+            .values({
+              roleId: managerRoleId,
+              permissionId,
+            })
+            .onConflictDoNothing();
+        }
+      }
+
+      const tenantSeedUsers = seedUsersByTenant.get(tenant.tenantId) ?? [];
+
+      for (const user of tenantSeedUsers) {
+        const roleName = resolveDefaultRoleName(user.role);
+        const roleId = roleIdByName.get(roleName);
+
+        if (!roleId) {
+          continue;
+        }
+
+        await transaction
+          .insert(userRoles)
+          .values({
+            tenantId: tenant.tenantId,
+            userId: user.userId,
+            roleId,
+          })
+          .onConflictDoNothing();
+      }
+    });
+  }
+
   console.warn(
-    `Seeded ${SEED_TENANTS.length} tenants and ${SEED_USERS.length} users successfully.`,
+    `Seeded ${SEED_TENANTS.length} tenants, ${SEED_USERS.length} users, ` +
+      `${BASE_PERMISSIONS.length} permissions, and ${DEFAULT_ROLES.length} default roles.`,
   );
 };
 

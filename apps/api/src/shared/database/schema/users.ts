@@ -29,6 +29,7 @@ export const users = pgTable(
   },
   (table) => ({
     tenantEmailUnique: uniqueIndex('users_tenant_email_unique').on(table.tenantId, table.email),
+    tenantUserIdUnique: uniqueIndex('users_tenant_user_id_unique').on(table.tenantId, table.userId),
     tenantIdIdx: index('users_tenant_id_idx').on(table.tenantId),
   }),
 );

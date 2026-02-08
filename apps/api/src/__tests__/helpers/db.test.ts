@@ -80,6 +80,10 @@ describe('resetTestDatabase', () => {
     expect(sqlTagMock).toHaveBeenCalledTimes(1);
     const [template] = sqlTagMock.mock.calls[0] ?? [];
     expect(Array.isArray(template)).toBe(true);
-    expect((template as TemplateStringsArray)[0]).toContain('TRUNCATE TABLE users, tenants');
+    const sqlText = (template as TemplateStringsArray)[0] ?? '';
+    expect(sqlText).toContain('TRUNCATE TABLE');
+    expect(sqlText).toContain('auth.permissions');
+    expect(sqlText).toContain('users');
+    expect(sqlText).toContain('tenants');
   });
 });

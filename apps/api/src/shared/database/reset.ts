@@ -18,6 +18,7 @@ const run = async () => {
   }
 
   const sql = getDatabasePool(config);
+  await sql`drop schema if exists auth cascade`;
   await sql`drop schema if exists public cascade`;
   await sql`create schema public`;
 

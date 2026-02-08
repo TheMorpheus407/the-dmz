@@ -30,5 +30,14 @@ export async function resetTestDatabase(): Promise<void> {
   }
 
   const pool = getDatabasePool();
-  await pool`TRUNCATE TABLE users, tenants RESTART IDENTITY CASCADE`;
+  await pool`TRUNCATE TABLE
+    auth.role_permissions,
+    auth.user_roles,
+    auth.sessions,
+    auth.sso_connections,
+    auth.roles,
+    auth.permissions,
+    users,
+    tenants
+    RESTART IDENTITY CASCADE`;
 }
