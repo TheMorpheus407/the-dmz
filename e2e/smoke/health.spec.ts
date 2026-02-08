@@ -10,6 +10,13 @@ test('API health check returns 200', async ({ request, apiBaseUrl }) => {
   expect(await response.json()).toEqual({ status: 'ok' });
 });
 
+test('Web health check returns 200', async ({ request }) => {
+  const response = await request.get('/health');
+
+  expect(response.ok()).toBeTruthy();
+  expect(await response.json()).toEqual({ status: 'ok' });
+});
+
 test('Frontend loads without errors', async ({ page }) => {
   await page.goto('/');
 

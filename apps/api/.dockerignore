@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+*.test.ts
+*.spec.ts
+__tests__
+coverage
+.env*
+.git
+.gitignore
+README.md
+docs
