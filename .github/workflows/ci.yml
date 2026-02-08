@@ -101,6 +101,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build shared package for tests
         run: pnpm --filter @the-dmz/shared build
+      - name: Run repository script tests
+        run: pnpm test:scripts
       - name: Run unit tests with coverage
         env:
           CI: true

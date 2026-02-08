@@ -1,0 +1,47 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "group:monorepos", "group:recommended", ":semanticCommits"],
+  "schedule": ["before 6am on Monday"],
+  "timezone": "Europe/Berlin",
+  "labels": ["dependencies"],
+  "rangeStrategy": "bump",
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "Renovate Dashboard",
+  "semanticCommitType": "chore",
+  "semanticCommitScope": "deps",
+  "packageRules": [
+    {
+      "description": "Auto-merge dev dependency patches",
+      "matchDepTypes": ["devDependencies"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": false,
+      "ignoreTests": false
+    },
+    {
+      "description": "Group all Svelte packages",
+      "matchPackagePatterns": ["svelte", "^@sveltejs\\/"],
+      "groupName": "Svelte packages"
+    },
+    {
+      "description": "Group all Fastify packages",
+      "matchPackagePatterns": ["fastify", "^@fastify\\/"],
+      "groupName": "Fastify packages"
+    },
+    {
+      "description": "Group all testing packages",
+      "matchPackagePatterns": ["vitest", "^@testing-library\\/", "playwright", "^@playwright\\/"],
+      "groupName": "Testing packages"
+    },
+    {
+      "description": "Group all Drizzle packages",
+      "matchPackagePatterns": ["^drizzle-"],
+      "groupName": "Drizzle packages"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"]
+  }
+}

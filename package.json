@@ -19,7 +19,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
-    "test": "turbo run test",
+    "test": "pnpm test:scripts && turbo run test",
     "test:watch": "turbo run test:watch --parallel",
     "test:coverage": "turbo run test:coverage",
     "test:e2e:prepare": "pnpm --filter @the-dmz/shared build",
