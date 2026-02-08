@@ -179,6 +179,36 @@ describe('loadConfig', () => {
     });
   });
 
+  describe('rate limiting', () => {
+    it('defaults to 100 requests per minute', () => {
+      const config = loadConfig({ ...baseEnv });
+
+      expect(config.RATE_LIMIT_MAX).toBe(100);
+      expect(config.RATE_LIMIT_WINDOW_MS).toBe(60_000);
+    });
+
+    it('accepts rate limit overrides', () => {
+      const config = loadConfig({
+        ...baseEnv,
+        RATE_LIMIT_MAX: '250',
+        RATE_LIMIT_WINDOW_MS: '120000',
+      });
+
+      expect(config.RATE_LIMIT_MAX).toBe(250);
+      expect(config.RATE_LIMIT_WINDOW_MS).toBe(120_000);
+    });
+
+    it('rejects invalid rate limit configuration', () => {
+      expect(() =>
+        loadConfig({
+          ...baseEnv,
+          RATE_LIMIT_MAX: '0',
+          RATE_LIMIT_WINDOW_MS: '-1',
+        }),
+      ).toThrow(/Invalid backend environment configuration/);
+    });
+  });
+
   describe('ENABLE_SWAGGER', () => {
     it('defaults to enabled outside production', () => {
       const config = loadConfig({ ...baseEnv, NODE_ENV: 'test' });

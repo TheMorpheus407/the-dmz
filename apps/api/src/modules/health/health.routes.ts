@@ -12,6 +12,9 @@ export const registerHealthRoutes = async (fastify: FastifyInstance): Promise<vo
   fastify.get(
     '/health',
     {
+      config: {
+        rateLimit: false,
+      },
       schema: {
         querystring: healthQueryJsonSchema,
         response: {
@@ -25,6 +28,9 @@ export const registerHealthRoutes = async (fastify: FastifyInstance): Promise<vo
   fastify.get(
     '/ready',
     {
+      config: {
+        rateLimit: false,
+      },
       schema: {
         querystring: healthQueryJsonSchema,
         response: {

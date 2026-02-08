@@ -6,6 +6,7 @@ import { healthPlugin } from './modules/health/index.js';
 import { swaggerPlugin } from './plugins/swagger.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
 import { AppError, createErrorHandler, ErrorCodes } from './shared/middleware/error-handler.js';
+import { globalRateLimiter, registerRateLimiter } from './shared/middleware/rate-limiter.js';
 import { requestLogger } from './shared/middleware/request-logger.js';
 import { sanitizeInputHook } from './shared/middleware/sanitize-input.js';
 import { registerSecurityHeaders } from './shared/middleware/security-headers.js';
@@ -92,27 +93,35 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
   });
 
   registerSecurityHeaders(app, config);
+  registerRateLimiter(app, config);
 
   app.addHook('preValidation', sanitizeInputHook);
 
-  app.setNotFoundHandler(() => {
-    throw new AppError({
-      code: ErrorCodes.NOT_FOUND,
-      message: 'Route not found',
-      statusCode: 404,
-    });
-  });
+  app.setNotFoundHandler(
+    {
+      preHandler: globalRateLimiter(),
+    },
+    () => {
+      throw new AppError({
+        code: ErrorCodes.NOT_FOUND,
+        message: 'Route not found',
+        statusCode: 404,
+      });
+    },
+  );
 
   app.setErrorHandler(createErrorHandler());
 
   app.register(swaggerPlugin);
 
-  app.get('/api/v1/', async () => ({
-    status: 'ok',
-    version: 'v1',
-  }));
+  app.after(() => {
+    app.get('/api/v1/', async () => ({
+      status: 'ok',
+      version: 'v1',
+    }));
 
-  app.register(healthPlugin);
+    app.register(healthPlugin);
+  });
 
   return app;
 };

@@ -7,6 +7,7 @@ export const ErrorCodes = {
   VALIDATION_FAILED: 'VALIDATION_FAILED',
   INVALID_INPUT: 'INVALID_INPUT',
   NOT_FOUND: 'NOT_FOUND',
+  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
 } as const;
 
@@ -75,12 +76,23 @@ export const createErrorHandler = () =>
       request.log.info({ err: error }, 'request error');
     }
 
+    const errorPayload: {
+      code: ErrorCode;
+      message: string;
+      details: Record<string, unknown>;
+      requestId?: string;
+    } = {
+      code,
+      message,
+      details: normalizeDetails(details),
+    };
+
+    if (code === ErrorCodes.RATE_LIMIT_EXCEEDED) {
+      errorPayload.requestId = request.id;
+    }
+
     reply.status(statusCode).send({
       success: false,
-      error: {
-        code,
-        message,
-        details: normalizeDetails(details),
-      },
+      error: errorPayload,
     });
   };

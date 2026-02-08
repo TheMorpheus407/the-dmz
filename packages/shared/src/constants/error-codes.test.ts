@@ -6,6 +6,7 @@ describe('ErrorCodes', () => {
   it('exports expected error codes', () => {
     expect(ErrorCodes.AUTH_UNAUTHORIZED).toBe('AUTH_UNAUTHORIZED');
     expect(ErrorCodes.VALIDATION_FAILED).toBe('VALIDATION_FAILED');
+    expect(ErrorCodes.RATE_LIMIT_EXCEEDED).toBe('RATE_LIMIT_EXCEEDED');
     expect(ErrorCodes.SYSTEM_INTERNAL_ERROR).toBe('SYSTEM_INTERNAL_ERROR');
   });
 });

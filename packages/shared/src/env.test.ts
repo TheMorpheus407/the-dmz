@@ -23,6 +23,8 @@ describe('parseBackendEnv', () => {
     expect(config.API_HOST).toBe('0.0.0.0');
     expect(config.API_VERSION).toBe('0.0.0');
     expect(config.MAX_BODY_SIZE).toBe(1_048_576);
+    expect(config.RATE_LIMIT_MAX).toBe(100);
+    expect(config.RATE_LIMIT_WINDOW_MS).toBe(60_000);
     expect(config.DATABASE_URL).toBe('postgres://localhost:5432/the_dmz');
     expect(config.REDIS_URL).toBe('redis://localhost:6379');
     expect(config.LOG_LEVEL).toBe('info');
@@ -44,6 +46,8 @@ describe('parseBackendEnv', () => {
     expect(config.API_HOST).toBe('0.0.0.0');
     expect(config.API_VERSION).toBe('0.0.0');
     expect(config.MAX_BODY_SIZE).toBe(1_048_576);
+    expect(config.RATE_LIMIT_MAX).toBe(100);
+    expect(config.RATE_LIMIT_WINDOW_MS).toBe(60_000);
     expect(config.LOG_LEVEL).toBe('info');
     expect(config.JWT_EXPIRES_IN).toBe('7d');
     expect(config.ENABLE_SWAGGER).toBe(true);
@@ -104,6 +108,17 @@ describe('parseBackendEnv', () => {
     expect(config.MAX_BODY_SIZE).toBe(2_097_152);
   });
 
+  it('accepts configurable rate limiting values', () => {
+    const config = parseBackendEnv({
+      ...validBackendEnv,
+      RATE_LIMIT_MAX: '150',
+      RATE_LIMIT_WINDOW_MS: '90000',
+    });
+
+    expect(config.RATE_LIMIT_MAX).toBe(150);
+    expect(config.RATE_LIMIT_WINDOW_MS).toBe(90_000);
+  });
+
   it('accepts configurable frame ancestors for LMS embedding', () => {
     const config = parseBackendEnv({
       ...validBackendEnv,
@@ -143,6 +158,16 @@ describe('parseBackendEnv', () => {
     expect(() => parseBackendEnv({ ...validBackendEnv, MAX_BODY_SIZE: '-1' })).toThrow(
       /Invalid backend environment configuration/,
     );
+  });
+
+  it('rejects invalid rate limit values', () => {
+    expect(() =>
+      parseBackendEnv({
+        ...validBackendEnv,
+        RATE_LIMIT_MAX: '0',
+        RATE_LIMIT_WINDOW_MS: '-1',
+      }),
+    ).toThrow(/Invalid backend environment configuration/);
   });
 
   it('rejects invalid LOG_LEVEL values', () => {
