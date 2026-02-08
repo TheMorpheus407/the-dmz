@@ -4,8 +4,6 @@ on:
   schedule:
     # 03:00 UTC is before 06:00 Europe/Berlin all year (CET/CEST).
     - cron: '0 3 * * 1'
-  repository_vulnerability_alert:
-    types: [create]
   workflow_dispatch:
 
 concurrency:

@@ -6,7 +6,7 @@
   "labels": ["dependencies"],
   "rangeStrategy": "bump",
   "dependencyDashboard": true,
-  "dependencyDashboardTitle": "Renovate Dashboard",
+  "dependencyDashboardTitle": "Dependency Dashboard",
   "semanticCommitType": "chore",
   "semanticCommitScope": "deps",
   "packageRules": [

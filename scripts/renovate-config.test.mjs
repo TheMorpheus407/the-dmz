@@ -26,7 +26,8 @@ test('renovate.json configures schedule, semantic commits, and security labels',
   assert.ok(config.labels.includes('dependencies'));
   assert.equal(config.rangeStrategy, 'bump');
   assert.equal(config.dependencyDashboard, true);
-  assert.equal(config.dependencyDashboardTitle, 'Renovate Dashboard');
+  assert.equal(config.dependencyDashboardTitle, 'Dependency Dashboard');
+  assert.notEqual(config.dependencyDashboardTitle, 'Renovate Dashboard');
   assert.equal(config.semanticCommitType, 'chore');
   assert.equal(config.semanticCommitScope, 'deps');
   assert.deepEqual(config.vulnerabilityAlerts, {
@@ -119,14 +120,14 @@ test('renovate.json groups package ecosystems and automerges dev patches only', 
   }
 });
 
-test('renovate workflow runs on Monday before 6am Berlin and can open PRs/issues', async () => {
+test('renovate workflow runs on Monday before 6am Berlin and supports manual dispatch', async () => {
   const workflow = await readText('.github/workflows/renovate.yml');
 
   assert.match(workflow, /name:\s*Renovate/);
+  assert.match(workflow, /schedule:/);
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /cron:\s*'0 3 \* \* 1'/);
-  assert.match(workflow, /repository_vulnerability_alert:/);
-  assert.match(workflow, /types:\s*\[create\]/);
+  assert.doesNotMatch(workflow, /repository_vulnerability_alert:/);
   assert.match(workflow, /uses:\s*actions\/checkout@v4/);
   assert.match(workflow, /contents:\s*write/);
   assert.match(workflow, /pull-requests:\s*write/);
