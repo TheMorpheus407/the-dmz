@@ -26,8 +26,8 @@ test('renovate.json configures schedule, semantic commits, and security labels',
   assert.ok(config.labels.includes('dependencies'));
   assert.equal(config.rangeStrategy, 'bump');
   assert.equal(config.dependencyDashboard, true);
-  assert.equal(config.dependencyDashboardTitle, 'Dependency Dashboard');
-  assert.notEqual(config.dependencyDashboardTitle, 'Renovate Dashboard');
+  assert.equal(config.dependencyDashboardTitle, 'Renovate Dashboard');
+  assert.notEqual(config.dependencyDashboardTitle, 'Dependency Dashboard');
   assert.equal(config.semanticCommitType, 'chore');
   assert.equal(config.semanticCommitScope, 'deps');
   assert.deepEqual(config.vulnerabilityAlerts, {
@@ -134,10 +134,11 @@ test('renovate workflow runs on Monday before 6am Berlin and supports manual dis
   assert.match(workflow, /issues:\s*write/);
 });
 
-test('renovate workflow uses renovatebot action with repository config and token fallback', async () => {
+test('renovate workflow uses renovatebot action with repository targeting and token fallback', async () => {
   const workflow = await readText('.github/workflows/renovate.yml');
 
   assert.match(workflow, /uses:\s*renovatebot\/github-action@v43/);
+  assert.match(workflow, /RENOVATE_REPOSITORIES:\s*\${{\s*github\.repository\s*}}/);
   assert.match(workflow, /configurationFile:\s*renovate\.json/);
   assert.match(workflow, /token:\s*\${{\s*secrets\.RENOVATE_TOKEN\s*\|\|\s*github\.token\s*}}/);
   assert.doesNotMatch(workflow, /secrets\.GITHUB_TOKEN/);
