@@ -5,6 +5,7 @@ import fastify, { type FastifyInstance } from 'fastify';
 import { loadConfig, type AppConfig } from './config.js';
 import { healthPlugin } from './modules/health/index.js';
 import { swaggerPlugin } from './plugins/swagger.js';
+import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
 import { AppError, createErrorHandler, ErrorCodes } from './shared/middleware/error-handler.js';
 import { requestLogger } from './shared/middleware/request-logger.js';
 import { generateId } from './shared/utils/id.js';
@@ -100,6 +101,8 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
   });
 
   app.decorate('config', config);
+
+  app.register(eventBusPlugin);
 
   app.register(requestLogger);
 
