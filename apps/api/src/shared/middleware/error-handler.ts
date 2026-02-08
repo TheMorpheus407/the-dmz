@@ -5,6 +5,7 @@ import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 export const ErrorCodes = {
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
   VALIDATION_FAILED: 'VALIDATION_FAILED',
+  INVALID_INPUT: 'INVALID_INPUT',
   NOT_FOUND: 'NOT_FOUND',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
 } as const;
@@ -32,6 +33,7 @@ export class AppError extends Error {
 }
 
 const isAppError = (error: unknown): error is AppError => error instanceof AppError;
+const INVALID_JSON_BODY_ERROR_CODE = 'FST_ERR_CTP_INVALID_JSON_BODY';
 
 const normalizeDetails = (details?: Record<string, unknown>): Record<string, unknown> =>
   details ?? {};
@@ -58,6 +60,10 @@ export const createErrorHandler = () =>
       code = ErrorCodes.VALIDATION_FAILED;
       message = 'Validation failed';
       details = { issues: error.validation };
+    } else if (error.code === INVALID_JSON_BODY_ERROR_CODE && statusCode === 400) {
+      code = ErrorCodes.VALIDATION_FAILED;
+      message = 'Validation failed';
+      details = { reason: error.message };
     } else if (statusCode === 404) {
       code = ErrorCodes.NOT_FOUND;
       message = 'Route not found';

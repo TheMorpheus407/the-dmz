@@ -7,6 +7,7 @@ import { swaggerPlugin } from './plugins/swagger.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
 import { AppError, createErrorHandler, ErrorCodes } from './shared/middleware/error-handler.js';
 import { requestLogger } from './shared/middleware/request-logger.js';
+import { sanitizeInputHook } from './shared/middleware/sanitize-input.js';
 import { registerSecurityHeaders } from './shared/middleware/security-headers.js';
 import { generateId } from './shared/utils/id.js';
 
@@ -59,6 +60,12 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
     },
     requestIdHeader: 'x-request-id',
     genReqId: (req) => resolveRequestId(req.headers['x-request-id']) ?? generateId(),
+    // Baseline global payload cap; a future preParsing requestSizeLimitHook can add
+    // route-specific overrides on top of this default limit.
+    bodyLimit: config.MAX_BODY_SIZE,
+    // Let sanitizeInputHook classify forbidden keys consistently at preValidation.
+    onProtoPoisoning: 'ignore',
+    onConstructorPoisoning: 'ignore',
   });
 
   app.decorate('config', config);
@@ -85,6 +92,8 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
   });
 
   registerSecurityHeaders(app, config);
+
+  app.addHook('preValidation', sanitizeInputHook);
 
   app.setNotFoundHandler(() => {
     throw new AppError({

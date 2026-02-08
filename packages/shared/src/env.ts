@@ -48,6 +48,7 @@ export const backendEnvSchema = z
     ),
     API_HOST: z.string().min(1).default('0.0.0.0'),
     API_VERSION: z.string().min(1).default('0.0.0'),
+    MAX_BODY_SIZE: z.coerce.number().int().positive().default(1_048_576),
     DATABASE_URL: z.string().min(1).default('postgres://localhost:5432/the_dmz'),
     DATABASE_POOL_MIN: z.coerce.number().int().positive().optional(),
     DATABASE_POOL_MAX: z.coerce.number().int().positive().optional(),

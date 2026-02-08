@@ -22,6 +22,7 @@ describe('parseBackendEnv', () => {
     expect(config.PORT).toBe(3001);
     expect(config.API_HOST).toBe('0.0.0.0');
     expect(config.API_VERSION).toBe('0.0.0');
+    expect(config.MAX_BODY_SIZE).toBe(1_048_576);
     expect(config.DATABASE_URL).toBe('postgres://localhost:5432/the_dmz');
     expect(config.REDIS_URL).toBe('redis://localhost:6379');
     expect(config.LOG_LEVEL).toBe('info');
@@ -42,6 +43,7 @@ describe('parseBackendEnv', () => {
     expect(config.PORT).toBe(3001);
     expect(config.API_HOST).toBe('0.0.0.0');
     expect(config.API_VERSION).toBe('0.0.0');
+    expect(config.MAX_BODY_SIZE).toBe(1_048_576);
     expect(config.LOG_LEVEL).toBe('info');
     expect(config.JWT_EXPIRES_IN).toBe('7d');
     expect(config.ENABLE_SWAGGER).toBe(true);
@@ -93,6 +95,15 @@ describe('parseBackendEnv', () => {
     expect(config.API_VERSION).toBe('1.2.3');
   });
 
+  it('accepts configurable MAX_BODY_SIZE', () => {
+    const config = parseBackendEnv({
+      ...validBackendEnv,
+      MAX_BODY_SIZE: '2097152',
+    });
+
+    expect(config.MAX_BODY_SIZE).toBe(2_097_152);
+  });
+
   it('accepts configurable frame ancestors for LMS embedding', () => {
     const config = parseBackendEnv({
       ...validBackendEnv,
@@ -124,6 +135,12 @@ describe('parseBackendEnv', () => {
 
   it('rejects non-numeric PORT values', () => {
     expect(() => parseBackendEnv({ ...validBackendEnv, PORT: 'abc' })).toThrow(
+      /Invalid backend environment configuration/,
+    );
+  });
+
+  it('rejects invalid MAX_BODY_SIZE values', () => {
+    expect(() => parseBackendEnv({ ...validBackendEnv, MAX_BODY_SIZE: '-1' })).toThrow(
       /Invalid backend environment configuration/,
     );
   });

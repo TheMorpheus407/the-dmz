@@ -165,6 +165,20 @@ describe('loadConfig', () => {
     });
   });
 
+  describe('MAX_BODY_SIZE', () => {
+    it('defaults to 1MB', () => {
+      const config = loadConfig({ ...baseEnv });
+
+      expect(config.MAX_BODY_SIZE).toBe(1_048_576);
+    });
+
+    it('accepts custom MAX_BODY_SIZE values', () => {
+      const config = loadConfig({ ...baseEnv, MAX_BODY_SIZE: '2048' });
+
+      expect(config.MAX_BODY_SIZE).toBe(2048);
+    });
+  });
+
   describe('ENABLE_SWAGGER', () => {
     it('defaults to enabled outside production', () => {
       const config = loadConfig({ ...baseEnv, NODE_ENV: 'test' });
