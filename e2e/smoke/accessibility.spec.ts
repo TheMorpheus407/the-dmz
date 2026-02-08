@@ -1,10 +1,9 @@
-import AxeBuilder from '@axe-core/playwright';
-
+import { expectAccessible } from '../helpers/a11y';
 import { expect, test } from '../fixtures/base';
 
-test('Axe can analyze the home page (placeholder)', async ({ page }) => {
+test('Home page passes WCAG 2.1 AA accessibility smoke check', async ({ page }) => {
   await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Archive Gate' })).toBeVisible();
 
-  const results = await new AxeBuilder({ page }).analyze();
-  expect(Array.isArray(results.violations)).toBe(true);
+  await expectAccessible(page);
 });
