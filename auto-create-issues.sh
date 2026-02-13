@@ -10,6 +10,12 @@ Options:
   --milestone  Milestone number from docs/MILESTONES.md (for example: 0, 1, 2)
                Special value: 1337 => bug-fix discovery mode (not a docs milestone)
   -h, --help   Show this help text
+
+Examples:
+  ./auto-create-issues.sh --agent opencode --milestone 0
+  ./auto-create-issues.sh --agent opencode --milestone 1337
+  ./auto-create-issues.sh --agent codex --milestone 1
+  ./auto-create-issues.sh --agent claude --milestone 1
 EOF
 }
 

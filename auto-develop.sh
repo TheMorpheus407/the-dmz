@@ -14,6 +14,13 @@ Options:
   --max-issues <n>       Stop after completing n issues
   --issue <number>       Process only this open issue number
   -h, --help             Show this help text
+
+Examples:
+  ./auto-develop.sh --research opencode --implement opencode --review-a opencode --review-b opencode --finalize opencode --max-issues 1
+  ./auto-develop.sh --research opencode --implement opencode --review-a opencode --review-b opencode --finalize opencode --issue 42
+  ./auto-develop.sh --research codex --implement codex --review-a codex --review-b codex --max-issues 1
+  ./auto-develop.sh --research claude --implement claude --review-a claude --review-b claude --max-issues 1
+  ./auto-develop.sh --research claude --implement claude --review-a claude --review-b claude --issue 42
 EOF
 }
 
