@@ -4,6 +4,16 @@ set -uo pipefail
 usage() {
   cat <<'EOF'
 Usage: auto-develop.sh --research <claude|codex|opencode> --implement <claude|codex|opencode> --review-a <claude|codex|opencode> --review-b <claude|codex|opencode> [--finalize <claude|codex|opencode>]
+
+Options:
+  --research <agent>     Research agent runner
+  --implement <agent>    Implementer agent runner
+  --review-a <agent>     Reviewer A agent runner
+  --review-b <agent>     Reviewer B agent runner
+  --finalize <agent>     Finalizer agent runner (defaults to --implement)
+  --max-issues <n>       Stop after completing n issues
+  --issue <number>       Process only this open issue number
+  -h, --help             Show this help text
 EOF
 }
 
@@ -22,6 +32,12 @@ sleep_briefly() {
 
 require_cmd() {
   command -v "$1" >/dev/null 2>&1 || die "Missing required command: $1"
+}
+
+validate_positive_integer() {
+  local value="$1"
+  local name="$2"
+  [[ "$value" =~ ^[1-9][0-9]*$ ]] || die "$name must be a positive integer (received: $value)"
 }
 
 validate_agent() {
@@ -180,10 +196,12 @@ IMPLEMENT_AGENT=""
 REVIEW_A_AGENT=""
 REVIEW_B_AGENT=""
 FINALIZE_AGENT=""
+MAX_ISSUES=""
+TARGET_ISSUE=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --research|--implement|--review-a|--review-b|--finalize)
+    --research|--implement|--review-a|--review-b|--finalize|--max-issues|--issue)
       [[ $# -ge 2 ]] || die "Option $1 requires an argument."
       case "$1" in
         --research)  RESEARCH_AGENT="$2" ;;
@@ -191,6 +209,8 @@ while [[ $# -gt 0 ]]; do
         --review-a)  REVIEW_A_AGENT="$2" ;;
         --review-b)  REVIEW_B_AGENT="$2" ;;
         --finalize)  FINALIZE_AGENT="$2" ;;
+        --max-issues) MAX_ISSUES="$2" ;;
+        --issue) TARGET_ISSUE="$2" ;;
       esac
       shift 2
       ;;
@@ -203,6 +223,20 @@ done
   usage
   exit 1
 }
+
+if [[ -n "$MAX_ISSUES" ]]; then
+  validate_positive_integer "$MAX_ISSUES" "--max-issues"
+fi
+
+if [[ -n "$TARGET_ISSUE" ]]; then
+  validate_positive_integer "$TARGET_ISSUE" "--issue"
+  if [[ -z "$MAX_ISSUES" ]]; then
+    MAX_ISSUES=1
+  elif (( MAX_ISSUES > 1 )); then
+    warn "--issue was provided with --max-issues=$MAX_ISSUES; reducing --max-issues to 1."
+    MAX_ISSUES=1
+  fi
+fi
 
 validate_agent "$RESEARCH_AGENT"
 validate_agent "$IMPLEMENT_AGENT"
@@ -269,22 +303,40 @@ query($owner: String!, $name: String!, $endCursor: String) {
 }
 '
 
+completed_issues=0
 while true; do
-  if ! issues_json="$(gh api graphql --paginate --slurp -F owner="$owner" -F name="$repo" -f query="$gql")"; then
-    warn "Failed to query issues. Retrying."
-    sleep_briefly
-    continue
-  fi
-
-  if ! issue_number="$(printf "%s" "$issues_json" | jq '[.[].data.repository.issues.nodes[].number] | min')"; then
-    warn "Failed to parse issue list."
-    sleep_briefly
-    continue
-  fi
-
-  if [[ -z "$issue_number" || "$issue_number" == "null" ]]; then
-    echo "No open issues found. Exiting."
+  if [[ -n "$MAX_ISSUES" && "$completed_issues" -ge "$MAX_ISSUES" ]]; then
+    echo "Reached --max-issues limit ($MAX_ISSUES). Exiting."
     exit 0
+  fi
+
+  if [[ -n "$TARGET_ISSUE" ]]; then
+    issue_number="$TARGET_ISSUE"
+    issue_state="$(gh issue view "$issue_number" --json state -q .state 2>/dev/null || true)"
+    if [[ -z "$issue_state" ]]; then
+      die "Issue #$issue_number was not found or is inaccessible."
+    fi
+    if [[ "$issue_state" != "OPEN" ]]; then
+      echo "Issue #$issue_number is not open (state: $issue_state). Exiting."
+      exit 0
+    fi
+  else
+    if ! issues_json="$(gh api graphql --paginate --slurp -F owner="$owner" -F name="$repo" -f query="$gql")"; then
+      warn "Failed to query issues. Retrying."
+      sleep_briefly
+      continue
+    fi
+
+    if ! issue_number="$(printf "%s" "$issues_json" | jq '[.[].data.repository.issues.nodes[].number] | min')"; then
+      warn "Failed to parse issue list."
+      sleep_briefly
+      continue
+    fi
+
+    if [[ -z "$issue_number" || "$issue_number" == "null" ]]; then
+      echo "No open issues found. Exiting."
+      exit 0
+    fi
   fi
 
   issue_dir="logs/issues/$issue_number"
@@ -419,6 +471,9 @@ EOF
 
   if [[ -z "$(git status --porcelain)" ]]; then
     warn "No uncommitted changes available to finalize for issue #$issue_number."
+    if [[ -n "$TARGET_ISSUE" ]]; then
+      exit 0
+    fi
     continue
   fi
 
@@ -467,4 +522,5 @@ EOF
   done
 
   echo "Completed issue #$issue_number."
+  completed_issues=$((completed_issues + 1))
 done
