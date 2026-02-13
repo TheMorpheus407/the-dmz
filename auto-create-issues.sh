@@ -3,10 +3,10 @@ set -uo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: auto-create-issues.sh --agent <claude|codex> --milestone <number>
+Usage: auto-create-issues.sh --agent <claude|codex|opencode> --milestone <number>
 
 Options:
-  --agent      Agent runner to use for issue creation (claude or codex)
+  --agent      Agent runner to use for issue creation (claude, codex, or opencode)
   --milestone  Milestone number from docs/MILESTONES.md (for example: 0, 1, 2)
                Special value: 1337 => bug-fix discovery mode (not a docs milestone)
   -h, --help   Show this help text
@@ -29,8 +29,8 @@ require_cmd() {
 validate_agent() {
   local agent="$1"
   case "$agent" in
-    claude|codex) ;;
-    *) die "Invalid agent: $agent (expected 'claude' or 'codex')" ;;
+    claude|codex|opencode) ;;
+    *) die "Invalid agent: $agent (expected 'claude', 'codex', or 'opencode')" ;;
   esac
 }
 
@@ -39,8 +39,10 @@ run_agent() {
   local prompt="$2"
   if [[ "$agent" == "claude" ]]; then
     claude --dangerously-skip-permissions -p "$prompt"
-  else
+  elif [[ "$agent" == "codex" ]]; then
     codex exec --yolo "$prompt"
+  else
+    opencode run "$prompt"
   fi
 }
 
@@ -121,8 +123,10 @@ require_cmd git
 require_cmd gh
 if [[ "$AGENT" == "claude" ]]; then
   require_cmd claude
-else
+elif [[ "$AGENT" == "codex" ]]; then
   require_cmd codex
+else
+  require_cmd opencode
 fi
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || die "Not inside a git repository."

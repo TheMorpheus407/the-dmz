@@ -3,7 +3,7 @@ set -uo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: auto-develop.sh --research <claude|codex> --implement <claude|codex> --review-a <claude|codex> --review-b <claude|codex> [--finalize <claude|codex>]
+Usage: auto-develop.sh --research <claude|codex|opencode> --implement <claude|codex|opencode> --review-a <claude|codex|opencode> --review-b <claude|codex|opencode> [--finalize <claude|codex|opencode>]
 EOF
 }
 
@@ -27,8 +27,8 @@ require_cmd() {
 validate_agent() {
   local agent="$1"
   case "$agent" in
-    claude|codex) ;;
-    *) die "Invalid agent: $agent (expected 'claude' or 'codex')" ;;
+    claude|codex|opencode) ;;
+    *) die "Invalid agent: $agent (expected 'claude', 'codex', or 'opencode')" ;;
   esac
 }
 
@@ -37,8 +37,10 @@ run_agent() {
   local prompt="$2"
   if [[ "$agent" == "claude" ]]; then
     claude --dangerously-skip-permissions -p "$prompt"
-  else
+  elif [[ "$agent" == "codex" ]]; then
     codex exec --yolo "$prompt"
+  else
+    opencode run "$prompt"
   fi
 }
 
@@ -218,10 +220,12 @@ require_cmd jq
 
 needs_claude=false
 needs_codex=false
+needs_opencode=false
 for agent in "$RESEARCH_AGENT" "$IMPLEMENT_AGENT" "$REVIEW_A_AGENT" "$REVIEW_B_AGENT" "$FINALIZE_AGENT"; do
   case "$agent" in
     claude) needs_claude=true ;;
     codex) needs_codex=true ;;
+    opencode) needs_opencode=true ;;
   esac
 done
 
@@ -230,6 +234,9 @@ if $needs_claude; then
 fi
 if $needs_codex; then
   require_cmd codex
+fi
+if $needs_opencode; then
+  require_cmd opencode
 fi
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || die "Not inside a git repository."
