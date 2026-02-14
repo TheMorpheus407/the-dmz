@@ -10,11 +10,14 @@ export type DependencyHealth = {
   message: string;
 };
 
+export type DB = DatabaseClient;
 export type DatabaseClient = PostgresJsDatabase<typeof schema>;
 export type DatabasePool = Sql;
 
-let pool: DatabasePool | null = null;
-let client: DatabaseClient | null = null;
+const pools = new Map<string, DatabasePool>();
+const clients = new Map<string, DatabaseClient>();
+
+const getConfigKey = (config: AppConfig): string => config.DATABASE_URL;
 
 const createDatabasePool = (config: AppConfig): DatabasePool =>
   postgres(config.DATABASE_URL, {
@@ -25,29 +28,33 @@ const createDatabasePool = (config: AppConfig): DatabasePool =>
   });
 
 export const getDatabasePool = (config: AppConfig = loadConfig()): DatabasePool => {
-  if (!pool) {
-    pool = createDatabasePool(config);
+  const key = getConfigKey(config);
+
+  if (!pools.has(key)) {
+    pools.set(key, createDatabasePool(config));
   }
 
-  return pool;
+  return pools.get(key)!;
 };
 
 export const getDatabaseClient = (config: AppConfig = loadConfig()): DatabaseClient => {
-  if (!client) {
+  const key = getConfigKey(config);
+
+  if (!clients.has(key)) {
     const sql = getDatabasePool(config);
-    client = drizzle(sql, { schema });
+    clients.set(key, drizzle(sql, { schema }));
   }
 
-  return client;
+  return clients.get(key)!;
 };
 
 export const closeDatabase = async (): Promise<void> => {
-  if (pool) {
+  for (const pool of pools.values()) {
     await pool.end({ timeout: 5 });
   }
 
-  pool = null;
-  client = null;
+  pools.clear();
+  clients.clear();
 };
 
 export async function checkDatabaseHealth(

@@ -12,6 +12,7 @@ const baseEnv = {
   LOG_LEVEL: 'silent',
   JWT_SECRET: 'test-secret',
   CORS_ORIGINS: 'http://localhost:5173',
+  TOKEN_HASH_SALT: 'test-token-salt',
 } as const;
 
 const createTestConfig = (overrides: Record<string, string> = {}): AppConfig =>

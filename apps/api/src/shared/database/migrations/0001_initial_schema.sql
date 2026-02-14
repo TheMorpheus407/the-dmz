@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS "users" (
 	"tenant_id" uuid NOT NULL,
 	"email" varchar(255) NOT NULL,
 	"display_name" varchar(128),
+	"password_hash" varchar(255),
 	"role" varchar(32) DEFAULT 'learner' NOT NULL,
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,

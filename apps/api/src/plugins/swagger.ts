@@ -25,6 +25,15 @@ const swaggerPluginImpl: FastifyPluginAsync = async (fastify) => {
           description: 'Local development',
         },
       ],
+      components: {
+        securitySchemes: {
+          bearerAuth: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'JWT',
+          },
+        },
+      },
     },
   });
 

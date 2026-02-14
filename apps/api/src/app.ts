@@ -3,6 +3,7 @@ import fastify, { type FastifyInstance } from 'fastify';
 
 import { loadConfig, type AppConfig } from './config.js';
 import { healthPlugin } from './modules/health/index.js';
+import { authPlugin } from './modules/auth/index.js';
 import { swaggerPlugin } from './plugins/swagger.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
 import { AppError, createErrorHandler, ErrorCodes } from './shared/middleware/error-handler.js';
@@ -121,6 +122,13 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
     }));
 
     app.register(healthPlugin);
+
+    app.register(
+      async (apiRouter) => {
+        await apiRouter.register(authPlugin);
+      },
+      { prefix: '/api/v1' },
+    );
   });
 
   return app;

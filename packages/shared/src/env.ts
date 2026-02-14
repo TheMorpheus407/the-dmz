@@ -61,6 +61,7 @@ export const backendEnvSchema = z
     LOG_LEVEL: z.enum(logLevelValues).default('info'),
     JWT_SECRET: z.string().min(1).default('dev-secret-change-in-production'),
     JWT_EXPIRES_IN: z.string().min(1).default('7d'),
+    TOKEN_HASH_SALT: z.string().min(1).default('token-hash-salt-change-in-production'),
     ENABLE_SWAGGER: booleanFromString.optional(),
     CORS_ORIGINS: z.string().min(1).default('http://localhost:5173'),
     CSP_FRAME_ANCESTORS: z.string().min(1).default('none'),
@@ -90,6 +91,16 @@ export const backendEnvSchema = z
     {
       message: 'JWT_SECRET must be changed from the default value in production',
       path: ['JWT_SECRET'],
+    },
+  )
+  .refine(
+    (config) => {
+      if (config.NODE_ENV !== 'production') return true;
+      return !config.TOKEN_HASH_SALT.startsWith('token-hash');
+    },
+    {
+      message: 'TOKEN_HASH_SALT must be changed from the default value in production',
+      path: ['TOKEN_HASH_SALT'],
     },
   );
 

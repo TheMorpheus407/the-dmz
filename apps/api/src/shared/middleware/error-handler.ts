@@ -9,19 +9,22 @@ export const ErrorCodes = {
   NOT_FOUND: 'NOT_FOUND',
   RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
+  AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
+  AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
+  AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
 
 export type AppErrorOptions = {
-  code: ErrorCode;
+  code: string;
   message: string;
   statusCode: number;
   details?: Record<string, unknown>;
 };
 
 export class AppError extends Error {
-  public readonly code: ErrorCode;
+  public readonly code: string;
   public readonly statusCode: number;
   public readonly details: Record<string, unknown> | undefined;
 
@@ -42,7 +45,7 @@ const normalizeDetails = (details?: Record<string, unknown>): Record<string, unk
 export const createErrorHandler = () =>
   function errorHandler(error: FastifyError, request: FastifyRequest, reply: FastifyReply) {
     let statusCode = error.statusCode ?? 500;
-    let code: ErrorCode = ErrorCodes.INTERNAL_SERVER_ERROR;
+    let code: string = ErrorCodes.INTERNAL_SERVER_ERROR;
     let message = 'Internal Server Error';
     let details: Record<string, unknown> | undefined;
 
@@ -77,7 +80,7 @@ export const createErrorHandler = () =>
     }
 
     const errorPayload: {
-      code: ErrorCode;
+      code: string;
       message: string;
       details: Record<string, unknown>;
       requestId?: string;

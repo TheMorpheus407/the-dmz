@@ -11,6 +11,7 @@ const baseEnv = {
   REDIS_URL: 'redis://localhost:6379',
   LOG_LEVEL: 'silent',
   JWT_SECRET: 'test-secret',
+  TOKEN_HASH_SALT: 'test-token-salt',
 } as const;
 
 const createTestConfig = (overrides: Record<string, string> = {}): AppConfig =>

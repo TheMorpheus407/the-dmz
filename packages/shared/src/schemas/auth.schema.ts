@@ -26,3 +26,39 @@ export const refreshTokenSchema = z
   .strict();
 
 export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;
+
+export const logoutResponseSchema = z
+  .object({
+    success: z.boolean(),
+  })
+  .strict();
+
+export type LogoutResponse = z.infer<typeof logoutResponseSchema>;
+
+export const meResponseSchema = z
+  .object({
+    user: z.object({
+      id: z.string().uuid(),
+      email: z.string().email(),
+      displayName: z.string(),
+      tenantId: z.string().uuid(),
+      role: z.string(),
+      isActive: z.boolean(),
+    }),
+  })
+  .strict();
+
+export type MeResponse = z.infer<typeof meResponseSchema>;
+
+export const authenticatedHealthResponseSchema = z
+  .object({
+    status: z.string(),
+    user: z.object({
+      id: z.string(),
+      tenantId: z.string(),
+      role: z.string(),
+    }),
+  })
+  .strict();
+
+export type AuthenticatedHealthResponse = z.infer<typeof authenticatedHealthResponseSchema>;

@@ -22,6 +22,7 @@ export const users = pgTable(
       .references(() => tenants.tenantId, { onDelete: 'restrict' }),
     email: varchar('email', { length: 255 }).notNull(),
     displayName: varchar('display_name', { length: 128 }),
+    passwordHash: varchar('password_hash', { length: 255 }),
     role: varchar('role', { length: 32 }).notNull().default('learner'),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),

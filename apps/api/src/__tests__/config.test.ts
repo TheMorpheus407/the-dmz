@@ -8,6 +8,7 @@ const baseEnv = {
   REDIS_URL: 'redis://localhost:6379',
   LOG_LEVEL: 'info',
   JWT_SECRET: 'test-secret',
+  TOKEN_HASH_SALT: 'test-token-salt',
 } as const;
 
 describe('loadConfig', () => {

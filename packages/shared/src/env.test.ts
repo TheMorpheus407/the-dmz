@@ -65,6 +65,7 @@ describe('parseBackendEnv', () => {
       ...validBackendEnv,
       NODE_ENV: 'production',
       JWT_SECRET: 'prod-jwt-value',
+      TOKEN_HASH_SALT: 'prod-salt-value',
     });
 
     expect(config.DATABASE_POOL_MIN).toBe(5);
@@ -203,6 +204,7 @@ describe('parseBackendEnv', () => {
       ...validBackendEnv,
       NODE_ENV: 'production',
       JWT_SECRET: 'prod',
+      TOKEN_HASH_SALT: 'prod-salt-value',
     });
 
     expect(config.JWT_SECRET).toBe('prod');
@@ -246,6 +248,7 @@ describe('parseBackendEnv', () => {
       ...validBackendEnv,
       NODE_ENV: 'production',
       JWT_SECRET: 'prod-jwt-value',
+      TOKEN_HASH_SALT: 'prod-salt-value',
     });
 
     expect(config.ENABLE_SWAGGER).toBe(false);
