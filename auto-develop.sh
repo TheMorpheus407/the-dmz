@@ -388,14 +388,33 @@ EOF
   [[ -s "$research_file" ]] || warn "Research file missing or empty: $research_file (continuing)."
 
   while true; do
+    # Build retry context if previous reviews exist (DENIED feedback)
+    retry_context=""
+    if [[ -s "$review_a_file" || -s "$review_b_file" ]]; then
+      retry_context="
+CRITICAL — RETRY AFTER DENIAL:
+Your previous implementation was DENIED by reviewers. You MUST read the review feedback before doing anything else:
+"
+      if [[ -s "$review_a_file" ]]; then
+        retry_context+="- Reviewer A (correctness): $review_a_file
+"
+      fi
+      if [[ -s "$review_b_file" ]]; then
+        retry_context+="- Reviewer B (issue coverage): $review_b_file
+"
+      fi
+      retry_context+="Read these files FIRST. Fix ALL issues they raised. Do not repeat the same mistakes."
+    fi
+
     implement_prompt=$(cat <<EOF
 You are the Implementer Agent for GitHub issue #$issue_number in this repository.
+${retry_context}
 
 Requirements:
 - Read the issue and all comments using the GitHub CLI (gh).
 - Read ALL documents in: $issue_dir
 - Implement the issue and add/update tests.
-- Run tests if available;
+- Run tests if available.
 - Write a summary to: $implementation_file (Markdown). Include changes made, files touched, and tests run.
 
 Important:
