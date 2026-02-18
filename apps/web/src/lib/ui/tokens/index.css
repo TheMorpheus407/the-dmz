@@ -1,22 +1,470 @@
 :root {
-  --font-ui: 'DMZ Terminal', 'DMZ Mono', ui-monospace, monospace;
-  --color-bg: #050a08;
-  --color-surface: #0b1511;
-  --color-text: #d4f5e1;
-  --color-muted: #7fb395;
-  --color-border: #1d3a2c;
-  --color-accent: #34f19a;
+  /* ========================================
+     FONTS
+     ======================================== */
+  --font-terminal:
+    'JetBrains Mono', 'Fira Code', 'IBM Plex Mono', 'Cascadia Code', 'Source Code Pro', 'Consolas',
+    'Liberation Mono', monospace;
+  --font-document: 'IBM Plex Sans', 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --font-admin: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-ui: var(--font-terminal);
+
+  /* ========================================
+     COLOR - GAME: CORE SURFACES
+     ======================================== */
+  --color-bg-primary: #0a0e14;
+  --color-bg-secondary: #141a22;
+  --color-bg-tertiary: #1e2832;
+  --color-bg-hover: #253040;
+  --color-bg: var(--color-bg-primary);
+  --color-surface: var(--color-bg-secondary);
+
+  /* ========================================
+     COLOR - GAME: PHOSPHOR TERMINAL
+     ======================================== */
+  --color-phosphor-green: #33ff33;
+  --color-phosphor-green-dim: #88aa88;
+  --color-phosphor-green-dark: #334433;
+  --color-amber: #ffb000;
+  --color-amber-dim: #aa7700;
+  --color-document-white: #e0e0e0;
+  --color-document-muted: #b0b0b0;
+
+  /* Text colors */
+  --color-text: var(--color-phosphor-green);
+  --color-text-muted: var(--color-phosphor-green-dim);
+  --color-text-document: var(--color-document-white);
+
+  /* ========================================
+     COLOR - GAME: SEMANTIC STATUS
+     ======================================== */
+  --color-safe: #33cc66;
+  --color-warning: #ffcc00;
+  --color-danger: #ff5555;
+  --color-info: #3399ff;
+  --color-critical: #ff3333;
+  --color-flagged: #ff9900;
+  --color-archived: #8a8a8a;
+
+  /* ========================================
+     COLOR - GAME: THREAT TIERS
+     ======================================== */
+  --color-threat-1: #3366ff;
+  --color-threat-2: #33cc66;
+  --color-threat-3: #ffcc00;
+  --color-threat-4: #ff6600;
+  --color-threat-5: #cc0000;
+
+  /* ========================================
+     COLOR - GAME: FACTION
+     ======================================== */
+  --color-faction-sovereign: #4488cc;
+  --color-faction-nexion: #cc8844;
+  --color-faction-librarians: #44aa88;
+  --color-faction-hacktivist: #aa44cc;
+  --color-faction-criminal: #cc4444;
+
+  /* ========================================
+     COLOR - UI UTILITIES
+     ======================================== */
+  --color-border: var(--color-phosphor-green-dark);
+  --color-accent: var(--color-phosphor-green);
+  --color-muted: var(--color-phosphor-green-dim);
+
+  /* ========================================
+     COLOR - ADMIN PALETTE
+     ======================================== */
+  --admin-bg-primary: #1a1a2e;
+  --admin-bg-secondary: #16213e;
+  --admin-bg-tertiary: #1f2b47;
+  --admin-text-primary: #e0e0e0;
+  --admin-text-secondary: #a0a0b0;
+  --admin-accent: #4d9eff;
+  --admin-success: #2ea96e;
+  --admin-warning: #ffd44d;
+  --admin-danger: #e85d6a;
+  --admin-border: #2a2a4a;
+
+  /* ========================================
+     TYPE SCALE - GAME
+     ======================================== */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-md: 1.125rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+  --text-3xl: 2.5rem;
+
+  /* ========================================
+     TYPE SCALE - ADMIN
+     ======================================== */
+  --admin-text-xs: 0.75rem;
+  --admin-text-sm: 0.875rem;
+  --admin-text-base: 1rem;
+  --admin-text-lg: 1.125rem;
+  --admin-text-xl: 1.375rem;
+  --admin-text-2xl: 1.75rem;
+  --admin-text-metric: 2rem;
+
+  /* ========================================
+     SPACING
+     ======================================== */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+
+  /* ========================================
+     RADIUS
+     ======================================== */
+  --radius-none: 0;
+  --radius-sm: 4px;
   --radius-md: 10px;
-  --space-2: 8px;
-  --space-4: 16px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* ========================================
+     BORDERS
+     ======================================== */
+  --border-width: 1px;
+  --border-style: solid;
+  --border-default: var(--border-width) var(--border-style) var(--color-border);
+
+  /* ========================================
+     SHADOWS
+     ======================================== */
   --shadow-soft: 0 18px 40px rgba(3, 12, 8, 0.5);
+  --shadow-glow: 0 0 10px var(--color-accent);
+  --shadow-glow-amber: 0 0 10px var(--color-amber);
+
+  /* ========================================
+     CRT EFFECT CONTROLS
+     ======================================== */
+  --scanline-opacity: 0.05;
+  --scanline-size: 2px;
+  --glow-intensity: 1;
+  --noise-opacity: 0.03;
+  --vignette-opacity: 0.3;
+
+  /* Effect toggle flags */
+  --effect-scanlines: 1;
+  --effect-curvature: 1;
+  --effect-glow: 1;
+  --effect-noise: 1;
+  --effect-vignette: 1;
 }
 
+/* ========================================
+   THEME: GREEN (DEFAULT - GAME)
+   ======================================== */
 [data-theme='green'] {
-  --color-bg: #050a08;
-  --color-surface: #0c1a14;
-  --color-text: #d7fbe5;
-  --color-muted: #7dbf9a;
-  --color-border: #1f3d2f;
-  --color-accent: #35ff8f;
+  --color-bg: #0a0e14;
+  --color-surface: #141a22;
+  --color-text: #33ff33;
+  --color-text-muted: #88aa88;
+  --color-border: #334433;
+  --color-accent: #33ff33;
+  --color-muted: #88aa88;
+}
+
+/* ========================================
+   THEME: AMBER (GAME VARIANT)
+   ======================================== */
+[data-theme='amber'] {
+  --color-bg: #0a0e14;
+  --color-surface: #141a22;
+  --color-text: #ffb000;
+  --color-text-muted: #aa7700;
+  --color-border: #4a3a00;
+  --color-accent: #ffb000;
+  --color-muted: #aa7700;
+}
+
+/* ========================================
+   THEME: HIGH-CONTRAST (ACCESSIBILITY)
+   ======================================== */
+[data-theme='high-contrast'] {
+  --color-bg: #000000;
+  --color-surface: #0a0a0a;
+  --color-text: #ffffff;
+  --color-text-muted: #cccccc;
+  --color-border: #ffffff;
+  --color-accent: #ffff00;
+  --color-muted: #cccccc;
+
+  /* Disable CRT effects in high-contrast */
+  --effect-scanlines: 0;
+  --effect-curvature: 0;
+  --effect-glow: 0;
+  --effect-noise: 0;
+  --effect-vignette: 0;
+}
+
+/* ========================================
+   THEME: ENTERPRISE (ADMIN)
+   ======================================== */
+[data-theme='enterprise'] {
+  --color-bg: var(--admin-bg-primary);
+  --color-surface: var(--admin-bg-secondary);
+  --color-text: var(--admin-text-primary);
+  --color-text-muted: var(--admin-text-secondary);
+  --color-border: var(--admin-border);
+  --color-accent: var(--admin-accent);
+  --color-muted: var(--admin-text-secondary);
+
+  /* Disable CRT effects in enterprise mode */
+  --effect-scanlines: 0;
+  --effect-curvature: 0;
+  --effect-glow: 0;
+  --effect-noise: 0;
+  --effect-vignette: 0;
+}
+
+/* ========================================
+   ROUTE GROUP: (GAME) - DEFAULT GREEN
+   ======================================== */
+[data-surface='game'] {
+  --font-ui: var(--font-terminal);
+}
+
+/* ========================================
+   ROUTE GROUP: (ADMIN) - ENTERPRISE
+   ======================================== */
+[data-surface='admin'] {
+  --font-ui: var(--font-admin);
+}
+
+/* ========================================
+   ROUTE GROUP: (AUTH) & (PUBLIC)
+   ======================================== */
+[data-surface='auth'],
+[data-surface='public'] {
+  --font-ui: var(--font-document);
+}
+
+/* ========================================
+   CRT EFFECTS - SCANLINES
+   ======================================== */
+.crt-scanlines::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1000;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 1px,
+    rgba(0, 0, 0, var(--scanline-opacity, 0.05)) 1px,
+    rgba(0, 0, 0, var(--scanline-opacity, 0.05)) 2px
+  );
+  animation: scanline-drift 8s linear infinite;
+}
+
+@keyframes scanline-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 4px;
+  }
+}
+
+/* ========================================
+   CRT EFFECTS - PHOSPHOR GLOW
+   ======================================== */
+.crt-glow {
+  text-shadow:
+    0 0 calc(2px * var(--glow-intensity, 1)) rgba(51, 255, 51, calc(0.4 * var(--glow-intensity, 1))),
+    0 0 calc(4px * var(--glow-intensity, 1)) rgba(51, 255, 51, calc(0.2 * var(--glow-intensity, 1))),
+    0 0 calc(8px * var(--glow-intensity, 1)) rgba(51, 255, 51, calc(0.1 * var(--glow-intensity, 1)));
+}
+
+.crt-glow--amber {
+  text-shadow:
+    0 0 calc(2px * var(--glow-intensity, 1)) rgba(255, 176, 0, calc(0.4 * var(--glow-intensity, 1))),
+    0 0 calc(4px * var(--glow-intensity, 1)) rgba(255, 176, 0, calc(0.2 * var(--glow-intensity, 1))),
+    0 0 calc(8px * var(--glow-intensity, 1)) rgba(255, 176, 0, calc(0.1 * var(--glow-intensity, 1)));
+}
+
+/* ========================================
+   CRT EFFECTS - VIGNETTE
+   ======================================== */
+.crt-vignette::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 60%,
+    rgba(0, 0, 0, var(--vignette-opacity, 0.3)) 100%
+  );
+}
+
+/* ========================================
+   CRT EFFECTS - NOISE
+   ======================================== */
+.crt-noise::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1001;
+  opacity: var(--noise-opacity, 0.03);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-size: 128px 128px;
+  animation: noise-shift 0.5s steps(4) infinite;
+}
+
+@keyframes noise-shift {
+  0% {
+    background-position: 0 0;
+  }
+  25% {
+    background-position: -32px -16px;
+  }
+  50% {
+    background-position: 16px -32px;
+  }
+  75% {
+    background-position: -16px 32px;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+/* ========================================
+   CRT EFFECTS - FLICKER
+   ======================================== */
+@keyframes screen-flicker {
+  0% {
+    opacity: 1;
+  }
+  5% {
+    opacity: 0.85;
+  }
+  10% {
+    opacity: 1;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.crt-flicker--active {
+  animation: screen-flicker 0.4s ease-out 1;
+}
+
+/* ========================================
+   CRT EFFECTS - CURVATURE
+   ======================================== */
+.crt-curvature {
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.crt-curvature > .game-viewport {
+  transform: perspective(800px) rotateX(0.5deg);
+  border-radius: 20px / 18px;
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.4),
+    inset 0 0 120px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 1023px) {
+  .crt-curvature > .game-viewport {
+    transform: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* ========================================
+   REDUCED MOTION - DISABLE ANIMATIONS
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .crt-scanlines::after,
+  .crt-noise::before {
+    animation: none;
+  }
+
+  .crt-flicker--active {
+    animation: none;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+  }
+
+  .crt-curvature > .game-viewport {
+    transform: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+/* ========================================
+   EFFECT TOGGLE: SCANLINES
+   ======================================== */
+[data-scanlines='off'] .crt-scanlines::after {
+  display: none;
+}
+
+/* ========================================
+   EFFECT TOGGLE: CURVATURE
+   ======================================== */
+[data-curvature='off'] .crt-curvature > .game-viewport {
+  transform: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* ========================================
+   EFFECT TOGGLE: GLOW
+   ======================================== */
+[data-glow='off'] .crt-glow,
+[data-glow='off'] .crt-glow--amber,
+[data-high-contrast='on'] .crt-glow,
+[data-high-contrast='on'] .crt-glow--amber {
+  text-shadow: none;
+}
+
+/* ========================================
+   EFFECT TOGGLE: NOISE
+   ======================================== */
+[data-noise='off'] .crt-noise::before {
+  display: none;
+}
+
+/* ========================================
+   EFFECT TOGGLE: VIGNETTE
+   ======================================== */
+[data-vignette='off'] .crt-vignette::after {
+  display: none;
+}
+
+/* ========================================
+   HIGH-CONTRAST MODE TOGGLE
+   ======================================== */
+[data-high-contrast='on'] {
+  --color-bg: #000000;
+  --color-surface: #0a0a0a;
+  --color-text: #ffffff;
+  --color-text-muted: #cccccc;
+  --color-border: #ffffff;
+  --color-accent: #ffff00;
+  --color-muted: #cccccc;
 }
