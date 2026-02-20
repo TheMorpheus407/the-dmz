@@ -76,9 +76,27 @@ export const createErrorHandler = () =>
     }
 
     if (statusCode >= 500) {
-      request.log.error({ err: error }, 'request failed');
+      request.log.error(
+        {
+          err: error,
+          requestId: request.id,
+          code,
+          tenantId: request.tenantContext?.tenantId,
+          userId: request.tenantContext?.userId,
+        },
+        'request failed',
+      );
     } else {
-      request.log.info({ err: error }, 'request error');
+      request.log.warn(
+        {
+          err: error,
+          requestId: request.id,
+          code,
+          tenantId: request.tenantContext?.tenantId,
+          userId: request.tenantContext?.userId,
+        },
+        'request error',
+      );
     }
 
     const errorPayload: {

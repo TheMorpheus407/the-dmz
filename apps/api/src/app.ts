@@ -48,14 +48,45 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
     disableRequestLogging: true,
     logger: {
       level: config.LOG_LEVEL,
+      serializers: {
+        req(request) {
+          return {
+            method: request.method,
+            url: request.url,
+            headers: {
+              authorization: request.headers.authorization ? '[REDACTED]' : undefined,
+              cookie: request.headers.cookie ? '[REDACTED]' : undefined,
+              'x-api-key': request.headers['x-api-key'] ? '[REDACTED]' : undefined,
+              'x-request-id': request.headers['x-request-id'],
+              'user-agent': request.headers['user-agent'],
+              'x-forwarded-for': request.headers['x-forwarded-for'],
+            },
+          };
+        },
+      },
       redact: {
         paths: [
           'req.headers.authorization',
           'req.headers.cookie',
           "req.headers['x-api-key']",
+          'req.headers.x_refresh_token',
           'req.body.password',
+          'req.body.passwordConfirm',
           'req.body.token',
           'req.body.refreshToken',
+          'req.body.accessToken',
+          'req.body.refresh_token',
+          'req.body.access_token',
+          'req.body.mfaCode',
+          'req.body.mfa_code',
+          'req.body.verificationCode',
+          'req.body.verification_code',
+          'req.body.code',
+          'req.body.secret',
+          'req.body.clientSecret',
+          'req.body.client_secret',
+          'response.headers.authorization',
+          'response.headers.set-cookie',
         ],
         remove: true,
       },
