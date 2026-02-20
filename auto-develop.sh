@@ -67,10 +67,31 @@ run_agent() {
   fi
 }
 
-first_word() {
+extract_verdict() {
   local file="$1"
   [[ -s "$file" ]] || { echo ""; return 0; }
-  awk 'NR==1{print $1; exit}' "$file"
+
+  # Fast path: check if line 1 literally starts with the verdict
+  local word
+  word="$(awk 'NR==1{print $1; exit}' "$file")"
+  if [[ "$word" == "ACCEPTED" || "$word" == "DENIED" ]]; then
+    echo "$word"
+    return 0
+  fi
+
+  # Check if the last word of the file is the verdict
+  local last
+  last="$(awk '{w=$NF} END{print w}' "$file")"
+  if [[ "$last" == "ACCEPTED" || "$last" == "DENIED" ]]; then
+    echo "$last"
+    return 0
+  fi
+
+  # Final fallback: some agents bury the verdict in markdown formatting.
+  # Search for the first standalone ACCEPTED or DENIED anywhere in the file.
+  local verdict
+  verdict="$(grep -oE '\bACCEPTED\b|\bDENIED\b' "$file" | head -1)"
+  echo "${verdict:-}"
 }
 
 is_head_pushed() {
@@ -438,7 +459,7 @@ Requirements:
 - Run tests if available; if none are found, say so explicitly.
 - Run pnpm lint; if it fails, start with DENIED and explain why.
 - Run pnpm typecheck; if it fails, start with DENIED and explain why.
-- First word MUST be ACCEPTED or DENIED followed by ONE space!
+- The VERY FIRST LINE of the file MUST start with ACCEPTED or DENIED (no heading, no prefix, no markdown before it). Example first line: "ACCEPTED All checks pass." or "DENIED Lint failures found."
 - If ANY concern exists, start with DENIED. Only start with ACCEPTED if there are NO concerns.
 - Write your review to: $review_a_file
 
@@ -462,7 +483,7 @@ Requirements:
 - Run tests if available; if none are found, say so explicitly.
 - Run pnpm lint; if it fails, start with DENIED and explain why.
 - Run pnpm typecheck; if it fails, start with DENIED and explain why.
-- First word MUST be ACCEPTED or DENIED.
+- The VERY FIRST LINE of the file MUST start with ACCEPTED or DENIED (no heading, no prefix, no markdown before it). Example first line: "ACCEPTED All requirements met." or "DENIED Missing test coverage."
 - If ANY concern exists, start with DENIED. Only start with ACCEPTED if there are NO concerns.
 - Write your review to: $review_b_file
 
@@ -477,8 +498,8 @@ EOF
     fi
     [[ -s "$review_b_file" ]] || warn "Review B file missing or empty: $review_b_file (continuing)."
 
-    review_a_word="$(first_word "$review_a_file")"
-    review_b_word="$(first_word "$review_b_file")"
+    review_a_word="$(extract_verdict "$review_a_file")"
+    review_b_word="$(extract_verdict "$review_b_file")"
 
     if [[ "$review_a_word" == "ACCEPTED" && "$review_b_word" == "ACCEPTED" ]]; then
       if ! pnpm lint; then
