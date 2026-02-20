@@ -70,6 +70,7 @@
   --color-border: var(--color-phosphor-green-dark);
   --color-accent: var(--color-phosphor-green);
   --color-muted: var(--color-phosphor-green-dim);
+  --color-backdrop: rgba(0, 0, 0, 0.7);
 
   /* ========================================
      COLOR - ADMIN PALETTE
@@ -187,8 +188,8 @@
 }
 
 /* ========================================
-   THEME: HIGH-CONTRAST (ACCESSIBILITY)
-   ======================================== */
+    THEME: HIGH-CONTRAST (ACCESSIBILITY)
+    ======================================== */
 [data-theme='high-contrast'] {
   --color-bg: #000000;
   --color-surface: #0a0a0a;
@@ -197,6 +198,7 @@
   --color-border: #ffffff;
   --color-accent: #ffff00;
   --color-muted: #cccccc;
+  --color-backdrop: rgba(0, 0, 0, 0.9);
 
   /* Disable CRT effects in high-contrast */
   --effect-scanlines: 0;
@@ -207,8 +209,8 @@
 }
 
 /* ========================================
-   THEME: ENTERPRISE (ADMIN)
-   ======================================== */
+    THEME: ENTERPRISE (ADMIN)
+    ======================================== */
 [data-theme='enterprise'] {
   --color-bg: var(--admin-bg-primary);
   --color-surface: var(--admin-bg-secondary);
@@ -217,6 +219,7 @@
   --color-border: var(--admin-border);
   --color-accent: var(--admin-accent);
   --color-muted: var(--admin-text-secondary);
+  --color-backdrop: rgba(0, 0, 0, 0.6);
 
   /* Disable CRT effects in enterprise mode */
   --effect-scanlines: 0;
