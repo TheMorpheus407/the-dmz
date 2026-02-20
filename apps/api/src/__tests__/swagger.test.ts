@@ -113,14 +113,16 @@ describe('swagger docs', () => {
       });
 
       expect(response.statusCode).toBe(404);
-      expect(response.json()).toEqual({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Route not found',
-          details: {},
-        },
-      });
+      expect(response.json()).toEqual(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'NOT_FOUND',
+            message: 'Route not found',
+            details: {},
+          }),
+        }),
+      );
     });
 
     it('keeps raw OpenAPI JSON for tooling', async () => {

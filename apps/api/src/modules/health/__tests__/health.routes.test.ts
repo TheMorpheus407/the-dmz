@@ -96,11 +96,12 @@ describe('health routes', () => {
     expect(response.statusCode).toBe(404);
     expect(response.json()).toEqual({
       success: false,
-      error: {
+      error: expect.objectContaining({
         code: 'NOT_FOUND',
         message: 'Route not found',
         details: {},
-      },
+        requestId: expect.any(String),
+      }),
     });
   });
 });

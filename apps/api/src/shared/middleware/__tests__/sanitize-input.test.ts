@@ -138,17 +138,19 @@ describe('sanitizeInputHook', () => {
     });
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      success: false,
-      error: {
-        code: 'INVALID_INPUT',
-        message: 'Request payload contains forbidden patterns',
-        details: {
-          reason: 'Prototype pollution attempt detected',
-          field: '__proto__',
-        },
-      },
-    });
+    expect(response.json()).toEqual(
+      expect.objectContaining({
+        success: false,
+        error: expect.objectContaining({
+          code: 'INVALID_INPUT',
+          message: 'Request payload contains forbidden patterns',
+          details: {
+            reason: 'Prototype pollution attempt detected',
+            field: '__proto__',
+          },
+        }),
+      }),
+    );
   });
 
   it('rejects constructor.prototype payloads with INVALID_INPUT details', async () => {
@@ -162,17 +164,19 @@ describe('sanitizeInputHook', () => {
     });
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      success: false,
-      error: {
-        code: 'INVALID_INPUT',
-        message: 'Request payload contains forbidden patterns',
-        details: {
-          reason: 'Prototype pollution attempt detected',
-          field: 'account.constructor',
-        },
-      },
-    });
+    expect(response.json()).toEqual(
+      expect.objectContaining({
+        success: false,
+        error: expect.objectContaining({
+          code: 'INVALID_INPUT',
+          message: 'Request payload contains forbidden patterns',
+          details: {
+            reason: 'Prototype pollution attempt detected',
+            field: 'account.constructor',
+          },
+        }),
+      }),
+    );
   });
 
   it('returns VALIDATION_FAILED for malformed JSON payloads', async () => {
@@ -186,16 +190,18 @@ describe('sanitizeInputHook', () => {
     });
 
     expect(response.statusCode).toBe(400);
-    expect(response.json()).toEqual({
-      success: false,
-      error: {
-        code: 'VALIDATION_FAILED',
-        message: 'Validation failed',
-        details: {
-          reason: "Body is not valid JSON but content-type is set to 'application/json'",
-        },
-      },
-    });
+    expect(response.json()).toEqual(
+      expect.objectContaining({
+        success: false,
+        error: expect.objectContaining({
+          code: 'VALIDATION_FAILED',
+          message: 'Validation failed',
+          details: {
+            reason: "Body is not valid JSON but content-type is set to 'application/json'",
+          },
+        }),
+      }),
+    );
   });
 
   it('supports per-route HTML skip fields', async () => {
