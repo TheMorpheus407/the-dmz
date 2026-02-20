@@ -1,5 +1,7 @@
 import type { LoginInput, RegisterInput, RefreshTokenInput } from '@the-dmz/shared/schemas';
 
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
+
 import * as authService from './auth.service.js';
 import { AuthError } from './auth.errors.js';
 
@@ -97,10 +99,10 @@ export const authGuard = async (request: FastifyRequest, _reply: FastifyReply): 
     });
   }
 
-  const token = authHeader.substring(7);
+  const bearerValue = authHeader.substring(7);
 
   try {
-    const user = await authService.verifyAccessToken(config, token);
+    const user = await authService.verifyAccessToken(config, bearerValue);
     request.user = user;
   } catch (error) {
     if (error instanceof AuthError) {
@@ -197,8 +199,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.delete(
     '/auth/logout',
     {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      preHandler: authGuard,
+      preHandler: [authGuard, tenantContext],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
@@ -224,8 +225,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.get(
     '/auth/me',
     {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      preHandler: authGuard,
+      preHandler: [authGuard, tenantContext],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
@@ -243,8 +243,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.get(
     '/health/authenticated',
     {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
-      preHandler: authGuard,
+      preHandler: [authGuard, tenantContext],
       config: {
         rateLimit: false,
       },

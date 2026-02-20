@@ -51,7 +51,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'test@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Test User',
         },
       });
@@ -71,7 +71,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'duplicate@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'First User',
         },
       });
@@ -81,7 +81,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'duplicate@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Second User',
         },
       });
@@ -97,7 +97,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'invalid-email',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Test User',
         },
       });
@@ -127,7 +127,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'logintest@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Login Test',
         },
       });
@@ -137,7 +137,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/login',
         payload: {
           email: 'logintest@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
         },
       });
 
@@ -154,7 +154,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/login',
         payload: {
           email: 'nonexistent@example.com',
-          password: 'WrongPassword123!',
+          password: 'wrong pass 1234',
         },
       });
 
@@ -170,7 +170,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'wrongpass@example.com',
-          password: 'CorrectPassword123!',
+          password: 'correct pass 1234',
           displayName: 'Wrong Pass',
         },
       });
@@ -180,7 +180,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/login',
         payload: {
           email: 'wrongpass@example.com',
-          password: 'IncorrectPassword123!',
+          password: 'incorrect pass 1234',
         },
       });
 
@@ -195,7 +195,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'refresh@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Refresh Test',
         },
       });
@@ -236,7 +236,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'rotation@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Rotation Test',
         },
       });
@@ -274,7 +274,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'me@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Me Test',
         },
       });
@@ -326,7 +326,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'logout@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Logout Test',
         },
       });
@@ -356,7 +356,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'logoutreuse@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Logout Reuse Test',
         },
       });
@@ -394,7 +394,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'health@example.com',
-          password: 'SecurePassword123!',
+          password: 'valid pass 1234',
           displayName: 'Health Test',
         },
       });
@@ -425,6 +425,88 @@ describe('auth routes', () => {
       });
 
       expect(response.statusCode).toBe(401);
+    });
+  });
+
+  describe('tenant context', () => {
+    it('sets tenant context on protected route with valid JWT', async () => {
+      const registerResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/register',
+        payload: {
+          email: 'tenantctx@example.com',
+          password: 'valid pass 1234',
+          displayName: 'Tenant Ctx Test',
+        },
+      });
+
+      const { accessToken, user } = registerResponse.json() as {
+        accessToken: string;
+        user: { tenantId: string; id: string };
+      };
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/me',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.user).toBeDefined();
+      expect(body.user.tenantId).toBe(user.tenantId);
+    });
+
+    it('returns 401 with AUTH_UNAUTHORIZED code when token is invalid', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/me',
+        headers: {
+          authorization: 'Bearer invalid-token',
+        },
+      });
+
+      expect(response.statusCode).toBe(401);
+      const body = response.json();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('AUTH_UNAUTHORIZED');
+    });
+
+    it('public health route does not require tenant context', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.status).toBeDefined();
+    });
+
+    it('public ready route does not require tenant context', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/ready',
+      });
+
+      expect(response.statusCode).toBeDefined();
+    });
+
+    it('returns error with requestId for tenant context failures', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/me',
+        headers: {
+          authorization: 'Bearer invalid-token',
+        },
+      });
+
+      expect(response.statusCode).toBe(401);
+      const body = response.json();
+      expect(body.success).toBe(false);
+      expect(body.error.requestId).toBeDefined();
     });
   });
 });

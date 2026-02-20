@@ -12,6 +12,8 @@ export const ErrorCodes = {
   AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
   AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
   AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
+  TENANT_CONTEXT_MISSING: 'TENANT_CONTEXT_MISSING',
+  TENANT_CONTEXT_INVALID: 'TENANT_CONTEXT_INVALID',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -91,6 +93,14 @@ export const createErrorHandler = () =>
     };
 
     if (code === ErrorCodes.RATE_LIMIT_EXCEEDED) {
+      errorPayload.requestId = request.id;
+    }
+
+    if (
+      code === ErrorCodes.AUTH_UNAUTHORIZED ||
+      code === ErrorCodes.TENANT_CONTEXT_MISSING ||
+      code === ErrorCodes.TENANT_CONTEXT_INVALID
+    ) {
       errorPayload.requestId = request.id;
     }
 
