@@ -150,6 +150,9 @@ importers:
       '@the-dmz/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      zod:
+        specifier: ^3.23.0
+        version: 3.25.76
     devDependencies:
       '@axe-core/playwright':
         specifier: ^4.11.0
