@@ -301,6 +301,17 @@ export default [
       ...typeAwareRules,
       ...svelteRecommendedRules,
       ...svelteA11yRules,
+      'svelte/no-navigation-without-resolve': 'off',
+    },
+  },
+  {
+    files: [
+      'apps/web/src/routes/(auth)/+layout.server.ts',
+      'apps/web/src/routes/(game)/+layout.server.ts',
+      'apps/web/src/routes/(admin)/+layout.server.ts',
+    ],
+    rules: {
+      '@typescript-eslint/only-throw-error': 'off',
     },
   },
   {

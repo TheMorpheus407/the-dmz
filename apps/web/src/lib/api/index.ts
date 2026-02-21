@@ -17,3 +17,5 @@ export {
   apiSuccessEnvelopeSchema,
   defaultRetryConfig,
 } from './types';
+export { login, register, refresh, logout, getCurrentUser } from './auth';
+export type { AuthResponse, RefreshResponse } from './auth';

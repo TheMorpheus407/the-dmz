@@ -7,6 +7,7 @@
 
   let email = $state('');
   let password = $state('');
+  let displayName = $state('');
   let error = $state<string | null>(null);
   let loading = $state(false);
 
@@ -15,7 +16,7 @@
     error = null;
     loading = true;
 
-    const result = await sessionStore.login({ email, password });
+    const result = await sessionStore.register({ email, password, displayName });
 
     if (result.error) {
       error = getErrorMessage(result.error);
@@ -26,21 +27,36 @@
     await goto('/game', { replaceState: true });
   }
 
-  function handleRegister() {
-    void goto('/register');
+  function handleLogin() {
+    void goto('/login');
   }
 </script>
 
-<Panel variant="outlined" ariaLabel="Login">
+<Panel variant="outlined" ariaLabel="Register">
   <form onsubmit={handleSubmit}>
-    <h1>Access Portal</h1>
-    <p class="subtitle">Enter your credentials to access the game.</p>
+    <h1>Create Account</h1>
+    <p class="subtitle">Join the game to start playing.</p>
 
     {#if error}
       <div class="error-message" role="alert">
         {error}
       </div>
     {/if}
+
+    <div class="form-group">
+      <label for="displayName">Display Name</label>
+      <input
+        type="text"
+        id="displayName"
+        name="displayName"
+        bind:value={displayName}
+        required
+        minlength="2"
+        maxlength="64"
+        autocomplete="name"
+        disabled={loading}
+      />
+    </div>
 
     <div class="form-group">
       <label for="email">Email</label>
@@ -63,16 +79,19 @@
         name="password"
         bind:value={password}
         required
-        autocomplete="current-password"
+        minlength="12"
+        maxlength="128"
+        autocomplete="new-password"
         disabled={loading}
       />
+      <span class="hint">Minimum 12 characters</span>
     </div>
 
     <div class="actions">
       <Button type="submit" disabled={loading}>
-        {loading ? 'Signing in...' : 'Sign In'}
+        {loading ? 'Creating account...' : 'Create Account'}
       </Button>
-      <Button variant="ghost" onclick={handleRegister} disabled={loading}>Create Account</Button>
+      <Button variant="ghost" onclick={handleLogin} disabled={loading}>Back to Login</Button>
     </div>
   </form>
 </Panel>
@@ -83,7 +102,7 @@
     color: var(--color-text);
     font-size: var(--text-xl);
     font-weight: 600;
-    margin: var(--space-2) 0;
+    margin: 0 0 var(--space-2) 0;
   }
 
   .subtitle {
@@ -136,6 +155,14 @@
   input:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+  }
+
+  .hint {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: var(--space-1);
   }
 
   .actions {
