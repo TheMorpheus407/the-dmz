@@ -1,6 +1,7 @@
 import type { LoginInput, RegisterInput, RefreshTokenInput } from '@the-dmz/shared/schemas';
 
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
 
 import * as authService from './auth.service.js';
 import { AuthError, InvalidCredentialsError } from './auth.errors.js';
@@ -130,10 +131,14 @@ declare module 'fastify' {
 export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const config = fastify.config;
   const isTest = config.NODE_ENV === 'test';
+  const tenantResolverEnabled = config.TENANT_RESOLVER_ENABLED ?? false;
+
+  const preAuthMiddleware = tenantResolverEnabled ? [preAuthTenantResolver()] : [];
 
   fastify.post<{ Body: RegisterInput }>(
     '/auth/register',
     {
+      preHandler: preAuthMiddleware,
       config: {
         rateLimit: isTest
           ? false
@@ -150,7 +155,12 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       },
     },
     async (request, reply) => {
-      const result = await authService.register(config, request.body);
+      const tenantId = request.preAuthTenantContext?.tenantId;
+      const result = await authService.register(
+        config,
+        request.body,
+        tenantId ? { tenantId } : undefined,
+      );
 
       const eventBus = fastify.eventBus;
       eventBus.publish(
@@ -191,6 +201,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.post<{ Body: LoginInput }>(
     '/auth/login',
     {
+      preHandler: preAuthMiddleware,
       config: {
         rateLimit: isTest
           ? false
@@ -207,8 +218,13 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       },
     },
     async (request) => {
+      const tenantId = request.preAuthTenantContext?.tenantId;
       try {
-        const result = await authService.login(config, request.body);
+        const result = await authService.login(
+          config,
+          request.body,
+          tenantId ? { tenantId } : undefined,
+        );
 
         const eventBus = fastify.eventBus;
         eventBus.publish(

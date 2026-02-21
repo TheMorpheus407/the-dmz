@@ -94,31 +94,44 @@ export const register = async (
     password: string;
     displayName: string;
   },
+  options?: { tenantId?: string },
 ): Promise<AuthResponse> => {
   const db = getDatabaseClient(config);
 
-  const defaultTenant = await db.query.tenants.findFirst({
-    where: (tenants, { eq }) => eq(tenants.slug, 'default'),
-  });
-
   let tenantId: string;
 
-  if (!defaultTenant) {
-    const [created] = await db
-      .insert(tenants)
-      .values({
-        name: 'Default Tenant',
-        slug: 'default',
-      })
-      .returning({ tenantId: tenants.tenantId });
+  if (options?.tenantId) {
+    const tenant = await db.query.tenants.findFirst({
+      where: (tenants, { eq }) => eq(tenants.tenantId, options.tenantId!),
+    });
 
-    if (!created || !created.tenantId) {
-      throw new Error('Failed to create default tenant');
+    if (!tenant) {
+      throw new Error('Tenant not found');
     }
 
-    tenantId = created.tenantId;
+    tenantId = tenant.tenantId;
   } else {
-    tenantId = defaultTenant.tenantId;
+    const defaultTenant = await db.query.tenants.findFirst({
+      where: (tenants, { eq }) => eq(tenants.slug, 'default'),
+    });
+
+    if (!defaultTenant) {
+      const [created] = await db
+        .insert(tenants)
+        .values({
+          name: 'Default Tenant',
+          slug: 'default',
+        })
+        .returning({ tenantId: tenants.tenantId });
+
+      if (!created || !created.tenantId) {
+        throw new Error('Failed to create default tenant');
+      }
+
+      tenantId = created.tenantId;
+    } else {
+      tenantId = defaultTenant.tenantId;
+    }
   }
 
   const passwordHash = await hashPassword(data.password);
@@ -158,18 +171,35 @@ export const login = async (
     email: string;
     password: string;
   },
+  options?: { tenantId?: string },
 ): Promise<AuthResponse> => {
   const db = getDatabaseClient(config);
 
-  const defaultTenant = await db.query.tenants.findFirst({
-    where: (tenants, { eq }) => eq(tenants.slug, 'default'),
-  });
+  let tenantId: string;
 
-  if (!defaultTenant) {
-    throw new InvalidCredentialsError();
+  if (options?.tenantId) {
+    const tenant = await db.query.tenants.findFirst({
+      where: (tenants, { eq }) => eq(tenants.tenantId, options.tenantId!),
+    });
+
+    if (!tenant) {
+      throw new InvalidCredentialsError();
+    }
+
+    tenantId = tenant.tenantId;
+  } else {
+    const defaultTenant = await db.query.tenants.findFirst({
+      where: (tenants, { eq }) => eq(tenants.slug, 'default'),
+    });
+
+    if (!defaultTenant) {
+      throw new InvalidCredentialsError();
+    }
+
+    tenantId = defaultTenant.tenantId;
   }
 
-  const userWithHash = await findUserByEmail(db, data.email, defaultTenant.tenantId);
+  const userWithHash = await findUserByEmail(db, data.email, tenantId);
 
   if (!userWithHash) {
     throw new InvalidCredentialsError();

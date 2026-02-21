@@ -68,9 +68,15 @@ export const backendEnvSchema = z
     CSP_CONNECT_SRC: z.string().optional().default(''),
     CSP_IMG_SRC: z.string().optional().default(''),
     COEP_POLICY: z.enum(coepPolicyValues).default('require-corp'),
+    TENANT_HEADER_NAME: z.string().min(1).default('x-tenant-id'),
+    TENANT_FALLBACK_ENABLED: booleanFromString.optional(),
+    TENANT_FALLBACK_SLUG: z.string().min(1).default('default'),
+    TENANT_RESOLVER_ENABLED: booleanFromString.optional(),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';
+    const isDev = config.NODE_ENV === 'development';
+    const isTest = config.NODE_ENV === 'test';
 
     return {
       ...config,
@@ -81,6 +87,8 @@ export const backendEnvSchema = z
       DATABASE_SSL: config.DATABASE_SSL ?? isProd,
       ENABLE_SWAGGER: config.ENABLE_SWAGGER ?? config.NODE_ENV !== 'production',
       CORS_ORIGINS_LIST: config.CORS_ORIGINS.split(',').map((o) => o.trim()),
+      TENANT_FALLBACK_ENABLED: (config.TENANT_FALLBACK_ENABLED ?? isDev) || isTest,
+      TENANT_RESOLVER_ENABLED: config.TENANT_RESOLVER_ENABLED ?? false,
     };
   })
   .refine(
