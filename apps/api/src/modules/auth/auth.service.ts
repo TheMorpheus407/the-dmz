@@ -147,6 +147,7 @@ export const register = async (
 
   return {
     user,
+    sessionId: session.id,
     ...tokens,
   };
 };
@@ -210,6 +211,7 @@ export const login = async (
 
   return {
     user,
+    sessionId: session.id,
     ...tokens,
   };
 };
@@ -255,7 +257,13 @@ export const refresh = async (
 
   const newTokens = await generateTokens(config, user, newSession.id, newRefreshToken);
 
-  return newTokens;
+  return {
+    ...newTokens,
+    sessionId: newSession.id,
+    oldSessionId: session.id,
+    userId: user.id,
+    tenantId: user.tenantId,
+  };
 };
 
 export const logout = async (config: AppConfig, refreshToken: string): Promise<void> => {

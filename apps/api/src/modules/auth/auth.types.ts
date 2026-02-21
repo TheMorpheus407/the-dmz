@@ -32,9 +32,15 @@ export type AuthTokens = {
 
 export type AuthResponse = {
   user: AuthUser;
+  sessionId: string;
 } & AuthTokens;
 
-export type RefreshResponse = AuthTokens;
+export type RefreshResponse = AuthTokens & {
+  sessionId: string;
+  oldSessionId: string;
+  userId: string;
+  tenantId: string;
+};
 
 export interface AuthenticatedUser {
   userId: string;

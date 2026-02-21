@@ -3,7 +3,13 @@ import type { LoginInput, RegisterInput, RefreshTokenInput } from '@the-dmz/shar
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 
 import * as authService from './auth.service.js';
-import { AuthError } from './auth.errors.js';
+import { AuthError, InvalidCredentialsError } from './auth.errors.js';
+import {
+  createAuthUserCreatedEvent,
+  createAuthSessionCreatedEvent,
+  createAuthSessionRevokedEvent,
+  createAuthLoginFailedEvent,
+} from './auth.events.js';
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthenticatedUser } from './auth.types.js';
@@ -145,6 +151,38 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
     },
     async (request, reply) => {
       const result = await authService.register(config, request.body);
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createAuthUserCreatedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: result.user.tenantId,
+          userId: result.user.id,
+          version: 1,
+          payload: {
+            userId: result.user.id,
+            email: result.user.email,
+            tenantId: result.user.tenantId,
+          },
+        }),
+      );
+
+      eventBus.publish(
+        createAuthSessionCreatedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: result.user.tenantId,
+          userId: result.user.id,
+          version: 1,
+          payload: {
+            sessionId: result.sessionId,
+            userId: result.user.id,
+            tenantId: result.user.tenantId,
+          },
+        }),
+      );
+
       reply.code(201);
       return result;
     },
@@ -169,7 +207,48 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       },
     },
     async (request) => {
-      return authService.login(config, request.body);
+      try {
+        const result = await authService.login(config, request.body);
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createAuthSessionCreatedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: result.user.tenantId,
+            userId: result.user.id,
+            version: 1,
+            payload: {
+              sessionId: result.sessionId,
+              userId: result.user.id,
+              tenantId: result.user.tenantId,
+            },
+          }),
+        );
+
+        return result;
+      } catch (error) {
+        if (error instanceof InvalidCredentialsError) {
+          const eventBus = fastify.eventBus;
+          const defaultTenantId = 'default';
+          eventBus.publish(
+            createAuthLoginFailedEvent({
+              source: 'auth-module',
+              correlationId: request.id,
+              tenantId: defaultTenantId,
+              userId: '',
+              version: 1,
+              payload: {
+                tenantId: defaultTenantId,
+                email: request.body.email,
+                reason: 'invalid_credentials',
+                correlationId: request.id,
+              },
+            }),
+          );
+        }
+        throw error;
+      }
     },
   );
 
@@ -192,7 +271,41 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       },
     },
     async (request) => {
-      return authService.refresh(config, request.body.refreshToken);
+      const result = await authService.refresh(config, request.body.refreshToken);
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createAuthSessionCreatedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: result.tenantId,
+          userId: result.userId,
+          version: 1,
+          payload: {
+            sessionId: result.sessionId,
+            userId: result.userId,
+            tenantId: result.tenantId,
+          },
+        }),
+      );
+
+      eventBus.publish(
+        createAuthSessionRevokedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: result.tenantId,
+          userId: result.userId,
+          version: 1,
+          payload: {
+            sessionId: result.oldSessionId,
+            userId: result.userId,
+            tenantId: result.tenantId,
+            reason: 'refresh_rotation',
+          },
+        }),
+      );
+
+      return result;
     },
   );
 
@@ -214,9 +327,27 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       },
     },
     async (request) => {
+      const user = request.user as AuthenticatedUser;
       const refreshToken = (request.headers['x-refresh-token'] as string) || '';
       if (refreshToken) {
         await authService.logout(config, refreshToken);
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createAuthSessionRevokedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: user.tenantId,
+            userId: user.userId,
+            version: 1,
+            payload: {
+              sessionId: user.sessionId,
+              userId: user.userId,
+              tenantId: user.tenantId,
+              reason: 'logout',
+            },
+          }),
+        );
       }
       return { success: true };
     },
