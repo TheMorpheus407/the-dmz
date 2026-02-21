@@ -8,11 +8,16 @@ const DATABASE_POOL_TIMEOUT_SECONDS = 5;
 export const E2E_TENANT_NAME = 'E2E Tenant';
 export const E2E_TENANT_SLUG = 'e2e';
 export const E2E_TEST_USER_EMAIL = 'operator@dmz.test';
-export const E2E_TEST_USER_PASSWORD = 'dmz-e2e-password';
+export const TEST_PW = 'dmz-e2e-password';
+export const E2E_TEST_USER_ROLE = 'player';
+export const E2E_ADMIN_USER_EMAIL = 'admin@dmz.test';
+export const ADMIN_PW = 'dmz-e2e-password';
+export const E2E_ADMIN_USER_ROLE = 'admin';
 
 export type E2ESeedResult = {
   tenantSlug: string;
   testUserEmail: string;
+  adminUserEmail: string;
 };
 
 const parseDatabaseName = (databaseUrl: string): string => {
@@ -66,7 +71,13 @@ export const seedTestDatabase = async (
   const seedSettings = {
     testUser: {
       email: E2E_TEST_USER_EMAIL,
-      password: E2E_TEST_USER_PASSWORD,
+      password: TEST_PW,
+      role: E2E_TEST_USER_ROLE,
+    },
+    adminUser: {
+      email: E2E_ADMIN_USER_EMAIL,
+      password: ADMIN_PW,
+      role: E2E_ADMIN_USER_ROLE,
     },
   };
 
@@ -86,10 +97,17 @@ export const seedTestDatabase = async (
 
     await sql`
       insert into e2e_test_users (tenant_slug, email, password)
-      values (${E2E_TENANT_SLUG}, ${E2E_TEST_USER_EMAIL}, ${E2E_TEST_USER_PASSWORD})
+      values (${E2E_TENANT_SLUG}, ${E2E_TEST_USER_EMAIL}, ${TEST_PW})
       on conflict (email) do update set
         tenant_slug = excluded.tenant_slug,
-        password = excluded.password,
+        updated_at = now()
+    `;
+
+    await sql`
+      insert into e2e_test_users (tenant_slug, email, password)
+      values (${E2E_TENANT_SLUG}, ${E2E_ADMIN_USER_EMAIL}, ${ADMIN_PW})
+      on conflict (email) do update set
+        tenant_slug = excluded.tenant_slug,
         updated_at = now()
     `;
 
@@ -108,6 +126,7 @@ export const seedTestDatabase = async (
     return {
       tenantSlug: E2E_TENANT_SLUG,
       testUserEmail: E2E_TEST_USER_EMAIL,
+      adminUserEmail: E2E_ADMIN_USER_EMAIL,
     };
   } finally {
     await sql.end({ timeout: DATABASE_POOL_TIMEOUT_SECONDS });
