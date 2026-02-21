@@ -12,6 +12,7 @@ export const ErrorCodes = {
   SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
   AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
   AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
+  AUTH_INSUFFICIENT_PERMS: 'AUTH_INSUFFICIENT_PERMS',
   AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
   AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
   TENANT_CONTEXT_MISSING: 'TENANT_CONTEXT_MISSING',
@@ -32,6 +33,7 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.SERVICE_UNAVAILABLE]: 503,
   [ErrorCodes.AUTH_UNAUTHORIZED]: 401,
   [ErrorCodes.AUTH_FORBIDDEN]: 403,
+  [ErrorCodes.AUTH_INSUFFICIENT_PERMS]: 403,
   [ErrorCodes.AUTH_SESSION_EXPIRED]: 401,
   [ErrorCodes.AUTH_INVALID_TOKEN]: 401,
   [ErrorCodes.TENANT_CONTEXT_MISSING]: 401,
@@ -50,6 +52,7 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.SERVICE_UNAVAILABLE]: 'Service temporarily unavailable',
   [ErrorCodes.AUTH_UNAUTHORIZED]: 'Authentication required',
   [ErrorCodes.AUTH_FORBIDDEN]: 'Access forbidden',
+  [ErrorCodes.AUTH_INSUFFICIENT_PERMS]: 'Insufficient permissions to perform this action',
   [ErrorCodes.AUTH_SESSION_EXPIRED]: 'Session expired or invalid',
   [ErrorCodes.AUTH_INVALID_TOKEN]: 'Invalid or malformed authentication token',
   [ErrorCodes.TENANT_CONTEXT_MISSING]: 'Tenant context is required for this endpoint',
@@ -98,6 +101,11 @@ export const unauthorized = (message?: string, details?: Record<string, unknown>
 
 export const forbidden = (message?: string, details?: Record<string, unknown>): AppError =>
   createAppError(ErrorCodes.AUTH_FORBIDDEN, message, details);
+
+export const insufficientPermissions = (
+  message?: string,
+  details?: Record<string, unknown>,
+): AppError => createAppError(ErrorCodes.AUTH_INSUFFICIENT_PERMS, message, details);
 
 export const notFound = (message?: string, details?: Record<string, unknown>): AppError =>
   createAppError(ErrorCodes.RESOURCE_NOT_FOUND, message, details);

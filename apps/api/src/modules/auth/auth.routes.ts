@@ -2,6 +2,8 @@ import type { LoginInput, RegisterInput, RefreshTokenInput } from '@the-dmz/shar
 
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
+import { requirePermission, resolvePermissions } from '../../shared/middleware/authorization.js';
+import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 
 import * as authService from './auth.service.js';
 import { AuthError, InvalidCredentialsError } from './auth.errors.js';
@@ -90,8 +92,16 @@ const meResponseJsonSchema = {
       },
       required: ['id', 'email', 'displayName', 'tenantId', 'role', 'isActive'],
     },
+    permissions: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    roles: {
+      type: 'array',
+      items: { type: 'string' },
+    },
   },
-  required: ['user'],
+  required: ['user', 'permissions', 'roles'],
 } as const;
 
 export const authGuard = async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
@@ -383,7 +393,12 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
     async (request) => {
       const user = request.user as AuthenticatedUser;
       const currentUser = await authService.getCurrentUser(config, user.userId, user.tenantId);
-      return { user: currentUser };
+      const permissionContext = await resolvePermissions(config, user.tenantId, user.userId);
+      return {
+        user: currentUser,
+        permissions: permissionContext.permissions,
+        roles: permissionContext.roles,
+      };
     },
   );
 
@@ -425,6 +440,41 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           tenantId: user.tenantId,
           role: user.role,
         },
+      };
+    },
+  );
+
+  fastify.get(
+    '/auth/admin/users',
+    {
+      preHandler: [authGuard, tenantContext, requirePermission('admin', 'list')],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              users: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string', format: 'uuid' },
+                    email: { type: 'string', format: 'email' },
+                    displayName: { type: 'string' },
+                    role: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          403: errorResponseSchemas.Forbidden,
+        },
+      },
+    },
+    async (_request) => {
+      return {
+        users: [],
       };
     },
   );

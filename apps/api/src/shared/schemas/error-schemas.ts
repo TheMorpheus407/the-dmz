@@ -26,6 +26,7 @@ export const ErrorCodeEnum = [
   'SERVICE_UNAVAILABLE',
   'AUTH_UNAUTHORIZED',
   'AUTH_FORBIDDEN',
+  'AUTH_INSUFFICIENT_PERMS',
   'AUTH_SESSION_EXPIRED',
   'AUTH_INVALID_TOKEN',
   'TENANT_CONTEXT_MISSING',
@@ -81,7 +82,10 @@ export const errorResponseSchemas = {
       error: {
         type: 'object',
         properties: {
-          code: { type: 'string', const: 'AUTH_FORBIDDEN' },
+          code: {
+            type: 'string',
+            enum: ['AUTH_FORBIDDEN', 'AUTH_INSUFFICIENT_PERMS'],
+          },
           message: { type: 'string' },
           details: { type: 'object' },
           requestId: { type: 'string' },
