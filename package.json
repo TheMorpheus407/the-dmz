@@ -43,7 +43,8 @@
     "storybook": "pnpm --filter @the-dmz/web storybook",
     "storybook:build": "turbo run storybook:build",
     "openapi:generate": "pnpm --filter @the-dmz/api openapi:generate",
-    "openapi:check": "pnpm --filter @the-dmz/api openapi:check"
+    "openapi:check": "pnpm --filter @the-dmz/api openapi:check",
+    "contract:parity": "pnpm --filter @the-dmz/api contract:parity"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

@@ -24,7 +24,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true });\"",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
-    "openapi:check": "tsx scripts/check-openapi.ts"
+    "openapi:check": "tsx scripts/check-openapi.ts",
+    "contract:parity": "tsx scripts/check-contract-parity.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

@@ -41,6 +41,11 @@
       "types": "./dist/esm/testing/index.d.ts",
       "import": "./dist/esm/testing/index.js",
       "require": "./dist/cjs/testing/index.js"
+    },
+    "./contracts": {
+      "types": "./dist/esm/contracts/index.d.ts",
+      "import": "./dist/esm/contracts/index.js",
+      "require": "./dist/cjs/contracts/index.js"
     }
   },
   "scripts": {

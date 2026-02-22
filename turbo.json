@@ -11,7 +11,7 @@
       "env": ["WEB_PORT", "API_PORT", "PORT", "VITE_API_URL"]
     },
     "lint": {
-      "dependsOn": ["openapi:check"],
+      "dependsOn": ["openapi:check", "contract:parity"],
       "outputs": []
     },
     "lint:fix": {
@@ -56,6 +56,11 @@
       "dependsOn": ["openapi:generate"],
       "outputs": [],
       "inputs": ["openapi/**", "src/**", "scripts/**"]
+    },
+    "contract:parity": {
+      "dependsOn": ["openapi:generate"],
+      "outputs": [],
+      "inputs": ["openapi/**", "../packages/shared/src/contracts/**", "../apps/web/src/lib/api/**"]
     },
     "check:tokens": {
       "cache": false,
