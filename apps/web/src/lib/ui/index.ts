@@ -1,1 +1,11 @@
-export { Button, Panel, Badge, Tabs, Modal, LoadingState } from './components';
+export {
+  Button,
+  Panel,
+  Badge,
+  Tabs,
+  Modal,
+  LoadingState,
+  ErrorPanel,
+  ErrorToast,
+  ErrorState,
+} from './components';

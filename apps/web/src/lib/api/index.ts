@@ -1,6 +1,8 @@
 export { apiClient, ApiClient } from './client';
 export { buildApiUrl, defaultApiClientConfig } from './client';
 export { mapApiError, mapNetworkError, getErrorMessage } from './error-mapper';
+export { getErrorCopy, getSurfaceFromPath, getSeverity, getAriaLivePriority } from './error-copy';
+export type { ErrorCopy, RouteSurface } from './error-copy';
 export type {
   ApiClientConfig,
   ApiError,

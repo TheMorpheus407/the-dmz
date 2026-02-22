@@ -4,3 +4,6 @@ export { default as Badge } from './Badge.svelte';
 export { default as Tabs } from './Tabs.svelte';
 export { default as Modal } from './Modal.svelte';
 export { default as LoadingState } from './LoadingState.svelte';
+export { default as ErrorPanel } from './ErrorPanel.svelte';
+export { default as ErrorToast } from './ErrorToast.svelte';
+export { default as ErrorState } from './ErrorState.svelte';

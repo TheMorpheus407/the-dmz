@@ -18,3 +18,5 @@ export { settingsStore, initialSettingsState } from './settings';
 export type { SettingsState } from './settings';
 export { themeStore, initialThemeState } from './theme';
 export type { ThemeName, ThemeState } from './theme';
+export { errorStore, toastErrorStore } from './errors';
+export type { ErrorState, ToastError } from './errors';

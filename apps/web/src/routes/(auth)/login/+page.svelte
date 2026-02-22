@@ -1,13 +1,13 @@
 <script lang="ts">
-  import { Panel, Button } from '$lib/ui';
+  import { Panel, Button, ErrorPanel } from '$lib/ui';
   import { sessionStore } from '$lib/stores/session';
-  import { getErrorMessage } from '$lib/api/error-mapper';
+  import type { CategorizedApiError } from '$lib/api/types';
 
   import { goto } from '$app/navigation';
 
   let email = $state('');
   let password = $state('');
-  let error = $state<string | null>(null);
+  let error = $state<CategorizedApiError | null>(null);
   let loading = $state(false);
 
   async function handleSubmit(e: Event) {
@@ -18,7 +18,7 @@
     const result = await sessionStore.login({ email, password });
 
     if (result.error) {
-      error = getErrorMessage(result.error);
+      error = result.error;
       loading = false;
       return;
     }
@@ -29,6 +29,15 @@
   function handleRegister() {
     void goto('/register');
   }
+
+  function handleRetry() {
+    error = null;
+    void handleSubmit(new Event('submit'));
+  }
+
+  function handleDismissError() {
+    error = null;
+  }
 </script>
 
 <Panel variant="outlined" ariaLabel="Login">
@@ -37,8 +46,12 @@
     <p class="subtitle">Enter your credentials to access the game.</p>
 
     {#if error}
-      <div class="error-message" role="alert">
-        {error}
+      <div class="error-container">
+        {#if error.retryable}
+          <ErrorPanel {error} surface="auth" onRetry={handleRetry} onDismiss={handleDismissError} />
+        {:else}
+          <ErrorPanel {error} surface="auth" onDismiss={handleDismissError} />
+        {/if}
       </div>
     {/if}
 
@@ -92,16 +105,8 @@
     margin: 0 0 var(--space-4) 0;
   }
 
-  .error-message {
-    background-color: var(--color-danger-bg);
-    color: var(--color-danger);
-    border: var(--border-default);
-    border-color: var(--color-danger);
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-sm);
+  .error-container {
     margin-bottom: var(--space-3);
-    font-family: var(--font-ui);
-    font-size: var(--text-sm);
   }
 
   .form-group {
