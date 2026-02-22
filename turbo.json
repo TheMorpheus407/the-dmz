@@ -11,6 +11,7 @@
       "env": ["WEB_PORT", "API_PORT", "PORT", "VITE_API_URL"]
     },
     "lint": {
+      "dependsOn": ["openapi:check"],
       "outputs": []
     },
     "lint:fix": {
@@ -45,6 +46,16 @@
       "dependsOn": ["^build"],
       "outputs": ["storybook-static/**"],
       "inputs": [".storybook/**", "src/**"]
+    },
+    "openapi:generate": {
+      "dependsOn": ["^build"],
+      "outputs": ["openapi/**"],
+      "inputs": ["src/**", "scripts/**"]
+    },
+    "openapi:check": {
+      "dependsOn": ["openapi:generate"],
+      "outputs": [],
+      "inputs": ["openapi/**", "src/**", "scripts/**"]
     }
   }
 }

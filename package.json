@@ -41,7 +41,9 @@
     "services:logs": "docker compose logs -f",
     "test:scripts": "node --test scripts/*.test.mjs",
     "storybook": "pnpm --filter @the-dmz/web storybook",
-    "storybook:build": "turbo run storybook:build"
+    "storybook:build": "turbo run storybook:build",
+    "openapi:generate": "pnpm --filter @the-dmz/api openapi:generate",
+    "openapi:check": "pnpm --filter @the-dmz/api openapi:check"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
