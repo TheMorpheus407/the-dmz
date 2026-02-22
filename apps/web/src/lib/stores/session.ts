@@ -1,6 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 
 import { login, register, logout as apiLogout, getCurrentUser } from '$lib/api/auth';
+import { apiClient } from '$lib/api/client';
 import type { CategorizedApiError } from '$lib/api/types';
 import type { LoginInput, RegisterInput } from '@the-dmz/shared/schemas';
 
@@ -70,6 +71,14 @@ function createSessionStore() {
       }
 
       if (result.data) {
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+          const [name, value] = cookie.trim().split('=');
+          if (name === 'csrf-token' && value) {
+            apiClient.setCsrfToken(value);
+            break;
+          }
+        }
         set({
           status: 'authenticated',
           user: result.data.user,
@@ -100,6 +109,14 @@ function createSessionStore() {
       }
 
       if (result.data) {
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+          const [name, value] = cookie.trim().split('=');
+          if (name === 'csrf-token' && value) {
+            apiClient.setCsrfToken(value);
+            break;
+          }
+        }
         set({
           status: 'authenticated',
           user: result.data.user,
@@ -120,6 +137,7 @@ function createSessionStore() {
     },
 
     async logout(): Promise<void> {
+      apiClient.clearCsrfToken();
       await apiLogout();
       set({ status: 'anonymous', user: null });
     },

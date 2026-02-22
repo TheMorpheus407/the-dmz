@@ -189,7 +189,6 @@ describe('sessionStore', () => {
             isActive: true,
           },
           accessToken: 'access-token',
-          refreshToken: 'refresh-token',
         },
       });
 
@@ -240,7 +239,6 @@ describe('sessionStore', () => {
             isActive: true,
           },
           accessToken: 'access-token',
-          refreshToken: 'refresh-token',
         },
       });
 

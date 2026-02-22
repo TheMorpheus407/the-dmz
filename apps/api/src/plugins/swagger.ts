@@ -32,6 +32,16 @@ const swaggerPluginImpl: FastifyPluginAsync = async (fastify) => {
             scheme: 'bearer',
             bearerFormat: 'JWT',
           },
+          cookieAuth: {
+            type: 'apiKey',
+            in: 'cookie',
+            name: 'refresh-token',
+          },
+          csrfToken: {
+            type: 'apiKey',
+            in: 'header',
+            name: 'x-csrf-token',
+          },
         },
       },
     },

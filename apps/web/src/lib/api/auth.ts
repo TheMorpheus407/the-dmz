@@ -3,7 +3,6 @@ import {
   meResponseSchema,
   type LoginInput,
   type RegisterInput,
-  type RefreshTokenInput,
   type LogoutResponse,
   type MeResponse,
 } from '@the-dmz/shared/schemas';
@@ -22,12 +21,10 @@ export interface AuthResponse {
     isActive: boolean;
   };
   accessToken: string;
-  refreshToken: string;
 }
 
 export interface RefreshResponse {
   accessToken: string;
-  refreshToken: string;
 }
 
 export async function login(
@@ -100,10 +97,12 @@ export async function register(
   };
 }
 
-export async function refresh(
-  tokens: RefreshTokenInput,
-): Promise<{ data?: RefreshResponse; error?: CategorizedApiError }> {
-  const result = await apiClient.post<RefreshResponse, RefreshTokenInput>('/auth/refresh', tokens);
+export async function refresh(): Promise<{ data?: RefreshResponse; error?: CategorizedApiError }> {
+  const csrfToken = apiClient.getCsrfToken();
+
+  const result = await apiClient.post<RefreshResponse>('/auth/refresh', undefined, {
+    headers: csrfToken ? { 'x-csrf-token': csrfToken } : {},
+  });
 
   if (result.error) {
     return { error: result.error };
@@ -136,7 +135,11 @@ export async function refresh(
 }
 
 export async function logout(): Promise<{ data?: LogoutResponse; error?: CategorizedApiError }> {
-  const result = await apiClient.delete<LogoutResponse>('/auth/logout');
+  const csrfToken = apiClient.getCsrfToken();
+
+  const result = await apiClient.delete<LogoutResponse>('/auth/logout', {
+    headers: csrfToken ? { 'x-csrf-token': csrfToken } : {},
+  });
 
   if (result.error) {
     return { error: result.error };

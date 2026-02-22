@@ -5,6 +5,8 @@ vi.mock('./client', () => ({
     post: vi.fn(),
     get: vi.fn(),
     delete: vi.fn(),
+    getCsrfToken: vi.fn().mockReturnValue('test-csrf-token'),
+    setCsrfToken: vi.fn(),
   },
 }));
 
@@ -107,18 +109,17 @@ describe('auth service', () => {
   });
 
   describe('refresh', () => {
-    it('calls POST /auth/refresh with tokens', async () => {
+    it('calls POST /auth/refresh with CSRF header', async () => {
       vi.mocked(apiClient.post).mockResolvedValue({
         data: {
           accessToken: 'new-access-token',
-          refreshToken: 'new-refresh-token',
         },
       });
 
-      const result = await refresh({ refreshToken: 'old-refresh-token' });
+      const result = await refresh();
 
-      expect(apiClient.post).toHaveBeenCalledWith('/auth/refresh', {
-        refreshToken: 'old-refresh-token',
+      expect(apiClient.post).toHaveBeenCalledWith('/auth/refresh', undefined, {
+        headers: { 'x-csrf-token': 'test-csrf-token' },
       });
       expect(result.data).toBeDefined();
     });
@@ -134,7 +135,9 @@ describe('auth service', () => {
 
       const result = await logout();
 
-      expect(apiClient.delete).toHaveBeenCalledWith('/auth/logout');
+      expect(apiClient.delete).toHaveBeenCalledWith('/auth/logout', {
+        headers: { 'x-csrf-token': 'test-csrf-token' },
+      });
       expect(result.data).toBeDefined();
     });
   });

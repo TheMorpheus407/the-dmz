@@ -1,5 +1,6 @@
 import cors from '@fastify/cors';
 import fastify, { type FastifyInstance } from 'fastify';
+import cookie from '@fastify/cookie';
 
 import { loadConfig, type AppConfig } from './config.js';
 import { healthPlugin } from './modules/health/index.js';
@@ -102,6 +103,8 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
   });
 
   app.decorate('config', config);
+
+  app.register(cookie);
 
   app.register(eventBusPlugin);
 

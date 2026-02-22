@@ -35,6 +35,7 @@ async function delay(ms: number): Promise<void> {
 
 export class ApiClient {
   private config: ApiClientConfig;
+  private csrfToken: string | null = null;
 
   constructor(config: Partial<ApiClientConfig> = {}) {
     this.config = {
@@ -277,6 +278,18 @@ export class ApiClient {
   clearAuthToken(): void {
     const { Authorization: _, ...rest } = this.config.defaultHeaders || {};
     this.config.defaultHeaders = rest;
+  }
+
+  setCsrfToken(token: string): void {
+    this.csrfToken = token;
+  }
+
+  getCsrfToken(): string | null {
+    return this.csrfToken;
+  }
+
+  clearCsrfToken(): void {
+    this.csrfToken = null;
   }
 }
 

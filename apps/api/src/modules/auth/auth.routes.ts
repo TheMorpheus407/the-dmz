@@ -15,6 +15,8 @@ import {
   createAuthSessionRevokedEvent,
   createAuthLoginFailedEvent,
 } from './auth.events.js';
+import { validateCsrf, setCsrfCookie } from './csrf.js';
+import { setRefreshCookie, clearRefreshCookie, getRefreshCookieName } from './cookies.js';
 
 import type { UpdateProfileData } from './auth.repo.js';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
@@ -66,18 +68,16 @@ const authResponseJsonSchema = {
       required: ['id', 'email', 'displayName', 'tenantId', 'role', 'isActive'],
     },
     accessToken: { type: 'string' },
-    refreshToken: { type: 'string' },
   },
-  required: ['user', 'accessToken', 'refreshToken'],
+  required: ['user', 'accessToken'],
 } as const;
 
 const refreshResponseJsonSchema = {
   type: 'object',
   properties: {
     accessToken: { type: 'string' },
-    refreshToken: { type: 'string' },
   },
-  required: ['accessToken', 'refreshToken'],
+  required: ['accessToken'],
 } as const;
 
 const meResponseJsonSchema = {
@@ -213,6 +213,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           201: authResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
         },
+        security: [{ cookieAuth: [] }],
       },
     },
     async (request, reply) => {
@@ -222,6 +223,9 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         request.body,
         tenantId ? { tenantId } : undefined,
       );
+
+      setCsrfCookie(request, reply);
+      setRefreshCookie({ refreshToken: result.refreshToken, reply });
 
       const eventBus = fastify.eventBus;
       eventBus.publish(
@@ -255,7 +259,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       );
 
       reply.code(201);
-      return result;
+      return { user: result.user, accessToken: result.accessToken };
     },
   );
 
@@ -277,9 +281,10 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           200: authResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
         },
+        security: [{ cookieAuth: [] }],
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const tenantId = request.preAuthTenantContext?.tenantId;
       try {
         const result = await authService.login(
@@ -287,6 +292,9 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           request.body,
           tenantId ? { tenantId } : undefined,
         );
+
+        setCsrfCookie(request, reply);
+        setRefreshCookie({ refreshToken: result.refreshToken, reply });
 
         const eventBus = fastify.eventBus;
         eventBus.publish(
@@ -304,7 +312,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           }),
         );
 
-        return result;
+        return { user: result.user, accessToken: result.accessToken };
       } catch (error) {
         if (error instanceof InvalidCredentialsError) {
           const eventBus = fastify.eventBus;
@@ -333,6 +341,8 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.post<{ Body: RefreshTokenInput }>(
     '/auth/refresh',
     {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      preHandler: validateCsrf,
       config: {
         rateLimit: isTest
           ? false
@@ -342,15 +352,27 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             },
       },
       schema: {
-        body: refreshBodyJsonSchema,
         response: {
           200: refreshResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
         },
+        security: [{ cookieAuth: [] }, { csrfToken: [] }],
       },
     },
-    async (request) => {
-      const result = await authService.refresh(config, request.body.refreshToken);
+    async (request, reply) => {
+      const refreshToken = request.cookies[getRefreshCookieName()];
+
+      if (!refreshToken) {
+        throw new AuthError({
+          message: 'Refresh token not provided',
+          statusCode: 401,
+        });
+      }
+
+      const result = await authService.refresh(config, refreshToken);
+
+      setCsrfCookie(request, reply);
+      setRefreshCookie({ refreshToken: result.refreshToken, reply });
 
       const eventBus = fastify.eventBus;
       eventBus.publish(
@@ -384,16 +406,16 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         }),
       );
 
-      return result;
+      return { accessToken: result.accessToken };
     },
   );
 
   fastify.delete(
     '/auth/logout',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf],
       schema: {
-        security: [{ bearerAuth: [] }],
+        security: [{ bearerAuth: [] }, { cookieAuth: [] }, { csrfToken: [] }],
         response: {
           200: {
             type: 'object',
@@ -406,9 +428,9 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         },
       },
     },
-    async (request) => {
+    async (request, reply) => {
       const user = request.user as AuthenticatedUser;
-      const refreshToken = (request.headers['x-refresh-token'] as string) || '';
+      const refreshToken = request.cookies[getRefreshCookieName()];
       if (refreshToken) {
         await authService.logout(config, refreshToken);
 
@@ -429,6 +451,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           }),
         );
       }
+      clearRefreshCookie(reply);
       return { success: true };
     },
   );

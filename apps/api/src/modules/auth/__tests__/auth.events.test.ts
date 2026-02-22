@@ -4,6 +4,8 @@ import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabasePool } from '../../../shared/database/connection.js';
 import { AUTH_EVENTS } from '../auth.events.js';
+import { getRefreshCookieName } from '../cookies.js';
+import { csrfCookieName } from '../csrf.js';
 
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
@@ -184,20 +186,26 @@ describe('auth events', () => {
         },
       });
 
-      const { accessToken, refreshToken } = registerResponse.json() as {
-        accessToken: string;
-        refreshToken: string;
-      };
+      const cookies = registerResponse.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      const csrfCookie = cookies.find((c) => c.name === csrfCookieName);
+
+      const accessToken = (registerResponse.json() as { accessToken: string }).accessToken;
+      const refreshTokenValue = refreshTokenCookie?.value;
+      const csrfTokenValue = csrfCookie?.value;
 
       const handler = vi.fn();
       app.eventBus.subscribe(AUTH_EVENTS.SESSION_REVOKED, handler as never);
+
+      const cookieHeader = `${getRefreshCookieName()}=${refreshTokenValue}; ${csrfCookieName}=${csrfTokenValue}`;
 
       const response = await app.inject({
         method: 'DELETE',
         url: '/api/v1/auth/logout',
         headers: {
           authorization: `Bearer ${accessToken}`,
-          'x-refresh-token': refreshToken,
+          'x-csrf-token': csrfTokenValue,
+          cookie: cookieHeader,
         },
       });
 
@@ -226,20 +234,26 @@ describe('auth events', () => {
         },
       });
 
-      const { accessToken, refreshToken } = registerResponse.json() as {
-        accessToken: string;
-        refreshToken: string;
-      };
+      const cookies = registerResponse.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      const csrfCookie = cookies.find((c) => c.name === csrfCookieName);
+
+      const accessToken = (registerResponse.json() as { accessToken: string }).accessToken;
+      const refreshTokenValue = refreshTokenCookie?.value;
+      const csrfTokenValue = csrfCookie?.value;
 
       const handler = vi.fn();
       app.eventBus.subscribe(AUTH_EVENTS.SESSION_REVOKED, handler as never);
+
+      const cookieHeader = `${getRefreshCookieName()}=${refreshTokenValue}; ${csrfCookieName}=${csrfTokenValue}`;
 
       await app.inject({
         method: 'DELETE',
         url: '/api/v1/auth/logout',
         headers: {
           authorization: `Bearer ${accessToken}`,
-          'x-refresh-token': refreshToken,
+          'x-csrf-token': csrfTokenValue,
+          cookie: cookieHeader,
         },
       });
 
@@ -311,9 +325,14 @@ describe('auth events', () => {
         },
       });
 
-      const { refreshToken } = registerResponse.json() as {
-        refreshToken: string;
-      };
+      const cookies = registerResponse.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      const csrfCookie = cookies.find((c) => c.name === csrfCookieName);
+
+      const refreshTokenValue = refreshTokenCookie?.value;
+      const csrfTokenValue = csrfCookie?.value;
+
+      const cookieHeader = `${getRefreshCookieName()}=${refreshTokenValue}; ${csrfCookieName}=${csrfTokenValue}`;
 
       const sessionCreatedHandler = vi.fn();
       const sessionRevokedHandler = vi.fn();
@@ -323,8 +342,9 @@ describe('auth events', () => {
       const refreshResponse = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/refresh',
-        payload: {
-          refreshToken,
+        headers: {
+          'x-csrf-token': csrfTokenValue,
+          cookie: cookieHeader,
         },
       });
 

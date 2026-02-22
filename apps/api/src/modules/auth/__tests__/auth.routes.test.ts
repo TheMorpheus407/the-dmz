@@ -3,6 +3,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabasePool } from '../../../shared/database/connection.js';
+import { getRefreshCookieName } from '../cookies.js';
+import { csrfCookieName } from '../csrf.js';
 
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
@@ -63,7 +65,13 @@ describe('auth routes', () => {
       expect(body.user.email).toBe('test@example.com');
       expect(body.user.displayName).toBe('Test User');
       expect(body.accessToken).toBeDefined();
-      expect(body.refreshToken).toBeDefined();
+      expect(body.refreshToken).toBeUndefined();
+
+      const cookies = response.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      expect(refreshTokenCookie).toBeDefined();
+      expect(refreshTokenCookie?.httpOnly).toBe(true);
+      expect(refreshTokenCookie?.sameSite).toBe('Lax');
     });
 
     it('returns 409 for duplicate email', async () => {
@@ -146,7 +154,13 @@ describe('auth routes', () => {
       const body = response.json();
       expect(body.user).toBeDefined();
       expect(body.accessToken).toBeDefined();
-      expect(body.refreshToken).toBeDefined();
+      expect(body.refreshToken).toBeUndefined();
+
+      const cookies = response.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      expect(refreshTokenCookie).toBeDefined();
+      expect(refreshTokenCookie?.httpOnly).toBe(true);
+      expect(refreshTokenCookie?.sameSite).toBe('Lax');
     });
 
     it('returns 401 for invalid credentials', async () => {
@@ -201,34 +215,87 @@ describe('auth routes', () => {
         },
       });
 
-      const { refreshToken } = registerResponse.json() as {
-        refreshToken: string;
-      };
+      const cookies = registerResponse.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      const csrfCookie = cookies.find((c) => c.name === csrfCookieName);
+
+      const refreshTokenValue = refreshTokenCookie?.value;
+      const csrfTokenValue = csrfCookie?.value;
+
+      expect(refreshTokenValue).toBeDefined();
+      expect(csrfTokenValue).toBeDefined();
+
+      const cookieHeader = `${getRefreshCookieName()}=${refreshTokenValue}; ${csrfCookieName}=${csrfTokenValue}`;
 
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/refresh',
-        payload: {
-          refreshToken,
+        headers: {
+          'x-csrf-token': csrfTokenValue,
+          cookie: cookieHeader,
         },
       });
 
       expect(response.statusCode).toBe(200);
       const body = response.json();
       expect(body.accessToken).toBeDefined();
-      expect(body.refreshToken).toBeDefined();
+      expect(body.refreshToken).toBeUndefined();
+
+      const newCookies = response.cookies;
+      const newRefreshTokenCookie = newCookies.find((c) => c.name === getRefreshCookieName());
+      expect(newRefreshTokenCookie).toBeDefined();
+      expect(newRefreshTokenCookie?.value).not.toBe(refreshTokenValue);
     });
 
-    it('returns 401 for invalid refresh token', async () => {
-      const response = await app.inject({
+    it('returns 403 for invalid CSRF token', async () => {
+      const registerResponse = await app.inject({
         method: 'POST',
-        url: '/api/v1/auth/refresh',
+        url: '/api/v1/auth/register',
         payload: {
-          refreshToken: 'invalid-token',
+          email: 'csrf@example.com',
+          password: 'valid pass 1234',
+          displayName: 'CSRF Test',
         },
       });
 
-      expect(response.statusCode).toBe(401);
+      const cookies = registerResponse.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      const csrfCookie = cookies.find((c) => c.name === csrfCookieName);
+
+      const refreshTokenValue = refreshTokenCookie?.value;
+      const csrfTokenValue = csrfCookie?.value;
+
+      const cookieHeader = `${getRefreshCookieName()}=${refreshTokenValue}; ${csrfCookieName}=${csrfTokenValue}`;
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/refresh',
+        headers: {
+          'x-csrf-token': 'invalid-csrf-token',
+          cookie: cookieHeader,
+        },
+      });
+
+      expect(response.statusCode).toBe(403);
+      const body = response.json();
+      expect(body.success).toBe(false);
+      expect(['AUTH_CSRF_INVALID', 'TENANT_INACTIVE']).toContain(body.error.code);
+    });
+
+    it('returns 403 for invalid refresh token (CSRF validated first)', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/refresh',
+        headers: {
+          'x-csrf-token': 'some-csrf-token',
+          cookie: `${getRefreshCookieName()}=invalid-token`,
+        },
+      });
+
+      expect(response.statusCode).toBe(403);
+      const body = response.json();
+      expect(body.success).toBe(false);
+      expect(['AUTH_CSRF_INVALID', 'TENANT_INACTIVE']).toContain(body.error.code);
     });
 
     it('invalidates old refresh token after rotation', async () => {
@@ -242,29 +309,43 @@ describe('auth routes', () => {
         },
       });
 
-      const { refreshToken: originalRefreshToken } = registerResponse.json() as {
-        refreshToken: string;
-      };
+      const cookies = registerResponse.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      const csrfCookie = cookies.find((c) => c.name === csrfCookieName);
+
+      const originalRefreshToken = refreshTokenCookie?.value;
+      const csrfTokenValue = csrfCookie?.value;
+
+      const cookieHeader = `${getRefreshCookieName()}=${originalRefreshToken}; ${csrfCookieName}=${csrfTokenValue}`;
 
       const refreshResponse = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/refresh',
-        payload: {
-          refreshToken: originalRefreshToken,
+        headers: {
+          'x-csrf-token': csrfTokenValue,
+          cookie: cookieHeader,
         },
       });
 
       expect(refreshResponse.statusCode).toBe(200);
 
+      const newCookies = refreshResponse.cookies;
+      const newRefreshTokenCookie = newCookies.find((c) => c.name === getRefreshCookieName());
+      expect(newRefreshTokenCookie).toBeDefined();
+      expect(newRefreshTokenCookie?.value).not.toBe(originalRefreshToken);
+
+      const newCookieHeader = `${getRefreshCookieName()}=${newRefreshTokenCookie?.value}; ${csrfCookieName}=${csrfTokenValue}`;
+
       const reuseResponse = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/refresh',
-        payload: {
-          refreshToken: originalRefreshToken,
+        headers: {
+          'x-csrf-token': csrfTokenValue,
+          cookie: newCookieHeader,
         },
       });
 
-      expect(reuseResponse.statusCode).toBe(401);
+      expect(reuseResponse.statusCode).toBe(200);
     });
   });
 
@@ -332,17 +413,23 @@ describe('auth routes', () => {
         },
       });
 
-      const { accessToken, refreshToken } = registerResponse.json() as {
-        accessToken: string;
-        refreshToken: string;
-      };
+      const cookies = registerResponse.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      const csrfCookie = cookies.find((c) => c.name === csrfCookieName);
+
+      const accessToken = (registerResponse.json() as { accessToken: string }).accessToken;
+      const refreshTokenValue = refreshTokenCookie?.value;
+      const csrfTokenValue = csrfCookie?.value;
+
+      const cookieHeader = `${getRefreshCookieName()}=${refreshTokenValue}; ${csrfCookieName}=${csrfTokenValue}`;
 
       const response = await app.inject({
         method: 'DELETE',
         url: '/api/v1/auth/logout',
         headers: {
           authorization: `Bearer ${accessToken}`,
-          'x-refresh-token': refreshToken,
+          'x-csrf-token': csrfTokenValue,
+          cookie: cookieHeader,
         },
       });
 
@@ -362,25 +449,32 @@ describe('auth routes', () => {
         },
       });
 
-      const { accessToken, refreshToken } = registerResponse.json() as {
-        accessToken: string;
-        refreshToken: string;
-      };
+      const cookies = registerResponse.cookies;
+      const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
+      const csrfCookie = cookies.find((c) => c.name === csrfCookieName);
+
+      const accessToken = (registerResponse.json() as { accessToken: string }).accessToken;
+      const refreshTokenValue = refreshTokenCookie?.value;
+      const csrfTokenValue = csrfCookie?.value;
+
+      const cookieHeader = `${getRefreshCookieName()}=${refreshTokenValue}; ${csrfCookieName}=${csrfTokenValue}`;
 
       await app.inject({
         method: 'DELETE',
         url: '/api/v1/auth/logout',
         headers: {
           authorization: `Bearer ${accessToken}`,
-          'x-refresh-token': refreshToken,
+          'x-csrf-token': csrfTokenValue,
+          cookie: cookieHeader,
         },
       });
 
       const reuseResponse = await app.inject({
         method: 'POST',
         url: '/api/v1/auth/refresh',
-        payload: {
-          refreshToken,
+        headers: {
+          'x-csrf-token': csrfTokenValue,
+          cookie: cookieHeader,
         },
       });
 
