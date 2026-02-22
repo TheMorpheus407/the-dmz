@@ -103,6 +103,35 @@ Error codes are defined in `src/constants/error-codes.ts` and shared between API
 | `ErrorCodes`                                           | Error code constants                |
 | `apiErrorCategoryMap`                                  | Maps error codes to categories      |
 
+## Taxonomy
+
+This package contains canonical taxonomies for threat tiers, themes, and surfaces. These definitions are shared across all applications in the monorepo.
+
+### Taxonomy Definitions
+
+- **Threat Tiers**: `src/constants/taxonomy.ts` - Contains `THREAT_TIERS`, `THREAT_TIER_RANKS`, and `THREAT_TIER_METADATA`
+- **Theme IDs**: `src/constants/taxonomy.ts` - Contains `THEME_IDS` and `THEME_METADATA`
+- **Surface IDs**: `src/constants/taxonomy.ts` - Contains `SURFACE_IDS` for route surface classification
+- **Zod Schemas**: `src/schemas/taxonomy.schema.ts` - Runtime validation schemas for all taxonomy types
+
+### Taxonomy Ownership
+
+All taxonomy definitions are owned by `@the-dmz/shared`. Applications must import from this package rather than defining their own local copies.
+
+| Taxonomy    | Canonical Source            | Consumers          |
+| ----------- | --------------------------- | ------------------ |
+| Threat Tier | `@the-dmz/shared` constants | API, Web           |
+| Theme ID    | `@the-dmz/shared` constants | Web (primary), API |
+| Surface ID  | `@the-dmz/shared` constants | Web (primary)      |
+
+Adding or modifying a taxonomy:
+
+1. **Add/Edit constants** in `src/constants/taxonomy.ts`
+2. **Add/Edit Zod schemas** in `src/schemas/taxonomy.schema.ts`
+3. **Update exports** in `src/constants/index.ts` and `src/schemas/index.ts`
+4. **Verify tests pass**: `pnpm test`
+5. **Update consumers** to use shared taxonomy imports
+
 ## Development
 
 ```bash

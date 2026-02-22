@@ -1,8 +1,10 @@
 import { writable } from 'svelte/store';
 
+import type { ThemeId, SurfaceId } from '@the-dmz/shared';
+
 import { browser } from '$app/environment';
 
-export type ThemeName = 'green' | 'amber' | 'high-contrast' | 'enterprise';
+export type ThemeName = ThemeId;
 
 export interface EffectState {
   scanlines: boolean;
@@ -203,7 +205,7 @@ function createThemeStore() {
 
 export const themeStore = createThemeStore();
 
-export function getRouteDefaultTheme(surface: 'game' | 'admin' | 'auth' | 'public'): ThemeName {
+export function getRouteDefaultTheme(surface: SurfaceId): ThemeId {
   switch (surface) {
     case 'game':
       return 'green';
