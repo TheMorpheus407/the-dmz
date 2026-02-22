@@ -4,10 +4,11 @@
   import { themeStore, getRouteDefaultTheme, STORAGE_KEY } from '$lib/stores/theme';
   import Drawer from '$lib/ui/components/Drawer.svelte';
   import Button from '$lib/ui/components/Button.svelte';
+  import LoadingState from '$lib/ui/components/LoadingState.svelte';
 
   import type { Snippet } from 'svelte';
 
-  import { page } from '$app/stores';
+  import { navigating, page } from '$app/stores';
 
   interface Props {
     children?: Snippet;
@@ -83,7 +84,16 @@
     </aside>
 
     <main class="shell-admin__main">
-      {#if children}
+      {#if $navigating}
+        <div class="loading-boundary" role="status" aria-live="polite">
+          <LoadingState
+            variant="spinner"
+            size="md"
+            message="Loading dashboard..."
+            label="Admin loading"
+          />
+        </div>
+      {:else if children}
         {@render children()}
       {/if}
     </main>
@@ -207,6 +217,18 @@
     grid-row: 2;
     padding: var(--space-4);
     overflow-y: auto;
+  }
+
+  .loading-boundary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+    background-color: var(--color-surface);
+    border-radius: var(--radius-md);
+    font-family: var(--font-ui);
   }
 
   @media (max-width: 767px) {

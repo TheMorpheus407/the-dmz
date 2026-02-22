@@ -4,8 +4,11 @@
   import { themeStore, getRouteDefaultTheme, STORAGE_KEY } from '$lib/stores/theme';
   import Drawer from '$lib/ui/components/Drawer.svelte';
   import Button from '$lib/ui/components/Button.svelte';
+  import LoadingState from '$lib/ui/components/LoadingState.svelte';
 
   import type { Snippet } from 'svelte';
+
+  import { navigating } from '$app/stores';
 
   interface Props {
     children?: Snippet;
@@ -46,36 +49,47 @@
 
 <section class="surface surface-game" data-surface="game">
   <div class="shell-game">
-    <div class="shell-game__panel--inbox shell-game__panel--active">
-      <div class="shell-game__placeholder">
-        <span class="shell-game__placeholder-label">Inbox</span>
+    {#if $navigating}
+      <div class="loading-overlay">
+        <LoadingState
+          variant="dots"
+          size="lg"
+          message="Establishing secure connection..."
+          label="Game loading"
+        />
       </div>
-    </div>
-
-    <div class="shell-game__panel--document shell-game__panel--active">
-      {#if children}
-        {@render children()}
-      {:else}
+    {:else}
+      <div class="shell-game__panel--inbox shell-game__panel--active">
         <div class="shell-game__placeholder">
-          <span class="shell-game__placeholder-label">Document</span>
+          <span class="shell-game__placeholder-label">Inbox</span>
         </div>
-      {/if}
-    </div>
-
-    <div class="shell-game__panel--status">
-      <div class="shell-game__placeholder">
-        <span class="shell-game__placeholder-label">Status</span>
       </div>
-      <Button
-        variant="secondary"
-        size="sm"
-        class="shell-game__drawer-toggle"
-        onclick={toggleStatusDrawer}
-        ariaLabel="Toggle status panel"
-      >
-        {isStatusDrawerOpen ? 'Close' : 'Status'}
-      </Button>
-    </div>
+
+      <div class="shell-game__panel--document shell-game__panel--active">
+        {#if children}
+          {@render children()}
+        {:else}
+          <div class="shell-game__placeholder">
+            <span class="shell-game__placeholder-label">Document</span>
+          </div>
+        {/if}
+      </div>
+
+      <div class="shell-game__panel--status">
+        <div class="shell-game__placeholder">
+          <span class="shell-game__placeholder-label">Status</span>
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          class="shell-game__drawer-toggle"
+          onclick={toggleStatusDrawer}
+          ariaLabel="Toggle status panel"
+        >
+          {isStatusDrawerOpen ? 'Close' : 'Status'}
+        </Button>
+      </div>
+    {/if}
   </div>
 
   <Drawer bind:open={isStatusDrawerOpen} ariaLabel="Status Panel">
@@ -135,6 +149,18 @@
     width: 100%;
     padding: var(--space-4);
     box-sizing: border-box;
+  }
+
+  .loading-overlay {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-phosphor-green-dark);
+    border-radius: var(--radius-md);
+    font-family: var(--font-terminal);
+    color: var(--color-phosphor-green);
   }
 
   .shell-game__panel--inbox {

@@ -181,3 +181,47 @@ test.describe('M1 Foundation Gate - OpenAPI Documentation', () => {
     expect(Object.keys(paths)).toContain('/health/authenticated');
   });
 });
+
+test.describe('M1 Foundation Gate - Loading Boundaries', () => {
+  test('(public) route has loading boundary with accessibility attributes', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const loadingBoundary = page.locator('.loading-boundary');
+    await expect(loadingBoundary).toHaveAttribute('role', 'status');
+    await expect(loadingBoundary).toHaveAttribute('aria-live', 'polite');
+  });
+
+  test('(game) route has loading overlay during navigation', async ({ page }) => {
+    await page.goto('/game');
+    await page.waitForLoadState('networkidle');
+
+    const loadingOverlay = page.locator('.loading-overlay');
+    await expect(loadingOverlay).toBeHidden();
+  });
+
+  test('loading state appears during route transition', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    await page.click('text=About');
+
+    const loadingBoundary = page.locator('.loading-boundary');
+    await expect(loadingBoundary).toBeVisible();
+  });
+
+  test('(auth) route has loading boundary with correct message', async ({ page }) => {
+    await page.goto('/login');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('text=Authenticating...')).toBeHidden();
+  });
+
+  test('(admin) route has loading boundary during navigation', async ({ page, loginAsAdmin }) => {
+    await loginAsAdmin();
+    await page.goto('/admin');
+    await page.waitForLoadState('networkidle');
+
+    await expect(page.locator('[data-surface="admin"]')).toBeVisible();
+  });
+});

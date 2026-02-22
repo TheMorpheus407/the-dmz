@@ -2,8 +2,11 @@
   import { onMount } from 'svelte';
 
   import { themeStore, getRouteDefaultTheme, STORAGE_KEY } from '$lib/stores/theme';
+  import LoadingState from '$lib/ui/components/LoadingState.svelte';
 
   import type { Snippet } from 'svelte';
+
+  import { navigating } from '$app/stores';
 
   interface Props {
     children?: Snippet;
@@ -38,7 +41,16 @@
         <p class="shell-auth__subtitle">Archive Gate System</p>
       </header>
       <div class="shell-auth__content">
-        {#if children}
+        {#if $navigating}
+          <div class="loading-boundary" role="status" aria-live="polite">
+            <LoadingState
+              variant="spinner"
+              size="sm"
+              message="Authenticating..."
+              label="Authentication loading"
+            />
+          </div>
+        {:else if children}
           {@render children()}
         {/if}
       </div>
@@ -99,6 +111,17 @@
     border: var(--border-default);
     border-radius: var(--radius-md);
     padding: var(--space-6);
+    min-height: 200px;
+  }
+
+  .loading-boundary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 120px;
+    padding: var(--space-6);
+    font-family: var(--font-ui);
   }
 
   .shell-auth__footer {

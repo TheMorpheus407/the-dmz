@@ -3,8 +3,11 @@
 
   import { themeStore, getRouteDefaultTheme, STORAGE_KEY } from '$lib/stores/theme';
   import Button from '$lib/ui/components/Button.svelte';
+  import LoadingState from '$lib/ui/components/LoadingState.svelte';
 
   import type { Snippet } from 'svelte';
+
+  import { navigating } from '$app/stores';
 
   interface Props {
     children?: Snippet;
@@ -47,7 +50,11 @@
 
   <main class="shell-public__main">
     <div class="shell-public__container">
-      {#if children}
+      {#if $navigating}
+        <div class="loading-boundary" role="status" aria-live="polite">
+          <LoadingState variant="spinner" size="sm" message="Loading..." label="Page loading" />
+        </div>
+      {:else if children}
         {@render children()}
       {/if}
     </div>
@@ -130,6 +137,16 @@
   .shell-public__container {
     width: 100%;
     max-width: 800px;
+  }
+
+  .loading-boundary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 100px;
+    padding: var(--space-4);
+    font-family: var(--font-ui);
   }
 
   .shell-public__footer {
