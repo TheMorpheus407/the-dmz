@@ -5,6 +5,8 @@ import { SignJWT, jwtVerify } from 'jose';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { tenants } from '../../shared/database/schema/tenants.js';
+import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
+import { ALLOWED_TENANT_STATUSES } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
 
 import {
   createUser,
@@ -15,6 +17,7 @@ import {
   findSessionByTokenHash,
   deleteSession,
   deleteSessionByTokenHash,
+  deleteAllSessionsByTenantId,
 } from './auth.repo.js';
 import {
   InvalidCredentialsError,
@@ -270,6 +273,29 @@ export const refresh = async (
     throw new InvalidCredentialsError();
   }
 
+  const tenant = await db.query.tenants.findFirst({
+    where: (t, { eq }) => eq(t.tenantId, user.tenantId),
+    columns: {
+      tenantId: true,
+      status: true,
+    },
+  });
+
+  if (
+    tenant &&
+    !ALLOWED_TENANT_STATUSES.includes(tenant.status as (typeof ALLOWED_TENANT_STATUSES)[number])
+  ) {
+    throw new AppError({
+      code: ErrorCodes.TENANT_INACTIVE,
+      message: `Tenant is ${tenant.status}`,
+      statusCode: 403,
+      details: {
+        tenantId: tenant.tenantId,
+        tenantStatus: tenant.status,
+      },
+    });
+  }
+
   const newRefreshToken = randomUUID();
   const newRefreshTokenHash = await hashToken(newRefreshToken, config.TOKEN_HASH_SALT);
 
@@ -354,4 +380,12 @@ export const getCurrentUser = async (
   }
 
   return user;
+};
+
+export const invalidateTenantSessions = async (
+  config: AppConfig,
+  tenantId: string,
+): Promise<number> => {
+  const db = getDatabaseClient(config);
+  return deleteAllSessionsByTenantId(db, tenantId);
 };

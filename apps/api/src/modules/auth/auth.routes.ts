@@ -2,6 +2,8 @@ import type { LoginInput, RegisterInput, RefreshTokenInput } from '@the-dmz/shar
 
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
+import { preAuthTenantStatusGuard } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
+import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { requirePermission, resolvePermissions } from '../../shared/middleware/authorization.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 
@@ -143,7 +145,9 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   const isTest = config.NODE_ENV === 'test';
   const tenantResolverEnabled = config.TENANT_RESOLVER_ENABLED ?? false;
 
-  const preAuthMiddleware = tenantResolverEnabled ? [preAuthTenantResolver()] : [];
+  const preAuthMiddleware = tenantResolverEnabled
+    ? [preAuthTenantResolver(), preAuthTenantStatusGuard]
+    : [];
 
   fastify.post<{ Body: RegisterInput }>(
     '/auth/register',
@@ -161,6 +165,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         body: registerBodyJsonSchema,
         response: {
           201: authResponseJsonSchema,
+          403: errorResponseSchemas.TenantInactive,
         },
       },
     },
@@ -224,6 +229,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         body: loginBodyJsonSchema,
         response: {
           200: authResponseJsonSchema,
+          403: errorResponseSchemas.TenantInactive,
         },
       },
     },
@@ -293,6 +299,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         body: refreshBodyJsonSchema,
         response: {
           200: refreshResponseJsonSchema,
+          403: errorResponseSchemas.TenantInactive,
         },
       },
     },
@@ -338,7 +345,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.delete(
     '/auth/logout',
     {
-      preHandler: [authGuard, tenantContext],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
@@ -349,6 +356,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             },
             required: ['success'],
           },
+          403: errorResponseSchemas.TenantInactive,
         },
       },
     },
@@ -382,11 +390,12 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.get(
     '/auth/me',
     {
-      preHandler: [authGuard, tenantContext],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
           200: meResponseJsonSchema,
+          403: errorResponseSchemas.TenantInactive,
         },
       },
     },
@@ -405,7 +414,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.get(
     '/health/authenticated',
     {
-      preHandler: [authGuard, tenantContext],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
       config: {
         rateLimit: false,
       },
@@ -428,6 +437,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             },
             required: ['status', 'user'],
           },
+          403: errorResponseSchemas.TenantInactive,
         },
       },
     },
@@ -447,7 +457,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.get(
     '/auth/admin/users',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('admin', 'list')],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, requirePermission('admin', 'list')],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
@@ -468,7 +478,9 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
               },
             },
           },
-          403: errorResponseSchemas.Forbidden,
+          403: {
+            oneOf: [errorResponseSchemas.Forbidden, errorResponseSchemas.TenantInactive],
+          },
         },
       },
     },

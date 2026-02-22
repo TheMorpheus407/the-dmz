@@ -196,6 +196,14 @@ export const deleteSessionByTokenHash = async (db: DB, tokenHash: string): Promi
   await db.delete(sessionsTable).where(eq(sessionsTable.tokenHash, tokenHash));
 };
 
+export const deleteAllSessionsByTenantId = async (db: DB, tenantId: string): Promise<number> => {
+  const deletedSessions = await db
+    .delete(sessionsTable)
+    .where(eq(sessionsTable.tenantId, tenantId))
+    .returning({ id: sessionsTable.id });
+  return deletedSessions.length;
+};
+
 export const updateSessionLastActive = async (db: DB, sessionId: string): Promise<void> => {
   await db
     .update(sessionsTable)

@@ -32,6 +32,7 @@ export const ErrorCodeEnum = [
   'TENANT_CONTEXT_MISSING',
   'TENANT_CONTEXT_INVALID',
   'TENANT_NOT_FOUND',
+  'TENANT_INACTIVE',
   'RESOURCE_NOT_FOUND',
 ] as const;
 
@@ -84,10 +85,34 @@ export const errorResponseSchemas = {
         properties: {
           code: {
             type: 'string',
-            enum: ['AUTH_FORBIDDEN', 'AUTH_INSUFFICIENT_PERMS'],
+            enum: ['AUTH_FORBIDDEN', 'AUTH_INSUFFICIENT_PERMS', 'TENANT_INACTIVE'],
           },
           message: { type: 'string' },
           details: { type: 'object' },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
+
+  TenantInactive: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', const: 'TENANT_INACTIVE' },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              tenantId: { type: 'string' },
+              tenantStatus: { type: 'string' },
+            },
+          },
           requestId: { type: 'string' },
         },
         required: ['code', 'message', 'details'],

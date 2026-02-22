@@ -18,6 +18,7 @@ export const ErrorCodes = {
   TENANT_CONTEXT_MISSING: 'TENANT_CONTEXT_MISSING',
   TENANT_CONTEXT_INVALID: 'TENANT_CONTEXT_INVALID',
   TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
+  TENANT_INACTIVE: 'TENANT_INACTIVE',
   RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
 } as const;
 
@@ -39,6 +40,7 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.TENANT_CONTEXT_MISSING]: 401,
   [ErrorCodes.TENANT_CONTEXT_INVALID]: 401,
   [ErrorCodes.TENANT_NOT_FOUND]: 404,
+  [ErrorCodes.TENANT_INACTIVE]: 403,
   [ErrorCodes.RESOURCE_NOT_FOUND]: 404,
 } as const;
 
@@ -58,6 +60,7 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.TENANT_CONTEXT_MISSING]: 'Tenant context is required for this endpoint',
   [ErrorCodes.TENANT_CONTEXT_INVALID]: 'Tenant context is invalid',
   [ErrorCodes.TENANT_NOT_FOUND]: 'Tenant not found',
+  [ErrorCodes.TENANT_INACTIVE]: 'Tenant is suspended or deactivated',
   [ErrorCodes.RESOURCE_NOT_FOUND]: 'The requested resource was not found',
 } as const;
 
