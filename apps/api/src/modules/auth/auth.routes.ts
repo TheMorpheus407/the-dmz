@@ -1,4 +1,14 @@
 import type { LoginInput, RegisterInput, RefreshTokenInput } from '@the-dmz/shared/schemas';
+import {
+  loginJsonSchema,
+  registerJsonSchema,
+  refreshTokenJsonSchema,
+  loginResponseJsonSchema,
+  profileJsonSchema,
+  updateProfileJsonSchema,
+  refreshResponseJsonSchema as sharedRefreshResponseJsonSchema,
+  meResponseJsonSchema as sharedMeResponseJsonSchema,
+} from '@the-dmz/shared/schemas';
 
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
@@ -22,91 +32,20 @@ import type { UpdateProfileData } from './auth.repo.js';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthenticatedUser } from './auth.types.js';
 
-export const loginBodyJsonSchema = {
-  type: 'object',
-  properties: {
-    email: { type: 'string', format: 'email' },
-    password: { type: 'string', minLength: 12, maxLength: 128 },
-  },
-  required: ['email', 'password'],
-  additionalProperties: false,
-} as const;
+export const loginBodyJsonSchema = loginJsonSchema;
 
-export const registerBodyJsonSchema = {
-  type: 'object',
-  properties: {
-    email: { type: 'string', format: 'email' },
-    password: { type: 'string', minLength: 12, maxLength: 128 },
-    displayName: { type: 'string', minLength: 2, maxLength: 64 },
-  },
-  required: ['email', 'password', 'displayName'],
-  additionalProperties: false,
-} as const;
+export const registerBodyJsonSchema = registerJsonSchema;
 
-export const refreshBodyJsonSchema = {
-  type: 'object',
-  properties: {
-    refreshToken: { type: 'string', minLength: 1 },
-  },
-  required: ['refreshToken'],
-  additionalProperties: false,
-} as const;
+export const refreshBodyJsonSchema = refreshTokenJsonSchema;
 
-const authResponseJsonSchema = {
-  type: 'object',
-  properties: {
-    user: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', format: 'uuid' },
-        email: { type: 'string', format: 'email' },
-        displayName: { type: 'string' },
-        tenantId: { type: 'string', format: 'uuid' },
-        role: { type: 'string' },
-        isActive: { type: 'boolean' },
-      },
-      required: ['id', 'email', 'displayName', 'tenantId', 'role', 'isActive'],
-    },
-    accessToken: { type: 'string' },
-  },
-  required: ['user', 'accessToken'],
-} as const;
+export const authResponseJsonSchema = loginResponseJsonSchema;
 
-const refreshResponseJsonSchema = {
-  type: 'object',
-  properties: {
-    accessToken: { type: 'string' },
-  },
-  required: ['accessToken'],
-} as const;
+export const refreshResponseJsonSchema = sharedRefreshResponseJsonSchema;
 
-const meResponseJsonSchema = {
-  type: 'object',
+export const meResponseJsonSchema = {
+  ...sharedMeResponseJsonSchema,
   properties: {
-    user: {
-      type: 'object',
-      properties: {
-        id: { type: 'string', format: 'uuid' },
-        email: { type: 'string', format: 'email' },
-        displayName: { type: 'string' },
-        tenantId: { type: 'string', format: 'uuid' },
-        role: { type: 'string' },
-        isActive: { type: 'boolean' },
-      },
-      required: ['id', 'email', 'displayName', 'tenantId', 'role', 'isActive'],
-    },
-    profile: {
-      type: 'object',
-      properties: {
-        profileId: { type: 'string', format: 'uuid' },
-        tenantId: { type: 'string', format: 'uuid' },
-        userId: { type: 'string', format: 'uuid' },
-        locale: { type: 'string' },
-        timezone: { type: 'string' },
-        accessibilitySettings: { type: 'object' },
-        notificationSettings: { type: 'object' },
-      },
-    },
+    ...sharedMeResponseJsonSchema.properties,
     permissions: {
       type: 'array',
       items: { type: 'string' },
@@ -116,41 +55,12 @@ const meResponseJsonSchema = {
       items: { type: 'string' },
     },
   },
-  required: ['user', 'permissions', 'roles'],
+  required: [...(sharedMeResponseJsonSchema.required || []), 'permissions', 'roles'],
 } as const;
 
-const updateProfileBodyJsonSchema = {
-  type: 'object',
-  properties: {
-    locale: { type: 'string', maxLength: 10 },
-    timezone: { type: 'string', maxLength: 64 },
-    accessibilitySettings: { type: 'object' },
-    notificationSettings: { type: 'object' },
-  },
-  additionalProperties: false,
-} as const;
+export const updateProfileBodyJsonSchema = updateProfileJsonSchema;
 
-const profileResponseJsonSchema = {
-  type: 'object',
-  properties: {
-    profileId: { type: 'string', format: 'uuid' },
-    tenantId: { type: 'string', format: 'uuid' },
-    userId: { type: 'string', format: 'uuid' },
-    locale: { type: 'string' },
-    timezone: { type: 'string' },
-    accessibilitySettings: { type: 'object' },
-    notificationSettings: { type: 'object' },
-  },
-  required: [
-    'profileId',
-    'tenantId',
-    'userId',
-    'locale',
-    'timezone',
-    'accessibilitySettings',
-    'notificationSettings',
-  ],
-} as const;
+export const profileResponseJsonSchema = profileJsonSchema;
 
 export const authGuard = async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
   const config = request.server.config;

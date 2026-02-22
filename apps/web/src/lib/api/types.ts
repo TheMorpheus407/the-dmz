@@ -1,20 +1,18 @@
 import { z } from 'zod';
 
-export const apiErrorSchema = z.object({
-  code: z.string(),
-  message: z.string(),
-  details: z.record(z.unknown()).optional(),
-  requestId: z.string().optional(),
-});
+import {
+  apiErrorSchema,
+  apiErrorEnvelopeSchema,
+  ErrorCodeCategory,
+  ErrorCodes,
+  type ApiError,
+  type ApiErrorEnvelope,
+  type ErrorCode,
+  type ApiErrorCategory,
+} from '@the-dmz/shared';
 
-export type ApiError = z.infer<typeof apiErrorSchema>;
-
-export const apiErrorEnvelopeSchema = z.object({
-  success: z.literal(false),
-  error: apiErrorSchema,
-});
-
-export type ApiErrorEnvelope = z.infer<typeof apiErrorEnvelopeSchema>;
+export { apiErrorSchema, apiErrorEnvelopeSchema, ErrorCodeCategory, ErrorCodes };
+export type { ApiError, ApiErrorEnvelope, ErrorCode, ApiErrorCategory };
 
 export const apiSuccessEnvelopeSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
@@ -27,15 +25,15 @@ export type ApiSuccessEnvelope<T> = {
   data: T;
 };
 
-export type ApiResponse<T> = ApiSuccessEnvelope<T> | ApiErrorEnvelope;
-
-export type ApiErrorCategory =
-  | 'authentication'
-  | 'authorization'
-  | 'validation'
-  | 'rate_limiting'
-  | 'server'
-  | 'network';
+export type ApiResponse<T> =
+  | {
+      success: true;
+      data: T;
+    }
+  | {
+      success: false;
+      error: ApiError;
+    };
 
 export interface CategorizedApiError {
   category: ApiErrorCategory;

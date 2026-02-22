@@ -2,6 +2,40 @@ import { z } from 'zod';
 
 const PASSWORD_KEY = 'password' as const;
 
+export const userSchema = z
+  .object({
+    id: z.string().uuid(),
+    email: z.string().email(),
+    displayName: z.string(),
+    tenantId: z.string().uuid(),
+    role: z.string(),
+    isActive: z.boolean(),
+  })
+  .strict();
+
+export type UserData = z.infer<typeof userSchema>;
+
+export const loginResponseSchema = z
+  .object({
+    user: userSchema,
+    accessToken: z.string(),
+  })
+  .strict();
+
+export type LoginResponse = z.infer<typeof loginResponseSchema>;
+
+export const registerResponseSchema = loginResponseSchema;
+
+export type RegisterResponse = z.infer<typeof registerResponseSchema>;
+
+export const refreshResponseSchema = z
+  .object({
+    accessToken: z.string(),
+  })
+  .strict();
+
+export type RefreshResponse = z.infer<typeof refreshResponseSchema>;
+
 export const loginSchema = z
   .object({
     email: z.string().email(),

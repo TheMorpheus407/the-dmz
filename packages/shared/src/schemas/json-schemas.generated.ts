@@ -54,6 +54,289 @@ export const refreshTokenJsonSchema = {
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
 
+export const loginResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          format: 'uuid',
+        },
+        email: {
+          type: 'string',
+          format: 'email',
+        },
+        displayName: {
+          type: 'string',
+        },
+        tenantId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        role: {
+          type: 'string',
+        },
+        isActive: {
+          type: 'boolean',
+        },
+      },
+      required: ['id', 'email', 'displayName', 'tenantId', 'role', 'isActive'],
+      additionalProperties: false,
+    },
+    accessToken: {
+      type: 'string',
+    },
+  },
+  required: ['user', 'accessToken'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const registerResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          format: 'uuid',
+        },
+        email: {
+          type: 'string',
+          format: 'email',
+        },
+        displayName: {
+          type: 'string',
+        },
+        tenantId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        role: {
+          type: 'string',
+        },
+        isActive: {
+          type: 'boolean',
+        },
+      },
+      required: ['id', 'email', 'displayName', 'tenantId', 'role', 'isActive'],
+      additionalProperties: false,
+    },
+    accessToken: {
+      type: 'string',
+    },
+  },
+  required: ['user', 'accessToken'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const refreshResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    accessToken: {
+      type: 'string',
+    },
+  },
+  required: ['accessToken'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const userJsonSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'string',
+      format: 'uuid',
+    },
+    email: {
+      type: 'string',
+      format: 'email',
+    },
+    displayName: {
+      type: 'string',
+    },
+    tenantId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    role: {
+      type: 'string',
+    },
+    isActive: {
+      type: 'boolean',
+    },
+  },
+  required: ['id', 'email', 'displayName', 'tenantId', 'role', 'isActive'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const logoutResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+    },
+  },
+  required: ['success'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const profileJsonSchema = {
+  type: 'object',
+  properties: {
+    profileId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    tenantId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    userId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    locale: {
+      type: 'string',
+      maxLength: 10,
+    },
+    timezone: {
+      type: 'string',
+      maxLength: 64,
+    },
+    accessibilitySettings: {
+      type: 'object',
+      additionalProperties: {},
+    },
+    notificationSettings: {
+      type: 'object',
+      additionalProperties: {},
+    },
+  },
+  required: [
+    'profileId',
+    'tenantId',
+    'userId',
+    'locale',
+    'timezone',
+    'accessibilitySettings',
+    'notificationSettings',
+  ],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const updateProfileJsonSchema = {
+  type: 'object',
+  properties: {
+    locale: {
+      type: 'string',
+      maxLength: 10,
+    },
+    timezone: {
+      type: 'string',
+      maxLength: 64,
+    },
+    accessibilitySettings: {
+      type: 'object',
+      additionalProperties: {},
+    },
+    notificationSettings: {
+      type: 'object',
+      additionalProperties: {},
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const meResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    user: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+          format: 'uuid',
+        },
+        email: {
+          type: 'string',
+          format: 'email',
+        },
+        displayName: {
+          type: 'string',
+        },
+        tenantId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        role: {
+          type: 'string',
+        },
+        isActive: {
+          type: 'boolean',
+        },
+      },
+      required: ['id', 'email', 'displayName', 'tenantId', 'role', 'isActive'],
+      additionalProperties: false,
+    },
+    profile: {
+      type: 'object',
+      properties: {
+        profileId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        tenantId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        userId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        locale: {
+          type: 'string',
+          maxLength: 10,
+        },
+        timezone: {
+          type: 'string',
+          maxLength: 64,
+        },
+        accessibilitySettings: {
+          type: 'object',
+          additionalProperties: {},
+        },
+        notificationSettings: {
+          type: 'object',
+          additionalProperties: {},
+        },
+      },
+      required: [
+        'profileId',
+        'tenantId',
+        'userId',
+        'locale',
+        'timezone',
+        'accessibilitySettings',
+        'notificationSettings',
+      ],
+      additionalProperties: false,
+    },
+  },
+  required: ['user'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
 export const paginationJsonSchema = {
   type: 'object',
   properties: {
@@ -165,6 +448,61 @@ export const readinessResponseJsonSchema = {
     },
   },
   required: ['status', 'checks'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const apiErrorJsonSchema = {
+  type: 'object',
+  properties: {
+    code: {
+      type: 'string',
+    },
+    message: {
+      type: 'string',
+    },
+    details: {
+      type: 'object',
+      additionalProperties: {},
+    },
+    requestId: {
+      type: 'string',
+    },
+  },
+  required: ['code', 'message'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const apiErrorEnvelopeJsonSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+      const: false,
+    },
+    error: {
+      type: 'object',
+      properties: {
+        code: {
+          type: 'string',
+        },
+        message: {
+          type: 'string',
+        },
+        details: {
+          type: 'object',
+          additionalProperties: {},
+        },
+        requestId: {
+          type: 'string',
+        },
+      },
+      required: ['code', 'message'],
+      additionalProperties: false,
+    },
+  },
+  required: ['success', 'error'],
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;

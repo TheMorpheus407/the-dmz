@@ -2,24 +2,47 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { loginSchema, refreshTokenSchema, registerSchema } from '../src/schemas/auth.schema.js';
+import {
+  loginSchema,
+  refreshTokenSchema,
+  registerSchema,
+  loginResponseSchema,
+  registerResponseSchema,
+  refreshResponseSchema,
+  userSchema,
+  logoutResponseSchema,
+  profileSchema,
+  updateProfileSchema,
+  meResponseSchema,
+} from '../src/schemas/auth.schema.js';
 import { dateRangeSchema, paginationSchema } from '../src/schemas/common.schema.js';
 import {
   healthResponseSchema,
   healthQuerySchema,
   readinessResponseSchema,
 } from '../src/schemas/health.schema.js';
+import { apiErrorSchema, apiErrorEnvelopeSchema } from '../src/schemas/api-envelope.schema.js';
 import { createJsonSchema } from '../src/schemas/json-schema.js';
 
 const entries: Array<[string, Record<string, unknown>]> = [
   ['loginJsonSchema', createJsonSchema(loginSchema)],
   ['registerJsonSchema', createJsonSchema(registerSchema)],
   ['refreshTokenJsonSchema', createJsonSchema(refreshTokenSchema)],
+  ['loginResponseJsonSchema', createJsonSchema(loginResponseSchema)],
+  ['registerResponseJsonSchema', createJsonSchema(registerResponseSchema)],
+  ['refreshResponseJsonSchema', createJsonSchema(refreshResponseSchema)],
+  ['userJsonSchema', createJsonSchema(userSchema)],
+  ['logoutResponseJsonSchema', createJsonSchema(logoutResponseSchema)],
+  ['profileJsonSchema', createJsonSchema(profileSchema)],
+  ['updateProfileJsonSchema', createJsonSchema(updateProfileSchema)],
+  ['meResponseJsonSchema', createJsonSchema(meResponseSchema)],
   ['paginationJsonSchema', createJsonSchema(paginationSchema)],
   ['dateRangeJsonSchema', createJsonSchema(dateRangeSchema)],
   ['healthQueryJsonSchema', createJsonSchema(healthQuerySchema)],
   ['healthResponseJsonSchema', createJsonSchema(healthResponseSchema)],
   ['readinessResponseJsonSchema', createJsonSchema(readinessResponseSchema)],
+  ['apiErrorJsonSchema', createJsonSchema(apiErrorSchema)],
+  ['apiErrorEnvelopeJsonSchema', createJsonSchema(apiErrorEnvelopeSchema)],
 ];
 
 const renderExport = (name: string, schema: Record<string, unknown>): string =>
