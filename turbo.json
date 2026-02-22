@@ -11,7 +11,12 @@
       "env": ["WEB_PORT", "API_PORT", "PORT", "VITE_API_URL"]
     },
     "lint": {
-      "dependsOn": ["openapi:check", "contract:parity", "error-contract:check"],
+      "dependsOn": [
+        "openapi:check",
+        "contract:parity",
+        "error-contract:check",
+        "event-contract:check"
+      ],
       "outputs": []
     },
     "lint:fix": {
@@ -74,6 +79,15 @@
         "../apps/api/src/shared/middleware/error-handler.ts",
         "../apps/web/src/lib/api/error-mapper.ts",
         "../apps/web/src/lib/api/error-copy.ts"
+      ]
+    },
+    "event-contract:check": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "inputs": [
+        "../packages/shared/src/contracts/event-manifest.ts",
+        "../apps/api/src/modules/auth/auth.events.ts",
+        "../apps/api/scripts/check-event-contract.ts"
       ]
     },
     "check:tokens": {

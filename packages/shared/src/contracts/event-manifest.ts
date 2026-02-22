@@ -1,0 +1,218 @@
+import { z } from 'zod';
+
+export const authEventContractSchema = z.object({
+  eventType: z.string(),
+  version: z.number().int().positive(),
+  requiredMetadataFields: z.array(z.string()),
+  requiredPayloadFields: z.array(z.string()),
+  optionalPayloadFields: z.array(z.string()).optional(),
+  forbiddenPayloadFields: z.array(z.string()),
+});
+
+export type AuthEventContract = z.infer<typeof authEventContractSchema>;
+
+export const m1AuthEventContracts = [
+  {
+    eventType: 'auth.user.created',
+    version: 1,
+    requiredMetadataFields: [
+      'eventId',
+      'eventType',
+      'timestamp',
+      'correlationId',
+      'tenantId',
+      'userId',
+      'source',
+      'version',
+    ],
+    requiredPayloadFields: ['userId', 'email', 'tenantId'],
+    optionalPayloadFields: [],
+    forbiddenPayloadFields: [
+      'password',
+      'passwordHash',
+      'passwordSalt',
+      'accessToken',
+      'refreshToken',
+      'token',
+      'mfaSecret',
+      'mfaCode',
+      'mfaBackupCodes',
+      'cookies',
+      'sessionToken',
+    ],
+  },
+  {
+    eventType: 'auth.user.updated',
+    version: 1,
+    requiredMetadataFields: [
+      'eventId',
+      'eventType',
+      'timestamp',
+      'correlationId',
+      'tenantId',
+      'userId',
+      'source',
+      'version',
+    ],
+    requiredPayloadFields: ['userId', 'email', 'tenantId', 'changes'],
+    optionalPayloadFields: [],
+    forbiddenPayloadFields: [
+      'password',
+      'passwordHash',
+      'passwordSalt',
+      'accessToken',
+      'refreshToken',
+      'token',
+      'mfaSecret',
+      'mfaCode',
+      'mfaBackupCodes',
+      'cookies',
+      'sessionToken',
+    ],
+  },
+  {
+    eventType: 'auth.user.deactivated',
+    version: 1,
+    requiredMetadataFields: [
+      'eventId',
+      'eventType',
+      'timestamp',
+      'correlationId',
+      'tenantId',
+      'userId',
+      'source',
+      'version',
+    ],
+    requiredPayloadFields: ['userId', 'email', 'tenantId'],
+    optionalPayloadFields: [],
+    forbiddenPayloadFields: [
+      'password',
+      'passwordHash',
+      'passwordSalt',
+      'accessToken',
+      'refreshToken',
+      'token',
+      'mfaSecret',
+      'mfaCode',
+      'mfaBackupCodes',
+      'cookies',
+      'sessionToken',
+    ],
+  },
+  {
+    eventType: 'auth.session.created',
+    version: 1,
+    requiredMetadataFields: [
+      'eventId',
+      'eventType',
+      'timestamp',
+      'correlationId',
+      'tenantId',
+      'userId',
+      'source',
+      'version',
+    ],
+    requiredPayloadFields: ['sessionId', 'userId', 'tenantId'],
+    optionalPayloadFields: [],
+    forbiddenPayloadFields: [
+      'password',
+      'passwordHash',
+      'passwordSalt',
+      'accessToken',
+      'refreshToken',
+      'token',
+      'mfaSecret',
+      'mfaCode',
+      'mfaBackupCodes',
+      'cookies',
+      'sessionToken',
+    ],
+  },
+  {
+    eventType: 'auth.session.revoked',
+    version: 1,
+    requiredMetadataFields: [
+      'eventId',
+      'eventType',
+      'timestamp',
+      'correlationId',
+      'tenantId',
+      'userId',
+      'source',
+      'version',
+    ],
+    requiredPayloadFields: ['sessionId', 'userId', 'tenantId', 'reason'],
+    optionalPayloadFields: [],
+    forbiddenPayloadFields: [
+      'password',
+      'passwordHash',
+      'passwordSalt',
+      'accessToken',
+      'refreshToken',
+      'token',
+      'mfaSecret',
+      'mfaCode',
+      'mfaBackupCodes',
+      'cookies',
+      'sessionToken',
+    ],
+  },
+  {
+    eventType: 'auth.login.failed',
+    version: 1,
+    requiredMetadataFields: [
+      'eventId',
+      'eventType',
+      'timestamp',
+      'correlationId',
+      'tenantId',
+      'userId',
+      'source',
+      'version',
+    ],
+    requiredPayloadFields: ['tenantId', 'email', 'reason', 'correlationId'],
+    optionalPayloadFields: [],
+    forbiddenPayloadFields: [
+      'password',
+      'passwordHash',
+      'passwordSalt',
+      'accessToken',
+      'refreshToken',
+      'token',
+      'mfaSecret',
+      'mfaCode',
+      'mfaBackupCodes',
+      'cookies',
+      'sessionToken',
+    ],
+  },
+] as const;
+
+export type M1AuthEventContracts = typeof m1AuthEventContracts;
+
+export const m1AuthEventContractMap = m1AuthEventContracts.reduce(
+  (acc, contract) => {
+    acc[contract.eventType] = contract;
+    return acc;
+  },
+  {} as Record<
+    (typeof m1AuthEventContracts)[number]['eventType'],
+    (typeof m1AuthEventContracts)[number]
+  >,
+);
+
+export const FORBIDDEN_PAYLOAD_FIELDS = [
+  'password',
+  'passwordHash',
+  'passwordSalt',
+  'accessToken',
+  'refreshToken',
+  'token',
+  'mfaSecret',
+  'mfaCode',
+  'mfaBackupCodes',
+  'cookies',
+  'sessionToken',
+] as const;
+
+export type ForbiddenPayloadField = (typeof FORBIDDEN_PAYLOAD_FIELDS)[number];
