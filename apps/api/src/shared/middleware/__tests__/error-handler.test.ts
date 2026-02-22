@@ -46,7 +46,7 @@ describe('ErrorCodes and AppError', () => {
       expect(ErrorCodes.AUTH_UNAUTHORIZED).toBe('AUTH_UNAUTHORIZED');
       expect(ErrorCodes.AUTH_FORBIDDEN).toBe('AUTH_FORBIDDEN');
       expect(ErrorCodes.AUTH_SESSION_EXPIRED).toBe('AUTH_SESSION_EXPIRED');
-      expect(ErrorCodes.AUTH_INVALID_TOKEN).toBe('AUTH_INVALID_TOKEN');
+      expect(ErrorCodes.AUTH_TOKEN_INVALID).toBe('AUTH_TOKEN_INVALID');
       expect(ErrorCodes.TENANT_CONTEXT_MISSING).toBe('TENANT_CONTEXT_MISSING');
       expect(ErrorCodes.TENANT_CONTEXT_INVALID).toBe('TENANT_CONTEXT_INVALID');
       expect(ErrorCodes.TENANT_NOT_FOUND).toBe('TENANT_NOT_FOUND');

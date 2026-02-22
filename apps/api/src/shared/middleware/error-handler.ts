@@ -1,31 +1,38 @@
 import { ZodError } from 'zod';
 
+import {
+  ErrorCodes as SharedErrorCodes,
+  ErrorCodeCategory,
+  errorCodeMetadata as sharedErrorCodeMetadata,
+} from '@the-dmz/shared';
+
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 
 export const ErrorCodes = {
+  ...SharedErrorCodes,
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
-  VALIDATION_FAILED: 'VALIDATION_FAILED',
-  INVALID_INPUT: 'INVALID_INPUT',
-  NOT_FOUND: 'NOT_FOUND',
-  CONFLICT: 'CONFLICT',
-  RATE_LIMIT_EXCEEDED: 'RATE_LIMIT_EXCEEDED',
-  SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
-  AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
-  AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
-  AUTH_INSUFFICIENT_PERMS: 'AUTH_INSUFFICIENT_PERMS',
-  AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
-  AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
-  AUTH_CSRF_INVALID: 'AUTH_CSRF_INVALID',
-  TENANT_CONTEXT_MISSING: 'TENANT_CONTEXT_MISSING',
-  TENANT_CONTEXT_INVALID: 'TENANT_CONTEXT_INVALID',
-  TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
-  TENANT_INACTIVE: 'TENANT_INACTIVE',
   RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
   PROFILE_NOT_FOUND: 'PROFILE_NOT_FOUND',
   PROFILE_UPDATE_FAILED: 'PROFILE_UPDATE_FAILED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
+
+const API_SPECIFIC_CODES: Record<string, { category: ErrorCodeCategory; retryable: boolean }> = {
+  INTERNAL_SERVER_ERROR: { category: ErrorCodeCategory.SERVER, retryable: true },
+  RESOURCE_NOT_FOUND: { category: ErrorCodeCategory.NOT_FOUND, retryable: false },
+  PROFILE_NOT_FOUND: { category: ErrorCodeCategory.NOT_FOUND, retryable: false },
+  PROFILE_UPDATE_FAILED: { category: ErrorCodeCategory.SERVER, retryable: false },
+};
+
+const allErrorCodeMetadata: Record<string, { category: ErrorCodeCategory; retryable: boolean }> = {
+  ...sharedErrorCodeMetadata,
+};
+for (const [code, meta] of Object.entries(API_SPECIFIC_CODES)) {
+  allErrorCodeMetadata[code] = meta;
+}
+
+export { allErrorCodeMetadata as errorCodeMetadata };
 
 export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.INTERNAL_SERVER_ERROR]: 500,
@@ -39,7 +46,7 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.AUTH_FORBIDDEN]: 403,
   [ErrorCodes.AUTH_INSUFFICIENT_PERMS]: 403,
   [ErrorCodes.AUTH_SESSION_EXPIRED]: 401,
-  [ErrorCodes.AUTH_INVALID_TOKEN]: 401,
+  [ErrorCodes.AUTH_TOKEN_INVALID]: 401,
   [ErrorCodes.AUTH_CSRF_INVALID]: 403,
   [ErrorCodes.TENANT_CONTEXT_MISSING]: 401,
   [ErrorCodes.TENANT_CONTEXT_INVALID]: 401,
@@ -48,6 +55,20 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.RESOURCE_NOT_FOUND]: 404,
   [ErrorCodes.PROFILE_NOT_FOUND]: 404,
   [ErrorCodes.PROFILE_UPDATE_FAILED]: 400,
+  [ErrorCodes.AUTH_INVALID_CREDENTIALS]: 401,
+  [ErrorCodes.AUTH_TOKEN_EXPIRED]: 401,
+  [ErrorCodes.AUTH_MFA_REQUIRED]: 401,
+  [ErrorCodes.AUTH_ACCOUNT_LOCKED]: 403,
+  [ErrorCodes.AUTH_ACCOUNT_SUSPENDED]: 403,
+  [ErrorCodes.VALIDATION_INVALID_FORMAT]: 400,
+  [ErrorCodes.GAME_NOT_FOUND]: 404,
+  [ErrorCodes.GAME_STATE_INVALID]: 400,
+  [ErrorCodes.TENANT_SUSPENDED]: 403,
+  [ErrorCodes.TENANT_BLOCKED]: 403,
+  [ErrorCodes.SYSTEM_INTERNAL_ERROR]: 500,
+  [ErrorCodes.SYSTEM_SERVICE_UNAVAILABLE]: 503,
+  [ErrorCodes.INTERNAL_ERROR]: 500,
+  [ErrorCodes.AI_GENERATION_FAILED]: 500,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -62,7 +83,7 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.AUTH_FORBIDDEN]: 'Access forbidden',
   [ErrorCodes.AUTH_INSUFFICIENT_PERMS]: 'Insufficient permissions to perform this action',
   [ErrorCodes.AUTH_SESSION_EXPIRED]: 'Session expired or invalid',
-  [ErrorCodes.AUTH_INVALID_TOKEN]: 'Invalid or malformed authentication token',
+  [ErrorCodes.AUTH_TOKEN_INVALID]: 'Invalid or malformed authentication token',
   [ErrorCodes.AUTH_CSRF_INVALID]: 'Invalid or missing CSRF token',
   [ErrorCodes.TENANT_CONTEXT_MISSING]: 'Tenant context is required for this endpoint',
   [ErrorCodes.TENANT_CONTEXT_INVALID]: 'Tenant context is invalid',
@@ -71,6 +92,20 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.RESOURCE_NOT_FOUND]: 'The requested resource was not found',
   [ErrorCodes.PROFILE_NOT_FOUND]: 'User profile not found',
   [ErrorCodes.PROFILE_UPDATE_FAILED]: 'Failed to update user profile',
+  [ErrorCodes.AUTH_INVALID_CREDENTIALS]: 'Invalid credentials',
+  [ErrorCodes.AUTH_TOKEN_EXPIRED]: 'Authentication token expired',
+  [ErrorCodes.AUTH_MFA_REQUIRED]: 'Multi-factor authentication required',
+  [ErrorCodes.AUTH_ACCOUNT_LOCKED]: 'Account is locked',
+  [ErrorCodes.AUTH_ACCOUNT_SUSPENDED]: 'Account is suspended',
+  [ErrorCodes.VALIDATION_INVALID_FORMAT]: 'Invalid format',
+  [ErrorCodes.GAME_NOT_FOUND]: 'Game not found',
+  [ErrorCodes.GAME_STATE_INVALID]: 'Game state is invalid',
+  [ErrorCodes.TENANT_SUSPENDED]: 'Tenant is suspended',
+  [ErrorCodes.TENANT_BLOCKED]: 'Tenant is blocked',
+  [ErrorCodes.SYSTEM_INTERNAL_ERROR]: 'Internal system error',
+  [ErrorCodes.SYSTEM_SERVICE_UNAVAILABLE]: 'System service unavailable',
+  [ErrorCodes.INTERNAL_ERROR]: 'Internal error',
+  [ErrorCodes.AI_GENERATION_FAILED]: 'AI generation failed',
 } as const;
 
 export type AppErrorOptions = {

@@ -45,3 +45,166 @@ export const ErrorCodes = {
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
+
+export interface ErrorCodeMetadata {
+  category: ErrorCodeCategory;
+  retryable: boolean;
+  messageKey: string;
+}
+
+export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
+  [ErrorCodes.AUTH_INVALID_CREDENTIALS]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.invalidCredentials',
+  },
+  [ErrorCodes.AUTH_TOKEN_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.tokenExpired',
+  },
+  [ErrorCodes.AUTH_TOKEN_INVALID]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.tokenInvalid',
+  },
+  [ErrorCodes.AUTH_MFA_REQUIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.mfaRequired',
+  },
+  [ErrorCodes.AUTH_ACCOUNT_LOCKED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.accountLocked',
+  },
+  [ErrorCodes.AUTH_FORBIDDEN]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.auth.forbidden',
+  },
+  [ErrorCodes.AUTH_UNAUTHORIZED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.unauthorized',
+  },
+  [ErrorCodes.AUTH_SESSION_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.sessionExpired',
+  },
+  [ErrorCodes.AUTH_CSRF_INVALID]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.csrfInvalid',
+  },
+  [ErrorCodes.AUTH_INSUFFICIENT_PERMS]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.auth.insufficientPerms',
+  },
+  [ErrorCodes.AUTH_ACCOUNT_SUSPENDED]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.auth.accountSuspended',
+  },
+  [ErrorCodes.VALIDATION_FAILED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.validation.failed',
+  },
+  [ErrorCodes.VALIDATION_INVALID_FORMAT]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.validation.invalidFormat',
+  },
+  [ErrorCodes.INVALID_INPUT]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.validation.invalidInput',
+  },
+  [ErrorCodes.RATE_LIMIT_EXCEEDED]: {
+    category: ErrorCodeCategory.RATE_LIMITING,
+    retryable: true,
+    messageKey: 'errors.rateLimit.exceeded',
+  },
+  [ErrorCodes.GAME_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.game.notFound',
+  },
+  [ErrorCodes.GAME_STATE_INVALID]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.game.stateInvalid',
+  },
+  [ErrorCodes.TENANT_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.tenant.notFound',
+  },
+  [ErrorCodes.TENANT_SUSPENDED]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.tenant.suspended',
+  },
+  [ErrorCodes.TENANT_INACTIVE]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.tenant.inactive',
+  },
+  [ErrorCodes.TENANT_BLOCKED]: {
+    category: ErrorCodeCategory.TENANT_BLOCKED,
+    retryable: false,
+    messageKey: 'errors.tenant.blocked',
+  },
+  [ErrorCodes.TENANT_CONTEXT_MISSING]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.tenant.contextMissing',
+  },
+  [ErrorCodes.TENANT_CONTEXT_INVALID]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.tenant.contextInvalid',
+  },
+  [ErrorCodes.SYSTEM_INTERNAL_ERROR]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: true,
+    messageKey: 'errors.system.internalError',
+  },
+  [ErrorCodes.SYSTEM_SERVICE_UNAVAILABLE]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: true,
+    messageKey: 'errors.system.serviceUnavailable',
+  },
+  [ErrorCodes.INTERNAL_ERROR]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.server.internalError',
+  },
+  [ErrorCodes.SERVICE_UNAVAILABLE]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: true,
+    messageKey: 'errors.server.unavailable',
+  },
+  [ErrorCodes.AI_GENERATION_FAILED]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: true,
+    messageKey: 'errors.ai.generationFailed',
+  },
+  [ErrorCodes.NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.notFound',
+  },
+  [ErrorCodes.CONFLICT]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.conflict',
+  },
+};
+
+export const allErrorCodes: readonly ErrorCode[] = Object.keys(ErrorCodes) as ErrorCode[];
+
+export const errorCodeCategories: readonly ErrorCodeCategory[] = Object.values(ErrorCodeCategory);

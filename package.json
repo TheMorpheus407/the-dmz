@@ -44,7 +44,8 @@
     "storybook:build": "turbo run storybook:build",
     "openapi:generate": "pnpm --filter @the-dmz/api openapi:generate",
     "openapi:check": "pnpm --filter @the-dmz/api openapi:check",
-    "contract:parity": "pnpm --filter @the-dmz/api contract:parity"
+    "contract:parity": "pnpm --filter @the-dmz/api contract:parity",
+    "error-contract:check": "pnpm --filter @the-dmz/shared test -- --run src/constants/error-contract.test.ts && pnpm --filter @the-dmz/web test -- --run src/lib/api/error-mapping-coverage.test.ts"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

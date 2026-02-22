@@ -1,3 +1,5 @@
+import { errorCodeMetadata, type ErrorCode } from '@the-dmz/shared';
+
 import type { ApiError, ApiErrorCategory, CategorizedApiError } from './types.js';
 
 const AUTHENTICATION_CODES = [
@@ -6,19 +8,38 @@ const AUTHENTICATION_CODES = [
   'AUTH_TOKEN_INVALID',
   'AUTH_MFA_REQUIRED',
   'AUTH_ACCOUNT_LOCKED',
+  'AUTH_SESSION_EXPIRED',
+  'AUTH_CSRF_INVALID',
+  'TENANT_CONTEXT_MISSING',
+  'TENANT_CONTEXT_INVALID',
 ];
 
 const AUTHORIZATION_CODES = [
   'AUTH_INSUFFICIENT_PERMS',
   'AUTH_ACCOUNT_SUSPENDED',
-  'AUTH_MFA_REQUIRED',
+  'AUTH_FORBIDDEN',
+  'TENANT_SUSPENDED',
+  'TENANT_INACTIVE',
+  'TENANT_BLOCKED',
 ];
 
-const VALIDATION_CODES = ['VALIDATION_FAILED', 'INVALID_INPUT'];
+const VALIDATION_CODES = ['VALIDATION_FAILED', 'INVALID_INPUT', 'VALIDATION_INVALID_FORMAT'];
 
 const RATE_LIMIT_CODES = ['RATE_LIMIT_EXCEEDED'];
 
-const SERVER_CODES = ['INTERNAL_ERROR', 'SERVICE_UNAVAILABLE', 'AI_GENERATION_FAILED'];
+const SERVER_CODES = [
+  'INTERNAL_ERROR',
+  'SERVICE_UNAVAILABLE',
+  'AI_GENERATION_FAILED',
+  'SYSTEM_INTERNAL_ERROR',
+  'SYSTEM_SERVICE_UNAVAILABLE',
+  'GAME_STATE_INVALID',
+  'PROFILE_UPDATE_FAILED',
+  'RESOURCE_NOT_FOUND',
+  'PROFILE_NOT_FOUND',
+];
+
+const NOT_FOUND_CODES = ['NOT_FOUND', 'GAME_NOT_FOUND', 'TENANT_NOT_FOUND'];
 
 function categorizeErrorCode(code: string): ApiErrorCategory {
   if (AUTHENTICATION_CODES.includes(code)) {
@@ -32,6 +53,9 @@ function categorizeErrorCode(code: string): ApiErrorCategory {
   }
   if (RATE_LIMIT_CODES.includes(code)) {
     return 'rate_limiting';
+  }
+  if (NOT_FOUND_CODES.includes(code)) {
+    return 'not_found';
   }
   if (SERVER_CODES.includes(code)) {
     return 'server';
@@ -58,6 +82,11 @@ function categorizeByStatus(status: number): ApiErrorCategory {
   return 'server';
 }
 
+function getRetryableFromMetadata(code: string): boolean | undefined {
+  const metadata = errorCodeMetadata[code as ErrorCode];
+  return metadata?.retryable;
+}
+
 function isRetryableCategory(category: ApiErrorCategory): boolean {
   return category === 'rate_limiting';
 }
@@ -65,12 +94,15 @@ function isRetryableCategory(category: ApiErrorCategory): boolean {
 export function mapApiError(error: ApiError, httpStatus: number): CategorizedApiError {
   const category = error.code ? categorizeErrorCode(error.code) : categorizeByStatus(httpStatus);
 
+  const metadataRetryable = error.code ? getRetryableFromMetadata(error.code) : undefined;
+  const categoryRetryable = isRetryableCategory(category);
+
   const result: CategorizedApiError = {
     category,
     code: error.code || 'UNKNOWN_ERROR',
     message: error.message || 'An unexpected error occurred',
     status: httpStatus,
-    retryable: isRetryableCategory(category) || httpStatus === 503,
+    retryable: (metadataRetryable ?? categoryRetryable) || httpStatus === 503,
   };
 
   if (error.details) {
