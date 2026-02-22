@@ -5,6 +5,8 @@ export const ErrorCodeCategory = {
   RATE_LIMITING: 'rate_limiting',
   SERVER: 'server',
   NETWORK: 'network',
+  NOT_FOUND: 'not_found',
+  TENANT_BLOCKED: 'tenant_blocked',
 } as const;
 
 export type ErrorCodeCategory = (typeof ErrorCodeCategory)[keyof typeof ErrorCodeCategory];
@@ -30,6 +32,7 @@ export const ErrorCodes = {
   TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
   TENANT_SUSPENDED: 'TENANT_SUSPENDED',
   TENANT_INACTIVE: 'TENANT_INACTIVE',
+  TENANT_BLOCKED: 'TENANT_BLOCKED',
   TENANT_CONTEXT_MISSING: 'TENANT_CONTEXT_MISSING',
   TENANT_CONTEXT_INVALID: 'TENANT_CONTEXT_INVALID',
   SYSTEM_INTERNAL_ERROR: 'SYSTEM_INTERNAL_ERROR',

@@ -230,7 +230,7 @@ describe('Accessibility', () => {
     });
 
     const errorState = container.querySelector('.error-state');
-    expect(errorState?.getAttribute('role')).toBe('status');
+    expect(errorState?.getAttribute('role')).toBe('alert');
   });
 
   it('renders buttons that are keyboard accessible', () => {

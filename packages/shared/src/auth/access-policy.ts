@@ -69,6 +69,116 @@ export const RouteGroup = {
 
 export type RouteGroup = (typeof RouteGroup)[keyof typeof RouteGroup];
 
+export const RouteOutcome = {
+  UNAUTHENTICATED: 'unauthenticated',
+  FORBIDDEN: 'forbidden',
+  TENANT_BLOCKED: 'tenant_blocked',
+  NOT_FOUND: 'not_found',
+} as const;
+
+export type RouteOutcome = (typeof RouteOutcome)[keyof typeof RouteOutcome];
+
+export const routeOutcomeStatus: Record<RouteOutcome, number> = {
+  [RouteOutcome.UNAUTHENTICATED]: 401,
+  [RouteOutcome.FORBIDDEN]: 403,
+  [RouteOutcome.TENANT_BLOCKED]: 403,
+  [RouteOutcome.NOT_FOUND]: 404,
+};
+
+export const routeOutcomeMessages: Record<
+  RouteOutcome,
+  Record<RouteGroup, { title: string; message: string; recoveryAction: string }>
+> = {
+  [RouteOutcome.UNAUTHENTICATED]: {
+    [RouteGroup.PUBLIC]: {
+      title: 'Please Sign In',
+      message: 'You need to be signed in to access this page.',
+      recoveryAction: 'Sign In',
+    },
+    [RouteGroup.AUTH]: {
+      title: 'Session Required',
+      message: 'Please sign in to continue.',
+      recoveryAction: 'Sign In',
+    },
+    [RouteGroup.GAME]: {
+      title: 'AUTH_FAILURE',
+      message: 'Session token invalid or expired. Re-authenticate to continue.',
+      recoveryAction: 'RETRY_AUTH',
+    },
+    [RouteGroup.ADMIN]: {
+      title: 'Authentication Required',
+      message: 'Your session has expired. Please sign in to continue.',
+      recoveryAction: 'Sign In',
+    },
+  },
+  [RouteOutcome.FORBIDDEN]: {
+    [RouteGroup.PUBLIC]: {
+      title: 'Access Restricted',
+      message: 'You do not have permission to view this content.',
+      recoveryAction: 'Go Home',
+    },
+    [RouteGroup.AUTH]: {
+      title: 'Account Restricted',
+      message: 'Your account does not have access to this resource.',
+      recoveryAction: 'Go to Home',
+    },
+    [RouteGroup.GAME]: {
+      title: 'ACCESS_DENIED',
+      message: 'Insufficient privileges for this operation. Access denied.',
+      recoveryAction: 'RETURN_TO_BASE',
+    },
+    [RouteGroup.ADMIN]: {
+      title: 'Access Denied',
+      message: 'You do not have permission to perform this action.',
+      recoveryAction: 'Go Back',
+    },
+  },
+  [RouteOutcome.TENANT_BLOCKED]: {
+    [RouteGroup.PUBLIC]: {
+      title: 'Service Unavailable',
+      message: 'This service is currently unavailable.',
+      recoveryAction: 'Go Home',
+    },
+    [RouteGroup.AUTH]: {
+      title: 'Account Suspended',
+      message: 'Your account has been suspended. Please contact support.',
+      recoveryAction: 'Contact Support',
+    },
+    [RouteGroup.GAME]: {
+      title: 'TENANT_SUSPENDED',
+      message: 'Tenant access suspended. Contact administrator for restoration.',
+      recoveryAction: 'CONTACT_ADMIN',
+    },
+    [RouteGroup.ADMIN]: {
+      title: 'Tenant Suspended',
+      message: 'This tenant is currently suspended. Please contact support.',
+      recoveryAction: 'Contact Support',
+    },
+  },
+  [RouteOutcome.NOT_FOUND]: {
+    [RouteGroup.PUBLIC]: {
+      title: 'Page Not Found',
+      message: 'The page you are looking for does not exist.',
+      recoveryAction: 'Go Home',
+    },
+    [RouteGroup.AUTH]: {
+      title: 'Page Not Found',
+      message: 'This page does not exist.',
+      recoveryAction: 'Go to Home',
+    },
+    [RouteGroup.GAME]: {
+      title: 'LINK_BROKEN',
+      message: 'Connection path no longer exists. Return to secure location.',
+      recoveryAction: 'RETURN_TO_BASE',
+    },
+    [RouteGroup.ADMIN]: {
+      title: 'Resource Not Found',
+      message: 'The requested resource does not exist or has been removed.',
+      recoveryAction: 'Go to Dashboard',
+    },
+  },
+};
+
 export const routeGroupSchema = z.enum([
   RouteGroup.PUBLIC,
   RouteGroup.AUTH,
@@ -232,6 +342,7 @@ export const hasAllowedTenantStatus = (
 export interface PolicyEvaluationResult {
   allowed: boolean;
   redirectUrl?: string;
+  outcome?: RouteOutcome;
 }
 
 export const evaluateRouteGroupPolicy = (
@@ -248,14 +359,23 @@ export const evaluateRouteGroupPolicy = (
   }
 
   if (!user) {
-    return { allowed: false, redirectUrl: policy.redirectOnDeny ?? '/login' };
+    return {
+      allowed: false,
+      redirectUrl: policy.redirectOnDeny ?? '/login',
+      outcome: RouteOutcome.UNAUTHENTICATED,
+    };
   }
 
-  if (
-    !hasRequiredRole(user.role, policy.requiredRoles) ||
-    !hasAllowedTenantStatus(user.tenantStatus, policy.allowedTenantStatuses)
-  ) {
-    const result: PolicyEvaluationResult = { allowed: false };
+  if (!hasAllowedTenantStatus(user.tenantStatus, policy.allowedTenantStatuses)) {
+    const result: PolicyEvaluationResult = { allowed: false, outcome: RouteOutcome.TENANT_BLOCKED };
+    if (policy.redirectOnDeny) {
+      result.redirectUrl = policy.redirectOnDeny;
+    }
+    return result;
+  }
+
+  if (!hasRequiredRole(user.role, policy.requiredRoles)) {
+    const result: PolicyEvaluationResult = { allowed: false, outcome: RouteOutcome.FORBIDDEN };
     if (policy.redirectOnDeny) {
       result.redirectUrl = policy.redirectOnDeny;
     }

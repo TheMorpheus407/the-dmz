@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+
   import type { CategorizedApiError } from '$lib/api/types';
   import type { ErrorCopy, RouteSurface } from '$lib/api/error-copy';
-  import { getErrorCopy } from '$lib/api/error-copy';
+  import { getErrorCopy, getAriaLivePriority } from '$lib/api/error-copy';
 
   import Button from './Button.svelte';
 
@@ -23,6 +25,17 @@
 
   const displayMessage = $derived(message || copy?.message || 'Please try again later.');
 
+  const ariaLivePriority = $derived(error ? getAriaLivePriority(error.category) : 'polite');
+
+  let containerRef: HTMLDivElement | null = null;
+
+  onMount(() => {
+    const el = containerRef;
+    if (el) {
+      (el as HTMLElement).focus();
+    }
+  });
+
   function handleRetry(e: MouseEvent) {
     e.preventDefault();
     onRetry?.();
@@ -32,23 +45,42 @@
     e.preventDefault();
     onAction?.();
   }
+
+  function getIcon(category?: string): string {
+    switch (category) {
+      case 'network':
+        return '⌁';
+      case 'authentication':
+      case 'authorization':
+        return '⊘';
+      case 'rate_limiting':
+        return '◷';
+      case 'not_found':
+        return '⦰';
+      case 'tenant_blocked':
+        return '⊘';
+      case 'validation':
+        return '⚠';
+      default:
+        return '⚠';
+    }
+  }
 </script>
 
-<div class="error-state" role="status">
+<div
+  class="error-state"
+  role="alert"
+  aria-live={ariaLivePriority}
+  aria-atomic="true"
+  tabindex="-1"
+  bind:this={containerRef}
+>
   <div class="error-state__icon" aria-hidden="true">
-    {#if error?.category === 'network'}
-      ⌁
-    {:else if error?.category === 'authentication' || error?.category === 'authorization'}
-      ⊘
-    {:else if error?.category === 'rate_limiting'}
-      ◷
-    {:else}
-      ⚠
-    {/if}
+    {getIcon(error?.category)}
   </div>
 
-  <h2 class="error-state__title">{displayTitle}</h2>
-  <p class="error-state__message">{displayMessage}</p>
+  <h2 class="error-state__title" id="error-title">{displayTitle}</h2>
+  <p class="error-state__message" id="error-message">{displayMessage}</p>
 
   <div class="error-state__actions">
     {#if onRetry}

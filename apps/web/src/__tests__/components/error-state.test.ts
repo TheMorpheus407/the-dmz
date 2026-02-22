@@ -159,6 +159,6 @@ describe('ErrorState', () => {
     });
 
     const state = container.querySelector('.error-state');
-    expect(state?.getAttribute('role')).toBe('status');
+    expect(state?.getAttribute('role')).toBe('alert');
   });
 });

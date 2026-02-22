@@ -1,3 +1,5 @@
+import { routeOutcomeMessages, RouteOutcome, RouteGroup } from '@the-dmz/shared/auth';
+
 import type { CategorizedApiError, ApiErrorCategory } from './types.js';
 
 export type RouteSurface = 'game' | 'admin' | 'auth' | 'public';
@@ -46,6 +48,18 @@ const GAME_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     retryLabel: 'RECONNECT',
     dismissLabel: 'DISMISS',
   },
+  not_found: {
+    title: 'LINK_BROKEN',
+    message: 'Connection path no longer exists. Return to secure location.',
+    retryLabel: 'RETURN_TO_BASE',
+    dismissLabel: 'DISMISS',
+  },
+  tenant_blocked: {
+    title: 'TENANT_SUSPENDED',
+    message: 'Tenant access suspended. Contact administrator for restoration.',
+    retryLabel: 'CONTACT_ADMIN',
+    dismissLabel: 'DISMISS',
+  },
 };
 
 const ADMIN_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
@@ -85,6 +99,18 @@ const ADMIN_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     retryLabel: 'Retry',
     dismissLabel: 'Dismiss',
   },
+  not_found: {
+    title: 'Resource Not Found',
+    message: 'The requested resource does not exist or has been removed.',
+    retryLabel: 'Go to Dashboard',
+    dismissLabel: 'Dismiss',
+  },
+  tenant_blocked: {
+    title: 'Tenant Suspended',
+    message: 'This tenant is currently suspended. Please contact support.',
+    retryLabel: 'Contact Support',
+    dismissLabel: 'Dismiss',
+  },
 };
 
 const AUTH_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
@@ -118,6 +144,16 @@ const AUTH_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     message: 'Please check your internet connection.',
     retryLabel: 'Try Again',
   },
+  not_found: {
+    title: 'Page Not Found',
+    message: 'This page does not exist.',
+    retryLabel: 'Go to Home',
+  },
+  tenant_blocked: {
+    title: 'Account Suspended',
+    message: 'Your account has been suspended. Please contact support.',
+    retryLabel: 'Contact Support',
+  },
 };
 
 const PUBLIC_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
@@ -150,6 +186,16 @@ const PUBLIC_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     title: 'No Connection',
     message: 'Please check your internet connection.',
     retryLabel: 'Try Again',
+  },
+  not_found: {
+    title: 'Page Not Found',
+    message: 'The page you are looking for does not exist.',
+    retryLabel: 'Go Home',
+  },
+  tenant_blocked: {
+    title: 'Service Unavailable',
+    message: 'This service is currently unavailable.',
+    retryLabel: 'Go Home',
   },
 };
 
@@ -216,4 +262,47 @@ export function getSeverity(category: ApiErrorCategory): 'low' | 'medium' | 'hig
 export function getAriaLivePriority(category: ApiErrorCategory): 'polite' | 'assertive' {
   const severity = getSeverity(category);
   return severity === 'high' ? 'assertive' : 'polite';
+}
+
+const routeGroupMap: Record<RouteSurface, RouteGroup> = {
+  game: RouteGroup.GAME,
+  admin: RouteGroup.ADMIN,
+  auth: RouteGroup.AUTH,
+  public: RouteGroup.PUBLIC,
+};
+
+export function getErrorCopyForOutcome(outcome: RouteOutcome, surface: RouteSurface): ErrorCopy {
+  const routeGroup = routeGroupMap[surface];
+  const outcomeCopy = routeOutcomeMessages[outcome][routeGroup];
+  return {
+    title: outcomeCopy.title,
+    message: outcomeCopy.message,
+    retryLabel: outcomeCopy.recoveryAction,
+  };
+}
+
+export function getOutcomeFromStatus(status: number): RouteOutcome | null {
+  switch (status) {
+    case 401:
+      return RouteOutcome.UNAUTHENTICATED;
+    case 403:
+      return RouteOutcome.FORBIDDEN;
+    case 404:
+      return RouteOutcome.NOT_FOUND;
+    default:
+      return null;
+  }
+}
+
+export function mapStatusToErrorCategory(status: number): ApiErrorCategory {
+  switch (status) {
+    case 401:
+      return 'authentication';
+    case 403:
+      return 'authorization';
+    case 404:
+      return 'not_found';
+    default:
+      return 'server';
+  }
 }
