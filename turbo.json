@@ -36,6 +36,11 @@
     },
     "clean": {
       "cache": false
+    },
+    "storybook:build": {
+      "dependsOn": ["^build"],
+      "outputs": ["storybook-static/**"],
+      "inputs": [".storybook/**", "src/**"]
     }
   }
 }

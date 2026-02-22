@@ -171,6 +171,10 @@ export default [
       '**/.turbo/**',
       '**/coverage/**',
       '**/node_modules/**',
+      '**/*.stories.ts',
+      '**/.storybook/**',
+      '**/storybook-static/**',
+      'eslint.config.mjs',
     ],
   },
   {

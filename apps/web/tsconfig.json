@@ -25,5 +25,5 @@
     "vite.config.ts",
     "svelte.config.js"
   ],
-  "exclude": ["node_modules", ".svelte-kit", "build"]
+  "exclude": ["node_modules", ".svelte-kit", "build", "coverage", "**/*.stories.ts"]
 }
