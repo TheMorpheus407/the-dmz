@@ -36,6 +36,10 @@ import {
   updatePreferencesSchema,
   policyLockedPreferencesSchema,
 } from '../src/schemas/preferences.schema.js';
+import {
+  gameSessionBootstrapSchema,
+  gameSessionBootstrapResponseSchema,
+} from '../src/schemas/game-session.schema.js';
 
 const entries: Array<[string, Record<string, unknown>]> = [
   ['loginJsonSchema', createJsonSchema(loginSchema)],
@@ -70,6 +74,8 @@ const entries: Array<[string, Record<string, unknown>]> = [
   ['effectivePreferencesJsonSchema', createJsonSchema(effectivePreferencesSchema)],
   ['updatePreferencesJsonSchema', createJsonSchema(updatePreferencesSchema)],
   ['policyLockedPreferencesJsonSchema', createJsonSchema(policyLockedPreferencesSchema)],
+  ['gameSessionBootstrapJsonSchema', createJsonSchema(gameSessionBootstrapSchema)],
+  ['gameSessionBootstrapResponseJsonSchema', createJsonSchema(gameSessionBootstrapResponseSchema)],
 ];
 
 const renderExport = (name: string, schema: Record<string, unknown>): string =>

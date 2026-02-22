@@ -1472,3 +1472,174 @@ export const policyLockedPreferencesJsonSchema = {
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
+
+export const gameSessionBootstrapJsonSchema = {
+  type: 'object',
+  properties: {
+    schemaVersion: {
+      type: 'number',
+      const: 1,
+    },
+    tenantId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    sessionId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    userId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    day: {
+      type: 'integer',
+      minimum: 1,
+      default: 1,
+    },
+    funds: {
+      type: 'integer',
+      minimum: 0,
+      default: 1000,
+    },
+    clientCount: {
+      type: 'integer',
+      minimum: 0,
+      default: 5,
+    },
+    threatLevel: {
+      type: 'string',
+      enum: ['low', 'medium', 'high'],
+      default: 'low',
+    },
+    facilityLoadout: {
+      type: 'object',
+      properties: {
+        defenseLevel: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 10,
+          default: 1,
+        },
+        serverLevel: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 10,
+          default: 1,
+        },
+        networkLevel: {
+          type: 'integer',
+          minimum: 1,
+          maximum: 10,
+          default: 1,
+        },
+      },
+      additionalProperties: false,
+      default: {
+        defenseLevel: 1,
+        serverLevel: 1,
+        networkLevel: 1,
+      },
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['schemaVersion', 'tenantId', 'sessionId', 'userId', 'createdAt', 'updatedAt'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const gameSessionBootstrapResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    data: {
+      type: 'object',
+      properties: {
+        schemaVersion: {
+          type: 'number',
+          const: 1,
+        },
+        tenantId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        sessionId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        userId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        day: {
+          type: 'integer',
+          minimum: 1,
+          default: 1,
+        },
+        funds: {
+          type: 'integer',
+          minimum: 0,
+          default: 1000,
+        },
+        clientCount: {
+          type: 'integer',
+          minimum: 0,
+          default: 5,
+        },
+        threatLevel: {
+          type: 'string',
+          enum: ['low', 'medium', 'high'],
+          default: 'low',
+        },
+        facilityLoadout: {
+          type: 'object',
+          properties: {
+            defenseLevel: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 10,
+              default: 1,
+            },
+            serverLevel: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 10,
+              default: 1,
+            },
+            networkLevel: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 10,
+              default: 1,
+            },
+          },
+          additionalProperties: false,
+          default: {
+            defenseLevel: 1,
+            serverLevel: 1,
+            networkLevel: 1,
+          },
+        },
+        createdAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+        updatedAt: {
+          type: 'string',
+          format: 'date-time',
+        },
+      },
+      required: ['schemaVersion', 'tenantId', 'sessionId', 'userId', 'createdAt', 'updatedAt'],
+      additionalProperties: false,
+    },
+  },
+  required: ['data'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;

@@ -5,6 +5,7 @@ import cookie from '@fastify/cookie';
 import { loadConfig, type AppConfig } from './config.js';
 import { healthPlugin } from './modules/health/index.js';
 import { authPlugin } from './modules/auth/index.js';
+import { gamePlugin } from './modules/game/game.plugin.js';
 import { swaggerPlugin } from './plugins/swagger.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
 import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js';
@@ -171,6 +172,7 @@ export const buildApp = (
     app.register(
       async (apiRouter) => {
         await apiRouter.register(authPlugin);
+        await apiRouter.register(gamePlugin);
       },
       { prefix: '/api/v1' },
     );
