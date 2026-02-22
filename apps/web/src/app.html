@@ -3,9 +3,65 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <noscript>
+      <style>
+        body {
+          margin: 0;
+          font-family: system-ui, sans-serif;
+        }
+        .noscript-fallback {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          padding: 2rem;
+          text-align: center;
+          background: #1a1a2e;
+          color: #eee;
+        }
+        .noscript-fallback h1 {
+          margin: 0 0 1rem 0;
+          font-size: 1.5rem;
+        }
+        .noscript-fallback p {
+          margin: 0 0 1.5rem 0;
+          max-width: 400px;
+          line-height: 1.6;
+        }
+        .noscript-fallback a {
+          color: #4ade80;
+          text-decoration: underline;
+        }
+        .noscript-fallback .warning {
+          background: #422006;
+          border: 1px solid #f59e0b;
+          border-radius: 8px;
+          padding: 1rem;
+          margin-top: 1.5rem;
+        }
+      </style>
+    </noscript>
     %sveltekit.head%
   </head>
   <body data-sveltekit-preload-data="hover">
     <div style="display: contents">%sveltekit.body%</div>
+    <noscript>
+      <div class="noscript-fallback" role="alert">
+        <h1>JavaScript Required</h1>
+        <p>
+          The DMZ: Archive Gate requires JavaScript to provide an interactive experience. Your
+          browser has JavaScript disabled, which limits functionality.
+        </p>
+        <p>
+          To access the full game experience, please enable JavaScript in your browser settings.
+        </p>
+        <p>For help, visit our <a href="/docs">documentation</a> or contact support.</p>
+        <div class="warning">
+          <strong>Note:</strong> Some features may not work without JavaScript. Protected routes
+          (game, admin) require authentication via JavaScript.
+        </div>
+      </div>
+    </noscript>
   </body>
 </html>
