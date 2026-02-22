@@ -21,6 +21,10 @@
       "outputs": []
     },
     "test": {
+      "dependsOn": ["^build", "test:isolation"],
+      "outputs": ["coverage/**"]
+    },
+    "test:isolation": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
     },

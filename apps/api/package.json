@@ -21,6 +21,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:isolation": "vitest run --testNamePattern tenant-isolation",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('dist', { recursive: true, force: true });\"",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
