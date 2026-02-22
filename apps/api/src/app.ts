@@ -7,6 +7,7 @@ import { healthPlugin } from './modules/health/index.js';
 import { authPlugin } from './modules/auth/index.js';
 import { swaggerPlugin } from './plugins/swagger.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
+import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js';
 import { AppError, createErrorHandler, ErrorCodes } from './shared/middleware/error-handler.js';
 import { globalRateLimiter, registerRateLimiter } from './shared/middleware/rate-limiter.js';
 import { requestLogger } from './shared/middleware/request-logger.js';
@@ -42,8 +43,13 @@ const resolveRequestId = (value: string | string[] | undefined): string | undefi
   return undefined;
 };
 
-export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
+export const buildApp = (
+  config: AppConfig = loadConfig(),
+  options?: { skipHealthCheck?: boolean },
+): FastifyInstance => {
   const allowedOrigins = buildCorsOriginSet(config.CORS_ORIGINS_LIST, config.NODE_ENV);
+
+  const skipHealthCheck = options?.skipHealthCheck;
 
   const app = fastify({
     disableRequestLogging: true,
@@ -105,6 +111,11 @@ export const buildApp = (config: AppConfig = loadConfig()): FastifyInstance => {
   app.decorate('config', config);
 
   app.register(cookie);
+
+  app.register(infrastructurePlugin, {
+    config,
+    ...(skipHealthCheck !== undefined && { skipHealthCheck }),
+  });
 
   app.register(eventBusPlugin);
 

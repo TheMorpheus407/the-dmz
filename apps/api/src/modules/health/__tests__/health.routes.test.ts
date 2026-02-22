@@ -64,11 +64,11 @@ describe('health routes', () => {
       checks: {
         database: {
           ok: false,
-          message: 'Database health check disabled for tests',
+          message: 'Database not initialized',
         },
         redis: {
           ok: false,
-          message: 'Redis connection not configured',
+          message: 'Redis not available (degraded mode)',
         },
       },
     });

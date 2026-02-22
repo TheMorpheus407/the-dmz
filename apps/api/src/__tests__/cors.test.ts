@@ -24,10 +24,10 @@ describe('CORS origin handling', () => {
     beforeAll(async () => {
       const config = createTestConfig({
         NODE_ENV: 'production',
-        JWT_SECRET: 'a-real-production-secret-key-here',
+        JWT_SECRET: 'prod-jwt-value',
         CORS_ORIGINS: 'https://app.example.com,https://admin.example.com',
       });
-      app = buildApp(config);
+      app = buildApp(config, { skipHealthCheck: true });
       await app.ready();
     });
 
@@ -97,7 +97,7 @@ describe('CORS origin handling', () => {
         NODE_ENV: 'development',
         CORS_ORIGINS: 'http://localhost:5173,https://staging.example.com',
       });
-      app = buildApp(config);
+      app = buildApp(config, { skipHealthCheck: true });
       await app.ready();
     });
 
@@ -156,10 +156,10 @@ describe('CORS origin handling', () => {
     beforeAll(async () => {
       const config = createTestConfig({
         NODE_ENV: 'production',
-        JWT_SECRET: 'a-real-production-secret-key-here',
+        JWT_SECRET: 'prod-jwt-value',
         CORS_ORIGINS: 'http://localhost:5173,https://app.example.com',
       });
-      app = buildApp(config);
+      app = buildApp(config, { skipHealthCheck: true });
       await app.ready();
     });
 

@@ -98,6 +98,7 @@ describe('swagger docs', () => {
           ENABLE_SWAGGER: 'false',
           API_VERSION: '2.0.0',
         }),
+        { skipHealthCheck: true },
       );
       await app.ready();
     });

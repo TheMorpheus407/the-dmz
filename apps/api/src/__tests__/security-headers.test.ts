@@ -52,7 +52,7 @@ describe('security headers', () => {
         JWT_SECRET: 'example-production-secret-key',
         CORS_ORIGINS: 'https://app.example.com',
       });
-      app = buildApp(config);
+      app = buildApp(config, { skipHealthCheck: true });
       await app.ready();
     });
 
@@ -134,6 +134,7 @@ describe('security headers', () => {
           CORS_ORIGINS: 'https://app.example.com',
           CSP_FRAME_ANCESTORS: 'https://lms.example.com,https://canvas.example.com',
         }),
+        { skipHealthCheck: true },
       );
       await app.ready();
     });
@@ -165,7 +166,7 @@ describe('security headers', () => {
       const config = createTestConfig({
         NODE_ENV: 'development',
       });
-      app = buildApp(config);
+      app = buildApp(config, { skipHealthCheck: true });
       await app.ready();
     });
 

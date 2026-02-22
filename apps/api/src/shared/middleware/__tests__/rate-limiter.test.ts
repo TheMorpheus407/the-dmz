@@ -222,6 +222,7 @@ describe('rate limiter middleware', () => {
           RATE_LIMIT_MAX: '2',
           RATE_LIMIT_WINDOW_MS: '60000',
         }),
+        { skipHealthCheck: true },
       );
       await app.ready();
 
