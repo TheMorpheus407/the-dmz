@@ -211,6 +211,96 @@ export const profileJsonSchema = {
       type: 'string',
       maxLength: 64,
     },
+    preferences: {
+      type: 'object',
+      properties: {
+        themePreferences: {
+          type: 'object',
+          properties: {
+            theme: {
+              type: 'string',
+              enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+            },
+            enableTerminalEffects: {
+              type: 'boolean',
+            },
+            effects: {
+              type: 'object',
+              properties: {
+                scanlines: {
+                  type: 'boolean',
+                },
+                curvature: {
+                  type: 'boolean',
+                },
+                glow: {
+                  type: 'boolean',
+                },
+                noise: {
+                  type: 'boolean',
+                },
+                vignette: {
+                  type: 'boolean',
+                },
+              },
+              required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+              additionalProperties: false,
+            },
+            fontSize: {
+              type: 'number',
+              minimum: 12,
+              maximum: 32,
+            },
+          },
+          additionalProperties: false,
+        },
+        accessibilityPreferences: {
+          type: 'object',
+          properties: {
+            reducedMotion: {
+              type: 'boolean',
+            },
+            highContrast: {
+              type: 'boolean',
+            },
+            fontSize: {
+              type: 'number',
+              minimum: 12,
+              maximum: 32,
+            },
+          },
+          additionalProperties: false,
+        },
+      },
+      additionalProperties: false,
+    },
+    policyLockedPreferences: {
+      type: 'object',
+      properties: {
+        theme: {
+          type: 'boolean',
+        },
+        enableTerminalEffects: {
+          type: 'boolean',
+        },
+        effects: {
+          type: 'object',
+          additionalProperties: {
+            type: 'boolean',
+          },
+        },
+        fontSize: {
+          type: 'boolean',
+        },
+        reducedMotion: {
+          type: 'boolean',
+        },
+        highContrast: {
+          type: 'boolean',
+        },
+      },
+      additionalProperties: false,
+    },
     accessibilitySettings: {
       type: 'object',
       additionalProperties: {},
@@ -243,6 +333,69 @@ export const updateProfileJsonSchema = {
     timezone: {
       type: 'string',
       maxLength: 64,
+    },
+    preferences: {
+      type: 'object',
+      properties: {
+        themePreferences: {
+          type: 'object',
+          properties: {
+            theme: {
+              type: 'string',
+              enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+            },
+            enableTerminalEffects: {
+              type: 'boolean',
+            },
+            effects: {
+              type: 'object',
+              properties: {
+                scanlines: {
+                  type: 'boolean',
+                },
+                curvature: {
+                  type: 'boolean',
+                },
+                glow: {
+                  type: 'boolean',
+                },
+                noise: {
+                  type: 'boolean',
+                },
+                vignette: {
+                  type: 'boolean',
+                },
+              },
+              required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+              additionalProperties: false,
+            },
+            fontSize: {
+              type: 'number',
+              minimum: 12,
+              maximum: 32,
+            },
+          },
+          additionalProperties: false,
+        },
+        accessibilityPreferences: {
+          type: 'object',
+          properties: {
+            reducedMotion: {
+              type: 'boolean',
+            },
+            highContrast: {
+              type: 'boolean',
+            },
+            fontSize: {
+              type: 'number',
+              minimum: 12,
+              maximum: 32,
+            },
+          },
+          additionalProperties: false,
+        },
+      },
+      additionalProperties: false,
     },
     accessibilitySettings: {
       type: 'object',
@@ -311,6 +464,96 @@ export const meResponseJsonSchema = {
           type: 'string',
           maxLength: 64,
         },
+        preferences: {
+          type: 'object',
+          properties: {
+            themePreferences: {
+              type: 'object',
+              properties: {
+                theme: {
+                  type: 'string',
+                  enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+                },
+                enableTerminalEffects: {
+                  type: 'boolean',
+                },
+                effects: {
+                  type: 'object',
+                  properties: {
+                    scanlines: {
+                      type: 'boolean',
+                    },
+                    curvature: {
+                      type: 'boolean',
+                    },
+                    glow: {
+                      type: 'boolean',
+                    },
+                    noise: {
+                      type: 'boolean',
+                    },
+                    vignette: {
+                      type: 'boolean',
+                    },
+                  },
+                  required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+                  additionalProperties: false,
+                },
+                fontSize: {
+                  type: 'number',
+                  minimum: 12,
+                  maximum: 32,
+                },
+              },
+              additionalProperties: false,
+            },
+            accessibilityPreferences: {
+              type: 'object',
+              properties: {
+                reducedMotion: {
+                  type: 'boolean',
+                },
+                highContrast: {
+                  type: 'boolean',
+                },
+                fontSize: {
+                  type: 'number',
+                  minimum: 12,
+                  maximum: 32,
+                },
+              },
+              additionalProperties: false,
+            },
+          },
+          additionalProperties: false,
+        },
+        policyLockedPreferences: {
+          type: 'object',
+          properties: {
+            theme: {
+              type: 'boolean',
+            },
+            enableTerminalEffects: {
+              type: 'boolean',
+            },
+            effects: {
+              type: 'object',
+              additionalProperties: {
+                type: 'boolean',
+              },
+            },
+            fontSize: {
+              type: 'boolean',
+            },
+            reducedMotion: {
+              type: 'boolean',
+            },
+            highContrast: {
+              type: 'boolean',
+            },
+          },
+          additionalProperties: false,
+        },
         accessibilitySettings: {
           type: 'object',
           additionalProperties: {},
@@ -329,6 +572,159 @@ export const meResponseJsonSchema = {
         'accessibilitySettings',
         'notificationSettings',
       ],
+      additionalProperties: false,
+    },
+    effectivePreferences: {
+      type: 'object',
+      properties: {
+        themePreferences: {
+          type: 'object',
+          properties: {
+            theme: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            enableTerminalEffects: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            effects: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            fontSize: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+          },
+          required: ['theme', 'enableTerminalEffects', 'effects', 'fontSize'],
+          additionalProperties: false,
+        },
+        accessibilityPreferences: {
+          type: 'object',
+          properties: {
+            reducedMotion: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            highContrast: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            fontSize: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+          },
+          required: ['reducedMotion', 'highContrast', 'fontSize'],
+          additionalProperties: false,
+        },
+      },
       additionalProperties: false,
     },
   },
@@ -503,6 +899,576 @@ export const apiErrorEnvelopeJsonSchema = {
     },
   },
   required: ['success', 'error'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const effectStateJsonSchema = {
+  type: 'object',
+  properties: {
+    scanlines: {
+      type: 'boolean',
+    },
+    curvature: {
+      type: 'boolean',
+    },
+    glow: {
+      type: 'boolean',
+    },
+    noise: {
+      type: 'boolean',
+    },
+    vignette: {
+      type: 'boolean',
+    },
+  },
+  required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const themePreferencesJsonSchema = {
+  type: 'object',
+  properties: {
+    theme: {
+      type: 'string',
+      enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+    },
+    enableTerminalEffects: {
+      type: 'boolean',
+    },
+    effects: {
+      type: 'object',
+      properties: {
+        scanlines: {
+          type: 'boolean',
+        },
+        curvature: {
+          type: 'boolean',
+        },
+        glow: {
+          type: 'boolean',
+        },
+        noise: {
+          type: 'boolean',
+        },
+        vignette: {
+          type: 'boolean',
+        },
+      },
+      required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+      additionalProperties: false,
+    },
+    fontSize: {
+      type: 'number',
+      minimum: 12,
+      maximum: 32,
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const accessibilityPreferencesJsonSchema = {
+  type: 'object',
+  properties: {
+    reducedMotion: {
+      type: 'boolean',
+    },
+    highContrast: {
+      type: 'boolean',
+    },
+    fontSize: {
+      type: 'number',
+      minimum: 12,
+      maximum: 32,
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const userPreferencesJsonSchema = {
+  type: 'object',
+  properties: {
+    themePreferences: {
+      type: 'object',
+      properties: {
+        theme: {
+          type: 'string',
+          enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+        },
+        enableTerminalEffects: {
+          type: 'boolean',
+        },
+        effects: {
+          type: 'object',
+          properties: {
+            scanlines: {
+              type: 'boolean',
+            },
+            curvature: {
+              type: 'boolean',
+            },
+            glow: {
+              type: 'boolean',
+            },
+            noise: {
+              type: 'boolean',
+            },
+            vignette: {
+              type: 'boolean',
+            },
+          },
+          required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+          additionalProperties: false,
+        },
+        fontSize: {
+          type: 'number',
+          minimum: 12,
+          maximum: 32,
+        },
+      },
+      additionalProperties: false,
+    },
+    accessibilityPreferences: {
+      type: 'object',
+      properties: {
+        reducedMotion: {
+          type: 'boolean',
+        },
+        highContrast: {
+          type: 'boolean',
+        },
+        fontSize: {
+          type: 'number',
+          minimum: 12,
+          maximum: 32,
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const preferenceSourceJsonSchema = {
+  type: 'string',
+  enum: ['policy', 'server', 'local', 'os', 'default'],
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const effectivePreferenceValueJsonSchema = {
+  type: 'object',
+  properties: {
+    value: {},
+    source: {
+      type: 'string',
+      enum: ['policy', 'server', 'local', 'os', 'default'],
+    },
+  },
+  required: ['source'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const effectiveThemePreferencesJsonSchema = {
+  type: 'object',
+  properties: {
+    theme: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    enableTerminalEffects: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    effects: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    fontSize: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+  },
+  required: ['theme', 'enableTerminalEffects', 'effects', 'fontSize'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const effectiveAccessibilityPreferencesJsonSchema = {
+  type: 'object',
+  properties: {
+    reducedMotion: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    highContrast: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    fontSize: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+  },
+  required: ['reducedMotion', 'highContrast', 'fontSize'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const effectivePreferencesJsonSchema = {
+  type: 'object',
+  properties: {
+    themePreferences: {
+      type: 'object',
+      properties: {
+        theme: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        enableTerminalEffects: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        effects: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        fontSize: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+      },
+      required: ['theme', 'enableTerminalEffects', 'effects', 'fontSize'],
+      additionalProperties: false,
+    },
+    accessibilityPreferences: {
+      type: 'object',
+      properties: {
+        reducedMotion: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        highContrast: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        fontSize: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+      },
+      required: ['reducedMotion', 'highContrast', 'fontSize'],
+      additionalProperties: false,
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const updatePreferencesJsonSchema = {
+  type: 'object',
+  properties: {
+    themePreferences: {
+      type: 'object',
+      properties: {
+        theme: {
+          type: 'string',
+          enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+        },
+        enableTerminalEffects: {
+          type: 'boolean',
+        },
+        effects: {
+          type: 'object',
+          properties: {
+            scanlines: {
+              type: 'boolean',
+            },
+            curvature: {
+              type: 'boolean',
+            },
+            glow: {
+              type: 'boolean',
+            },
+            noise: {
+              type: 'boolean',
+            },
+            vignette: {
+              type: 'boolean',
+            },
+          },
+          required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+          additionalProperties: false,
+        },
+        fontSize: {
+          type: 'number',
+          minimum: 12,
+          maximum: 32,
+        },
+      },
+      additionalProperties: false,
+    },
+    accessibilityPreferences: {
+      type: 'object',
+      properties: {
+        reducedMotion: {
+          type: 'boolean',
+        },
+        highContrast: {
+          type: 'boolean',
+        },
+        fontSize: {
+          type: 'number',
+          minimum: 12,
+          maximum: 32,
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const policyLockedPreferencesJsonSchema = {
+  type: 'object',
+  properties: {
+    theme: {
+      type: 'boolean',
+    },
+    enableTerminalEffects: {
+      type: 'boolean',
+    },
+    effects: {
+      type: 'object',
+      additionalProperties: {
+        type: 'boolean',
+      },
+    },
+    fontSize: {
+      type: 'boolean',
+    },
+    reducedMotion: {
+      type: 'boolean',
+    },
+    highContrast: {
+      type: 'boolean',
+    },
+  },
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;

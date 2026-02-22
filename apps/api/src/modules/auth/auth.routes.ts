@@ -8,6 +8,7 @@ import {
   updateProfileJsonSchema,
   refreshResponseJsonSchema as sharedRefreshResponseJsonSchema,
   meResponseJsonSchema as sharedMeResponseJsonSchema,
+  effectivePreferencesJsonSchema,
 } from '@the-dmz/shared/schemas';
 
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
@@ -54,6 +55,7 @@ export const meResponseJsonSchema = {
       type: 'array',
       items: { type: 'string' },
     },
+    effectivePreferences: effectivePreferencesJsonSchema,
   },
   required: [...(sharedMeResponseJsonSchema.required || []), 'permissions', 'roles'],
 } as const;
@@ -382,10 +384,22 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       const user = request.user as AuthenticatedUser;
       const currentUser = await authService.getCurrentUser(config, user.userId, user.tenantId);
       const permissionContext = await resolvePermissions(config, user.tenantId, user.userId);
-      const profile = await authService.getProfile(config, user.userId, user.tenantId);
+      const { profile, effectivePreferences } = await authService.getEffectivePreferences(
+        config,
+        user.userId,
+        user.tenantId,
+      );
+
       return {
         user: currentUser,
-        profile: profile ?? undefined,
+        profile: profile
+          ? {
+              ...profile,
+              preferences: profile.preferences,
+              policyLockedPreferences: profile.policyLockedPreferences,
+            }
+          : undefined,
+        effectivePreferences,
         permissions: permissionContext.permissions,
         roles: permissionContext.roles,
       };

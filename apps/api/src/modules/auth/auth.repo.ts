@@ -9,6 +9,17 @@ import { UserExistsError } from './auth.errors.js';
 
 import type { AuthUser, AuthSession } from './auth.types.js';
 
+export type ProfileData = {
+  tenantId: string;
+  userId: string;
+  locale?: string;
+  timezone?: string;
+  preferences?: Record<string, unknown>;
+  policyLockedPreferences?: Record<string, unknown>;
+  accessibilitySettings?: Record<string, unknown>;
+  notificationSettings?: Record<string, unknown>;
+};
+
 export const createUser = async (
   db: DB,
   data: {
@@ -220,15 +231,6 @@ export const updateSessionTokenHash = async (
   await db.update(sessionsTable).set({ tokenHash }).where(eq(sessionsTable.id, sessionId));
 };
 
-export type ProfileData = {
-  tenantId: string;
-  userId: string;
-  locale?: string;
-  timezone?: string;
-  accessibilitySettings?: Record<string, unknown>;
-  notificationSettings?: Record<string, unknown>;
-};
-
 export const createProfile = async (
   db: DB,
   data: ProfileData,
@@ -238,6 +240,8 @@ export const createProfile = async (
   userId: string;
   locale: string;
   timezone: string;
+  preferences?: Record<string, unknown>;
+  policyLockedPreferences?: Record<string, unknown>;
   accessibilitySettings: Record<string, unknown>;
   notificationSettings: Record<string, unknown>;
 }> => {
@@ -248,7 +252,11 @@ export const createProfile = async (
       userId: data.userId,
       locale: data.locale ?? 'en',
       timezone: data.timezone ?? 'UTC',
-      accessibilitySettings: data.accessibilitySettings ?? {},
+      accessibilitySettings: {
+        ...(data.preferences?.['themePreferences'] ?? {}),
+        ...(data.preferences?.['accessibilityPreferences'] ?? {}),
+        ...(data.accessibilitySettings ?? {}),
+      },
       notificationSettings: data.notificationSettings ?? {},
     })
     .returning({
@@ -271,8 +279,20 @@ export const createProfile = async (
     userId: created.userId,
     locale: created.locale,
     timezone: created.timezone,
+    preferences: data.preferences,
+    policyLockedPreferences: data.policyLockedPreferences,
     accessibilitySettings: created.accessibilitySettings as Record<string, unknown>,
     notificationSettings: created.notificationSettings as Record<string, unknown>,
+  } as unknown as {
+    profileId: string;
+    tenantId: string;
+    userId: string;
+    locale: string;
+    timezone: string;
+    preferences?: Record<string, unknown>;
+    policyLockedPreferences?: Record<string, unknown>;
+    accessibilitySettings: Record<string, unknown>;
+    notificationSettings: Record<string, unknown>;
   };
 };
 
@@ -286,6 +306,8 @@ export const findProfileByUserId = async (
   userId: string;
   locale: string;
   timezone: string;
+  preferences?: Record<string, unknown>;
+  policyLockedPreferences?: Record<string, unknown>;
   accessibilitySettings: Record<string, unknown>;
   notificationSettings: Record<string, unknown>;
 } | null> => {
@@ -297,20 +319,51 @@ export const findProfileByUserId = async (
     return null;
   }
 
+  const accSettings = profile.accessibilitySettings as Record<string, unknown>;
+
   return {
     profileId: profile.profileId,
     tenantId: profile.tenantId,
     userId: profile.userId,
     locale: profile.locale,
     timezone: profile.timezone,
-    accessibilitySettings: profile.accessibilitySettings as Record<string, unknown>,
+    preferences: {
+      themePreferences: {
+        theme: accSettings['theme'] as
+          | 'green'
+          | 'amber'
+          | 'high-contrast'
+          | 'enterprise'
+          | undefined,
+        enableTerminalEffects: accSettings['enableTerminalEffects'] as boolean | undefined,
+        fontSize: accSettings['fontSize'] as number | undefined,
+      },
+      accessibilityPreferences: {
+        reducedMotion: accSettings['reducedMotion'] as boolean | undefined,
+        highContrast: accSettings['highContrast'] as boolean | undefined,
+        fontSize: accSettings['fontSize'] as number | undefined,
+      },
+    } as Record<string, unknown>,
+    policyLockedPreferences: undefined as unknown as Record<string, unknown>,
+    accessibilitySettings: accSettings,
     notificationSettings: profile.notificationSettings as Record<string, unknown>,
+  } as unknown as {
+    profileId: string;
+    tenantId: string;
+    userId: string;
+    locale: string;
+    timezone: string;
+    preferences?: Record<string, unknown>;
+    policyLockedPreferences?: Record<string, unknown>;
+    accessibilitySettings: Record<string, unknown>;
+    notificationSettings: Record<string, unknown>;
   };
 };
 
 export type UpdateProfileData = {
   locale?: string;
   timezone?: string;
+  preferences?: Record<string, unknown>;
   accessibilitySettings?: Record<string, unknown>;
   notificationSettings?: Record<string, unknown>;
 };
@@ -326,6 +379,8 @@ export const updateProfile = async (
   userId: string;
   locale: string;
   timezone: string;
+  preferences?: Record<string, unknown>;
+  policyLockedPreferences?: Record<string, unknown>;
   accessibilitySettings: Record<string, unknown>;
   notificationSettings: Record<string, unknown>;
 } | null> => {
@@ -337,9 +392,24 @@ export const updateProfile = async (
   if (data.timezone !== undefined) {
     updates['timezone'] = data.timezone;
   }
-  if (data.accessibilitySettings !== undefined) {
-    updates['accessibilitySettings'] = data.accessibilitySettings;
+
+  const existingProfile = await findProfileByUserId(db, userId, tenantId);
+
+  if (data.preferences !== undefined) {
+    const mergedSettings = {
+      ...(existingProfile?.accessibilitySettings ?? {}),
+      ...((data.preferences['themePreferences'] as Record<string, unknown>) ?? {}),
+      ...((data.preferences['accessibilityPreferences'] as Record<string, unknown>) ?? {}),
+    };
+    updates['accessibilitySettings'] = mergedSettings;
+  } else if (data.accessibilitySettings !== undefined) {
+    const mergedSettings = {
+      ...(existingProfile?.accessibilitySettings ?? {}),
+      ...data.accessibilitySettings,
+    };
+    updates['accessibilitySettings'] = mergedSettings;
   }
+
   if (data.notificationSettings !== undefined) {
     updates['notificationSettings'] = data.notificationSettings;
   }
@@ -372,8 +442,20 @@ export const updateProfile = async (
     userId: updated.userId,
     locale: updated.locale,
     timezone: updated.timezone,
+    preferences: data.preferences,
+    policyLockedPreferences: existingProfile?.policyLockedPreferences,
     accessibilitySettings: updated.accessibilitySettings as Record<string, unknown>,
     notificationSettings: updated.notificationSettings as Record<string, unknown>,
+  } as unknown as {
+    profileId: string;
+    tenantId: string;
+    userId: string;
+    locale: string;
+    timezone: string;
+    preferences?: Record<string, unknown>;
+    policyLockedPreferences?: Record<string, unknown>;
+    accessibilitySettings: Record<string, unknown>;
+    notificationSettings: Record<string, unknown>;
   };
 };
 

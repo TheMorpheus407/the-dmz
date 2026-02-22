@@ -682,6 +682,102 @@
                           "type": "string",
                           "maxLength": 64
                         },
+                        "preferences": {
+                          "type": "object",
+                          "properties": {
+                            "themePreferences": {
+                              "type": "object",
+                              "properties": {
+                                "theme": {
+                                  "type": "string",
+                                  "enum": ["green", "amber", "high-contrast", "enterprise"]
+                                },
+                                "enableTerminalEffects": {
+                                  "type": "boolean"
+                                },
+                                "effects": {
+                                  "type": "object",
+                                  "properties": {
+                                    "scanlines": {
+                                      "type": "boolean"
+                                    },
+                                    "curvature": {
+                                      "type": "boolean"
+                                    },
+                                    "glow": {
+                                      "type": "boolean"
+                                    },
+                                    "noise": {
+                                      "type": "boolean"
+                                    },
+                                    "vignette": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "scanlines",
+                                    "curvature",
+                                    "glow",
+                                    "noise",
+                                    "vignette"
+                                  ],
+                                  "additionalProperties": false
+                                },
+                                "fontSize": {
+                                  "type": "number",
+                                  "minimum": 12,
+                                  "maximum": 32
+                                }
+                              },
+                              "additionalProperties": false
+                            },
+                            "accessibilityPreferences": {
+                              "type": "object",
+                              "properties": {
+                                "reducedMotion": {
+                                  "type": "boolean"
+                                },
+                                "highContrast": {
+                                  "type": "boolean"
+                                },
+                                "fontSize": {
+                                  "type": "number",
+                                  "minimum": 12,
+                                  "maximum": 32
+                                }
+                              },
+                              "additionalProperties": false
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "policyLockedPreferences": {
+                          "type": "object",
+                          "properties": {
+                            "theme": {
+                              "type": "boolean"
+                            },
+                            "enableTerminalEffects": {
+                              "type": "boolean"
+                            },
+                            "effects": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "boolean"
+                              }
+                            },
+                            "fontSize": {
+                              "type": "boolean"
+                            },
+                            "reducedMotion": {
+                              "type": "boolean"
+                            },
+                            "highContrast": {
+                              "type": "boolean"
+                            }
+                          },
+                          "additionalProperties": false
+                        },
                         "accessibilitySettings": {
                           "type": "object",
                           "additionalProperties": {}
@@ -700,6 +796,159 @@
                         "accessibilitySettings",
                         "notificationSettings"
                       ],
+                      "additionalProperties": false
+                    },
+                    "effectivePreferences": {
+                      "type": "object",
+                      "properties": {
+                        "themePreferences": {
+                          "type": "object",
+                          "properties": {
+                            "theme": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "enableTerminalEffects": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "effects": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "fontSize": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": ["theme", "enableTerminalEffects", "effects", "fontSize"],
+                          "additionalProperties": false
+                        },
+                        "accessibilityPreferences": {
+                          "type": "object",
+                          "properties": {
+                            "reducedMotion": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "highContrast": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "fontSize": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": ["reducedMotion", "highContrast", "fontSize"],
+                          "additionalProperties": false
+                        }
+                      },
                       "additionalProperties": false
                     },
                     "permissions": {
@@ -785,6 +1034,69 @@
                     "type": "string",
                     "maxLength": 64
                   },
+                  "preferences": {
+                    "type": "object",
+                    "properties": {
+                      "themePreferences": {
+                        "type": "object",
+                        "properties": {
+                          "theme": {
+                            "type": "string",
+                            "enum": ["green", "amber", "high-contrast", "enterprise"]
+                          },
+                          "enableTerminalEffects": {
+                            "type": "boolean"
+                          },
+                          "effects": {
+                            "type": "object",
+                            "properties": {
+                              "scanlines": {
+                                "type": "boolean"
+                              },
+                              "curvature": {
+                                "type": "boolean"
+                              },
+                              "glow": {
+                                "type": "boolean"
+                              },
+                              "noise": {
+                                "type": "boolean"
+                              },
+                              "vignette": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["scanlines", "curvature", "glow", "noise", "vignette"],
+                            "additionalProperties": false
+                          },
+                          "fontSize": {
+                            "type": "number",
+                            "minimum": 12,
+                            "maximum": 32
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "accessibilityPreferences": {
+                        "type": "object",
+                        "properties": {
+                          "reducedMotion": {
+                            "type": "boolean"
+                          },
+                          "highContrast": {
+                            "type": "boolean"
+                          },
+                          "fontSize": {
+                            "type": "number",
+                            "minimum": 12,
+                            "maximum": 32
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  },
                   "accessibilitySettings": {
                     "type": "object",
                     "additionalProperties": {}
@@ -831,6 +1143,96 @@
                     "timezone": {
                       "type": "string",
                       "maxLength": 64
+                    },
+                    "preferences": {
+                      "type": "object",
+                      "properties": {
+                        "themePreferences": {
+                          "type": "object",
+                          "properties": {
+                            "theme": {
+                              "type": "string",
+                              "enum": ["green", "amber", "high-contrast", "enterprise"]
+                            },
+                            "enableTerminalEffects": {
+                              "type": "boolean"
+                            },
+                            "effects": {
+                              "type": "object",
+                              "properties": {
+                                "scanlines": {
+                                  "type": "boolean"
+                                },
+                                "curvature": {
+                                  "type": "boolean"
+                                },
+                                "glow": {
+                                  "type": "boolean"
+                                },
+                                "noise": {
+                                  "type": "boolean"
+                                },
+                                "vignette": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["scanlines", "curvature", "glow", "noise", "vignette"],
+                              "additionalProperties": false
+                            },
+                            "fontSize": {
+                              "type": "number",
+                              "minimum": 12,
+                              "maximum": 32
+                            }
+                          },
+                          "additionalProperties": false
+                        },
+                        "accessibilityPreferences": {
+                          "type": "object",
+                          "properties": {
+                            "reducedMotion": {
+                              "type": "boolean"
+                            },
+                            "highContrast": {
+                              "type": "boolean"
+                            },
+                            "fontSize": {
+                              "type": "number",
+                              "minimum": 12,
+                              "maximum": 32
+                            }
+                          },
+                          "additionalProperties": false
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "policyLockedPreferences": {
+                      "type": "object",
+                      "properties": {
+                        "theme": {
+                          "type": "boolean"
+                        },
+                        "enableTerminalEffects": {
+                          "type": "boolean"
+                        },
+                        "effects": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "boolean"
+                          }
+                        },
+                        "fontSize": {
+                          "type": "boolean"
+                        },
+                        "reducedMotion": {
+                          "type": "boolean"
+                        },
+                        "highContrast": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false
                     },
                     "accessibilitySettings": {
                       "type": "object",

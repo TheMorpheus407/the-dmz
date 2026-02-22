@@ -23,6 +23,19 @@ import {
 } from '../src/schemas/health.schema.js';
 import { apiErrorSchema, apiErrorEnvelopeSchema } from '../src/schemas/api-envelope.schema.js';
 import { createJsonSchema } from '../src/schemas/json-schema.js';
+import {
+  effectStateSchema,
+  themePreferencesSchema,
+  accessibilityPreferencesSchema,
+  userPreferencesSchema,
+  preferenceSourceSchema,
+  effectivePreferenceValueSchema,
+  effectiveThemePreferencesSchema,
+  effectiveAccessibilityPreferencesSchema,
+  effectivePreferencesSchema,
+  updatePreferencesSchema,
+  policyLockedPreferencesSchema,
+} from '../src/schemas/preferences.schema.js';
 
 const entries: Array<[string, Record<string, unknown>]> = [
   ['loginJsonSchema', createJsonSchema(loginSchema)],
@@ -43,6 +56,20 @@ const entries: Array<[string, Record<string, unknown>]> = [
   ['readinessResponseJsonSchema', createJsonSchema(readinessResponseSchema)],
   ['apiErrorJsonSchema', createJsonSchema(apiErrorSchema)],
   ['apiErrorEnvelopeJsonSchema', createJsonSchema(apiErrorEnvelopeSchema)],
+  ['effectStateJsonSchema', createJsonSchema(effectStateSchema)],
+  ['themePreferencesJsonSchema', createJsonSchema(themePreferencesSchema)],
+  ['accessibilityPreferencesJsonSchema', createJsonSchema(accessibilityPreferencesSchema)],
+  ['userPreferencesJsonSchema', createJsonSchema(userPreferencesSchema)],
+  ['preferenceSourceJsonSchema', createJsonSchema(preferenceSourceSchema)],
+  ['effectivePreferenceValueJsonSchema', createJsonSchema(effectivePreferenceValueSchema)],
+  ['effectiveThemePreferencesJsonSchema', createJsonSchema(effectiveThemePreferencesSchema)],
+  [
+    'effectiveAccessibilityPreferencesJsonSchema',
+    createJsonSchema(effectiveAccessibilityPreferencesSchema),
+  ],
+  ['effectivePreferencesJsonSchema', createJsonSchema(effectivePreferencesSchema)],
+  ['updatePreferencesJsonSchema', createJsonSchema(updatePreferencesSchema)],
+  ['policyLockedPreferencesJsonSchema', createJsonSchema(policyLockedPreferencesSchema)],
 ];
 
 const renderExport = (name: string, schema: Record<string, unknown>): string =>

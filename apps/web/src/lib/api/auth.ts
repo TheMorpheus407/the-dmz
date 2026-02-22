@@ -6,6 +6,7 @@ import {
   type LogoutResponse,
   type MeResponse,
 } from '@the-dmz/shared/schemas';
+import type { ThemeName, EffectState } from '$lib/stores/theme';
 
 import { apiClient } from './client.js';
 
@@ -42,12 +43,54 @@ export async function login(
         error: {
           category: 'server',
           code: 'INVALID_RESPONSE',
-          message: 'Invalid login response from server',
+          message: 'No data received from server',
           status: 500,
           retryable: false,
         },
       };
     }
+
+    return { data: result.data };
+  }
+
+  return {
+    error: {
+      category: 'server',
+      code: 'INVALID_RESPONSE',
+      message: 'No data received from server',
+      status: 500,
+      retryable: false,
+    },
+  };
+}
+
+export interface UpdatePreferencesInput {
+  themePreferences?: {
+    theme?: ThemeName;
+    enableTerminalEffects?: boolean;
+    effects?: EffectState;
+    fontSize?: number;
+  };
+  accessibilityPreferences?: {
+    reducedMotion?: boolean;
+    highContrast?: boolean;
+    fontSize?: number;
+  };
+}
+
+export async function updatePreferences(
+  preferences: UpdatePreferencesInput,
+): Promise<{ data?: Record<string, unknown>; error?: CategorizedApiError }> {
+  const result = await apiClient.patch<Record<string, unknown>, UpdatePreferencesInput>(
+    '/auth/profile',
+    preferences,
+  );
+
+  if (result.error) {
+    return { error: result.error };
+  }
+
+  if (result.data) {
     return { data: result.data };
   }
 

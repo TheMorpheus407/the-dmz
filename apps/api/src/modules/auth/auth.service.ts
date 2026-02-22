@@ -28,6 +28,11 @@ import {
   SessionExpiredError,
   SessionRevokedError,
 } from './auth.errors.js';
+import {
+  resolveEffectivePreferences,
+  getLockedPreferenceKeys,
+  type PreferenceResolutionOptions,
+} from './preferences.js';
 
 import type { AppConfig } from '../../config.js';
 import type {
@@ -417,4 +422,77 @@ export const updateUserProfile = async (
 ): Promise<UserProfile | null> => {
   const db = getDatabaseClient(config);
   return updateProfile(db, userId, tenantId, data);
+};
+
+export const getEffectivePreferences = async (
+  config: AppConfig,
+  userId: string,
+  tenantId: string,
+  _surface?: string,
+): Promise<{
+  profile: UserProfile | null;
+  effectivePreferences: ReturnType<typeof resolveEffectivePreferences>;
+  lockedPreferenceKeys: string[];
+}> => {
+  const profile = await getProfile(config, userId, tenantId);
+
+  if (!profile) {
+    return {
+      profile: null,
+      effectivePreferences: resolveEffectivePreferences({}),
+      lockedPreferenceKeys: [],
+    };
+  }
+
+  type UserPrefs = {
+    themePreferences?: {
+      theme?: 'green' | 'amber' | 'high-contrast' | 'enterprise';
+      enableTerminalEffects?: boolean;
+      effects?: Record<string, boolean>;
+      fontSize?: number;
+    };
+    accessibilityPreferences?: {
+      reducedMotion?: boolean;
+      highContrast?: boolean;
+      fontSize?: number;
+    };
+  };
+
+  type LockedPrefs = {
+    theme?: boolean;
+    enableTerminalEffects?: boolean;
+    effects?: Record<string, boolean>;
+    fontSize?: boolean;
+    reducedMotion?: boolean;
+    highContrast?: boolean;
+  };
+
+  const userPrefs = profile.preferences as UserPrefs | undefined;
+  const lockedPrefs = profile.policyLockedPreferences as LockedPrefs | undefined;
+
+  const resolutionOptions: {
+    userPreferences?: UserPrefs;
+    policyLockedPreferences?: LockedPrefs;
+    surface?: string;
+    osPreferences?: { prefersReducedMotion: boolean; prefersContrast: boolean };
+  } = {};
+
+  if (userPrefs) {
+    resolutionOptions.userPreferences = userPrefs;
+  }
+
+  if (lockedPrefs) {
+    resolutionOptions.policyLockedPreferences = lockedPrefs;
+  }
+
+  const effectivePreferences = resolveEffectivePreferences(
+    resolutionOptions as PreferenceResolutionOptions,
+  );
+  const lockedPreferenceKeys = getLockedPreferenceKeys(resolutionOptions.policyLockedPreferences);
+
+  return {
+    profile,
+    effectivePreferences,
+    lockedPreferenceKeys,
+  };
 };

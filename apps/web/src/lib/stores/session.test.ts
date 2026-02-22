@@ -23,6 +23,10 @@ vi.mock('$app/environment', () => ({
   browser: true,
 }));
 
+vi.stubGlobal('window', {
+  matchMedia: vi.fn().mockReturnValue({ matches: false }),
+});
+
 const { login, register, logout, getCurrentUser } = await import('$lib/api/auth');
 
 describe('sessionStore', () => {

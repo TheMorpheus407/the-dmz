@@ -55,6 +55,8 @@ export type UserProfile = {
   userId: string;
   locale: string;
   timezone: string;
+  preferences?: Record<string, unknown>;
+  policyLockedPreferences?: Record<string, unknown>;
   accessibilitySettings: Record<string, unknown>;
   notificationSettings: Record<string, unknown>;
 };

@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+import {
+  userPreferencesSchema,
+  effectivePreferencesSchema,
+  policyLockedPreferencesSchema,
+} from './preferences.schema.js';
+
 const PASSWORD_KEY = 'password' as const;
 
 export const userSchema = z
@@ -78,6 +84,8 @@ export const profileSchema = z
     userId: z.string().uuid(),
     locale: z.string().max(10),
     timezone: z.string().max(64),
+    preferences: userPreferencesSchema.optional(),
+    policyLockedPreferences: policyLockedPreferencesSchema.optional(),
     accessibilitySettings: z.record(z.unknown()),
     notificationSettings: z.record(z.unknown()),
   })
@@ -89,6 +97,7 @@ export const updateProfileSchema = z
   .object({
     locale: z.string().max(10).optional(),
     timezone: z.string().max(64).optional(),
+    preferences: userPreferencesSchema.optional(),
     accessibilitySettings: z.record(z.unknown()).optional(),
     notificationSettings: z.record(z.unknown()).optional(),
   })
@@ -107,6 +116,7 @@ export const meResponseSchema = z
       isActive: z.boolean(),
     }),
     profile: profileSchema.optional(),
+    effectivePreferences: effectivePreferencesSchema.optional(),
   })
   .strict();
 
