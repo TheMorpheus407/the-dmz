@@ -12,6 +12,11 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
+    "./auth": {
+      "types": "./dist/esm/auth/index.d.ts",
+      "import": "./dist/esm/auth/index.js",
+      "require": "./dist/cjs/auth/index.js"
+    },
     "./types": {
       "types": "./dist/esm/types/index.d.ts",
       "import": "./dist/esm/types/index.js",

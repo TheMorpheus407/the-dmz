@@ -1,18 +1,17 @@
 import { redirect } from '@sveltejs/kit';
 
 import { getServerUser } from '$lib/server/auth';
+import { RouteGroup, evaluateRouteGroupPolicy } from '@the-dmz/shared/auth';
 
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async (event) => {
   const user = await getServerUser(event);
 
-  if (!user) {
-    throw redirect(303, '/login');
-  }
+  const result = evaluateRouteGroupPolicy(RouteGroup.ADMIN, user);
 
-  if (user.role !== 'admin') {
-    throw redirect(303, '/game');
+  if (!result.allowed && result.redirectUrl) {
+    throw redirect(303, result.redirectUrl);
   }
 
   return {

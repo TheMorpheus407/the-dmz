@@ -1,11 +1,13 @@
+import { allowedTenantStatuses, blockedTenantStatuses } from '@the-dmz/shared/auth';
+
 import { getDatabaseClient } from '../database/connection.js';
 
 import { ErrorCodes, AppError } from './error-handler.js';
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
-export const ALLOWED_TENANT_STATUSES = ['active'] as const;
-export const BLOCKED_TENANT_STATUSES = ['suspended', 'deactivated'] as const;
+export const ALLOWED_TENANT_STATUSES = allowedTenantStatuses;
+export const BLOCKED_TENANT_STATUSES = blockedTenantStatuses;
 
 export type AllowedTenantStatus = (typeof ALLOWED_TENANT_STATUSES)[number];
 export type BlockedTenantStatus = (typeof BLOCKED_TENANT_STATUSES)[number];
