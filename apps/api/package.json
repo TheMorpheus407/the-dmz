@@ -10,6 +10,7 @@
     "start": "node dist/server.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:architecture": "eslint . --quiet --rule 'import-x/no-cycle:error' --rule 'import-x/no-restricted-paths:error'",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "tsx src/shared/database/migrate.ts",
     "db:smoke": "tsx src/shared/database/smoke.ts",

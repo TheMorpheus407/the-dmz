@@ -16,6 +16,9 @@
     "lint:fix": {
       "outputs": []
     },
+    "lint:architecture": {
+      "outputs": []
+    },
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]
