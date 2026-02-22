@@ -65,7 +65,36 @@ const buildModuleBoundaryZones = () => {
   return zones;
 };
 
+const buildWebSurfaceBoundaryZones = () => {
+  const webLibRoot = path.join(rootDir, 'apps', 'web', 'src', 'lib');
+  if (!fs.existsSync(webLibRoot)) {
+    return [];
+  }
+
+  const surfaceModules = ['game', 'admin'];
+  const existingSurfaces = surfaceModules.filter((name) =>
+    fs.existsSync(path.join(webLibRoot, name)),
+  );
+
+  const zones = [];
+  for (const target of existingSurfaces) {
+    for (const from of existingSurfaces) {
+      if (from === target) {
+        continue;
+      }
+      zones.push({
+        target: path.join(webLibRoot, target),
+        from: path.join(webLibRoot, from),
+      });
+    }
+  }
+
+  return zones;
+};
+
 const moduleBoundaryZones = buildModuleBoundaryZones();
+const webSurfaceBoundaryZones = buildWebSurfaceBoundaryZones();
+const allBoundaryZones = [...moduleBoundaryZones, ...webSurfaceBoundaryZones];
 
 const importOrderRule = [
   'error',
@@ -79,6 +108,7 @@ const importOrderRule = [
       { pattern: '$stores/**', group: 'internal' },
       { pattern: '$utils/**', group: 'internal' },
       { pattern: '$game/**', group: 'internal' },
+      { pattern: '$admin/**', group: 'internal' },
     ],
     pathGroupsExcludedImportTypes: ['builtin'],
     'newlines-between': 'always',
@@ -103,12 +133,12 @@ const baseRules = {
   'import-x/no-cycle': 'error',
   'import-x/no-duplicates': 'error',
   'import-x/order': importOrderRule,
-  ...(moduleBoundaryZones.length > 0
+  ...(allBoundaryZones.length > 0
     ? {
         'import-x/no-restricted-paths': [
           'error',
           {
-            zones: moduleBoundaryZones,
+            zones: allBoundaryZones,
             basePath: rootDir,
           },
         ],
