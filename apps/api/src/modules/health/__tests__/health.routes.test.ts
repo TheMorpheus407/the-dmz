@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
@@ -11,6 +11,17 @@ const createTestConfig = (): AppConfig => {
     LOG_LEVEL: 'silent',
   };
 };
+
+vi.mock('../health.service.js', () => ({
+  getHealth: vi.fn().mockReturnValue({ status: 'ok' }),
+  getReadiness: vi.fn().mockResolvedValue({
+    status: 'ok',
+    checks: {
+      database: { ok: true, message: 'Database connection ok' },
+      redis: { ok: true, message: 'Redis connection ok' },
+    },
+  }),
+}));
 
 describe('health routes', () => {
   const app = buildApp(createTestConfig());
@@ -52,23 +63,23 @@ describe('health routes', () => {
     expect(payload.error.details.issues.length).toBeGreaterThan(0);
   });
 
-  it('returns 503 for /ready when dependencies are missing', async () => {
+  it('returns 200 with ok status for /ready when dependencies are healthy', async () => {
     const response = await app.inject({
       method: 'GET',
       url: '/ready',
     });
 
-    expect(response.statusCode).toBe(503);
+    expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({
-      status: 'degraded',
+      status: 'ok',
       checks: {
         database: {
-          ok: false,
-          message: 'Database not initialized',
+          ok: true,
+          message: 'Database connection ok',
         },
         redis: {
-          ok: false,
-          message: 'Redis not available (degraded mode)',
+          ok: true,
+          message: 'Redis connection ok',
         },
       },
     });

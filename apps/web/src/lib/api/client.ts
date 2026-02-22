@@ -291,6 +291,39 @@ export class ApiClient {
   clearCsrfToken(): void {
     this.csrfToken = null;
   }
+
+  async getHealth(): Promise<{ data?: { status: 'ok' }; error?: CategorizedApiError }> {
+    return this.get<{ status: 'ok' }>('/health', { retry: { maxAttempts: 1 } });
+  }
+
+  async getReadiness(): Promise<{
+    data?: {
+      status: 'ok' | 'degraded';
+      checks: {
+        database: { ok: boolean; message: string };
+        redis: { ok: boolean; message: string };
+      };
+    };
+    error?: CategorizedApiError;
+  }> {
+    return this.get<{
+      status: 'ok' | 'degraded';
+      checks: {
+        database: { ok: boolean; message: string };
+        redis: { ok: boolean; message: string };
+      };
+    }>('/ready', { retry: { maxAttempts: 1 } });
+  }
+
+  async getAuthenticatedHealth(): Promise<{
+    data?: { status: 'ok'; user: { id: string; tenantId: string; role: string } };
+    error?: CategorizedApiError;
+  }> {
+    return this.get<{ status: 'ok'; user: { id: string; tenantId: string; role: string } }>(
+      '/api/v1/health/authenticated',
+      { retry: { maxAttempts: 1 } },
+    );
+  }
 }
 
 export const buildApiUrl = (
