@@ -31,6 +31,10 @@
       "cache": false,
       "persistent": true
     },
+    "test:a11y": {
+      "cache": false,
+      "outputs": ["playwright-report/**"]
+    },
     "typecheck": {
       "outputs": []
     },

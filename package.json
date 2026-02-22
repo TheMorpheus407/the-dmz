@@ -27,6 +27,7 @@
     "test:e2e:ui": "pnpm run test:e2e:prepare && playwright test --ui",
     "test:e2e:headed": "pnpm run test:e2e:prepare && playwright test --headed",
     "test:e2e:debug": "pnpm run test:e2e:prepare && playwright test --debug",
+    "test:a11y": "pnpm run test:e2e:prepare && playwright test e2e/smoke/accessibility-m1.spec.ts",
     "typecheck": "turbo run typecheck",
     "clean": "turbo run clean",
     "env:setup": "node scripts/copy-env.mjs",
