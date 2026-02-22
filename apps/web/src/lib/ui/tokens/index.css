@@ -110,8 +110,16 @@
   --admin-text-metric: 2rem;
 
   /* ========================================
-     SPACING
+     CRT EFFECT INTENSITY - GAME
      ======================================== */
+  --scanline-opacity: 0.05;
+  --glow-intensity: 1;
+  --noise-opacity: 0.03;
+  --vignette-opacity: 0.3;
+
+  /* ========================================
+       SPACING
+      ======================================== */
   --space-0: 0;
   --space-1: 0.25rem;
   --space-2: 0.5rem;
@@ -122,43 +130,13 @@
   --space-8: 3rem;
 
   /* ========================================
-     RADIUS
-     ======================================== */
-  --radius-none: 0;
-  --radius-sm: 4px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
-  --radius-full: 9999px;
-
-  /* ========================================
-     BORDERS
-     ======================================== */
-  --border-width: 1px;
-  --border-style: solid;
-  --border-default: var(--border-width) var(--border-style) var(--color-border);
-
-  /* ========================================
-     SHADOWS
-     ======================================== */
-  --shadow-soft: 0 18px 40px rgba(3, 12, 8, 0.5);
-  --shadow-glow: 0 0 10px var(--color-accent);
-  --shadow-glow-amber: 0 0 10px var(--color-amber);
-
-  /* ========================================
-     CRT EFFECT CONTROLS
-     ======================================== */
-  --scanline-opacity: 0.05;
-  --scanline-size: 2px;
-  --glow-intensity: 1;
-  --noise-opacity: 0.03;
-  --vignette-opacity: 0.3;
-
-  /* Effect toggle flags */
-  --effect-scanlines: 1;
-  --effect-curvature: 1;
-  --effect-glow: 1;
-  --effect-noise: 1;
-  --effect-vignette: 1;
+      BREAKPOINTS
+      ======================================== */
+  --bp-mobile-sm: 320px;
+  --bp-mobile: 600px;
+  --bp-tablet: 768px;
+  --bp-desktop: 1024px;
+  --bp-desktop-lg: 1440px;
 }
 
 /* ========================================
@@ -470,4 +448,293 @@
   --color-border: #ffffff;
   --color-accent: #ffff00;
   --color-muted: #cccccc;
+}
+
+/* ========================================
+   RESPONSIVE LAYOUT UTILITIES
+   ======================================== */
+
+/* Mobile small (320px+) */
+@media (min-width: var(--bp-mobile-sm)) {
+  .shell--mobile-sm-only {
+    display: block;
+  }
+  .shell--tablet-only,
+  .shell--desktop-only {
+    display: none;
+  }
+}
+
+/* Mobile (600px+) */
+@media (min-width: var(--bp-mobile)) {
+  .shell--mobile-only {
+    display: block;
+  }
+  .shell--tablet-only,
+  .shell--desktop-only {
+    display: none;
+  }
+}
+
+/* Tablet (768px-1023px) */
+@media (min-width: var(--bp-tablet)) and (max-width: 1023px) {
+  .shell--tablet-only {
+    display: block;
+  }
+  .shell--mobile-only,
+  .shell--desktop-only {
+    display: none;
+  }
+}
+
+/* Desktop (1024px+) */
+@media (min-width: var(--bp-desktop)) {
+  .shell--desktop-only {
+    display: block;
+  }
+  .shell--mobile-only,
+  .shell--tablet-only {
+    display: none;
+  }
+}
+
+/* ========================================
+   RESPONSIVE GRID LAYOUTS - GAME SHELL
+   ======================================== */
+
+/* Desktop: 3-panel grid */
+.shell-game {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  grid-template-rows: 1fr;
+  gap: var(--space-4);
+  height: 100vh;
+  width: 100%;
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+.shell-game__panel--inbox {
+  grid-column: 1;
+  grid-row: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-game__panel--document {
+  grid-column: 2;
+  grid-row: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-game__panel--status {
+  grid-column: 3;
+  grid-row: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Tablet: 2-panel with toggleable drawer */
+@media (min-width: var(--bp-tablet)) and (max-width: 1023px) {
+  .shell-game {
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: 1fr;
+  }
+
+  .shell-game__panel--inbox {
+    grid-column: 1;
+  }
+
+  .shell-game__panel--document {
+    grid-column: 2;
+  }
+
+  .shell-game__panel--status {
+    display: none;
+  }
+
+  .shell-game__panel--status.shell-game__panel--drawer-open {
+    display: flex;
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 300px;
+    z-index: 100;
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+/* Mobile: 1-panel with tabs */
+@media (max-width: 767px) {
+  .shell-game {
+    display: flex;
+    flex-direction: column;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    padding: var(--space-2);
+  }
+
+  .shell-game__panel--inbox,
+  .shell-game__panel--document,
+  .shell-game__panel--status {
+    display: none;
+    grid-column: auto;
+    grid-row: auto;
+    flex: 1;
+    overflow: auto;
+  }
+
+  .shell-game__panel--inbox.shell-game__panel--active,
+  .shell-game__panel--document.shell-game__panel--active,
+  .shell-game__panel--status.shell-game__panel--active {
+    display: flex;
+  }
+}
+
+/* ========================================
+   RESPONSIVE GRID LAYOUTS - ADMIN SHELL
+   ======================================== */
+
+.shell-admin {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: auto 1fr;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.shell-admin__header {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-default);
+  background-color: var(--color-surface);
+}
+
+.shell-admin__sidebar {
+  grid-column: 1;
+  grid-row: 2;
+  padding: var(--space-4);
+  border-right: var(--border-default);
+  background-color: var(--color-bg);
+  overflow-y: auto;
+}
+
+.shell-admin__main {
+  grid-column: 2;
+  grid-row: 2;
+  padding: var(--space-4);
+  overflow-y: auto;
+}
+
+@media (max-width: 767px) {
+  .shell-admin {
+    grid-template-columns: 1fr;
+  }
+
+  .shell-admin__sidebar {
+    display: none;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    z-index: 100;
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .shell-admin__sidebar.shell-admin__sidebar--open {
+    display: block;
+  }
+
+  .shell-admin__main {
+    grid-column: 1;
+    padding: var(--space-2);
+  }
+}
+
+/* ========================================
+   RESPONSIVE GRID LAYOUTS - AUTH/PUBLIC SHELL
+   ======================================== */
+
+.shell-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+  padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+.shell-auth__container {
+  width: 100%;
+  max-width: 420px;
+}
+
+@media (min-width: var(--bp-tablet)) {
+  .shell-auth__container {
+    max-width: 480px;
+  }
+}
+
+.shell-public {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.shell-public__header {
+  padding: var(--space-4);
+  border-bottom: var(--border-default);
+  background-color: var(--color-surface);
+}
+
+.shell-public__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+}
+
+.shell-public__container {
+  width: 100%;
+  max-width: 800px;
+}
+
+@media (max-width: 767px) {
+  .shell-public__main {
+    padding: var(--space-4);
+  }
+}
+
+/* ========================================
+   REDUCED MOTION FOR LAYOUT TRANSITIONS
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .shell-game,
+  .shell-admin,
+  .shell-auth,
+  .shell-public {
+    transition: none;
+  }
+
+  .shell-drawer,
+  .shell-sidebar {
+    transition: none;
+  }
 }

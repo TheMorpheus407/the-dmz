@@ -13,6 +13,7 @@
     ariaLabel?: string;
     ariaDescribedBy?: string;
     onclick?: (e: MouseEvent) => void;
+    class?: string;
     children: Snippet;
   }
 
@@ -24,12 +25,13 @@
     ariaLabel,
     ariaDescribedBy,
     onclick,
+    class: className = '',
     children,
   }: Props = $props();
 </script>
 
 <button
-  class="button button--{variant} button--{size}"
+  class="button button--{variant} button--{size} {className}"
   {type}
   {disabled}
   aria-label={ariaLabel}
