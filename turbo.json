@@ -56,6 +56,10 @@
       "dependsOn": ["openapi:generate"],
       "outputs": [],
       "inputs": ["openapi/**", "src/**", "scripts/**"]
+    },
+    "check:tokens": {
+      "cache": false,
+      "outputs": []
     }
   }
 }
