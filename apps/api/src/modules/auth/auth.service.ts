@@ -3,6 +3,8 @@ import { randomUUID } from 'crypto';
 import * as argon2 from 'argon2';
 import { SignJWT, jwtVerify } from 'jose';
 
+import { canRefreshSession, getSessionPolicyForRole } from '@the-dmz/shared/auth/session-policy.js';
+
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { tenants } from '../../shared/database/schema/tenants.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
@@ -286,6 +288,16 @@ export const refresh = async (
 
   if (!user || !user.isActive) {
     throw new InvalidCredentialsError();
+  }
+
+  if (!canRefreshSession(session.createdAt, user.role)) {
+    await deleteSession(db, session.id);
+    const policy = getSessionPolicyForRole(user.role);
+    throw new AppError({
+      code: ErrorCodes.AUTH_SESSION_EXPIRED,
+      message: `Session has exceeded maximum duration of ${policy.maxSessionDurationMs}ms for role ${user.role}`,
+      statusCode: 401,
+    });
   }
 
   const tenant = await db.query.tenants.findFirst({

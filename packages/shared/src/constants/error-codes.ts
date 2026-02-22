@@ -20,6 +20,7 @@ export const ErrorCodes = {
   AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
   AUTH_UNAUTHORIZED: 'AUTH_UNAUTHORIZED',
   AUTH_SESSION_EXPIRED: 'AUTH_SESSION_EXPIRED',
+  AUTH_SESSION_REVOKED: 'AUTH_SESSION_REVOKED',
   AUTH_CSRF_INVALID: 'AUTH_CSRF_INVALID',
   AUTH_INSUFFICIENT_PERMS: 'AUTH_INSUFFICIENT_PERMS',
   AUTH_ACCOUNT_SUSPENDED: 'AUTH_ACCOUNT_SUSPENDED',
@@ -92,6 +93,11 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHENTICATION,
     retryable: false,
     messageKey: 'errors.auth.sessionExpired',
+  },
+  [ErrorCodes.AUTH_SESSION_REVOKED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.sessionRevoked',
   },
   [ErrorCodes.AUTH_CSRF_INVALID]: {
     category: ErrorCodeCategory.AUTHENTICATION,

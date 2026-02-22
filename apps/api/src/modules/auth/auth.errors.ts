@@ -33,7 +33,7 @@ export class SessionExpiredError extends AuthError {
 export class SessionRevokedError extends AuthError {
   constructor() {
     super({
-      code: ErrorCodes.AUTH_SESSION_EXPIRED,
+      code: ErrorCodes.AUTH_SESSION_REVOKED,
       message: 'Session has been revoked',
       statusCode: 401,
     });

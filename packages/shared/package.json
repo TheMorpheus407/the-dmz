@@ -17,6 +17,16 @@
       "import": "./dist/esm/auth/index.js",
       "require": "./dist/cjs/auth/index.js"
     },
+    "./auth/session-policy": {
+      "types": "./dist/esm/auth/session-policy.d.ts",
+      "import": "./dist/esm/auth/session-policy.js",
+      "require": "./dist/cjs/auth/session-policy.js"
+    },
+    "./auth/session-policy.js": {
+      "types": "./dist/esm/auth/session-policy.d.ts",
+      "import": "./dist/esm/auth/session-policy.js",
+      "require": "./dist/cjs/auth/session-policy.js"
+    },
     "./types": {
       "types": "./dist/esm/types/index.d.ts",
       "import": "./dist/esm/types/index.js",

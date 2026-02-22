@@ -15,7 +15,13 @@ import { themeStore } from './theme';
 
 import type { Readable } from 'svelte/store';
 
-export type SessionStatus = 'anonymous' | 'authenticating' | 'authenticated' | 'expired';
+export type SessionStatus =
+  | 'anonymous'
+  | 'authenticating'
+  | 'authenticated'
+  | 'expired'
+  | 'revoked'
+  | 'policy_denied';
 
 export interface SessionUser {
   id: string;
@@ -109,7 +115,18 @@ function createSessionStore() {
 
       if (result.error) {
         if (result.error.category === 'authentication') {
-          set({ status: 'expired', user: null, lockedPreferenceKeys: [] });
+          if (result.error.code === 'AUTH_SESSION_REVOKED') {
+            set({ status: 'revoked', user: null, lockedPreferenceKeys: [] });
+          } else if (
+            result.error.code === 'AUTH_SESSION_EXPIRED' ||
+            result.error.code === 'AUTH_TOKEN_EXPIRED'
+          ) {
+            set({ status: 'expired', user: null, lockedPreferenceKeys: [] });
+          } else {
+            set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
+          }
+        } else if (result.error.category === 'authorization') {
+          set({ status: 'policy_denied', user: null, lockedPreferenceKeys: [] });
         } else {
           set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
         }
@@ -278,6 +295,14 @@ function createSessionStore() {
       set({ status: 'expired', user: null, lockedPreferenceKeys: [] });
     },
 
+    revoke(): void {
+      set({ status: 'revoked', user: null, lockedPreferenceKeys: [] });
+    },
+
+    policyDeny(): void {
+      set({ status: 'policy_denied', user: null, lockedPreferenceKeys: [] });
+    },
+
     clear(): void {
       themeStore.clearPendingSync();
       themeStore.init();
@@ -306,6 +331,16 @@ export const isAnonymous: Readable<boolean> = derived(
 export const isExpired: Readable<boolean> = derived(
   sessionStore,
   ($session) => $session.status === 'expired',
+);
+
+export const isRevoked: Readable<boolean> = derived(
+  sessionStore,
+  ($session) => $session.status === 'revoked',
+);
+
+export const isPolicyDenied: Readable<boolean> = derived(
+  sessionStore,
+  ($session) => $session.status === 'policy_denied',
 );
 
 export const currentUser: Readable<SessionUser | null> = derived(
