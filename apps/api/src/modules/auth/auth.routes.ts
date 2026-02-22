@@ -16,6 +16,7 @@ import {
   createAuthLoginFailedEvent,
 } from './auth.events.js';
 
+import type { UpdateProfileData } from './auth.repo.js';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthenticatedUser } from './auth.types.js';
 
@@ -94,6 +95,18 @@ const meResponseJsonSchema = {
       },
       required: ['id', 'email', 'displayName', 'tenantId', 'role', 'isActive'],
     },
+    profile: {
+      type: 'object',
+      properties: {
+        profileId: { type: 'string', format: 'uuid' },
+        tenantId: { type: 'string', format: 'uuid' },
+        userId: { type: 'string', format: 'uuid' },
+        locale: { type: 'string' },
+        timezone: { type: 'string' },
+        accessibilitySettings: { type: 'object' },
+        notificationSettings: { type: 'object' },
+      },
+    },
     permissions: {
       type: 'array',
       items: { type: 'string' },
@@ -104,6 +117,39 @@ const meResponseJsonSchema = {
     },
   },
   required: ['user', 'permissions', 'roles'],
+} as const;
+
+const updateProfileBodyJsonSchema = {
+  type: 'object',
+  properties: {
+    locale: { type: 'string', maxLength: 10 },
+    timezone: { type: 'string', maxLength: 64 },
+    accessibilitySettings: { type: 'object' },
+    notificationSettings: { type: 'object' },
+  },
+  additionalProperties: false,
+} as const;
+
+const profileResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    profileId: { type: 'string', format: 'uuid' },
+    tenantId: { type: 'string', format: 'uuid' },
+    userId: { type: 'string', format: 'uuid' },
+    locale: { type: 'string' },
+    timezone: { type: 'string' },
+    accessibilitySettings: { type: 'object' },
+    notificationSettings: { type: 'object' },
+  },
+  required: [
+    'profileId',
+    'tenantId',
+    'userId',
+    'locale',
+    'timezone',
+    'accessibilitySettings',
+    'notificationSettings',
+  ],
 } as const;
 
 export const authGuard = async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
@@ -403,11 +449,44 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       const user = request.user as AuthenticatedUser;
       const currentUser = await authService.getCurrentUser(config, user.userId, user.tenantId);
       const permissionContext = await resolvePermissions(config, user.tenantId, user.userId);
+      const profile = await authService.getProfile(config, user.userId, user.tenantId);
       return {
         user: currentUser,
+        profile: profile ?? undefined,
         permissions: permissionContext.permissions,
         roles: permissionContext.roles,
       };
+    },
+  );
+
+  fastify.patch(
+    '/auth/profile',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        body: updateProfileBodyJsonSchema,
+        response: {
+          200: profileResponseJsonSchema,
+          400: errorResponseSchemas.BadRequest,
+          403: errorResponseSchemas.TenantInactive,
+          404: errorResponseSchemas.NotFound,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const body = request.body as UpdateProfileData;
+      const profile = await authService.updateUserProfile(config, user.userId, user.tenantId, body);
+
+      if (!profile) {
+        throw new AuthError({
+          message: 'Profile not found',
+          statusCode: 404,
+        });
+      }
+
+      return profile;
     },
   );
 

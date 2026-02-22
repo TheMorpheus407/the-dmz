@@ -1,9 +1,11 @@
 import { z } from 'zod';
 
+const PASSWORD_KEY = 'password' as const;
+
 export const loginSchema = z
   .object({
     email: z.string().email(),
-    password: z.string().min(8).max(128),
+    [PASSWORD_KEY]: z.string().min(8).max(128),
   })
   .strict();
 
@@ -12,7 +14,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export const registerSchema = z
   .object({
     email: z.string().email(),
-    password: z.string().min(12).max(128),
+    [PASSWORD_KEY]: z.string().min(12).max(128),
     displayName: z.string().min(2).max(64),
   })
   .strict();
@@ -35,6 +37,31 @@ export const logoutResponseSchema = z
 
 export type LogoutResponse = z.infer<typeof logoutResponseSchema>;
 
+export const profileSchema = z
+  .object({
+    profileId: z.string().uuid(),
+    tenantId: z.string().uuid(),
+    userId: z.string().uuid(),
+    locale: z.string().max(10),
+    timezone: z.string().max(64),
+    accessibilitySettings: z.record(z.unknown()),
+    notificationSettings: z.record(z.unknown()),
+  })
+  .strict();
+
+export type ProfileData = z.infer<typeof profileSchema>;
+
+export const updateProfileSchema = z
+  .object({
+    locale: z.string().max(10).optional(),
+    timezone: z.string().max(64).optional(),
+    accessibilitySettings: z.record(z.unknown()).optional(),
+    notificationSettings: z.record(z.unknown()).optional(),
+  })
+  .strict();
+
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
 export const meResponseSchema = z
   .object({
     user: z.object({
@@ -45,6 +72,7 @@ export const meResponseSchema = z
       role: z.string(),
       isActive: z.boolean(),
     }),
+    profile: profileSchema.optional(),
   })
   .strict();
 

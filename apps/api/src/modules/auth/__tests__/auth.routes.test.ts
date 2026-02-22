@@ -20,6 +20,7 @@ const testConfig = createTestConfig();
 const resetTestData = async (): Promise<void> => {
   const pool = getDatabasePool(testConfig);
   await pool`TRUNCATE TABLE
+    auth.user_profiles,
     auth.role_permissions,
     auth.user_roles,
     auth.sessions,

@@ -20,6 +20,8 @@ export const ErrorCodes = {
   TENANT_NOT_FOUND: 'TENANT_NOT_FOUND',
   TENANT_INACTIVE: 'TENANT_INACTIVE',
   RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
+  PROFILE_NOT_FOUND: 'PROFILE_NOT_FOUND',
+  PROFILE_UPDATE_FAILED: 'PROFILE_UPDATE_FAILED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -42,6 +44,8 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.TENANT_NOT_FOUND]: 404,
   [ErrorCodes.TENANT_INACTIVE]: 403,
   [ErrorCodes.RESOURCE_NOT_FOUND]: 404,
+  [ErrorCodes.PROFILE_NOT_FOUND]: 404,
+  [ErrorCodes.PROFILE_UPDATE_FAILED]: 400,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -62,6 +66,8 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.TENANT_NOT_FOUND]: 'Tenant not found',
   [ErrorCodes.TENANT_INACTIVE]: 'Tenant is suspended or deactivated',
   [ErrorCodes.RESOURCE_NOT_FOUND]: 'The requested resource was not found',
+  [ErrorCodes.PROFILE_NOT_FOUND]: 'User profile not found',
+  [ErrorCodes.PROFILE_UPDATE_FAILED]: 'Failed to update user profile',
 } as const;
 
 export type AppErrorOptions = {

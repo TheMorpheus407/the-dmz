@@ -18,6 +18,10 @@ import {
   deleteSession,
   deleteSessionByTokenHash,
   deleteAllSessionsByTenantId,
+  createProfile,
+  findProfileByUserId,
+  updateProfile,
+  type UpdateProfileData,
 } from './auth.repo.js';
 import {
   InvalidCredentialsError,
@@ -33,6 +37,7 @@ import type {
   RefreshResponse,
   JwtPayload,
   AuthenticatedUser,
+  UserProfile,
 } from './auth.types.js';
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 30;
@@ -144,6 +149,11 @@ export const register = async (
     passwordHash,
     displayName: data.displayName,
     tenantId,
+  });
+
+  await createProfile(db, {
+    tenantId: user.tenantId,
+    userId: user.id,
   });
 
   const refreshToken = randomUUID();
@@ -388,4 +398,23 @@ export const invalidateTenantSessions = async (
 ): Promise<number> => {
   const db = getDatabaseClient(config);
   return deleteAllSessionsByTenantId(db, tenantId);
+};
+
+export const getProfile = async (
+  config: AppConfig,
+  userId: string,
+  tenantId: string,
+): Promise<UserProfile | null> => {
+  const db = getDatabaseClient(config);
+  return findProfileByUserId(db, userId, tenantId);
+};
+
+export const updateUserProfile = async (
+  config: AppConfig,
+  userId: string,
+  tenantId: string,
+  data: UpdateProfileData,
+): Promise<UserProfile | null> => {
+  const db = getDatabaseClient(config);
+  return updateProfile(db, userId, tenantId, data);
 };

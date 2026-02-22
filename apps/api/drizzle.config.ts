@@ -9,6 +9,7 @@ const config = {
     './src/db/schema/auth/roles.ts',
     './src/db/schema/auth/sessions.ts',
     './src/db/schema/auth/sso-connections.ts',
+    './src/db/schema/auth/user-profiles.ts',
     './src/db/schema/auth/user-roles.ts',
   ],
   out: './src/shared/database/migrations',

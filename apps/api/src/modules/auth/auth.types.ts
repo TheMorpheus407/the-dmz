@@ -48,3 +48,13 @@ export interface AuthenticatedUser {
   sessionId: string;
   role: string;
 }
+
+export type UserProfile = {
+  profileId: string;
+  tenantId: string;
+  userId: string;
+  locale: string;
+  timezone: string;
+  accessibilitySettings: Record<string, unknown>;
+  notificationSettings: Record<string, unknown>;
+};
