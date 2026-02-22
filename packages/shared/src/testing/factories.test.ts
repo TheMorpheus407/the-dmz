@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
-import { SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
-import { createTestTenant, createTestUser, SEED_TENANTS, SEED_USERS } from './factories.js';
+import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
+import {
+  createTestProfile,
+  createTestTenant,
+  createTestUser,
+  SEED_PROFILES,
+  SEED_TENANTS,
+  SEED_USERS,
+} from './factories.js';
 
-import type { TenantSeed, UserSeed } from './factories.js';
+import type { ProfileSeed, TenantSeed, UserSeed } from './factories.js';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -211,6 +218,132 @@ describe('SEED_USERS', () => {
     const inactiveUsers = SEED_USERS.filter((u) => u.tenantId === SEED_TENANT_IDS.inactiveCo);
     for (const user of inactiveUsers) {
       expect(user.isActive, `${user.email} in inactive tenant should be inactive`).toBe(false);
+    }
+  });
+});
+
+describe('createTestProfile', () => {
+  it('returns a profile with all required fields', () => {
+    const profile = createTestProfile();
+
+    expect(profile).toHaveProperty('profileId');
+    expect(profile).toHaveProperty('userId');
+    expect(profile).toHaveProperty('tenantId');
+    expect(profile).toHaveProperty('locale');
+    expect(profile).toHaveProperty('timezone');
+    expect(profile).toHaveProperty('accessibilitySettings');
+    expect(profile).toHaveProperty('notificationSettings');
+  });
+
+  it('uses deterministic defaults', () => {
+    const profile = createTestProfile();
+
+    expect(profile.profileId).toBe(SEED_PROFILE_IDS.acmeCorp.learner);
+    expect(profile.userId).toBe(SEED_USER_IDS.acmeCorp.learner);
+    expect(profile.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(profile.locale).toBe('en');
+    expect(profile.timezone).toBe('UTC');
+    expect(profile.accessibilitySettings).toEqual({});
+    expect(profile.notificationSettings).toEqual({});
+  });
+
+  it('accepts overrides for all fields', () => {
+    const overrides: ProfileSeed = {
+      profileId: '33333333-3333-4333-a333-333333333333',
+      userId: SEED_USER_IDS.acmeCorp.superAdmin,
+      tenantId: SEED_TENANT_IDS.consumerPlatform,
+      locale: 'de',
+      timezone: 'Europe/Berlin',
+      accessibilitySettings: { reducedMotion: true },
+      notificationSettings: { email: false },
+    };
+
+    const profile = createTestProfile(overrides);
+    expect(profile).toEqual(overrides);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const profile = createTestProfile({ locale: 'fr' });
+
+    expect(profile.locale).toBe('fr');
+    expect(profile.profileId).toBe(SEED_PROFILE_IDS.acmeCorp.learner);
+    expect(profile.timezone).toBe('UTC');
+  });
+});
+
+describe('SEED_PROFILES', () => {
+  it('contains exactly 12 profiles (4 per tenant)', () => {
+    expect(SEED_PROFILES).toHaveLength(12);
+  });
+
+  it('has exactly 4 profiles per non-system tenant', () => {
+    const nonSystemTenantIds = [
+      SEED_TENANT_IDS.acmeCorp,
+      SEED_TENANT_IDS.consumerPlatform,
+      SEED_TENANT_IDS.inactiveCo,
+    ];
+
+    for (const tenantId of nonSystemTenantIds) {
+      const tenantProfiles = SEED_PROFILES.filter((p) => p.tenantId === tenantId);
+      expect(tenantProfiles, `tenant ${tenantId} should have 4 profiles`).toHaveLength(4);
+    }
+  });
+
+  it('has valid UUID format for all profile IDs', () => {
+    for (const profile of SEED_PROFILES) {
+      expect(profile.profileId, `${profile.profileId} should have valid UUID`).toMatch(UUID_REGEX);
+    }
+  });
+
+  it('has unique profile IDs', () => {
+    const ids = SEED_PROFILES.map((p) => p.profileId);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('references only tenant IDs from SEED_TENANT_IDS', () => {
+    const validTenantIds = new Set(Object.values(SEED_TENANT_IDS));
+    for (const profile of SEED_PROFILES) {
+      expect(
+        validTenantIds.has(profile.tenantId),
+        `${profile.profileId} should reference a known tenant`,
+      ).toBe(true);
+    }
+  });
+
+  it('references only user IDs from SEED_USERS', () => {
+    const validUserIds = new Set(SEED_USERS.map((u) => u.userId));
+    for (const profile of SEED_PROFILES) {
+      expect(
+        validUserIds.has(profile.userId),
+        `${profile.profileId} should reference a known user`,
+      ).toBe(true);
+    }
+  });
+
+  it('has all required fields on every profile', () => {
+    for (const profile of SEED_PROFILES) {
+      expect(profile).toHaveProperty('profileId');
+      expect(profile).toHaveProperty('userId');
+      expect(profile).toHaveProperty('tenantId');
+      expect(profile).toHaveProperty('locale');
+      expect(profile).toHaveProperty('timezone');
+      expect(profile).toHaveProperty('accessibilitySettings');
+      expect(profile).toHaveProperty('notificationSettings');
+    }
+  });
+
+  it('has deterministic locale and timezone defaults', () => {
+    for (const profile of SEED_PROFILES) {
+      expect(profile.locale).toBe('en');
+      expect(profile.timezone).toBe('UTC');
+    }
+  });
+
+  it('each profile matches its corresponding user', () => {
+    for (const profile of SEED_PROFILES) {
+      const matchingUser = SEED_USERS.find((u) => u.userId === profile.userId);
+      expect(matchingUser).toBeDefined();
+      expect(matchingUser?.tenantId).toBe(profile.tenantId);
     }
   });
 });

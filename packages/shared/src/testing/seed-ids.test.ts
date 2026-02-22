@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
+import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -73,5 +73,58 @@ describe('SEED_USER_IDS', () => {
     }
 
     expect(new Set(allIds).size).toBe(allIds.length);
+  });
+});
+
+describe('SEED_PROFILE_IDS', () => {
+  it('contains profile IDs for 3 non-system tenants', () => {
+    expect(Object.keys(SEED_PROFILE_IDS)).toHaveLength(3);
+    expect(SEED_PROFILE_IDS).toHaveProperty('acmeCorp');
+    expect(SEED_PROFILE_IDS).toHaveProperty('consumerPlatform');
+    expect(SEED_PROFILE_IDS).toHaveProperty('inactiveCo');
+  });
+
+  it('has 4 profiles per tenant', () => {
+    for (const [tenantKey, profiles] of Object.entries(SEED_PROFILE_IDS)) {
+      const profileKeys = Object.keys(profiles);
+      expect(profileKeys, `${tenantKey} should have 4 profiles`).toHaveLength(4);
+      expect(profileKeys).toContain('superAdmin');
+      expect(profileKeys).toContain('tenantAdmin');
+      expect(profileKeys).toContain('manager');
+      expect(profileKeys).toContain('learner');
+    }
+  });
+
+  it('has valid UUID format for all profile IDs', () => {
+    for (const [tenantKey, profiles] of Object.entries(SEED_PROFILE_IDS)) {
+      for (const [roleKey, id] of Object.entries(profiles)) {
+        expect(id, `${tenantKey}.${roleKey} should be valid UUID`).toMatch(UUID_REGEX);
+      }
+    }
+  });
+
+  it('has globally unique IDs across all tenants', () => {
+    const allIds: string[] = [];
+
+    for (const profiles of Object.values(SEED_PROFILE_IDS)) {
+      allIds.push(...Object.values(profiles));
+    }
+
+    expect(new Set(allIds).size).toBe(allIds.length);
+  });
+
+  it('profile IDs are distinct from user IDs', () => {
+    const userIds: string[] = [];
+    for (const users of Object.values(SEED_USER_IDS)) {
+      userIds.push(...Object.values(users));
+    }
+
+    const profileIds: string[] = [];
+    for (const profiles of Object.values(SEED_PROFILE_IDS)) {
+      profileIds.push(...Object.values(profiles));
+    }
+
+    const overlap = userIds.filter((id) => profileIds.includes(id));
+    expect(overlap).toHaveLength(0);
   });
 });

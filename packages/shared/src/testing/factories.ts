@@ -1,4 +1,4 @@
-import { SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
+import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
 
 /**
  * Shape of a tenant row for seeding. Matches the Drizzle `tenants` table
@@ -26,6 +26,20 @@ export type UserSeed = {
 };
 
 /**
+ * Shape of a user profile row for seeding. Matches the Drizzle `user_profiles` table
+ * insert type without importing drizzle-orm (keeps shared package DB-free).
+ */
+export type ProfileSeed = {
+  profileId: string;
+  userId: string;
+  tenantId: string;
+  locale: string;
+  timezone: string;
+  accessibilitySettings: Record<string, unknown>;
+  notificationSettings: Record<string, unknown>;
+};
+
+/**
  * Build a tenant seed object with sensible defaults.
  * Does NOT insert into the database — pure data factory.
  */
@@ -48,6 +62,20 @@ export const createTestUser = (overrides: Partial<UserSeed> = {}): UserSeed => (
   displayName: overrides.displayName ?? 'Test User',
   role: overrides.role ?? 'learner',
   isActive: overrides.isActive ?? true,
+});
+
+/**
+ * Build a user profile seed object with sensible defaults.
+ * Does NOT insert into the database — pure data factory.
+ */
+export const createTestProfile = (overrides: Partial<ProfileSeed> = {}): ProfileSeed => ({
+  profileId: overrides.profileId ?? SEED_PROFILE_IDS.acmeCorp.learner,
+  userId: overrides.userId ?? SEED_USER_IDS.acmeCorp.learner,
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  locale: overrides.locale ?? 'en',
+  timezone: overrides.timezone ?? 'UTC',
+  accessibilitySettings: overrides.accessibilitySettings ?? {},
+  notificationSettings: overrides.notificationSettings ?? {},
 });
 
 /**
@@ -186,4 +214,46 @@ export const SEED_USERS: readonly UserSeed[] = [
     role: 'learner',
     isActive: false,
   },
+] as const;
+
+const DEFAULT_ACCESSIBILITY_SETTINGS = {
+  reducedMotion: false,
+  highContrast: false,
+  screenReader: false,
+  fontSize: 'normal',
+} as const;
+
+const DEFAULT_NOTIFICATION_SETTINGS = {
+  email: true,
+  push: false,
+  sms: false,
+  marketing: false,
+} as const;
+
+const buildProfile = (
+  tenantKey: keyof typeof SEED_PROFILE_IDS,
+  roleKey: keyof (typeof SEED_PROFILE_IDS)[keyof typeof SEED_PROFILE_IDS],
+): ProfileSeed => ({
+  profileId: SEED_PROFILE_IDS[tenantKey][roleKey],
+  userId: SEED_USER_IDS[tenantKey][roleKey],
+  tenantId: SEED_TENANT_IDS[tenantKey],
+  locale: 'en',
+  timezone: 'UTC',
+  accessibilitySettings: { ...DEFAULT_ACCESSIBILITY_SETTINGS },
+  notificationSettings: { ...DEFAULT_NOTIFICATION_SETTINGS },
+});
+
+export const SEED_PROFILES: readonly ProfileSeed[] = [
+  buildProfile('acmeCorp', 'superAdmin'),
+  buildProfile('acmeCorp', 'tenantAdmin'),
+  buildProfile('acmeCorp', 'manager'),
+  buildProfile('acmeCorp', 'learner'),
+  buildProfile('consumerPlatform', 'superAdmin'),
+  buildProfile('consumerPlatform', 'tenantAdmin'),
+  buildProfile('consumerPlatform', 'manager'),
+  buildProfile('consumerPlatform', 'learner'),
+  buildProfile('inactiveCo', 'superAdmin'),
+  buildProfile('inactiveCo', 'tenantAdmin'),
+  buildProfile('inactiveCo', 'manager'),
+  buildProfile('inactiveCo', 'learner'),
 ] as const;

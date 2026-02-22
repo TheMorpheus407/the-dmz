@@ -2,12 +2,20 @@ import { pathToFileURL } from 'node:url';
 
 import { eq, sql } from 'drizzle-orm';
 
-import { SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS } from '@the-dmz/shared/testing';
+import { SEED_PROFILES, SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS } from '@the-dmz/shared/testing';
 
 import { closeDatabase, getDatabaseClient } from './connection.js';
-import { permissions, rolePermissions, roles, tenants, userRoles, users } from './schema/index.js';
+import {
+  permissions,
+  rolePermissions,
+  roles,
+  tenants,
+  userProfiles,
+  userRoles,
+  users,
+} from './schema/index.js';
 
-export { SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS };
+export { SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS, SEED_PROFILES };
 
 const BASE_PERMISSIONS = [
   { resource: 'users', action: 'read', description: 'View user profiles' },
@@ -162,6 +170,30 @@ export const seedDatabase = async (): Promise<void> => {
       });
   }
 
+  for (const profile of SEED_PROFILES) {
+    await db
+      .insert(userProfiles)
+      .values({
+        profileId: profile.profileId,
+        userId: profile.userId,
+        tenantId: profile.tenantId,
+        locale: profile.locale,
+        timezone: profile.timezone,
+        accessibilitySettings: profile.accessibilitySettings,
+        notificationSettings: profile.notificationSettings,
+      })
+      .onConflictDoUpdate({
+        target: [userProfiles.profileId],
+        set: {
+          locale: sql`excluded.locale`,
+          timezone: sql`excluded.timezone`,
+          accessibilitySettings: sql`excluded.accessibility_settings`,
+          notificationSettings: sql`excluded.notification_settings`,
+          updatedAt: sql`now()`,
+        },
+      });
+  }
+
   for (const tenant of tenantRows) {
     await db.transaction(async (transaction) => {
       // Keep both keys in sync while the codebase transitions to a single tenant context variable.
@@ -252,6 +284,7 @@ export const seedDatabase = async (): Promise<void> => {
 
   console.warn(
     `Seeded ${SEED_TENANTS.length} tenants, ${SEED_USERS.length} users, ` +
+      `${SEED_PROFILES.length} profiles, ` +
       `${BASE_PERMISSIONS.length} permissions, and ${DEFAULT_ROLES.length} default roles.`,
   );
 };

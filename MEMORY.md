@@ -103,6 +103,36 @@
 - 11-phase day cycle state machine (see DD-01)
 - 13 in-game document types (see DD-02, DD-07)
 
+## Database Seeding
+
+### Seed Commands
+
+| Command | Description | Requirements |
+|---------|-------------|--------------|
+| `pnpm db:migrate` | Run pending migrations | Docker services running |
+| `pnpm db:seed` | Seed database with base data (M0) | - |
+| `pnpm db:seed:m1` | Seed database with M1 foundation data | `ALLOW_SEEDING=1` env var |
+| `pnpm db:seed:test` | Seed test database | - |
+| `pnpm db:reset` | Drop, migrate, and re-seed (dev only) | Docker services running |
+
+### Seed Data Fixtures
+
+The project uses deterministic seed fixtures in `packages/shared/src/testing/`:
+- `seed-ids.ts` — Stable UUIDs for tenants, users, and profiles
+- `factories.ts` — Test data factories (`createTestProfile`, etc.)
+
+These fixtures are used by:
+- Database seed scripts (`apps/api/src/shared/database/seed.ts`)
+- Integration tests requiring authenticated users
+- E2E tests with stable identities
+
+### Seed Verification
+
+Automated seed verification is done via `apps/api/src/shared/database/__tests__/seed.test.ts` which:
+1. Runs `seedDatabase()`
+2. Verifies seeded entities exist in the database
+3. Validates tenant/user/profile relationships
+
 ## Update Instructions
 
 When updating this file:

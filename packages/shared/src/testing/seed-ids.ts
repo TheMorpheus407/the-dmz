@@ -52,3 +52,26 @@ export const SEED_USER_IDS = {
 } as const;
 
 export type SeedUserKey = keyof typeof SEED_USER_IDS;
+
+export const SEED_PROFILE_IDS = {
+  acmeCorp: {
+    superAdmin: '00000000-0000-0000-0000-000110000101',
+    tenantAdmin: '00000000-0000-0000-0000-000110000102',
+    manager: '00000000-0000-0000-0000-000110000103',
+    learner: '00000000-0000-0000-0000-000110000104',
+  },
+  consumerPlatform: {
+    superAdmin: '00000000-0000-0000-0000-000120000201',
+    tenantAdmin: '00000000-0000-0000-0000-000120000202',
+    manager: '00000000-0000-0000-0000-000120000203',
+    learner: '00000000-0000-0000-0000-000120000204',
+  },
+  inactiveCo: {
+    superAdmin: '00000000-0000-0000-0000-000130000301',
+    tenantAdmin: '00000000-0000-0000-0000-000130000302',
+    manager: '00000000-0000-0000-0000-000130000303',
+    learner: '00000000-0000-0000-0000-000130000304',
+  },
+} as const;
+
+export type SeedProfileKey = keyof typeof SEED_PROFILE_IDS;

@@ -29,6 +29,13 @@
       "when": 1770527692767,
       "tag": "0002_auth_rbac_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1771000000000,
+      "tag": "0003_auth_user_profiles",
+      "breakpoints": true
     }
   ]
 }

@@ -34,6 +34,7 @@
     "db:migrate": "pnpm --filter @the-dmz/api db:migrate",
     "db:seed": "pnpm --filter @the-dmz/api db:seed",
     "db:seed:test": "pnpm --filter @the-dmz/api db:seed:test",
+    "db:seed:m1": "pnpm --filter @the-dmz/api db:seed:m1",
     "db:reset": "pnpm --filter @the-dmz/api db:reset",
     "services:up": "docker compose up -d",
     "services:down": "docker compose down",

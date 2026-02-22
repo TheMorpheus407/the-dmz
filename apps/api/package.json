@@ -17,6 +17,7 @@
     "db:studio": "drizzle-kit studio --config drizzle.config.ts",
     "db:seed": "tsx src/shared/database/seed.ts",
     "db:seed:test": "tsx src/shared/database/seed-test.ts",
+    "db:seed:m1": "tsx src/shared/database/seed-m1.ts",
     "db:reset": "tsx src/shared/database/reset.ts",
     "test": "vitest run",
     "test:watch": "vitest",
