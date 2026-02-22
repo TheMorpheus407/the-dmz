@@ -9,6 +9,7 @@ import {
   sessions,
   ssoConnections,
   tenants,
+  userProfiles,
   userRoles,
   users,
 } from '../index.js';
@@ -361,5 +362,90 @@ describe('auth.sso_connections schema', () => {
     expect(config.foreignKeys.length).toBe(1);
     expect(config.foreignKeys[0]!.reference().foreignTable).toBe(tenants);
     expect(tenantProviderIdx).toBeDefined();
+  });
+});
+
+describe('auth.user_profiles schema', () => {
+  it('has the correct table name and schema', () => {
+    const config = getTableConfig(userProfiles);
+
+    expect(getTableName(userProfiles)).toBe('user_profiles');
+    expect(config.schema).toBe('auth');
+  });
+
+  it('has all required columns', () => {
+    const config = getTableConfig(userProfiles);
+    const columnNames = config.columns.map((c) => c.name);
+
+    expect(columnNames).toContain('profile_id');
+    expect(columnNames).toContain('tenant_id');
+    expect(columnNames).toContain('user_id');
+    expect(columnNames).toContain('locale');
+    expect(columnNames).toContain('timezone');
+    expect(columnNames).toContain('accessibility_settings');
+    expect(columnNames).toContain('notification_settings');
+    expect(columnNames).toContain('created_at');
+    expect(columnNames).toContain('updated_at');
+  });
+
+  it('has tenant_id as NOT NULL', () => {
+    const config = getTableConfig(userProfiles);
+    const tenantIdCol = config.columns.find((c) => c.name === 'tenant_id');
+
+    expect(tenantIdCol).toBeDefined();
+    expect(tenantIdCol!.notNull).toBe(true);
+  });
+
+  it('has composite foreign key to users (tenant_id, user_id)', () => {
+    const config = getTableConfig(userProfiles);
+    const foreignKeyNames = config.foreignKeys.map((fk) => fk.getName());
+
+    expect(config.foreignKeys.length).toBe(2);
+    expect(foreignKeyNames).toContain('user_profiles_tenant_id_tenants_tenant_id_fk');
+    expect(foreignKeyNames).toContain('user_profiles_tenant_id_user_id_users_tenant_id_user_id_fk');
+  });
+
+  it('has composite unique index on (tenant_id, user_id)', () => {
+    const config = getTableConfig(userProfiles);
+    const uniqueIdx = config.indexes.find(
+      (i) => i.config.name === 'auth_user_profiles_tenant_user_unique',
+    );
+
+    expect(uniqueIdx).toBeDefined();
+    expect(uniqueIdx!.config.unique).toBe(true);
+  });
+
+  it('has indexes on tenant_id and user_id', () => {
+    const config = getTableConfig(userProfiles);
+    const tenantIdx = config.indexes.find((i) => i.config.name === 'auth_user_profiles_tenant_idx');
+    const userIdx = config.indexes.find((i) => i.config.name === 'auth_user_profiles_user_idx');
+
+    expect(tenantIdx).toBeDefined();
+    expect(userIdx).toBeDefined();
+  });
+
+  it('has correct default values', () => {
+    const config = getTableConfig(userProfiles);
+    const localeCol = config.columns.find((c) => c.name === 'locale');
+    const timezoneCol = config.columns.find((c) => c.name === 'timezone');
+
+    expect(localeCol!.hasDefault).toBe(true);
+    expect(timezoneCol!.hasDefault).toBe(true);
+  });
+});
+
+describe('Tenant schema invariants', () => {
+  it('auth.permissions is intentionally global (no tenant_id)', () => {
+    const config = getTableConfig(permissions);
+    const columnNames = config.columns.map((c) => c.name);
+
+    expect(columnNames).not.toContain('tenant_id');
+  });
+
+  it('auth.role_permissions relies on FK to tenant-scoped roles', () => {
+    const config = getTableConfig(rolePermissions);
+    const columnNames = config.columns.map((c) => c.name);
+
+    expect(columnNames).toContain('role_id');
   });
 });
