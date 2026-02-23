@@ -355,4 +355,56 @@ describe('request logger middleware', () => {
       expect(errorLogPayload['requestId']).toBeDefined();
     });
   });
+
+  describe('X-Request-Id response header', () => {
+    let app: ReturnType<typeof buildApp>;
+
+    beforeAll(async () => {
+      app = buildApp(createTestConfig({ LOG_LEVEL: 'silent' }));
+      await app.ready();
+    });
+
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('echoes x-request-id in response headers when provided', async () => {
+      const customRequestId = 'my-custom-request-id';
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+        headers: {
+          'x-request-id': customRequestId,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-request-id']).toBe(customRequestId);
+    });
+
+    it('returns generated request ID in response headers when not provided', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-request-id']).toBeDefined();
+      expect(response.headers['x-request-id']).toMatch(/^[0-9a-f-]+$/);
+    });
+
+    it('echoes request ID on error responses', async () => {
+      const customRequestId = 'error-request-id';
+      const response = await app.inject({
+        method: 'GET',
+        url: '/nonexistent',
+        headers: {
+          'x-request-id': customRequestId,
+        },
+      });
+
+      expect(response.statusCode).toBe(404);
+      expect(response.headers['x-request-id']).toBe(customRequestId);
+    });
+  });
 });

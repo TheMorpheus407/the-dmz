@@ -92,7 +92,12 @@ function isRetryableCategory(category: ApiErrorCategory): boolean {
   return category === 'rate_limiting';
 }
 
-export function mapApiError(error: ApiError, httpStatus: number): CategorizedApiError {
+export function mapApiError(
+  error: ApiError,
+  httpStatus: number,
+  requestId?: string,
+  retryAfterSeconds?: number,
+): CategorizedApiError {
   const category = error.code ? categorizeErrorCode(error.code) : categorizeByStatus(httpStatus);
 
   const metadataRetryable = error.code ? getRetryableFromMetadata(error.code) : undefined;
@@ -109,8 +114,11 @@ export function mapApiError(error: ApiError, httpStatus: number): CategorizedApi
   if (error.details) {
     result.details = error.details;
   }
-  if (error.requestId) {
-    result.requestId = error.requestId;
+  if (error.requestId || requestId) {
+    result.requestId = (error.requestId ?? requestId) as string;
+  }
+  if (retryAfterSeconds) {
+    result.retryAfterSeconds = retryAfterSeconds;
   }
 
   return result;

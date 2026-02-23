@@ -2,6 +2,14 @@ export { apiClient, ApiClient } from './client';
 export { buildApiUrl, defaultApiClientConfig } from './client';
 export { mapApiError, mapNetworkError, getErrorMessage } from './error-mapper';
 export {
+  extractErrorDiagnostics,
+  getDebugInfoForSupport,
+  ERROR_DIAGNOSTICS_ATTRIBUTE,
+  getRequestIdSelector,
+  getRequestIdFromElement,
+  type ErrorDiagnostics,
+} from './diagnostics';
+export {
   getErrorCopy,
   getSurfaceFromPath,
   getSeverity,

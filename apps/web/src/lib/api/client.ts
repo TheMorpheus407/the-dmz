@@ -11,6 +11,10 @@ import { mapApiError, mapNetworkError } from './error-mapper.js';
 
 export { defaultApiClientConfig } from './types.js';
 
+function generateRequestId(): string {
+  return crypto.randomUUID();
+}
+
 function isIdempotentMethod(method: string): boolean {
   return method === 'GET' || method === 'DELETE';
 }
@@ -63,7 +67,7 @@ export class ApiClient {
     options: RequestOptions<TRequest>,
     retryConfig: RetryConfig,
     attempt: number = 0,
-  ): Promise<{ data?: TResponse; error?: CategorizedApiError }> {
+  ): Promise<{ data?: TResponse; error?: CategorizedApiError; requestId?: string }> {
     const {
       method,
       path = '',
@@ -71,11 +75,15 @@ export class ApiClient {
       params,
       headers = {},
       credentials = this.config.credentials,
+      requestId: customRequestId,
     } = options;
+
+    const requestId = customRequestId || generateRequestId();
 
     const url = this.buildUrl(path, params);
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
+      'X-Request-Id': requestId,
       ...this.config.defaultHeaders,
       ...headers,
     };
@@ -99,6 +107,11 @@ export class ApiClient {
     try {
       const response = await fetch(url, requestInit);
 
+      const contentType = response.headers.get('content-type');
+      const responseRequestId = response.headers.get('x-request-id') || requestId;
+      const retryAfterHeader = response.headers.get('retry-after');
+      const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined;
+
       if (retryConfig && attempt < retryConfig.maxAttempts - 1) {
         const errorBody: Record<string, unknown> = await (
           response.clone().json() as Promise<Record<string, unknown>>
@@ -118,7 +131,6 @@ export class ApiClient {
         }
       }
 
-      const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         if (!response.ok) {
           return {
@@ -128,36 +140,49 @@ export class ApiClient {
               message: 'Invalid response from server',
               status: response.status,
               retryable: response.status === 503,
+              requestId: responseRequestId,
             },
+            requestId: responseRequestId,
           };
         }
-        return { data: undefined as TResponse };
+        return { data: undefined as TResponse, requestId: responseRequestId };
       }
 
       const json: unknown = await response.json();
 
       const errorEnvelope = apiErrorEnvelopeSchema.safeParse(json);
       if (errorEnvelope.success) {
-        const mappedError = mapApiError(errorEnvelope.data.error, response.status);
-        return { error: mappedError };
+        const mappedError = mapApiError(
+          errorEnvelope.data.error,
+          response.status,
+          responseRequestId,
+          retryAfterSeconds,
+        );
+        return { error: mappedError, requestId: responseRequestId };
       }
 
       if (!response.ok) {
+        const errorObj: CategorizedApiError = {
+          category: 'server',
+          code: 'UNKNOWN_ERROR',
+          message: 'An unexpected error occurred',
+          status: response.status,
+          retryable: response.status === 503,
+          requestId: responseRequestId,
+        };
+        if (retryAfterSeconds !== undefined) {
+          errorObj.retryAfterSeconds = retryAfterSeconds;
+        }
         return {
-          error: {
-            category: 'server',
-            code: 'UNKNOWN_ERROR',
-            message: 'An unexpected error occurred',
-            status: response.status,
-            retryable: response.status === 503,
-          },
+          error: errorObj,
+          requestId: responseRequestId,
         };
       }
 
       if (typeof json === 'object' && json !== null && 'data' in json) {
-        return { data: json.data as TResponse };
+        return { data: json.data as TResponse, requestId: responseRequestId };
       }
-      return { data: undefined as TResponse };
+      return { data: undefined as TResponse, requestId: responseRequestId };
     } catch (err) {
       if (err instanceof Error) {
         if (err.name === 'AbortError') {
@@ -168,7 +193,9 @@ export class ApiClient {
               message: 'Request timed out',
               status: 0,
               retryable: true,
+              requestId,
             },
+            requestId,
           };
         }
         const networkError = mapNetworkError(err);
@@ -178,7 +205,7 @@ export class ApiClient {
             return this.request<TResponse, TRequest>(options, retryConfig, attempt + 1);
           }
         }
-        return { error: networkError };
+        return { error: networkError, requestId };
       }
       return {
         error: {
@@ -187,7 +214,9 @@ export class ApiClient {
           message: 'An unexpected error occurred',
           status: 0,
           retryable: false,
+          requestId,
         },
+        requestId,
       };
     }
   }
@@ -195,7 +224,7 @@ export class ApiClient {
   async get<TResponse = unknown>(
     path: string,
     options: Omit<RequestOptions<never>, 'method' | 'body'> = {},
-  ): Promise<{ data?: TResponse; error?: CategorizedApiError }> {
+  ): Promise<{ data?: TResponse; error?: CategorizedApiError; requestId?: string }> {
     return this.request<TResponse>(
       {
         method: 'GET',
@@ -213,7 +242,7 @@ export class ApiClient {
     path: string,
     body: TRequest,
     options: Omit<RequestOptions<TRequest>, 'method' | 'body'> = {},
-  ): Promise<{ data?: TResponse; error?: CategorizedApiError }> {
+  ): Promise<{ data?: TResponse; error?: CategorizedApiError; requestId?: string }> {
     return this.request<TResponse, TRequest>(
       {
         method: 'POST',
@@ -232,7 +261,7 @@ export class ApiClient {
     path: string,
     body: TRequest,
     options: Omit<RequestOptions<TRequest>, 'method' | 'body'> = {},
-  ): Promise<{ data?: TResponse; error?: CategorizedApiError }> {
+  ): Promise<{ data?: TResponse; error?: CategorizedApiError; requestId?: string }> {
     return this.request<TResponse, TRequest>(
       {
         method: 'PATCH',
@@ -250,7 +279,7 @@ export class ApiClient {
   async delete<TResponse = unknown>(
     path: string,
     options: Omit<RequestOptions<never>, 'method' | 'body'> = {},
-  ): Promise<{ data?: TResponse; error?: CategorizedApiError }> {
+  ): Promise<{ data?: TResponse; error?: CategorizedApiError; requestId?: string }> {
     return this.request<TResponse>(
       {
         method: 'DELETE',

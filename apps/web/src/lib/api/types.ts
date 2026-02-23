@@ -42,6 +42,7 @@ export interface CategorizedApiError {
   status: number;
   details?: Record<string, unknown>;
   requestId?: string;
+  retryAfterSeconds?: number;
   retryable: boolean;
 }
 
@@ -69,6 +70,7 @@ export interface RequestOptions<TRequest = unknown> {
   headers?: Record<string, string>;
   retry?: Partial<RetryConfig>;
   credentials?: RequestCredentials;
+  requestId?: string;
 }
 
 export interface ApiClientConfig {

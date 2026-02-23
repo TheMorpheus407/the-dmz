@@ -27,13 +27,22 @@ const getUserAgent = (request: {
   return request.headers['user-agent'] as string | undefined;
 };
 
+const REQUEST_ID_HEADER = 'x-request-id';
+
 export const requestLogger = fp(async (fastify: FastifyInstance) => {
   const serviceName = 'the-dmz-api';
   const serviceVersion = fastify.config.API_VERSION;
   const serviceEnv = fastify.config.NODE_ENV;
 
-  fastify.addHook('onRequest', async (request) => {
+  fastify.addHook('onRequest', async (request, reply) => {
     request.startTime = process.hrtime.bigint();
+
+    const clientRequestId = request.headers[REQUEST_ID_HEADER] as string | undefined;
+    if (clientRequestId) {
+      request.id = clientRequestId;
+    }
+
+    reply.header(REQUEST_ID_HEADER, request.id);
 
     const fields: RequestLogFields = {
       requestId: request.id,

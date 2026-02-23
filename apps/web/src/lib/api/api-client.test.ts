@@ -707,3 +707,162 @@ describe('defaultRetryConfig', () => {
     expect(defaultRetryConfig.retryableStatuses).toContain(503);
   });
 });
+
+describe('Request ID correlation', () => {
+  let fetchSpy: ReturnType<typeof vi.fn<typeof fetch>>;
+  let originalFetch: typeof globalThis.fetch;
+
+  beforeEach(() => {
+    fetchSpy = vi.fn<typeof fetch>();
+    originalFetch = globalThis.fetch;
+    globalThis.fetch = fetchSpy;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+  });
+
+  it('generates X-Request-Id header for each request when not provided', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ success: true, data: { id: '1' } }),
+    } as Response);
+
+    const client = new ApiClient();
+    await client.get('/users');
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'X-Request-Id': expect.any(String),
+        }),
+      }),
+    );
+
+    const callArgs = fetchSpy.mock.calls[0];
+    if (!callArgs || !callArgs[1]) {
+      throw new Error('Expected fetch to have been called');
+    }
+    const headers = callArgs[1].headers as Record<string, string>;
+    expect(headers['X-Request-Id']).toMatch(/^[0-9a-f-]{36}$/i);
+  });
+
+  it('uses custom requestId when provided in options', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ success: true, data: { id: '1' } }),
+    } as Response);
+
+    const client = new ApiClient();
+    await client.get('/users', { requestId: 'custom-req-123' });
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          'X-Request-Id': 'custom-req-123',
+        }),
+      }),
+    );
+  });
+
+  it('returns requestId in response', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      headers: new Headers({
+        'content-type': 'application/json',
+        'x-request-id': 'resp-req-456',
+      }),
+      json: async () => ({ success: true, data: { id: '1' } }),
+    } as Response);
+
+    const client = new ApiClient();
+    const result = await client.get('/users');
+
+    expect(result.requestId).toBe('resp-req-456');
+  });
+
+  it('falls back to generated requestId when server does not echo it', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({ success: true, data: { id: '1' } }),
+    } as Response);
+
+    const client = new ApiClient();
+    const result = await client.get('/users');
+
+    expect(result.requestId).toBeDefined();
+    expect(result.requestId).toMatch(/^[0-9a-f-]{36}$/i);
+  });
+
+  it('includes requestId in error response', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: false,
+      status: 401,
+      headers: new Headers({
+        'content-type': 'application/json',
+        'x-request-id': 'error-req-789',
+      }),
+      json: async () => ({
+        success: false,
+        error: { code: 'AUTH_TOKEN_EXPIRED', message: 'Session expired' },
+      }),
+    } as Response);
+
+    const client = new ApiClient();
+    const result = await client.get('/protected');
+
+    expect(result.error).toBeDefined();
+    expect(result.error?.requestId).toBe('error-req-789');
+  });
+
+  it('extracts retry-after seconds from rate limit response', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: false,
+      status: 429,
+      headers: new Headers({
+        'content-type': 'application/json',
+        'x-request-id': 'rate-limit-req',
+        'retry-after': '60',
+      }),
+      json: async () => ({
+        success: false,
+        error: { code: 'RATE_LIMIT_EXCEEDED', message: 'Too many requests' },
+      }),
+    } as Response);
+
+    const client = new ApiClient();
+    const result = await client.get('/users');
+
+    expect(result.error).toBeDefined();
+    expect(result.error?.retryAfterSeconds).toBe(60);
+  });
+
+  it('passes client-provided requestId to error when server echoes different one', async () => {
+    fetchSpy.mockResolvedValue({
+      ok: false,
+      status: 401,
+      headers: new Headers({
+        'content-type': 'application/json',
+        'x-request-id': 'server-req-id',
+      }),
+      json: async () => ({
+        success: false,
+        error: {
+          code: 'AUTH_TOKEN_EXPIRED',
+          message: 'Session expired',
+          requestId: 'server-req-id',
+        },
+      }),
+    } as Response);
+
+    const client = new ApiClient();
+    const result = await client.get('/protected', { requestId: 'client-req-id' });
+
+    expect(result.error?.requestId).toBe('server-req-id');
+  });
+});
