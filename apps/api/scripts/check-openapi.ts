@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { loadConfig } from '../src/config.js';
 import { buildApp } from '../src/app.js';
+import { API_VERSIONING_POLICY } from '../src/shared/policies/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -18,6 +19,7 @@ interface OpenAPISpec {
     schemas?: Record<string, unknown>;
   };
   paths: Record<string, Record<string, unknown>>;
+  servers?: Array<{ url: string; description?: string }>;
 }
 
 const M1_ENDPOINTS = [
@@ -145,6 +147,14 @@ async function checkOpenApi(): Promise<void> {
   await app.ready();
 
   const generatedSpec = app.swagger() as OpenAPISpec;
+
+  generatedSpec.servers = [
+    {
+      url: 'http://localhost:3001/api/v1',
+      description: 'Local development',
+    },
+    ...(API_VERSIONING_POLICY.openApi.servers as Array<{ url: string; description: string }>),
+  ];
 
   await app.close();
 

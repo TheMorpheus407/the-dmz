@@ -3148,8 +3148,12 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3001",
+      "url": "http://localhost:3001/api/v1",
       "description": "Local development"
+    },
+    {
+      "url": "/api/v1",
+      "description": "Current production API (v1)"
     }
   ]
 }

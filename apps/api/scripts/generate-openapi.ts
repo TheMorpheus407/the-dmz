@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import { loadConfig } from '../src/config.js';
 import { buildApp } from '../src/app.js';
+import { API_VERSIONING_POLICY } from '../src/shared/policies/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -28,9 +29,19 @@ async function generateOpenApiSpec(): Promise<void> {
 
   await app.ready();
 
-  const openApiSpec = app.swagger();
+  const openApiSpec = app.swagger() as {
+    servers?: Array<{ url: string; description?: string }>;
+  };
 
   await app.close();
+
+  openApiSpec.servers = [
+    {
+      url: 'http://localhost:3001/api/v1',
+      description: 'Local development',
+    },
+    ...(API_VERSIONING_POLICY.openApi.servers as Array<{ url: string; description: string }>),
+  ];
 
   if (!existsSync(OPENAPI_OUTPUT_DIR)) {
     mkdirSync(OPENAPI_OUTPUT_DIR, { recursive: true });
