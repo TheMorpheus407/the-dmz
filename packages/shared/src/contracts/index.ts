@@ -53,3 +53,24 @@ export {
   type LogRedactionKey,
   type M1LoggingContractManifest,
 } from './logging-manifest.js';
+
+export {
+  m1RateLimitPolicyManifest,
+  rateLimitPolicyManifestSchema,
+  rateLimitPolicyEntrySchema,
+  rateLimitCategorySchema,
+  bucketKeySchema,
+  exemptRouteSchema,
+  REQUIRED_RATE_LIMIT_HEADERS,
+  REQUIRED_429_HEADERS,
+  OPTIONAL_RATE_LIMIT_HEADERS,
+  RATE_LIMIT_EXCEEDED_ERROR_CODE,
+  REQUIRED_ERROR_DETAILS,
+  type BucketKey,
+  type RateLimitPolicyEntry,
+  type ExemptRoute,
+  type RateLimitPolicyManifest,
+  type M1RateLimitPolicyManifest,
+  type M1RateLimitPolicy,
+  RateLimitCategory,
+} from './rate-limit-policy.js';

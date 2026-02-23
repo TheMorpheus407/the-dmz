@@ -125,6 +125,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         response: {
           201: authResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
         security: [{ cookieAuth: [] }],
       },
@@ -193,6 +194,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         response: {
           200: authResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
         security: [{ cookieAuth: [] }],
       },
@@ -268,6 +270,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         response: {
           200: refreshResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
         security: [{ cookieAuth: [] }, { csrfToken: [] }],
       },
@@ -338,6 +341,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             required: ['success'],
           },
           403: errorResponseSchemas.TenantInactive,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
       },
     },
@@ -378,6 +382,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         response: {
           200: meResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
       },
     },
@@ -419,6 +424,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           400: errorResponseSchemas.BadRequest,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
       },
     },
@@ -465,6 +471,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             required: ['status', 'user'],
           },
           403: errorResponseSchemas.TenantInactive,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
       },
     },
@@ -514,6 +521,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           403: {
             oneOf: [errorResponseSchemas.Forbidden, errorResponseSchemas.TenantInactive],
           },
+          429: errorResponseSchemas.RateLimitExceeded,
         },
       },
     },
