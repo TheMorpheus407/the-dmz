@@ -40,9 +40,11 @@ const buildModuleBoundaryZones = () => {
     return [];
   }
 
+  const nonModuleDirs = new Set(['routes', '__tests__', 'shared', 'lib', 'utils', 'types']);
+
   const moduleNames = fs
     .readdirSync(modulesRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
+    .filter((entry) => entry.isDirectory() && !nonModuleDirs.has(entry.name))
     .map((entry) => entry.name);
 
   const zones = [];
