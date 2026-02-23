@@ -16,3 +16,20 @@ export {
   type M1AuthEventContracts,
   type ForbiddenPayloadField,
 } from './event-manifest.js';
+
+export {
+  VERSION_POLICY_TYPES,
+  eventOwnershipSchema,
+  eventExemptionSchema,
+  versionPolicySchema,
+  eventOwnershipManifestSchema,
+  SENSITIVE_PAYLOAD_FIELDS,
+  REQUIRED_METADATA_FIELDS,
+  type VersionPolicyType,
+  type EventOwnership,
+  type EventExemption,
+  type VersionPolicy,
+  type EventOwnershipManifest,
+  type SensitivePayloadField,
+  type RequiredMetadataField,
+} from './event-ownership.js';
