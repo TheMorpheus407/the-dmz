@@ -19,7 +19,8 @@
         "lint:contracts",
         "lint:data-boundaries",
         "lint:hook-chain",
-        "lint:db-tenant-context"
+        "lint:db-tenant-context",
+        "test:ui-contract"
       ],
       "outputs": []
     },
@@ -107,6 +108,10 @@
       "outputs": []
     },
     "check:tokens": {
+      "cache": false,
+      "outputs": []
+    },
+    "test:ui-contract": {
       "cache": false,
       "outputs": []
     }
