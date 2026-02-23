@@ -127,6 +127,12 @@ const svelteA11yRules = {
   'svelte/no-target-blank': 'error',
 };
 
+const svelteRunesRules = {
+  'svelte/prefer-svelte-reactivity': 'error',
+  'svelte/no-reactive-reassign': 'error',
+  'svelte/no-reactive-literals': 'error',
+};
+
 const baseRules = {
   ...js.configs.recommended.rules,
   'no-console': ['warn', { allow: ['warn', 'error'] }],
@@ -337,6 +343,7 @@ export default [
       ...typeAwareRules,
       ...svelteRecommendedRules,
       ...svelteA11yRules,
+      ...svelteRunesRules,
       'svelte/no-navigation-without-resolve': 'off',
     },
   },

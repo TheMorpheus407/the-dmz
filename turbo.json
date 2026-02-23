@@ -16,6 +16,7 @@
         "contract:parity",
         "error-contract:check",
         "event-contract:check",
+        "lint:contracts",
         "lint:data-boundaries",
         "lint:hook-chain",
         "lint:db-tenant-context"
@@ -101,6 +102,9 @@
         "../apps/api/src/modules/auth/auth.events.ts",
         "../apps/api/scripts/check-event-contract.ts"
       ]
+    },
+    "lint:contracts": {
+      "outputs": []
     },
     "check:tokens": {
       "cache": false,

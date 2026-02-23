@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "lint": "cd ../.. && pnpm exec eslint .",
     "lint:fix": "eslint . --fix",
+    "lint:contracts": "cd ../.. && node scripts/contract-gate.mjs",
     "lint:architecture": "cd ../.. && pnpm exec eslint --no-error-on-unmatched-pattern apps/web/src/lib/game apps/web/src/lib/admin",
     "test": "svelte-kit sync && node ./scripts/verify-shared-import.mjs && node ./scripts/verify-scaffold.mjs && vitest run",
     "test:watch": "svelte-kit sync && vitest",
