@@ -3,7 +3,7 @@ import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
 export class AuthError extends AppError {
   constructor(options: { code?: string; message: string; statusCode?: number }) {
     super({
-      code: options.code ?? ErrorCodes.INTERNAL_SERVER_ERROR,
+      code: options.code ?? ErrorCodes.AUTH_UNAUTHORIZED,
       message: options.message,
       statusCode: options.statusCode ?? 401,
     });

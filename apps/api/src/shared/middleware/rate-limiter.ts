@@ -386,14 +386,8 @@ const buildRateLimitPluginOptions = (
     const key = request.ip;
 
     if (!tenantId) {
-      throw new AppError({
-        code: ErrorCodes.TENANT_CONTEXT_MISSING,
-        message: 'Tenant context required for rate limiting: missing tenant_id in request',
-        statusCode: 500,
-        details: {
-          hint: 'Rate limit keys must be tenant-scoped. Provide x-tenant-id header or configure tenant resolver.',
-        },
-      });
+      const prefix = buildRateLimitKeyPrefix(groupId);
+      return `${KEY_CATEGORIES.RATE_LIMIT}:${prefix}${key}:unauthenticated`;
     }
 
     const prefix = buildRateLimitKeyPrefix(groupId);

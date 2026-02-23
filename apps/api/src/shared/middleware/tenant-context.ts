@@ -68,7 +68,8 @@ export const tenantContext = async (
 
   try {
     await pool.unsafe(
-      `SET LOCAL app.current_tenant_id = '${tenantId}'; SET LOCAL app.tenant_id = '${tenantId}';`,
+      `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false)`,
+      [tenantId],
     );
   } catch (error) {
     request.log.error({ err: error }, 'tenant context set failed');

@@ -17,7 +17,8 @@
         "error-contract:check",
         "event-contract:check",
         "lint:data-boundaries",
-        "lint:hook-chain"
+        "lint:hook-chain",
+        "lint:db-tenant-context"
       ],
       "outputs": []
     },
@@ -31,6 +32,9 @@
       "outputs": []
     },
     "lint:hook-chain": {
+      "outputs": []
+    },
+    "lint:db-tenant-context": {
       "outputs": []
     },
     "test": {
