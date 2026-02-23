@@ -6,6 +6,7 @@ import {
   logout as apiLogout,
   getCurrentUser,
   updatePreferences,
+  getMfaStatus,
 } from '$lib/api/auth';
 import { apiClient } from '$lib/api/client';
 import type { CategorizedApiError } from '$lib/api/types';
@@ -21,7 +22,8 @@ export type SessionStatus =
   | 'authenticated'
   | 'expired'
   | 'revoked'
-  | 'policy_denied';
+  | 'policy_denied'
+  | 'mfa_required';
 
 export interface SessionUser {
   id: string;
@@ -32,11 +34,20 @@ export interface SessionUser {
   isActive: boolean;
 }
 
+export interface MfaState {
+  mfaRequired: boolean;
+  mfaVerified: boolean;
+  method: string | null;
+  mfaVerifiedAt: string | null;
+  hasCredentials: boolean;
+}
+
 export interface SessionState {
   status: SessionStatus;
   user: SessionUser | null;
   effectivePreferences?: unknown;
   lockedPreferenceKeys: string[];
+  mfa: MfaState | null;
 }
 
 export const initialSessionState: SessionState = {
@@ -44,6 +55,7 @@ export const initialSessionState: SessionState = {
   user: null,
   effectivePreferences: undefined,
   lockedPreferenceKeys: [],
+  mfa: null,
 };
 
 async function syncPreferencesToServer(preferences: {
@@ -109,26 +121,26 @@ function createSessionStore() {
     },
 
     async bootstrap(): Promise<void> {
-      set({ status: 'authenticating', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'authenticating', user: null, lockedPreferenceKeys: [], mfa: null });
 
       const result = await getCurrentUser();
 
       if (result.error) {
         if (result.error.category === 'authentication') {
           if (result.error.code === 'AUTH_SESSION_REVOKED') {
-            set({ status: 'revoked', user: null, lockedPreferenceKeys: [] });
+            set({ status: 'revoked', user: null, lockedPreferenceKeys: [], mfa: null });
           } else if (
             result.error.code === 'AUTH_SESSION_EXPIRED' ||
             result.error.code === 'AUTH_TOKEN_EXPIRED'
           ) {
-            set({ status: 'expired', user: null, lockedPreferenceKeys: [] });
+            set({ status: 'expired', user: null, lockedPreferenceKeys: [], mfa: null });
           } else {
-            set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
+            set({ status: 'anonymous', user: null, lockedPreferenceKeys: [], mfa: null });
           }
         } else if (result.error.category === 'authorization') {
-          set({ status: 'policy_denied', user: null, lockedPreferenceKeys: [] });
+          set({ status: 'policy_denied', user: null, lockedPreferenceKeys: [], mfa: null });
         } else {
-          set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
+          set({ status: 'anonymous', user: null, lockedPreferenceKeys: [], mfa: null });
         }
         return;
       }
@@ -150,22 +162,47 @@ function createSessionStore() {
 
         themeStore.applyEffectivePreferences(effectivePreferences, lockedPreferenceKeys);
 
-        set({
-          status: 'authenticated',
-          user: result.data.user,
-          effectivePreferences,
-          lockedPreferenceKeys,
-        });
+        let mfaState: MfaState | null = null;
+        if (result.data.user.role === 'super-admin') {
+          const mfaResult = await getMfaStatus();
+          if (mfaResult.data) {
+            mfaState = {
+              mfaRequired: mfaResult.data.mfaRequired,
+              mfaVerified: mfaResult.data.mfaVerified,
+              method: mfaResult.data.method,
+              mfaVerifiedAt: mfaResult.data.mfaVerifiedAt,
+              hasCredentials: mfaResult.data.hasCredentials,
+            };
+          }
+        }
+
+        if (mfaState?.mfaRequired && !mfaState?.mfaVerified) {
+          set({
+            status: 'mfa_required',
+            user: result.data.user,
+            effectivePreferences,
+            lockedPreferenceKeys,
+            mfa: mfaState,
+          });
+        } else {
+          set({
+            status: 'authenticated',
+            user: result.data.user,
+            effectivePreferences,
+            lockedPreferenceKeys,
+            mfa: mfaState,
+          });
+        }
       }
     },
 
     async login(credentials: LoginInput): Promise<{ error?: CategorizedApiError }> {
-      set({ status: 'authenticating', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'authenticating', user: null, lockedPreferenceKeys: [], mfa: null });
 
       const result = await login(credentials);
 
       if (result.error) {
-        set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
+        set({ status: 'anonymous', user: null, lockedPreferenceKeys: [], mfa: null });
         return { error: result.error };
       }
 
@@ -205,11 +242,12 @@ function createSessionStore() {
           user: result.data.user,
           effectivePreferences,
           lockedPreferenceKeys,
+          mfa: null,
         });
         return {};
       }
 
-      set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'anonymous', user: null, lockedPreferenceKeys: [], mfa: null });
       return {
         error: {
           category: 'server',
@@ -222,12 +260,12 @@ function createSessionStore() {
     },
 
     async register(credentials: RegisterInput): Promise<{ error?: CategorizedApiError }> {
-      set({ status: 'authenticating', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'authenticating', user: null, lockedPreferenceKeys: [], mfa: null });
 
       const result = await register(credentials);
 
       if (result.error) {
-        set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
+        set({ status: 'anonymous', user: null, lockedPreferenceKeys: [], mfa: null });
         return { error: result.error };
       }
 
@@ -267,11 +305,12 @@ function createSessionStore() {
           user: result.data.user,
           effectivePreferences,
           lockedPreferenceKeys,
+          mfa: null,
         });
         return {};
       }
 
-      set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'anonymous', user: null, lockedPreferenceKeys: [], mfa: null });
       return {
         error: {
           category: 'server',
@@ -288,25 +327,25 @@ function createSessionStore() {
       await apiLogout();
       themeStore.clearPendingSync();
       themeStore.init();
-      set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'anonymous', user: null, lockedPreferenceKeys: [], mfa: null });
     },
 
     expire(): void {
-      set({ status: 'expired', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'expired', user: null, lockedPreferenceKeys: [], mfa: null });
     },
 
     revoke(): void {
-      set({ status: 'revoked', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'revoked', user: null, lockedPreferenceKeys: [], mfa: null });
     },
 
     policyDeny(): void {
-      set({ status: 'policy_denied', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'policy_denied', user: null, lockedPreferenceKeys: [], mfa: null });
     },
 
     clear(): void {
       themeStore.clearPendingSync();
       themeStore.init();
-      set({ status: 'anonymous', user: null, lockedPreferenceKeys: [] });
+      set({ status: 'anonymous', user: null, lockedPreferenceKeys: [], mfa: null });
     },
   };
 }
@@ -371,4 +410,19 @@ export const effectivePreferences: Readable<unknown> = derived(
 export const lockedPreferenceKeys: Readable<string[]> = derived(
   sessionStore,
   ($session) => $session.lockedPreferenceKeys,
+);
+
+export const mfaState: Readable<MfaState | null> = derived(
+  sessionStore,
+  ($session) => $session.mfa,
+);
+
+export const isMfaRequired: Readable<boolean> = derived(
+  sessionStore,
+  ($session) => $session.status === 'mfa_required',
+);
+
+export const isSuperAdmin: Readable<boolean> = derived(
+  sessionStore,
+  ($session) => $session.user?.role === 'super-admin',
 );

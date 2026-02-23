@@ -20,3 +20,18 @@ export type JwtPayloadBase = {
   iat: number;
   exp: number;
 };
+
+export type MfaState = {
+  required: boolean;
+  verified: boolean;
+  method: 'webauthn' | 'totp' | 'sms' | 'email' | null;
+  verifiedAt: Date | null;
+};
+
+export type AuthenticatedUserWithMfa = {
+  userId: string;
+  tenantId: string;
+  sessionId: string;
+  role: string;
+  mfaState: MfaState;
+};

@@ -16,6 +16,7 @@ import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-r
 import { preAuthTenantStatusGuard } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { requirePermission, resolvePermissions } from '../../shared/middleware/authorization.js';
+import { requireMfaForSuperAdmin } from '../../shared/middleware/mfa-guard.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 
 import * as authService from './auth.service.js';
@@ -483,7 +484,13 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.get(
     '/auth/admin/users',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard, requirePermission('admin', 'list')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'list'),
+        requireMfaForSuperAdmin,
+      ],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {

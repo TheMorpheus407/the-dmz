@@ -34,6 +34,8 @@ export const sessions = authSchema.table(
     lastActiveAt: timestamp('last_active_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),
+    mfaVerifiedAt: timestamp('mfa_verified_at', { withTimezone: true, mode: 'date' }),
+    mfaMethod: varchar('mfa_method', { length: 32 }),
   },
   (table) => ({
     tokenHashUnique: uniqueIndex('auth_sessions_token_hash_unique').on(table.tokenHash),

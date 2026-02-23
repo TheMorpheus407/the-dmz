@@ -40,6 +40,16 @@ import {
   gameSessionBootstrapSchema,
   gameSessionBootstrapResponseSchema,
 } from '../src/schemas/game-session.schema.js';
+import {
+  webauthnChallengeRequestSchema,
+  webauthnChallengeResponseSchema,
+  webauthnRegistrationRequestSchema,
+  webauthnVerificationRequestSchema,
+  webauthnCredentialsListResponseSchema,
+  webauthnRegistrationResponseSchema,
+  webauthnVerificationResponseSchema,
+  mfaStatusResponseSchema,
+} from '../src/schemas/mfa.schema.js';
 
 const entries: Array<[string, Record<string, unknown>]> = [
   ['loginJsonSchema', createJsonSchema(loginSchema)],
@@ -76,6 +86,17 @@ const entries: Array<[string, Record<string, unknown>]> = [
   ['policyLockedPreferencesJsonSchema', createJsonSchema(policyLockedPreferencesSchema)],
   ['gameSessionBootstrapJsonSchema', createJsonSchema(gameSessionBootstrapSchema)],
   ['gameSessionBootstrapResponseJsonSchema', createJsonSchema(gameSessionBootstrapResponseSchema)],
+  ['webauthnChallengeRequestJsonSchema', createJsonSchema(webauthnChallengeRequestSchema)],
+  ['webauthnChallengeResponseJsonSchema', createJsonSchema(webauthnChallengeResponseSchema)],
+  ['webauthnRegistrationRequestJsonSchema', createJsonSchema(webauthnRegistrationRequestSchema)],
+  ['webauthnVerificationRequestJsonSchema', createJsonSchema(webauthnVerificationRequestSchema)],
+  [
+    'webauthnCredentialsListResponseJsonSchema',
+    createJsonSchema(webauthnCredentialsListResponseSchema),
+  ],
+  ['webauthnRegistrationResponseJsonSchema', createJsonSchema(webauthnRegistrationResponseSchema)],
+  ['webauthnVerificationResponseJsonSchema', createJsonSchema(webauthnVerificationResponseSchema)],
+  ['mfaStatusResponseJsonSchema', createJsonSchema(mfaStatusResponseSchema)],
 ];
 
 const renderExport = (name: string, schema: Record<string, unknown>): string =>

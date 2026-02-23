@@ -72,6 +72,8 @@ export const backendEnvSchema = z
     TENANT_FALLBACK_ENABLED: booleanFromString.optional(),
     TENANT_FALLBACK_SLUG: z.string().min(1).default('default'),
     TENANT_RESOLVER_ENABLED: booleanFromString.optional(),
+    WEBAUTHN_RP_ID: z.string().min(1).default('localhost'),
+    WEBAUTHN_RP_NAME: z.string().min(1).default('The DMZ'),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';

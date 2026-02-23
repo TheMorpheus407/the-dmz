@@ -1643,3 +1643,335 @@ export const gameSessionBootstrapResponseJsonSchema = {
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
+
+export const webauthnChallengeRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    challengeType: {
+      type: 'string',
+      enum: ['registration', 'verification'],
+    },
+  },
+  required: ['challengeType'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const webauthnChallengeResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    challenge: {
+      type: 'string',
+    },
+    rp: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+        },
+        name: {
+          type: 'string',
+        },
+      },
+      required: ['id', 'name'],
+      additionalProperties: false,
+    },
+    user: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+        },
+        name: {
+          type: 'string',
+        },
+        displayName: {
+          type: 'string',
+        },
+      },
+      required: ['id', 'name', 'displayName'],
+      additionalProperties: false,
+    },
+    pubKeyCredParams: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            const: 'public-key',
+          },
+          alg: {
+            type: 'number',
+          },
+        },
+        required: ['type', 'alg'],
+        additionalProperties: false,
+      },
+    },
+    timeout: {
+      type: 'number',
+    },
+    excludeCredentials: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+          },
+          type: {
+            type: 'string',
+            const: 'public-key',
+          },
+        },
+        required: ['id', 'type'],
+        additionalProperties: false,
+      },
+    },
+    authenticatorSelection: {
+      type: 'object',
+      properties: {
+        requireResidentKey: {
+          type: 'boolean',
+        },
+        residentKey: {
+          type: 'string',
+          enum: ['discouraged', 'preferred', 'required'],
+        },
+        authenticatorAttachment: {
+          type: 'string',
+          enum: ['platform', 'cross-platform'],
+        },
+        userVerification: {
+          type: 'string',
+          enum: ['required', 'preferred', 'discouraged'],
+        },
+      },
+      additionalProperties: false,
+    },
+    attestation: {
+      type: 'string',
+      enum: ['none', 'indirect', 'direct', 'enterprise'],
+    },
+    extensions: {
+      type: 'object',
+      additionalProperties: {},
+    },
+  },
+  required: ['challenge', 'rp', 'user', 'pubKeyCredParams'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const webauthnRegistrationRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    credential: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+        },
+        rawId: {
+          type: 'string',
+        },
+        type: {
+          type: 'string',
+          const: 'public-key',
+        },
+        response: {
+          type: 'object',
+          properties: {
+            clientDataJSON: {
+              type: 'string',
+            },
+            attestationObject: {
+              type: 'string',
+            },
+            transports: {
+              type: 'array',
+              items: {
+                type: 'string',
+                enum: ['usb', 'nfc', 'ble', 'internal'],
+              },
+            },
+          },
+          required: ['clientDataJSON', 'attestationObject'],
+          additionalProperties: false,
+        },
+        clientExtensionResults: {
+          type: 'object',
+          additionalProperties: {},
+        },
+      },
+      required: ['id', 'rawId', 'type', 'response'],
+      additionalProperties: false,
+    },
+  },
+  required: ['credential'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const webauthnVerificationRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    credential: {
+      type: 'object',
+      properties: {
+        id: {
+          type: 'string',
+        },
+        rawId: {
+          type: 'string',
+        },
+        type: {
+          type: 'string',
+          const: 'public-key',
+        },
+        response: {
+          type: 'object',
+          properties: {
+            clientDataJSON: {
+              type: 'string',
+            },
+            authenticatorData: {
+              type: 'string',
+            },
+            signature: {
+              type: 'string',
+            },
+            userHandle: {
+              type: 'string',
+            },
+          },
+          required: ['clientDataJSON', 'authenticatorData', 'signature'],
+          additionalProperties: false,
+        },
+        clientExtensionResults: {
+          type: 'object',
+          additionalProperties: {},
+        },
+      },
+      required: ['id', 'rawId', 'type', 'response'],
+      additionalProperties: false,
+    },
+    challengeId: {
+      type: 'string',
+      format: 'uuid',
+    },
+  },
+  required: ['credential', 'challengeId'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const webauthnCredentialsListResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    credentials: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+          },
+          credentialId: {
+            type: 'string',
+          },
+          transports: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['usb', 'nfc', 'ble', 'internal'],
+            },
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+        },
+        required: ['id', 'credentialId', 'createdAt'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['credentials'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const webauthnRegistrationResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+    },
+    credentialId: {
+      type: 'string',
+      format: 'uuid',
+    },
+  },
+  required: ['success', 'credentialId'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const webauthnVerificationResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+    },
+    mfaVerifiedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['success', 'mfaVerifiedAt'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const mfaStatusResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    mfaRequired: {
+      type: 'boolean',
+    },
+    mfaVerified: {
+      type: 'boolean',
+    },
+    method: {
+      anyOf: [
+        {
+          type: 'string',
+          enum: ['webauthn', 'totp', 'sms', 'email'],
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    mfaVerifiedAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    hasCredentials: {
+      type: 'boolean',
+    },
+  },
+  required: ['mfaRequired', 'mfaVerified', 'method', 'mfaVerifiedAt', 'hasCredentials'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;

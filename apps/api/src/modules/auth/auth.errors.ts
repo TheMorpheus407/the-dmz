@@ -59,3 +59,43 @@ export class UserNotFoundError extends AuthError {
     });
   }
 }
+
+export class MfaRequiredError extends AuthError {
+  constructor() {
+    super({
+      code: ErrorCodes.AUTH_MFA_REQUIRED,
+      message: 'MFA verification required for this action',
+      statusCode: 403,
+    });
+  }
+}
+
+export class MfaNotEnabledError extends AuthError {
+  constructor() {
+    super({
+      code: ErrorCodes.AUTH_MFA_NOT_ENABLED,
+      message: 'MFA is not enabled for this user',
+      statusCode: 400,
+    });
+  }
+}
+
+export class WebauthnChallengeExpiredError extends AuthError {
+  constructor() {
+    super({
+      code: ErrorCodes.AUTH_WEBAUTHN_CHALLENGE_EXPIRED,
+      message: 'WebAuthn challenge has expired',
+      statusCode: 400,
+    });
+  }
+}
+
+export class WebauthnVerificationFailedError extends AuthError {
+  constructor() {
+    super({
+      code: ErrorCodes.AUTH_WEBAUTHN_VERIFICATION_FAILED,
+      message: 'WebAuthn verification failed',
+      statusCode: 400,
+    });
+  }
+}

@@ -5,6 +5,11 @@ import {
   type RegisterInput,
   type LogoutResponse,
   type MeResponse,
+  type MfaStatusResponse,
+  type WebauthnChallengeResponse,
+  type WebauthnRegistrationResponse,
+  type WebauthnVerificationResponse,
+  type WebauthnCredentialsListResponse,
 } from '@the-dmz/shared/schemas';
 import type { ThemeName, EffectState } from '$lib/stores/theme';
 
@@ -250,4 +255,187 @@ export async function getCurrentUser(): Promise<{
       retryable: false,
     },
   };
+}
+
+export type WebauthnChallengeRequest = {
+  challengeType: 'registration' | 'verification';
+};
+
+export async function getMfaStatus(): Promise<{
+  data?: MfaStatusResponse;
+  error?: CategorizedApiError;
+}> {
+  const result = await apiClient.get<MfaStatusResponse>('/auth/mfa/status');
+
+  if (result.error) {
+    return { error: result.error };
+  }
+
+  if (result.data) {
+    return { data: result.data };
+  }
+
+  return {
+    error: {
+      category: 'server',
+      code: 'INVALID_RESPONSE',
+      message: 'No data received from server',
+      status: 500,
+      retryable: false,
+    },
+  };
+}
+
+export async function createWebauthnChallenge(request: WebauthnChallengeRequest): Promise<{
+  data?: WebauthnChallengeResponse;
+  error?: CategorizedApiError;
+}> {
+  const result = await apiClient.post<WebauthnChallengeResponse, WebauthnChallengeRequest>(
+    '/auth/mfa/webauthn/challenge',
+    request,
+  );
+
+  if (result.error) {
+    return { error: result.error };
+  }
+
+  if (result.data) {
+    return { data: result.data };
+  }
+
+  return {
+    error: {
+      category: 'server',
+      code: 'INVALID_RESPONSE',
+      message: 'No data received from server',
+      status: 500,
+      retryable: false,
+    },
+  };
+}
+
+export type WebauthnRegistrationRequest = {
+  credential: {
+    id: string;
+    rawId: string;
+    type: 'public-key';
+    response: {
+      clientDataJSON: string;
+      attestationObject: string;
+      transports?: string[];
+    };
+    clientExtensionResults?: Record<string, unknown>;
+  };
+  challengeId: string;
+};
+
+export async function registerWebauthnCredential(request: WebauthnRegistrationRequest): Promise<{
+  data?: WebauthnRegistrationResponse;
+  error?: CategorizedApiError;
+}> {
+  const result = await apiClient.post<WebauthnRegistrationResponse, WebauthnRegistrationRequest>(
+    '/auth/mfa/webauthn/register',
+    request,
+  );
+
+  if (result.error) {
+    return { error: result.error };
+  }
+
+  if (result.data) {
+    return { data: result.data };
+  }
+
+  return {
+    error: {
+      category: 'server',
+      code: 'INVALID_RESPONSE',
+      message: 'No data received from server',
+      status: 500,
+      retryable: false,
+    },
+  };
+}
+
+export type WebauthnVerificationRequest = {
+  credential: {
+    id: string;
+    rawId: string;
+    type: 'public-key';
+    response: {
+      clientDataJSON: string;
+      authenticatorData: string;
+      signature: string;
+      userHandle?: string;
+    };
+    clientExtensionResults?: Record<string, unknown>;
+  };
+  challengeId: string;
+};
+
+export async function verifyWebauthnAssertion(request: WebauthnVerificationRequest): Promise<{
+  data?: WebauthnVerificationResponse;
+  error?: CategorizedApiError;
+}> {
+  const result = await apiClient.post<WebauthnVerificationResponse, WebauthnVerificationRequest>(
+    '/auth/mfa/webauthn/verify',
+    request,
+  );
+
+  if (result.error) {
+    return { error: result.error };
+  }
+
+  if (result.data) {
+    return { data: result.data };
+  }
+
+  return {
+    error: {
+      category: 'server',
+      code: 'INVALID_RESPONSE',
+      message: 'No data received from server',
+      status: 500,
+      retryable: false,
+    },
+  };
+}
+
+export async function listWebauthnCredentials(): Promise<{
+  data?: WebauthnCredentialsListResponse;
+  error?: CategorizedApiError;
+}> {
+  const result = await apiClient.get<WebauthnCredentialsListResponse>(
+    '/auth/mfa/webauthn/credentials',
+  );
+
+  if (result.error) {
+    return { error: result.error };
+  }
+
+  if (result.data) {
+    return { data: result.data };
+  }
+
+  return {
+    error: {
+      category: 'server',
+      code: 'INVALID_RESPONSE',
+      message: 'No data received from server',
+      status: 500,
+      retryable: false,
+    },
+  };
+}
+
+export async function deleteWebauthnCredential(
+  credentialId: string,
+): Promise<{ error?: CategorizedApiError }> {
+  const result = await apiClient.delete<void>(`/auth/mfa/webauthn/credentials/${credentialId}`);
+
+  if (result.error) {
+    return { error: result.error };
+  }
+
+  return {};
 }
