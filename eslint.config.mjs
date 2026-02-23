@@ -213,6 +213,7 @@ export default [
       '**/.storybook/**',
       '**/storybook-static/**',
       'eslint.config.mjs',
+      'apps/api/vitest.log-contract.config.ts',
     ],
   },
   {

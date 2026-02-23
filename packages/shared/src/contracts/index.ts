@@ -33,3 +33,23 @@ export {
   type SensitivePayloadField,
   type RequiredMetadataField,
 } from './event-ownership.js';
+
+export {
+  m1LoggingContractManifest,
+  loggingContractManifestSchema,
+  logEventCategorySchema,
+  logLevelSemanticsSchema,
+  requiredLogFieldSchema,
+  redactionPathSchema,
+  LOG_REDACTION_KEYS,
+  requiredRequestLogFields,
+  requiredResponseLogFields,
+  optionalContextLogFields,
+  type LoggingContractManifest,
+  type LogEventCategory,
+  type LogLevelSemantics,
+  type RequiredLogField,
+  type RedactionPath,
+  type LogRedactionKey,
+  type M1LoggingContractManifest,
+} from './logging-manifest.js';

@@ -16,6 +16,7 @@
         "contract:parity",
         "error-contract:check",
         "event-contract:check",
+        "log-contract:check",
         "lint:contracts",
         "lint:data-boundaries",
         "lint:hook-chain",
@@ -102,6 +103,17 @@
         "../packages/shared/src/contracts/event-manifest.ts",
         "../apps/api/src/modules/auth/auth.events.ts",
         "../apps/api/scripts/check-event-contract.ts"
+      ]
+    },
+    "log-contract:check": {
+      "dependsOn": ["^build"],
+      "outputs": [],
+      "inputs": [
+        "../packages/shared/src/contracts/logging-manifest.ts",
+        "../apps/api/src/shared/middleware/request-logger.ts",
+        "../apps/api/src/app.ts",
+        "../apps/api/src/shared/middleware/error-handler.ts",
+        "../apps/api/scripts/check-logging-contract.ts"
       ]
     },
     "lint:contracts": {

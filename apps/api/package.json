@@ -38,7 +38,9 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "openapi:check": "tsx scripts/check-openapi.ts",
     "contract:parity": "tsx scripts/check-contract-parity.ts",
-    "event-contract:check": "tsx scripts/check-event-contract.ts"
+    "event-contract:check": "tsx scripts/check-event-contract.ts",
+    "log-contract:check": "tsx scripts/check-logging-contract.ts",
+    "test:log-contract": "vitest run --config vitest.log-contract.config.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",
