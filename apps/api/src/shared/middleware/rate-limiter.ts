@@ -6,6 +6,7 @@ import rateLimit, {
 } from '@fastify/rate-limit';
 
 import { closeRedisClient, getRedisClient, type RedisRateLimitClient } from '../database/redis.js';
+import { tenantScopedKey, KEY_CATEGORIES } from '../cache/index.js';
 
 import { AppError, ErrorCodes } from './error-handler.js';
 
@@ -55,6 +56,23 @@ type StoreState = {
 
 export type RateLimitStoreState = StoreState;
 
+const extractTenantIdFromRequest = (request: FastifyRequest): string | undefined => {
+  if (request.tenantContext?.tenantId) {
+    return request.tenantContext.tenantId;
+  }
+
+  if (request.preAuthTenantContext?.tenantId) {
+    return request.preAuthTenantContext.tenantId;
+  }
+
+  const headerTenantId = request.headers['x-tenant-id'];
+  if (typeof headerTenantId === 'string') {
+    return headerTenantId;
+  }
+
+  return undefined;
+};
+
 const normalizePositiveInteger = (value: unknown, fallback: number): number => {
   const numeric = Number(value);
   if (!Number.isFinite(numeric) || numeric <= 0) {
@@ -69,6 +87,19 @@ const calculateRetryAfterSeconds = (context: errorResponseBuilderContext): numbe
 
 const buildRateLimitKeyPrefix = (groupId?: string): string =>
   groupId ? `${RATE_LIMIT_NAMESPACE}${groupId}-` : RATE_LIMIT_NAMESPACE;
+
+const extractGroupIdFromRoute = (request: FastifyRequest): string | undefined => {
+  const routeOptions = request.routeOptions as
+    | { config?: { rateLimit?: { groupId?: string } } }
+    | undefined;
+  const rateLimitConfig = routeOptions?.config?.rateLimit;
+
+  if (typeof rateLimitConfig === 'object' && rateLimitConfig?.groupId) {
+    return rateLimitConfig.groupId;
+  }
+
+  return undefined;
+};
 
 const toStoreOptions = (value: unknown): StoreOptions => {
   if (!value || typeof value !== 'object') {
@@ -349,9 +380,30 @@ const buildRateLimitPluginOptions = (
     logger.warn('Redis unavailable, using in-memory rate limit store');
   }
 
+  const rateLimitKeyGenerator = (request: FastifyRequest): string => {
+    const groupId = extractGroupIdFromRoute(request);
+    const tenantId = extractTenantIdFromRequest(request);
+    const key = request.ip;
+
+    if (!tenantId) {
+      throw new AppError({
+        code: ErrorCodes.TENANT_CONTEXT_MISSING,
+        message: 'Tenant context required for rate limiting: missing tenant_id in request',
+        statusCode: 500,
+        details: {
+          hint: 'Rate limit keys must be tenant-scoped. Provide x-tenant-id header or configure tenant resolver.',
+        },
+      });
+    }
+
+    const prefix = buildRateLimitKeyPrefix(groupId);
+    return tenantScopedKey(KEY_CATEGORIES.RATE_LIMIT, `${prefix}${key}`, tenantId);
+  };
+
   return {
     global: true,
     hook: 'onRequest',
+    keyGenerator: rateLimitKeyGenerator,
     max: config.RATE_LIMIT_MAX,
     timeWindow: config.RATE_LIMIT_WINDOW_MS,
     allowList: (request) => isRateLimitExemptPath(request),

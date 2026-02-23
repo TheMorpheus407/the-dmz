@@ -5,7 +5,7 @@ import { loadConfig, type AppConfig } from '../../../config.js';
 import { createRateLimitStore, rateLimiter, type RateLimitStoreState } from '../rate-limiter.js';
 
 import type { RedisRateLimitClient } from '../../database/redis.js';
-import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
+import type { FastifyBaseLogger, FastifyInstance, FastifyRequest } from 'fastify';
 
 const baseEnv = {
   NODE_ENV: 'test',
@@ -15,15 +15,10 @@ const baseEnv = {
   JWT_SECRET: 'test-secret',
 } as const;
 
+const TEST_TENANT_ID = '550e8400-e29b-41d4-a716-446655440000';
+
 const createTestConfig = (overrides: Record<string, string> = {}): AppConfig =>
   loadConfig({ ...baseEnv, ...overrides });
-
-const createNonTestConfig = (overrides: Record<string, string> = {}): AppConfig =>
-  loadConfig({
-    ...baseEnv,
-    NODE_ENV: 'development',
-    ...overrides,
-  });
 
 const getHeader = (
   headers: Record<string, number | string | string[] | undefined>,
@@ -115,6 +110,7 @@ describe('rate limiter middleware', () => {
       const first = await app.inject({
         method: 'GET',
         url: '/api/v1/',
+        headers: { 'x-tenant-id': '550e8400-e29b-41d4-a716-446655440000' },
       });
 
       expect(first.statusCode).toBe(200);
@@ -127,6 +123,7 @@ describe('rate limiter middleware', () => {
       const second = await app.inject({
         method: 'GET',
         url: '/api/v1/',
+        headers: { 'x-tenant-id': '550e8400-e29b-41d4-a716-446655440000' },
       });
 
       expect(second.statusCode).toBe(200);
@@ -135,6 +132,7 @@ describe('rate limiter middleware', () => {
       const third = await app.inject({
         method: 'GET',
         url: '/api/v1/',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
 
       expect(third.statusCode).toBe(429);
@@ -172,6 +170,7 @@ describe('rate limiter middleware', () => {
       const response = await isolatedApp.inject({
         method: 'GET',
         url: '/missing-route',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
 
       expect(response.statusCode).toBe(404);
@@ -194,14 +193,17 @@ describe('rate limiter middleware', () => {
       const first = await isolatedApp.inject({
         method: 'GET',
         url: '/api/v1/',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const second = await isolatedApp.inject({
         method: 'GET',
         url: '/missing-route',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const third = await isolatedApp.inject({
         method: 'GET',
         url: '/api/v1/',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
 
       expect(first.statusCode).toBe(200);
@@ -216,7 +218,7 @@ describe('rate limiter middleware', () => {
 
     it('falls back to in-memory limiting when REDIS_URL is malformed', async () => {
       const app = buildApp(
-        createNonTestConfig({
+        createTestConfig({
           LOG_LEVEL: 'silent',
           REDIS_URL: 'not-a-url',
           RATE_LIMIT_MAX: '2',
@@ -229,14 +231,17 @@ describe('rate limiter middleware', () => {
       const first = await app.inject({
         method: 'GET',
         url: '/api/v1/',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const second = await app.inject({
         method: 'GET',
         url: '/api/v1/',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const third = await app.inject({
         method: 'GET',
         url: '/api/v1/',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
 
       expect(first.statusCode).toBe(200);
@@ -290,6 +295,19 @@ describe('rate limiter middleware', () => {
   });
 
   describe('per-route override utility', () => {
+    const TEST_TENANT_ID = '550e8400-e29b-41d4-a716-446655440000';
+
+    const setTestTenantContext = async (request: FastifyRequest): Promise<void> => {
+      const tenantId = request.headers['x-tenant-id'] as string | undefined;
+      if (tenantId) {
+        request.preAuthTenantContext = {
+          tenantId,
+          tenantSlug: 'test-tenant',
+          source: 'header',
+        };
+      }
+    };
+
     const buildOverrideApp = async (): Promise<FastifyInstance> => {
       const app = buildApp(
         createTestConfig({
@@ -305,6 +323,7 @@ describe('rate limiter middleware', () => {
             rateLimit: false,
           },
           preHandler: [
+            setTestTenantContext,
             rateLimiter({
               max: 1,
               timeWindow: 60_000,
@@ -321,6 +340,7 @@ describe('rate limiter middleware', () => {
             rateLimit: false,
           },
           preHandler: [
+            setTestTenantContext,
             rateLimiter({
               max: 3,
               timeWindow: 60_000,
@@ -341,10 +361,12 @@ describe('rate limiter middleware', () => {
       const first = await app.inject({
         method: 'GET',
         url: '/test/strict',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const second = await app.inject({
         method: 'GET',
         url: '/test/strict',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
 
       expect(first.statusCode).toBe(200);
@@ -360,18 +382,22 @@ describe('rate limiter middleware', () => {
       const first = await app.inject({
         method: 'GET',
         url: '/test/read',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const second = await app.inject({
         method: 'GET',
         url: '/test/read',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const third = await app.inject({
         method: 'GET',
         url: '/test/read',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const fourth = await app.inject({
         method: 'GET',
         url: '/test/read',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
 
       expect(first.statusCode).toBe(200);
@@ -389,23 +415,28 @@ describe('rate limiter middleware', () => {
       const strict = await app.inject({
         method: 'GET',
         url: '/test/strict',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
 
       const readFirst = await app.inject({
         method: 'GET',
         url: '/test/read',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const readSecond = await app.inject({
         method: 'GET',
         url: '/test/read',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const readThird = await app.inject({
         method: 'GET',
         url: '/test/read',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
       const readFourth = await app.inject({
         method: 'GET',
         url: '/test/read',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
       });
 
       expect(strict.statusCode).toBe(200);
