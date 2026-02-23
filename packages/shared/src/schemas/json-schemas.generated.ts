@@ -1975,3 +1975,79 @@ export const mfaStatusResponseJsonSchema = {
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
+
+export const mfaMethodJsonSchema = {
+  type: 'string',
+  enum: ['webauthn', 'totp', 'sms', 'email'],
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const mfaChallengeStateJsonSchema = {
+  type: 'object',
+  properties: {
+    required: {
+      type: 'boolean',
+    },
+    verified: {
+      type: ['boolean', 'null'],
+    },
+    method: {
+      anyOf: [
+        {
+          type: 'string',
+          enum: ['webauthn', 'totp', 'sms', 'email'],
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    expiresAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+  },
+  required: ['required', 'verified', 'method', 'expiresAt'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const webauthnCredentialJsonSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'string',
+      format: 'uuid',
+    },
+    credentialId: {
+      type: 'string',
+    },
+    publicKey: {
+      type: 'string',
+    },
+    counter: {
+      type: 'number',
+    },
+    transports: {
+      type: 'array',
+      items: {
+        type: 'string',
+        enum: ['usb', 'nfc', 'ble', 'internal'],
+      },
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['id', 'credentialId', 'publicKey', 'counter', 'createdAt'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;

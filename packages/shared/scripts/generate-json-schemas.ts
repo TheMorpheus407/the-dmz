@@ -49,6 +49,9 @@ import {
   webauthnRegistrationResponseSchema,
   webauthnVerificationResponseSchema,
   mfaStatusResponseSchema,
+  mfaMethodSchema,
+  mfaChallengeStateSchema,
+  webauthnCredentialSchema,
 } from '../src/schemas/mfa.schema.js';
 
 const entries: Array<[string, Record<string, unknown>]> = [
@@ -97,6 +100,9 @@ const entries: Array<[string, Record<string, unknown>]> = [
   ['webauthnRegistrationResponseJsonSchema', createJsonSchema(webauthnRegistrationResponseSchema)],
   ['webauthnVerificationResponseJsonSchema', createJsonSchema(webauthnVerificationResponseSchema)],
   ['mfaStatusResponseJsonSchema', createJsonSchema(mfaStatusResponseSchema)],
+  ['mfaMethodJsonSchema', createJsonSchema(mfaMethodSchema)],
+  ['mfaChallengeStateJsonSchema', createJsonSchema(mfaChallengeStateSchema)],
+  ['webauthnCredentialJsonSchema', createJsonSchema(webauthnCredentialSchema)],
 ];
 
 const renderExport = (name: string, schema: Record<string, unknown>): string =>

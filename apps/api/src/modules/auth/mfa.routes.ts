@@ -1,10 +1,15 @@
 import {
-  webauthnChallengeRequestJsonSchema,
-  webauthnChallengeResponseJsonSchema,
-  webauthnRegistrationResponseJsonSchema,
-  webauthnVerificationResponseJsonSchema,
-  mfaStatusResponseJsonSchema,
-  webauthnCredentialsListResponseJsonSchema,
+  webauthnChallengeRequestJsonSchema as challengeRequestSchema,
+  webauthnChallengeResponseJsonSchema as challengeResponseSchema,
+  webauthnRegistrationResponseJsonSchema as registrationResponseSchema,
+  webauthnVerificationResponseJsonSchema as verificationResponseSchema,
+  mfaStatusResponseJsonSchema as mfaStatusSchema,
+  webauthnCredentialsListResponseJsonSchema as credentialsListSchema,
+  mfaMethodJsonSchema as sharedMfaMethodJsonSchema,
+  mfaChallengeStateJsonSchema as sharedMfaChallengeStateJsonSchema,
+  webauthnCredentialJsonSchema as sharedWebauthnCredentialJsonSchema,
+  webauthnRegistrationRequestJsonSchema as registrationRequestSchema,
+  webauthnVerificationRequestJsonSchema as verificationRequestSchema,
 } from '@the-dmz/shared/schemas';
 import type { WebauthnChallengeRequest } from '@the-dmz/shared/schemas';
 
@@ -399,3 +404,15 @@ export const registerMfaRoutes = async (fastify: FastifyInstance): Promise<void>
     },
   );
 };
+
+export const mfaMethodJsonSchema = sharedMfaMethodJsonSchema;
+export const mfaChallengeStateJsonSchema = sharedMfaChallengeStateJsonSchema;
+export const webauthnCredentialJsonSchema = sharedWebauthnCredentialJsonSchema;
+export const webauthnChallengeRequestJsonSchema = challengeRequestSchema;
+export const webauthnChallengeResponseJsonSchema = challengeResponseSchema;
+export const webauthnRegistrationRequestJsonSchema = registrationRequestSchema;
+export const webauthnVerificationRequestJsonSchema = verificationRequestSchema;
+export const webauthnRegistrationResponseJsonSchema = registrationResponseSchema;
+export const webauthnVerificationResponseJsonSchema = verificationResponseSchema;
+export const mfaStatusResponseJsonSchema = mfaStatusSchema;
+export const webauthnCredentialsListResponseJsonSchema = credentialsListSchema;

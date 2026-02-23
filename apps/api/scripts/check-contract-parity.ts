@@ -40,6 +40,16 @@ const M1_ENDPOINTS: ManifestEndpoint[] = [
   { path: '/api/v1/auth/logout', method: 'DELETE', requiresAuth: true },
   { path: '/api/v1/auth/me', method: 'GET', requiresAuth: true },
   { path: '/api/v1/auth/profile', method: 'PATCH', requiresAuth: true },
+  { path: '/api/v1/auth/mfa/webauthn/challenge', method: 'POST', requiresAuth: true },
+  { path: '/api/v1/auth/mfa/webauthn/register', method: 'POST', requiresAuth: true },
+  { path: '/api/v1/auth/mfa/webauthn/verify', method: 'POST', requiresAuth: true },
+  { path: '/api/v1/auth/mfa/status', method: 'GET', requiresAuth: true },
+  { path: '/api/v1/auth/mfa/webauthn/credentials', method: 'GET', requiresAuth: true },
+  {
+    path: '/api/v1/auth/mfa/webauthn/credentials/{credentialId}',
+    method: 'DELETE',
+    requiresAuth: true,
+  },
   { path: '/api/v1/health/authenticated', method: 'GET', requiresAuth: true },
   { path: '/health', method: 'GET', requiresAuth: false },
   { path: '/ready', method: 'GET', requiresAuth: false },
@@ -126,6 +136,11 @@ function checkFrontendClientManifestParity(): string[] {
     '/api/v1/auth/logout',
     '/api/v1/auth/me',
     '/api/v1/auth/profile',
+    '/api/v1/auth/mfa/webauthn/challenge',
+    '/api/v1/auth/mfa/webauthn/register',
+    '/api/v1/auth/mfa/webauthn/verify',
+    '/api/v1/auth/mfa/status',
+    '/api/v1/auth/mfa/webauthn/credentials',
   ];
 
   const fileContent = tsFiles.map((f) => readFileSync(f, 'utf-8')).join('\n');

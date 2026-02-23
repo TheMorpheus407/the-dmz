@@ -46,6 +46,9 @@
     "openapi:generate": "pnpm --filter @the-dmz/api openapi:generate",
     "openapi:check": "pnpm --filter @the-dmz/api openapi:check",
     "contract:parity": "pnpm --filter @the-dmz/api contract:parity",
+    "mfa:parity": "pnpm --filter @the-dmz/api test -- --run src/modules/auth/__tests__/mfa-contract-drift.test.ts && pnpm --filter @the-dmz/web test -- --run src/lib/api/error-mapping-coverage.test.ts",
+    "mfa:smoke": "pnpm --filter @the-dmz/api test -- --run src/modules/auth/__tests__/mfa-smoke.test.ts",
+    "mfa:gate": "pnpm mfa:parity && pnpm mfa:smoke",
     "error-contract:check": "pnpm --filter @the-dmz/shared test -- --run src/constants/error-contract.test.ts && pnpm --filter @the-dmz/web test -- --run src/lib/api/error-mapping-coverage.test.ts"
   },
   "devDependencies": {
