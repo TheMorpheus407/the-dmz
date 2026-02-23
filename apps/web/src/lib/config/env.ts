@@ -1,4 +1,8 @@
-import { type FrontendEnv, parseFrontendEnv } from '@the-dmz/shared';
+import {
+  type FrontendEnv,
+  parseFrontendEnv,
+  validateFrontendEnvConsistency,
+} from '@the-dmz/shared';
 
 let cachedConfig: FrontendEnv | undefined;
 
@@ -15,7 +19,16 @@ export function loadFrontendConfig(
     return cachedConfig;
   }
 
-  cachedConfig = parseFrontendEnv(env);
+  const config = parseFrontendEnv(env);
+
+  const validation = validateFrontendEnvConsistency(config);
+  if (!validation.ok) {
+    throw new Error(
+      `Environment consistency validation failed:\n${validation.errors.join('\n')}\n\nFix these issues before starting the server.`,
+    );
+  }
+
+  cachedConfig = config;
   return cachedConfig;
 }
 

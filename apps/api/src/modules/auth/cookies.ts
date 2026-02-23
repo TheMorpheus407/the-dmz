@@ -1,4 +1,5 @@
 import type { FastifyReply } from 'fastify';
+import type { AppConfig } from '../../config.js';
 
 export const REFRESH_COOKIE_NAME = 'refresh-token';
 
@@ -10,7 +11,8 @@ interface SetRefreshCookieOptions {
 }
 
 export const setRefreshCookie = ({ refreshToken, reply }: SetRefreshCookieOptions): void => {
-  const isProduction = process.env['NODE_ENV'] === 'production';
+  const config: AppConfig = (reply.server as typeof reply.server & { config: AppConfig }).config;
+  const isProduction = config.NODE_ENV === 'production';
 
   const expires = new Date();
   expires.setDate(expires.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);

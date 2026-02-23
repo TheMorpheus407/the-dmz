@@ -1,4 +1,4 @@
-import { type BackendEnv, parseBackendEnv } from '@the-dmz/shared';
+import { type BackendEnv, parseBackendEnv, validateBackendEnvConsistency } from '@the-dmz/shared';
 
 export type AppConfig = BackendEnv;
 
@@ -23,5 +23,14 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     effective['PORT'] = apiPort;
   }
 
-  return parseBackendEnv(effective);
+  const config = parseBackendEnv(effective);
+
+  const validation = validateBackendEnvConsistency(config);
+  if (!validation.ok) {
+    throw new Error(
+      `Environment consistency validation failed:\n${validation.errors.join('\n')}\n\nFix these issues before starting the server.`,
+    );
+  }
+
+  return config;
 }

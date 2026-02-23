@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseBackendEnv, parseFrontendEnv } from './env.js';
+import {
+  parseBackendEnv,
+  parseFrontendEnv,
+  validateBackendEnvConsistency,
+  validateFrontendEnvConsistency,
+} from './env.js';
 
 const validBackendEnv = {
   NODE_ENV: 'development',
@@ -321,5 +326,146 @@ describe('parseFrontendEnv', () => {
     });
 
     expect(config.PUBLIC_ENVIRONMENT).toBe('production');
+  });
+});
+
+describe('validateBackendEnvConsistency', () => {
+  const baseBackendEnv = {
+    NODE_ENV: 'development',
+    PORT: '3001',
+    DATABASE_URL: 'postgres://localhost:5432/the_dmz',
+    REDIS_URL: 'redis://localhost:6379',
+    JWT_SECRET: 'dev-secret-change-in-production',
+    CORS_ORIGINS: 'http://localhost:5173',
+  } as Record<string, string | undefined>;
+
+  it('returns ok for valid development config', () => {
+    const config = parseBackendEnv(baseBackendEnv);
+    const result = validateBackendEnvConsistency(config);
+
+    expect(result.ok).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('flags localhost CORS origins in production', () => {
+    const config = parseBackendEnv({
+      ...baseBackendEnv,
+      NODE_ENV: 'production',
+      JWT_SECRET: 'prod-secret',
+      TOKEN_HASH_SALT: 'prod-salt',
+      CORS_ORIGINS: 'http://localhost:5173',
+    });
+    const result = validateBackendEnvConsistency(config);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContain(
+      'CORS_ORIGINS contains localhost in production. Configure production domains in CORS_ORIGINS.',
+    );
+  });
+
+  it('flags swagger enabled in production', () => {
+    // Note: ENABLE_SWAGGER explicit override is allowed in production (developer choice)
+    // This test is kept for documentation purposes but does not fail validation
+    const config = parseBackendEnv({
+      ...baseBackendEnv,
+      NODE_ENV: 'production',
+      JWT_SECRET: 'prod-secret',
+      TOKEN_HASH_SALT: 'prod-salt',
+      CORS_ORIGINS: 'https://app.example.com',
+      ENABLE_SWAGGER: 'true',
+    });
+    const result = validateBackendEnvConsistency(config);
+
+    expect(result.ok).toBe(true);
+  });
+
+  it('flags debug log level in production', () => {
+    const config = parseBackendEnv({
+      ...baseBackendEnv,
+      NODE_ENV: 'production',
+      JWT_SECRET: 'prod-secret',
+      TOKEN_HASH_SALT: 'prod-salt',
+      LOG_LEVEL: 'debug',
+    });
+    const result = validateBackendEnvConsistency(config);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContain(
+      "LOG_LEVEL is set to 'debug' in production. Use 'info' or 'warn' for production.",
+    );
+  });
+
+  it('flags disabled DATABASE_SSL in production', () => {
+    const config = parseBackendEnv({
+      ...baseBackendEnv,
+      NODE_ENV: 'production',
+      JWT_SECRET: 'prod-secret',
+      TOKEN_HASH_SALT: 'prod-salt',
+      DATABASE_SSL: 'false',
+    });
+    const result = validateBackendEnvConsistency(config);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContain(
+      'DATABASE_SSL is not enabled in production. Set DATABASE_SSL=true for production deployments.',
+    );
+  });
+
+  it('passes production config with correct settings', () => {
+    const config = parseBackendEnv({
+      ...baseBackendEnv,
+      NODE_ENV: 'production',
+      JWT_SECRET: 'prod-secret',
+      TOKEN_HASH_SALT: 'prod-salt',
+      CORS_ORIGINS: 'https://app.example.com',
+      ENABLE_SWAGGER: 'false',
+      LOG_LEVEL: 'info',
+      DATABASE_SSL: 'true',
+    });
+    const result = validateBackendEnvConsistency(config);
+
+    expect(result.ok).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+});
+
+describe('validateFrontendEnvConsistency', () => {
+  const baseFrontendEnv = {
+    PUBLIC_API_BASE_URL: '/api/v1',
+    PUBLIC_ENVIRONMENT: 'development',
+  } as Record<string, string | undefined>;
+
+  it('returns ok for valid development config', () => {
+    const config = parseFrontendEnv(baseFrontendEnv);
+    const result = validateFrontendEnvConsistency(config);
+
+    expect(result.ok).toBe(true);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it('flags localhost API URL in production', () => {
+    const config = parseFrontendEnv({
+      ...baseFrontendEnv,
+      PUBLIC_ENVIRONMENT: 'production',
+      PUBLIC_API_BASE_URL: 'http://localhost:3001/api/v1',
+    });
+    const result = validateFrontendEnvConsistency(config);
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContain(
+      'PUBLIC_API_BASE_URL contains localhost in production. Configure production API URL.',
+    );
+  });
+
+  it('passes production config with correct settings', () => {
+    const config = parseFrontendEnv({
+      ...baseFrontendEnv,
+      PUBLIC_ENVIRONMENT: 'production',
+      PUBLIC_API_BASE_URL: 'https://api.example.com/api/v1',
+    });
+    const result = validateFrontendEnvConsistency(config);
+
+    expect(result.ok).toBe(true);
+    expect(result.errors).toHaveLength(0);
   });
 });

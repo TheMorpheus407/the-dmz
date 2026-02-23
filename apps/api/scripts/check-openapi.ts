@@ -128,7 +128,7 @@ async function checkOpenApi(): Promise<void> {
   console.log('Generating OpenAPI spec...');
 
   const config = loadConfig({
-    NODE_ENV: 'production',
+    NODE_ENV: 'development',
     DATABASE_URL: process.env['DATABASE_URL'] ?? 'postgresql://localhost:5432/dmz_dev',
     REDIS_URL: process.env['REDIS_URL'] ?? 'redis://localhost:6379',
     LOG_LEVEL: 'silent',

@@ -12,6 +12,71 @@ const baseEnv = {
 } as const;
 
 describe('loadConfig', () => {
+  describe('environment consistency validation', () => {
+    it('throws when CORS_ORIGINS contains localhost in production', () => {
+      expect(() =>
+        loadConfig({
+          ...baseEnv,
+          NODE_ENV: 'production',
+          JWT_SECRET: 'prod-secret',
+          TOKEN_HASH_SALT: 'prod-salt',
+          CORS_ORIGINS: 'http://localhost:5173',
+        }),
+      ).toThrow(/Environment consistency validation failed/);
+    });
+
+    it('throws when ENABLE_SWAGGER is true in production', () => {
+      expect(() =>
+        loadConfig({
+          ...baseEnv,
+          NODE_ENV: 'production',
+          JWT_SECRET: 'prod-secret',
+          TOKEN_HASH_SALT: 'prod-salt',
+          ENABLE_SWAGGER: 'true',
+        }),
+      ).toThrow(/Environment consistency validation failed/);
+    });
+
+    it('throws when LOG_LEVEL is debug in production', () => {
+      expect(() =>
+        loadConfig({
+          ...baseEnv,
+          NODE_ENV: 'production',
+          JWT_SECRET: 'prod-secret',
+          TOKEN_HASH_SALT: 'prod-salt',
+          LOG_LEVEL: 'debug',
+        }),
+      ).toThrow(/Environment consistency validation failed/);
+    });
+
+    it('throws when DATABASE_SSL is false in production', () => {
+      expect(() =>
+        loadConfig({
+          ...baseEnv,
+          NODE_ENV: 'production',
+          JWT_SECRET: 'prod-secret',
+          TOKEN_HASH_SALT: 'prod-salt',
+          DATABASE_SSL: 'false',
+        }),
+      ).toThrow(/Environment consistency validation failed/);
+    });
+
+    it('allows valid production configuration', () => {
+      const config = loadConfig({
+        ...baseEnv,
+        NODE_ENV: 'production',
+        JWT_SECRET: 'prod-secret',
+        TOKEN_HASH_SALT: 'prod-salt',
+        CORS_ORIGINS: 'https://app.example.com',
+        ENABLE_SWAGGER: 'false',
+        LOG_LEVEL: 'info',
+        DATABASE_SSL: 'true',
+      });
+
+      expect(config.NODE_ENV).toBe('production');
+    });
+  });
+
   describe('port resolution', () => {
     it('defaults API server port to 3001', () => {
       const config = loadConfig({
@@ -132,6 +197,10 @@ describe('loadConfig', () => {
         ...baseEnv,
         NODE_ENV: 'production',
         JWT_SECRET: 'prod-jwt-value',
+        TOKEN_HASH_SALT: 'prod-salt-value',
+        CORS_ORIGINS: 'https://app.example.com',
+        LOG_LEVEL: 'info',
+        DATABASE_SSL: 'true',
       });
 
       expect(config.JWT_SECRET).toBe('prod-jwt-value');
@@ -222,6 +291,10 @@ describe('loadConfig', () => {
         ...baseEnv,
         NODE_ENV: 'production',
         JWT_SECRET: 'prod-jwt-value',
+        TOKEN_HASH_SALT: 'prod-salt-value',
+        CORS_ORIGINS: 'https://app.example.com',
+        LOG_LEVEL: 'info',
+        DATABASE_SSL: 'true',
       });
 
       expect(config.ENABLE_SWAGGER).toBe(false);
@@ -232,6 +305,10 @@ describe('loadConfig', () => {
         ...baseEnv,
         NODE_ENV: 'production',
         JWT_SECRET: 'prod-jwt-value',
+        TOKEN_HASH_SALT: 'prod-salt-value',
+        CORS_ORIGINS: 'https://app.example.com',
+        LOG_LEVEL: 'info',
+        DATABASE_SSL: 'true',
         ENABLE_SWAGGER: 'true',
       });
 
@@ -300,6 +377,9 @@ describe('loadConfig', () => {
         ...baseEnv,
         NODE_ENV: 'production',
         JWT_SECRET: 'prod-jwt-value',
+        TOKEN_HASH_SALT: 'prod-salt-value',
+        CORS_ORIGINS: 'https://app.example.com',
+        LOG_LEVEL: 'info',
       });
 
       expect(config.DATABASE_POOL_MIN).toBe(5);

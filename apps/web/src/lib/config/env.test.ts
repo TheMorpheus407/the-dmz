@@ -7,6 +7,27 @@ beforeEach(() => {
 });
 
 describe('loadFrontendConfig', () => {
+  describe('environment consistency validation', () => {
+    it('throws when PUBLIC_API_BASE_URL contains localhost in production', () => {
+      expect(() =>
+        loadFrontendConfig({
+          PUBLIC_API_BASE_URL: 'http://localhost:3001/api/v1',
+          PUBLIC_ENVIRONMENT: 'production',
+        }),
+      ).toThrow(/Environment consistency validation failed/);
+    });
+
+    it('allows valid production configuration', () => {
+      const config = loadFrontendConfig({
+        PUBLIC_API_BASE_URL: 'https://api.example.com/api/v1',
+        PUBLIC_ENVIRONMENT: 'production',
+      });
+
+      expect(config.PUBLIC_ENVIRONMENT).toBe('production');
+      expect(config.PUBLIC_API_BASE_URL).toBe('https://api.example.com/api/v1');
+    });
+  });
+
   it('parses valid environment variables', () => {
     const config = loadFrontendConfig({
       PUBLIC_API_BASE_URL: '/api/v1',

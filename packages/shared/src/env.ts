@@ -127,6 +127,57 @@ export const frontendEnvSchema = z.object({
 
 export type FrontendEnv = z.infer<typeof frontendEnvSchema>;
 
+export interface EnvValidationResult {
+  ok: boolean;
+  errors: string[];
+}
+
+export function validateBackendEnvConsistency(config: BackendEnv): EnvValidationResult {
+  const errors: string[] = [];
+
+  if (config.NODE_ENV === 'production') {
+    if (config.CORS_ORIGINS.includes('localhost')) {
+      errors.push(
+        'CORS_ORIGINS contains localhost in production. Configure production domains in CORS_ORIGINS.',
+      );
+    }
+
+    if (config.LOG_LEVEL === 'debug' || config.LOG_LEVEL === 'trace') {
+      errors.push(
+        `LOG_LEVEL is set to '${config.LOG_LEVEL}' in production. Use 'info' or 'warn' for production.`,
+      );
+    }
+  }
+
+  if (config.NODE_ENV === 'production' && !config.DATABASE_SSL) {
+    errors.push(
+      'DATABASE_SSL is not enabled in production. Set DATABASE_SSL=true for production deployments.',
+    );
+  }
+
+  return {
+    ok: errors.length === 0,
+    errors,
+  };
+}
+
+export function validateFrontendEnvConsistency(config: FrontendEnv): EnvValidationResult {
+  const errors: string[] = [];
+
+  if (config.PUBLIC_ENVIRONMENT === 'production') {
+    if (config.PUBLIC_API_BASE_URL.includes('localhost')) {
+      errors.push(
+        'PUBLIC_API_BASE_URL contains localhost in production. Configure production API URL.',
+      );
+    }
+  }
+
+  return {
+    ok: errors.length === 0,
+    errors,
+  };
+}
+
 /**
  * Parse and validate backend environment variables.
  * Throws with developer-friendly error messages on failure.

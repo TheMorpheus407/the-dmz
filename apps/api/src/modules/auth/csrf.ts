@@ -1,6 +1,12 @@
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
 
-import type { FastifyRequest, FastifyReply, preHandlerAsyncHookHandler } from 'fastify';
+import type {
+  FastifyInstance,
+  FastifyRequest,
+  FastifyReply,
+  preHandlerAsyncHookHandler,
+} from 'fastify';
+import type { AppConfig } from '../../config.js';
 
 const CSRF_COOKIE_NAME = 'csrf-token';
 const CSRF_HEADER_NAME = 'x-csrf-token';
@@ -17,7 +23,8 @@ export const setCsrfCookie = (request: FastifyRequest, reply: FastifyReply): str
 
   const newToken = crypto.randomUUID();
 
-  const isProduction = process.env['NODE_ENV'] === 'production';
+  const config: AppConfig = (request.server as FastifyInstance & { config: AppConfig }).config;
+  const isProduction = config.NODE_ENV === 'production';
 
   void reply.setCookie(CSRF_COOKIE_NAME, newToken, {
     secure: isProduction,
