@@ -16,7 +16,8 @@
         "contract:parity",
         "error-contract:check",
         "event-contract:check",
-        "lint:data-boundaries"
+        "lint:data-boundaries",
+        "lint:hook-chain"
       ],
       "outputs": []
     },
@@ -27,6 +28,9 @@
       "outputs": []
     },
     "lint:data-boundaries": {
+      "outputs": []
+    },
+    "lint:hook-chain": {
       "outputs": []
     },
     "test": {

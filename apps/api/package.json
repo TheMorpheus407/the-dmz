@@ -16,6 +16,7 @@
     "lint:event-boundaries": "tsx scripts/validate-event-boundaries.ts",
     "lint:route-boundaries": "tsx scripts/validate-route-boundaries.ts",
     "lint:schema-boundaries": "tsx scripts/validate-schema-boundaries.ts",
+    "lint:hook-chain": "tsx scripts/validate-hook-chain.ts",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:migrate": "tsx src/shared/database/migrate.ts",
     "db:smoke": "tsx src/shared/database/smoke.ts",
