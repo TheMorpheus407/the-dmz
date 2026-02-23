@@ -15,7 +15,8 @@
         "openapi:check",
         "contract:parity",
         "error-contract:check",
-        "event-contract:check"
+        "event-contract:check",
+        "lint:data-boundaries"
       ],
       "outputs": []
     },
@@ -23,6 +24,9 @@
       "outputs": []
     },
     "lint:architecture": {
+      "outputs": []
+    },
+    "lint:data-boundaries": {
       "outputs": []
     },
     "test": {
