@@ -3,25 +3,33 @@ import fastify, { type FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
 
 import { loadConfig, type AppConfig } from './config.js';
-import { healthPlugin } from './modules/health/index.js';
-import { authPlugin } from './modules/auth/index.js';
-import { gamePlugin } from './modules/game/game.plugin.js';
+import { validateManifest, getRegistrationOrder } from './modules/bootstrap.js';
 import { swaggerPlugin } from './plugins/swagger.js';
-import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
-import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js';
 import { AppError, createErrorHandler, ErrorCodes } from './shared/middleware/error-handler.js';
 import { globalRateLimiter, registerRateLimiter } from './shared/middleware/rate-limiter.js';
 import { requestLogger } from './shared/middleware/request-logger.js';
 import { sanitizeInputHook } from './shared/middleware/sanitize-input.js';
 import { registerSecurityHeaders } from './shared/middleware/security-headers.js';
 import { generateId } from './shared/utils/id.js';
+import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js';
+import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
+import { healthPlugin } from './modules/health/index.js';
+import { authPlugin } from './modules/auth/index.js';
+import { gamePlugin } from './modules/game/game.plugin.js';
+
+const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
+  infrastructure: { plugin: infrastructurePlugin },
+  eventBus: { plugin: eventBusPlugin },
+  health: { plugin: healthPlugin },
+  auth: { plugin: authPlugin, routePrefix: '/auth' },
+  game: { plugin: gamePlugin, routePrefix: '/game' },
+};
 
 const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {
   const origins = new Set<string>();
   for (const origin of corsOriginsList) {
     origins.add(origin);
   }
-  // In non-production environments, also allow 127.0.0.1 variant of localhost origins
   if (nodeEnv !== 'production') {
     for (const origin of corsOriginsList) {
       if (origin.includes('localhost')) {
@@ -101,24 +109,53 @@ export const buildApp = (
     },
     requestIdHeader: 'x-request-id',
     genReqId: (req) => resolveRequestId(req.headers['x-request-id']) ?? generateId(),
-    // Baseline global payload cap; a future preParsing requestSizeLimitHook can add
-    // route-specific overrides on top of this default limit.
     bodyLimit: config.MAX_BODY_SIZE,
-    // Let sanitizeInputHook classify forbidden keys consistently at preValidation.
     onProtoPoisoning: 'ignore',
     onConstructorPoisoning: 'ignore',
   });
 
   app.decorate('config', config);
 
+  const manifestValidation = validateManifest();
+  if (!manifestValidation.valid) {
+    const errorMessages = manifestValidation.errors.map((e) => `  - ${e.message}`).join('\n');
+    throw new Error(`Module manifest validation failed:\n${errorMessages}`);
+  }
+
   app.register(cookie);
 
-  app.register(infrastructurePlugin, {
-    config,
-    ...(skipHealthCheck !== undefined && { skipHealthCheck }),
-  });
+  const registrationOrder = getRegistrationOrder();
 
-  app.register(eventBusPlugin);
+  const infrastructureNames = new Set(['infrastructure', 'eventBus']);
+  const infrastructureEntries = registrationOrder.filter((e) => infrastructureNames.has(e.name));
+  const domainEntries = registrationOrder.filter((e) => !infrastructureNames.has(e.name));
+
+  for (const entry of infrastructureEntries) {
+    const registryEntry = MODULE_REGISTRY[entry.name];
+    if (!registryEntry) {
+      throw new Error(
+        `Module '${entry.name}' is in manifest but not registered in MODULE_REGISTRY`,
+      );
+    }
+
+    if (entry.name === 'infrastructure') {
+      app.register(registryEntry.plugin as never, {
+        config,
+        ...(skipHealthCheck !== undefined && { skipHealthCheck }),
+      });
+    } else {
+      app.register(registryEntry.plugin as never);
+    }
+  }
+
+  const rootLevelModules = domainEntries.filter((e) => {
+    const registryEntry = MODULE_REGISTRY[e.name];
+    return registryEntry && !registryEntry.routePrefix;
+  });
+  const prefixedModules = domainEntries.filter((e) => {
+    const registryEntry = MODULE_REGISTRY[e.name];
+    return registryEntry && !!registryEntry.routePrefix;
+  });
 
   app.register(requestLogger);
 
@@ -167,12 +204,34 @@ export const buildApp = (
       version: 'v1',
     }));
 
-    app.register(healthPlugin);
+    for (const entry of rootLevelModules) {
+      const registryEntry = MODULE_REGISTRY[entry.name];
+      if (!registryEntry) {
+        throw new Error(
+          `Module '${entry.name}' is in manifest but not registered in MODULE_REGISTRY`,
+        );
+      }
+      app.register(registryEntry.plugin as never);
+    }
 
     app.register(
       async (apiRouter) => {
-        await apiRouter.register(authPlugin);
-        await apiRouter.register(gamePlugin);
+        for (const entry of prefixedModules) {
+          const registryEntry = MODULE_REGISTRY[entry.name];
+          if (!registryEntry) {
+            throw new Error(
+              `Module '${entry.name}' is in manifest but not registered in MODULE_REGISTRY`,
+            );
+          }
+
+          const { plugin, routePrefix } = registryEntry;
+          if (!routePrefix) {
+            throw new Error(
+              `Module '${entry.name}' has no routePrefix but was included in prefixedModules`,
+            );
+          }
+          await apiRouter.register(plugin as never, { prefix: routePrefix });
+        }
       },
       { prefix: '/api/v1' },
     );
