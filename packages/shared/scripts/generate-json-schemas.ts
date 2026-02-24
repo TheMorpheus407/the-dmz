@@ -15,7 +15,12 @@ import {
   updateProfileSchema,
   meResponseSchema,
 } from '../src/schemas/auth.schema.js';
-import { dateRangeSchema, paginationSchema } from '../src/schemas/common.schema.js';
+import {
+  dateRangeSchema,
+  cursorPaginationSchema,
+  cursorPaginationMetaSchema,
+  paginationSchema,
+} from '../src/schemas/common.schema.js';
 import {
   healthResponseSchema,
   healthQuerySchema,
@@ -67,6 +72,8 @@ const entries: Array<[string, Record<string, unknown>]> = [
   ['updateProfileJsonSchema', createJsonSchema(updateProfileSchema)],
   ['meResponseJsonSchema', createJsonSchema(meResponseSchema)],
   ['paginationJsonSchema', createJsonSchema(paginationSchema)],
+  ['cursorPaginationJsonSchema', createJsonSchema(cursorPaginationSchema)],
+  ['cursorPaginationMetaJsonSchema', createJsonSchema(cursorPaginationMetaSchema)],
   ['dateRangeJsonSchema', createJsonSchema(dateRangeSchema)],
   ['healthQueryJsonSchema', createJsonSchema(healthQuerySchema)],
   ['healthResponseJsonSchema', createJsonSchema(healthResponseSchema)],

@@ -4,6 +4,21 @@ export const sortOrderSchema = z.enum(['asc', 'desc']);
 
 export type SortOrderInput = z.infer<typeof sortOrderSchema>;
 
+export const cursorPaginationSchema = z
+  .object({
+    cursor: z.string().optional(),
+    limit: z.coerce.number().int().min(1).max(100).default(20),
+  })
+  .strict();
+
+export const cursorPaginationMetaSchema = z
+  .object({
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+    total: z.number().int().nullable().optional(),
+  })
+  .strict();
+
 export const paginationSchema = z
   .object({
     page: z.coerce.number().int().positive().default(1),

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  cursorPaginationMetaSchema,
+  cursorPaginationSchema,
   dateRangeJsonSchema,
   dateRangeSchema,
   paginationJsonSchema,
@@ -49,6 +51,69 @@ describe('common schemas', () => {
       dateRangeSchema.parse({
         start: 'not-a-date',
         end: '2024-01-02T00:00:00.000Z',
+      }),
+    ).toThrow();
+  });
+});
+
+describe('cursor pagination schemas', () => {
+  it('parses valid cursor pagination params with defaults', () => {
+    const result = cursorPaginationSchema.parse({});
+    expect(result.cursor).toBeUndefined();
+    expect(result.limit).toBe(20);
+  });
+
+  it('parses cursor pagination params with values', () => {
+    const result = cursorPaginationSchema.parse({
+      cursor: 'abc123xyz',
+      limit: '50',
+    });
+    expect(result.cursor).toBe('abc123xyz');
+    expect(result.limit).toBe(50);
+  });
+
+  it('rejects invalid cursor pagination params', () => {
+    expect(() =>
+      cursorPaginationSchema.parse({
+        cursor: 123,
+        limit: -1,
+      }),
+    ).toThrow();
+  });
+
+  it('rejects limit exceeding maximum', () => {
+    expect(() =>
+      cursorPaginationSchema.parse({
+        limit: 200,
+      }),
+    ).toThrow();
+  });
+
+  it('validates cursor pagination meta', () => {
+    const meta = cursorPaginationMetaSchema.parse({
+      hasMore: true,
+      nextCursor: 'next123',
+      total: 100,
+    });
+    expect(meta.hasMore).toBe(true);
+    expect(meta.nextCursor).toBe('next123');
+    expect(meta.total).toBe(100);
+  });
+
+  it('validates cursor pagination meta without total', () => {
+    const meta = cursorPaginationMetaSchema.parse({
+      hasMore: false,
+      nextCursor: null,
+    });
+    expect(meta.hasMore).toBe(false);
+    expect(meta.nextCursor).toBeNull();
+  });
+
+  it('rejects invalid cursor pagination meta', () => {
+    expect(() =>
+      cursorPaginationMetaSchema.parse({
+        hasMore: 'yes',
+        nextCursor: 123,
       }),
     ).toThrow();
   });

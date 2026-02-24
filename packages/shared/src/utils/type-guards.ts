@@ -1,5 +1,5 @@
 import type { ApiError, ApiResponse } from '../types/api.js';
-import type { PaginationMeta } from '../types/common.js';
+import type { PaginationMeta, CursorPaginationMeta } from '../types/common.js';
 import type { UserBase } from '../types/auth.js';
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -10,6 +10,8 @@ const isNumber = (value: unknown): value is number =>
 
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0;
+
+const isBoolean = (value: unknown): value is boolean => typeof value === 'boolean';
 
 export const isApiError = (value: unknown): value is ApiError => {
   if (!isRecord(value)) {
@@ -44,6 +46,28 @@ export const isPaginationMeta = (value: unknown): value is PaginationMeta => {
   );
 };
 
+export const isCursorPaginationMeta = (value: unknown): value is CursorPaginationMeta => {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const record = value;
+
+  if (!isBoolean(record['hasMore'])) {
+    return false;
+  }
+
+  if (record['nextCursor'] !== null && !isNonEmptyString(record['nextCursor'])) {
+    return false;
+  }
+
+  if (record['total'] !== undefined && !isNumber(record['total'])) {
+    return false;
+  }
+
+  return true;
+};
+
 export const isApiResponse = <T = unknown>(value: unknown): value is ApiResponse<T> => {
   if (!isRecord(value)) {
     return false;
@@ -59,7 +83,11 @@ export const isApiResponse = <T = unknown>(value: unknown): value is ApiResponse
     return false;
   }
 
-  if (record['meta'] !== undefined && !isPaginationMeta(record['meta'])) {
+  if (
+    record['meta'] !== undefined &&
+    !isPaginationMeta(record['meta']) &&
+    !isCursorPaginationMeta(record['meta'])
+  ) {
     return false;
   }
 

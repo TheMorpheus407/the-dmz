@@ -760,6 +760,48 @@ export const paginationJsonSchema = {
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
 
+export const cursorPaginationJsonSchema = {
+  type: 'object',
+  properties: {
+    cursor: {
+      type: 'string',
+    },
+    limit: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 100,
+      default: 20,
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const cursorPaginationMetaJsonSchema = {
+  type: 'object',
+  properties: {
+    hasMore: {
+      type: 'boolean',
+    },
+    nextCursor: {
+      type: ['string', 'null'],
+    },
+    total: {
+      anyOf: [
+        {
+          type: 'integer',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+  },
+  required: ['hasMore', 'nextCursor'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
 export const dateRangeJsonSchema = {
   type: 'object',
   properties: {
