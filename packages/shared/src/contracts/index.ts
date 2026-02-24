@@ -113,3 +113,28 @@ export {
   type AuthAbuseCounterScope,
   type AbuseErrorCode,
 } from './auth-abuse-policy.js';
+
+export {
+  m1PasswordPolicyManifest,
+  passwordPolicyManifestSchema,
+  passwordRequirementSchema,
+  passwordCharacterClassSchema,
+  compromisedCredentialModeSchema,
+  degradedModeBehaviorSchema,
+  PASSWORD_ERROR_CODES,
+  evaluatePasswordPolicy,
+  getCharacterClassesInPassword,
+  getTenantPolicy,
+  createNoOpCompromisedCredentialProvider,
+  PasswordRequirement,
+  PasswordCharacterClass,
+  type M1PasswordPolicyManifest,
+  type M1PasswordPolicy,
+  type PasswordErrorCode,
+  type PasswordPolicyRequirements,
+  type PasswordValidationResult,
+  type CompromisedCredentialMode,
+  type DegradedModeBehavior,
+  type CompromisedCredentialProvider,
+  type CompromisedCredentialScreeningResult,
+} from './password-policy.js';

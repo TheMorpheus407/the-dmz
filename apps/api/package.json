@@ -43,7 +43,8 @@
     "rate-limit-contract:check": "tsx scripts/check-rate-limit-contract.ts",
     "test:rate-limit-contract": "vitest run --config vitest.rate-limit-contract.config.ts",
     "test:log-contract": "vitest run --config vitest.log-contract.config.ts",
-    "test:auth-abuse-contract": "vitest run --config vitest.auth-abuse-contract.config.ts"
+    "test:auth-abuse-contract": "vitest run --config vitest.auth-abuse-contract.config.ts",
+    "test:password-policy-contract": "vitest run --config vitest.password-policy-contract.config.ts"
   },
   "dependencies": {
     "@fastify/cookie": "^11.0.2",

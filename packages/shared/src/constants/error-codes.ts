@@ -59,6 +59,11 @@ export const ErrorCodes = {
   AUTH_ABUSE_LOCKED: 'AUTH_ABUSE_LOCKED',
   AUTH_ABUSE_CHALLENGE_REQUIRED: 'AUTH_ABUSE_CHALLENGE_REQUIRED',
   AUTH_ABUSE_IP_BLOCKED: 'AUTH_ABUSE_IP_BLOCKED',
+  AUTH_PASSWORD_TOO_SHORT: 'AUTH_PASSWORD_TOO_SHORT',
+  AUTH_PASSWORD_TOO_LONG: 'AUTH_PASSWORD_TOO_LONG',
+  AUTH_PASSWORD_TOO_WEAK: 'AUTH_PASSWORD_TOO_WEAK',
+  AUTH_PASSWORD_COMPROMISED: 'AUTH_PASSWORD_COMPROMISED',
+  AUTH_PASSWORD_POLICY_VIOLATION: 'AUTH_PASSWORD_POLICY_VIOLATION',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -299,6 +304,31 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHENTICATION,
     retryable: true,
     messageKey: 'errors.auth.abuseIpBlocked',
+  },
+  [ErrorCodes.AUTH_PASSWORD_TOO_SHORT]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.auth.passwordTooShort',
+  },
+  [ErrorCodes.AUTH_PASSWORD_TOO_LONG]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.auth.passwordTooLong',
+  },
+  [ErrorCodes.AUTH_PASSWORD_TOO_WEAK]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.auth.passwordTooWeak',
+  },
+  [ErrorCodes.AUTH_PASSWORD_COMPROMISED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.passwordCompromised',
+  },
+  [ErrorCodes.AUTH_PASSWORD_POLICY_VIOLATION]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.auth.passwordPolicyViolation',
   },
 };
 

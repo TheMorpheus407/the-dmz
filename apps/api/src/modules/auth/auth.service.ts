@@ -4,11 +4,18 @@ import * as argon2 from 'argon2';
 import { SignJWT, jwtVerify } from 'jose';
 
 import { canRefreshSession, getSessionPolicyForRole } from '@the-dmz/shared/auth/session-policy.js';
+import {
+  m1PasswordPolicyManifest,
+  evaluatePasswordPolicy,
+  getTenantPolicy,
+  type PasswordPolicyRequirements,
+} from '@the-dmz/shared/contracts';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { tenants } from '../../shared/database/schema/tenants.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
 import { ALLOWED_TENANT_STATUSES } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
+import { screenPassword } from '../../shared/services/compromised-credential.service.js';
 
 import {
   createUser,
@@ -29,6 +36,7 @@ import {
   InvalidCredentialsError,
   SessionExpiredError,
   SessionRevokedError,
+  PasswordPolicyError,
 } from './auth.errors.js';
 import {
   resolveEffectivePreferences,
@@ -102,6 +110,33 @@ const generateTokens = async (
   };
 };
 
+const validatePasswordAgainstPolicy = (
+  password: string,
+  _tenantId: string,
+): PasswordPolicyRequirements => {
+  const policy = getTenantPolicy(undefined, m1PasswordPolicyManifest);
+
+  const result = evaluatePasswordPolicy(password, policy);
+
+  if (!result.valid) {
+    throw new PasswordPolicyError({
+      policyRequirements: {
+        minLength: policy.minLength,
+        maxLength: policy.maxLength,
+        requireUppercase: policy.requireUppercase,
+        requireLowercase: policy.requireLowercase,
+        requireNumber: policy.requireNumber,
+        requireSpecial: policy.requireSpecial,
+        characterClassesRequired: policy.characterClassesRequired,
+        characterClassesMet: result.characterClassesMet,
+      },
+      violations: result.violations,
+    });
+  }
+
+  return policy;
+};
+
 export const register = async (
   config: AppConfig,
   data: {
@@ -147,6 +182,25 @@ export const register = async (
     } else {
       tenantId = defaultTenant.tenantId;
     }
+  }
+
+  validatePasswordAgainstPolicy(data.password, tenantId);
+
+  const compromisedResult = await screenPassword(config, data.password);
+  if ('compromised' in compromisedResult && compromisedResult.compromised) {
+    throw new PasswordPolicyError({
+      policyRequirements: {
+        minLength: 12,
+        maxLength: 128,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumber: true,
+        requireSpecial: true,
+        characterClassesRequired: 3,
+        characterClassesMet: 0,
+      },
+      violations: ['compromised'],
+    });
   }
 
   const passwordHash = await hashPassword(data.password);

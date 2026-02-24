@@ -85,6 +85,11 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.AUTH_ABUSE_LOCKED]: 403,
   [ErrorCodes.AUTH_ABUSE_CHALLENGE_REQUIRED]: 403,
   [ErrorCodes.AUTH_ABUSE_IP_BLOCKED]: 403,
+  [ErrorCodes.AUTH_PASSWORD_TOO_SHORT]: 400,
+  [ErrorCodes.AUTH_PASSWORD_TOO_LONG]: 400,
+  [ErrorCodes.AUTH_PASSWORD_TOO_WEAK]: 400,
+  [ErrorCodes.AUTH_PASSWORD_COMPROMISED]: 400,
+  [ErrorCodes.AUTH_PASSWORD_POLICY_VIOLATION]: 400,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -142,6 +147,11 @@ export const ErrorMessages: Record<ErrorCode, string> = {
     'MFA verification required due to suspicious login activity.',
   [ErrorCodes.AUTH_ABUSE_IP_BLOCKED]:
     'IP address temporarily blocked due to repeated authentication failures.',
+  [ErrorCodes.AUTH_PASSWORD_TOO_SHORT]: 'Password is below the minimum length requirement',
+  [ErrorCodes.AUTH_PASSWORD_TOO_LONG]: 'Password exceeds the maximum length requirement',
+  [ErrorCodes.AUTH_PASSWORD_TOO_WEAK]: 'Password does not meet complexity requirements',
+  [ErrorCodes.AUTH_PASSWORD_COMPROMISED]: 'Password found in known data breach',
+  [ErrorCodes.AUTH_PASSWORD_POLICY_VIOLATION]: 'Password policy violation',
 } as const;
 
 export type AppErrorOptions = {

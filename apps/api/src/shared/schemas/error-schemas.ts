@@ -44,9 +44,34 @@ export const errorResponseSchemas = {
       error: {
         type: 'object',
         properties: {
-          code: { type: 'string', const: 'VALIDATION_FAILED' },
+          code: {
+            type: 'string',
+            enum: [
+              'VALIDATION_FAILED',
+              'AUTH_PASSWORD_TOO_SHORT',
+              'AUTH_PASSWORD_TOO_LONG',
+              'AUTH_PASSWORD_TOO_WEAK',
+              'AUTH_PASSWORD_COMPROMISED',
+              'AUTH_PASSWORD_POLICY_VIOLATION',
+            ],
+          },
           message: { type: 'string' },
-          details: { type: 'object' },
+          details: {
+            type: 'object',
+            properties: {
+              violations: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    code: { type: 'string' },
+                    message: { type: 'string' },
+                  },
+                  required: ['code', 'message'],
+                },
+              },
+            },
+          },
           requestId: { type: 'string' },
         },
         required: ['code', 'message', 'details'],
@@ -313,6 +338,54 @@ export const errorResponseSchemas = {
           code: { type: 'string', const: 'SERVICE_UNAVAILABLE' },
           message: { type: 'string' },
           details: { type: 'object' },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
+
+  PasswordPolicyError: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: {
+            type: 'string',
+            enum: [
+              'AUTH_PASSWORD_TOO_SHORT',
+              'AUTH_PASSWORD_TOO_LONG',
+              'AUTH_PASSWORD_TOO_WEAK',
+              'AUTH_PASSWORD_COMPROMISED',
+              'AUTH_PASSWORD_POLICY_VIOLATION',
+            ],
+          },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              policyRequirements: {
+                type: 'object',
+                properties: {
+                  minLength: { type: 'integer' },
+                  maxLength: { type: 'integer' },
+                  requireUppercase: { type: 'boolean' },
+                  requireLowercase: { type: 'boolean' },
+                  requireNumber: { type: 'boolean' },
+                  requireSpecial: { type: 'boolean' },
+                  characterClassesRequired: { type: 'integer' },
+                  characterClassesMet: { type: 'integer' },
+                },
+              },
+              violations: {
+                type: 'array',
+                items: { type: 'string' },
+              },
+            },
+          },
           requestId: { type: 'string' },
         },
         required: ['code', 'message', 'details'],
