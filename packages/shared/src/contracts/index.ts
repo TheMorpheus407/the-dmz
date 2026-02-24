@@ -91,3 +91,25 @@ export {
   type FrameAncestorsMode,
   type SecurityRouteGroup,
 } from './security-headers.js';
+
+export {
+  m1AuthAbusePolicyManifest,
+  authAbusePolicyManifestSchema,
+  authAbuseCategorySchema,
+  authAbuseLevelSchema,
+  abuseCounterKeySchema,
+  authAbuseThresholdSchema,
+  authAbuseCounterScopeSchema,
+  ABUSE_ERROR_CODES,
+  ABUSE_LEVEL_TO_STATUS,
+  getThresholdForLevel,
+  AuthAbuseCategory,
+  AuthAbuseLevel,
+  type AuthAbusePolicyManifest,
+  type M1AuthAbusePolicyManifest,
+  type M1AuthAbusePolicy,
+  type AbuseCounterKey,
+  type AuthAbuseThreshold,
+  type AuthAbuseCounterScope,
+  type AbuseErrorCode,
+} from './auth-abuse-policy.js';

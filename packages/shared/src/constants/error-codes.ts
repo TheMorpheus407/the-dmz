@@ -3,6 +3,7 @@ export const ErrorCodeCategory = {
   AUTHORIZATION: 'authorization',
   VALIDATION: 'validation',
   RATE_LIMITING: 'rate_limiting',
+  ABUSE: 'abuse',
   SERVER: 'server',
   NETWORK: 'network',
   NOT_FOUND: 'not_found',
@@ -54,6 +55,10 @@ export const ErrorCodes = {
   AI_GENERATION_FAILED: 'AI_GENERATION_FAILED',
   NOT_FOUND: 'NOT_FOUND',
   CONFLICT: 'CONFLICT',
+  AUTH_ABUSE_COOLDOWN: 'AUTH_ABUSE_COOLDOWN',
+  AUTH_ABUSE_LOCKED: 'AUTH_ABUSE_LOCKED',
+  AUTH_ABUSE_CHALLENGE_REQUIRED: 'AUTH_ABUSE_CHALLENGE_REQUIRED',
+  AUTH_ABUSE_IP_BLOCKED: 'AUTH_ABUSE_IP_BLOCKED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -274,6 +279,26 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.SERVER,
     retryable: false,
     messageKey: 'errors.conflict',
+  },
+  [ErrorCodes.AUTH_ABUSE_COOLDOWN]: {
+    category: ErrorCodeCategory.RATE_LIMITING,
+    retryable: true,
+    messageKey: 'errors.auth.abuseCooldown',
+  },
+  [ErrorCodes.AUTH_ABUSE_LOCKED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.abuseLocked',
+  },
+  [ErrorCodes.AUTH_ABUSE_CHALLENGE_REQUIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.abuseChallengeRequired',
+  },
+  [ErrorCodes.AUTH_ABUSE_IP_BLOCKED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: true,
+    messageKey: 'errors.auth.abuseIpBlocked',
   },
 };
 

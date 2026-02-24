@@ -7,6 +7,16 @@ export {
   validateVersioningPolicy,
 } from './api-versioning-policy.js';
 
+export {
+  evaluateAbuseResult,
+  setAbuseHeaders,
+  getClientIp,
+  isAbuseProtectionEnabled,
+  getPolicyThresholds,
+  getPolicyScope,
+  getCoveredEndpoints,
+} from './auth-abuse-policy.js';
+
 export type {
   ApiVersioningPolicy,
   VersionedRouteRule,

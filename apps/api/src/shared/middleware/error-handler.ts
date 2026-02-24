@@ -81,6 +81,10 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.SYSTEM_SERVICE_UNAVAILABLE]: 503,
   [ErrorCodes.INTERNAL_ERROR]: 500,
   [ErrorCodes.AI_GENERATION_FAILED]: 500,
+  [ErrorCodes.AUTH_ABUSE_COOLDOWN]: 429,
+  [ErrorCodes.AUTH_ABUSE_LOCKED]: 403,
+  [ErrorCodes.AUTH_ABUSE_CHALLENGE_REQUIRED]: 403,
+  [ErrorCodes.AUTH_ABUSE_IP_BLOCKED]: 403,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -130,6 +134,14 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.SYSTEM_SERVICE_UNAVAILABLE]: 'System service unavailable',
   [ErrorCodes.INTERNAL_ERROR]: 'Internal error',
   [ErrorCodes.AI_GENERATION_FAILED]: 'AI generation failed',
+  [ErrorCodes.AUTH_ABUSE_COOLDOWN]:
+    'Too many failed login attempts. Please wait before trying again.',
+  [ErrorCodes.AUTH_ABUSE_LOCKED]:
+    'Account temporarily locked due to repeated failed login attempts.',
+  [ErrorCodes.AUTH_ABUSE_CHALLENGE_REQUIRED]:
+    'MFA verification required due to suspicious login activity.',
+  [ErrorCodes.AUTH_ABUSE_IP_BLOCKED]:
+    'IP address temporarily blocked due to repeated authentication failures.',
 } as const;
 
 export type AppErrorOptions = {

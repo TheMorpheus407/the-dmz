@@ -180,6 +180,111 @@ export const errorResponseSchemas = {
     required: ['success', 'error'],
   },
 
+  AbuseCooldown: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', const: 'AUTH_ABUSE_COOLDOWN' },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              abuseLevel: { type: 'string', const: 'cooldown' },
+              failureCount: { type: 'integer' },
+              windowExpiresAt: { type: 'string' },
+              retryAfterSeconds: { type: 'integer' },
+            },
+            required: ['abuseLevel', 'failureCount', 'windowExpiresAt'],
+          },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
+
+  AbuseLocked: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', const: 'AUTH_ABUSE_LOCKED' },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              abuseLevel: { type: 'string', const: 'locked' },
+              failureCount: { type: 'integer' },
+              windowExpiresAt: { type: 'string' },
+            },
+            required: ['abuseLevel', 'failureCount', 'windowExpiresAt'],
+          },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
+
+  AbuseChallengeRequired: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', const: 'AUTH_ABUSE_CHALLENGE_REQUIRED' },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              abuseLevel: { type: 'string', const: 'challenge_required' },
+              failureCount: { type: 'integer' },
+              windowExpiresAt: { type: 'string' },
+            },
+            required: ['abuseLevel', 'failureCount', 'windowExpiresAt'],
+          },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
+
+  AbuseIpBlocked: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', const: 'AUTH_ABUSE_IP_BLOCKED' },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              abuseLevel: { type: 'string', const: 'ip_blocked' },
+              failureCount: { type: 'integer' },
+              windowExpiresAt: { type: 'string' },
+            },
+            required: ['abuseLevel', 'failureCount', 'windowExpiresAt'],
+          },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
+
   InternalServerError: {
     type: 'object',
     properties: {

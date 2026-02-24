@@ -18,6 +18,12 @@ import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.j
 import { requirePermission, resolvePermissions } from '../../shared/middleware/authorization.js';
 import { requireMfaForSuperAdmin } from '../../shared/middleware/mfa-guard.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
+import { getAbuseCounterService } from '../../shared/services/abuse-counter.service.js';
+import {
+  evaluateAbuseResult,
+  setAbuseHeaders,
+  getClientIp,
+} from '../../shared/policies/auth-abuse-policy.js';
 
 import * as authService from './auth.service.js';
 import { AuthError, InvalidCredentialsError } from './auth.errors.js';
@@ -124,56 +130,97 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         body: registerBodyJsonSchema,
         response: {
           201: authResponseJsonSchema,
-          403: errorResponseSchemas.TenantInactive,
-          429: errorResponseSchemas.RateLimitExceeded,
+          400: errorResponseSchemas.BadRequest,
+          403: {
+            oneOf: [
+              errorResponseSchemas.TenantInactive,
+              errorResponseSchemas.AbuseLocked,
+              errorResponseSchemas.AbuseChallengeRequired,
+              errorResponseSchemas.AbuseIpBlocked,
+            ],
+          },
+          409: errorResponseSchemas.Conflict,
+          429: {
+            oneOf: [errorResponseSchemas.RateLimitExceeded, errorResponseSchemas.AbuseCooldown],
+          },
         },
         security: [{ cookieAuth: [] }],
       },
     },
     async (request, reply) => {
-      const tenantId = request.preAuthTenantContext?.tenantId;
-      const result = await authService.register(
-        config,
-        request.body,
-        tenantId ? { tenantId } : undefined,
-      );
+      const tenantId = request.preAuthTenantContext?.tenantId ?? 'default';
+      const clientIp = getClientIp(request);
 
-      setCsrfCookie(request, reply);
-      setRefreshCookie({ refreshToken: result.refreshToken, reply });
+      const abuseService = getAbuseCounterService(config);
 
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createAuthUserCreatedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: result.user.tenantId,
-          userId: result.user.id,
-          version: 1,
-          payload: {
-            userId: result.user.id,
-            email: result.user.email,
+      const registerAbuseOptions: {
+        tenantId: string;
+        email: string;
+        ip?: string;
+        category: 'register';
+      } = {
+        tenantId,
+        email: request.body.email,
+        category: 'register',
+      };
+      if (clientIp) {
+        registerAbuseOptions.ip = clientIp;
+      }
+
+      const preAuthAbuse = await abuseService.checkAbuseLevel(registerAbuseOptions);
+
+      evaluateAbuseResult(preAuthAbuse);
+      setAbuseHeaders(reply, preAuthAbuse);
+
+      try {
+        const result = await authService.register(
+          config,
+          request.body,
+          tenantId ? { tenantId } : undefined,
+        );
+
+        await abuseService.resetCounters(registerAbuseOptions);
+
+        setCsrfCookie(request, reply);
+        setRefreshCookie({ refreshToken: result.refreshToken, reply });
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createAuthUserCreatedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
             tenantId: result.user.tenantId,
-          },
-        }),
-      );
-
-      eventBus.publish(
-        createAuthSessionCreatedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: result.user.tenantId,
-          userId: result.user.id,
-          version: 1,
-          payload: {
-            sessionId: result.sessionId,
             userId: result.user.id,
-            tenantId: result.user.tenantId,
-          },
-        }),
-      );
+            version: 1,
+            payload: {
+              userId: result.user.id,
+              email: result.user.email,
+              tenantId: result.user.tenantId,
+            },
+          }),
+        );
 
-      reply.code(201);
-      return { user: result.user, accessToken: result.accessToken };
+        eventBus.publish(
+          createAuthSessionCreatedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: result.user.tenantId,
+            userId: result.user.id,
+            version: 1,
+            payload: {
+              sessionId: result.sessionId,
+              userId: result.user.id,
+              tenantId: result.user.tenantId,
+            },
+          }),
+        );
+
+        reply.code(201);
+        return { user: result.user, accessToken: result.accessToken };
+      } catch (error) {
+        await abuseService.incrementAndEvaluate(registerAbuseOptions);
+        throw error;
+      }
     },
   );
 
@@ -193,20 +240,56 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         body: loginBodyJsonSchema,
         response: {
           200: authResponseJsonSchema,
-          403: errorResponseSchemas.TenantInactive,
-          429: errorResponseSchemas.RateLimitExceeded,
+          400: errorResponseSchemas.BadRequest,
+          401: errorResponseSchemas.Unauthorized,
+          403: {
+            oneOf: [
+              errorResponseSchemas.TenantInactive,
+              errorResponseSchemas.AbuseLocked,
+              errorResponseSchemas.AbuseChallengeRequired,
+              errorResponseSchemas.AbuseIpBlocked,
+            ],
+          },
+          429: {
+            oneOf: [errorResponseSchemas.RateLimitExceeded, errorResponseSchemas.AbuseCooldown],
+          },
         },
         security: [{ cookieAuth: [] }],
       },
     },
     async (request, reply) => {
-      const tenantId = request.preAuthTenantContext?.tenantId;
+      const tenantId = request.preAuthTenantContext?.tenantId ?? 'default';
+      const clientIp = getClientIp(request);
+
+      const abuseService = getAbuseCounterService(config);
+
+      const abuseCheckOptions: {
+        tenantId: string;
+        email: string;
+        ip?: string;
+        category: 'login' | 'register';
+      } = {
+        tenantId,
+        email: request.body.email,
+        category: 'login',
+      };
+      if (clientIp) {
+        abuseCheckOptions.ip = clientIp;
+      }
+
+      const preAuthAbuse = await abuseService.checkAbuseLevel(abuseCheckOptions);
+
+      evaluateAbuseResult(preAuthAbuse);
+      setAbuseHeaders(reply, preAuthAbuse);
+
       try {
         const result = await authService.login(
           config,
           request.body,
           tenantId ? { tenantId } : undefined,
         );
+
+        await abuseService.resetCounters(abuseCheckOptions);
 
         setCsrfCookie(request, reply);
         setRefreshCookie({ refreshToken: result.refreshToken, reply });
@@ -230,17 +313,21 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         return { user: result.user, accessToken: result.accessToken };
       } catch (error) {
         if (error instanceof InvalidCredentialsError) {
+          const postAuthAbuse = await abuseService.incrementAndEvaluate(abuseCheckOptions);
+
+          evaluateAbuseResult(postAuthAbuse);
+          setAbuseHeaders(reply, postAuthAbuse);
+
           const eventBus = fastify.eventBus;
-          const defaultTenantId = 'default';
           eventBus.publish(
             createAuthLoginFailedEvent({
               source: 'auth-module',
               correlationId: request.id,
-              tenantId: defaultTenantId,
+              tenantId,
               userId: '',
               version: 1,
               payload: {
-                tenantId: defaultTenantId,
+                tenantId,
                 email: request.body.email,
                 reason: 'invalid_credentials',
                 correlationId: request.id,
