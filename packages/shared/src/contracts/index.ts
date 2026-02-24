@@ -140,6 +140,21 @@ export {
 } from './password-policy.js';
 
 export {
+  m1PasswordRecoveryPolicyManifest,
+  passwordRecoveryPolicyManifestSchema,
+  passwordRecoveryOutcomeSchema,
+  passwordRecoveryErrorCodeSchema,
+  PASSWORD_RECOVERY_ERROR_CODES,
+  generateResetToken,
+  getTenantRecoveryPolicy,
+  PasswordRecoveryErrorCode,
+  type M1PasswordRecoveryPolicyManifest,
+  type M1PasswordRecoveryPolicy,
+  type PasswordRecoveryOutcome,
+  type PasswordResetTokenData,
+} from './password-recovery-policy.js';
+
+export {
   m1JWTSigningProfileManifest,
   jwtSigningProfileManifestSchema,
   jwtHeaderSchema,

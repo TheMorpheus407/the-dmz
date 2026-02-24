@@ -393,6 +393,99 @@ export const errorResponseSchemas = {
     },
     required: ['success', 'error'],
   },
+
+  PasswordResetTokenExpired: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', const: 'AUTH_PASSWORD_RESET_TOKEN_EXPIRED' },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              reason: { type: 'string', const: 'expired' },
+            },
+          },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
+
+  PasswordResetTokenInvalid: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', const: 'AUTH_PASSWORD_RESET_TOKEN_INVALID' },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              reason: { type: 'string', const: 'invalid' },
+            },
+          },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
+
+  PasswordResetTokenAlreadyUsed: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', const: 'AUTH_PASSWORD_RESET_TOKEN_ALREADY_USED' },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              reason: { type: 'string', const: 'already_used' },
+            },
+          },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
+
+  PasswordResetRateLimited: {
+    type: 'object',
+    properties: {
+      success: { type: 'boolean', const: false },
+      error: {
+        type: 'object',
+        properties: {
+          code: { type: 'string', const: 'AUTH_PASSWORD_RESET_RATE_LIMITED' },
+          message: { type: 'string' },
+          details: {
+            type: 'object',
+            properties: {
+              reason: { type: 'string', const: 'rate_limited' },
+              retryAfterSeconds: { type: 'integer' },
+            },
+          },
+          requestId: { type: 'string' },
+        },
+        required: ['code', 'message', 'details'],
+      },
+    },
+    required: ['success', 'error'],
+  },
 } as const;
 
 export const standardErrorResponses = {

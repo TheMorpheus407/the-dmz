@@ -1,9 +1,10 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, sql, isNull } from 'drizzle-orm';
 
 import { type DB } from '../../shared/database/connection.js';
 import { users } from '../../shared/database/schema/users.js';
 import { sessions as sessionsTable } from '../../db/schema/auth/sessions.js';
 import { userProfiles } from '../../db/schema/auth/user-profiles.js';
+import { passwordResetTokens } from '../../db/schema/auth/password-reset-tokens.js';
 
 import { UserExistsError } from './auth.errors.js';
 
@@ -473,4 +474,135 @@ export const backfillProfiles = async (db: DB): Promise<number> => {
   `);
   const rowCount = (result as { rowCount?: number }).rowCount;
   return rowCount ?? 0;
+};
+
+export interface PasswordResetTokenRecord {
+  id: string;
+  tenantId: string;
+  userId: string;
+  tokenHash: string;
+  expiresAt: Date;
+  usedAt: Date | null;
+  createdAt: Date;
+}
+
+export const createPasswordResetToken = async (
+  db: DB,
+  data: {
+    userId: string;
+    tenantId: string;
+    tokenHash: string;
+    expiresAt: Date;
+  },
+): Promise<PasswordResetTokenRecord> => {
+  const hashCol = passwordResetTokens.tokenHash;
+  const [created] = await db
+    .insert(passwordResetTokens)
+    .values({
+      userId: data.userId,
+      tenantId: data.tenantId,
+      tokenHash: data.tokenHash,
+      expiresAt: data.expiresAt,
+    })
+    .returning({
+      id: passwordResetTokens.id,
+      tenantId: passwordResetTokens.tenantId,
+      userId: passwordResetTokens.userId,
+      tokenHash: hashCol,
+      expiresAt: passwordResetTokens.expiresAt,
+      usedAt: passwordResetTokens.usedAt,
+      createdAt: passwordResetTokens.createdAt,
+    });
+
+  if (!created) {
+    throw new Error('Failed to create password reset token');
+  }
+
+  return created;
+};
+
+export const findValidPasswordResetToken = async (
+  db: DB,
+  tokenHash: string,
+  tenantId: string,
+): Promise<PasswordResetTokenRecord | null> => {
+  const token = await db.query.passwordResetTokens.findFirst({
+    where: and(
+      eq(passwordResetTokens.tokenHash, tokenHash),
+      eq(passwordResetTokens.tenantId, tenantId),
+      isNull(passwordResetTokens.usedAt),
+    ),
+  });
+
+  if (!token) {
+    return null;
+  }
+
+  if (new Date() > token.expiresAt) {
+    return null;
+  }
+
+  return {
+    id: token.id,
+    tenantId: token.tenantId,
+    userId: token.userId,
+    tokenHash: token.tokenHash,
+    expiresAt: token.expiresAt,
+    usedAt: token.usedAt,
+    createdAt: token.createdAt,
+  };
+};
+
+export const markPasswordResetTokenUsed = async (db: DB, tokenId: string): Promise<void> => {
+  await db
+    .update(passwordResetTokens)
+    .set({ usedAt: new Date() })
+    .where(eq(passwordResetTokens.id, tokenId));
+};
+
+export const deleteAllPasswordResetTokensForUser = async (
+  db: DB,
+  userId: string,
+  tenantId: string,
+): Promise<number> => {
+  const deleted = await db
+    .delete(passwordResetTokens)
+    .where(and(eq(passwordResetTokens.userId, userId), eq(passwordResetTokens.tenantId, tenantId)))
+    .returning({ id: passwordResetTokens.id });
+  return deleted.length;
+};
+
+export const findUserByEmailForPasswordReset = async (
+  db: DB,
+  email: string,
+  tenantId: string,
+): Promise<AuthUser | null> => {
+  const user = await db.query.users.findFirst({
+    where: eq(users.email, email),
+  });
+
+  if (!user || user.tenantId !== tenantId) {
+    return null;
+  }
+
+  return {
+    id: user.userId,
+    email: user.email,
+    displayName: user.displayName ?? '',
+    tenantId: user.tenantId,
+    role: user.role,
+    isActive: user.isActive,
+  };
+};
+
+export const updateUserPassword = async (
+  db: DB,
+  userId: string,
+  tenantId: string,
+  passwordHash: string,
+): Promise<void> => {
+  await db
+    .update(users)
+    .set({ passwordHash })
+    .where(and(eq(users.userId, userId), eq(users.tenantId, tenantId)));
 };

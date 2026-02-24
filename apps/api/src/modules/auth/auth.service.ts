@@ -8,13 +8,16 @@ import {
   evaluatePasswordPolicy,
   getTenantPolicy,
   type PasswordPolicyRequirements,
+  generateResetToken,
+  m1PasswordRecoveryPolicyManifest,
+  getTenantRecoveryPolicy,
 } from '@the-dmz/shared/contracts';
 
+import { screenPassword } from '../../shared/services/compromised-credential.service.js';
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { tenants } from '../../shared/database/schema/tenants.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
 import { ALLOWED_TENANT_STATUSES } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
-import { screenPassword } from '../../shared/services/compromised-credential.service.js';
 
 import {
   createUser,
@@ -29,6 +32,12 @@ import {
   createProfile,
   findProfileByUserId,
   updateProfile,
+  createPasswordResetToken,
+  findValidPasswordResetToken,
+  markPasswordResetTokenUsed,
+  deleteAllPasswordResetTokensForUser,
+  findUserByEmailForPasswordReset,
+  updateUserPassword,
   type UpdateProfileData,
 } from './auth.repo.js';
 import {
@@ -40,6 +49,9 @@ import {
   KeyRevokedError,
   KeyExpiredError,
   MissingKeyIdError,
+  PasswordResetTokenExpiredError,
+  PasswordResetTokenInvalidError,
+  PasswordResetTokenAlreadyUsedError,
 } from './auth.errors.js';
 import {
   resolveEffectivePreferences,
@@ -566,4 +578,154 @@ export const getEffectivePreferences = async (
     effectivePreferences,
     lockedPreferenceKeys,
   };
+};
+
+export interface RequestPasswordResetResult {
+  success: boolean;
+}
+
+export const requestPasswordReset = async (
+  config: AppConfig,
+  data: {
+    email: string;
+  },
+  options?: { tenantId?: string },
+): Promise<RequestPasswordResetResult> => {
+  const db = getDatabaseClient(config);
+
+  let tenantId: string;
+
+  if (options?.tenantId) {
+    const tenant = await db.query.tenants.findFirst({
+      where: (tenants, { eq }) => eq(tenants.tenantId, options.tenantId!),
+    });
+
+    if (!tenant) {
+      return { success: true };
+    }
+
+    tenantId = tenant.tenantId;
+  } else {
+    const defaultTenant = await db.query.tenants.findFirst({
+      where: (tenants, { eq }) => eq(tenants.slug, 'default'),
+    });
+
+    if (!defaultTenant) {
+      return { success: true };
+    }
+
+    tenantId = defaultTenant.tenantId;
+  }
+
+  const user = await findUserByEmailForPasswordReset(db, data.email, tenantId);
+
+  if (!user || !user.isActive) {
+    return { success: true };
+  }
+
+  const recoveryPolicy = getTenantRecoveryPolicy(undefined, m1PasswordRecoveryPolicyManifest);
+  const token = generateResetToken(recoveryPolicy.tokenLength);
+  const tokenHash = await hashToken(token, config.TOKEN_HASH_SALT);
+
+  const expiresAt = new Date();
+  expiresAt.setSeconds(expiresAt.getSeconds() + recoveryPolicy.tokenTtlSeconds);
+
+  await createPasswordResetToken(db, {
+    userId: user.id,
+    tenantId: user.tenantId,
+    tokenHash,
+    expiresAt,
+  });
+
+  return { success: true };
+};
+
+export interface ChangePasswordWithTokenResult {
+  success: boolean;
+  sessionsRevoked?: number;
+}
+
+export const changePasswordWithToken = async (
+  config: AppConfig,
+  data: {
+    token: string;
+    password: string;
+  },
+  options?: { tenantId?: string },
+): Promise<ChangePasswordWithTokenResult> => {
+  const db = getDatabaseClient(config);
+
+  let tenantId: string;
+
+  if (options?.tenantId) {
+    const tenant = await db.query.tenants.findFirst({
+      where: (tenants, { eq }) => eq(tenants.tenantId, options.tenantId!),
+    });
+
+    if (!tenant) {
+      throw new PasswordResetTokenInvalidError();
+    }
+
+    tenantId = tenant.tenantId;
+  } else {
+    const defaultTenant = await db.query.tenants.findFirst({
+      where: (tenants, { eq }) => eq(tenants.slug, 'default'),
+    });
+
+    if (!defaultTenant) {
+      throw new PasswordResetTokenInvalidError();
+    }
+
+    tenantId = defaultTenant.tenantId;
+  }
+
+  const tokenHash = await hashToken(data.token, config.TOKEN_HASH_SALT);
+  const tokenRecord = await findValidPasswordResetToken(db, tokenHash, tenantId);
+
+  if (!tokenRecord) {
+    throw new PasswordResetTokenInvalidError();
+  }
+
+  if (tokenRecord.usedAt) {
+    throw new PasswordResetTokenAlreadyUsedError();
+  }
+
+  if (new Date() > tokenRecord.expiresAt) {
+    throw new PasswordResetTokenExpiredError();
+  }
+
+  validatePasswordAgainstPolicy(data.password, tokenRecord.tenantId);
+
+  const compromisedResult = await screenPassword(config, data.password);
+  if ('compromised' in compromisedResult && compromisedResult.compromised) {
+    throw new PasswordPolicyError({
+      policyRequirements: {
+        minLength: 12,
+        maxLength: 128,
+        requireUppercase: true,
+        requireLowercase: true,
+        requireNumber: true,
+        requireSpecial: true,
+        characterClassesRequired: 3,
+        characterClassesMet: 0,
+      },
+      violations: ['compromised'],
+    });
+  }
+
+  const passwordHash = await hashPassword(data.password);
+
+  await updateUserPassword(db, tokenRecord.userId, tokenRecord.tenantId, passwordHash);
+
+  await markPasswordResetTokenUsed(db, tokenRecord.id);
+
+  await deleteAllPasswordResetTokensForUser(db, tokenRecord.userId, tokenRecord.tenantId);
+
+  const recoveryPolicy = m1PasswordRecoveryPolicyManifest;
+  let sessionsRevoked = 0;
+  if (recoveryPolicy.securityContract.sessionRevocationOnSuccess) {
+    sessionsRevoked = await deleteAllSessionsByTenantId(db, tokenRecord.tenantId);
+  }
+
+  return { success: true, sessionsRevoked };
 };

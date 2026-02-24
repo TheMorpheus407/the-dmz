@@ -2093,3 +2093,62 @@ export const webauthnCredentialJsonSchema = {
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
+
+export const passwordResetRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    email: {
+      type: 'string',
+      format: 'email',
+    },
+  },
+  required: ['email'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const passwordResetRequestResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+    },
+  },
+  required: ['success'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const passwordChangeRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    token: {
+      type: 'string',
+      minLength: 16,
+      maxLength: 64,
+    },
+    password: {
+      type: 'string',
+      minLength: 12,
+      maxLength: 128,
+    },
+  },
+  required: ['token', 'password'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const passwordChangeRequestResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+    },
+    sessionsRevoked: {
+      type: 'number',
+    },
+  },
+  required: ['success'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;

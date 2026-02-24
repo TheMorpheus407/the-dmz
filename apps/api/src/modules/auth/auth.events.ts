@@ -7,6 +7,9 @@ export const AUTH_EVENTS = {
   SESSION_CREATED: 'auth.session.created',
   SESSION_REVOKED: 'auth.session.revoked',
   LOGIN_FAILED: 'auth.login.failed',
+  PASSWORD_RESET_REQUESTED: 'auth.password_reset.requested',
+  PASSWORD_RESET_COMPLETED: 'auth.password_reset.completed',
+  PASSWORD_RESET_FAILED: 'auth.password_reset.failed',
   JWT_SIGNING_KEY_CREATED: 'jwt.' + 'signing_key.created',
   JWT_SIGNING_KEY_ROTATED: 'jwt.' + 'signing_key.rotated',
   JWT_SIGNING_KEY_REVOKED: 'jwt.' + 'signing_key.revoked',
@@ -53,6 +56,26 @@ export interface AuthLoginFailedPayload {
   correlationId: string;
 }
 
+export interface AuthPasswordResetRequestedPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+}
+
+export interface AuthPasswordResetCompletedPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  sessionsRevoked: number;
+}
+
+export interface AuthPasswordResetFailedPayload {
+  tenantId: string;
+  email: string;
+  reason: 'expired' | 'invalid' | 'already_used' | 'policy_denied' | 'rate_limited';
+  correlationId: string;
+}
+
 export interface JWTSigningKeyCreatedPayload {
   kid: string;
   keyType: string;
@@ -76,6 +99,9 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.SESSION_CREATED]: AuthSessionCreatedPayload;
   [AUTH_EVENTS.SESSION_REVOKED]: AuthSessionRevokedPayload;
   [AUTH_EVENTS.LOGIN_FAILED]: AuthLoginFailedPayload;
+  [AUTH_EVENTS.PASSWORD_RESET_REQUESTED]: AuthPasswordResetRequestedPayload;
+  [AUTH_EVENTS.PASSWORD_RESET_COMPLETED]: AuthPasswordResetCompletedPayload;
+  [AUTH_EVENTS.PASSWORD_RESET_FAILED]: AuthPasswordResetFailedPayload;
   [AUTH_EVENTS.JWT_SIGNING_KEY_CREATED]: JWTSigningKeyCreatedPayload;
   [AUTH_EVENTS.JWT_SIGNING_KEY_ROTATED]: JWTSigningKeyRotatedPayload;
   [AUTH_EVENTS.JWT_SIGNING_KEY_REVOKED]: JWTSigningKeyRevokedPayload;
@@ -234,6 +260,54 @@ export const createJWTSigningKeyRevokedEvent = (
   return {
     eventId: crypto.randomUUID(),
     eventType: AUTH_EVENTS.JWT_SIGNING_KEY_REVOKED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthPasswordResetRequestedEvent = (
+  params: BaseAuthEventParams & { payload: AuthPasswordResetRequestedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.PASSWORD_RESET_REQUESTED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.PASSWORD_RESET_REQUESTED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthPasswordResetCompletedEvent = (
+  params: BaseAuthEventParams & { payload: AuthPasswordResetCompletedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.PASSWORD_RESET_COMPLETED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.PASSWORD_RESET_COMPLETED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthPasswordResetFailedEvent = (
+  params: BaseAuthEventParams & { payload: AuthPasswordResetFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.PASSWORD_RESET_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.PASSWORD_RESET_FAILED,
     timestamp: new Date().toISOString(),
     correlationId: params.correlationId,
     tenantId: params.tenantId,

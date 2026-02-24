@@ -9,6 +9,10 @@ import {
   refreshResponseJsonSchema as sharedRefreshResponseJsonSchema,
   meResponseJsonSchema as sharedMeResponseJsonSchema,
   effectivePreferencesJsonSchema,
+  passwordResetRequestJsonSchema,
+  passwordResetRequestResponseJsonSchema,
+  passwordChangeRequestJsonSchema,
+  passwordChangeRequestResponseJsonSchema,
 } from '@the-dmz/shared/schemas';
 
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
@@ -32,6 +36,8 @@ import {
   createAuthSessionCreatedEvent,
   createAuthSessionRevokedEvent,
   createAuthLoginFailedEvent,
+  createAuthPasswordResetRequestedEvent,
+  createAuthPasswordResetCompletedEvent,
 } from './auth.events.js';
 import { validateCsrf, setCsrfCookie } from './csrf.js';
 import { setRefreshCookie, clearRefreshCookie, getRefreshCookieName } from './cookies.js';
@@ -70,6 +76,10 @@ export const meResponseJsonSchema = {
 export const updateProfileBodyJsonSchema = updateProfileJsonSchema;
 
 export const profileResponseJsonSchema = profileJsonSchema;
+
+export const passwordResetRequestBodyJsonSchema = passwordResetRequestJsonSchema;
+
+export const passwordChangeRequestBodyJsonSchema = passwordChangeRequestJsonSchema;
 
 export const authGuard = async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
   const config = request.server.config;
@@ -629,6 +639,204 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       return {
         users: [],
       };
+    },
+  );
+
+  fastify.post<{ Body: { email: string } }>(
+    '/auth/password/reset',
+    {
+      preHandler: preAuthMiddleware,
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 3,
+              timeWindow: '1 hour',
+            },
+      },
+      schema: {
+        body: passwordResetRequestBodyJsonSchema,
+        response: {
+          200: passwordResetRequestResponseJsonSchema,
+          400: errorResponseSchemas.BadRequest,
+          403: {
+            oneOf: [
+              errorResponseSchemas.TenantInactive,
+              errorResponseSchemas.AbuseLocked,
+              errorResponseSchemas.AbuseChallengeRequired,
+              errorResponseSchemas.AbuseIpBlocked,
+            ],
+          },
+          429: {
+            oneOf: [
+              errorResponseSchemas.RateLimitExceeded,
+              errorResponseSchemas.AbuseCooldown,
+              errorResponseSchemas.PasswordResetRateLimited,
+            ],
+          },
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request, reply) => {
+      const tenantId = request.preAuthTenantContext?.tenantId;
+      const clientIp = getClientIp(request);
+
+      const abuseService = getAbuseCounterService(config);
+
+      const abuseCheckOptions: {
+        tenantId?: string;
+        email: string;
+        ip?: string;
+        category: 'password_reset';
+      } = {
+        email: request.body.email,
+        category: 'password_reset',
+      };
+      if (tenantId) {
+        abuseCheckOptions.tenantId = tenantId;
+      }
+      if (clientIp) {
+        abuseCheckOptions.ip = clientIp;
+      }
+
+      const preAuthAbuse = await abuseService.checkAbuseLevel(abuseCheckOptions);
+
+      evaluateAbuseResult(preAuthAbuse);
+      setAbuseHeaders(reply, preAuthAbuse);
+
+      try {
+        const result = await authService.requestPasswordReset(
+          config,
+          request.body,
+          tenantId ? { tenantId } : undefined,
+        );
+
+        const eventBus = fastify.eventBus;
+        if (result.success) {
+          eventBus.publish(
+            createAuthPasswordResetRequestedEvent({
+              source: 'auth-module',
+              correlationId: request.id,
+              tenantId: tenantId ?? '',
+              userId: '',
+              version: 1,
+              payload: {
+                userId: '',
+                email: request.body.email,
+                tenantId: tenantId ?? '',
+              },
+            }),
+          );
+        }
+
+        return { success: true };
+      } catch (error) {
+        await abuseService.incrementAndEvaluate(abuseCheckOptions);
+        throw error;
+      }
+    },
+  );
+
+  fastify.post<{ Body: { token: string; password: string } }>(
+    '/auth/password/change',
+    {
+      preHandler: preAuthMiddleware,
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 10,
+              timeWindow: '1 minute',
+            },
+      },
+      schema: {
+        body: passwordChangeRequestBodyJsonSchema,
+        response: {
+          200: passwordChangeRequestResponseJsonSchema,
+          400: {
+            oneOf: [
+              errorResponseSchemas.BadRequest,
+              errorResponseSchemas.PasswordPolicyError,
+              errorResponseSchemas.PasswordResetTokenExpired,
+              errorResponseSchemas.PasswordResetTokenInvalid,
+              errorResponseSchemas.PasswordResetTokenAlreadyUsed,
+            ],
+          },
+          403: {
+            oneOf: [
+              errorResponseSchemas.TenantInactive,
+              errorResponseSchemas.AbuseLocked,
+              errorResponseSchemas.AbuseChallengeRequired,
+              errorResponseSchemas.AbuseIpBlocked,
+            ],
+          },
+          429: {
+            oneOf: [errorResponseSchemas.RateLimitExceeded, errorResponseSchemas.AbuseCooldown],
+          },
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request, reply) => {
+      const tenantId = request.preAuthTenantContext?.tenantId;
+      const clientIp = getClientIp(request);
+
+      const abuseService = getAbuseCounterService(config);
+
+      const abuseCheckOptions: {
+        tenantId?: string;
+        ip?: string;
+        category: 'password_change';
+      } = {
+        category: 'password_change',
+      };
+      if (tenantId) {
+        abuseCheckOptions.tenantId = tenantId;
+      }
+      if (clientIp) {
+        abuseCheckOptions.ip = clientIp;
+      }
+
+      const preAuthAbuse = await abuseService.checkAbuseLevel(abuseCheckOptions);
+
+      evaluateAbuseResult(preAuthAbuse);
+      setAbuseHeaders(reply, preAuthAbuse);
+
+      try {
+        const result = await authService.changePasswordWithToken(
+          config,
+          request.body,
+          tenantId ? { tenantId } : undefined,
+        );
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createAuthPasswordResetCompletedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: tenantId ?? '',
+            userId: '',
+            version: 1,
+            payload: {
+              userId: '',
+              email: '',
+              tenantId: tenantId ?? '',
+              sessionsRevoked: result.sessionsRevoked ?? 0,
+            },
+          }),
+        );
+
+        return {
+          success: result.success,
+          sessionsRevoked: result.sessionsRevoked,
+        };
+      } catch (error) {
+        if (error instanceof InvalidCredentialsError === false) {
+          await abuseService.incrementAndEvaluate(abuseCheckOptions);
+        }
+        throw error;
+      }
     },
   );
 };

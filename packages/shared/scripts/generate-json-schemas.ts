@@ -58,6 +58,12 @@ import {
   mfaChallengeStateSchema,
   webauthnCredentialSchema,
 } from '../src/schemas/mfa.schema.js';
+import {
+  passwordResetRequestSchema,
+  passwordResetRequestResponseSchema,
+  passwordChangeRequestSchema,
+  passwordChangeRequestResponseSchema,
+} from '../src/schemas/password-recovery.schema.js';
 
 const entries: Array<[string, Record<string, unknown>]> = [
   ['loginJsonSchema', createJsonSchema(loginSchema)],
@@ -110,6 +116,13 @@ const entries: Array<[string, Record<string, unknown>]> = [
   ['mfaMethodJsonSchema', createJsonSchema(mfaMethodSchema)],
   ['mfaChallengeStateJsonSchema', createJsonSchema(mfaChallengeStateSchema)],
   ['webauthnCredentialJsonSchema', createJsonSchema(webauthnCredentialSchema)],
+  ['passwordResetRequestJsonSchema', createJsonSchema(passwordResetRequestSchema)],
+  ['passwordResetRequestResponseJsonSchema', createJsonSchema(passwordResetRequestResponseSchema)],
+  ['passwordChangeRequestJsonSchema', createJsonSchema(passwordChangeRequestSchema)],
+  [
+    'passwordChangeRequestResponseJsonSchema',
+    createJsonSchema(passwordChangeRequestResponseSchema),
+  ],
 ];
 
 const renderExport = (name: string, schema: Record<string, unknown>): string =>

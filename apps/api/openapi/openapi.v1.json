@@ -2828,6 +2828,1036 @@
         }
       }
     },
+    "/api/v1/auth/password/reset": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  }
+                },
+                "required": ["email"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": ["success"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "AUTH_PASSWORD_TOO_SHORT",
+                            "AUTH_PASSWORD_TOO_LONG",
+                            "AUTH_PASSWORD_TOO_WEAK",
+                            "AUTH_PASSWORD_COMPROMISED",
+                            "AUTH_PASSWORD_POLICY_VIOLATION"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "violations": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "code": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["code", "message"]
+                              }
+                            }
+                          }
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["TENANT_INACTIVE"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "tenantId": {
+                                  "type": "string"
+                                },
+                                "tenantStatus": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_ABUSE_LOCKED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "abuseLevel": {
+                                  "type": "string",
+                                  "enum": ["locked"]
+                                },
+                                "failureCount": {
+                                  "type": "integer"
+                                },
+                                "windowExpiresAt": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["abuseLevel", "failureCount", "windowExpiresAt"]
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_ABUSE_CHALLENGE_REQUIRED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "abuseLevel": {
+                                  "type": "string",
+                                  "enum": ["challenge_required"]
+                                },
+                                "failureCount": {
+                                  "type": "integer"
+                                },
+                                "windowExpiresAt": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["abuseLevel", "failureCount", "windowExpiresAt"]
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_ABUSE_IP_BLOCKED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "abuseLevel": {
+                                  "type": "string",
+                                  "enum": ["ip_blocked"]
+                                },
+                                "failureCount": {
+                                  "type": "integer"
+                                },
+                                "windowExpiresAt": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["abuseLevel", "failureCount", "windowExpiresAt"]
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["RATE_LIMIT_EXCEEDED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "retryAfterSeconds": {
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_ABUSE_COOLDOWN"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "abuseLevel": {
+                                  "type": "string",
+                                  "enum": ["cooldown"]
+                                },
+                                "failureCount": {
+                                  "type": "integer"
+                                },
+                                "windowExpiresAt": {
+                                  "type": "string"
+                                },
+                                "retryAfterSeconds": {
+                                  "type": "integer"
+                                }
+                              },
+                              "required": ["abuseLevel", "failureCount", "windowExpiresAt"]
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_PASSWORD_RESET_RATE_LIMITED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "enum": ["rate_limited"]
+                                },
+                                "retryAfterSeconds": {
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["INTERNAL_SERVER_ERROR"]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/password/change": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 16,
+                    "maxLength": 64
+                  },
+                  "password": {
+                    "type": "string",
+                    "minLength": 12,
+                    "maxLength": 128
+                  }
+                },
+                "required": ["token", "password"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "sessionsRevoked": {
+                      "type": "number"
+                    }
+                  },
+                  "required": ["success"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "VALIDATION_FAILED",
+                                "AUTH_PASSWORD_TOO_SHORT",
+                                "AUTH_PASSWORD_TOO_LONG",
+                                "AUTH_PASSWORD_TOO_WEAK",
+                                "AUTH_PASSWORD_COMPROMISED",
+                                "AUTH_PASSWORD_POLICY_VIOLATION"
+                              ]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "violations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "code": {
+                                        "type": "string"
+                                      },
+                                      "message": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": ["code", "message"]
+                                  }
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "AUTH_PASSWORD_TOO_SHORT",
+                                "AUTH_PASSWORD_TOO_LONG",
+                                "AUTH_PASSWORD_TOO_WEAK",
+                                "AUTH_PASSWORD_COMPROMISED",
+                                "AUTH_PASSWORD_POLICY_VIOLATION"
+                              ]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "policyRequirements": {
+                                  "type": "object",
+                                  "properties": {
+                                    "minLength": {
+                                      "type": "integer"
+                                    },
+                                    "maxLength": {
+                                      "type": "integer"
+                                    },
+                                    "requireUppercase": {
+                                      "type": "boolean"
+                                    },
+                                    "requireLowercase": {
+                                      "type": "boolean"
+                                    },
+                                    "requireNumber": {
+                                      "type": "boolean"
+                                    },
+                                    "requireSpecial": {
+                                      "type": "boolean"
+                                    },
+                                    "characterClassesRequired": {
+                                      "type": "integer"
+                                    },
+                                    "characterClassesMet": {
+                                      "type": "integer"
+                                    }
+                                  }
+                                },
+                                "violations": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_PASSWORD_RESET_TOKEN_EXPIRED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "enum": ["expired"]
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_PASSWORD_RESET_TOKEN_INVALID"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "enum": ["invalid"]
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_PASSWORD_RESET_TOKEN_ALREADY_USED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "reason": {
+                                  "type": "string",
+                                  "enum": ["already_used"]
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["TENANT_INACTIVE"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "tenantId": {
+                                  "type": "string"
+                                },
+                                "tenantStatus": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_ABUSE_LOCKED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "abuseLevel": {
+                                  "type": "string",
+                                  "enum": ["locked"]
+                                },
+                                "failureCount": {
+                                  "type": "integer"
+                                },
+                                "windowExpiresAt": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["abuseLevel", "failureCount", "windowExpiresAt"]
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_ABUSE_CHALLENGE_REQUIRED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "abuseLevel": {
+                                  "type": "string",
+                                  "enum": ["challenge_required"]
+                                },
+                                "failureCount": {
+                                  "type": "integer"
+                                },
+                                "windowExpiresAt": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["abuseLevel", "failureCount", "windowExpiresAt"]
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_ABUSE_IP_BLOCKED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "abuseLevel": {
+                                  "type": "string",
+                                  "enum": ["ip_blocked"]
+                                },
+                                "failureCount": {
+                                  "type": "integer"
+                                },
+                                "windowExpiresAt": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": ["abuseLevel", "failureCount", "windowExpiresAt"]
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["RATE_LIMIT_EXCEEDED"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "retryAfterSeconds": {
+                                  "type": "integer"
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["AUTH_ABUSE_COOLDOWN"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "abuseLevel": {
+                                  "type": "string",
+                                  "enum": ["cooldown"]
+                                },
+                                "failureCount": {
+                                  "type": "integer"
+                                },
+                                "windowExpiresAt": {
+                                  "type": "string"
+                                },
+                                "retryAfterSeconds": {
+                                  "type": "integer"
+                                }
+                              },
+                              "required": ["abuseLevel", "failureCount", "windowExpiresAt"]
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["INTERNAL_SERVER_ERROR"]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/mfa/webauthn/challenge": {
       "post": {
         "requestBody": {

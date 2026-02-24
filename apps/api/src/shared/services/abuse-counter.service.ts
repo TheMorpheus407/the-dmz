@@ -16,7 +16,7 @@ export interface AbuseCounterOptions {
   tenantId?: string;
   email?: string;
   ip?: string;
-  category: 'login' | 'refresh' | 'register';
+  category: 'login' | 'refresh' | 'register' | 'password_reset' | 'password_change';
 }
 
 const ABUSE_LEVEL_TO_THRESHOLD_INDEX: Record<AuthAbuseLevel, number> = {

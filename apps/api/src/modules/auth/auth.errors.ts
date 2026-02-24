@@ -1,4 +1,5 @@
 import { ErrorCodes, JWT_ERROR_CODES } from '@the-dmz/shared';
+import { PASSWORD_RECOVERY_ERROR_CODES } from '@the-dmz/shared/contracts';
 
 import { AppError } from '../../shared/middleware/error-handler.js';
 
@@ -207,3 +208,47 @@ const getPasswordErrorMessage = (code: string): string => {
   };
   return messages[code] ?? 'Password policy violation';
 };
+
+export class PasswordResetTokenExpiredError extends AuthError {
+  constructor() {
+    super({
+      code: PASSWORD_RECOVERY_ERROR_CODES.EXPIRED,
+      message: 'Password reset token has expired',
+      statusCode: 400,
+      details: { reason: 'expired' },
+    });
+  }
+}
+
+export class PasswordResetTokenInvalidError extends AuthError {
+  constructor() {
+    super({
+      code: PASSWORD_RECOVERY_ERROR_CODES.INVALID,
+      message: 'Password reset token is invalid',
+      statusCode: 400,
+      details: { reason: 'invalid' },
+    });
+  }
+}
+
+export class PasswordResetTokenAlreadyUsedError extends AuthError {
+  constructor() {
+    super({
+      code: PASSWORD_RECOVERY_ERROR_CODES.ALREADY_USED,
+      message: 'Password reset token has already been used',
+      statusCode: 400,
+      details: { reason: 'already_used' },
+    });
+  }
+}
+
+export class PasswordResetRateLimitedError extends AuthError {
+  constructor(retryAfterSeconds: number) {
+    super({
+      code: PASSWORD_RECOVERY_ERROR_CODES.RATE_LIMITED,
+      message: 'Too many password reset requests. Please try again later.',
+      statusCode: 429,
+      details: { reason: 'rate_limited', retryAfterSeconds },
+    });
+  }
+}

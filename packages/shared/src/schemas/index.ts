@@ -6,5 +6,6 @@ export * from './health.schema.js';
 export * from './json-schemas.generated.js';
 export * from './json-schema.js';
 export * from './mfa.schema.js';
+export * from './password-recovery.schema.js';
 export * from './preferences.schema.js';
 export * from './taxonomy.schema.js';

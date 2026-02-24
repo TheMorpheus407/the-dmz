@@ -27,6 +27,10 @@ export const SCHEMA_OWNERSHIP_MANIFEST: SchemaOwnershipManifest = {
         'mfaMethodJsonSchema',
         'mfaChallengeStateJsonSchema',
         'webauthnCredentialJsonSchema',
+        'passwordResetRequestBodyJsonSchema',
+        'passwordResetRequestResponseJsonSchema',
+        'passwordChangeRequestBodyJsonSchema',
+        'passwordChangeRequestResponseJsonSchema',
       ],
       ownedComponents: [
         'AuthLoginResponse',
