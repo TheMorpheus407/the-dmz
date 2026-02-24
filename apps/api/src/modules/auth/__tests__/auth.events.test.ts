@@ -58,7 +58,7 @@ describe('auth events', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'eventtest@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Event Test',
         },
       });
@@ -101,7 +101,7 @@ describe('auth events', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'loginevent@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Login Event Test',
         },
       });
@@ -114,7 +114,7 @@ describe('auth events', () => {
         url: '/api/v1/auth/login',
         payload: {
           email: 'loginevent@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
         },
       });
 
@@ -181,7 +181,7 @@ describe('auth events', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'logouttest@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Logout Test',
         },
       });
@@ -229,7 +229,7 @@ describe('auth events', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'logoutonce@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Logout Once',
         },
       });
@@ -272,7 +272,7 @@ describe('auth events', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'securetest@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Secure Test',
         },
       });
@@ -300,7 +300,7 @@ describe('auth events', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'tenanttest@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Tenant Test',
         },
       });
@@ -320,7 +320,7 @@ describe('auth events', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'refreshtest@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Refresh Test',
         },
       });

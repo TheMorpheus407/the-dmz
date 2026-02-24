@@ -54,7 +54,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'test@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Test User',
         },
       });
@@ -80,7 +80,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'duplicate@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'First User',
         },
       });
@@ -90,7 +90,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'duplicate@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Second User',
         },
       });
@@ -106,7 +106,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'invalid-email',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Test User',
         },
       });
@@ -136,7 +136,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'logintest@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Login Test',
         },
       });
@@ -146,7 +146,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/login',
         payload: {
           email: 'logintest@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
         },
       });
 
@@ -210,7 +210,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'refresh@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Refresh Test',
         },
       });
@@ -253,7 +253,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'csrf@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'CSRF Test',
         },
       });
@@ -304,7 +304,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'rotation@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Rotation Test',
         },
       });
@@ -356,7 +356,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'me@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Me Test',
         },
       });
@@ -408,7 +408,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'logout@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Logout Test',
         },
       });
@@ -444,7 +444,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'logoutreuse@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Logout Reuse Test',
         },
       });
@@ -489,7 +489,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'health@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Health Test',
         },
       });
@@ -530,7 +530,7 @@ describe('auth routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'tenantctx@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Tenant Ctx Test',
         },
       });

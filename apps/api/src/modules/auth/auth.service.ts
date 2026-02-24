@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto';
 
 import * as argon2 from 'argon2';
-import { SignJWT, jwtVerify } from 'jose';
 
 import { canRefreshSession, getSessionPolicyForRole } from '@the-dmz/shared/auth/session-policy.js';
 import {
@@ -37,12 +36,17 @@ import {
   SessionExpiredError,
   SessionRevokedError,
   PasswordPolicyError,
+  InvalidKeyIdError,
+  KeyRevokedError,
+  KeyExpiredError,
+  MissingKeyIdError,
 } from './auth.errors.js';
 import {
   resolveEffectivePreferences,
   getLockedPreferenceKeys,
   type PreferenceResolutionOptions,
 } from './preferences.js';
+import { signJWT, verifyJWT } from './jwt-keys.service.js';
 
 import type { AppConfig } from '../../config.js';
 import type {
@@ -88,19 +92,12 @@ const generateTokens = async (
   sessionId: string,
   providedRefreshToken?: string,
 ): Promise<AuthTokens> => {
-  const now = Math.floor(Date.now() / 1000);
-  const accessTokenExpires = config.JWT_EXPIRES_IN;
-
-  const accessToken = await new SignJWT({
+  const accessToken = await signJWT(config, {
     sub: user.id,
     tenantId: user.tenantId,
     sessionId,
     role: user.role,
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt(now)
-    .setExpirationTime(accessTokenExpires)
-    .sign(new TextEncoder().encode(config.JWT_SECRET));
+  });
 
   const refreshToken = providedRefreshToken ?? randomUUID();
 
@@ -415,7 +412,7 @@ export const verifyAccessToken = async (
   token: string,
 ): Promise<AuthenticatedUser> => {
   try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(config.JWT_SECRET));
+    const { payload } = await verifyJWT(config, token);
 
     const jwtPayload = payload as unknown as JwtPayload;
 
@@ -442,6 +439,14 @@ export const verifyAccessToken = async (
     };
   } catch (error) {
     if (error instanceof SessionExpiredError || error instanceof SessionRevokedError) {
+      throw error;
+    }
+    if (
+      error instanceof MissingKeyIdError ||
+      error instanceof InvalidKeyIdError ||
+      error instanceof KeyRevokedError ||
+      error instanceof KeyExpiredError
+    ) {
       throw error;
     }
     throw new InvalidCredentialsError();

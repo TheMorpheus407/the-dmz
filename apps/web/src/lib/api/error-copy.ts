@@ -60,6 +60,12 @@ const GAME_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     retryLabel: 'CONTACT_ADMIN',
     dismissLabel: 'DISMISS',
   },
+  abuse: {
+    title: 'ABUSE_DETECTED',
+    message: 'Abuse detected. Contact administrator for details.',
+    retryLabel: 'CONTACT_ADMIN',
+    dismissLabel: 'DISMISS',
+  },
 };
 
 const ADMIN_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
@@ -111,6 +117,12 @@ const ADMIN_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     retryLabel: 'Contact Support',
     dismissLabel: 'Dismiss',
   },
+  abuse: {
+    title: 'Abuse Detected',
+    message: 'Abusive activity has been detected. Please contact support.',
+    retryLabel: 'Contact Support',
+    dismissLabel: 'Dismiss',
+  },
 };
 
 const AUTH_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
@@ -154,6 +166,11 @@ const AUTH_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     message: 'Your account has been suspended. Please contact support.',
     retryLabel: 'Contact Support',
   },
+  abuse: {
+    title: 'Activity Restricted',
+    message: 'Your activity has been flagged. Please contact support.',
+    retryLabel: 'Contact Support',
+  },
 };
 
 const PUBLIC_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
@@ -195,6 +212,11 @@ const PUBLIC_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
   tenant_blocked: {
     title: 'Service Unavailable',
     message: 'This service is currently unavailable.',
+    retryLabel: 'Go Home',
+  },
+  abuse: {
+    title: 'Activity Restricted',
+    message: 'Your activity has been flagged.',
     retryLabel: 'Go Home',
   },
 };
@@ -247,10 +269,12 @@ export function getSeverity(category: ApiErrorCategory): 'low' | 'medium' | 'hig
   switch (category) {
     case 'authentication':
     case 'authorization':
+    case 'abuse':
       return 'high';
     case 'rate_limiting':
     case 'server':
     case 'network':
+    case 'tenant_blocked':
       return 'medium';
     case 'validation':
       return 'low';

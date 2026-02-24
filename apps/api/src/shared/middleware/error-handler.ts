@@ -4,12 +4,14 @@ import {
   ErrorCodes as SharedErrorCodes,
   ErrorCodeCategory,
   errorCodeMetadata as sharedErrorCodeMetadata,
+  JWT_ERROR_CODES,
 } from '@the-dmz/shared';
 
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 
 export const ErrorCodes = {
   ...SharedErrorCodes,
+  ...JWT_ERROR_CODES,
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
   RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
   PROFILE_NOT_FOUND: 'PROFILE_NOT_FOUND',
@@ -90,6 +92,14 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.AUTH_PASSWORD_TOO_WEAK]: 400,
   [ErrorCodes.AUTH_PASSWORD_COMPROMISED]: 400,
   [ErrorCodes.AUTH_PASSWORD_POLICY_VIOLATION]: 400,
+  [JWT_ERROR_CODES.AUTH_JWT_INVALID_KEY_ID]: 401,
+  [JWT_ERROR_CODES.AUTH_JWT_KEY_REVOKED]: 401,
+  [JWT_ERROR_CODES.AUTH_JWT_KEY_EXPIRED]: 401,
+  [JWT_ERROR_CODES.AUTH_JWT_ALGORITHM_MISMATCH]: 401,
+  [JWT_ERROR_CODES.AUTH_JWT_INVALID_TOKEN]: 401,
+  [JWT_ERROR_CODES.AUTH_JWT_MISSING_KEY_ID]: 401,
+  [JWT_ERROR_CODES.AUTH_JWK_NOT_FOUND]: 401,
+  [JWT_ERROR_CODES.AUTH_JWT_SIGNING_ERROR]: 500,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -152,6 +162,14 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.AUTH_PASSWORD_TOO_WEAK]: 'Password does not meet complexity requirements',
   [ErrorCodes.AUTH_PASSWORD_COMPROMISED]: 'Password found in known data breach',
   [ErrorCodes.AUTH_PASSWORD_POLICY_VIOLATION]: 'Password policy violation',
+  [JWT_ERROR_CODES.AUTH_JWT_INVALID_KEY_ID]: 'Token contains unknown or invalid key ID',
+  [JWT_ERROR_CODES.AUTH_JWT_KEY_REVOKED]: 'Token was signed with a revoked key',
+  [JWT_ERROR_CODES.AUTH_JWT_KEY_EXPIRED]: 'Token was signed with an expired key',
+  [JWT_ERROR_CODES.AUTH_JWT_ALGORITHM_MISMATCH]: 'Token algorithm does not match key algorithm',
+  [JWT_ERROR_CODES.AUTH_JWT_INVALID_TOKEN]: 'Token is invalid or malformed',
+  [JWT_ERROR_CODES.AUTH_JWT_MISSING_KEY_ID]: 'Token is missing required key ID header',
+  [JWT_ERROR_CODES.AUTH_JWK_NOT_FOUND]: 'No valid signing key found',
+  [JWT_ERROR_CODES.AUTH_JWT_SIGNING_ERROR]: 'Failed to sign token',
 } as const;
 
 export type AppErrorOptions = {

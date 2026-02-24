@@ -98,7 +98,7 @@ describe('tenant-context DB isolation', () => {
         headers: { 'x-tenant-id': fixture.tenantA.id },
         payload: {
           email: 'usera@test.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'User A',
         },
       });
@@ -109,7 +109,7 @@ describe('tenant-context DB isolation', () => {
         headers: { 'x-tenant-id': fixture.tenantB.id },
         payload: {
           email: 'userb@test.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'User B',
         },
       });
@@ -183,7 +183,7 @@ describe('tenant-context DB isolation', () => {
         headers: { 'x-tenant-id': fixture.tenantA.id },
         payload: {
           email: 'sequential-a@test.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Seq A',
         },
       });
@@ -194,7 +194,7 @@ describe('tenant-context DB isolation', () => {
         headers: { 'x-tenant-id': fixture.tenantB.id },
         payload: {
           email: 'sequential-b@test.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Seq B',
         },
       });
@@ -254,7 +254,7 @@ describe('tenant-context DB isolation', () => {
         headers: { 'x-tenant-id': fixture.tenantA.id },
         payload: {
           email: 'pool-a@test.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Pool A',
         },
       });
@@ -265,7 +265,7 @@ describe('tenant-context DB isolation', () => {
         headers: { 'x-tenant-id': fixture.tenantB.id },
         payload: {
           email: 'pool-b@test.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Pool B',
         },
       });
@@ -339,7 +339,7 @@ describe('tenant-context DB isolation', () => {
         headers: { 'x-tenant-id': fixture.tenantA.id },
         payload: {
           email: 'error-test@test.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Error Test',
         },
       });

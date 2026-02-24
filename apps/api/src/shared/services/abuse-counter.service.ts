@@ -1,7 +1,7 @@
 import { m1AuthAbusePolicyManifest, AuthAbuseLevel } from '@the-dmz/shared/contracts';
 
 import { getRedisClient, type RedisRateLimitClient } from '../database/redis.js';
-import { tenantScopedKey, KEY_CATEGORIES, getTTL } from '../cache/index.js';
+import { tenantScopedKey, validateTenantId, KEY_CATEGORIES, getTTL } from '../cache/index.js';
 
 import type { AppConfig } from '../../config.js';
 
@@ -13,7 +13,7 @@ export interface AbuseCounterResult {
 }
 
 export interface AbuseCounterOptions {
-  tenantId: string;
+  tenantId?: string;
   email?: string;
   ip?: string;
   category: 'login' | 'refresh' | 'register';
@@ -43,11 +43,15 @@ const getAbuseLevelFromFailureCount = (failureCount: number): AuthAbuseLevel => 
 };
 
 const buildAbuseCounterKey = (
-  tenantId: string,
+  tenantId: string | undefined,
   identifier: string,
   identifierType: 'email' | 'ip',
   category: string,
 ): string => {
+  if (!tenantId || !validateTenantId(tenantId)) {
+    return `${KEY_CATEGORIES.AUTH_ABUSE}:unauthenticated:${identifierType}:${identifier}:${category}`;
+  }
+
   return tenantScopedKey(
     KEY_CATEGORIES.AUTH_ABUSE,
     `${identifierType}:${identifier}:${category}`,

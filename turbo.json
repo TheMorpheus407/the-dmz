@@ -14,6 +14,7 @@
       "dependsOn": [
         "openapi:check",
         "contract:parity",
+        "jwks-contract:check",
         "error-contract:check",
         "event-contract:check",
         "log-contract:check",
@@ -85,6 +86,14 @@
       "dependsOn": ["openapi:generate"],
       "outputs": [],
       "inputs": ["openapi/**", "../packages/shared/src/contracts/**", "../apps/web/src/lib/api/**"]
+    },
+    "jwks-contract:check": {
+      "outputs": [],
+      "inputs": [
+        "../packages/shared/src/contracts/**",
+        "src/modules/auth/jwks.routes.ts",
+        "src/modules/auth/jwt-keys.service.ts"
+      ]
     },
     "error-contract:check": {
       "dependsOn": ["^build"],

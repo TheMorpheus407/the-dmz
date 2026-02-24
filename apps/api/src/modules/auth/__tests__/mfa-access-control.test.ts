@@ -58,7 +58,7 @@ describe('MFA Access Control - Super Admin Step-up Flow', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'mfa-status-superadmin@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'MFA Status SuperAdmin',
         },
       });
@@ -93,7 +93,7 @@ describe('MFA Access Control - Super Admin Step-up Flow', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'mfa-status-regular@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'MFA Status Regular',
         },
       });
@@ -125,7 +125,7 @@ describe('MFA Access Control - Super Admin Step-up Flow', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'mfa-status-security@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'MFA Status Security',
         },
       });
@@ -161,7 +161,7 @@ describe('MFA Access Control - Super Admin Step-up Flow', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'mfa-expired-session@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'MFA Expired Session Test',
         },
       });
@@ -212,7 +212,7 @@ describe('MFA Access Control - Super Admin Step-up Flow', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'mfa-logout-test@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'MFA Logout Test',
         },
       });

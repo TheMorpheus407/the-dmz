@@ -7,6 +7,9 @@ export const AUTH_EVENTS = {
   SESSION_CREATED: 'auth.session.created',
   SESSION_REVOKED: 'auth.session.revoked',
   LOGIN_FAILED: 'auth.login.failed',
+  JWT_SIGNING_KEY_CREATED: 'jwt.' + 'signing_key.created',
+  JWT_SIGNING_KEY_ROTATED: 'jwt.' + 'signing_key.rotated',
+  JWT_SIGNING_KEY_REVOKED: 'jwt.' + 'signing_key.revoked',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -50,6 +53,22 @@ export interface AuthLoginFailedPayload {
   correlationId: string;
 }
 
+export interface JWTSigningKeyCreatedPayload {
+  kid: string;
+  keyType: string;
+  algorithm: string;
+}
+
+export interface JWTSigningKeyRotatedPayload {
+  oldKid: string;
+  newKid: string;
+}
+
+export interface JWTSigningKeyRevokedPayload {
+  kid: string;
+  reason: string;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -57,6 +76,9 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.SESSION_CREATED]: AuthSessionCreatedPayload;
   [AUTH_EVENTS.SESSION_REVOKED]: AuthSessionRevokedPayload;
   [AUTH_EVENTS.LOGIN_FAILED]: AuthLoginFailedPayload;
+  [AUTH_EVENTS.JWT_SIGNING_KEY_CREATED]: JWTSigningKeyCreatedPayload;
+  [AUTH_EVENTS.JWT_SIGNING_KEY_ROTATED]: JWTSigningKeyRotatedPayload;
+  [AUTH_EVENTS.JWT_SIGNING_KEY_REVOKED]: JWTSigningKeyRevokedPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -161,6 +183,61 @@ export const createAuthLoginFailedEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+interface BaseJWTSigningKeyEventParams {
+  source: string;
+  correlationId: string;
+  tenantId: string;
+  version: number;
+}
+
+export const createJWTSigningKeyCreatedEvent = (
+  params: BaseJWTSigningKeyEventParams & { payload: JWTSigningKeyCreatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.JWT_SIGNING_KEY_CREATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.JWT_SIGNING_KEY_CREATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createJWTSigningKeyRotatedEvent = (
+  params: BaseJWTSigningKeyEventParams & { payload: JWTSigningKeyRotatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.JWT_SIGNING_KEY_ROTATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.JWT_SIGNING_KEY_ROTATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createJWTSigningKeyRevokedEvent = (
+  params: BaseJWTSigningKeyEventParams & { payload: JWTSigningKeyRevokedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.JWT_SIGNING_KEY_REVOKED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.JWT_SIGNING_KEY_REVOKED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
     source: params.source,
     version: params.version,
     payload: params.payload,

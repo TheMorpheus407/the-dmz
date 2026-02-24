@@ -1,4 +1,4 @@
-import { ErrorCodes } from '@the-dmz/shared';
+import { ErrorCodes, JWT_ERROR_CODES } from '@the-dmz/shared';
 
 import { AppError } from '../../shared/middleware/error-handler.js';
 
@@ -14,6 +14,50 @@ export class AuthError extends AppError {
       message: options.message,
       statusCode: options.statusCode ?? 401,
       ...(options.details !== undefined && { details: options.details }),
+    });
+  }
+}
+
+export class InvalidKeyIdError extends AuthError {
+  constructor(kid: string) {
+    super({
+      code: JWT_ERROR_CODES.AUTH_JWT_INVALID_KEY_ID,
+      message: 'Token contains unknown or invalid key ID',
+      statusCode: 401,
+      details: { kid, reason: 'invalid_key_id' },
+    });
+  }
+}
+
+export class KeyRevokedError extends AuthError {
+  constructor(kid: string) {
+    super({
+      code: JWT_ERROR_CODES.AUTH_JWT_KEY_REVOKED,
+      message: 'Token was signed with a revoked key',
+      statusCode: 401,
+      details: { kid, reason: 'key_revoked' },
+    });
+  }
+}
+
+export class KeyExpiredError extends AuthError {
+  constructor(kid: string) {
+    super({
+      code: JWT_ERROR_CODES.AUTH_JWT_KEY_EXPIRED,
+      message: 'Token was signed with an expired key',
+      statusCode: 401,
+      details: { kid, reason: 'key_expired' },
+    });
+  }
+}
+
+export class MissingKeyIdError extends AuthError {
+  constructor() {
+    super({
+      code: JWT_ERROR_CODES.AUTH_JWT_MISSING_KEY_ID,
+      message: 'Token is missing required key ID header',
+      statusCode: 401,
+      details: { reason: 'missing_kid' },
     });
   }
 }

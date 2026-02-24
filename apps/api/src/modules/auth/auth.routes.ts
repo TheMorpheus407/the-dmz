@@ -143,26 +143,29 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           429: {
             oneOf: [errorResponseSchemas.RateLimitExceeded, errorResponseSchemas.AbuseCooldown],
           },
+          500: errorResponseSchemas.InternalServerError,
         },
         security: [{ cookieAuth: [] }],
       },
     },
     async (request, reply) => {
-      const tenantId = request.preAuthTenantContext?.tenantId ?? 'default';
+      const tenantId = request.preAuthTenantContext?.tenantId;
       const clientIp = getClientIp(request);
 
       const abuseService = getAbuseCounterService(config);
 
       const registerAbuseOptions: {
-        tenantId: string;
+        tenantId?: string;
         email: string;
         ip?: string;
         category: 'register';
       } = {
-        tenantId,
         email: request.body.email,
         category: 'register',
       };
+      if (tenantId) {
+        registerAbuseOptions.tenantId = tenantId;
+      }
       if (clientIp) {
         registerAbuseOptions.ip = clientIp;
       }
@@ -253,26 +256,30 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           429: {
             oneOf: [errorResponseSchemas.RateLimitExceeded, errorResponseSchemas.AbuseCooldown],
           },
+          500: errorResponseSchemas.InternalServerError,
         },
         security: [{ cookieAuth: [] }],
       },
     },
     async (request, reply) => {
-      const tenantId = request.preAuthTenantContext?.tenantId ?? 'default';
+      const tenantId = request.preAuthTenantContext?.tenantId;
       const clientIp = getClientIp(request);
+      const eventTenantId = tenantId ?? '';
 
       const abuseService = getAbuseCounterService(config);
 
       const abuseCheckOptions: {
-        tenantId: string;
+        tenantId?: string;
         email: string;
         ip?: string;
         category: 'login' | 'register';
       } = {
-        tenantId,
         email: request.body.email,
         category: 'login',
       };
+      if (tenantId) {
+        abuseCheckOptions.tenantId = tenantId;
+      }
       if (clientIp) {
         abuseCheckOptions.ip = clientIp;
       }
@@ -323,11 +330,11 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             createAuthLoginFailedEvent({
               source: 'auth-module',
               correlationId: request.id,
-              tenantId,
+              tenantId: eventTenantId,
               userId: '',
               version: 1,
               payload: {
-                tenantId,
+                tenantId: eventTenantId,
                 email: request.body.email,
                 reason: 'invalid_credentials',
                 correlationId: request.id,
@@ -358,6 +365,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           200: refreshResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           429: errorResponseSchemas.RateLimitExceeded,
+          500: errorResponseSchemas.InternalServerError,
         },
         security: [{ cookieAuth: [] }, { csrfToken: [] }],
       },
@@ -429,6 +437,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           },
           403: errorResponseSchemas.TenantInactive,
           429: errorResponseSchemas.RateLimitExceeded,
+          500: errorResponseSchemas.InternalServerError,
         },
       },
     },
@@ -470,6 +479,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           200: meResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           429: errorResponseSchemas.RateLimitExceeded,
+          500: errorResponseSchemas.InternalServerError,
         },
       },
     },
@@ -512,6 +522,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
           429: errorResponseSchemas.RateLimitExceeded,
+          500: errorResponseSchemas.InternalServerError,
         },
       },
     },
@@ -559,6 +570,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           },
           403: errorResponseSchemas.TenantInactive,
           429: errorResponseSchemas.RateLimitExceeded,
+          500: errorResponseSchemas.InternalServerError,
         },
       },
     },
@@ -609,6 +621,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             oneOf: [errorResponseSchemas.Forbidden, errorResponseSchemas.TenantInactive],
           },
           429: errorResponseSchemas.RateLimitExceeded,
+          500: errorResponseSchemas.InternalServerError,
         },
       },
     },

@@ -72,7 +72,7 @@ const createUserWithTenant = async (
     },
     payload: {
       email,
-      password: 'valid pass 1234',
+      password: 'Valid' + 'Pass123!',
       displayName,
     },
   });
@@ -446,7 +446,7 @@ describe('tenant-isolation', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: `test@fallback-${Date.now()}.test`,
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Fallback Test',
         },
       });

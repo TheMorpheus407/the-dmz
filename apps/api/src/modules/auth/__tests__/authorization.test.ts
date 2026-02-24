@@ -123,7 +123,7 @@ describe('authorization middleware - integration tests', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'perm-allow@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Perm Allow',
         },
       });
@@ -183,7 +183,7 @@ describe('authorization middleware - integration tests', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'perm-deny@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Perm Deny',
         },
       });
@@ -218,7 +218,7 @@ describe('authorization middleware - integration tests', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'no-roles@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'No Roles',
         },
       });
@@ -251,7 +251,7 @@ describe('authorization middleware - integration tests', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'tenant1-user@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Tenant 1 User',
         },
       });
@@ -261,7 +261,7 @@ describe('authorization middleware - integration tests', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'tenant2-user@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Tenant 2 User',
         },
       });
@@ -346,7 +346,7 @@ describe('authorization middleware - integration tests', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'cache-test@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'Cache Test',
         },
       });

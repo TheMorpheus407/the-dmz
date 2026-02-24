@@ -255,7 +255,7 @@ describe('request logger middleware', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'test@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           tenantId: '00000000-0000-0000-0000-000000000001',
         },
       });
@@ -269,7 +269,7 @@ describe('request logger middleware', () => {
         url: '/api/v1/auth/login',
         payload: {
           email: 'test@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           token: 'should-be-redacted',
           refreshToken: 'also-should-be-redacted',
         },

@@ -76,6 +76,10 @@ export const backendEnvSchema = z
     WEBAUTHN_RP_NAME: z.string().min(1).default('The DMZ'),
     ABAC_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(30),
     ABAC_SLOW_EVALUATION_THRESHOLD_MS: z.coerce.number().int().positive().default(10),
+    JWT_PRIVATE_KEY_ENCRYPTION_KEY: z
+      .string()
+      .min(32, 'JWT_PRIVATE_KEY_ENCRYPTION_KEY must be at least 32 characters')
+      .default('dev-encryption-key-change-in-prod'),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';
@@ -113,6 +117,17 @@ export const backendEnvSchema = z
     {
       message: 'TOKEN_HASH_SALT must be changed from the default value in production',
       path: ['TOKEN_HASH_SALT'],
+    },
+  )
+  .refine(
+    (config) => {
+      if (config.NODE_ENV !== 'production') return true;
+      return !config.JWT_PRIVATE_KEY_ENCRYPTION_KEY.startsWith('dev-');
+    },
+    {
+      message:
+        'JWT_PRIVATE_KEY_ENCRYPTION_KEY must be changed from the default value in production',
+      path: ['JWT_PRIVATE_KEY_ENCRYPTION_KEY'],
     },
   );
 

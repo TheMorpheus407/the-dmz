@@ -131,7 +131,7 @@ async function checkOpenApi(): Promise<void> {
 
   const config = loadConfig({
     NODE_ENV: 'development',
-    DATABASE_URL: process.env['DATABASE_URL'] ?? 'postgresql://localhost:5432/dmz_dev',
+    DATABASE_URL: process.env['DATABASE_URL'] ?? 'postgresql://dmz:dmz_dev@localhost:5432/dmz_dev',
     REDIS_URL: process.env['REDIS_URL'] ?? 'redis://localhost:6379',
     LOG_LEVEL: 'silent',
     JWT_SECRET: process.env['JWT_SECRET'] ?? 'openapi-generation-secret',

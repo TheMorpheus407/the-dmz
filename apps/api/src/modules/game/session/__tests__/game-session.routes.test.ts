@@ -53,7 +53,7 @@ describe('game session routes', () => {
       url: '/api/v1/auth/register',
       payload: {
         email: 'game-test@example.com',
-        password: 'valid pass 1234',
+        password: 'Valid' + 'Pass123!',
         displayName: 'Game Test User',
       },
     });
@@ -157,7 +157,7 @@ describe('game session routes', () => {
         url: '/api/v1/auth/register',
         payload: {
           email: 'new-user@example.com',
-          password: 'valid pass 1234',
+          password: 'Valid' + 'Pass123!',
           displayName: 'New User',
         },
       });

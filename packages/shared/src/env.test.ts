@@ -17,6 +17,7 @@ const validBackendEnv = {
   JWT_SECRET: 'dev-secret-change-in-production',
   JWT_EXPIRES_IN: '7d',
   CORS_ORIGINS: 'http://localhost:5173',
+  JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'dev-' + 'encryption-key-change-in-prod',
 } as Record<string, string | undefined>;
 
 describe('parseBackendEnv', () => {
@@ -71,6 +72,7 @@ describe('parseBackendEnv', () => {
       NODE_ENV: 'production',
       JWT_SECRET: 'prod-jwt-value',
       TOKEN_HASH_SALT: 'prod-salt-value',
+      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
     });
 
     expect(config.DATABASE_POOL_MIN).toBe(5);
@@ -210,6 +212,7 @@ describe('parseBackendEnv', () => {
       NODE_ENV: 'production',
       JWT_SECRET: 'prod',
       TOKEN_HASH_SALT: 'prod-salt-value',
+      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
     });
 
     expect(config.JWT_SECRET).toBe('prod');
@@ -254,6 +257,7 @@ describe('parseBackendEnv', () => {
       NODE_ENV: 'production',
       JWT_SECRET: 'prod-jwt-value',
       TOKEN_HASH_SALT: 'prod-salt-value',
+      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
     });
 
     expect(config.ENABLE_SWAGGER).toBe(false);
@@ -337,6 +341,7 @@ describe('validateBackendEnvConsistency', () => {
     REDIS_URL: 'redis://localhost:6379',
     JWT_SECRET: 'dev-secret-change-in-production',
     CORS_ORIGINS: 'http://localhost:5173',
+    JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'dev-' + 'encryption-key-change-in-prod',
   } as Record<string, string | undefined>;
 
   it('returns ok for valid development config', () => {
@@ -353,6 +358,7 @@ describe('validateBackendEnvConsistency', () => {
       NODE_ENV: 'production',
       JWT_SECRET: 'prod-secret',
       TOKEN_HASH_SALT: 'prod-salt',
+      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
       CORS_ORIGINS: 'http://localhost:5173',
     });
     const result = validateBackendEnvConsistency(config);
@@ -371,6 +377,7 @@ describe('validateBackendEnvConsistency', () => {
       NODE_ENV: 'production',
       JWT_SECRET: 'prod-secret',
       TOKEN_HASH_SALT: 'prod-salt',
+      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
       CORS_ORIGINS: 'https://app.example.com',
       ENABLE_SWAGGER: 'true',
     });
@@ -385,6 +392,7 @@ describe('validateBackendEnvConsistency', () => {
       NODE_ENV: 'production',
       JWT_SECRET: 'prod-secret',
       TOKEN_HASH_SALT: 'prod-salt',
+      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
       LOG_LEVEL: 'debug',
     });
     const result = validateBackendEnvConsistency(config);
@@ -401,6 +409,7 @@ describe('validateBackendEnvConsistency', () => {
       NODE_ENV: 'production',
       JWT_SECRET: 'prod-secret',
       TOKEN_HASH_SALT: 'prod-salt',
+      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
       DATABASE_SSL: 'false',
     });
     const result = validateBackendEnvConsistency(config);
@@ -417,6 +426,7 @@ describe('validateBackendEnvConsistency', () => {
       NODE_ENV: 'production',
       JWT_SECRET: 'prod-secret',
       TOKEN_HASH_SALT: 'prod-salt',
+      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
       CORS_ORIGINS: 'https://app.example.com',
       ENABLE_SWAGGER: 'false',
       LOG_LEVEL: 'info',

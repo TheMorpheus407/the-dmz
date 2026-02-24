@@ -14,7 +14,7 @@ import { generateId } from './shared/utils/id.js';
 import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
 import { healthPlugin } from './modules/health/index.js';
-import { authPlugin } from './modules/auth/index.js';
+import { authPlugin, jwksPlugin, signingKeyInitPlugin } from './modules/auth/index.js';
 import { gamePlugin } from './modules/game/game.plugin.js';
 
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
@@ -198,44 +198,45 @@ export const buildApp = (
 
   app.register(swaggerPlugin);
 
-  app.after(() => {
-    app.get('/api/v1/', async () => ({
-      status: 'ok',
-      version: 'v1',
-    }));
+  app.register(signingKeyInitPlugin);
+  app.register(jwksPlugin);
 
-    for (const entry of rootLevelModules) {
-      const registryEntry = MODULE_REGISTRY[entry.name];
-      if (!registryEntry) {
-        throw new Error(
-          `Module '${entry.name}' is in manifest but not registered in MODULE_REGISTRY`,
-        );
-      }
-      app.register(registryEntry.plugin as never);
+  app.get('/api/v1/', async () => ({
+    status: 'ok',
+    version: 'v1',
+  }));
+
+  for (const entry of rootLevelModules) {
+    const registryEntry = MODULE_REGISTRY[entry.name];
+    if (!registryEntry) {
+      throw new Error(
+        `Module '${entry.name}' is in manifest but not registered in MODULE_REGISTRY`,
+      );
     }
+    app.register(registryEntry.plugin as never);
+  }
 
-    app.register(
-      async (apiRouter) => {
-        for (const entry of prefixedModules) {
-          const registryEntry = MODULE_REGISTRY[entry.name];
-          if (!registryEntry) {
-            throw new Error(
-              `Module '${entry.name}' is in manifest but not registered in MODULE_REGISTRY`,
-            );
-          }
-
-          const { plugin, routePrefix } = registryEntry;
-          if (!routePrefix) {
-            throw new Error(
-              `Module '${entry.name}' has no routePrefix but was included in prefixedModules`,
-            );
-          }
-          await apiRouter.register(plugin as never, { prefix: routePrefix });
+  app.register(
+    async (apiRouter) => {
+      for (const entry of prefixedModules) {
+        const registryEntry = MODULE_REGISTRY[entry.name];
+        if (!registryEntry) {
+          throw new Error(
+            `Module '${entry.name}' is in manifest but not registered in MODULE_REGISTRY`,
+          );
         }
-      },
-      { prefix: '/api/v1' },
-    );
-  });
+
+        const { plugin, routePrefix } = registryEntry;
+        if (!routePrefix) {
+          throw new Error(
+            `Module '${entry.name}' has no routePrefix but was included in prefixedModules`,
+          );
+        }
+        await apiRouter.register(plugin as never, { prefix: routePrefix });
+      }
+    },
+    { prefix: '/api/v1' },
+  );
 
   return app;
 };

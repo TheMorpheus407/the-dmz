@@ -9,6 +9,7 @@ const baseEnv = {
   LOG_LEVEL: 'info',
   JWT_SECRET: 'test-secret',
   TOKEN_HASH_SALT: 'test-token-salt',
+  JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'test-' + 'encryption-key-at-least-32-chars',
 } as const;
 
 describe('loadConfig', () => {
@@ -20,6 +21,7 @@ describe('loadConfig', () => {
           NODE_ENV: 'production',
           JWT_SECRET: 'prod-secret',
           TOKEN_HASH_SALT: 'prod-salt',
+          JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
           CORS_ORIGINS: 'http://localhost:5173',
         }),
       ).toThrow(/Environment consistency validation failed/);
@@ -32,6 +34,7 @@ describe('loadConfig', () => {
           NODE_ENV: 'production',
           JWT_SECRET: 'prod-secret',
           TOKEN_HASH_SALT: 'prod-salt',
+          JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
           ENABLE_SWAGGER: 'true',
         }),
       ).toThrow(/Environment consistency validation failed/);
