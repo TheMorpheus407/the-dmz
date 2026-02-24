@@ -162,7 +162,7 @@ describe('authorization middleware - integration tests', () => {
         tenantId: user.tenantId,
       });
 
-      clearPermissionCache(user.tenantId, user.id);
+      clearPermissionCache(testConfig, user.tenantId, user.id);
 
       const response = await app.inject({
         method: 'GET',
@@ -193,7 +193,7 @@ describe('authorization middleware - integration tests', () => {
         user: { tenantId: string; id: string };
       };
 
-      clearPermissionCache(user.tenantId, user.id);
+      clearPermissionCache(testConfig, user.tenantId, user.id);
 
       const response = await app.inject({
         method: 'GET',
@@ -228,7 +228,7 @@ describe('authorization middleware - integration tests', () => {
         user: { tenantId: string; id: string };
       };
 
-      clearPermissionCache(user.tenantId, user.id);
+      clearPermissionCache(testConfig, user.tenantId, user.id);
 
       const response = await app.inject({
         method: 'GET',
@@ -315,8 +315,8 @@ describe('authorization middleware - integration tests', () => {
         tenantId: user1.tenantId,
       });
 
-      clearPermissionCache(user1.tenantId, user1.id);
-      clearPermissionCache(user2.tenantId, user2.id);
+      clearPermissionCache(testConfig, user1.tenantId, user1.id);
+      clearPermissionCache(testConfig, user2.tenantId, user2.id);
 
       const tenant1Access = await app.inject({
         method: 'GET',
@@ -385,7 +385,7 @@ describe('authorization middleware - integration tests', () => {
         tenantId: user.tenantId,
       });
 
-      clearPermissionCache(user.tenantId, user.id);
+      clearPermissionCache(testConfig, user.tenantId, user.id);
 
       const firstResponse = await app.inject({
         method: 'GET',

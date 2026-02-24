@@ -74,6 +74,10 @@ export interface RedisRateLimitClient {
   incrementRateLimitKey(
     params: RedisRateLimitIncrementParams,
   ): Promise<RedisRateLimitIncrementResult>;
+  getValue(key: string): Promise<string | null>;
+  setValue(key: string, value: string, ttlSeconds: number): Promise<void>;
+  deleteKey(key: string): Promise<void>;
+  getKeys(pattern: string): Promise<string[]>;
   quit(): Promise<void>;
   disconnect(): void;
 }
@@ -341,6 +345,42 @@ class RedisTcpClient implements RedisRateLimitClient {
       current: parsePositiveInteger(result[0], 1),
       ttl: parseNonNegativeInteger(result[1], params.timeWindowMs),
     };
+  }
+
+  public async getValue(key: string): Promise<string | null> {
+    const result = await this.sendCommand(['GET', key]);
+
+    if (result === null) {
+      return null;
+    }
+
+    if (typeof result === 'string') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis GET response');
+  }
+
+  public async setValue(key: string, value: string, ttlSeconds: number): Promise<void> {
+    await this.sendCommand(['SET', key, value, 'EX', String(ttlSeconds)]);
+  }
+
+  public async deleteKey(key: string): Promise<void> {
+    await this.sendCommand(['DEL', key]);
+  }
+
+  public async getKeys(pattern: string): Promise<string[]> {
+    const result = await this.sendCommand(['KEYS', pattern]);
+
+    if (result === null) {
+      return [];
+    }
+
+    if (Array.isArray(result)) {
+      return result.filter((item): item is string => typeof item === 'string');
+    }
+
+    throw new Error('Unexpected Redis KEYS response');
   }
 
   public async quit(): Promise<void> {

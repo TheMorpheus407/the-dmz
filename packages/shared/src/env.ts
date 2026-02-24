@@ -74,6 +74,8 @@ export const backendEnvSchema = z
     TENANT_RESOLVER_ENABLED: booleanFromString.optional(),
     WEBAUTHN_RP_ID: z.string().min(1).default('localhost'),
     WEBAUTHN_RP_NAME: z.string().min(1).default('The DMZ'),
+    ABAC_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(30),
+    ABAC_SLOW_EVALUATION_THRESHOLD_MS: z.coerce.number().int().positive().default(10),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';

@@ -464,6 +464,10 @@ describe('rate limiter middleware', () => {
         connect,
         ping: vi.fn(async () => 'PONG'),
         incrementRateLimitKey,
+        getValue: vi.fn(async () => null),
+        setValue: vi.fn(async () => undefined),
+        deleteKey: vi.fn(async () => undefined),
+        getKeys: vi.fn(async () => []),
         quit: vi.fn(async () => undefined),
         disconnect: vi.fn(),
       } satisfies RedisRateLimitClient;
@@ -502,6 +506,10 @@ describe('rate limiter middleware', () => {
         connect,
         ping: vi.fn(async () => 'PONG'),
         incrementRateLimitKey,
+        getValue: vi.fn(async () => null),
+        setValue: vi.fn(async () => undefined),
+        deleteKey: vi.fn(async () => undefined),
+        getKeys: vi.fn(async () => []),
         quit: vi.fn(async () => undefined),
         disconnect: vi.fn(),
       } satisfies RedisRateLimitClient;
@@ -546,6 +554,10 @@ describe('rate limiter middleware', () => {
           connect,
           ping: vi.fn(async () => 'PONG'),
           incrementRateLimitKey,
+          getValue: vi.fn(async () => null),
+          setValue: vi.fn(async () => undefined),
+          deleteKey: vi.fn(async () => undefined),
+          getKeys: vi.fn(async () => []),
           quit: vi.fn(async () => undefined),
           disconnect: vi.fn(),
         } satisfies RedisRateLimitClient;

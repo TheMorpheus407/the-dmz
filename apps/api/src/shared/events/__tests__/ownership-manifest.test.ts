@@ -18,8 +18,8 @@ describe('EVENT_OWNERSHIP_MANIFEST', () => {
   });
 
   it('should contain auth events', () => {
-    const authEvents = EVENT_OWNERSHIP_MANIFEST.events.filter((e) =>
-      e.eventType.startsWith('auth.'),
+    const authEvents = EVENT_OWNERSHIP_MANIFEST.events.filter(
+      (e) => e.eventType.startsWith('auth.') || e.eventType.startsWith('authz.'),
     );
     expect(authEvents.length).toBeGreaterThan(0);
   });
@@ -74,7 +74,9 @@ describe('getAllOwnedEvents', () => {
   it('should return all events owned by a module', () => {
     const authEvents = getAllOwnedEvents('auth');
     expect(authEvents.length).toBeGreaterThan(0);
-    expect(authEvents.every((e) => e.eventType.startsWith('auth.'))).toBe(true);
+    expect(
+      authEvents.every((e) => e.eventType.startsWith('auth.') || e.eventType.startsWith('authz.')),
+    ).toBe(true);
 
     const gameEvents = getAllOwnedEvents('game');
     expect(gameEvents.length).toBeGreaterThan(0);
