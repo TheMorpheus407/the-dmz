@@ -125,6 +125,10 @@ export type BackendEnv = z.infer<typeof backendEnvSchema>;
 export const frontendEnvSchema = z.object({
   PUBLIC_API_BASE_URL: z.string().min(1).default('/api/v1'),
   PUBLIC_ENVIRONMENT: z.enum(nodeEnvValues).default('development'),
+  CSP_FRAME_ANCESTORS: z.string().default('none'),
+  CSP_CONNECT_SRC: z.string().optional().default(''),
+  CSP_IMG_SRC: z.string().optional().default(''),
+  COEP_POLICY: z.enum(coepPolicyValues).default('require-corp'),
 });
 
 export type FrontendEnv = z.infer<typeof frontendEnvSchema>;

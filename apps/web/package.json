@@ -17,6 +17,7 @@
     "test:coverage": "svelte-kit sync && node ./scripts/verify-shared-import.mjs && node ./scripts/verify-scaffold.mjs && vitest run --coverage",
     "test:tokens": "vitest run src/lib/ui/tokens/validate.test.ts --reporter=verbose",
     "test:ui-contract": "node ../../scripts/check-primitive-catalog.mjs && node ../../scripts/check-shell-primitives.mjs && vitest run src/__tests__/components/primitive-state-matrix.test.ts src/__tests__/components/primitive-semantic-contracts.test.ts --reporter=verbose",
+    "test:security-headers-contract": "vitest run src/__tests__/security-headers-contract.test.ts src/__tests__/security-headers-response-contract.test.ts --reporter=verbose",
     "check:tokens": "vitest run src/lib/ui/tokens/validate.test.ts --reporter=verbose",
     "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.json --noEmit",
     "clean": "node -e \"const fs = require('node:fs'); fs.rmSync('.svelte-kit', { recursive: true, force: true }); fs.rmSync('build', { recursive: true, force: true });\"",

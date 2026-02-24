@@ -119,6 +119,11 @@
     "lint:contracts": {
       "outputs": []
     },
+    "test:security-headers-contract": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "outputs": []
+    },
     "check:tokens": {
       "cache": false,
       "outputs": []

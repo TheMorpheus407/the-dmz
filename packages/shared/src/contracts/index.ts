@@ -74,3 +74,20 @@ export {
   type M1RateLimitPolicy,
   RateLimitCategory,
 } from './rate-limit-policy.js';
+
+export {
+  securityHeadersPolicySchema,
+  buildSecurityHeadersPolicy,
+  buildCspHeaderValue,
+  M1_WEB_SECURITY_HEADERS_POLICY,
+  ROUTE_GROUPS,
+  cspDirectiveNames,
+  securityHeaderNames,
+  trustedTypesDirectiveNames,
+  frameAncestorsModeSchema,
+  type SecurityHeadersPolicy,
+  type CspDirectives,
+  type EnvironmentMode,
+  type FrameAncestorsMode,
+  type SecurityRouteGroup,
+} from './security-headers.js';
