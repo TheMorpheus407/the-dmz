@@ -3,6 +3,73 @@ import { PASSWORD_RECOVERY_ERROR_CODES } from '@the-dmz/shared/contracts';
 
 import { AppError } from '../../shared/middleware/error-handler.js';
 
+export class OAuthError extends AppError {
+  constructor(options: {
+    code?: string;
+    message: string;
+    statusCode?: number;
+    details?: Record<string, unknown>;
+  }) {
+    super({
+      code: options.code ?? ErrorCodes.OAUTH_INVALID_CLIENT,
+      message: options.message,
+      statusCode: options.statusCode ?? 401,
+      ...(options.details !== undefined && { details: options.details }),
+    });
+  }
+}
+
+export class OAuthInvalidClientError extends OAuthError {
+  constructor() {
+    super({
+      code: ErrorCodes.OAUTH_INVALID_CLIENT,
+      message: 'Invalid client credentials',
+      statusCode: 401,
+    });
+  }
+}
+
+export class OAuthInvalidGrantError extends OAuthError {
+  constructor() {
+    super({
+      code: ErrorCodes.OAUTH_INVALID_GRANT,
+      message: 'Invalid grant type',
+      statusCode: 400,
+    });
+  }
+}
+
+export class OAuthInsufficientScopeError extends OAuthError {
+  constructor(requestedScope: string, requiredScope: string) {
+    super({
+      code: ErrorCodes.OAUTH_INSUFFICIENT_SCOPE,
+      message: 'Insufficient scope for this request',
+      statusCode: 403,
+      details: { requestedScope, requiredScope },
+    });
+  }
+}
+
+export class OAuthClientRevokedError extends OAuthError {
+  constructor() {
+    super({
+      code: ErrorCodes.OAUTH_CLIENT_REVOKED,
+      message: 'OAuth client has been revoked',
+      statusCode: 401,
+    });
+  }
+}
+
+export class OAuthClientExpiredError extends OAuthError {
+  constructor() {
+    super({
+      code: ErrorCodes.OAUTH_CLIENT_EXPIRED,
+      message: 'OAuth client has expired',
+      statusCode: 401,
+    });
+  }
+}
+
 export class AuthError extends AppError {
   constructor(options: {
     code?: string;

@@ -1,3 +1,4 @@
+export * from './oauth-clients.js';
 export * from './password-reset-tokens.js';
 export * from './permissions.js';
 export * from './role-permissions.js';

@@ -100,6 +100,11 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [JWT_ERROR_CODES.AUTH_JWT_MISSING_KEY_ID]: 401,
   [JWT_ERROR_CODES.AUTH_JWK_NOT_FOUND]: 401,
   [JWT_ERROR_CODES.AUTH_JWT_SIGNING_ERROR]: 500,
+  [SharedErrorCodes.OAUTH_INVALID_CLIENT]: 401,
+  [SharedErrorCodes.OAUTH_INVALID_GRANT]: 400,
+  [SharedErrorCodes.OAUTH_INSUFFICIENT_SCOPE]: 403,
+  [SharedErrorCodes.OAUTH_CLIENT_REVOKED]: 401,
+  [SharedErrorCodes.OAUTH_CLIENT_EXPIRED]: 401,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -170,6 +175,11 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [JWT_ERROR_CODES.AUTH_JWT_MISSING_KEY_ID]: 'Token is missing required key ID header',
   [JWT_ERROR_CODES.AUTH_JWK_NOT_FOUND]: 'No valid signing key found',
   [JWT_ERROR_CODES.AUTH_JWT_SIGNING_ERROR]: 'Failed to sign token',
+  [SharedErrorCodes.OAUTH_INVALID_CLIENT]: 'Invalid client credentials',
+  [SharedErrorCodes.OAUTH_INVALID_GRANT]: 'Invalid grant type',
+  [SharedErrorCodes.OAUTH_INSUFFICIENT_SCOPE]: 'Insufficient scope for this request',
+  [SharedErrorCodes.OAUTH_CLIENT_REVOKED]: 'OAuth client has been revoked',
+  [SharedErrorCodes.OAUTH_CLIENT_EXPIRED]: 'OAuth client has expired',
 } as const;
 
 export type AppErrorOptions = {

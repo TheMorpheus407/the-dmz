@@ -38,6 +38,10 @@ import {
   createAuthLoginFailedEvent,
   createAuthPasswordResetRequestedEvent,
   createAuthPasswordResetCompletedEvent,
+  createOAuthClientCreatedEvent,
+  createOAuthClientRotatedEvent,
+  createOAuthClientRevokedEvent,
+  createOAuthTokenIssuedEvent,
 } from './auth.events.js';
 import { validateCsrf, setCsrfCookie } from './csrf.js';
 import { setRefreshCookie, clearRefreshCookie, getRefreshCookieName } from './cookies.js';
@@ -837,6 +841,365 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         }
         throw error;
       }
+    },
+  );
+
+  fastify.post<{
+    Body: { grant_type: string; client_id: string; client_secret: string; scope?: string };
+  }>(
+    '/auth/oauth/token',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 20,
+              timeWindow: '1 minute',
+            },
+      },
+      schema: {
+        body: {
+          type: 'object',
+          required: ['grant_type', 'client_id', 'client_secret'],
+          properties: {
+            grant_type: { type: 'string', enum: ['client_credentials'] },
+            client_id: { type: 'string', format: 'uuid' },
+            client_secret: { type: 'string', minLength: 1 },
+            scope: { type: 'string' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              access_token: { type: 'string' },
+              token_type: { type: 'string', enum: ['Bearer'] },
+              expires_in: { type: 'integer' },
+              scope: { type: 'string' },
+            },
+            required: ['access_token', 'token_type', 'expires_in', 'scope'],
+          },
+          400: errorResponseSchemas.BadRequest,
+          401: errorResponseSchemas.Unauthorized,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const { grant_type, client_id, client_secret, scope } = request.body;
+
+      if (grant_type !== 'client_credentials') {
+        throw new AuthError({
+          message: 'Invalid grant type',
+          statusCode: 400,
+        });
+      }
+
+      try {
+        const client = await authService.findOAuthClientByClientIdOnly(config, client_id);
+        if (!client) {
+          throw new AuthError({
+            message: 'Invalid client credentials',
+            statusCode: 401,
+          });
+        }
+
+        const tokenResponse = await authService.issueClientCredentialsToken(config, {
+          clientId: client_id,
+          clientSecret: client_secret,
+          tenantId: client.tenantId,
+          ...(scope && { scope }),
+        });
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createOAuthTokenIssuedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: client.tenantId,
+            version: 1,
+            payload: {
+              clientId: client_id,
+              tenantId: client.tenantId,
+              scopes: tokenResponse.scope.split(' '),
+            },
+          }),
+        );
+
+        return tokenResponse;
+      } catch (err) {
+        if (err instanceof AuthError) {
+          throw err;
+        }
+        throw new AuthError({
+          message: 'Invalid client credentials',
+          statusCode: 401,
+        });
+      }
+    },
+  );
+
+  fastify.get(
+    '/auth/oauth/clients',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              clients: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    clientId: { type: 'string', format: 'uuid' },
+                    name: { type: 'string' },
+                    tenantId: { type: 'string', format: 'uuid' },
+                    scopes: { type: 'array', items: { type: 'string' } },
+                    createdAt: { type: 'string', format: 'date-time' },
+                    expiresAt: { type: 'string', format: 'date-time', nullable: true },
+                    revokedAt: { type: 'string', format: 'date-time', nullable: true },
+                    lastUsedAt: { type: 'string', format: 'date-time', nullable: true },
+                  },
+                },
+              },
+            },
+          },
+          403: errorResponseSchemas.TenantInactive,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const clients = await authService.listOAuthClients(config, user.tenantId);
+      return { clients };
+    },
+  );
+
+  fastify.post<{ Body: { name: string; scopes: string[] } }>(
+    '/auth/oauth/clients',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        body: {
+          type: 'object',
+          required: ['name', 'scopes'],
+          properties: {
+            name: { type: 'string', minLength: 1, maxLength: 255 },
+            scopes: {
+              type: 'array',
+              items: { type: 'string', enum: ['scim.read', 'scim.write'] },
+              minItems: 1,
+            },
+          },
+        },
+        response: {
+          201: {
+            type: 'object',
+            properties: {
+              clientId: { type: 'string', format: 'uuid' },
+              clientSecret: { type: 'string' },
+              name: { type: 'string' },
+              tenantId: { type: 'string', format: 'uuid' },
+              scopes: { type: 'array', items: { type: 'string' } },
+              expiresAt: { type: 'string', format: 'date-time', nullable: true },
+            },
+            required: ['clientId', 'clientSecret', 'name', 'tenantId', 'scopes', 'expiresAt'],
+          },
+          400: errorResponseSchemas.BadRequest,
+          403: errorResponseSchemas.TenantInactive,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = request.user as AuthenticatedUser;
+      const { name, scopes } = request.body;
+
+      const result = await authService.createOAuthClient(config, {
+        name,
+        tenantId: user.tenantId,
+        scopes,
+      });
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createOAuthClientCreatedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: user.tenantId,
+          version: 1,
+          payload: {
+            clientId: result.clientId,
+            name: result.name,
+            tenantId: result.tenantId,
+            scopes: result.scopes,
+          },
+        }),
+      );
+
+      reply.code(201);
+      return result;
+    },
+  );
+
+  fastify.post<{ Params: { id: string } }>(
+    '/auth/oauth/clients/:id/rotate',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+          },
+          required: ['id'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              clientSecret: { type: 'string' },
+            },
+            required: ['clientSecret'],
+          },
+          403: errorResponseSchemas.TenantInactive,
+          404: errorResponseSchemas.NotFound,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const { id } = request.params;
+
+      const existingClient = await authService.findOAuthClientByClientIdOnly(config, id);
+      if (!existingClient) {
+        throw new AuthError({
+          message: 'OAuth client not found',
+          statusCode: 404,
+        });
+      }
+
+      const result = await authService.rotateOAuthClientSecret(config, id, user.tenantId);
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createOAuthClientRotatedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: user.tenantId,
+          version: 1,
+          payload: {
+            clientId: id,
+            name: existingClient.name,
+            tenantId: user.tenantId,
+          },
+        }),
+      );
+
+      return result;
+    },
+  );
+
+  fastify.post<{ Params: { id: string } }>(
+    '/auth/oauth/clients/:id/revoke',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+          },
+          required: ['id'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+            },
+            required: ['success'],
+          },
+          403: errorResponseSchemas.TenantInactive,
+          404: errorResponseSchemas.NotFound,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const { id } = request.params;
+
+      const existingClient = await authService.findOAuthClientByClientIdOnly(config, id);
+      if (!existingClient) {
+        throw new AuthError({
+          message: 'OAuth client not found',
+          statusCode: 404,
+        });
+      }
+
+      await authService.revokeOAuthClient(config, id, user.tenantId);
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createOAuthClientRevokedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: user.tenantId,
+          version: 1,
+          payload: {
+            clientId: id,
+            name: existingClient.name,
+            tenantId: user.tenantId,
+            reason: 'admin_revocation',
+          },
+        }),
+      );
+
+      return { success: true };
+    },
+  );
+
+  fastify.delete<{ Params: { id: string } }>(
+    '/auth/oauth/clients/:id',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+          },
+          required: ['id'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+            },
+            required: ['success'],
+          },
+          403: errorResponseSchemas.TenantInactive,
+          404: errorResponseSchemas.NotFound,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const { id } = request.params;
+
+      await authService.deleteOAuthClient(config, id, user.tenantId);
+      return { success: true };
     },
   );
 };

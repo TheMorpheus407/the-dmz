@@ -64,6 +64,11 @@ export const ErrorCodes = {
   AUTH_PASSWORD_TOO_WEAK: 'AUTH_PASSWORD_TOO_WEAK',
   AUTH_PASSWORD_COMPROMISED: 'AUTH_PASSWORD_COMPROMISED',
   AUTH_PASSWORD_POLICY_VIOLATION: 'AUTH_PASSWORD_POLICY_VIOLATION',
+  OAUTH_INVALID_CLIENT: 'OAUTH_INVALID_CLIENT',
+  OAUTH_INVALID_GRANT: 'OAUTH_INVALID_GRANT',
+  OAUTH_INSUFFICIENT_SCOPE: 'OAUTH_INSUFFICIENT_SCOPE',
+  OAUTH_CLIENT_REVOKED: 'OAUTH_CLIENT_REVOKED',
+  OAUTH_CLIENT_EXPIRED: 'OAUTH_CLIENT_EXPIRED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -329,6 +334,31 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.VALIDATION,
     retryable: false,
     messageKey: 'errors.auth.passwordPolicyViolation',
+  },
+  [ErrorCodes.OAUTH_INVALID_CLIENT]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.oauth.invalidClient',
+  },
+  [ErrorCodes.OAUTH_INVALID_GRANT]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.oauth.invalidGrant',
+  },
+  [ErrorCodes.OAUTH_INSUFFICIENT_SCOPE]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.oauth.insufficientScope',
+  },
+  [ErrorCodes.OAUTH_CLIENT_REVOKED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.oauth.clientRevoked',
+  },
+  [ErrorCodes.OAUTH_CLIENT_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.oauth.clientExpired',
   },
 };
 

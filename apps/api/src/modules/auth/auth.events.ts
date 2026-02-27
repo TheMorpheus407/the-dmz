@@ -19,6 +19,12 @@ export const AUTH_EVENTS = {
   JWT_SIGNING_KEY_CREATED: 'jwt.' + 'signing_key.created',
   JWT_SIGNING_KEY_ROTATED: 'jwt.' + 'signing_key.rotated',
   JWT_SIGNING_KEY_REVOKED: 'jwt.' + 'signing_key.revoked',
+  OAUTH_CLIENT_CREATED: 'auth.oauth_client.created',
+  OAUTH_CLIENT_ROTATED: 'auth.oauth_client.rotated',
+  OAUTH_CLIENT_REVOKED: 'auth.oauth_client.revoked',
+  OAUTH_TOKEN_ISSUED: 'auth.oauth_token.issued',
+  OAUTH_TOKEN_REVOKED: 'auth.oauth_token.revoked',
+  OAUTH_SCOPE_DENIED: 'auth.oauth_scope_denied',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -159,6 +165,39 @@ export interface JWTSigningKeyRevokedPayload {
   reason: string;
 }
 
+export interface OAuthClientCreatedPayload {
+  clientId: string;
+  name: string;
+  tenantId: string;
+  scopes: string[];
+}
+
+export interface OAuthClientRotatedPayload {
+  clientId: string;
+  name: string;
+  tenantId: string;
+}
+
+export interface OAuthClientRevokedPayload {
+  clientId: string;
+  name: string;
+  tenantId: string;
+  reason: string;
+}
+
+export interface OAuthTokenIssuedPayload {
+  clientId: string;
+  tenantId: string;
+  scopes: string[];
+}
+
+export interface OAuthScopeDeniedPayload {
+  clientId: string;
+  tenantId: string;
+  requestedScope: string;
+  requiredScope: string;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -178,6 +217,11 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.JWT_SIGNING_KEY_CREATED]: JWTSigningKeyCreatedPayload;
   [AUTH_EVENTS.JWT_SIGNING_KEY_ROTATED]: JWTSigningKeyRotatedPayload;
   [AUTH_EVENTS.JWT_SIGNING_KEY_REVOKED]: JWTSigningKeyRevokedPayload;
+  [AUTH_EVENTS.OAUTH_CLIENT_CREATED]: OAuthClientCreatedPayload;
+  [AUTH_EVENTS.OAUTH_CLIENT_ROTATED]: OAuthClientRotatedPayload;
+  [AUTH_EVENTS.OAUTH_CLIENT_REVOKED]: OAuthClientRevokedPayload;
+  [AUTH_EVENTS.OAUTH_TOKEN_ISSUED]: OAuthTokenIssuedPayload;
+  [AUTH_EVENTS.OAUTH_SCOPE_DENIED]: OAuthScopeDeniedPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -481,6 +525,93 @@ export const createAuthMfaRecoveryCodesUsedEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+interface BaseOAuthEventParams {
+  source: string;
+  correlationId: string;
+  tenantId: string;
+  version: number;
+}
+
+export const createOAuthClientCreatedEvent = (
+  params: BaseOAuthEventParams & { payload: OAuthClientCreatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_CLIENT_CREATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.OAUTH_CLIENT_CREATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createOAuthClientRotatedEvent = (
+  params: BaseOAuthEventParams & { payload: OAuthClientRotatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_CLIENT_ROTATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.OAUTH_CLIENT_ROTATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createOAuthClientRevokedEvent = (
+  params: BaseOAuthEventParams & { payload: OAuthClientRevokedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_CLIENT_REVOKED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.OAUTH_CLIENT_REVOKED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createOAuthTokenIssuedEvent = (
+  params: BaseOAuthEventParams & { payload: OAuthTokenIssuedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_TOKEN_ISSUED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.OAUTH_TOKEN_ISSUED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createOAuthScopeDeniedEvent = (
+  params: BaseOAuthEventParams & { payload: OAuthScopeDeniedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_SCOPE_DENIED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.OAUTH_SCOPE_DENIED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
     source: params.source,
     version: params.version,
     payload: params.payload,

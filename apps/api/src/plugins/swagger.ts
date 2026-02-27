@@ -42,6 +42,18 @@ const swaggerPluginImpl: FastifyPluginAsync = async (fastify) => {
             in: 'header',
             name: 'x-csrf-token',
           },
+          oauth2: {
+            type: 'oauth2',
+            flows: {
+              clientCredentials: {
+                tokenUrl: '/api/v1/auth/oauth/token',
+                scopes: {
+                  'scim.read': 'Read access to SCIM resources',
+                  'scim.write': 'Write access to SCIM resources',
+                },
+              },
+            },
+          },
         },
       },
     },

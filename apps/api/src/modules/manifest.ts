@@ -36,6 +36,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus'],
       startupFlags: { required: true, diagnostics: true },
     },
+    {
+      name: 'scim',
+      pluginPath: './modules/scim/index.js',
+      routePrefix: '/scim',
+      dependencies: ['eventBus'],
+      startupFlags: { required: true, diagnostics: true },
+    },
   ],
 };
 
