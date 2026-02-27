@@ -43,6 +43,9 @@ import {
   createOAuthClientRevokedEvent,
   createOAuthTokenIssuedEvent,
   createAuthSessionRevokedFederatedEvent,
+  createAuthSessionRevokedAdminEvent,
+  createAuthSessionRevokedUserAllEvent,
+  createAuthSessionRevokedTenantAllEvent,
 } from './auth.events.js';
 import { validateCsrf, setCsrfCookie } from './csrf.js';
 import { setRefreshCookie, clearRefreshCookie, getRefreshCookieName } from './cookies.js';
@@ -1361,6 +1364,314 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       );
 
       return { sessionsRevoked: result.sessionsRevoked };
+    },
+  );
+
+  const sessionListQueryJsonSchema = {
+    type: 'object',
+    properties: {
+      userId: { type: 'string', format: 'uuid' },
+      status: { type: 'string', enum: ['active', 'expired', 'revoked'] },
+      cursor: { type: 'string' },
+      limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
+    },
+  };
+
+  fastify.get<{
+    Querystring: { userId?: string; status?: string; cursor?: string; limit?: number };
+  }>(
+    '/auth/admin/sessions',
+    {
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'sessions:read'),
+      ],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        querystring: sessionListQueryJsonSchema,
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              sessions: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    sessionId: { type: 'string', format: 'uuid' },
+                    userId: { type: 'string', format: 'uuid' },
+                    userEmail: { type: 'string', format: 'email' },
+                    tenantId: { type: 'string', format: 'uuid' },
+                    createdAt: { type: 'string', format: 'date-time' },
+                    lastSeenAt: { type: 'string', format: 'date-time', nullable: true },
+                    expiresAt: { type: 'string', format: 'date-time' },
+                    deviceInfo: {
+                      type: 'object',
+                      properties: {
+                        userAgent: { type: 'string', nullable: true },
+                        ipAddress: { type: 'string', nullable: true },
+                      },
+                      nullable: true,
+                    },
+                    status: { type: 'string', enum: ['active', 'expired', 'revoked'] },
+                  },
+                  required: [
+                    'sessionId',
+                    'userId',
+                    'userEmail',
+                    'tenantId',
+                    'createdAt',
+                    'expiresAt',
+                    'status',
+                  ],
+                },
+              },
+              nextCursor: { type: 'string', nullable: true },
+              total: { type: 'number' },
+            },
+            required: ['sessions', 'total'],
+          },
+          403: errorResponseSchemas.TenantInactive,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const { userId, cursor, limit } = request.query;
+
+      const serviceInput: {
+        tenantId: string;
+        userId?: string;
+        cursor?: string;
+        limit?: number;
+      } = {
+        tenantId: user.tenantId,
+      };
+
+      if (userId) {
+        serviceInput.userId = userId;
+      }
+      if (cursor) {
+        serviceInput.cursor = cursor;
+      }
+      if (limit) {
+        serviceInput.limit = limit;
+      }
+
+      const sessions = await authService.listTenantSessions(config, serviceInput);
+
+      return {
+        sessions: sessions.sessions.map((s) => ({
+          sessionId: s.sessionId,
+          userId: s.userId,
+          userEmail: s.userEmail,
+          tenantId: s.tenantId,
+          createdAt: s.createdAt.toISOString(),
+          lastSeenAt: s.lastSeenAt?.toISOString() ?? null,
+          expiresAt: s.expiresAt.toISOString(),
+          deviceInfo: s.deviceInfo,
+          status: s.status,
+        })),
+        nextCursor: sessions.nextCursor ?? undefined,
+        total: sessions.total,
+      };
+    },
+  );
+
+  fastify.post<{ Params: { sessionId: string } }>(
+    '/auth/admin/sessions/:sessionId/revoke',
+    {
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'sessions:revoke'),
+      ],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            sessionId: { type: 'string', format: 'uuid' },
+          },
+          required: ['sessionId'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              result: {
+                type: 'string',
+                enum: ['revoked', 'already_revoked', 'not_found', 'forbidden', 'failed'],
+              },
+              sessionId: { type: 'string', format: 'uuid' },
+              reason: { type: 'string' },
+            },
+            required: ['result', 'sessionId', 'reason'],
+          },
+          403: errorResponseSchemas.TenantInactive,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const { sessionId } = request.params;
+
+      const result = await authService.revokeSingleSession(config, {
+        sessionId,
+        tenantId: user.tenantId,
+      });
+
+      if (result.result === 'revoked') {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createAuthSessionRevokedAdminEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: user.tenantId,
+            userId: user.userId,
+            version: 1,
+            payload: {
+              sessionId,
+              userId: user.userId,
+              tenantId: user.tenantId,
+              reason: 'admin_revoked',
+              initiatedBy: user.userId,
+              correlationId: request.id,
+            },
+          }),
+        );
+      }
+
+      return result;
+    },
+  );
+
+  fastify.delete<{ Params: { userId: string } }>(
+    '/auth/admin/sessions/user/:userId',
+    {
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'sessions:revoke'),
+      ],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            userId: { type: 'string', format: 'uuid' },
+          },
+          required: ['userId'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              result: {
+                type: 'string',
+                enum: ['revoked', 'already_revoked', 'not_found', 'forbidden', 'failed'],
+              },
+              sessionsRevoked: { type: 'number' },
+              reason: { type: 'string' },
+            },
+            required: ['result', 'sessionsRevoked', 'reason'],
+          },
+          403: errorResponseSchemas.TenantInactive,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const { userId } = request.params;
+
+      const result = await authService.revokeAllUserSessions(config, {
+        userId,
+        tenantId: user.tenantId,
+        initiatedBy: user.userId,
+      });
+
+      if (result.result === 'revoked') {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createAuthSessionRevokedUserAllEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: user.tenantId,
+            userId,
+            version: 1,
+            payload: {
+              userId,
+              tenantId: user.tenantId,
+              sessionsRevoked: result.sessionsRevoked,
+              reason: 'admin_revoked',
+              initiatedBy: user.userId,
+              correlationId: request.id,
+            },
+          }),
+        );
+      }
+
+      return result;
+    },
+  );
+
+  fastify.delete(
+    '/auth/admin/sessions',
+    {
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'sessions:revoke:tenant'),
+      ],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              result: { type: 'string', enum: ['revoked', 'failed'] },
+              sessionsRevoked: { type: 'number' },
+              reason: { type: 'string' },
+            },
+            required: ['result', 'sessionsRevoked', 'reason'],
+          },
+          403: errorResponseSchemas.TenantInactive,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+
+      const result = await authService.revokeAllTenantSessions(config, {
+        tenantId: user.tenantId,
+        initiatedBy: user.userId,
+      });
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createAuthSessionRevokedTenantAllEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: user.tenantId,
+          userId: user.userId,
+          version: 1,
+          payload: {
+            tenantId: user.tenantId,
+            sessionsRevoked: result.sessionsRevoked,
+            reason: 'tenant_wide_admin_revocation',
+            initiatedBy: user.userId,
+            correlationId: request.id,
+          },
+        }),
+      );
+
+      return result;
     },
   );
 };

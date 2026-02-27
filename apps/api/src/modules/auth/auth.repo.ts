@@ -1,4 +1,4 @@
-import { eq, and, sql, isNull } from 'drizzle-orm';
+import { eq, and, sql, isNull, lt, desc } from 'drizzle-orm';
 
 import { type DB } from '../../shared/database/connection.js';
 import { users } from '../../shared/database/schema/users.js';
@@ -856,4 +856,150 @@ export const deleteOAuthClient = async (
   await db
     .delete(oauthClients)
     .where(and(eq(oauthClients.clientId, clientId), eq(oauthClients.tenantId, tenantId)));
+};
+
+export interface SessionListItem {
+  id: string;
+  userId: string;
+  tenantId: string;
+  expiresAt: Date;
+  createdAt: Date;
+  lastActiveAt: Date | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+}
+
+export interface ListTenantSessionsParams {
+  tenantId: string;
+  userId?: string;
+  cursor?: string;
+  limit: number;
+}
+
+export const listTenantSessions = async (
+  db: DB,
+  params: ListTenantSessionsParams,
+): Promise<{ sessions: SessionListItem[]; nextCursor: string | undefined }> => {
+  const { tenantId, userId, cursor, limit } = params;
+
+  const conditions: ReturnType<typeof eq>[] = [];
+  conditions.push(eq(sessionsTable.tenantId, tenantId));
+
+  if (userId) {
+    conditions.push(eq(sessionsTable.userId, userId));
+  }
+
+  if (cursor) {
+    const cursorDate = new Date(cursor);
+    conditions.push(lt(sessionsTable.createdAt, cursorDate));
+  }
+
+  const baseWhere = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+  const results = await db
+    .select({
+      id: sessionsTable.id,
+      userId: sessionsTable.userId,
+      tenantId: sessionsTable.tenantId,
+      expiresAt: sessionsTable.expiresAt,
+      createdAt: sessionsTable.createdAt,
+      lastActiveAt: sessionsTable.lastActiveAt,
+      ipAddress: sessionsTable.ipAddress,
+      userAgent: sessionsTable.userAgent,
+    })
+    .from(sessionsTable)
+    .where(baseWhere)
+    .orderBy(desc(sessionsTable.createdAt))
+    .limit(limit + 1);
+
+  let nextCursor: string | undefined;
+  if (results.length > limit) {
+    const lastSession = results[limit - 1]!;
+    nextCursor = lastSession.createdAt.toISOString();
+    results.pop();
+  }
+
+  return { sessions: results, nextCursor };
+};
+
+export const findSessionWithUser = async (
+  db: DB,
+  sessionId: string,
+  tenantId: string,
+): Promise<(SessionListItem & { email: string }) | null> => {
+  const result = await db
+    .select({
+      id: sessionsTable.id,
+      userId: sessionsTable.userId,
+      tenantId: sessionsTable.tenantId,
+      expiresAt: sessionsTable.expiresAt,
+      createdAt: sessionsTable.createdAt,
+      lastActiveAt: sessionsTable.lastActiveAt,
+      ipAddress: sessionsTable.ipAddress,
+      userAgent: sessionsTable.userAgent,
+      email: users.email,
+    })
+    .from(sessionsTable)
+    .leftJoin(
+      users,
+      and(eq(sessionsTable.userId, users.userId), eq(sessionsTable.tenantId, users.tenantId)),
+    )
+    .where(and(eq(sessionsTable.id, sessionId), eq(sessionsTable.tenantId, tenantId)))
+    .limit(1);
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  const row = result[0]!;
+  return {
+    id: row.id,
+    userId: row.userId,
+    tenantId: row.tenantId,
+    expiresAt: row.expiresAt,
+    createdAt: row.createdAt,
+    lastActiveAt: row.lastActiveAt,
+    ipAddress: row.ipAddress,
+    userAgent: row.userAgent,
+    email: row.email ?? '',
+  };
+};
+
+export const revokeSessionById = async (
+  db: DB,
+  sessionId: string,
+  tenantId: string,
+): Promise<{ success: boolean; alreadyRevoked: boolean }> => {
+  const session = await db.query.sessions.findFirst({
+    where: and(eq(sessionsTable.id, sessionId), eq(sessionsTable.tenantId, tenantId)),
+  });
+
+  if (!session) {
+    return { success: false, alreadyRevoked: false };
+  }
+
+  await db.delete(sessionsTable).where(eq(sessionsTable.id, sessionId));
+
+  return { success: true, alreadyRevoked: false };
+};
+
+export const countTenantSessions = async (
+  db: DB,
+  tenantId: string,
+  userId?: string,
+): Promise<number> => {
+  const conditions = [eq(sessionsTable.tenantId, tenantId)];
+
+  if (userId) {
+    conditions.push(eq(sessionsTable.userId, userId));
+  }
+
+  const whereClause = conditions.length > 1 ? and(...conditions) : conditions[0];
+
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(sessionsTable)
+    .where(whereClause);
+
+  return result[0]?.count ?? 0;
 };

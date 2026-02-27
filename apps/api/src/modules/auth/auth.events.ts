@@ -58,6 +58,10 @@ export const AUTH_EVENTS = {
   SESSION_REVOKED_FEDERATED: 'auth.session.revoked.federated',
   SESSION_REVOCATION_FAILED: 'auth.session.revocation.failed',
   SESSION_REVOCATION_IGNORED: 'auth.session.revocation.ignored',
+  SESSION_REVOKED_ADMIN: 'auth.session.revoked.admin',
+  SESSION_REVOKED_USER_ALL: 'auth.session.revoked.user_all',
+  SESSION_REVOKED_TENANT_ALL: 'auth.session.revoked.tenant_all',
+  SESSION_REVOCATION_DENIED: 'auth.session.revocation.denied',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -509,6 +513,41 @@ export interface AuthSessionRevocationIgnoredPayload {
   correlationId: string;
 }
 
+export interface AuthSessionRevokedAdminPayload {
+  sessionId: string;
+  userId: string;
+  tenantId: string;
+  reason: 'admin_revoked';
+  initiatedBy: string;
+  correlationId: string;
+}
+
+export interface AuthSessionRevokedUserAllPayload {
+  userId: string;
+  tenantId: string;
+  sessionsRevoked: number;
+  reason: 'admin_revoked';
+  initiatedBy: string;
+  correlationId: string;
+}
+
+export interface AuthSessionRevokedTenantAllPayload {
+  tenantId: string;
+  sessionsRevoked: number;
+  reason: 'tenant_wide_admin_revocation';
+  initiatedBy: string;
+  correlationId: string;
+}
+
+export interface AuthSessionRevocationDeniedPayload {
+  sessionId?: string;
+  userId?: string;
+  tenantId: string;
+  reason: string;
+  initiatedBy: string;
+  correlationId: string;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -566,6 +605,10 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.SESSION_REVOKED_FEDERATED]: AuthSessionRevokedFederatedPayload;
   [AUTH_EVENTS.SESSION_REVOCATION_FAILED]: AuthSessionRevocationFailedPayload;
   [AUTH_EVENTS.SESSION_REVOCATION_IGNORED]: AuthSessionRevocationIgnoredPayload;
+  [AUTH_EVENTS.SESSION_REVOKED_ADMIN]: AuthSessionRevokedAdminPayload;
+  [AUTH_EVENTS.SESSION_REVOKED_USER_ALL]: AuthSessionRevokedUserAllPayload;
+  [AUTH_EVENTS.SESSION_REVOKED_TENANT_ALL]: AuthSessionRevokedTenantAllPayload;
+  [AUTH_EVENTS.SESSION_REVOCATION_DENIED]: AuthSessionRevocationDeniedPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -1491,6 +1534,70 @@ export const createAuthSessionRevocationIgnoredEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: params.payload.userId ?? '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthSessionRevokedAdminEvent = (
+  params: BaseAuthEventParams & { payload: AuthSessionRevokedAdminPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOKED_ADMIN> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SESSION_REVOKED_ADMIN,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthSessionRevokedUserAllEvent = (
+  params: BaseAuthEventParams & { payload: AuthSessionRevokedUserAllPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOKED_USER_ALL> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SESSION_REVOKED_USER_ALL,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthSessionRevokedTenantAllEvent = (
+  params: BaseAuthEventParams & { payload: AuthSessionRevokedTenantAllPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOKED_TENANT_ALL> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SESSION_REVOKED_TENANT_ALL,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.initiatedBy,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthSessionRevocationDeniedEvent = (
+  params: BaseAuthEventParams & { payload: AuthSessionRevocationDeniedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOCATION_DENIED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SESSION_REVOCATION_DENIED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.initiatedBy,
     source: params.source,
     version: params.version,
     payload: params.payload,
