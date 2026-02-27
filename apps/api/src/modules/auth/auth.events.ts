@@ -37,6 +37,15 @@ export const AUTH_EVENTS = {
   SSO_JIT_DENIED: 'auth.sso.jit.denied',
   SSO_METADATA_REFRESHED: 'auth.sso.metadata.refreshed',
   SSO_METADATA_FAILED: 'auth.sso.metadata.failed',
+  SCIM_USER_PROVISIONED: 'auth.scim.user.provisioned',
+  SCIM_USER_UPDATED: 'auth.scim.user.updated',
+  SCIM_USER_DEPROVISIONED: 'auth.scim.user.deprovisioned',
+  SCIM_USER_REACTIVATED: 'auth.scim.user.reactivated',
+  SCIM_GROUP_PROVISIONED: 'auth.scim.group.provisioned',
+  SCIM_GROUP_UPDATED: 'auth.scim.group.updated',
+  SCIM_GROUP_DELETED: 'auth.scim.group.deleted',
+  SCIM_GROUP_MEMBERSHIP_CHANGED: 'auth.scim.group.membership_changed',
+  SCIM_JIT_RECONCILIATION: 'auth.scim.jit.reconciliation',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -310,6 +319,74 @@ export interface SSOMetadataFailedPayload {
   correlationId: string;
 }
 
+export interface SCIMUserProvisionedPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  lifecycleOutcome: string;
+  idempotencyKey: string;
+  externalId?: string;
+}
+
+export interface SCIMUserUpdatedPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  changes: string[];
+  lifecycleOutcome: string;
+}
+
+export interface SCIMUserDeprovisionedPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  reason: 'deactivate' | 'delete';
+  sessionsRevoked: number;
+}
+
+export interface SCIMUserReactivatedPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+}
+
+export interface SCIMGroupProvisionedPayload {
+  groupId: string;
+  name: string;
+  tenantId: string;
+  lifecycleOutcome: string;
+}
+
+export interface SCIMGroupUpdatedPayload {
+  groupId: string;
+  name: string;
+  tenantId: string;
+  changes: string[];
+}
+
+export interface SCIMGroupDeletedPayload {
+  groupId: string;
+  name: string;
+  tenantId: string;
+}
+
+export interface SCIMGroupMembershipChangedPayload {
+  groupId: string;
+  groupName: string;
+  tenantId: string;
+  userIdsAdded: string[];
+  userIdsRemoved: string[];
+}
+
+export interface SCIMJitReconciliationPayload {
+  tenantId: string;
+  scimUserId?: string;
+  jitUserId: string;
+  email: string;
+  outcome: string;
+  reason: string;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -346,6 +423,15 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.SSO_JIT_DENIED]: SSOJitDeniedPayload;
   [AUTH_EVENTS.SSO_METADATA_REFRESHED]: SSOMetadataRefreshedPayload;
   [AUTH_EVENTS.SSO_METADATA_FAILED]: SSOMetadataFailedPayload;
+  [AUTH_EVENTS.SCIM_USER_PROVISIONED]: SCIMUserProvisionedPayload;
+  [AUTH_EVENTS.SCIM_USER_UPDATED]: SCIMUserUpdatedPayload;
+  [AUTH_EVENTS.SCIM_USER_DEPROVISIONED]: SCIMUserDeprovisionedPayload;
+  [AUTH_EVENTS.SCIM_USER_REACTIVATED]: SCIMUserReactivatedPayload;
+  [AUTH_EVENTS.SCIM_GROUP_PROVISIONED]: SCIMGroupProvisionedPayload;
+  [AUTH_EVENTS.SCIM_GROUP_UPDATED]: SCIMGroupUpdatedPayload;
+  [AUTH_EVENTS.SCIM_GROUP_DELETED]: SCIMGroupDeletedPayload;
+  [AUTH_EVENTS.SCIM_GROUP_MEMBERSHIP_CHANGED]: SCIMGroupMembershipChangedPayload;
+  [AUTH_EVENTS.SCIM_JIT_RECONCILIATION]: SCIMJitReconciliationPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -935,6 +1021,150 @@ export const createSSOMetadataFailedEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSCIMUserProvisionedEvent = (
+  params: BaseAuthEventParams & { payload: SCIMUserProvisionedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_USER_PROVISIONED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SCIM_USER_PROVISIONED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSCIMUserUpdatedEvent = (
+  params: BaseAuthEventParams & { payload: SCIMUserUpdatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_USER_UPDATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SCIM_USER_UPDATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSCIMUserDeprovisionedEvent = (
+  params: BaseAuthEventParams & { payload: SCIMUserDeprovisionedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_USER_DEPROVISIONED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SCIM_USER_DEPROVISIONED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSCIMUserReactivatedEvent = (
+  params: BaseAuthEventParams & { payload: SCIMUserReactivatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_USER_REACTIVATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SCIM_USER_REACTIVATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSCIMGroupProvisionedEvent = (
+  params: BaseAuthEventParams & { payload: SCIMGroupProvisionedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_GROUP_PROVISIONED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SCIM_GROUP_PROVISIONED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSCIMGroupUpdatedEvent = (
+  params: BaseAuthEventParams & { payload: SCIMGroupUpdatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_GROUP_UPDATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SCIM_GROUP_UPDATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSCIMGroupDeletedEvent = (
+  params: BaseAuthEventParams & { payload: SCIMGroupDeletedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_GROUP_DELETED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SCIM_GROUP_DELETED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSCIMGroupMembershipChangedEvent = (
+  params: BaseAuthEventParams & { payload: SCIMGroupMembershipChangedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_GROUP_MEMBERSHIP_CHANGED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SCIM_GROUP_MEMBERSHIP_CHANGED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSCIMJitReconciliationEvent = (
+  params: BaseAuthEventParams & { payload: SCIMJitReconciliationPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_JIT_RECONCILIATION> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SCIM_JIT_RECONCILIATION,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.scimUserId ?? params.payload.jitUserId,
     source: params.source,
     version: params.version,
     payload: params.payload,

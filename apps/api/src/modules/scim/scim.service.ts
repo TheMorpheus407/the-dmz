@@ -2,6 +2,8 @@ import { randomUUID } from 'crypto';
 
 import { eq, and, ilike, asc } from 'drizzle-orm';
 
+import { SCIM_LIFECYCLE_CONTRACT_V1, SCIM_ADMIN_PROTECTED_FIELDS } from '@the-dmz/shared/auth';
+
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { users } from '../../shared/database/schema/users.js';
 
@@ -13,6 +15,38 @@ import type {
   SCIMBulkRequest,
   SCIMBulkResponse,
 } from './scim.types.js';
+
+const SCIM_ERRORS = {
+  INVALID_REQUEST: 'SCIM_INVALID_REQUEST',
+  USER_NOT_FOUND: 'SCIM_USER_NOT_FOUND',
+  USER_ALREADY_EXISTS: 'SCIM_USER_ALREADY_EXISTS',
+  GROUP_NOT_FOUND: 'SCIM_GROUP_NOT_FOUND',
+  GROUP_ALREADY_EXISTS: 'SCIM_GROUP_ALREADY_EXISTS',
+  INVALID_FILTER: 'SCIM_INVALID_FILTER',
+  TENANT_MISMATCH: 'SCIM_TENANT_MISMATCH',
+  IDEMPOTENCY_KEY_CONFLICT: 'SCIM_IDEMPOTENCY_KEY_CONFLICT',
+} as const;
+
+export class SCIMError extends Error {
+  constructor(
+    public readonly code: (typeof SCIM_ERRORS)[keyof typeof SCIM_ERRORS],
+    message: string,
+    public readonly statusCode: number = 400,
+    public readonly correlationId?: string,
+  ) {
+    super(message);
+    this.name = 'SCIMError';
+  }
+
+  toJSON() {
+    return {
+      schemas: ['urn:ietf:params:scim:api:messages:2.0:Error'],
+      status: this.statusCode.toString(),
+      scimType: this.code,
+      detail: this.message,
+    };
+  }
+}
 
 interface DbUser {
   userId: string;
@@ -69,6 +103,38 @@ const buildScimGroupResponse = (group: DbGroup): SCIMGroup & { schemas: string[]
   };
 };
 
+const validateFilter = (filter: string | undefined): void => {
+  if (!filter) return;
+
+  const validFilters = [
+    /^userName eq ".*"$/,
+    /^userName sw ".*"$/,
+    /^email eq ".*"$/,
+    /^active eq (true|false)$/,
+    /^displayName eq ".*"$/,
+  ];
+
+  const isValid = validFilters.some((regex) => regex.test(filter));
+  if (!isValid) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_FILTER, `Invalid filter syntax: ${filter}`, 400);
+  }
+};
+
+const checkIdempotency = async (
+  config: AppConfig,
+  tenantId: string,
+  idempotencyKey: string,
+): Promise<DbUser | null> => {
+  const db = getDatabaseClient(config);
+  const existing = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.tenantId, tenantId), eq(users.email as never, idempotencyKey)))
+    .limit(1);
+
+  return existing[0] ?? null;
+};
+
 export const listScimUsers = async (
   config: AppConfig,
   tenantId: string,
@@ -81,7 +147,11 @@ export const listScimUsers = async (
   const db = getDatabaseClient(config);
 
   const startIndex = options?.startIndex ?? 1;
-  const count = options?.count ?? 100;
+  const count = Math.min(options?.count ?? 100, 1000);
+
+  if (options?.filter) {
+    validateFilter(options.filter);
+  }
 
   let query = db.select().from(users).where(eq(users.tenantId, tenantId));
 
@@ -121,7 +191,7 @@ export const getScimUser = async (
     .where(and(eq(users.userId, userId), eq(users.tenantId, tenantId)));
 
   if (!user) {
-    throw new Error('User not found');
+    throw new SCIMError(SCIM_ERRORS.USER_NOT_FOUND, 'User not found', 404);
   }
 
   return buildScimUserResponse(user);
@@ -130,9 +200,39 @@ export const getScimUser = async (
 export const createScimUser = async (
   config: AppConfig,
   tenantId: string,
-  userData: SCIMUser,
+  userData: SCIMUser & { idempotencyKey?: string },
 ): Promise<SCIMUser & { schemas: string[] }> => {
   const db = getDatabaseClient(config);
+
+  if (userData.idempotencyKey) {
+    const existing = await checkIdempotency(config, tenantId, userData.idempotencyKey);
+    if (existing) {
+      return buildScimUserResponse(existing);
+    }
+  }
+
+  const [existingByEmail] = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.tenantId, tenantId), eq(users.email, userData.userName)));
+
+  if (existingByEmail) {
+    throw new SCIMError(
+      SCIM_ERRORS.USER_ALREADY_EXISTS,
+      `User with userName ${userData.userName} already exists`,
+      409,
+    );
+  }
+
+  for (const protectedField of SCIM_ADMIN_PROTECTED_FIELDS) {
+    if (userData[protectedField as keyof typeof userData] !== undefined) {
+      throw new SCIMError(
+        SCIM_ERRORS.INVALID_REQUEST,
+        `Cannot set admin-protected field: ${protectedField}`,
+        400,
+      );
+    }
+  }
 
   const userId = randomUUID();
   const now = new Date();
@@ -152,7 +252,7 @@ export const createScimUser = async (
   const [createdUser] = await db.select().from(users).where(eq(users.userId, userId));
 
   if (!createdUser) {
-    throw new Error('Failed to create user');
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to create user', 500);
   }
 
   return buildScimUserResponse(createdUser);
@@ -172,7 +272,17 @@ export const updateScimUser = async (
     .where(and(eq(users.userId, userId), eq(users.tenantId, tenantId)));
 
   if (!existing) {
-    throw new Error('User not found');
+    throw new SCIMError(SCIM_ERRORS.USER_NOT_FOUND, 'User not found', 404);
+  }
+
+  for (const protectedField of SCIM_ADMIN_PROTECTED_FIELDS) {
+    if (userData[protectedField as keyof typeof userData] !== undefined) {
+      throw new SCIMError(
+        SCIM_ERRORS.INVALID_REQUEST,
+        `Cannot modify admin-protected field: ${protectedField}`,
+        400,
+      );
+    }
   }
 
   const updates: Record<string, unknown> = {
@@ -200,7 +310,7 @@ export const updateScimUser = async (
   const [updatedUser] = await db.select().from(users).where(eq(users.userId, userId));
 
   if (!updatedUser) {
-    throw new Error('Failed to update user');
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to update user', 500);
   }
 
   return buildScimUserResponse(updatedUser);
@@ -219,13 +329,47 @@ export const deleteScimUser = async (
     .where(and(eq(users.userId, userId), eq(users.tenantId, tenantId)));
 
   if (!existing) {
-    throw new Error('User not found');
+    throw new SCIMError(SCIM_ERRORS.USER_NOT_FOUND, 'User not found', 404);
+  }
+
+  if (SCIM_LIFECYCLE_CONTRACT_V1.softDeleteOnDeprovision) {
+    await db
+      .update(users)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(users.userId, userId));
+  } else {
+    await db.delete(users).where(eq(users.userId, userId));
+  }
+};
+
+export const reactivateScimUser = async (
+  config: AppConfig,
+  tenantId: string,
+  userId: string,
+): Promise<SCIMUser & { schemas: string[] }> => {
+  const db = getDatabaseClient(config);
+
+  const [existing] = await db
+    .select()
+    .from(users)
+    .where(and(eq(users.userId, userId), eq(users.tenantId, tenantId)));
+
+  if (!existing) {
+    throw new SCIMError(SCIM_ERRORS.USER_NOT_FOUND, 'User not found', 404);
   }
 
   await db
     .update(users)
-    .set({ isActive: false, updatedAt: new Date() })
+    .set({ isActive: true, updatedAt: new Date() })
     .where(eq(users.userId, userId));
+
+  const [reactivatedUser] = await db.select().from(users).where(eq(users.userId, userId));
+
+  if (!reactivatedUser) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to reactivate user', 500);
+  }
+
+  return buildScimUserResponse(reactivatedUser);
 };
 
 const mockGroups: Map<string, DbGroup> = new Map();
@@ -240,7 +384,11 @@ export const listScimGroups = async (
   },
 ): Promise<SCIMListResponse> => {
   const startIndex = options?.startIndex ?? 1;
-  const count = options?.count ?? 100;
+  const count = Math.min(options?.count ?? 100, 1000);
+
+  if (options?.filter) {
+    validateFilter(options.filter);
+  }
 
   const allGroups = Array.from(mockGroups.values()).filter((g) => g.tenantId === tenantId);
   const totalResults = allGroups.length;
@@ -263,7 +411,7 @@ export const getScimGroup = async (
   const group = mockGroups.get(groupId);
 
   if (!group || group.tenantId !== tenantId) {
-    throw new Error('Group not found');
+    throw new SCIMError(SCIM_ERRORS.GROUP_NOT_FOUND, 'Group not found', 404);
   }
 
   return buildScimGroupResponse(group);
@@ -274,6 +422,18 @@ export const createScimGroup = async (
   tenantId: string,
   groupData: SCIMGroup,
 ): Promise<SCIMGroup & { schemas: string[] }> => {
+  const existingGroup = Array.from(mockGroups.values()).find(
+    (g) => g.tenantId === tenantId && g.name === groupData.displayName,
+  );
+
+  if (existingGroup) {
+    throw new SCIMError(
+      SCIM_ERRORS.GROUP_ALREADY_EXISTS,
+      `Group with displayName ${groupData.displayName} already exists`,
+      409,
+    );
+  }
+
   const groupId = randomUUID();
   const now = new Date();
 
@@ -299,7 +459,7 @@ export const updateScimGroup = async (
   const group = mockGroups.get(groupId);
 
   if (!group || group.tenantId !== tenantId) {
-    throw new Error('Group not found');
+    throw new SCIMError(SCIM_ERRORS.GROUP_NOT_FOUND, 'Group not found', 404);
   }
 
   if (groupData.displayName !== undefined) {
@@ -318,7 +478,7 @@ export const deleteScimGroup = async (
   const group = mockGroups.get(groupId);
 
   if (!group || group.tenantId !== tenantId) {
-    throw new Error('Group not found');
+    throw new SCIMError(SCIM_ERRORS.GROUP_NOT_FOUND, 'Group not found', 404);
   }
 
   mockGroups.delete(groupId);
@@ -340,3 +500,5 @@ export const processBulkRequest = async (
     Operations: operations,
   };
 };
+
+export { SCIM_LIFECYCLE_CONTRACT_V1 };

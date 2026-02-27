@@ -123,6 +123,17 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.SSO_CONFIGURATION_ERROR]: 500,
   [ErrorCodes.SSO_ACCOUNT_LINKING_FAILED]: 400,
   [ErrorCodes.SSO_JIT_PROVISIONING_DENIED]: 403,
+  [ErrorCodes.SCIM_INVALID_REQUEST]: 400,
+  [ErrorCodes.SCIM_USER_NOT_FOUND]: 404,
+  [ErrorCodes.SCIM_USER_ALREADY_EXISTS]: 409,
+  [ErrorCodes.SCIM_GROUP_NOT_FOUND]: 404,
+  [ErrorCodes.SCIM_GROUP_ALREADY_EXISTS]: 409,
+  [ErrorCodes.SCIM_INVALID_FILTER]: 400,
+  [ErrorCodes.SCIM_TENANT_MISMATCH]: 403,
+  [ErrorCodes.SCIM_IDEMPOTENCY_KEY_CONFLICT]: 409,
+  [ErrorCodes.SCIM_ROLE_ESCALATION_BLOCKED]: 403,
+  [ErrorCodes.SCIM_ATTRIBUTE_MUTABILITY_VIOLATION]: 400,
+  [ErrorCodes.SCIM_JIT_CONFLICT]: 409,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -216,6 +227,17 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.SSO_CONFIGURATION_ERROR]: 'SSO configuration error',
   [ErrorCodes.SSO_ACCOUNT_LINKING_FAILED]: 'SSO account linking failed',
   [ErrorCodes.SSO_JIT_PROVISIONING_DENIED]: 'JIT provisioning denied for SSO user',
+  [ErrorCodes.SCIM_INVALID_REQUEST]: 'Invalid SCIM request',
+  [ErrorCodes.SCIM_USER_NOT_FOUND]: 'SCIM user not found',
+  [ErrorCodes.SCIM_USER_ALREADY_EXISTS]: 'SCIM user already exists',
+  [ErrorCodes.SCIM_GROUP_NOT_FOUND]: 'SCIM group not found',
+  [ErrorCodes.SCIM_GROUP_ALREADY_EXISTS]: 'SCIM group already exists',
+  [ErrorCodes.SCIM_INVALID_FILTER]: 'Invalid SCIM filter syntax',
+  [ErrorCodes.SCIM_TENANT_MISMATCH]: 'SCIM tenant mismatch',
+  [ErrorCodes.SCIM_IDEMPOTENCY_KEY_CONFLICT]: 'SCIM idempotency key conflict',
+  [ErrorCodes.SCIM_ROLE_ESCALATION_BLOCKED]: 'SCIM role escalation blocked by policy',
+  [ErrorCodes.SCIM_ATTRIBUTE_MUTABILITY_VIOLATION]: 'SCIM attribute mutability violation',
+  [ErrorCodes.SCIM_JIT_CONFLICT]: 'SCIM/JIT reconciliation conflict',
 } as const;
 
 export type AppErrorOptions = {

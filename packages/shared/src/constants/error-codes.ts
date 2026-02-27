@@ -87,6 +87,17 @@ export const ErrorCodes = {
   SSO_CONFIGURATION_ERROR: 'SSO_CONFIGURATION_ERROR',
   SSO_ACCOUNT_LINKING_FAILED: 'SSO_ACCOUNT_LINKING_FAILED',
   SSO_JIT_PROVISIONING_DENIED: 'SSO_JIT_PROVISIONING_DENIED',
+  SCIM_INVALID_REQUEST: 'SCIM_INVALID_REQUEST',
+  SCIM_USER_NOT_FOUND: 'SCIM_USER_NOT_FOUND',
+  SCIM_USER_ALREADY_EXISTS: 'SCIM_USER_ALREADY_EXISTS',
+  SCIM_GROUP_NOT_FOUND: 'SCIM_GROUP_NOT_FOUND',
+  SCIM_GROUP_ALREADY_EXISTS: 'SCIM_GROUP_ALREADY_EXISTS',
+  SCIM_INVALID_FILTER: 'SCIM_INVALID_FILTER',
+  SCIM_TENANT_MISMATCH: 'SCIM_TENANT_MISMATCH',
+  SCIM_IDEMPOTENCY_KEY_CONFLICT: 'SCIM_IDEMPOTENCY_KEY_CONFLICT',
+  SCIM_ROLE_ESCALATION_BLOCKED: 'SCIM_ROLE_ESCALATION_BLOCKED',
+  SCIM_ATTRIBUTE_MUTABILITY_VIOLATION: 'SCIM_ATTRIBUTE_MUTABILITY_VIOLATION',
+  SCIM_JIT_CONFLICT: 'SCIM_JIT_CONFLICT',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -467,6 +478,61 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHENTICATION,
     retryable: false,
     messageKey: 'errors.sso.jitProvisioningDenied',
+  },
+  [ErrorCodes.SCIM_INVALID_REQUEST]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.scim.invalidRequest',
+  },
+  [ErrorCodes.SCIM_USER_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.scim.userNotFound',
+  },
+  [ErrorCodes.SCIM_USER_ALREADY_EXISTS]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.scim.userAlreadyExists',
+  },
+  [ErrorCodes.SCIM_GROUP_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.scim.groupNotFound',
+  },
+  [ErrorCodes.SCIM_GROUP_ALREADY_EXISTS]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.scim.groupAlreadyExists',
+  },
+  [ErrorCodes.SCIM_INVALID_FILTER]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.scim.invalidFilter',
+  },
+  [ErrorCodes.SCIM_TENANT_MISMATCH]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.scim.tenantMismatch',
+  },
+  [ErrorCodes.SCIM_IDEMPOTENCY_KEY_CONFLICT]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.scim.idempotencyKeyConflict',
+  },
+  [ErrorCodes.SCIM_ROLE_ESCALATION_BLOCKED]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.scim.roleEscalationBlocked',
+  },
+  [ErrorCodes.SCIM_ATTRIBUTE_MUTABILITY_VIOLATION]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.scim.attributeMutabilityViolation',
+  },
+  [ErrorCodes.SCIM_JIT_CONFLICT]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.scim.jitConflict',
   },
 };
 
