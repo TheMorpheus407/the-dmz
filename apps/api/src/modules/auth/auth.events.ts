@@ -10,6 +10,12 @@ export const AUTH_EVENTS = {
   PASSWORD_RESET_REQUESTED: 'auth.password_reset.requested',
   PASSWORD_RESET_COMPLETED: 'auth.password_reset.completed',
   PASSWORD_RESET_FAILED: 'auth.password_reset.failed',
+  ACCOUNT_LOCKED: 'auth.account_locked',
+  ACCOUNT_UNLOCKED: 'auth.account_unlocked',
+  NEW_DEVICE_SESSION: 'auth.new_device_session',
+  MFA_ENABLED: 'auth.mfa_enabled',
+  MFA_DISABLED: 'auth.mfa_disabled',
+  MFA_RECOVERY_CODES_USED: 'auth.mfa_recovery_codes_used',
   JWT_SIGNING_KEY_CREATED: 'jwt.' + 'signing_key.created',
   JWT_SIGNING_KEY_ROTATED: 'jwt.' + 'signing_key.rotated',
   JWT_SIGNING_KEY_REVOKED: 'jwt.' + 'signing_key.revoked',
@@ -76,6 +82,67 @@ export interface AuthPasswordResetFailedPayload {
   correlationId: string;
 }
 
+export interface AuthAccountLockedPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  reason: string;
+  riskContext?: {
+    ipAddress?: string;
+    userAgent?: string;
+    deviceFingerprint?: string;
+    location?: string;
+    isAnomalous?: boolean;
+  };
+}
+
+export interface AuthAccountUnlockedPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  reason: string;
+}
+
+export interface AuthNewDeviceSessionPayload {
+  sessionId: string;
+  userId: string;
+  email: string;
+  tenantId: string;
+  riskContext: {
+    ipAddress?: string;
+    userAgent?: string;
+    deviceFingerprint?: string;
+    location?: string;
+    isNewDevice: boolean;
+    isAnomalous?: boolean;
+  };
+}
+
+export interface AuthMfaEnabledPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  method: 'totp' | 'webauthn' | 'email';
+}
+
+export interface AuthMfaDisabledPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  reason: 'user_request' | 'admin_reset' | 'compromised';
+}
+
+export interface AuthMfaRecoveryCodesUsedPayload {
+  userId: string;
+  email: string;
+  tenantId: string;
+  riskContext?: {
+    ipAddress?: string;
+    userAgent?: string;
+    location?: string;
+  };
+}
+
 export interface JWTSigningKeyCreatedPayload {
   kid: string;
   keyType: string;
@@ -102,6 +169,12 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.PASSWORD_RESET_REQUESTED]: AuthPasswordResetRequestedPayload;
   [AUTH_EVENTS.PASSWORD_RESET_COMPLETED]: AuthPasswordResetCompletedPayload;
   [AUTH_EVENTS.PASSWORD_RESET_FAILED]: AuthPasswordResetFailedPayload;
+  [AUTH_EVENTS.ACCOUNT_LOCKED]: AuthAccountLockedPayload;
+  [AUTH_EVENTS.ACCOUNT_UNLOCKED]: AuthAccountUnlockedPayload;
+  [AUTH_EVENTS.NEW_DEVICE_SESSION]: AuthNewDeviceSessionPayload;
+  [AUTH_EVENTS.MFA_ENABLED]: AuthMfaEnabledPayload;
+  [AUTH_EVENTS.MFA_DISABLED]: AuthMfaDisabledPayload;
+  [AUTH_EVENTS.MFA_RECOVERY_CODES_USED]: AuthMfaRecoveryCodesUsedPayload;
   [AUTH_EVENTS.JWT_SIGNING_KEY_CREATED]: JWTSigningKeyCreatedPayload;
   [AUTH_EVENTS.JWT_SIGNING_KEY_ROTATED]: JWTSigningKeyRotatedPayload;
   [AUTH_EVENTS.JWT_SIGNING_KEY_REVOKED]: JWTSigningKeyRevokedPayload;
@@ -312,6 +385,102 @@ export const createAuthPasswordResetFailedEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthAccountLockedEvent = (
+  params: BaseAuthEventParams & { payload: AuthAccountLockedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.ACCOUNT_LOCKED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.ACCOUNT_LOCKED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthAccountUnlockedEvent = (
+  params: BaseAuthEventParams & { payload: AuthAccountUnlockedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.ACCOUNT_UNLOCKED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.ACCOUNT_UNLOCKED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthNewDeviceSessionEvent = (
+  params: BaseAuthEventParams & { payload: AuthNewDeviceSessionPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.NEW_DEVICE_SESSION> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.NEW_DEVICE_SESSION,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthMfaEnabledEvent = (
+  params: BaseAuthEventParams & { payload: AuthMfaEnabledPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.MFA_ENABLED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.MFA_ENABLED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthMfaDisabledEvent = (
+  params: BaseAuthEventParams & { payload: AuthMfaDisabledPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.MFA_DISABLED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.MFA_DISABLED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthMfaRecoveryCodesUsedEvent = (
+  params: BaseAuthEventParams & { payload: AuthMfaRecoveryCodesUsedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.MFA_RECOVERY_CODES_USED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.MFA_RECOVERY_CODES_USED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
     source: params.source,
     version: params.version,
     payload: params.payload,

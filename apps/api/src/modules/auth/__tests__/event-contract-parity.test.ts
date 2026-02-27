@@ -10,6 +10,12 @@ import {
   createAuthUserCreatedEvent,
   createAuthUserDeactivatedEvent,
   createAuthUserUpdatedEvent,
+  createAuthAccountLockedEvent,
+  createAuthAccountUnlockedEvent,
+  createAuthNewDeviceSessionEvent,
+  createAuthMfaEnabledEvent,
+  createAuthMfaDisabledEvent,
+  createAuthMfaRecoveryCodesUsedEvent,
 } from '../auth.events.js';
 
 const BASE_PARAMS = {
@@ -144,6 +150,74 @@ function createTestEvent(eventType: string) {
           email: 'test@example.com',
           reason: 'invalid_credentials',
           correlationId: 'test-correlation-id',
+        },
+      });
+
+    case 'auth.account_locked':
+      return createAuthAccountLockedEvent({
+        ...BASE_PARAMS,
+        payload: {
+          userId: 'test-user-id',
+          email: 'test@example.com',
+          tenantId: 'test-tenant-id',
+          reason: 'abuse_detection',
+          riskContext: { isAnomalous: true },
+        },
+      });
+
+    case 'auth.account_unlocked':
+      return createAuthAccountUnlockedEvent({
+        ...BASE_PARAMS,
+        payload: {
+          userId: 'test-user-id',
+          email: 'test@example.com',
+          tenantId: 'test-tenant-id',
+          reason: 'password_reset_complete',
+        },
+      });
+
+    case 'auth.new_device_session':
+      return createAuthNewDeviceSessionEvent({
+        ...BASE_PARAMS,
+        payload: {
+          sessionId: 'test-session-id',
+          userId: 'test-user-id',
+          email: 'test@example.com',
+          tenantId: 'test-tenant-id',
+          riskContext: { isNewDevice: true, isAnomalous: false },
+        },
+      });
+
+    case 'auth.mfa_enabled':
+      return createAuthMfaEnabledEvent({
+        ...BASE_PARAMS,
+        payload: {
+          userId: 'test-user-id',
+          email: 'test@example.com',
+          tenantId: 'test-tenant-id',
+          method: 'totp',
+        },
+      });
+
+    case 'auth.mfa_disabled':
+      return createAuthMfaDisabledEvent({
+        ...BASE_PARAMS,
+        payload: {
+          userId: 'test-user-id',
+          email: 'test@example.com',
+          tenantId: 'test-tenant-id',
+          reason: 'user_request',
+        },
+      });
+
+    case 'auth.mfa_recovery_codes_used':
+      return createAuthMfaRecoveryCodesUsedEvent({
+        ...BASE_PARAMS,
+        payload: {
+          userId: 'test-user-id',
+          email: 'test@example.com',
+          tenantId: 'test-tenant-id',
+          riskContext: { ipAddress: '192.168.1.1' },
         },
       });
 

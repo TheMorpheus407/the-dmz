@@ -9,15 +9,22 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const AUTH_EVENTS_FILE = join(__dirname, '..', 'src', 'modules', 'auth', 'auth.events.ts');
 const EVENT_TYPES_FILE = join(__dirname, '..', 'src', 'shared', 'events', 'event-types.ts');
 
+function toCamelCase(str: string): string {
+  return str.replace(/_([a-z])/g, (_: string, letter: string) => letter.toUpperCase());
+}
+
 function checkEventContractsExist(): string[] {
   const errors: string[] = [];
 
   for (const contract of m1AuthEventContracts) {
-    const expectedFactory =
+    const eventTypeParts = contract.eventType.split('.');
+    const factoryName =
       'create' +
-      contract.eventType
-        .split('.')
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      eventTypeParts
+        .map((part) => {
+          const camelCasePart = toCamelCase(part);
+          return camelCasePart.charAt(0).toUpperCase() + camelCasePart.slice(1);
+        })
         .join('') +
       'Event';
 
@@ -31,7 +38,7 @@ function checkEventContractsExist(): string[] {
       foundEventType = true;
     }
 
-    const factoryRegex = new RegExp(`export\\s+const\\s+${expectedFactory}`);
+    const factoryRegex = new RegExp(`export\\s+const\\s+${factoryName}`);
     if (factoryRegex.test(content)) {
       foundFactory = true;
     }

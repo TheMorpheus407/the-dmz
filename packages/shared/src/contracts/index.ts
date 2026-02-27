@@ -181,3 +181,28 @@ export {
   type JWTSigningProfileManifest,
   type M1JWTSigningProfile,
 } from './jwt-signing-profile.js';
+
+export {
+  AuthSecurityEventType,
+  AuthSecuritySeverity,
+  NotificationDeliveryChannel,
+  NotificationDeliveryStatus,
+  NotificationTemplateCategory,
+  authSecurityEventPayloadSchema,
+  authSecurityNotificationContractSchema,
+  AUTH_SECURITY_NOTIFICATION_CONTRACTS,
+  AUTH_SECURITY_EVENT_CONTRACT_MAP,
+  AUTH_SECURITY_FORBIDDEN_FIELDS,
+  notificationDeliveryLogSchema,
+  userNotificationPreferencesSchema,
+  getContractForEvent,
+  isMandatoryNotification,
+  getSeverityForEvent,
+  type AuthSecurityEventPayload,
+  type AuthSecurityNotificationContract,
+  type AuthSecurityForbiddenField,
+  type NotificationDeliveryLogEntry,
+  type NotificationDeliveryLog,
+  type UserNotificationPreferences,
+  type UserNotificationPreferencesInput,
+} from './auth-security-notification.js';
