@@ -52,6 +52,12 @@ export const AUTH_EVENTS = {
   SSO_ACTIVATION_SUCCEEDED: 'auth.sso.activation.succeeded',
   SSO_ACTIVATION_FAILED: 'auth.sso.activation.failed',
   SSO_DEACTIVATION_SUCCEEDED: 'auth.sso.deactivation.succeeded',
+  SSO_LOGOUT_INITIATED: 'auth.sso.logout.initiated',
+  SSO_LOGOUT_PROCESSED: 'auth.sso.logout.processed',
+  SSO_LOGOUT_FAILED: 'auth.sso.logout.failed',
+  SESSION_REVOKED_FEDERATED: 'auth.session.revoked.federated',
+  SESSION_REVOCATION_FAILED: 'auth.session.revocation.failed',
+  SESSION_REVOCATION_IGNORED: 'auth.session.revocation.ignored',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -447,6 +453,62 @@ export interface SSODeactivationSucceededPayload {
   deactivatedBy: string;
 }
 
+export interface SSOLogoutInitiatedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  logoutType: 'back_channel' | 'front_channel' | 'idp_initiated' | 'sp_initiated';
+  correlationId: string;
+  userId?: string;
+}
+
+export interface SSOLogoutProcessedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  userId: string;
+  sessionsRevoked: number;
+  result: 'revoked' | 'already_revoked' | 'failed';
+  correlationId: string;
+}
+
+export interface SSOLogoutFailedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  reason: string;
+  errorCode: string;
+  correlationId: string;
+}
+
+export interface AuthSessionRevokedFederatedPayload {
+  sessionId: string;
+  userId: string;
+  tenantId: string;
+  reason: 'saml_logout' | 'oidc_logout' | 'scim_deprovision' | 'admin_revocation';
+  sourceType: 'saml' | 'oidc' | 'scim';
+  ssoProviderId?: string;
+  correlationId: string;
+  sessionsRevoked: number;
+}
+
+export interface AuthSessionRevocationFailedPayload {
+  tenantId: string;
+  userId?: string;
+  reason: string;
+  errorCode: string;
+  sourceType: 'saml' | 'oidc' | 'scim';
+  correlationId: string;
+}
+
+export interface AuthSessionRevocationIgnoredPayload {
+  tenantId: string;
+  userId?: string;
+  reason: string;
+  sourceType: 'saml' | 'oidc' | 'scim';
+  correlationId: string;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -498,6 +560,12 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.SSO_ACTIVATION_SUCCEEDED]: SSOActivationSucceededPayload;
   [AUTH_EVENTS.SSO_ACTIVATION_FAILED]: SSOActivationFailedPayload;
   [AUTH_EVENTS.SSO_DEACTIVATION_SUCCEEDED]: SSODeactivationSucceededPayload;
+  [AUTH_EVENTS.SSO_LOGOUT_INITIATED]: SSOLogoutInitiatedPayload;
+  [AUTH_EVENTS.SSO_LOGOUT_PROCESSED]: SSOLogoutProcessedPayload;
+  [AUTH_EVENTS.SSO_LOGOUT_FAILED]: SSOLogoutFailedPayload;
+  [AUTH_EVENTS.SESSION_REVOKED_FEDERATED]: AuthSessionRevokedFederatedPayload;
+  [AUTH_EVENTS.SESSION_REVOCATION_FAILED]: AuthSessionRevocationFailedPayload;
+  [AUTH_EVENTS.SESSION_REVOCATION_IGNORED]: AuthSessionRevocationIgnoredPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -1327,6 +1395,102 @@ export const createSSODeactivationSucceededEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: params.payload.deactivatedBy,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOLogoutInitiatedEvent = (
+  params: BaseSSOEventParams & { payload: SSOLogoutInitiatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGOUT_INITIATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_LOGOUT_INITIATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId ?? '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOLogoutProcessedEvent = (
+  params: BaseSSOEventParams & { payload: SSOLogoutProcessedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGOUT_PROCESSED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_LOGOUT_PROCESSED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOLogoutFailedEvent = (
+  params: BaseSSOEventParams & { payload: SSOLogoutFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGOUT_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_LOGOUT_FAILED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthSessionRevokedFederatedEvent = (
+  params: BaseAuthEventParams & { payload: AuthSessionRevokedFederatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOKED_FEDERATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SESSION_REVOKED_FEDERATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthSessionRevocationFailedEvent = (
+  params: BaseAuthEventParams & { payload: AuthSessionRevocationFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOCATION_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SESSION_REVOCATION_FAILED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId ?? '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthSessionRevocationIgnoredEvent = (
+  params: BaseAuthEventParams & { payload: AuthSessionRevocationIgnoredPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOCATION_IGNORED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SESSION_REVOCATION_IGNORED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId ?? '',
     source: params.source,
     version: params.version,
     payload: params.payload,

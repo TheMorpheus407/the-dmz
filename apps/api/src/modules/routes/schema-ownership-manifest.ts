@@ -41,6 +41,9 @@ export const SCHEMA_OWNERSHIP_MANIFEST: SchemaOwnershipManifest = {
         'ssoSAMLMetadataResponseJsonSchema',
         'samlACSRequestJsonSchema',
         'oidcCallbackRequestJsonSchema',
+        'samlLogoutCallbackRequestJsonSchema',
+        'oidcLogoutCallbackRequestJsonSchema',
+        'federatedRevocationResponseJsonSchema',
       ],
       ownedComponents: [
         'AuthLoginResponse',

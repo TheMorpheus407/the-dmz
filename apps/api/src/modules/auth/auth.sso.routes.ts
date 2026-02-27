@@ -10,7 +10,14 @@ import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 import { authGuard } from './auth.routes.js';
 import * as ssoService from './auth.sso.service.js';
 import { SSOError } from './auth.sso.service.js';
-import { createSSOLoginInitiatedEvent, createSSOLoginFailedEvent } from './auth.events.js';
+import * as authService from './auth.service.js';
+import {
+  createSSOLoginInitiatedEvent,
+  createSSOLoginFailedEvent,
+  createSSOLogoutInitiatedEvent,
+  createSSOLogoutProcessedEvent,
+  createSSOLogoutFailedEvent,
+} from './auth.events.js';
 
 import type { FastifyInstance } from 'fastify';
 
@@ -104,6 +111,46 @@ export type OIDCCallbackRequest = {
   error?: string;
   error_description?: string;
 };
+
+export const samlLogoutCallbackRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    SAMLResponse: { type: 'string' },
+    SAMLRequest: { type: 'string' },
+    RelayState: { type: 'string' },
+  },
+} as const;
+
+export type SAMLLogoutCallbackRequest = {
+  SAMLResponse?: string;
+  SAMLRequest?: string;
+  RelayState?: string;
+};
+
+export const oidcLogoutCallbackRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    id_token_hint: { type: 'string' },
+    post_logout_redirect_uri: { type: 'string', format: 'uri' },
+    state: { type: 'string' },
+  },
+} as const;
+
+export type OIDCLogoutCallbackRequest = {
+  id_token_hint?: string;
+  post_logout_redirect_uri?: string;
+  state?: string;
+};
+
+export const federatedRevocationResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    result: { type: 'string', enum: ['revoked', 'already_revoked', 'ignored_invalid', 'failed'] },
+    sessionsRevoked: { type: 'integer' },
+    userId: { type: 'string', format: 'uuid' },
+    reason: { type: 'string' },
+  },
+} as const;
 
 export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void> => {
   const config = fastify.config;
@@ -530,6 +577,340 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         statusCode: 501,
         correlationId: request.id,
       });
+    },
+  );
+
+  fastify.post<{ Body: SAMLLogoutCallbackRequest; Params: { providerId: string } }>(
+    '/auth/sso/saml/logout/:providerId',
+    {
+      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard],
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 10,
+              timeWindow: '1 minute',
+            },
+      },
+      schema: {
+        params: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string', format: 'uuid' },
+          },
+          required: ['providerId'],
+        },
+        body: samlLogoutCallbackRequestJsonSchema,
+        response: {
+          200: federatedRevocationResponseJsonSchema,
+          400: errorResponseSchemas.BadRequest,
+          403: {
+            oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
+          },
+          404: errorResponseSchemas.NotFound,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const tenantId = request.preAuthTenantContext?.tenantId;
+      if (!tenantId) {
+        throw new SSOError({
+          message: 'Tenant context required',
+          code: ErrorCodes.TENANT_CONTEXT_MISSING,
+          statusCode: 400,
+        });
+      }
+
+      const { providerId } = request.params;
+      const { SAMLResponse: _SAMLResponse, RelayState: _RelayState } = request.body;
+
+      const provider = await ssoService.getSSOProvider(providerId, tenantId);
+      if (!provider || !provider.isActive || provider.provider !== 'saml') {
+        throw new SSOError({
+          message: 'SSO provider not found or inactive',
+          code: ErrorCodes.SSO_PROVIDER_NOT_FOUND,
+          statusCode: 404,
+        });
+      }
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createSSOLogoutInitiatedEvent({
+          source: 'auth-sso-module',
+          correlationId: request.id,
+          tenantId,
+          version: 1,
+          payload: {
+            tenantId,
+            ssoProviderId: providerId,
+            providerType: 'saml',
+            logoutType: 'idp_initiated',
+            correlationId: request.id,
+          },
+        }),
+      );
+
+      throw new SSOError({
+        message: 'SAML logout processing not fully implemented',
+        code: ErrorCodes.SSO_CONFIGURATION_ERROR,
+        statusCode: 501,
+        correlationId: request.id,
+      });
+    },
+  );
+
+  fastify.get<{ Querystring: OIDCLogoutCallbackRequest; Params: { providerId: string } }>(
+    '/auth/sso/oidc/logout/:providerId',
+    {
+      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard],
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 10,
+              timeWindow: '1 minute',
+            },
+      },
+      schema: {
+        params: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string', format: 'uuid' },
+          },
+          required: ['providerId'],
+        },
+        querystring: oidcLogoutCallbackRequestJsonSchema,
+        response: {
+          200: federatedRevocationResponseJsonSchema,
+          400: errorResponseSchemas.BadRequest,
+          403: {
+            oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
+          },
+          404: errorResponseSchemas.NotFound,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const tenantId = request.preAuthTenantContext?.tenantId;
+      if (!tenantId) {
+        throw new SSOError({
+          message: 'Tenant context required',
+          code: ErrorCodes.TENANT_CONTEXT_MISSING,
+          statusCode: 400,
+        });
+      }
+
+      const { providerId } = request.params;
+      const {
+        id_token_hint: _idTokenHint,
+        post_logout_redirect_uri: _postLogoutRedirectUri,
+        state: _state,
+      } = request.query;
+
+      const provider = await ssoService.getSSOProvider(providerId, tenantId);
+      if (!provider || !provider.isActive || provider.provider !== 'oidc') {
+        throw new SSOError({
+          message: 'SSO provider not found or inactive',
+          code: ErrorCodes.SSO_PROVIDER_NOT_FOUND,
+          statusCode: 404,
+        });
+      }
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createSSOLogoutInitiatedEvent({
+          source: 'auth-sso-module',
+          correlationId: request.id,
+          tenantId,
+          version: 1,
+          payload: {
+            tenantId,
+            ssoProviderId: providerId,
+            providerType: 'oidc',
+            logoutType: 'back_channel',
+            correlationId: request.id,
+          },
+        }),
+      );
+
+      throw new SSOError({
+        message: 'OIDC logout processing not fully implemented',
+        code: ErrorCodes.SSO_CONFIGURATION_ERROR,
+        statusCode: 501,
+        correlationId: request.id,
+      });
+    },
+  );
+
+  fastify.post<{ Params: { providerId: string }; Body: { userId?: string; email?: string } }>(
+    '/auth/sso/saml/revoke/:providerId',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string', format: 'uuid' },
+          },
+          required: ['providerId'],
+        },
+        body: {
+          type: 'object',
+          properties: {
+            userId: { type: 'string', format: 'uuid' },
+            email: { type: 'string', format: 'email' },
+            providerId: { type: 'string', format: 'uuid' },
+          },
+        },
+        response: {
+          200: federatedRevocationResponseJsonSchema,
+          400: errorResponseSchemas.BadRequest,
+          403: errorResponseSchemas.TenantInactive,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as { tenantId: string };
+      const { providerId } = request.params;
+      const body = request.body as { userId?: string; email?: string };
+      const userId = body?.userId;
+      const email = body?.email;
+
+      const revocationResult = await authService.revokeUserSessionsByFederatedIdentity(config, {
+        tenantId: user.tenantId,
+        ...(userId && { userId }),
+        ...(email && { email }),
+        sourceType: 'saml',
+        ssoProviderId: providerId,
+      });
+
+      const eventBus = fastify.eventBus;
+      if (revocationResult.result === 'revoked' && revocationResult.userId) {
+        eventBus.publish(
+          createSSOLogoutProcessedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId: user.tenantId,
+            version: 1,
+            payload: {
+              tenantId: user.tenantId,
+              ssoProviderId: providerId,
+              providerType: 'saml',
+              userId: revocationResult.userId,
+              sessionsRevoked: revocationResult.sessionsRevoked,
+              result: revocationResult.result,
+              correlationId: request.id,
+            },
+          }),
+        );
+      } else {
+        eventBus.publish(
+          createSSOLogoutFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId: user.tenantId,
+            version: 1,
+            payload: {
+              tenantId: user.tenantId,
+              ssoProviderId: providerId,
+              providerType: 'saml',
+              reason: revocationResult.reason || 'revocation_failed',
+              errorCode: 'REVOCATION_FAILED',
+              correlationId: request.id,
+            },
+          }),
+        );
+      }
+
+      return revocationResult;
+    },
+  );
+
+  fastify.post<{ Params: { providerId: string }; Body: { userId?: string; email?: string } }>(
+    '/auth/sso/oidc/revoke/:providerId',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string', format: 'uuid' },
+          },
+          required: ['providerId'],
+        },
+        body: {
+          type: 'object',
+          properties: {
+            userId: { type: 'string', format: 'uuid' },
+            email: { type: 'string', format: 'email' },
+            providerId: { type: 'string', format: 'uuid' },
+          },
+        },
+        response: {
+          200: federatedRevocationResponseJsonSchema,
+          400: errorResponseSchemas.BadRequest,
+          403: errorResponseSchemas.TenantInactive,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as { tenantId: string };
+      const { providerId } = request.params;
+      const body = request.body as { userId?: string; email?: string };
+      const userId = body?.userId;
+      const email = body?.email;
+
+      const revocationResult = await authService.revokeUserSessionsByFederatedIdentity(config, {
+        tenantId: user.tenantId,
+        ...(userId && { userId }),
+        ...(email && { email }),
+        sourceType: 'oidc',
+        ssoProviderId: providerId,
+      });
+
+      const eventBus = fastify.eventBus;
+      if (revocationResult.result === 'revoked' && revocationResult.userId) {
+        eventBus.publish(
+          createSSOLogoutProcessedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId: user.tenantId,
+            version: 1,
+            payload: {
+              tenantId: user.tenantId,
+              ssoProviderId: providerId,
+              providerType: 'oidc',
+              userId: revocationResult.userId,
+              sessionsRevoked: revocationResult.sessionsRevoked,
+              result: revocationResult.result,
+              correlationId: request.id,
+            },
+          }),
+        );
+      } else {
+        eventBus.publish(
+          createSSOLogoutFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId: user.tenantId,
+            version: 1,
+            payload: {
+              tenantId: user.tenantId,
+              ssoProviderId: providerId,
+              providerType: 'oidc',
+              reason: revocationResult.reason || 'revocation_failed',
+              errorCode: 'REVOCATION_FAILED',
+              correlationId: request.id,
+            },
+          }),
+        );
+      }
+
+      return revocationResult;
     },
   );
 };

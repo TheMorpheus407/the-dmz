@@ -42,6 +42,7 @@ import {
   createOAuthClientRotatedEvent,
   createOAuthClientRevokedEvent,
   createOAuthTokenIssuedEvent,
+  createAuthSessionRevokedFederatedEvent,
 } from './auth.events.js';
 import { validateCsrf, setCsrfCookie } from './csrf.js';
 import { setRefreshCookie, clearRefreshCookie, getRefreshCookieName } from './cookies.js';
@@ -1200,6 +1201,166 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
 
       await authService.deleteOAuthClient(config, id, user.tenantId);
       return { success: true };
+    },
+  );
+
+  const federatedRevocationBodyJsonSchema = {
+    type: 'object',
+    properties: {
+      userId: { type: 'string', format: 'uuid' },
+      email: { type: 'string', format: 'email' },
+      sourceType: { type: 'string', enum: ['saml', 'oidc', 'scim'] },
+      ssoProviderId: { type: 'string' },
+    },
+    required: ['sourceType'],
+  };
+
+  fastify.post<{
+    Body: { userId?: string; email?: string; sourceType: string; ssoProviderId?: string };
+  }>(
+    '/auth/admin/sessions/revoke',
+    {
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'sessions:revoke'),
+      ],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        body: federatedRevocationBodyJsonSchema,
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              result: {
+                type: 'string',
+                enum: ['revoked', 'already_revoked', 'ignored_invalid', 'failed'],
+              },
+              sessionsRevoked: { type: 'integer' },
+              userId: { type: 'string', format: 'uuid' },
+              reason: { type: 'string' },
+            },
+          },
+          400: errorResponseSchemas.BadRequest,
+          403: errorResponseSchemas.TenantInactive,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const { userId, email, sourceType, ssoProviderId } = request.body;
+
+      const input = {
+        tenantId: user.tenantId,
+        ...(userId && { userId }),
+        ...(email && { email }),
+        sourceType: sourceType as 'saml' | 'oidc' | 'scim' | 'admin',
+        ...(ssoProviderId && { ssoProviderId }),
+      };
+
+      const result = await authService.revokeUserSessionsByFederatedIdentity(config, input);
+
+      const eventBus = fastify.eventBus;
+      if (result.result === 'revoked' && result.userId) {
+        const payload: {
+          sessionId: string;
+          userId: string;
+          tenantId: string;
+          reason: 'saml_logout' | 'oidc_logout' | 'scim_deprovision';
+          sourceType: 'saml' | 'oidc' | 'scim';
+          correlationId: string;
+          sessionsRevoked: number;
+          ssoProviderId?: string;
+        } = {
+          sessionId: '',
+          userId: result.userId,
+          tenantId: user.tenantId,
+          reason: `${sourceType}_logout` as 'saml_logout' | 'oidc_logout' | 'scim_deprovision',
+          sourceType: sourceType as 'saml' | 'oidc' | 'scim',
+          correlationId: request.id,
+          sessionsRevoked: result.sessionsRevoked,
+        };
+        if (ssoProviderId) {
+          payload.ssoProviderId = ssoProviderId;
+        }
+
+        eventBus.publish(
+          createAuthSessionRevokedFederatedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: user.tenantId,
+            userId: result.userId,
+            version: 1,
+            payload,
+          }),
+        );
+      }
+
+      return result;
+    },
+  );
+
+  fastify.delete<{ Params: { userId: string } }>(
+    '/auth/admin/sessions/:userId',
+    {
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'sessions:revoke'),
+      ],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            userId: { type: 'string', format: 'uuid' },
+          },
+          required: ['userId'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              sessionsRevoked: { type: 'integer' },
+            },
+          },
+          403: errorResponseSchemas.TenantInactive,
+        },
+      },
+    },
+    async (request) => {
+      const user = request.user as AuthenticatedUser;
+      const { userId } = request.params;
+
+      const result = await authService.revokeUserSessionsByFederatedIdentity(config, {
+        tenantId: user.tenantId,
+        userId,
+        sourceType: 'admin',
+      });
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createAuthSessionRevokedFederatedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: user.tenantId,
+          userId,
+          version: 1,
+          payload: {
+            sessionId: '',
+            userId,
+            tenantId: user.tenantId,
+            reason: 'saml_logout' as const,
+            sourceType: 'saml' as const,
+            correlationId: request.id,
+            sessionsRevoked: result.sessionsRevoked,
+          },
+        }),
+      );
+
+      return { sessionsRevoked: result.sessionsRevoked };
     },
   );
 };

@@ -36,6 +36,7 @@ import {
   deleteSession,
   deleteSessionByTokenHash,
   deleteAllSessionsByTenantId,
+  deleteAllSessionsByUserId,
   createProfile,
   findProfileByUserId,
   updateProfile,
@@ -1019,4 +1020,90 @@ export const hasRequiredOAuthScope = (
   requiredScope: string,
 ): boolean => {
   return tokenScopes.includes(requiredScope);
+};
+
+export interface FederatedRevocationInput {
+  tenantId: string;
+  userId?: string;
+  email?: string;
+  sourceType: 'saml' | 'oidc' | 'scim' | 'admin';
+  ssoProviderId?: string;
+}
+
+export interface FederatedRevocationResult {
+  result: 'revoked' | 'already_revoked' | 'ignored_invalid' | 'failed';
+  sessionsRevoked: number;
+  userId?: string;
+  reason?: string;
+}
+
+export const revokeUserSessionsByFederatedIdentity = async (
+  config: AppConfig,
+  input: FederatedRevocationInput,
+): Promise<FederatedRevocationResult> => {
+  const db = getDatabaseClient(config);
+
+  let targetUserId = input.userId;
+  let targetTenantId = input.tenantId;
+
+  if (!targetUserId && input.email) {
+    const user = await findUserByEmail(db, input.email, input.tenantId);
+    if (!user) {
+      return {
+        result: 'ignored_invalid',
+        sessionsRevoked: 0,
+        reason: 'user_not_found',
+      };
+    }
+    targetUserId = user.id;
+    targetTenantId = user.tenantId;
+  }
+
+  if (!targetUserId) {
+    return {
+      result: 'ignored_invalid',
+      sessionsRevoked: 0,
+      reason: 'user_identity_required',
+    };
+  }
+
+  if (targetTenantId !== input.tenantId) {
+    return {
+      result: 'ignored_invalid',
+      sessionsRevoked: 0,
+      reason: 'tenant_mismatch',
+    };
+  }
+
+  const sessionsBefore = await db.query.sessions.findMany({
+    where: (sessions, { eq, and }) =>
+      and(eq(sessions.userId, targetUserId), eq(sessions.tenantId, targetTenantId)),
+  });
+
+  if (sessionsBefore.length === 0) {
+    return {
+      result: 'already_revoked',
+      sessionsRevoked: 0,
+      userId: targetUserId,
+      reason: 'no_active_sessions',
+    };
+  }
+
+  const sessionsRevoked = await deleteAllSessionsByUserId(db, targetUserId, targetTenantId);
+
+  return {
+    result: 'revoked',
+    sessionsRevoked,
+    userId: targetUserId,
+    reason: `${input.sourceType}_revocation`,
+  };
+};
+
+export const revokeAllTenantSessionsFederated = async (
+  config: AppConfig,
+  tenantId: string,
+  _reason: string,
+): Promise<number> => {
+  const db = getDatabaseClient(config);
+  return deleteAllSessionsByTenantId(db, tenantId);
 };

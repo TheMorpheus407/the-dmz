@@ -1,4 +1,5 @@
 export * from './access-policy.js';
+export * from './federated-revocation-contract.js';
 export * from './oauth-scope-contract.js';
 export * from './scim-contract.js';
 export * from './session-policy.js';

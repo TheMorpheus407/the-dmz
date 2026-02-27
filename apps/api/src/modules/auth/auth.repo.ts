@@ -218,6 +218,37 @@ export const deleteAllSessionsByTenantId = async (db: DB, tenantId: string): Pro
   return deletedSessions.length;
 };
 
+export const deleteAllSessionsByUserId = async (
+  db: DB,
+  userId: string,
+  tenantId: string,
+): Promise<number> => {
+  const deletedSessions = await db
+    .delete(sessionsTable)
+    .where(and(eq(sessionsTable.userId, userId), eq(sessionsTable.tenantId, tenantId)))
+    .returning({ id: sessionsTable.id });
+  return deletedSessions.length;
+};
+
+export const findSessionsByUserId = async (
+  db: DB,
+  userId: string,
+  tenantId: string,
+): Promise<
+  Array<{
+    id: string;
+    userId: string;
+    tenantId: string;
+    expiresAt: Date;
+    createdAt: Date;
+    lastActiveAt: Date | null;
+  }>
+> => {
+  return db.query.sessions.findMany({
+    where: and(eq(sessionsTable.userId, userId), eq(sessionsTable.tenantId, tenantId)),
+  });
+};
+
 export const updateSessionLastActive = async (db: DB, sessionId: string): Promise<void> => {
   await db
     .update(sessionsTable)

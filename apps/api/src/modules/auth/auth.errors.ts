@@ -319,3 +319,52 @@ export class PasswordResetRateLimitedError extends AuthError {
     });
   }
 }
+
+export class FederatedRevocationError extends AuthError {
+  constructor(options: {
+    code?: string;
+    message: string;
+    statusCode?: number;
+    details?: Record<string, unknown>;
+  }) {
+    super({
+      code: options.code ?? ErrorCodes.AUTH_UNAUTHORIZED,
+      message: options.message,
+      statusCode: options.statusCode ?? 400,
+      ...(options.details !== undefined && { details: options.details }),
+    });
+  }
+}
+
+export class FederatedRevocationInvalidPayloadError extends FederatedRevocationError {
+  constructor(reason: string) {
+    super({
+      code: 'FEDERATED_REVOCATION_INVALID_PAYLOAD',
+      message: 'Invalid federated revocation payload',
+      statusCode: 400,
+      details: { reason },
+    });
+  }
+}
+
+export class FederatedRevocationTrustError extends FederatedRevocationError {
+  constructor(reason: string) {
+    super({
+      code: 'FEDERATED_REVOCATION_TRUST_FAILURE',
+      message: 'Federated revocation trust validation failed',
+      statusCode: 401,
+      details: { reason },
+    });
+  }
+}
+
+export class FederatedRevocationTenantMismatchError extends FederatedRevocationError {
+  constructor() {
+    super({
+      code: 'FEDERATED_REVOCATION_TENANT_MISMATCH',
+      message: 'Tenant mismatch in federated revocation request',
+      statusCode: 403,
+      details: { reason: 'tenant_mismatch' },
+    });
+  }
+}
