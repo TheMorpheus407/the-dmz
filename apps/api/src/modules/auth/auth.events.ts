@@ -62,6 +62,16 @@ export const AUTH_EVENTS = {
   SESSION_REVOKED_USER_ALL: 'auth.session.revoked.user_all',
   SESSION_REVOKED_TENANT_ALL: 'auth.session.revoked.tenant_all',
   SESSION_REVOCATION_DENIED: 'auth.session.revocation.denied',
+  MFA_POLICY_UPDATED: 'auth.mfa.policy.updated',
+  MFA_CHALLENGE_REQUIRED: 'auth.mfa.challenge.required',
+  MFA_CHALLENGE_SUCCEEDED: 'auth.mfa.challenge.succeeded',
+  MFA_CHALLENGE_FAILED: 'auth.mfa.challenge.failed',
+  MFA_ENROLLMENT_DEFERRED: 'auth.mfa.enrollment.deferred',
+  MFA_ENROLLMENT_EXPIRED: 'auth.mfa.enrollment.expired',
+  STEP_UP_REQUIRED: 'auth.step_up.required',
+  STEP_UP_SUCCEEDED: 'auth.step_up.succeeded',
+  STEP_UP_FAILED: 'auth.step_up.failed',
+  ADAPTIVE_MFA_TRIGGERED: 'auth.adaptive_mfa.triggered',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -548,6 +558,82 @@ export interface AuthSessionRevocationDeniedPayload {
   correlationId: string;
 }
 
+export interface AuthMfaPolicyUpdatedPayload {
+  tenantId: string;
+  updatedBy: string;
+  previousPolicy: Record<string, unknown>;
+  newPolicy: Record<string, unknown>;
+}
+
+export interface AuthMfaChallengeRequiredPayload {
+  userId: string;
+  tenantId: string;
+  sessionId: string;
+  method: string;
+  reason: 'login' | 'step_up' | 'adaptive';
+}
+
+export interface AuthMfaChallengeSucceededPayload {
+  userId: string;
+  tenantId: string;
+  sessionId: string;
+  method: string;
+  challengeOutcome: string;
+}
+
+export interface AuthMfaChallengeFailedPayload {
+  userId: string;
+  tenantId: string;
+  sessionId: string;
+  method: string;
+  failureReason: string;
+  attempts: number;
+}
+
+export interface AuthMfaEnrollmentDeferredPayload {
+  userId: string;
+  tenantId: string;
+  gracePeriodEndDate: string;
+}
+
+export interface AuthMfaEnrollmentExpiredPayload {
+  userId: string;
+  tenantId: string;
+  reason: string;
+}
+
+export interface AuthStepUpRequiredPayload {
+  userId: string;
+  tenantId: string;
+  sessionId: string;
+  action: string;
+  correlationId: string;
+}
+
+export interface AuthStepUpSucceededPayload {
+  userId: string;
+  tenantId: string;
+  sessionId: string;
+  action: string;
+  proofId: string;
+}
+
+export interface AuthStepUpFailedPayload {
+  userId: string;
+  tenantId: string;
+  sessionId: string;
+  action: string;
+  failureReason: string;
+}
+
+export interface AuthAdaptiveMfaTriggeredPayload {
+  userId: string;
+  tenantId: string;
+  sessionId: string;
+  triggers: string[];
+  riskScore: number;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -609,6 +695,16 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.SESSION_REVOKED_USER_ALL]: AuthSessionRevokedUserAllPayload;
   [AUTH_EVENTS.SESSION_REVOKED_TENANT_ALL]: AuthSessionRevokedTenantAllPayload;
   [AUTH_EVENTS.SESSION_REVOCATION_DENIED]: AuthSessionRevocationDeniedPayload;
+  [AUTH_EVENTS.MFA_POLICY_UPDATED]: AuthMfaPolicyUpdatedPayload;
+  [AUTH_EVENTS.MFA_CHALLENGE_REQUIRED]: AuthMfaChallengeRequiredPayload;
+  [AUTH_EVENTS.MFA_CHALLENGE_SUCCEEDED]: AuthMfaChallengeSucceededPayload;
+  [AUTH_EVENTS.MFA_CHALLENGE_FAILED]: AuthMfaChallengeFailedPayload;
+  [AUTH_EVENTS.MFA_ENROLLMENT_DEFERRED]: AuthMfaEnrollmentDeferredPayload;
+  [AUTH_EVENTS.MFA_ENROLLMENT_EXPIRED]: AuthMfaEnrollmentExpiredPayload;
+  [AUTH_EVENTS.STEP_UP_REQUIRED]: AuthStepUpRequiredPayload;
+  [AUTH_EVENTS.STEP_UP_SUCCEEDED]: AuthStepUpSucceededPayload;
+  [AUTH_EVENTS.STEP_UP_FAILED]: AuthStepUpFailedPayload;
+  [AUTH_EVENTS.ADAPTIVE_MFA_TRIGGERED]: AuthAdaptiveMfaTriggeredPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -1598,6 +1694,166 @@ export const createAuthSessionRevocationDeniedEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: params.payload.initiatedBy,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthMfaPolicyUpdatedEvent = (
+  params: BaseAuthEventParams & { payload: AuthMfaPolicyUpdatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.MFA_POLICY_UPDATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.MFA_POLICY_UPDATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.updatedBy,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthMfaChallengeRequiredEvent = (
+  params: BaseAuthEventParams & { payload: AuthMfaChallengeRequiredPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.MFA_CHALLENGE_REQUIRED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.MFA_CHALLENGE_REQUIRED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthMfaChallengeSucceededEvent = (
+  params: BaseAuthEventParams & { payload: AuthMfaChallengeSucceededPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.MFA_CHALLENGE_SUCCEEDED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.MFA_CHALLENGE_SUCCEEDED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthMfaChallengeFailedEvent = (
+  params: BaseAuthEventParams & { payload: AuthMfaChallengeFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.MFA_CHALLENGE_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.MFA_CHALLENGE_FAILED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthMfaEnrollmentDeferredEvent = (
+  params: BaseAuthEventParams & { payload: AuthMfaEnrollmentDeferredPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.MFA_ENROLLMENT_DEFERRED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.MFA_ENROLLMENT_DEFERRED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthMfaEnrollmentExpiredEvent = (
+  params: BaseAuthEventParams & { payload: AuthMfaEnrollmentExpiredPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.MFA_ENROLLMENT_EXPIRED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.MFA_ENROLLMENT_EXPIRED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthStepUpRequiredEvent = (
+  params: BaseAuthEventParams & { payload: AuthStepUpRequiredPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.STEP_UP_REQUIRED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.STEP_UP_REQUIRED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthStepUpSucceededEvent = (
+  params: BaseAuthEventParams & { payload: AuthStepUpSucceededPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.STEP_UP_SUCCEEDED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.STEP_UP_SUCCEEDED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthStepUpFailedEvent = (
+  params: BaseAuthEventParams & { payload: AuthStepUpFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.STEP_UP_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.STEP_UP_FAILED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthAdaptiveMfaTriggeredEvent = (
+  params: BaseAuthEventParams & { payload: AuthAdaptiveMfaTriggeredPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.ADAPTIVE_MFA_TRIGGERED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.ADAPTIVE_MFA_TRIGGERED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
     source: params.source,
     version: params.version,
     payload: params.payload,

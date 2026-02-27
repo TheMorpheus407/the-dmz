@@ -117,6 +117,13 @@ export const ErrorCodes = {
   AUTH_SESSION_CONCURRENT_LIMIT: 'AUTH_SESSION_CONCURRENT_LIMIT',
   AUTH_SESSION_BINDING_VIOLATION: 'AUTH_SESSION_BINDING_VIOLATION',
   AUTH_SESSION_POLICY_INVALID: 'AUTH_SESSION_POLICY_INVALID',
+  AUTH_MFA_POLICY_INVALID: 'AUTH_MFA_POLICY_INVALID',
+  AUTH_MFA_ENROLLMENT_EXPIRED: 'AUTH_MFA_ENROLLMENT_EXPIRED',
+  AUTH_STEP_UP_REQUIRED: 'AUTH_STEP_UP_REQUIRED',
+  AUTH_STEP_UP_FAILED: 'AUTH_STEP_UP_FAILED',
+  AUTH_STEP_UP_EXPIRED: 'AUTH_STEP_UP_EXPIRED',
+  AUTH_ADAPTIVE_MFA_TRIGGERED: 'AUTH_ADAPTIVE_MFA_TRIGGERED',
+  AUTH_MFA_METHOD_NOT_ALLOWED: 'AUTH_MFA_METHOD_NOT_ALLOWED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -647,6 +654,41 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.VALIDATION,
     retryable: false,
     messageKey: 'errors.auth.sessionPolicyInvalid',
+  },
+  [ErrorCodes.AUTH_MFA_POLICY_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.auth.mfaPolicyInvalid',
+  },
+  [ErrorCodes.AUTH_MFA_ENROLLMENT_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.mfaEnrollmentExpired',
+  },
+  [ErrorCodes.AUTH_STEP_UP_REQUIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.stepUpRequired',
+  },
+  [ErrorCodes.AUTH_STEP_UP_FAILED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.stepUpFailed',
+  },
+  [ErrorCodes.AUTH_STEP_UP_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.stepUpExpired',
+  },
+  [ErrorCodes.AUTH_ADAPTIVE_MFA_TRIGGERED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.adaptiveMfaTriggered',
+  },
+  [ErrorCodes.AUTH_MFA_METHOD_NOT_ALLOWED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.mfaMethodNotAllowed',
   },
 };
 

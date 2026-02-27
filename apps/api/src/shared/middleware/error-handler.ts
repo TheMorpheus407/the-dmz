@@ -153,6 +153,13 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.AUTH_SESSION_CONCURRENT_LIMIT]: 403,
   [ErrorCodes.AUTH_SESSION_BINDING_VIOLATION]: 401,
   [ErrorCodes.AUTH_SESSION_POLICY_INVALID]: 400,
+  [ErrorCodes.AUTH_MFA_POLICY_INVALID]: 400,
+  [ErrorCodes.AUTH_MFA_ENROLLMENT_EXPIRED]: 403,
+  [ErrorCodes.AUTH_STEP_UP_REQUIRED]: 403,
+  [ErrorCodes.AUTH_STEP_UP_FAILED]: 403,
+  [ErrorCodes.AUTH_STEP_UP_EXPIRED]: 403,
+  [ErrorCodes.AUTH_ADAPTIVE_MFA_TRIGGERED]: 403,
+  [ErrorCodes.AUTH_MFA_METHOD_NOT_ALLOWED]: 403,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -277,6 +284,13 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.AUTH_SESSION_CONCURRENT_LIMIT]: 'Maximum concurrent sessions reached',
   [ErrorCodes.AUTH_SESSION_BINDING_VIOLATION]: 'Session binding violation detected',
   [ErrorCodes.AUTH_SESSION_POLICY_INVALID]: 'Invalid session policy configuration',
+  [ErrorCodes.AUTH_MFA_POLICY_INVALID]: 'MFA policy configuration is invalid',
+  [ErrorCodes.AUTH_MFA_ENROLLMENT_EXPIRED]: 'MFA enrollment grace period has expired',
+  [ErrorCodes.AUTH_STEP_UP_REQUIRED]: 'Step-up authentication required for this action',
+  [ErrorCodes.AUTH_STEP_UP_FAILED]: 'Step-up authentication failed',
+  [ErrorCodes.AUTH_STEP_UP_EXPIRED]: 'Step-up authentication proof has expired',
+  [ErrorCodes.AUTH_ADAPTIVE_MFA_TRIGGERED]: 'Adaptive MFA was triggered due to risk detection',
+  [ErrorCodes.AUTH_MFA_METHOD_NOT_ALLOWED]: 'MFA method not allowed by tenant policy',
 } as const;
 
 export type AppErrorOptions = {
