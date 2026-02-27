@@ -124,6 +124,8 @@ export const ErrorCodes = {
   AUTH_STEP_UP_EXPIRED: 'AUTH_STEP_UP_EXPIRED',
   AUTH_ADAPTIVE_MFA_TRIGGERED: 'AUTH_ADAPTIVE_MFA_TRIGGERED',
   AUTH_MFA_METHOD_NOT_ALLOWED: 'AUTH_MFA_METHOD_NOT_ALLOWED',
+  AUTH_ROLE_ASSIGNMENT_EXPIRED: 'AUTH_ROLE_ASSIGNMENT_EXPIRED',
+  AUTH_ROLE_SCOPE_MISMATCH: 'AUTH_ROLE_SCOPE_MISMATCH',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -689,6 +691,16 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHENTICATION,
     retryable: false,
     messageKey: 'errors.auth.mfaMethodNotAllowed',
+  },
+  [ErrorCodes.AUTH_ROLE_ASSIGNMENT_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.auth.roleAssignmentExpired',
+  },
+  [ErrorCodes.AUTH_ROLE_SCOPE_MISMATCH]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.auth.roleScopeMismatch',
   },
 };
 

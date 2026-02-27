@@ -13,6 +13,7 @@ import {
   hasPermission,
   hasRole,
   clearPermissionCache,
+  isRoleAssignmentValid,
 } from '../../../shared/middleware/authorization.js';
 
 const createTestConfig = (): AppConfig => {
@@ -409,6 +410,417 @@ describe('authorization middleware - integration tests', () => {
       expect(firstBody.permissions).toEqual(secondBody.permissions);
       expect(firstBody.roles).toEqual(secondBody.roles);
       expect(secondBody.roles).toContain('manager');
+    });
+  });
+});
+
+describe('role assignment validity - isRoleAssignmentValid', () => {
+  describe('active assignment (no expiry)', () => {
+    it('returns valid for assignment with null expiry', () => {
+      const result = isRoleAssignmentValid({ expiresAt: null, scope: null });
+      expect(result.isValid).toBe(true);
+      expect(result.reason).toBeUndefined();
+    });
+
+    it('returns valid for assignment with future expiry', () => {
+      const futureDate = new Date(Date.now() + 86400000);
+      const result = isRoleAssignmentValid({ expiresAt: futureDate, scope: null });
+      expect(result.isValid).toBe(true);
+      expect(result.reason).toBeUndefined();
+    });
+
+    it('returns valid for assignment with matching scope', () => {
+      const result = isRoleAssignmentValid({ expiresAt: null, scope: 'admin' }, 'admin');
+      expect(result.isValid).toBe(true);
+      expect(result.reason).toBeUndefined();
+    });
+
+    it('returns valid for assignment with null scope (any scope allowed)', () => {
+      const result = isRoleAssignmentValid({ expiresAt: null, scope: null }, 'admin');
+      expect(result.isValid).toBe(true);
+      expect(result.reason).toBeUndefined();
+    });
+  });
+
+  describe('expired assignment', () => {
+    it('returns invalid for expired assignment', () => {
+      const pastDate = new Date(Date.now() - 86400000);
+      const result = isRoleAssignmentValid({ expiresAt: pastDate, scope: null });
+      expect(result.isValid).toBe(false);
+      expect(result.reason).toBe('expired');
+    });
+
+    it('returns invalid at exact boundary time (now)', () => {
+      const now = new Date();
+      const result = isRoleAssignmentValid({ expiresAt: now, scope: null });
+      expect(result.isValid).toBe(false);
+      expect(result.reason).toBe('expired');
+    });
+  });
+
+  describe('scope mismatch assignment', () => {
+    it('returns invalid for scope mismatch', () => {
+      const result = isRoleAssignmentValid({ expiresAt: null, scope: 'other-module' }, 'admin');
+      expect(result.isValid).toBe(false);
+      expect(result.reason).toBe('scope_mismatch');
+    });
+  });
+});
+
+describe('authorization middleware - role assignment expiry and scope integration', () => {
+  const app = buildApp(testConfig);
+
+  beforeAll(async () => {
+    await resetTestData();
+    await app.ready();
+  });
+
+  afterAll(async () => {
+    await closeDatabase();
+    await app.close();
+  });
+
+  describe('expired role assignment', () => {
+    it('denies access when role assignment has expired', async () => {
+      const registerResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/register',
+        payload: {
+          email: 'expired-role@example.com',
+          password: 'Valid' + 'Pass123!',
+          displayName: 'Expired Role User',
+        },
+      });
+
+      const { accessToken, user } = registerResponse.json() as {
+        accessToken: string;
+        user: { tenantId: string; id: string };
+      };
+
+      const db = getDatabaseClient(testConfig);
+
+      const [role] = await db
+        .insert(roles)
+        .values({
+          name: 'admin-expired',
+          tenantId: user.tenantId,
+          description: 'Admin role for expired test',
+        })
+        .returning();
+
+      const permRecord = await db.query.permissions.findFirst({
+        where: eq(permissions.resource, 'admin'),
+      });
+
+      if (permRecord) {
+        await db.insert(rolePermissions).values({
+          roleId: role!.id,
+          permissionId: permRecord.id,
+        });
+      } else {
+        await db.insert(permissions).values({
+          resource: 'admin',
+          action: 'list',
+        });
+        const [perm] = await db.select().from(permissions).where(eq(permissions.resource, 'admin'));
+        await db.insert(rolePermissions).values({
+          roleId: role!.id,
+          permissionId: perm!.id,
+        });
+      }
+
+      const pastDate = new Date(Date.now() - 86400000);
+      await db.insert(userRoles).values({
+        userId: user.id,
+        roleId: role!.id,
+        tenantId: user.tenantId,
+        expiresAt: pastDate,
+      });
+
+      clearPermissionCache(testConfig, user.tenantId, user.id);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/admin/users',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(403);
+      const body = response.json();
+      expect(body.error.code).toBe('AUTH_INSUFFICIENT_PERMS');
+    });
+  });
+
+  describe('active role assignment', () => {
+    it('allows access when role assignment is active (no expiry)', async () => {
+      const registerResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/register',
+        payload: {
+          email: 'active-role@example.com',
+          password: 'Valid' + 'Pass123!',
+          displayName: 'Active Role User',
+        },
+      });
+
+      const { accessToken, user } = registerResponse.json() as {
+        accessToken: string;
+        user: { tenantId: string; id: string };
+      };
+
+      const db = getDatabaseClient(testConfig);
+
+      const [role] = await db
+        .insert(roles)
+        .values({
+          name: 'manager',
+          tenantId: user.tenantId,
+          description: 'Manager role',
+        })
+        .returning();
+
+      await db.insert(permissions).values({
+        resource: 'users',
+        action: 'read',
+      });
+
+      const [perm] = await db.select().from(permissions).where(eq(permissions.resource, 'users'));
+
+      await db.insert(rolePermissions).values({
+        roleId: role!.id,
+        permissionId: perm!.id,
+      });
+
+      await db.insert(userRoles).values({
+        userId: user.id,
+        roleId: role!.id,
+        tenantId: user.tenantId,
+      });
+
+      clearPermissionCache(testConfig, user.tenantId, user.id);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/me',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      const body = response.json();
+      expect(body.roles).toContain('manager');
+    });
+  });
+
+  describe('active role assignment with future expiry', () => {
+    it('allows access when role assignment expires in the future', async () => {
+      const registerResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/register',
+        payload: {
+          email: 'future-expiry-role@example.com',
+          password: 'Valid' + 'Pass123!',
+          displayName: 'Future Expiry Role User',
+        },
+      });
+
+      const { accessToken, user } = registerResponse.json() as {
+        accessToken: string;
+        user: { tenantId: string; id: string };
+      };
+
+      const db = getDatabaseClient(testConfig);
+
+      const [role] = await db
+        .insert(roles)
+        .values({
+          name: 'trainer-future',
+          tenantId: user.tenantId,
+          description: 'Trainer role for future expiry test',
+        })
+        .returning();
+
+      const permRecord = await db.query.permissions.findFirst({
+        where: eq(permissions.resource, 'admin'),
+      });
+
+      if (permRecord) {
+        await db.insert(rolePermissions).values({
+          roleId: role!.id,
+          permissionId: permRecord.id,
+        });
+      } else {
+        await db.insert(permissions).values({
+          resource: 'admin',
+          action: 'list',
+        });
+        const [perm] = await db.select().from(permissions).where(eq(permissions.resource, 'admin'));
+        await db.insert(rolePermissions).values({
+          roleId: role!.id,
+          permissionId: perm!.id,
+        });
+      }
+
+      const futureDate = new Date(Date.now() + 86400000);
+      await db.insert(userRoles).values({
+        userId: user.id,
+        roleId: role!.id,
+        tenantId: user.tenantId,
+        expiresAt: futureDate,
+      });
+
+      clearPermissionCache(testConfig, user.tenantId, user.id);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/admin/users',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+    });
+  });
+
+  describe('scope mismatch role assignment', () => {
+    it('allows access when role assignment has matching scope', async () => {
+      const registerResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/register',
+        payload: {
+          email: 'scope-match@example.com',
+          password: 'Valid' + 'Pass123!',
+          displayName: 'Scope Match User',
+        },
+      });
+
+      const { accessToken, user } = registerResponse.json() as {
+        accessToken: string;
+        user: { tenantId: string; id: string };
+      };
+
+      const db = getDatabaseClient(testConfig);
+
+      const [role] = await db
+        .insert(roles)
+        .values({
+          name: 'admin-scope-match',
+          tenantId: user.tenantId,
+          description: 'Admin role for scope match test',
+        })
+        .returning();
+
+      const permRecord = await db.query.permissions.findFirst({
+        where: eq(permissions.resource, 'admin'),
+      });
+
+      if (permRecord) {
+        await db.insert(rolePermissions).values({
+          roleId: role!.id,
+          permissionId: permRecord.id,
+        });
+      } else {
+        await db.insert(permissions).values({
+          resource: 'admin',
+          action: 'list',
+        });
+        const [perm] = await db.select().from(permissions).where(eq(permissions.resource, 'admin'));
+        await db.insert(rolePermissions).values({
+          roleId: role!.id,
+          permissionId: perm!.id,
+        });
+      }
+
+      await db.insert(userRoles).values({
+        userId: user.id,
+        roleId: role!.id,
+        tenantId: user.tenantId,
+        scope: 'admin',
+      });
+
+      clearPermissionCache(testConfig, user.tenantId, user.id);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/admin/users',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+    });
+
+    it('allows access when role assignment has null scope (any scope)', async () => {
+      const registerResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/register',
+        payload: {
+          email: 'scope-null@example.com',
+          password: 'Valid' + 'Pass123!',
+          displayName: 'Scope Null User',
+        },
+      });
+
+      const { accessToken, user } = registerResponse.json() as {
+        accessToken: string;
+        user: { tenantId: string; id: string };
+      };
+
+      const db = getDatabaseClient(testConfig);
+
+      const [role] = await db
+        .insert(roles)
+        .values({
+          name: 'admin-scope-null',
+          tenantId: user.tenantId,
+          description: 'Admin role for scope null test',
+        })
+        .returning();
+
+      const permRecord = await db.query.permissions.findFirst({
+        where: eq(permissions.resource, 'admin'),
+      });
+
+      if (permRecord) {
+        await db.insert(rolePermissions).values({
+          roleId: role!.id,
+          permissionId: permRecord.id,
+        });
+      } else {
+        await db.insert(permissions).values({
+          resource: 'admin',
+          action: 'list',
+        });
+        const [perm] = await db.select().from(permissions).where(eq(permissions.resource, 'admin'));
+        await db.insert(rolePermissions).values({
+          roleId: role!.id,
+          permissionId: perm!.id,
+        });
+      }
+
+      await db.insert(userRoles).values({
+        userId: user.id,
+        roleId: role!.id,
+        tenantId: user.tenantId,
+        scope: null,
+      });
+
+      clearPermissionCache(testConfig, user.tenantId, user.id);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/admin/users',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
     });
   });
 });

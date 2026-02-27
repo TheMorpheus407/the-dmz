@@ -37,6 +37,51 @@ const permissionCache = new Map<
 
 const CACHE_TTL_MS = 30_000;
 
+export interface RoleAssignmentValidity {
+  isValid: boolean;
+  reason?: 'expired' | 'scope_mismatch';
+  expiresAt?: Date | undefined;
+  scope?: string | null | undefined;
+}
+
+export const isRoleAssignmentValid = (
+  assignment: {
+    expiresAt: Date | null;
+    scope: string | null;
+  },
+  requiredScope?: string | null,
+): RoleAssignmentValidity => {
+  const now = new Date();
+
+  if (assignment.expiresAt && assignment.expiresAt <= now) {
+    return {
+      isValid: false,
+      reason: 'expired',
+      expiresAt: assignment.expiresAt,
+      scope: assignment.scope ?? undefined,
+    };
+  }
+
+  if (
+    requiredScope !== undefined &&
+    assignment.scope !== null &&
+    assignment.scope !== requiredScope
+  ) {
+    return {
+      isValid: false,
+      reason: 'scope_mismatch',
+      expiresAt: assignment.expiresAt ?? undefined,
+      scope: assignment.scope,
+    };
+  }
+
+  return {
+    isValid: true,
+    expiresAt: assignment.expiresAt ?? undefined,
+    scope: assignment.scope ?? undefined,
+  };
+};
+
 const buildPermissionCacheKey = (tenantId: string, userId: string): string =>
   `permissions:${tenantId}:${userId}`;
 
@@ -106,13 +151,44 @@ export const resolvePermissions = async (
     .select({
       roleId: userRoles.roleId,
       roleName: roles.name,
+      expiresAt: userRoles.expiresAt,
+      scope: userRoles.scope,
     })
     .from(userRoles)
     .leftJoin(roles, and(eq(roles.id, userRoles.roleId), eq(roles.tenantId, tenantId)))
     .where(and(eq(userRoles.userId, userId), eq(userRoles.tenantId, tenantId)));
 
-  const roleIds = userRoleRecords.map((ur) => ur.roleId).filter(Boolean);
-  const roleNames = userRoleRecords
+  const validRoleAssignments: typeof userRoleRecords = [];
+  let hasExpiredAssignment = false;
+  let hasScopeMismatchAssignment = false;
+
+  for (const assignment of userRoleRecords) {
+    const validity = isRoleAssignmentValid({
+      expiresAt: assignment.expiresAt,
+      scope: assignment.scope,
+    });
+
+    if (validity.isValid) {
+      validRoleAssignments.push(assignment);
+    } else if (validity.reason === 'expired') {
+      hasExpiredAssignment = true;
+    } else if (validity.reason === 'scope_mismatch') {
+      hasScopeMismatchAssignment = true;
+    }
+  }
+
+  if (validRoleAssignments.length === 0 && userRoleRecords.length > 0) {
+    if (hasExpiredAssignment) {
+      throw insufficientPermissions('Role assignment has expired');
+    }
+    if (hasScopeMismatchAssignment) {
+      throw insufficientPermissions('Role assignment scope does not match');
+    }
+    throw insufficientPermissions('No valid role assignments found');
+  }
+
+  const roleIds = validRoleAssignments.map((ur) => ur.roleId).filter(Boolean);
+  const roleNames = validRoleAssignments
     .map((ur) => ur.roleName)
     .filter((name): name is string => !!name);
 

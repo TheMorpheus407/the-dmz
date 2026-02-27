@@ -160,6 +160,8 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.AUTH_STEP_UP_EXPIRED]: 403,
   [ErrorCodes.AUTH_ADAPTIVE_MFA_TRIGGERED]: 403,
   [ErrorCodes.AUTH_MFA_METHOD_NOT_ALLOWED]: 403,
+  [ErrorCodes.AUTH_ROLE_ASSIGNMENT_EXPIRED]: 403,
+  [ErrorCodes.AUTH_ROLE_SCOPE_MISMATCH]: 403,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -291,6 +293,9 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.AUTH_STEP_UP_EXPIRED]: 'Step-up authentication proof has expired',
   [ErrorCodes.AUTH_ADAPTIVE_MFA_TRIGGERED]: 'Adaptive MFA was triggered due to risk detection',
   [ErrorCodes.AUTH_MFA_METHOD_NOT_ALLOWED]: 'MFA method not allowed by tenant policy',
+  [ErrorCodes.AUTH_ROLE_ASSIGNMENT_EXPIRED]: 'Role assignment has expired',
+  [ErrorCodes.AUTH_ROLE_SCOPE_MISMATCH]:
+    'Role assignment scope does not match the requested resource',
 } as const;
 
 export type AppErrorOptions = {
