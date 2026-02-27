@@ -112,6 +112,11 @@ export const ErrorCodes = {
   SCIM_BASE_URL_UNREACHABLE: 'SCIM_BASE_URL_UNREACHABLE',
   SCIM_AUTHENTICATION_FAILED: 'SCIM_AUTHENTICATION_FAILED',
   SCIM_ENDPOINT_UNAVAILABLE: 'SCIM_ENDPOINT_UNAVAILABLE',
+  AUTH_SESSION_IDLE_TIMEOUT: 'AUTH_SESSION_IDLE_TIMEOUT',
+  AUTH_SESSION_ABSOLUTE_TIMEOUT: 'AUTH_SESSION_ABSOLUTE_TIMEOUT',
+  AUTH_SESSION_CONCURRENT_LIMIT: 'AUTH_SESSION_CONCURRENT_LIMIT',
+  AUTH_SESSION_BINDING_VIOLATION: 'AUTH_SESSION_BINDING_VIOLATION',
+  AUTH_SESSION_POLICY_INVALID: 'AUTH_SESSION_POLICY_INVALID',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -617,6 +622,31 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.NETWORK,
     retryable: true,
     messageKey: 'errors.scim.endpointUnavailable',
+  },
+  [ErrorCodes.AUTH_SESSION_IDLE_TIMEOUT]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.sessionIdleTimeout',
+  },
+  [ErrorCodes.AUTH_SESSION_ABSOLUTE_TIMEOUT]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.sessionAbsoluteTimeout',
+  },
+  [ErrorCodes.AUTH_SESSION_CONCURRENT_LIMIT]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.sessionConcurrentLimit',
+  },
+  [ErrorCodes.AUTH_SESSION_BINDING_VIOLATION]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.auth.sessionBindingViolation',
+  },
+  [ErrorCodes.AUTH_SESSION_POLICY_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.auth.sessionPolicyInvalid',
   },
 };
 

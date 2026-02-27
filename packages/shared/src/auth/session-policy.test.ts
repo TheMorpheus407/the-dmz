@@ -9,6 +9,18 @@ import {
   getSessionExpiryDate,
   roleBasedSessionPolicies,
   defaultSessionPolicy,
+  type TenantSessionPolicy,
+  defaultTenantSessionPolicy,
+  tenantSessionPolicySchema,
+  resolveTenantSessionPolicy,
+  validateTenantSessionPolicy,
+  evaluateSessionTimeouts,
+  evaluateConcurrentSessions,
+  validateSessionBinding,
+  SessionBindingMode,
+  ConcurrentSessionStrategy,
+  getNextIdleTimeout,
+  SESSION_POLICY_DEFAULTS,
 } from './session-policy.js';
 import { Role } from './access-policy.js';
 
@@ -181,6 +193,309 @@ describe('session-policy', () => {
       expect(expiry.getTime()).toBe(
         sessionCreatedAt.getTime() + defaultSessionPolicy.maxSessionDurationMs,
       );
+    });
+  });
+
+  describe('TenantSessionPolicy', () => {
+    describe('default values', () => {
+      it('should have correct default idle timeout', () => {
+        expect(defaultTenantSessionPolicy.idleTimeoutMinutes).toBe(
+          SESSION_POLICY_DEFAULTS.IDLE_TIMEOUT_MINUTES,
+        );
+      });
+
+      it('should have correct default absolute timeout', () => {
+        expect(defaultTenantSessionPolicy.absoluteTimeoutMinutes).toBe(
+          SESSION_POLICY_DEFAULTS.ABSOLUTE_TIMEOUT_MINUTES,
+        );
+      });
+
+      it('should have correct default max concurrent sessions', () => {
+        expect(defaultTenantSessionPolicy.maxConcurrentSessionsPerUser).toBe(
+          SESSION_POLICY_DEFAULTS.MAX_CONCURRENT_SESSIONS,
+        );
+      });
+
+      it('should have default session binding mode as none', () => {
+        expect(defaultTenantSessionPolicy.sessionBindingMode).toBe(SessionBindingMode.NONE);
+      });
+
+      it('should have force logout on password change enabled by default', () => {
+        expect(defaultTenantSessionPolicy.forceLogoutOnPasswordChange).toBe(true);
+      });
+
+      it('should have force logout on role change disabled by default', () => {
+        expect(defaultTenantSessionPolicy.forceLogoutOnRoleChange).toBe(false);
+      });
+
+      it('should have default concurrent session strategy as revoke oldest', () => {
+        expect(defaultTenantSessionPolicy.concurrentSessionStrategy).toBe(
+          ConcurrentSessionStrategy.REVOKE_OLDEST,
+        );
+      });
+    });
+
+    describe('tenantSessionPolicySchema validation', () => {
+      it('should validate a correct policy', () => {
+        const policy: TenantSessionPolicy = {
+          idleTimeoutMinutes: 30,
+          absoluteTimeoutMinutes: 1440,
+          maxConcurrentSessionsPerUser: 5,
+          sessionBindingMode: SessionBindingMode.IP,
+          forceLogoutOnPasswordChange: true,
+          forceLogoutOnRoleChange: false,
+          concurrentSessionStrategy: ConcurrentSessionStrategy.REVOKE_OLDEST,
+        };
+
+        const result = tenantSessionPolicySchema.safeParse(policy);
+        expect(result.success).toBe(true);
+      });
+
+      it('should reject idle timeout below minimum', () => {
+        const policy = {
+          ...defaultTenantSessionPolicy,
+          idleTimeoutMinutes: 1,
+        };
+
+        const result = tenantSessionPolicySchema.safeParse(policy);
+        expect(result.success).toBe(false);
+      });
+
+      it('should reject idle timeout above maximum', () => {
+        const policy = {
+          ...defaultTenantSessionPolicy,
+          idleTimeoutMinutes: 1000,
+        };
+
+        const result = tenantSessionPolicySchema.safeParse(policy);
+        expect(result.success).toBe(false);
+      });
+
+      it('should reject invalid session binding mode', () => {
+        const policy = {
+          ...defaultTenantSessionPolicy,
+          sessionBindingMode: 'invalid',
+        };
+
+        const result = tenantSessionPolicySchema.safeParse(policy);
+        expect(result.success).toBe(false);
+      });
+
+      it('should allow null for maxConcurrentSessionsPerUser (unlimited)', () => {
+        const policy = {
+          ...defaultTenantSessionPolicy,
+          maxConcurrentSessionsPerUser: null,
+        };
+
+        const result = tenantSessionPolicySchema.safeParse(policy);
+        expect(result.success).toBe(true);
+      });
+    });
+
+    describe('resolveTenantSessionPolicy', () => {
+      it('should return defaults when tenant settings are undefined', () => {
+        const result = resolveTenantSessionPolicy(undefined);
+        expect(result).toEqual(defaultTenantSessionPolicy);
+      });
+
+      it('should return defaults when tenant settings are empty', () => {
+        const result = resolveTenantSessionPolicy({});
+        expect(result).toEqual(defaultTenantSessionPolicy);
+      });
+
+      it('should use custom policy when provided in settings', () => {
+        const customSettings = {
+          sessionPolicy: {
+            idleTimeoutMinutes: 60,
+            absoluteTimeoutMinutes: 480,
+          },
+        };
+
+        const result = resolveTenantSessionPolicy(customSettings);
+        expect(result.idleTimeoutMinutes).toBe(60);
+        expect(result.absoluteTimeoutMinutes).toBe(480);
+        expect(result.maxConcurrentSessionsPerUser).toBe(
+          defaultTenantSessionPolicy.maxConcurrentSessionsPerUser,
+        );
+      });
+
+      it('should merge partial custom settings with defaults', () => {
+        const customSettings = {
+          sessionPolicy: {
+            maxConcurrentSessionsPerUser: 10,
+          },
+        };
+
+        const result = resolveTenantSessionPolicy(customSettings);
+        expect(result.maxConcurrentSessionsPerUser).toBe(10);
+        expect(result.idleTimeoutMinutes).toBe(defaultTenantSessionPolicy.idleTimeoutMinutes);
+      });
+    });
+
+    describe('validateTenantSessionPolicy', () => {
+      it('should return valid for correct policy', () => {
+        const result = validateTenantSessionPolicy(defaultTenantSessionPolicy);
+        expect(result.valid).toBe(true);
+        expect(result.errors).toHaveLength(0);
+      });
+
+      it('should return errors for invalid policy', () => {
+        const invalidPolicy = {
+          idleTimeoutMinutes: 1,
+          absoluteTimeoutMinutes: 30,
+          maxConcurrentSessionsPerUser: 0,
+        };
+
+        const result = validateTenantSessionPolicy(invalidPolicy);
+        expect(result.valid).toBe(false);
+        expect(result.errors.length).toBeGreaterThan(0);
+      });
+    });
+
+    describe('evaluateSessionTimeouts', () => {
+      it('should return active for fresh session within timeouts', () => {
+        const sessionCreatedAt = new Date(Date.now() - 30 * 60 * 1000);
+        const lastActiveAt = new Date(Date.now() - 5 * 60 * 1000);
+
+        const result = evaluateSessionTimeouts(
+          sessionCreatedAt,
+          lastActiveAt,
+          defaultTenantSessionPolicy,
+        );
+
+        expect(result.allowed).toBe(true);
+        expect(result.outcome).toBe(SessionOutcome.ACTIVE);
+        expect(result.idleTimeoutExpired).toBe(false);
+        expect(result.absoluteTimeoutExpired).toBe(false);
+      });
+
+      it('should return expired with idle timeout when idle too long', () => {
+        const sessionCreatedAt = new Date(Date.now() - 60 * 60 * 1000);
+        const lastActiveAt = new Date(Date.now() - 45 * 60 * 1000);
+
+        const policy = { ...defaultTenantSessionPolicy, idleTimeoutMinutes: 30 };
+
+        const result = evaluateSessionTimeouts(sessionCreatedAt, lastActiveAt, policy);
+
+        expect(result.allowed).toBe(false);
+        expect(result.outcome).toBe(SessionOutcome.EXPIRED);
+        expect(result.reason).toBe(SessionRevocationReason.IDLE_TIMEOUT);
+        expect(result.idleTimeoutExpired).toBe(true);
+      });
+
+      it('should return expired with absolute timeout when session too old', () => {
+        const sessionCreatedAt = new Date(Date.now() - 25 * 60 * 60 * 1000);
+        const lastActiveAt = new Date();
+
+        const policy = { ...defaultTenantSessionPolicy, absoluteTimeoutMinutes: 24 * 60 };
+
+        const result = evaluateSessionTimeouts(sessionCreatedAt, lastActiveAt, policy);
+
+        expect(result.allowed).toBe(false);
+        expect(result.outcome).toBe(SessionOutcome.EXPIRED);
+        expect(result.reason).toBe(SessionRevocationReason.ABSOLUTE_TIMEOUT);
+        expect(result.absoluteTimeoutExpired).toBe(true);
+      });
+    });
+
+    describe('evaluateConcurrentSessions', () => {
+      it('should allow session when under limit', () => {
+        const result = evaluateConcurrentSessions(3, defaultTenantSessionPolicy);
+
+        expect(result.allowed).toBe(true);
+        expect(result.currentSessionCount).toBe(3);
+        expect(result.maxSessions).toBe(5);
+      });
+
+      it('should deny session when at limit', () => {
+        const result = evaluateConcurrentSessions(5, defaultTenantSessionPolicy);
+
+        expect(result.allowed).toBe(false);
+        expect(result.outcome).toBe(SessionOutcome.POLICY_DENIED);
+        expect(result.reason).toBe(SessionRevocationReason.CONCURRENT_SESSION);
+      });
+
+      it('should allow unlimited sessions when maxConcurrentSessionsPerUser is null', () => {
+        const policy = { ...defaultTenantSessionPolicy, maxConcurrentSessionsPerUser: null };
+
+        const result = evaluateConcurrentSessions(100, policy);
+
+        expect(result.allowed).toBe(true);
+      });
+    });
+
+    describe('validateSessionBinding', () => {
+      it('should allow when binding mode is none', () => {
+        const policy = {
+          ...defaultTenantSessionPolicy,
+          sessionBindingMode: SessionBindingMode.NONE,
+        };
+        const original = { ipAddress: '192.168.1.1', deviceFingerprint: 'abc123' };
+        const current = { ipAddress: '10.0.0.1', deviceFingerprint: 'xyz789' };
+
+        const result = validateSessionBinding(policy, original, current);
+
+        expect(result.violated).toBe(false);
+      });
+
+      it('should detect IP binding violation', () => {
+        const policy = { ...defaultTenantSessionPolicy, sessionBindingMode: SessionBindingMode.IP };
+        const original = { ipAddress: '192.168.1.1', deviceFingerprint: null };
+        const current = { ipAddress: '10.0.0.1', deviceFingerprint: null };
+
+        const result = validateSessionBinding(policy, original, current);
+
+        expect(result.violated).toBe(true);
+        expect(result.violations).toContain('ip');
+      });
+
+      it('should detect device binding violation', () => {
+        const policy = {
+          ...defaultTenantSessionPolicy,
+          sessionBindingMode: SessionBindingMode.DEVICE,
+        };
+        const original = { ipAddress: null, deviceFingerprint: 'abc123' };
+        const current = { ipAddress: null, deviceFingerprint: 'xyz789' };
+
+        const result = validateSessionBinding(policy, original, current);
+
+        expect(result.violated).toBe(true);
+        expect(result.violations).toContain('device');
+      });
+
+      it('should detect both IP and device binding violations', () => {
+        const policy = {
+          ...defaultTenantSessionPolicy,
+          sessionBindingMode: SessionBindingMode.IP_DEVICE,
+        };
+        const original = { ipAddress: '192.168.1.1', deviceFingerprint: 'abc123' };
+        const current = { ipAddress: '10.0.0.1', deviceFingerprint: 'xyz789' };
+
+        const result = validateSessionBinding(policy, original, current);
+
+        expect(result.violated).toBe(true);
+        expect(result.violations).toContain('ip');
+        expect(result.violations).toContain('device');
+      });
+
+      it('should allow when no original context', () => {
+        const policy = { ...defaultTenantSessionPolicy, sessionBindingMode: SessionBindingMode.IP };
+        const original = { ipAddress: null, deviceFingerprint: null };
+        const current = { ipAddress: '10.0.0.1', deviceFingerprint: null };
+
+        const result = validateSessionBinding(policy, original, current);
+
+        expect(result.violated).toBe(false);
+      });
+    });
+
+    describe('getNextIdleTimeout', () => {
+      it('should return correct next idle timeout date', () => {
+        const lastActiveAt = new Date('2024-01-01T10:00:00Z');
+        const nextTimeout = getNextIdleTimeout(lastActiveAt, 30);
+
+        expect(nextTimeout.getTime()).toBe(lastActiveAt.getTime() + 30 * 60 * 1000);
+      });
     });
   });
 });

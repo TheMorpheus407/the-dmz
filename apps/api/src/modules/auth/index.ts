@@ -13,6 +13,8 @@ export {
   deleteSession,
   deleteSessionByTokenHash,
   deleteAllSessionsByTenantId,
+  deleteAllSessionsByUserId,
+  findSessionsByUserId,
   updateSessionLastActive,
   updateSessionTokenHash,
   createProfile,
@@ -25,8 +27,16 @@ export {
   deleteAllPasswordResetTokensForUser,
   findUserByEmailForPasswordReset,
   updateUserPassword,
+  countTenantSessions,
+  countActiveUserSessions,
+  getOldestActiveSession,
+  deleteOldestUserSessions,
+  findActiveSessionWithContext,
   type ProfileData,
   type OAuthClientData,
+  type SessionListItem,
+  type ActiveSessionInfo,
+  type ListTenantSessionsParams,
 } from './auth.repo.js';
 export * from './auth.types.js';
 export * from './auth.errors.js';

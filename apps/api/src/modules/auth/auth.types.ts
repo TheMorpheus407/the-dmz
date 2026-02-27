@@ -16,6 +16,12 @@ export type AuthSession = {
   lastActiveAt: Date;
 };
 
+export type AuthSessionWithContext = AuthSession & {
+  ipAddress: string | null;
+  userAgent: string | null;
+  deviceFingerprint: string | null;
+};
+
 export type JwtPayload = {
   sub: string;
   tenantId: string;

@@ -368,3 +368,58 @@ export class FederatedRevocationTenantMismatchError extends FederatedRevocationE
     });
   }
 }
+
+export class SessionIdleTimeoutError extends AuthError {
+  constructor(idleTimeoutMinutes: number) {
+    super({
+      code: ErrorCodes.AUTH_SESSION_IDLE_TIMEOUT,
+      message: `Session has been idle for too long. Maximum idle time is ${idleTimeoutMinutes} minutes.`,
+      statusCode: 401,
+      details: { reason: 'idle_timeout', idleTimeoutMinutes },
+    });
+  }
+}
+
+export class SessionAbsoluteTimeoutError extends AuthError {
+  constructor(maxSessionMinutes: number) {
+    super({
+      code: ErrorCodes.AUTH_SESSION_ABSOLUTE_TIMEOUT,
+      message: `Session has exceeded maximum lifetime of ${maxSessionMinutes} minutes.`,
+      statusCode: 401,
+      details: { reason: 'absolute_timeout', maxSessionMinutes },
+    });
+  }
+}
+
+export class SessionConcurrentLimitError extends AuthError {
+  constructor(maxSessions: number, currentCount: number) {
+    super({
+      code: ErrorCodes.AUTH_SESSION_CONCURRENT_LIMIT,
+      message: `Maximum concurrent sessions (${maxSessions}) reached. Current sessions: ${currentCount}.`,
+      statusCode: 403,
+      details: { reason: 'concurrent_session_limit', maxSessions, currentCount },
+    });
+  }
+}
+
+export class SessionBindingViolationError extends AuthError {
+  constructor(violations: Array<'ip' | 'device'>) {
+    super({
+      code: ErrorCodes.AUTH_SESSION_BINDING_VIOLATION,
+      message: `Session binding violation: ${violations.join(', ')}`,
+      statusCode: 401,
+      details: { reason: 'binding_violation', violations },
+    });
+  }
+}
+
+export class SessionPolicyInvalidError extends AuthError {
+  constructor(errors: string[]) {
+    super({
+      code: ErrorCodes.AUTH_SESSION_POLICY_INVALID,
+      message: 'Invalid session policy configuration',
+      statusCode: 400,
+      details: { reason: 'policy_invalid', errors },
+    });
+  }
+}

@@ -148,6 +148,11 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.SCIM_BASE_URL_UNREACHABLE]: 503,
   [ErrorCodes.SCIM_AUTHENTICATION_FAILED]: 401,
   [ErrorCodes.SCIM_ENDPOINT_UNAVAILABLE]: 503,
+  [ErrorCodes.AUTH_SESSION_IDLE_TIMEOUT]: 401,
+  [ErrorCodes.AUTH_SESSION_ABSOLUTE_TIMEOUT]: 401,
+  [ErrorCodes.AUTH_SESSION_CONCURRENT_LIMIT]: 403,
+  [ErrorCodes.AUTH_SESSION_BINDING_VIOLATION]: 401,
+  [ErrorCodes.AUTH_SESSION_POLICY_INVALID]: 400,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -267,6 +272,11 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.SCIM_BASE_URL_UNREACHABLE]: 'SCIM base URL is unreachable',
   [ErrorCodes.SCIM_AUTHENTICATION_FAILED]: 'SCIM authentication failed',
   [ErrorCodes.SCIM_ENDPOINT_UNAVAILABLE]: 'SCIM endpoint is unavailable',
+  [ErrorCodes.AUTH_SESSION_IDLE_TIMEOUT]: 'Session has been idle for too long',
+  [ErrorCodes.AUTH_SESSION_ABSOLUTE_TIMEOUT]: 'Session has exceeded maximum lifetime',
+  [ErrorCodes.AUTH_SESSION_CONCURRENT_LIMIT]: 'Maximum concurrent sessions reached',
+  [ErrorCodes.AUTH_SESSION_BINDING_VIOLATION]: 'Session binding violation detected',
+  [ErrorCodes.AUTH_SESSION_POLICY_INVALID]: 'Invalid session policy configuration',
 } as const;
 
 export type AppErrorOptions = {

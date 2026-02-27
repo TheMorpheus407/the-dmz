@@ -29,6 +29,7 @@ export const sessions = authSchema.table(
     tokenHash: varchar('token_hash', { length: 255 }).notNull(),
     ipAddress: inet('ip_address'),
     userAgent: text('user_agent'),
+    deviceFingerprint: varchar('device_fingerprint', { length: 128 }),
     expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
     lastActiveAt: timestamp('last_active_at', { withTimezone: true, mode: 'date' })
@@ -40,6 +41,7 @@ export const sessions = authSchema.table(
   (table) => ({
     tokenHashUnique: uniqueIndex('auth_sessions_token_hash_unique').on(table.tokenHash),
     userExpiresIdx: index('auth_sessions_user_expires_at_idx').on(table.userId, table.expiresAt),
+    tenantUserIdx: index('auth_sessions_tenant_user_idx').on(table.tenantId, table.userId),
     tenantUserFk: foreignKey({
       name: 'sessions_tenant_id_user_id_users_tenant_id_user_id_fk',
       columns: [table.tenantId, table.userId],

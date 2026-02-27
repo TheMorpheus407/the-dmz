@@ -3,7 +3,17 @@ import { randomUUID } from 'crypto';
 import * as argon2 from 'argon2';
 import { eq, and, or } from 'drizzle-orm';
 
-import { canRefreshSession, getSessionPolicyForRole } from '@the-dmz/shared/auth/session-policy.js';
+import {
+  canRefreshSession,
+  getSessionPolicyForRole,
+  resolveTenantSessionPolicy,
+  evaluateSessionTimeouts,
+  evaluateConcurrentSessions,
+  validateSessionBinding,
+  type SessionBindingContext,
+  ConcurrentSessionStrategy,
+  SessionRevocationReason,
+} from '@the-dmz/shared/auth/session-policy.js';
 import {
   m1PasswordPolicyManifest,
   evaluatePasswordPolicy,
@@ -62,6 +72,10 @@ import {
   findSessionWithUser,
   revokeSessionById,
   countTenantSessions,
+  countActiveUserSessions,
+  deleteOldestUserSessions,
+  findActiveSessionWithContext,
+  updateSessionLastActive,
 } from './auth.repo.js';
 import {
   InvalidCredentialsError,
@@ -75,6 +89,10 @@ import {
   PasswordResetTokenExpiredError,
   PasswordResetTokenInvalidError,
   PasswordResetTokenAlreadyUsedError,
+  SessionIdleTimeoutError,
+  SessionAbsoluteTimeoutError,
+  SessionConcurrentLimitError,
+  SessionBindingViolationError,
 } from './auth.errors.js';
 import {
   resolveEffectivePreferences,
@@ -271,13 +289,20 @@ export const register = async (
   };
 };
 
+export interface LoginOptions {
+  tenantId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  deviceFingerprint?: string;
+}
+
 export const login = async (
   config: AppConfig,
   data: {
     email: string;
     password: string;
   },
-  options?: { tenantId?: string },
+  options?: LoginOptions,
 ): Promise<AuthResponse> => {
   const db = getDatabaseClient(config);
 
@@ -321,18 +346,78 @@ export const login = async (
     throw new InvalidCredentialsError();
   }
 
+  const tenant = await db.query.tenants.findFirst({
+    where: (t, { eq }) => eq(t.tenantId, userWithHash.tenantId),
+    columns: {
+      tenantId: true,
+      status: true,
+      settings: true,
+    },
+  });
+
+  if (
+    tenant &&
+    !ALLOWED_TENANT_STATUSES.includes(tenant.status as (typeof ALLOWED_TENANT_STATUSES)[number])
+  ) {
+    throw new AppError({
+      code: ErrorCodes.TENANT_INACTIVE,
+      message: `Tenant is ${tenant.status}`,
+      statusCode: 403,
+    });
+  }
+
+  const sessionPolicy = resolveTenantSessionPolicy(
+    tenant?.settings as Record<string, unknown> | undefined,
+  );
+
+  const activeSessionCount = await countActiveUserSessions(
+    db,
+    userWithHash.id,
+    userWithHash.tenantId,
+  );
+
+  const concurrentEval = evaluateConcurrentSessions(activeSessionCount, sessionPolicy);
+
+  if (!concurrentEval.allowed) {
+    if (concurrentEval.strategy === ConcurrentSessionStrategy.REJECT_NEWEST) {
+      throw new SessionConcurrentLimitError(
+        concurrentEval.maxSessions ?? 0,
+        concurrentEval.currentSessionCount,
+      );
+    }
+
+    const keepCount = (sessionPolicy.maxConcurrentSessionsPerUser ?? 1) - 1;
+    await deleteOldestUserSessions(db, userWithHash.id, userWithHash.tenantId, keepCount);
+  }
+
   const refreshToken = randomUUID();
   const refreshTokenHash = await hashToken(refreshToken, config.TOKEN_HASH_SALT);
 
   const refreshTokenExpiry = new Date();
   refreshTokenExpiry.setDate(refreshTokenExpiry.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
 
-  const session = await createSession(db, {
+  const sessionData: {
+    userId: string;
+    tenantId: string;
+    tokenHash: string;
+    expiresAt: Date;
+    ipAddress?: string;
+    userAgent?: string;
+  } = {
     userId: userWithHash.id,
     tenantId: userWithHash.tenantId,
     tokenHash: refreshTokenHash,
     expiresAt: refreshTokenExpiry,
-  });
+  };
+
+  if (options?.ipAddress) {
+    sessionData.ipAddress = options.ipAddress;
+  }
+  if (options?.userAgent) {
+    sessionData.userAgent = options.userAgent;
+  }
+
+  const session = await createSession(db, sessionData);
 
   const tokens = await generateTokens(config, userWithHash, session.id, refreshToken);
 
@@ -352,9 +437,16 @@ export const login = async (
   };
 };
 
+export interface RefreshOptions {
+  ipAddress?: string;
+  userAgent?: string;
+  deviceFingerprint?: string;
+}
+
 export const refresh = async (
   config: AppConfig,
   refreshToken: string,
+  options?: RefreshOptions,
 ): Promise<RefreshResponse> => {
   const db = getDatabaseClient(config);
 
@@ -376,21 +468,12 @@ export const refresh = async (
     throw new InvalidCredentialsError();
   }
 
-  if (!canRefreshSession(session.createdAt, user.role)) {
-    await deleteSession(db, session.id);
-    const policy = getSessionPolicyForRole(user.role);
-    throw new AppError({
-      code: ErrorCodes.AUTH_SESSION_EXPIRED,
-      message: `Session has exceeded maximum duration of ${policy.maxSessionDurationMs}ms for role ${user.role}`,
-      statusCode: 401,
-    });
-  }
-
   const tenant = await db.query.tenants.findFirst({
     where: (t, { eq }) => eq(t.tenantId, user.tenantId),
     columns: {
       tenantId: true,
       status: true,
+      settings: true,
     },
   });
 
@@ -409,18 +492,87 @@ export const refresh = async (
     });
   }
 
+  const sessionPolicy = resolveTenantSessionPolicy(
+    tenant?.settings as Record<string, unknown> | undefined,
+  );
+
+  const lastActiveAt = session.lastActiveAt ?? session.createdAt;
+  const timeoutEval = evaluateSessionTimeouts(session.createdAt, lastActiveAt, sessionPolicy);
+
+  if (!timeoutEval.allowed) {
+    await deleteSession(db, session.id);
+    if (timeoutEval.reason === SessionRevocationReason.IDLE_TIMEOUT) {
+      throw new SessionIdleTimeoutError(sessionPolicy.idleTimeoutMinutes);
+    }
+    if (timeoutEval.reason === SessionRevocationReason.ABSOLUTE_TIMEOUT) {
+      throw new SessionAbsoluteTimeoutError(sessionPolicy.absoluteTimeoutMinutes);
+    }
+    throw new SessionExpiredError();
+  }
+
+  if (sessionPolicy.sessionBindingMode !== 'none') {
+    const originalSession = await findActiveSessionWithContext(db, session.id);
+    if (originalSession) {
+      const bindingContext: SessionBindingContext = {
+        ipAddress: options?.ipAddress ?? null,
+        deviceFingerprint: options?.deviceFingerprint ?? null,
+      };
+      const originalContext: SessionBindingContext = {
+        ipAddress: originalSession.ipAddress ?? null,
+        deviceFingerprint: originalSession.deviceFingerprint ?? null,
+      };
+      const bindingViolation = validateSessionBinding(
+        sessionPolicy,
+        originalContext,
+        bindingContext,
+      );
+      if (bindingViolation.violated) {
+        await deleteSession(db, session.id);
+        throw new SessionBindingViolationError(bindingViolation.violations);
+      }
+    }
+  }
+
+  if (!canRefreshSession(session.createdAt, user.role)) {
+    await deleteSession(db, session.id);
+    const policy = getSessionPolicyForRole(user.role);
+    throw new AppError({
+      code: ErrorCodes.AUTH_SESSION_EXPIRED,
+      message: `Session has exceeded maximum duration of ${policy.maxSessionDurationMs}ms for role ${user.role}`,
+      statusCode: 401,
+    });
+  }
+
+  await updateSessionLastActive(db, session.id);
+
   const newRefreshToken = randomUUID();
   const newRefreshTokenHash = await hashToken(newRefreshToken, config.TOKEN_HASH_SALT);
 
   const refreshTokenExpiry = new Date();
   refreshTokenExpiry.setDate(refreshTokenExpiry.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
 
-  const newSession = await createSession(db, {
+  const newSessionData: {
+    userId: string;
+    tenantId: string;
+    tokenHash: string;
+    expiresAt: Date;
+    ipAddress?: string;
+    userAgent?: string;
+  } = {
     userId: user.id,
     tenantId: user.tenantId,
     tokenHash: newRefreshTokenHash,
     expiresAt: refreshTokenExpiry,
-  });
+  };
+
+  if (options?.ipAddress) {
+    newSessionData.ipAddress = options.ipAddress;
+  }
+  if (options?.userAgent) {
+    newSessionData.userAgent = options.userAgent;
+  }
+
+  const newSession = await createSession(db, newSessionData);
 
   await deleteSession(db, session.id);
 
@@ -744,9 +896,15 @@ export const changePasswordWithToken = async (
 
   await deleteAllPasswordResetTokensForUser(db, tokenRecord.userId, tokenRecord.tenantId);
 
-  const recoveryPolicy = m1PasswordRecoveryPolicyManifest;
+  const tenant = await db.query.tenants.findFirst({
+    where: (tenants, { eq }) => eq(tenants.tenantId, tokenRecord.tenantId),
+  });
+
+  const sessionPolicy = resolveTenantSessionPolicy(
+    tenant?.settings as Record<string, unknown> | undefined,
+  );
   let sessionsRevoked = 0;
-  if (recoveryPolicy.securityContract.sessionRevocationOnSuccess) {
+  if (sessionPolicy.forceLogoutOnPasswordChange) {
     sessionsRevoked = await deleteAllSessionsByTenantId(db, tokenRecord.tenantId);
   }
 
@@ -1340,5 +1498,51 @@ export const revokeAllTenantSessions = async (
     result: 'revoked',
     sessionsRevoked,
     reason: 'tenant_wide_admin_revocation',
+  };
+};
+
+export interface HandleUserRoleChangeInput {
+  userId: string;
+  tenantId: string;
+  oldRole: string;
+  newRole: string;
+}
+
+export interface HandleUserRoleChangeResult {
+  sessionsRevoked: number;
+  reason: string;
+}
+
+export const handleUserRoleChange = async (
+  config: AppConfig,
+  input: HandleUserRoleChangeInput,
+): Promise<HandleUserRoleChangeResult> => {
+  if (input.oldRole === input.newRole) {
+    return { sessionsRevoked: 0, reason: 'role_unchanged' };
+  }
+
+  const db = getDatabaseClient(config);
+
+  const tenant = await db.query.tenants.findFirst({
+    where: (t, { eq }) => eq(t.tenantId, input.tenantId),
+    columns: {
+      tenantId: true,
+      settings: true,
+    },
+  });
+
+  const sessionPolicy = resolveTenantSessionPolicy(
+    tenant?.settings as Record<string, unknown> | undefined,
+  );
+
+  if (!sessionPolicy.forceLogoutOnRoleChange) {
+    return { sessionsRevoked: 0, reason: 'force_logout_disabled' };
+  }
+
+  const sessionsRevoked = await deleteAllSessionsByUserId(db, input.userId, input.tenantId);
+
+  return {
+    sessionsRevoked,
+    reason: SessionRevocationReason.ROLE_CHANGED,
   };
 };

@@ -1003,3 +1003,148 @@ export const countTenantSessions = async (
 
   return result[0]?.count ?? 0;
 };
+
+export const countActiveUserSessions = async (
+  db: DB,
+  userId: string,
+  tenantId: string,
+): Promise<number> => {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(sessionsTable)
+    .where(
+      and(
+        eq(sessionsTable.userId, userId),
+        eq(sessionsTable.tenantId, tenantId),
+        isNull(sessionsTable.mfaVerifiedAt),
+      ),
+    );
+
+  return result[0]?.count ?? 0;
+};
+
+export interface ActiveSessionInfo {
+  id: string;
+  userId: string;
+  tenantId: string;
+  expiresAt: Date;
+  createdAt: Date;
+  lastActiveAt: Date | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  deviceFingerprint: string | null;
+}
+
+export const getOldestActiveSession = async (
+  db: DB,
+  userId: string,
+  tenantId: string,
+): Promise<ActiveSessionInfo | null> => {
+  const result = await db
+    .select({
+      id: sessionsTable.id,
+      userId: sessionsTable.userId,
+      tenantId: sessionsTable.tenantId,
+      expiresAt: sessionsTable.expiresAt,
+      createdAt: sessionsTable.createdAt,
+      lastActiveAt: sessionsTable.lastActiveAt,
+      ipAddress: sessionsTable.ipAddress,
+      userAgent: sessionsTable.userAgent,
+      deviceFingerprint: sessionsTable.deviceFingerprint,
+    })
+    .from(sessionsTable)
+    .where(and(eq(sessionsTable.userId, userId), eq(sessionsTable.tenantId, tenantId)))
+    .orderBy(sessionsTable.createdAt)
+    .limit(1);
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  const row = result[0]!;
+  return {
+    id: row.id,
+    userId: row.userId,
+    tenantId: row.tenantId,
+    expiresAt: row.expiresAt,
+    createdAt: row.createdAt,
+    lastActiveAt: row.lastActiveAt,
+    ipAddress: row.ipAddress,
+    userAgent: row.userAgent,
+    deviceFingerprint: row.deviceFingerprint,
+  };
+};
+
+export const deleteOldestUserSessions = async (
+  db: DB,
+  userId: string,
+  tenantId: string,
+  keepCount: number,
+): Promise<number> => {
+  const userSessions = await db
+    .select({
+      id: sessionsTable.id,
+      createdAt: sessionsTable.createdAt,
+    })
+    .from(sessionsTable)
+    .where(and(eq(sessionsTable.userId, userId), eq(sessionsTable.tenantId, tenantId)))
+    .orderBy(sessionsTable.createdAt)
+    .limit(keepCount + 1);
+
+  if (userSessions.length <= keepCount) {
+    return 0;
+  }
+
+  const idsToDelete = userSessions.slice(keepCount).map((s) => s.id);
+
+  const deleted = await db
+    .delete(sessionsTable)
+    .where(
+      and(
+        eq(sessionsTable.userId, userId),
+        eq(sessionsTable.tenantId, tenantId),
+        sql`${sessionsTable.id} IN (${sql.join(idsToDelete.map((id) => sql`${id}`))})`,
+      ),
+    )
+    .returning({ id: sessionsTable.id });
+
+  return deleted.length;
+};
+
+export const findActiveSessionWithContext = async (
+  db: DB,
+  sessionId: string,
+): Promise<ActiveSessionInfo | null> => {
+  const result = await db
+    .select({
+      id: sessionsTable.id,
+      userId: sessionsTable.userId,
+      tenantId: sessionsTable.tenantId,
+      expiresAt: sessionsTable.expiresAt,
+      createdAt: sessionsTable.createdAt,
+      lastActiveAt: sessionsTable.lastActiveAt,
+      ipAddress: sessionsTable.ipAddress,
+      userAgent: sessionsTable.userAgent,
+      deviceFingerprint: sessionsTable.deviceFingerprint,
+    })
+    .from(sessionsTable)
+    .where(eq(sessionsTable.id, sessionId))
+    .limit(1);
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  const row = result[0]!;
+  return {
+    id: row.id,
+    userId: row.userId,
+    tenantId: row.tenantId,
+    expiresAt: row.expiresAt,
+    createdAt: row.createdAt,
+    lastActiveAt: row.lastActiveAt,
+    ipAddress: row.ipAddress,
+    userAgent: row.userAgent,
+    deviceFingerprint: row.deviceFingerprint,
+  };
+};
