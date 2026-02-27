@@ -98,6 +98,20 @@ export const ErrorCodes = {
   SCIM_ROLE_ESCALATION_BLOCKED: 'SCIM_ROLE_ESCALATION_BLOCKED',
   SCIM_ATTRIBUTE_MUTABILITY_VIOLATION: 'SCIM_ATTRIBUTE_MUTABILITY_VIOLATION',
   SCIM_JIT_CONFLICT: 'SCIM_JIT_CONFLICT',
+  SSO_VALIDATION_REQUIRED: 'SSO_VALIDATION_REQUIRED',
+  SSO_VALIDATION_STALE: 'SSO_VALIDATION_STALE',
+  SSO_VALIDATION_FAILED: 'SSO_VALIDATION_FAILED',
+  SSO_ACTIVATION_BLOCKED: 'SSO_ACTIVATION_BLOCKED',
+  SSO_METADATA_UNREACHABLE: 'SSO_METADATA_UNREACHABLE',
+  SSO_DISCOVERY_FAILED: 'SSO_DISCOVERY_FAILED',
+  SSO_JWKS_UNREACHABLE: 'SSO_JWKS_UNREACHABLE',
+  SSO_CERTIFICATE_EXPIRED: 'SSO_CERTIFICATE_EXPIRED',
+  SSO_ISSUER_MISMATCH_CONFIG: 'SSO_ISSUER_MISMATCH_CONFIG',
+  SSO_AUDIENCE_MISMATCH_CONFIG: 'SSO_AUDIENCE_MISMATCH_CONFIG',
+  SCIM_VALIDATION_FAILED: 'SCIM_VALIDATION_FAILED',
+  SCIM_BASE_URL_UNREACHABLE: 'SCIM_BASE_URL_UNREACHABLE',
+  SCIM_AUTHENTICATION_FAILED: 'SCIM_AUTHENTICATION_FAILED',
+  SCIM_ENDPOINT_UNAVAILABLE: 'SCIM_ENDPOINT_UNAVAILABLE',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -533,6 +547,76 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.SERVER,
     retryable: false,
     messageKey: 'errors.scim.jitConflict',
+  },
+  [ErrorCodes.SSO_VALIDATION_REQUIRED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.sso.validationRequired',
+  },
+  [ErrorCodes.SSO_VALIDATION_STALE]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.sso.validationStale',
+  },
+  [ErrorCodes.SSO_VALIDATION_FAILED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.sso.validationFailed',
+  },
+  [ErrorCodes.SSO_ACTIVATION_BLOCKED]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.sso.activationBlocked',
+  },
+  [ErrorCodes.SSO_METADATA_UNREACHABLE]: {
+    category: ErrorCodeCategory.NETWORK,
+    retryable: true,
+    messageKey: 'errors.sso.metadataUnreachable',
+  },
+  [ErrorCodes.SSO_DISCOVERY_FAILED]: {
+    category: ErrorCodeCategory.NETWORK,
+    retryable: true,
+    messageKey: 'errors.sso.discoveryFailed',
+  },
+  [ErrorCodes.SSO_JWKS_UNREACHABLE]: {
+    category: ErrorCodeCategory.NETWORK,
+    retryable: true,
+    messageKey: 'errors.sso.jwksUnreachable',
+  },
+  [ErrorCodes.SSO_CERTIFICATE_EXPIRED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.sso.certificateExpired',
+  },
+  [ErrorCodes.SSO_ISSUER_MISMATCH_CONFIG]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.sso.issuerMismatchConfig',
+  },
+  [ErrorCodes.SSO_AUDIENCE_MISMATCH_CONFIG]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.sso.audienceMismatchConfig',
+  },
+  [ErrorCodes.SCIM_VALIDATION_FAILED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.scim.validationFailed',
+  },
+  [ErrorCodes.SCIM_BASE_URL_UNREACHABLE]: {
+    category: ErrorCodeCategory.NETWORK,
+    retryable: true,
+    messageKey: 'errors.scim.baseUrlUnreachable',
+  },
+  [ErrorCodes.SCIM_AUTHENTICATION_FAILED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.scim.authenticationFailed',
+  },
+  [ErrorCodes.SCIM_ENDPOINT_UNAVAILABLE]: {
+    category: ErrorCodeCategory.NETWORK,
+    retryable: true,
+    messageKey: 'errors.scim.endpointUnavailable',
   },
 };
 

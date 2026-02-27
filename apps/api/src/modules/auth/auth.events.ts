@@ -46,6 +46,12 @@ export const AUTH_EVENTS = {
   SCIM_GROUP_DELETED: 'auth.scim.group.deleted',
   SCIM_GROUP_MEMBERSHIP_CHANGED: 'auth.scim.group.membership_changed',
   SCIM_JIT_RECONCILIATION: 'auth.scim.jit.reconciliation',
+  SSO_VALIDATION_STARTED: 'auth.sso.validation.started',
+  SSO_VALIDATION_COMPLETED: 'auth.sso.validation.completed',
+  SSO_VALIDATION_FAILED: 'auth.sso.validation.failed',
+  SSO_ACTIVATION_SUCCEEDED: 'auth.sso.activation.succeeded',
+  SSO_ACTIVATION_FAILED: 'auth.sso.activation.failed',
+  SSO_DEACTIVATION_SUCCEEDED: 'auth.sso.deactivation.succeeded',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -387,6 +393,60 @@ export interface SCIMJitReconciliationPayload {
   reason: string;
 }
 
+export interface SSOValidationStartedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc' | 'scim';
+  correlationId: string;
+  executedBy?: string;
+}
+
+export interface SSOValidationCompletedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc' | 'scim';
+  validationId: string;
+  overallStatus: 'ok' | 'warning' | 'failed';
+  checksPassed: number;
+  checksFailed: number;
+  checksWarning: number;
+  correlationId: string;
+}
+
+export interface SSOValidationFailedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc' | 'scim';
+  correlationId: string;
+  reason: string;
+  errorCode: string;
+}
+
+export interface SSOActivationSucceededPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  enforceSSOOnly: boolean;
+  activatedBy: string;
+  previousValidationId?: string;
+}
+
+export interface SSOActivationFailedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  reason: string;
+  errorCode: string;
+  correlationId: string;
+}
+
+export interface SSODeactivationSucceededPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  deactivatedBy: string;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -432,6 +492,12 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.SCIM_GROUP_DELETED]: SCIMGroupDeletedPayload;
   [AUTH_EVENTS.SCIM_GROUP_MEMBERSHIP_CHANGED]: SCIMGroupMembershipChangedPayload;
   [AUTH_EVENTS.SCIM_JIT_RECONCILIATION]: SCIMJitReconciliationPayload;
+  [AUTH_EVENTS.SSO_VALIDATION_STARTED]: SSOValidationStartedPayload;
+  [AUTH_EVENTS.SSO_VALIDATION_COMPLETED]: SSOValidationCompletedPayload;
+  [AUTH_EVENTS.SSO_VALIDATION_FAILED]: SSOValidationFailedPayload;
+  [AUTH_EVENTS.SSO_ACTIVATION_SUCCEEDED]: SSOActivationSucceededPayload;
+  [AUTH_EVENTS.SSO_ACTIVATION_FAILED]: SSOActivationFailedPayload;
+  [AUTH_EVENTS.SSO_DEACTIVATION_SUCCEEDED]: SSODeactivationSucceededPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -1165,6 +1231,102 @@ export const createSCIMJitReconciliationEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: params.payload.scimUserId ?? params.payload.jitUserId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOValidationStartedEvent = (
+  params: BaseSSOEventParams & { payload: SSOValidationStartedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_VALIDATION_STARTED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_VALIDATION_STARTED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.executedBy ?? '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOValidationCompletedEvent = (
+  params: BaseSSOEventParams & { payload: SSOValidationCompletedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_VALIDATION_COMPLETED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_VALIDATION_COMPLETED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOValidationFailedEvent = (
+  params: BaseSSOEventParams & { payload: SSOValidationFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_VALIDATION_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_VALIDATION_FAILED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOActivationSucceededEvent = (
+  params: BaseSSOEventParams & { payload: SSOActivationSucceededPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ACTIVATION_SUCCEEDED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_ACTIVATION_SUCCEEDED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.activatedBy,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOActivationFailedEvent = (
+  params: BaseSSOEventParams & { payload: SSOActivationFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ACTIVATION_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_ACTIVATION_FAILED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSODeactivationSucceededEvent = (
+  params: BaseSSOEventParams & { payload: SSODeactivationSucceededPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_DEACTIVATION_SUCCEEDED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_DEACTIVATION_SUCCEEDED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.deactivatedBy,
     source: params.source,
     version: params.version,
     payload: params.payload,

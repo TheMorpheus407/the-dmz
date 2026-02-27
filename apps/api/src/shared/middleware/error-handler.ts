@@ -134,6 +134,20 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.SCIM_ROLE_ESCALATION_BLOCKED]: 403,
   [ErrorCodes.SCIM_ATTRIBUTE_MUTABILITY_VIOLATION]: 400,
   [ErrorCodes.SCIM_JIT_CONFLICT]: 409,
+  [ErrorCodes.SSO_VALIDATION_REQUIRED]: 400,
+  [ErrorCodes.SSO_VALIDATION_STALE]: 400,
+  [ErrorCodes.SSO_VALIDATION_FAILED]: 400,
+  [ErrorCodes.SSO_ACTIVATION_BLOCKED]: 403,
+  [ErrorCodes.SSO_METADATA_UNREACHABLE]: 503,
+  [ErrorCodes.SSO_DISCOVERY_FAILED]: 503,
+  [ErrorCodes.SSO_JWKS_UNREACHABLE]: 503,
+  [ErrorCodes.SSO_CERTIFICATE_EXPIRED]: 400,
+  [ErrorCodes.SSO_ISSUER_MISMATCH_CONFIG]: 400,
+  [ErrorCodes.SSO_AUDIENCE_MISMATCH_CONFIG]: 400,
+  [ErrorCodes.SCIM_VALIDATION_FAILED]: 400,
+  [ErrorCodes.SCIM_BASE_URL_UNREACHABLE]: 503,
+  [ErrorCodes.SCIM_AUTHENTICATION_FAILED]: 401,
+  [ErrorCodes.SCIM_ENDPOINT_UNAVAILABLE]: 503,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -238,6 +252,21 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.SCIM_ROLE_ESCALATION_BLOCKED]: 'SCIM role escalation blocked by policy',
   [ErrorCodes.SCIM_ATTRIBUTE_MUTABILITY_VIOLATION]: 'SCIM attribute mutability violation',
   [ErrorCodes.SCIM_JIT_CONFLICT]: 'SCIM/JIT reconciliation conflict',
+  [ErrorCodes.SSO_VALIDATION_REQUIRED]: 'SSO validation required before activation',
+  [ErrorCodes.SSO_VALIDATION_STALE]: 'SSO validation is stale, please re-validate',
+  [ErrorCodes.SSO_VALIDATION_FAILED]: 'SSO validation failed',
+  [ErrorCodes.SSO_ACTIVATION_BLOCKED]:
+    'SSO activation blocked due to validation requirements not met',
+  [ErrorCodes.SSO_METADATA_UNREACHABLE]: 'SSO metadata URL is unreachable',
+  [ErrorCodes.SSO_DISCOVERY_FAILED]: 'OIDC discovery failed',
+  [ErrorCodes.SSO_JWKS_UNREACHABLE]: 'OIDC JWKS endpoint is unreachable',
+  [ErrorCodes.SSO_CERTIFICATE_EXPIRED]: 'SSO certificate has expired',
+  [ErrorCodes.SSO_ISSUER_MISMATCH_CONFIG]: 'SSO issuer does not match configuration',
+  [ErrorCodes.SSO_AUDIENCE_MISMATCH_CONFIG]: 'SSO audience does not match configuration',
+  [ErrorCodes.SCIM_VALIDATION_FAILED]: 'SCIM validation failed',
+  [ErrorCodes.SCIM_BASE_URL_UNREACHABLE]: 'SCIM base URL is unreachable',
+  [ErrorCodes.SCIM_AUTHENTICATION_FAILED]: 'SCIM authentication failed',
+  [ErrorCodes.SCIM_ENDPOINT_UNAVAILABLE]: 'SCIM endpoint is unavailable',
 } as const;
 
 export type AppErrorOptions = {
