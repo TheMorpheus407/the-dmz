@@ -25,6 +25,18 @@ export const AUTH_EVENTS = {
   OAUTH_TOKEN_ISSUED: 'auth.oauth_token.issued',
   OAUTH_TOKEN_REVOKED: 'auth.oauth_token.revoked',
   OAUTH_SCOPE_DENIED: 'auth.oauth_scope_denied',
+  SSO_LOGIN_INITIATED: 'auth.sso.login.initiated',
+  SSO_LOGIN_SUCCESS: 'auth.sso.login.success',
+  SSO_LOGIN_FAILED: 'auth.sso.login.failed',
+  SSO_ASSERTION_VALIDATED: 'auth.sso.assertion.validated',
+  SSO_ASSERTION_FAILED: 'auth.sso.assertion.failed',
+  SSO_TOKEN_EXCHANGED: 'auth.sso.token.exchanged',
+  SSO_ACCOUNT_LINKED: 'auth.sso.account.linked',
+  SSO_ACCOUNT_LINKING_FAILED: 'auth.sso.account.linking_failed',
+  SSO_JIT_PROVISIONED: 'auth.sso.jit.provisioned',
+  SSO_JIT_DENIED: 'auth.sso.jit.denied',
+  SSO_METADATA_REFRESHED: 'auth.sso.metadata.refreshed',
+  SSO_METADATA_FAILED: 'auth.sso.metadata.failed',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -198,6 +210,106 @@ export interface OAuthScopeDeniedPayload {
   requiredScope: string;
 }
 
+export interface SSOLoginInitiatedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  redirectUri?: string;
+}
+
+export interface SSOLoginSuccessPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  userId: string;
+  email: string;
+  subject: string;
+  linkingOutcome: string;
+}
+
+export interface SSOLoginFailedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  reason: string;
+  failureCode: string;
+  correlationId: string;
+}
+
+export interface SSOAssertionValidatedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  subject: string;
+  valid: boolean;
+  failureReason?: string;
+}
+
+export interface SSOAssertionFailedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  failureCode: string;
+  failureReason: string;
+  correlationId: string;
+}
+
+export interface SSOTokenExchangedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  userId: string;
+  subject: string;
+}
+
+export interface SSOAccountLinkedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  userId: string;
+  subject: string;
+  linkingOutcome: string;
+}
+
+export interface SSOAccountLinkingFailedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  subject: string;
+  email?: string;
+  reason: string;
+  failureCode: string;
+  correlationId: string;
+}
+
+export interface SSOJitProvisionedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  userId: string;
+  email: string;
+  role: string;
+}
+
+export interface SSOJitDeniedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  subject: string;
+  email?: string;
+  reason: string;
+}
+
+export interface SSOMetadataRefreshedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+}
+
+export interface SSOMetadataFailedPayload {
+  tenantId: string;
+  ssoProviderId: string;
+  providerType: 'saml' | 'oidc';
+  reason: string;
+  correlationId: string;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -222,6 +334,18 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.OAUTH_CLIENT_REVOKED]: OAuthClientRevokedPayload;
   [AUTH_EVENTS.OAUTH_TOKEN_ISSUED]: OAuthTokenIssuedPayload;
   [AUTH_EVENTS.OAUTH_SCOPE_DENIED]: OAuthScopeDeniedPayload;
+  [AUTH_EVENTS.SSO_LOGIN_INITIATED]: SSOLoginInitiatedPayload;
+  [AUTH_EVENTS.SSO_LOGIN_SUCCESS]: SSOLoginSuccessPayload;
+  [AUTH_EVENTS.SSO_LOGIN_FAILED]: SSOLoginFailedPayload;
+  [AUTH_EVENTS.SSO_ASSERTION_VALIDATED]: SSOAssertionValidatedPayload;
+  [AUTH_EVENTS.SSO_ASSERTION_FAILED]: SSOAssertionFailedPayload;
+  [AUTH_EVENTS.SSO_TOKEN_EXCHANGED]: SSOTokenExchangedPayload;
+  [AUTH_EVENTS.SSO_ACCOUNT_LINKED]: SSOAccountLinkedPayload;
+  [AUTH_EVENTS.SSO_ACCOUNT_LINKING_FAILED]: SSOAccountLinkingFailedPayload;
+  [AUTH_EVENTS.SSO_JIT_PROVISIONED]: SSOJitProvisionedPayload;
+  [AUTH_EVENTS.SSO_JIT_DENIED]: SSOJitDeniedPayload;
+  [AUTH_EVENTS.SSO_METADATA_REFRESHED]: SSOMetadataRefreshedPayload;
+  [AUTH_EVENTS.SSO_METADATA_FAILED]: SSOMetadataFailedPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -608,6 +732,205 @@ export const createOAuthScopeDeniedEvent = (
   return {
     eventId: crypto.randomUUID(),
     eventType: AUTH_EVENTS.OAUTH_SCOPE_DENIED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+interface BaseSSOEventParams {
+  source: string;
+  correlationId: string;
+  tenantId: string;
+  version: number;
+}
+
+export const createSSOLoginInitiatedEvent = (
+  params: BaseSSOEventParams & { payload: SSOLoginInitiatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGIN_INITIATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_LOGIN_INITIATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOLoginSuccessEvent = (
+  params: BaseSSOEventParams & { payload: SSOLoginSuccessPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGIN_SUCCESS> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_LOGIN_SUCCESS,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOLoginFailedEvent = (
+  params: BaseSSOEventParams & { payload: SSOLoginFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGIN_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_LOGIN_FAILED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOAssertionValidatedEvent = (
+  params: BaseSSOEventParams & { payload: SSOAssertionValidatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ASSERTION_VALIDATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_ASSERTION_VALIDATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOAssertionFailedEvent = (
+  params: BaseSSOEventParams & { payload: SSOAssertionFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ASSERTION_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_ASSERTION_FAILED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOTokenExchangedEvent = (
+  params: BaseSSOEventParams & { payload: SSOTokenExchangedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_TOKEN_EXCHANGED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_TOKEN_EXCHANGED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOAccountLinkedEvent = (
+  params: BaseSSOEventParams & { payload: SSOAccountLinkedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ACCOUNT_LINKED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_ACCOUNT_LINKED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOAccountLinkingFailedEvent = (
+  params: BaseSSOEventParams & { payload: SSOAccountLinkingFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ACCOUNT_LINKING_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_ACCOUNT_LINKING_FAILED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOJitProvisionedEvent = (
+  params: BaseSSOEventParams & { payload: SSOJitProvisionedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_JIT_PROVISIONED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_JIT_PROVISIONED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOJitDeniedEvent = (
+  params: BaseSSOEventParams & { payload: SSOJitDeniedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_JIT_DENIED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_JIT_DENIED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOMetadataRefreshedEvent = (
+  params: BaseSSOEventParams & { payload: SSOMetadataRefreshedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_METADATA_REFRESHED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_METADATA_REFRESHED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createSSOMetadataFailedEvent = (
+  params: BaseSSOEventParams & { payload: SSOMetadataFailedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.SSO_METADATA_FAILED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.SSO_METADATA_FAILED,
     timestamp: new Date().toISOString(),
     correlationId: params.correlationId,
     tenantId: params.tenantId,

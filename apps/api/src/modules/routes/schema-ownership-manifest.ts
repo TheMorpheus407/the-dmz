@@ -1,6 +1,10 @@
 import type { SchemaOwnershipManifest, SchemaOwnershipEntry } from './ownership.types.js';
 
-const AUTH_SHARED_SOURCES = ['@the-dmz/shared/schemas', '@the-dmz/shared/auth'];
+const AUTH_SHARED_SOURCES = [
+  '@the-dmz/shared/schemas',
+  '@the-dmz/shared/auth',
+  '@the-dmz/shared/constants',
+];
 
 export const SCHEMA_OWNERSHIP_MANIFEST: SchemaOwnershipManifest = {
   ownership: [
@@ -31,6 +35,12 @@ export const SCHEMA_OWNERSHIP_MANIFEST: SchemaOwnershipManifest = {
         'passwordResetRequestResponseJsonSchema',
         'passwordChangeRequestBodyJsonSchema',
         'passwordChangeRequestResponseJsonSchema',
+        'ssoProvidersResponseJsonSchema',
+        'ssoLoginInitiateRequestJsonSchema',
+        'ssoLoginInitiateResponseJsonSchema',
+        'ssoSAMLMetadataResponseJsonSchema',
+        'samlACSRequestJsonSchema',
+        'oidcCallbackRequestJsonSchema',
       ],
       ownedComponents: [
         'AuthLoginResponse',

@@ -8,4 +8,5 @@ export * from './signing-keys.js';
 export * from './sso-connections.js';
 export * from './user-profiles.js';
 export * from './user-roles.js';
+export * from './user-sso-identities.js';
 export * from './webauthn-credentials.js';

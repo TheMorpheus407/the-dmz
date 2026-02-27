@@ -69,6 +69,24 @@ export const ErrorCodes = {
   OAUTH_INSUFFICIENT_SCOPE: 'OAUTH_INSUFFICIENT_SCOPE',
   OAUTH_CLIENT_REVOKED: 'OAUTH_CLIENT_REVOKED',
   OAUTH_CLIENT_EXPIRED: 'OAUTH_CLIENT_EXPIRED',
+  SSO_PROVIDER_NOT_FOUND: 'SSO_PROVIDER_NOT_FOUND',
+  SSO_PROVIDER_INACTIVE: 'SSO_PROVIDER_INACTIVE',
+  SSO_INVALID_ASSERTION: 'SSO_INVALID_ASSERTION',
+  SSO_ASSERTION_EXPIRED: 'SSO_ASSERTION_EXPIRED',
+  SSO_ASSERTION_REPLAYED: 'SSO_ASSERTION_REPLAYED',
+  SSO_INVALID_SIGNATURE: 'SSO_INVALID_SIGNATURE',
+  SSO_INVALID_ISSUER: 'SSO_INVALID_ISSUER',
+  SSO_INVALID_AUDIENCE: 'SSO_INVALID_AUDIENCE',
+  SSO_INVALID_STATE: 'SSO_INVALID_STATE',
+  SSO_INVALID_NONCE: 'SSO_INVALID_NONCE',
+  SSO_MISSING_REQUIRED_CLAIM: 'SSO_MISSING_REQUIRED_CLAIM',
+  SSO_TOKEN_EXPIRED: 'SSO_TOKEN_EXPIRED',
+  SSO_TOKEN_INVALID: 'SSO_TOKEN_INVALID',
+  SSO_METADATA_FETCH_FAILED: 'SSO_METADATA_FETCH_FAILED',
+  SSO_METADATA_INVALID: 'SSO_METADATA_INVALID',
+  SSO_CONFIGURATION_ERROR: 'SSO_CONFIGURATION_ERROR',
+  SSO_ACCOUNT_LINKING_FAILED: 'SSO_ACCOUNT_LINKING_FAILED',
+  SSO_JIT_PROVISIONING_DENIED: 'SSO_JIT_PROVISIONING_DENIED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -359,6 +377,96 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHENTICATION,
     retryable: false,
     messageKey: 'errors.oauth.clientExpired',
+  },
+  [ErrorCodes.SSO_PROVIDER_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.sso.providerNotFound',
+  },
+  [ErrorCodes.SSO_PROVIDER_INACTIVE]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.providerInactive',
+  },
+  [ErrorCodes.SSO_INVALID_ASSERTION]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.invalidAssertion',
+  },
+  [ErrorCodes.SSO_ASSERTION_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.assertionExpired',
+  },
+  [ErrorCodes.SSO_ASSERTION_REPLAYED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.assertionReplayed',
+  },
+  [ErrorCodes.SSO_INVALID_SIGNATURE]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.invalidSignature',
+  },
+  [ErrorCodes.SSO_INVALID_ISSUER]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.invalidIssuer',
+  },
+  [ErrorCodes.SSO_INVALID_AUDIENCE]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.invalidAudience',
+  },
+  [ErrorCodes.SSO_INVALID_STATE]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.invalidState',
+  },
+  [ErrorCodes.SSO_INVALID_NONCE]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.invalidNonce',
+  },
+  [ErrorCodes.SSO_MISSING_REQUIRED_CLAIM]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.missingRequiredClaim',
+  },
+  [ErrorCodes.SSO_TOKEN_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.tokenExpired',
+  },
+  [ErrorCodes.SSO_TOKEN_INVALID]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.tokenInvalid',
+  },
+  [ErrorCodes.SSO_METADATA_FETCH_FAILED]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: true,
+    messageKey: 'errors.sso.metadataFetchFailed',
+  },
+  [ErrorCodes.SSO_METADATA_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.sso.metadataInvalid',
+  },
+  [ErrorCodes.SSO_CONFIGURATION_ERROR]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.sso.configurationError',
+  },
+  [ErrorCodes.SSO_ACCOUNT_LINKING_FAILED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.accountLinkingFailed',
+  },
+  [ErrorCodes.SSO_JIT_PROVISIONING_DENIED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.jitProvisioningDenied',
   },
 };
 
