@@ -131,6 +131,7 @@ export const ErrorCodes = {
   AUTH_DELEGATION_SYSTEM_ROLE_MUTATION_DENIED: 'AUTH_DELEGATION_SYSTEM_ROLE_MUTATION_DENIED',
   AUTH_DELEGATION_STEP_UP_REQUIRED: 'AUTH_DELEGATION_STEP_UP_REQUIRED',
   AUTH_DELEGATION_SELF_ESCALATION_DENIED: 'AUTH_DELEGATION_SELF_ESCALATION_DENIED',
+  AUTH_PERMISSION_DECLARATION_MISSING: 'AUTH_PERMISSION_DECLARATION_MISSING',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -731,6 +732,11 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHORIZATION,
     retryable: false,
     messageKey: 'errors.auth.delegationSelfEscalationDenied',
+  },
+  [ErrorCodes.AUTH_PERMISSION_DECLARATION_MISSING]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.auth.permissionDeclarationMissing',
   },
 };
 

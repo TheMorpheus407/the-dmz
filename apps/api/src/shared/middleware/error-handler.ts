@@ -16,6 +16,7 @@ export const ErrorCodes = {
   RESOURCE_NOT_FOUND: 'RESOURCE_NOT_FOUND',
   PROFILE_NOT_FOUND: 'PROFILE_NOT_FOUND',
   PROFILE_UPDATE_FAILED: 'PROFILE_UPDATE_FAILED',
+  AUTH_PERMISSION_DECLARATION_MISSING: 'AUTH_PERMISSION_DECLARATION_MISSING',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -167,6 +168,7 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.AUTH_DELEGATION_SYSTEM_ROLE_MUTATION_DENIED]: 403,
   [ErrorCodes.AUTH_DELEGATION_STEP_UP_REQUIRED]: 403,
   [ErrorCodes.AUTH_DELEGATION_SELF_ESCALATION_DENIED]: 403,
+  [ErrorCodes.AUTH_PERMISSION_DECLARATION_MISSING]: 500,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -310,6 +312,8 @@ export const ErrorMessages: Record<ErrorCode, string> = {
     'Step-up authentication required to perform this delegation',
   [ErrorCodes.AUTH_DELEGATION_SELF_ESCALATION_DENIED]:
     'Self-assignment and role escalation are not permitted',
+  [ErrorCodes.AUTH_PERMISSION_DECLARATION_MISSING]:
+    'Route configuration error: missing permission declaration',
 } as const;
 
 export type AppErrorOptions = {
