@@ -132,6 +132,11 @@ export const ErrorCodes = {
   AUTH_DELEGATION_STEP_UP_REQUIRED: 'AUTH_DELEGATION_STEP_UP_REQUIRED',
   AUTH_DELEGATION_SELF_ESCALATION_DENIED: 'AUTH_DELEGATION_SELF_ESCALATION_DENIED',
   AUTH_PERMISSION_DECLARATION_MISSING: 'AUTH_PERMISSION_DECLARATION_MISSING',
+  IDEMPOTENCY_KEY_REQUIRED: 'IDEMPOTENCY_KEY_REQUIRED',
+  IDEMPOTENCY_KEY_INVALID_FORMAT: 'IDEMPOTENCY_KEY_INVALID_FORMAT',
+  IDEMPOTENCY_KEY_CONFLICT: 'IDEMPOTENCY_KEY_CONFLICT',
+  IDEMPOTENCY_KEY_EXPIRED: 'IDEMPOTENCY_KEY_EXPIRED',
+  IDEMPOTENCY_IN_PROGRESS: 'IDEMPOTENCY_IN_PROGRESS',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -737,6 +742,31 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHORIZATION,
     retryable: false,
     messageKey: 'errors.auth.permissionDeclarationMissing',
+  },
+  [ErrorCodes.IDEMPOTENCY_KEY_REQUIRED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.idempotency.keyRequired',
+  },
+  [ErrorCodes.IDEMPOTENCY_KEY_INVALID_FORMAT]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.idempotency.keyInvalidFormat',
+  },
+  [ErrorCodes.IDEMPOTENCY_KEY_CONFLICT]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.idempotency.keyConflict',
+  },
+  [ErrorCodes.IDEMPOTENCY_KEY_EXPIRED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.idempotency.keyExpired',
+  },
+  [ErrorCodes.IDEMPOTENCY_IN_PROGRESS]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: true,
+    messageKey: 'errors.idempotency.inProgress',
   },
 };
 

@@ -169,6 +169,11 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.AUTH_DELEGATION_STEP_UP_REQUIRED]: 403,
   [ErrorCodes.AUTH_DELEGATION_SELF_ESCALATION_DENIED]: 403,
   [ErrorCodes.AUTH_PERMISSION_DECLARATION_MISSING]: 500,
+  [ErrorCodes.IDEMPOTENCY_KEY_REQUIRED]: 400,
+  [ErrorCodes.IDEMPOTENCY_KEY_INVALID_FORMAT]: 400,
+  [ErrorCodes.IDEMPOTENCY_KEY_CONFLICT]: 409,
+  [ErrorCodes.IDEMPOTENCY_KEY_EXPIRED]: 400,
+  [ErrorCodes.IDEMPOTENCY_IN_PROGRESS]: 409,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -314,6 +319,13 @@ export const ErrorMessages: Record<ErrorCode, string> = {
     'Self-assignment and role escalation are not permitted',
   [ErrorCodes.AUTH_PERMISSION_DECLARATION_MISSING]:
     'Route configuration error: missing permission declaration',
+  [ErrorCodes.IDEMPOTENCY_KEY_REQUIRED]: 'Idempotency-Key header is required for this request',
+  [ErrorCodes.IDEMPOTENCY_KEY_INVALID_FORMAT]: 'Idempotency-Key format is invalid',
+  [ErrorCodes.IDEMPOTENCY_KEY_CONFLICT]:
+    'Idempotency-Key was reused with a different request payload',
+  [ErrorCodes.IDEMPOTENCY_KEY_EXPIRED]: 'Idempotency-Key has expired',
+  [ErrorCodes.IDEMPOTENCY_IN_PROGRESS]:
+    'A request with this Idempotency-Key is already in progress',
 } as const;
 
 export type AppErrorOptions = {

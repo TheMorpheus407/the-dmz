@@ -6,7 +6,8 @@ export type HookName =
   | 'requireRole'
   | 'requireMfaForSuperAdmin'
   | 'validateCsrf'
-  | 'rateLimiter';
+  | 'rateLimiter'
+  | 'idempotency';
 
 export type RouteCategory = 'public' | 'auth' | 'protected' | 'game' | 'admin' | 'system';
 
@@ -87,6 +88,7 @@ const HOOK_CHAIN_CONTRACT: HookChainContract = {
     'requireMfaForSuperAdmin',
     'validateCsrf',
     'rateLimiter',
+    'idempotency',
   ],
   hookSources: [
     {
@@ -120,6 +122,10 @@ const HOOK_CHAIN_CONTRACT: HookChainContract = {
     {
       hook: 'rateLimiter',
       allowedSources: ['shared/middleware/rate-limiter.ts'],
+    },
+    {
+      hook: 'idempotency',
+      allowedSources: ['shared/middleware/idempotency.ts'],
     },
   ],
   exceptions: [

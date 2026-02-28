@@ -21,6 +21,7 @@ import { preAuthTenantStatusGuard } from '../../shared/middleware/pre-auth-tenan
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { requirePermission, resolvePermissions } from '../../shared/middleware/authorization.js';
 import { requireMfaForSuperAdmin } from '../../shared/middleware/mfa-guard.js';
+import { idempotency } from '../../shared/middleware/idempotency.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 import { getAbuseCounterService } from '../../shared/services/abuse-counter.service.js';
 import {
@@ -535,7 +536,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.patch(
     '/auth/profile',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, idempotency],
       schema: {
         security: [{ bearerAuth: [] }],
         body: updateProfileBodyJsonSchema,
@@ -1796,6 +1797,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         tenantContext,
         tenantStatusGuard,
         requirePermission('admin', 'role:create'),
+        idempotency,
       ],
       schema: {
         security: [{ bearerAuth: [] }],
@@ -2065,6 +2067,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         tenantContext,
         tenantStatusGuard,
         requirePermission('admin', 'role:write'),
+        idempotency,
       ],
       schema: {
         security: [{ bearerAuth: [] }],

@@ -247,3 +247,27 @@ export {
   evaluateAdaptiveMfa,
   defaultTenantMfaPolicy,
 } from './mfa-policy.js';
+
+export {
+  m1IdempotencyPolicyManifest,
+  idempotencyPolicyManifestSchema,
+  idempotencyOutcomeSchema,
+  idempotencyKeyFormatSchema,
+  idempotencyKeyConstraintsSchema,
+  idempotencyRecordSchema,
+  idempotencyReplayResponseSchema,
+  idempotencyErrorResponseSchema,
+  IDEMPOTENCY_KEY_FORMAT,
+  IDEMPOTENCY_ERROR_CODES,
+  IdempotencyOutcome,
+  validateIdempotencyKey,
+  generateFingerprint,
+  isIdempotencyRequiredForMethod,
+  type IdempotencyKeyConstraints,
+  type IdempotencyRecord,
+  type IdempotencyReplayResponse,
+  type IdempotencyErrorResponse,
+  type IdempotencyErrorCode,
+  type IdempotencyPolicyManifest,
+  type M1IdempotencyPolicyManifest,
+} from './idempotency-policy.js';

@@ -5,6 +5,7 @@ import { tenantStatusGuard } from '../../../shared/middleware/tenant-status-guar
 import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
 // eslint-disable-next-line import-x/no-restricted-paths
 import { authGuard } from '../../auth/auth.routes.js';
+import { idempotency } from '../../../shared/middleware/idempotency.js';
 
 import * as gameSessionService from './game-session.service.js';
 import { createGameSessionStartedEvent } from './game-session.events.js';
@@ -18,7 +19,7 @@ export const registerGameSessionRoutes = async (fastify: FastifyInstance): Promi
   fastify.post(
     '/game/session',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, idempotency],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
