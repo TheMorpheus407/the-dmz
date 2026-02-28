@@ -30,6 +30,7 @@ import {
 } from '../../shared/policies/auth-abuse-policy.js';
 
 import * as authService from './auth.service.js';
+import * as delegationService from './delegation.service.js';
 import { AuthError, InvalidCredentialsError } from './auth.errors.js';
 import {
   createAuthUserCreatedEvent,
@@ -46,6 +47,10 @@ import {
   createAuthSessionRevokedAdminEvent,
   createAuthSessionRevokedUserAllEvent,
   createAuthSessionRevokedTenantAllEvent,
+  createAuthDelegationRoleCreatedEvent,
+  createAuthDelegationRoleUpdatedEvent,
+  createAuthDelegationRoleAssignedEvent,
+  createAuthDelegationDeniedEvent,
 } from './auth.events.js';
 import { validateCsrf, setCsrfCookie } from './csrf.js';
 import { setRefreshCookie, clearRefreshCookie, getRefreshCookieName } from './cookies.js';
@@ -1672,6 +1677,547 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       );
 
       return result;
+    },
+  );
+
+  fastify.get(
+    '/auth/roles',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        response: {
+          200: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                name: { type: 'string' },
+                description: { type: 'string', nullable: true },
+                isSystem: { type: 'boolean' },
+                createdAt: { type: 'string', format: 'date-time' },
+                updatedAt: { type: 'string', format: 'date-time' },
+              },
+              required: ['id', 'name', 'description', 'isSystem', 'createdAt', 'updatedAt'],
+            },
+          },
+          403: errorResponseSchemas.TenantInactive,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const tenantContextVal = request.tenantContext;
+
+      if (!tenantContextVal) {
+        throw new AuthError({
+          message: 'Tenant context required',
+          statusCode: 400,
+        });
+      }
+
+      const roles = await delegationService.listTenantRoles(config, tenantContextVal.tenantId);
+
+      return roles;
+    },
+  );
+
+  fastify.get(
+    '/auth/roles/:roleId',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            roleId: { type: 'string', format: 'uuid' },
+          },
+          required: ['roleId'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              name: { type: 'string' },
+              description: { type: 'string', nullable: true },
+              isSystem: { type: 'boolean' },
+              permissions: { type: 'array', items: { type: 'string' } },
+              createdAt: { type: 'string', format: 'date-time' },
+              updatedAt: { type: 'string', format: 'date-time' },
+            },
+            required: [
+              'id',
+              'name',
+              'description',
+              'isSystem',
+              'permissions',
+              'createdAt',
+              'updatedAt',
+            ],
+          },
+          403: errorResponseSchemas.TenantInactive,
+          404: errorResponseSchemas.NotFound,
+        },
+      },
+    },
+    async (request, reply) => {
+      const tenantContextVal = request.tenantContext;
+      const { roleId } = request.params as { roleId: string };
+
+      if (!tenantContextVal) {
+        throw new AuthError({
+          message: 'Tenant context required',
+          statusCode: 400,
+        });
+      }
+
+      const role = await delegationService.getRoleDetails(
+        config,
+        roleId,
+        tenantContextVal.tenantId,
+      );
+
+      if (!role) {
+        reply.code(404);
+        return { message: 'Role not found' };
+      }
+
+      return role;
+    },
+  );
+
+  fastify.post(
+    '/auth/roles',
+    {
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'role:create'),
+      ],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        body: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', minLength: 1, maxLength: 64 },
+            description: { type: 'string' },
+            permissions: { type: 'array', items: { type: 'string' } },
+          },
+          required: ['name', 'permissions'],
+        },
+        response: {
+          201: {
+            type: 'object',
+            properties: {
+              outcome: { type: 'string', enum: ['allowed'] },
+              roleId: { type: 'string', format: 'uuid' },
+            },
+            required: ['outcome', 'roleId'],
+          },
+          403: {
+            oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = request.user as AuthenticatedUser;
+      const tenantContextVal = request.tenantContext;
+      const body = request.body as { name?: string; description?: string; permissions?: string[] };
+
+      if (!tenantContextVal) {
+        throw new AuthError({
+          message: 'Tenant context required',
+          statusCode: 400,
+        });
+      }
+
+      if (!body.name || !body.permissions) {
+        throw new AuthError({
+          message: 'Role name and permissions are required',
+          statusCode: 400,
+        });
+      }
+
+      const createData: {
+        actorId: string;
+        actorTenantId: string;
+        name: string;
+        description?: string;
+        permissions: string[];
+      } = {
+        actorId: user.userId,
+        actorTenantId: tenantContextVal.tenantId,
+        name: body.name,
+        permissions: body.permissions,
+      };
+
+      if (body.description) {
+        createData.description = body.description;
+      }
+
+      const result = await delegationService.createCustomRole(config, createData, {
+        logger: request.log,
+      });
+
+      if (result.outcome !== 'allowed') {
+        reply.code(403);
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createAuthDelegationDeniedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: tenantContextVal.tenantId,
+            userId: user.userId,
+            version: 1,
+            payload: {
+              actorId: user.userId,
+              tenantId: tenantContextVal.tenantId,
+              roleName: body.name,
+              reason: result.reason ?? 'Permission ceiling exceeded',
+              outcome: result.outcome,
+              correlationId: request.id,
+              ...(body.permissions && { permissions: body.permissions }),
+            },
+          }),
+        );
+
+        return {
+          outcome: result.outcome,
+          reason: result.reason,
+        };
+      }
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createAuthDelegationRoleCreatedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: tenantContextVal.tenantId,
+          userId: user.userId,
+          version: 1,
+          payload: {
+            actorId: user.userId,
+            tenantId: tenantContextVal.tenantId,
+            roleId: result.roleId!,
+            roleName: body.name,
+            permissions: body.permissions,
+            correlationId: request.id,
+          },
+        }),
+      );
+
+      reply.code(201);
+      return {
+        outcome: result.outcome,
+        roleId: result.roleId,
+      };
+    },
+  );
+
+  fastify.post(
+    '/auth/roles/:roleId/assign',
+    {
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'role:assign'),
+      ],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            roleId: { type: 'string', format: 'uuid' },
+          },
+          required: ['roleId'],
+        },
+        body: {
+          type: 'object',
+          properties: {
+            targetUserId: { type: 'string', format: 'uuid' },
+            scope: { type: 'string', nullable: true },
+            expiresAt: { type: 'string', format: 'date-time', nullable: true },
+          },
+          required: ['targetUserId'],
+        },
+        response: {
+          201: {
+            type: 'object',
+            properties: {
+              outcome: { type: 'string', enum: ['allowed'] },
+            },
+            required: ['outcome'],
+          },
+          403: {
+            oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = request.user as AuthenticatedUser;
+      const tenantContextVal = request.tenantContext;
+      const { roleId } = request.params as { roleId: string };
+      const body = request.body as {
+        targetUserId: string;
+        scope?: string | null;
+        expiresAt?: string | null;
+      };
+
+      if (!tenantContextVal) {
+        throw new AuthError({
+          message: 'Tenant context required',
+          statusCode: 400,
+        });
+      }
+
+      const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
+
+      const result = await delegationService.assignRoleToUser(
+        config,
+        {
+          actorId: user.userId,
+          actorTenantId: tenantContextVal.tenantId,
+          targetUserId: body.targetUserId,
+          targetRoleId: roleId,
+          scope: body.scope ?? null,
+          expiresAt,
+        },
+        {
+          logger: request.log,
+        },
+      );
+
+      if (result.outcome !== 'allowed') {
+        reply.code(403);
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createAuthDelegationDeniedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: tenantContextVal.tenantId,
+            userId: user.userId,
+            version: 1,
+            payload: {
+              actorId: user.userId,
+              tenantId: tenantContextVal.tenantId,
+              targetUserId: body.targetUserId,
+              roleId: roleId,
+              reason: result.reason ?? 'Role assignment denied',
+              outcome: result.outcome,
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        return {
+          outcome: result.outcome,
+          reason: result.reason,
+        };
+      }
+
+      const roleDetails = await delegationService.getRoleDetails(
+        config,
+        roleId,
+        tenantContextVal.tenantId,
+      );
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createAuthDelegationRoleAssignedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: tenantContextVal.tenantId,
+          userId: user.userId,
+          version: 1,
+          payload: {
+            actorId: user.userId,
+            tenantId: tenantContextVal.tenantId,
+            targetUserId: body.targetUserId,
+            roleId: roleId,
+            roleName: roleDetails?.name ?? 'unknown',
+            scope: body.scope ?? null,
+            expiresAt: expiresAt ? expiresAt.toISOString() : null,
+            correlationId: request.id,
+          },
+        }),
+      );
+
+      reply.code(201);
+      return {
+        outcome: result.outcome,
+      };
+    },
+  );
+
+  fastify.patch(
+    '/auth/roles/:roleId',
+    {
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        requirePermission('admin', 'role:write'),
+      ],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            roleId: { type: 'string', format: 'uuid' },
+          },
+          required: ['roleId'],
+        },
+        body: {
+          type: 'object',
+          properties: {
+            name: { type: 'string', minLength: 1, maxLength: 64 },
+            description: { type: 'string', nullable: true },
+            permissions: { type: 'array', items: { type: 'string' } },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              outcome: { type: 'string', enum: ['allowed'] },
+            },
+            required: ['outcome'],
+          },
+          403: {
+            oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
+          },
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = request.user as AuthenticatedUser;
+      const tenantContextVal = request.tenantContext;
+      const { roleId } = request.params as { roleId: string };
+      const body = request.body as {
+        name?: string;
+        description?: string | null;
+        permissions?: string[];
+      };
+
+      if (!tenantContextVal) {
+        throw new AuthError({
+          message: 'Tenant context required',
+          statusCode: 400,
+        });
+      }
+
+      if (!body.name && !body.description && !body.permissions) {
+        throw new AuthError({
+          message: 'At least one field (name, description, or permissions) is required',
+          statusCode: 400,
+        });
+      }
+
+      const updateData: {
+        actorId: string;
+        actorTenantId: string;
+        roleId: string;
+        name?: string;
+        description?: string;
+        permissions?: string[];
+      } = {
+        actorId: user.userId,
+        actorTenantId: tenantContextVal.tenantId,
+        roleId: roleId,
+      };
+
+      if (body.name) {
+        updateData.name = body.name;
+      }
+      if (body.description) {
+        updateData.description = body.description;
+      }
+      if (body.permissions) {
+        updateData.permissions = body.permissions;
+      }
+
+      const result = await delegationService.updateCustomRole(config, updateData, {
+        logger: request.log,
+      });
+
+      if (result.outcome !== 'allowed') {
+        reply.code(403);
+
+        const deniedPayload: {
+          actorId: string;
+          tenantId: string;
+          roleId: string;
+          permissions?: string[];
+          reason: string;
+          outcome: string;
+          correlationId: string;
+        } = {
+          actorId: user.userId,
+          tenantId: tenantContextVal.tenantId,
+          roleId: roleId,
+          reason: result.reason ?? 'Role update denied',
+          outcome: result.outcome,
+          correlationId: request.id,
+        };
+        if (body.permissions) {
+          deniedPayload.permissions = body.permissions;
+        }
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createAuthDelegationDeniedEvent({
+            source: 'auth-module',
+            correlationId: request.id,
+            tenantId: tenantContextVal.tenantId,
+            userId: user.userId,
+            version: 1,
+            payload: deniedPayload,
+          }),
+        );
+
+        return {
+          outcome: result.outcome,
+          reason: result.reason,
+        };
+      }
+
+      const roleDetails = await delegationService.getRoleDetails(
+        config,
+        roleId,
+        tenantContextVal.tenantId,
+      );
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createAuthDelegationRoleUpdatedEvent({
+          source: 'auth-module',
+          correlationId: request.id,
+          tenantId: tenantContextVal.tenantId,
+          userId: user.userId,
+          version: 1,
+          payload: {
+            actorId: user.userId,
+            tenantId: tenantContextVal.tenantId,
+            roleId: roleId,
+            roleName: roleDetails?.name ?? 'unknown',
+            permissions: body.permissions ?? roleDetails?.permissions ?? [],
+            correlationId: request.id,
+          },
+        }),
+      );
+
+      reply.code(200);
+      return {
+        outcome: result.outcome,
+      };
     },
   );
 };

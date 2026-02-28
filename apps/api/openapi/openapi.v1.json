@@ -5578,6 +5578,679 @@
         }
       }
     },
+    "/api/v1/auth/roles": {
+      "get": {
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "isSystem": {
+                        "type": "boolean"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": ["id", "name", "description", "isSystem", "createdAt", "updatedAt"]
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["TENANT_INACTIVE"]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "tenantId": {
+                              "type": "string"
+                            },
+                            "tenantStatus": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["name", "permissions"]
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "outcome": {
+                      "type": "string",
+                      "enum": ["allowed"]
+                    },
+                    "roleId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": ["outcome", "roleId"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["TENANT_INACTIVE"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "tenantId": {
+                                  "type": "string"
+                                },
+                                "tenantStatus": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "AUTH_FORBIDDEN",
+                                "AUTH_INSUFFICIENT_PERMS",
+                                "TENANT_INACTIVE"
+                              ]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object"
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/roles/{roleId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "roleId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "isSystem": {
+                      "type": "boolean"
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "description",
+                    "isSystem",
+                    "permissions",
+                    "createdAt",
+                    "updatedAt"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["TENANT_INACTIVE"]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "tenantId": {
+                              "type": "string"
+                            },
+                            "tenantStatus": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["NOT_FOUND", "RESOURCE_NOT_FOUND", "TENANT_NOT_FOUND"]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "roleId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "outcome": {
+                      "type": "string",
+                      "enum": ["allowed"]
+                    }
+                  },
+                  "required": ["outcome"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["TENANT_INACTIVE"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "tenantId": {
+                                  "type": "string"
+                                },
+                                "tenantStatus": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "AUTH_FORBIDDEN",
+                                "AUTH_INSUFFICIENT_PERMS",
+                                "TENANT_INACTIVE"
+                              ]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object"
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/roles/{roleId}/assign": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "targetUserId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "scope": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                },
+                "required": ["targetUserId"]
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "roleId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "outcome": {
+                      "type": "string",
+                      "enum": ["allowed"]
+                    }
+                  },
+                  "required": ["outcome"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": ["TENANT_INACTIVE"]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object",
+                              "properties": {
+                                "tenantId": {
+                                  "type": "string"
+                                },
+                                "tenantStatus": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "success": {
+                          "type": "boolean",
+                          "enum": [false]
+                        },
+                        "error": {
+                          "type": "object",
+                          "properties": {
+                            "code": {
+                              "type": "string",
+                              "enum": [
+                                "AUTH_FORBIDDEN",
+                                "AUTH_INSUFFICIENT_PERMS",
+                                "TENANT_INACTIVE"
+                              ]
+                            },
+                            "message": {
+                              "type": "string"
+                            },
+                            "details": {
+                              "type": "object"
+                            },
+                            "requestId": {
+                              "type": "string"
+                            }
+                          },
+                          "required": ["code", "message", "details"]
+                        }
+                      },
+                      "required": ["success", "error"]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/mfa/webauthn/challenge": {
       "post": {
         "requestBody": {

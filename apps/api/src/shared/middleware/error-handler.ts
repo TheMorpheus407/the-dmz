@@ -162,6 +162,11 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.AUTH_MFA_METHOD_NOT_ALLOWED]: 403,
   [ErrorCodes.AUTH_ROLE_ASSIGNMENT_EXPIRED]: 403,
   [ErrorCodes.AUTH_ROLE_SCOPE_MISMATCH]: 403,
+  [ErrorCodes.AUTH_DELEGATION_PERMISSION_CEILING_EXCEEDED]: 403,
+  [ErrorCodes.AUTH_DELEGATION_ROLE_NOT_ASSIGNABLE]: 403,
+  [ErrorCodes.AUTH_DELEGATION_SYSTEM_ROLE_MUTATION_DENIED]: 403,
+  [ErrorCodes.AUTH_DELEGATION_STEP_UP_REQUIRED]: 403,
+  [ErrorCodes.AUTH_DELEGATION_SELF_ESCALATION_DENIED]: 403,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -296,6 +301,15 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.AUTH_ROLE_ASSIGNMENT_EXPIRED]: 'Role assignment has expired',
   [ErrorCodes.AUTH_ROLE_SCOPE_MISMATCH]:
     'Role assignment scope does not match the requested resource',
+  [ErrorCodes.AUTH_DELEGATION_PERMISSION_CEILING_EXCEEDED]:
+    'Permission ceiling exceeded: actor cannot grant permissions beyond their own scope',
+  [ErrorCodes.AUTH_DELEGATION_ROLE_NOT_ASSIGNABLE]: 'Role is not assignable or does not exist',
+  [ErrorCodes.AUTH_DELEGATION_SYSTEM_ROLE_MUTATION_DENIED]:
+    'Cannot modify system roles without super_admin privileges',
+  [ErrorCodes.AUTH_DELEGATION_STEP_UP_REQUIRED]:
+    'Step-up authentication required to perform this delegation',
+  [ErrorCodes.AUTH_DELEGATION_SELF_ESCALATION_DENIED]:
+    'Self-assignment and role escalation are not permitted',
 } as const;
 
 export type AppErrorOptions = {

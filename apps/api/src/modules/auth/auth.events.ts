@@ -72,6 +72,10 @@ export const AUTH_EVENTS = {
   STEP_UP_SUCCEEDED: 'auth.step_up.succeeded',
   STEP_UP_FAILED: 'auth.step_up.failed',
   ADAPTIVE_MFA_TRIGGERED: 'auth.adaptive_mfa.triggered',
+  DELEGATION_ROLE_CREATED: 'auth.delegation.role.created',
+  DELEGATION_ROLE_UPDATED: 'auth.delegation.role.updated',
+  DELEGATION_ROLE_ASSIGNED: 'auth.delegation.role.assigned',
+  DELEGATION_DENIED: 'auth.delegation.denied',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -634,6 +638,47 @@ export interface AuthAdaptiveMfaTriggeredPayload {
   riskScore: number;
 }
 
+export interface AuthDelegationRoleCreatedPayload {
+  actorId: string;
+  tenantId: string;
+  roleId: string;
+  roleName: string;
+  permissions: string[];
+  correlationId: string;
+}
+
+export interface AuthDelegationRoleUpdatedPayload {
+  actorId: string;
+  tenantId: string;
+  roleId: string;
+  roleName: string;
+  permissions: string[];
+  correlationId: string;
+}
+
+export interface AuthDelegationRoleAssignedPayload {
+  actorId: string;
+  tenantId: string;
+  targetUserId: string;
+  roleId: string;
+  roleName: string;
+  scope: string | null;
+  expiresAt: string | null;
+  correlationId: string;
+}
+
+export interface AuthDelegationDeniedPayload {
+  actorId: string;
+  tenantId: string;
+  targetUserId?: string;
+  roleId?: string;
+  roleName?: string;
+  permissions?: string[];
+  reason: string;
+  outcome: string;
+  correlationId: string;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -705,6 +750,10 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.STEP_UP_SUCCEEDED]: AuthStepUpSucceededPayload;
   [AUTH_EVENTS.STEP_UP_FAILED]: AuthStepUpFailedPayload;
   [AUTH_EVENTS.ADAPTIVE_MFA_TRIGGERED]: AuthAdaptiveMfaTriggeredPayload;
+  [AUTH_EVENTS.DELEGATION_ROLE_CREATED]: AuthDelegationRoleCreatedPayload;
+  [AUTH_EVENTS.DELEGATION_ROLE_UPDATED]: AuthDelegationRoleUpdatedPayload;
+  [AUTH_EVENTS.DELEGATION_ROLE_ASSIGNED]: AuthDelegationRoleAssignedPayload;
+  [AUTH_EVENTS.DELEGATION_DENIED]: AuthDelegationDeniedPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -1854,6 +1903,70 @@ export const createAuthAdaptiveMfaTriggeredEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: params.payload.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthDelegationRoleCreatedEvent = (
+  params: BaseAuthEventParams & { payload: AuthDelegationRoleCreatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.DELEGATION_ROLE_CREATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.DELEGATION_ROLE_CREATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.actorId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthDelegationRoleUpdatedEvent = (
+  params: BaseAuthEventParams & { payload: AuthDelegationRoleUpdatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.DELEGATION_ROLE_UPDATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.DELEGATION_ROLE_UPDATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.actorId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthDelegationRoleAssignedEvent = (
+  params: BaseAuthEventParams & { payload: AuthDelegationRoleAssignedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.DELEGATION_ROLE_ASSIGNED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.DELEGATION_ROLE_ASSIGNED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.actorId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthDelegationDeniedEvent = (
+  params: BaseAuthEventParams & { payload: AuthDelegationDeniedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.DELEGATION_DENIED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.DELEGATION_DENIED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.actorId,
     source: params.source,
     version: params.version,
     payload: params.payload,
