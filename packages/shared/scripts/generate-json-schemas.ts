@@ -64,6 +64,14 @@ import {
   passwordChangeRequestSchema,
   passwordChangeRequestResponseSchema,
 } from '../src/schemas/password-recovery.schema.js';
+import {
+  apiKeyListResponseSchema,
+  createApiKeySchema,
+  rotateApiKeySchema,
+  revokeApiKeySchema,
+  apiKeyResponseSchema,
+  apiKeyWithSecretSchema,
+} from '../src/auth/api-key-contract.js';
 
 const entries: Array<[string, Record<string, unknown>]> = [
   ['loginJsonSchema', createJsonSchema(loginSchema)],
@@ -123,6 +131,12 @@ const entries: Array<[string, Record<string, unknown>]> = [
     'passwordChangeRequestResponseJsonSchema',
     createJsonSchema(passwordChangeRequestResponseSchema),
   ],
+  ['apiKeyListResponseJsonSchema', createJsonSchema(apiKeyListResponseSchema)],
+  ['createApiKeyJsonSchema', createJsonSchema(createApiKeySchema)],
+  ['rotateApiKeyJsonSchema', createJsonSchema(rotateApiKeySchema)],
+  ['revokeApiKeyJsonSchema', createJsonSchema(revokeApiKeySchema)],
+  ['apiKeyResponseJsonSchema', createJsonSchema(apiKeyResponseSchema)],
+  ['apiKeyWithSecretJsonSchema', createJsonSchema(apiKeyWithSecretSchema)],
 ];
 
 const renderExport = (name: string, schema: Record<string, unknown>): string =>

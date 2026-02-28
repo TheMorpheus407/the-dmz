@@ -20,6 +20,10 @@ export const ROUTE_OWNERSHIP_MANIFEST: RouteOwnershipManifest = {
         '/auth/mfa/status',
         '/auth/mfa/webauthn/credentials',
         '/auth/mfa/webauthn/credentials/:credentialId',
+        '/auth/api-keys',
+        '/auth/api-keys/:keyId',
+        '/auth/api-keys/:keyId/rotate',
+        '/auth/api-keys/:keyId/revoke',
       ],
       exemptions: [
         {

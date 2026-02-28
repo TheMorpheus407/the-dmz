@@ -44,6 +44,12 @@ export const SCHEMA_OWNERSHIP_MANIFEST: SchemaOwnershipManifest = {
         'samlLogoutCallbackRequestJsonSchema',
         'oidcLogoutCallbackRequestJsonSchema',
         'federatedRevocationResponseJsonSchema',
+        'createApiKeyJsonSchema',
+        'rotateApiKeyJsonSchema',
+        'revokeApiKeyJsonSchema',
+        'apiKeyResponseJsonSchema',
+        'apiKeyListResponseJsonSchema',
+        'apiKeyWithSecretJsonSchema',
       ],
       ownedComponents: [
         'AuthLoginResponse',

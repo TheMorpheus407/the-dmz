@@ -42,6 +42,8 @@ describe('Error Code Contract Parity', () => {
         'network',
         'not_found',
         'tenant_blocked',
+        'conflict',
+        'limit',
       ];
       const sharedCodes = Object.values(SharedErrorCodes) as readonly SharedErrorCode[];
       for (const code of sharedCodes) {

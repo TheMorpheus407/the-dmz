@@ -149,6 +149,11 @@ const HOOK_CHAIN_CONTRACT: HookChainContract = {
       reason: 'MFA credentials endpoint uses inline auth verification (equivalent to authGuard)',
       grantedAt: '2026-02-23',
     },
+    {
+      route: '/auth/api-keys',
+      reason: 'API key management routes use preAuth hooks instead of standard authGuard',
+      grantedAt: '2026-02-28',
+    },
   ],
 };
 

@@ -32,15 +32,30 @@
       "import": "./dist/esm/auth/oauth-scope-contract.js",
       "require": "./dist/cjs/auth/oauth-scope-contract.js"
     },
+    "./auth/api-key-contract": {
+      "types": "./dist/esm/auth/api-key-contract.d.ts",
+      "import": "./dist/esm/auth/api-key-contract.js",
+      "require": "./dist/cjs/auth/api-key-contract.js"
+    },
     "./types": {
       "types": "./dist/esm/types/index.d.ts",
       "import": "./dist/esm/types/index.js",
       "require": "./dist/cjs/types/index.js"
     },
+    "./types/auth": {
+      "types": "./dist/esm/types/auth.d.ts",
+      "import": "./dist/esm/types/auth.js",
+      "require": "./dist/cjs/types/auth.js"
+    },
     "./constants": {
       "types": "./dist/esm/constants/index.d.ts",
       "import": "./dist/esm/constants/index.js",
       "require": "./dist/cjs/constants/index.js"
+    },
+    "./constants/error-codes": {
+      "types": "./dist/esm/constants/error-codes.d.ts",
+      "import": "./dist/esm/constants/error-codes.js",
+      "require": "./dist/cjs/constants/error-codes.js"
     },
     "./schemas": {
       "types": "./dist/esm/schemas/index.d.ts",

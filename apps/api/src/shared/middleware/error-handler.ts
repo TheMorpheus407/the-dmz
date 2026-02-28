@@ -174,6 +174,14 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.IDEMPOTENCY_KEY_CONFLICT]: 409,
   [ErrorCodes.IDEMPOTENCY_KEY_EXPIRED]: 400,
   [ErrorCodes.IDEMPOTENCY_IN_PROGRESS]: 409,
+  [ErrorCodes.API_KEY_INVALID]: 401,
+  [ErrorCodes.API_KEY_REVOKED]: 401,
+  [ErrorCodes.API_KEY_EXPIRED]: 401,
+  [ErrorCodes.API_KEY_INSUFFICIENT_SCOPE]: 403,
+  [ErrorCodes.API_KEY_NOT_FOUND]: 404,
+  [ErrorCodes.API_KEY_ROTATION_IN_PROGRESS]: 409,
+  [ErrorCodes.API_KEY_ROTATION_GRACE_EXPIRED]: 401,
+  [ErrorCodes.API_KEY_TOO_MANY]: 429,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -326,6 +334,14 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.IDEMPOTENCY_KEY_EXPIRED]: 'Idempotency-Key has expired',
   [ErrorCodes.IDEMPOTENCY_IN_PROGRESS]:
     'A request with this Idempotency-Key is already in progress',
+  [ErrorCodes.API_KEY_INVALID]: 'Invalid API key or secret',
+  [ErrorCodes.API_KEY_REVOKED]: 'API key has been revoked',
+  [ErrorCodes.API_KEY_EXPIRED]: 'API key has expired',
+  [ErrorCodes.API_KEY_INSUFFICIENT_SCOPE]: 'API key does not have required scope',
+  [ErrorCodes.API_KEY_NOT_FOUND]: 'API key not found',
+  [ErrorCodes.API_KEY_ROTATION_IN_PROGRESS]: 'API key rotation already in progress',
+  [ErrorCodes.API_KEY_ROTATION_GRACE_EXPIRED]: 'API key rotation grace period has expired',
+  [ErrorCodes.API_KEY_TOO_MANY]: 'Maximum number of API keys reached',
 } as const;
 
 export type AppErrorOptions = {

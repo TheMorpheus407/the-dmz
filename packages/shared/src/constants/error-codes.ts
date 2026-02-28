@@ -8,6 +8,8 @@ export const ErrorCodeCategory = {
   NETWORK: 'network',
   NOT_FOUND: 'not_found',
   TENANT_BLOCKED: 'tenant_blocked',
+  LIMIT: 'limit',
+  CONFLICT: 'conflict',
 } as const;
 
 export type ErrorCodeCategory = (typeof ErrorCodeCategory)[keyof typeof ErrorCodeCategory];
@@ -137,6 +139,14 @@ export const ErrorCodes = {
   IDEMPOTENCY_KEY_CONFLICT: 'IDEMPOTENCY_KEY_CONFLICT',
   IDEMPOTENCY_KEY_EXPIRED: 'IDEMPOTENCY_KEY_EXPIRED',
   IDEMPOTENCY_IN_PROGRESS: 'IDEMPOTENCY_IN_PROGRESS',
+  API_KEY_INVALID: 'API_KEY_INVALID',
+  API_KEY_REVOKED: 'API_KEY_REVOKED',
+  API_KEY_EXPIRED: 'API_KEY_EXPIRED',
+  API_KEY_INSUFFICIENT_SCOPE: 'API_KEY_INSUFFICIENT_SCOPE',
+  API_KEY_NOT_FOUND: 'API_KEY_NOT_FOUND',
+  API_KEY_ROTATION_IN_PROGRESS: 'API_KEY_ROTATION_IN_PROGRESS',
+  API_KEY_ROTATION_GRACE_EXPIRED: 'API_KEY_ROTATION_GRACE_EXPIRED',
+  API_KEY_TOO_MANY: 'API_KEY_TOO_MANY',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -767,6 +777,46 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.SERVER,
     retryable: true,
     messageKey: 'errors.idempotency.inProgress',
+  },
+  [ErrorCodes.API_KEY_INVALID]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.apiKey.invalid',
+  },
+  [ErrorCodes.API_KEY_REVOKED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.apiKey.revoked',
+  },
+  [ErrorCodes.API_KEY_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.apiKey.expired',
+  },
+  [ErrorCodes.API_KEY_INSUFFICIENT_SCOPE]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.apiKey.insufficientScope',
+  },
+  [ErrorCodes.API_KEY_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.apiKey.notFound',
+  },
+  [ErrorCodes.API_KEY_ROTATION_IN_PROGRESS]: {
+    category: ErrorCodeCategory.CONFLICT,
+    retryable: false,
+    messageKey: 'errors.apiKey.rotationInProgress',
+  },
+  [ErrorCodes.API_KEY_ROTATION_GRACE_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.apiKey.rotationGraceExpired',
+  },
+  [ErrorCodes.API_KEY_TOO_MANY]: {
+    category: ErrorCodeCategory.LIMIT,
+    retryable: false,
+    messageKey: 'errors.apiKey.tooMany',
   },
 };
 

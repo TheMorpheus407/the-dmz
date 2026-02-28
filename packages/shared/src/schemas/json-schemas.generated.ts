@@ -2152,3 +2152,565 @@ export const passwordChangeRequestResponseJsonSchema = {
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
+
+export const apiKeyListResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    keys: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: {
+            type: 'string',
+            format: 'uuid',
+          },
+          keyId: {
+            type: 'string',
+            format: 'uuid',
+          },
+          name: {
+            type: 'string',
+            minLength: 1,
+            maxLength: 255,
+          },
+          type: {
+            type: 'string',
+            enum: ['api_key', 'pat'],
+          },
+          ownerType: {
+            type: 'string',
+            enum: ['service', 'user'],
+          },
+          ownerId: {
+            anyOf: [
+              {
+                type: 'string',
+                format: 'uuid',
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
+          tenantId: {
+            type: 'string',
+            format: 'uuid',
+          },
+          scopes: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                resource: {
+                  type: 'string',
+                  enum: ['analytics', 'users', 'admin', 'webhooks', 'scim', 'integrations'],
+                },
+                actions: {
+                  type: 'array',
+                  items: {
+                    type: 'string',
+                    enum: ['read', 'write', 'admin'],
+                  },
+                  minItems: 1,
+                },
+              },
+              required: ['resource', 'actions'],
+              additionalProperties: false,
+            },
+          },
+          status: {
+            type: 'string',
+            enum: ['active', 'rotating', 'revoked', 'expired'],
+          },
+          expiresAt: {
+            anyOf: [
+              {
+                type: 'string',
+                format: 'date-time',
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
+          rotationGracePeriodDays: {
+            type: 'integer',
+            minimum: 1,
+            maximum: 30,
+          },
+          rotationGraceEndsAt: {
+            anyOf: [
+              {
+                type: 'string',
+                format: 'date-time',
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
+          lastUsedAt: {
+            anyOf: [
+              {
+                type: 'string',
+                format: 'date-time',
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
+          createdBy: {
+            type: 'string',
+            format: 'uuid',
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+          revokedAt: {
+            anyOf: [
+              {
+                type: 'string',
+                format: 'date-time',
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
+        },
+        required: [
+          'id',
+          'keyId',
+          'name',
+          'type',
+          'ownerType',
+          'ownerId',
+          'tenantId',
+          'scopes',
+          'status',
+          'expiresAt',
+          'rotationGracePeriodDays',
+          'rotationGraceEndsAt',
+          'lastUsedAt',
+          'createdBy',
+          'createdAt',
+          'updatedAt',
+          'revokedAt',
+        ],
+        additionalProperties: false,
+      },
+    },
+    total: {
+      type: 'integer',
+      minimum: 0,
+    },
+    cursor: {
+      type: 'string',
+    },
+  },
+  required: ['keys', 'total'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const createApiKeyJsonSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 255,
+    },
+    type: {
+      type: 'string',
+      enum: ['api_key', 'pat'],
+      default: 'api_key',
+    },
+    ownerType: {
+      type: 'string',
+      enum: ['service', 'user'],
+      default: 'service',
+    },
+    ownerId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    scopes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          resource: {
+            type: 'string',
+            enum: ['analytics', 'users', 'admin', 'webhooks', 'scim', 'integrations'],
+          },
+          actions: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['read', 'write', 'admin'],
+            },
+            minItems: 1,
+          },
+        },
+        required: ['resource', 'actions'],
+        additionalProperties: false,
+      },
+      minItems: 1,
+    },
+    expiresAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    rotationGracePeriodDays: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 30,
+    },
+    metadata: {
+      type: 'object',
+      additionalProperties: {},
+    },
+  },
+  required: ['name', 'scopes'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const rotateApiKeyJsonSchema = {
+  type: 'object',
+  properties: {
+    rotationGracePeriodDays: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 30,
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const revokeApiKeyJsonSchema = {
+  type: 'object',
+  properties: {
+    reason: {
+      type: 'string',
+      maxLength: 500,
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const apiKeyResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'string',
+      format: 'uuid',
+    },
+    keyId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    name: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 255,
+    },
+    type: {
+      type: 'string',
+      enum: ['api_key', 'pat'],
+    },
+    ownerType: {
+      type: 'string',
+      enum: ['service', 'user'],
+    },
+    ownerId: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'uuid',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    tenantId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    scopes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          resource: {
+            type: 'string',
+            enum: ['analytics', 'users', 'admin', 'webhooks', 'scim', 'integrations'],
+          },
+          actions: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['read', 'write', 'admin'],
+            },
+            minItems: 1,
+          },
+        },
+        required: ['resource', 'actions'],
+        additionalProperties: false,
+      },
+    },
+    status: {
+      type: 'string',
+      enum: ['active', 'rotating', 'revoked', 'expired'],
+    },
+    expiresAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    rotationGracePeriodDays: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 30,
+    },
+    rotationGraceEndsAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    lastUsedAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    createdBy: {
+      type: 'string',
+      format: 'uuid',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    revokedAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+  },
+  required: [
+    'id',
+    'keyId',
+    'name',
+    'type',
+    'ownerType',
+    'ownerId',
+    'tenantId',
+    'scopes',
+    'status',
+    'expiresAt',
+    'rotationGracePeriodDays',
+    'rotationGraceEndsAt',
+    'lastUsedAt',
+    'createdBy',
+    'createdAt',
+    'updatedAt',
+    'revokedAt',
+  ],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const apiKeyWithSecretJsonSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'string',
+      format: 'uuid',
+    },
+    keyId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    name: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 255,
+    },
+    type: {
+      type: 'string',
+      enum: ['api_key', 'pat'],
+    },
+    ownerType: {
+      type: 'string',
+      enum: ['service', 'user'],
+    },
+    ownerId: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'uuid',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    tenantId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    scopes: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          resource: {
+            type: 'string',
+            enum: ['analytics', 'users', 'admin', 'webhooks', 'scim', 'integrations'],
+          },
+          actions: {
+            type: 'array',
+            items: {
+              type: 'string',
+              enum: ['read', 'write', 'admin'],
+            },
+            minItems: 1,
+          },
+        },
+        required: ['resource', 'actions'],
+        additionalProperties: false,
+      },
+    },
+    status: {
+      type: 'string',
+      enum: ['active', 'rotating', 'revoked', 'expired'],
+    },
+    expiresAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    rotationGracePeriodDays: {
+      type: 'integer',
+      minimum: 1,
+      maximum: 30,
+    },
+    rotationGraceEndsAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    lastUsedAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    createdBy: {
+      type: 'string',
+      format: 'uuid',
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    revokedAt: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'date-time',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    secret: {
+      type: 'string',
+      minLength: 32,
+      maxLength: 64,
+    },
+  },
+  required: [
+    'id',
+    'keyId',
+    'name',
+    'type',
+    'ownerType',
+    'ownerId',
+    'tenantId',
+    'scopes',
+    'status',
+    'expiresAt',
+    'rotationGracePeriodDays',
+    'rotationGraceEndsAt',
+    'lastUsedAt',
+    'createdBy',
+    'createdAt',
+    'updatedAt',
+    'revokedAt',
+    'secret',
+  ],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;

@@ -9785,6 +9785,870 @@
         }
       }
     },
+    "/api/v1/auth/api-keys": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "keys": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "keyId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "name": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": ["api_key", "pat"]
+                          },
+                          "ownerType": {
+                            "type": "string",
+                            "enum": ["service", "user"]
+                          },
+                          "ownerId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "tenantId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "scopes": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "resource": {
+                                  "type": "string",
+                                  "enum": [
+                                    "analytics",
+                                    "users",
+                                    "admin",
+                                    "webhooks",
+                                    "scim",
+                                    "integrations"
+                                  ]
+                                },
+                                "actions": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string",
+                                    "enum": ["read", "write", "admin"]
+                                  },
+                                  "minItems": 1
+                                }
+                              },
+                              "required": ["resource", "actions"],
+                              "additionalProperties": false
+                            }
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": ["active", "rotating", "revoked", "expired"]
+                          },
+                          "expiresAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "rotationGracePeriodDays": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 30
+                          },
+                          "rotationGraceEndsAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "lastUsedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "createdBy": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "revokedAt": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "keyId",
+                          "name",
+                          "type",
+                          "ownerType",
+                          "ownerId",
+                          "tenantId",
+                          "scopes",
+                          "status",
+                          "expiresAt",
+                          "rotationGracePeriodDays",
+                          "rotationGraceEndsAt",
+                          "lastUsedAt",
+                          "createdBy",
+                          "createdAt",
+                          "updatedAt",
+                          "revokedAt"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "cursor": {
+                      "type": "string"
+                    }
+                  },
+                  "required": ["keys", "total"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["api_key", "pat"],
+                    "default": "api_key"
+                  },
+                  "ownerType": {
+                    "type": "string",
+                    "enum": ["service", "user"],
+                    "default": "service"
+                  },
+                  "ownerId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "scopes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "resource": {
+                          "type": "string",
+                          "enum": [
+                            "analytics",
+                            "users",
+                            "admin",
+                            "webhooks",
+                            "scim",
+                            "integrations"
+                          ]
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "enum": ["read", "write", "admin"]
+                          },
+                          "minItems": 1
+                        }
+                      },
+                      "required": ["resource", "actions"],
+                      "additionalProperties": false
+                    },
+                    "minItems": 1
+                  },
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "rotationGracePeriodDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 30
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": {}
+                  }
+                },
+                "required": ["name", "scopes"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/api-keys/{keyId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "keyId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "keyId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["api_key", "pat"]
+                    },
+                    "ownerType": {
+                      "type": "string",
+                      "enum": ["service", "user"]
+                    },
+                    "ownerId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "tenantId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scopes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "resource": {
+                            "type": "string",
+                            "enum": [
+                              "analytics",
+                              "users",
+                              "admin",
+                              "webhooks",
+                              "scim",
+                              "integrations"
+                            ]
+                          },
+                          "actions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": ["read", "write", "admin"]
+                            },
+                            "minItems": 1
+                          }
+                        },
+                        "required": ["resource", "actions"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["active", "rotating", "revoked", "expired"]
+                    },
+                    "expiresAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rotationGracePeriodDays": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 30
+                    },
+                    "rotationGraceEndsAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "lastUsedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "revokedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "keyId",
+                    "name",
+                    "type",
+                    "ownerType",
+                    "ownerId",
+                    "tenantId",
+                    "scopes",
+                    "status",
+                    "expiresAt",
+                    "rotationGracePeriodDays",
+                    "rotationGraceEndsAt",
+                    "lastUsedAt",
+                    "createdBy",
+                    "createdAt",
+                    "updatedAt",
+                    "revokedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "keyId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/api-keys/{keyId}/rotate": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rotationGracePeriodDays": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 30
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "keyId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "keyId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["api_key", "pat"]
+                    },
+                    "ownerType": {
+                      "type": "string",
+                      "enum": ["service", "user"]
+                    },
+                    "ownerId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "tenantId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scopes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "resource": {
+                            "type": "string",
+                            "enum": [
+                              "analytics",
+                              "users",
+                              "admin",
+                              "webhooks",
+                              "scim",
+                              "integrations"
+                            ]
+                          },
+                          "actions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": ["read", "write", "admin"]
+                            },
+                            "minItems": 1
+                          }
+                        },
+                        "required": ["resource", "actions"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["active", "rotating", "revoked", "expired"]
+                    },
+                    "expiresAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rotationGracePeriodDays": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 30
+                    },
+                    "rotationGraceEndsAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "lastUsedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "revokedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "secret": {
+                      "type": "string",
+                      "minLength": 32,
+                      "maxLength": 64
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "keyId",
+                    "name",
+                    "type",
+                    "ownerType",
+                    "ownerId",
+                    "tenantId",
+                    "scopes",
+                    "status",
+                    "expiresAt",
+                    "rotationGracePeriodDays",
+                    "rotationGraceEndsAt",
+                    "lastUsedAt",
+                    "createdBy",
+                    "createdAt",
+                    "updatedAt",
+                    "revokedAt",
+                    "secret"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/api-keys/{keyId}/revoke": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "in": "path",
+            "name": "keyId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "keyId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": ["api_key", "pat"]
+                    },
+                    "ownerType": {
+                      "type": "string",
+                      "enum": ["service", "user"]
+                    },
+                    "ownerId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "tenantId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "scopes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "resource": {
+                            "type": "string",
+                            "enum": [
+                              "analytics",
+                              "users",
+                              "admin",
+                              "webhooks",
+                              "scim",
+                              "integrations"
+                            ]
+                          },
+                          "actions": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": ["read", "write", "admin"]
+                            },
+                            "minItems": 1
+                          }
+                        },
+                        "required": ["resource", "actions"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": ["active", "rotating", "revoked", "expired"]
+                    },
+                    "expiresAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rotationGracePeriodDays": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 30
+                    },
+                    "rotationGraceEndsAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "lastUsedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "revokedAt": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "keyId",
+                    "name",
+                    "type",
+                    "ownerType",
+                    "ownerId",
+                    "tenantId",
+                    "scopes",
+                    "status",
+                    "expiresAt",
+                    "rotationGracePeriodDays",
+                    "rotationGraceEndsAt",
+                    "lastUsedAt",
+                    "createdBy",
+                    "createdAt",
+                    "updatedAt",
+                    "revokedAt"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/game/session": {
       "post": {
         "security": [

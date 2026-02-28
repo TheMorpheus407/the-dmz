@@ -1,3 +1,4 @@
+export * from './api-keys.js';
 export * from './oauth-clients.js';
 export * from './password-reset-tokens.js';
 export * from './permissions.js';

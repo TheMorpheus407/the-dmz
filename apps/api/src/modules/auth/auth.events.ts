@@ -76,6 +76,10 @@ export const AUTH_EVENTS = {
   DELEGATION_ROLE_UPDATED: 'auth.delegation.role.updated',
   DELEGATION_ROLE_ASSIGNED: 'auth.delegation.role.assigned',
   DELEGATION_DENIED: 'auth.delegation.denied',
+  API_KEY_CREATED: 'auth.api_key.created',
+  API_KEY_ROTATED: 'auth.api_key.rotated',
+  API_KEY_REVOKED: 'auth.api_key.revoked',
+  API_KEY_REJECTED: 'auth.api_key.rejected',
 } as const;
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
@@ -679,6 +683,42 @@ export interface AuthDelegationDeniedPayload {
   correlationId: string;
 }
 
+export interface AuthApiKeyCreatedPayload {
+  keyId: string;
+  name: string;
+  tenantId: string;
+  ownerType: string;
+  ownerId?: string;
+  scopes: string[];
+  createdBy: string;
+}
+
+export interface AuthApiKeyRotatedPayload {
+  keyId: string;
+  name: string;
+  tenantId: string;
+  ownerType: string;
+  ownerId?: string;
+  rotatedBy: string;
+}
+
+export interface AuthApiKeyRevokedPayload {
+  keyId: string;
+  name: string;
+  tenantId: string;
+  ownerType: string;
+  ownerId?: string;
+  revokedBy: string;
+  reason?: string;
+}
+
+export interface AuthApiKeyRejectedPayload {
+  keyId: string;
+  tenantId: string;
+  reason: 'invalid' | 'revoked' | 'expired' | 'rotation_grace_expired' | 'scope_denied';
+  correlationId: string;
+}
+
 export type AuthEventPayloadMap = {
   [AUTH_EVENTS.USER_CREATED]: AuthUserCreatedPayload;
   [AUTH_EVENTS.USER_UPDATED]: AuthUserUpdatedPayload;
@@ -754,6 +794,10 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.DELEGATION_ROLE_UPDATED]: AuthDelegationRoleUpdatedPayload;
   [AUTH_EVENTS.DELEGATION_ROLE_ASSIGNED]: AuthDelegationRoleAssignedPayload;
   [AUTH_EVENTS.DELEGATION_DENIED]: AuthDelegationDeniedPayload;
+  [AUTH_EVENTS.API_KEY_CREATED]: AuthApiKeyCreatedPayload;
+  [AUTH_EVENTS.API_KEY_ROTATED]: AuthApiKeyRotatedPayload;
+  [AUTH_EVENTS.API_KEY_REVOKED]: AuthApiKeyRevokedPayload;
+  [AUTH_EVENTS.API_KEY_REJECTED]: AuthApiKeyRejectedPayload;
 };
 
 export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEvent<
@@ -1967,6 +2011,77 @@ export const createAuthDelegationDeniedEvent = (
     correlationId: params.correlationId,
     tenantId: params.tenantId,
     userId: params.payload.actorId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+interface BaseApiKeyEventParams {
+  source: string;
+  correlationId: string;
+  tenantId: string;
+  version: number;
+}
+
+export const createAuthApiKeyCreatedEvent = (
+  params: BaseApiKeyEventParams & { payload: AuthApiKeyCreatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.API_KEY_CREATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.API_KEY_CREATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.createdBy,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthApiKeyRotatedEvent = (
+  params: BaseApiKeyEventParams & { payload: AuthApiKeyRotatedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.API_KEY_ROTATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.API_KEY_ROTATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.rotatedBy,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthApiKeyRevokedEvent = (
+  params: BaseApiKeyEventParams & { payload: AuthApiKeyRevokedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.API_KEY_REVOKED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.API_KEY_REVOKED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.payload.revokedBy,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createAuthApiKeyRejectedEvent = (
+  params: BaseApiKeyEventParams & { payload: AuthApiKeyRejectedPayload },
+): AuthDomainEvent<typeof AUTH_EVENTS.API_KEY_REJECTED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: AUTH_EVENTS.API_KEY_REJECTED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: '',
     source: params.source,
     version: params.version,
     payload: params.payload,
