@@ -43,6 +43,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus'],
       startupFlags: { required: true, diagnostics: true },
     },
+    {
+      name: 'webhooks',
+      pluginPath: './modules/webhooks/index.js',
+      routePrefix: '/webhooks',
+      dependencies: ['eventBus'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 

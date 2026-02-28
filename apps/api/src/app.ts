@@ -17,6 +17,7 @@ import { healthPlugin } from './modules/health/index.js';
 import { authPlugin, jwksPlugin, signingKeyInitPlugin } from './modules/auth/index.js';
 import { scimPlugin } from './modules/scim/index.js';
 import { gamePlugin } from './modules/game/game.plugin.js';
+import { webhookPlugin } from './modules/webhooks/index.js';
 
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
@@ -25,6 +26,7 @@ const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }>
   auth: { plugin: authPlugin, routePrefix: '/auth' },
   scim: { plugin: scimPlugin, routePrefix: '/scim' },
   game: { plugin: gamePlugin, routePrefix: '/game' },
+  webhooks: { plugin: webhookPlugin, routePrefix: '/webhooks' },
 };
 
 const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {
