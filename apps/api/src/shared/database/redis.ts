@@ -74,6 +74,10 @@ export interface RedisRateLimitClient {
   incrementRateLimitKey(
     params: RedisRateLimitIncrementParams,
   ): Promise<RedisRateLimitIncrementResult>;
+  incrementHourlyQuotaKey(
+    key: string,
+    maxPerHour: number,
+  ): Promise<{ current: number; remaining: number }>;
   getValue(key: string): Promise<string | null>;
   setValue(key: string, value: string, ttlSeconds: number): Promise<void>;
   deleteKey(key: string): Promise<void>;
@@ -345,6 +349,33 @@ class RedisTcpClient implements RedisRateLimitClient {
       current: parsePositiveInteger(result[0], 1),
       ttl: parseNonNegativeInteger(result[1], params.timeWindowMs),
     };
+  }
+
+  public async incrementHourlyQuotaKey(
+    key: string,
+    maxPerHour: number,
+  ): Promise<{ current: number; remaining: number }> {
+    const HOUR_TTL_MS = 3_600_000;
+
+    const result = await this.sendCommand([
+      'EVAL',
+      REDIS_INCREMENT_LUA,
+      '1',
+      key,
+      String(HOUR_TTL_MS),
+      String(maxPerHour),
+      'false',
+      'false',
+    ]);
+
+    if (!Array.isArray(result) || result.length < 2) {
+      throw new Error('Unexpected Redis hourly quota response');
+    }
+
+    const current = parsePositiveInteger(result[0], 1);
+    const remaining = Math.max(0, maxPerHour - current);
+
+    return { current, remaining };
   }
 
   public async getValue(key: string): Promise<string | null> {

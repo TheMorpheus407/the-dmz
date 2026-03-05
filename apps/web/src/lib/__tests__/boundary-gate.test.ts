@@ -70,8 +70,8 @@ describe('Frontend Surface Boundary Gate', () => {
 
   it('should allow imports through public index files', async () => {
     const validGameCode = `
-import { something } from '../game';
-export const test = something;
+import type { GameState } from '../game';
+export type { GameState };
 `;
     writeFileSync(testFile3, validGameCode);
 

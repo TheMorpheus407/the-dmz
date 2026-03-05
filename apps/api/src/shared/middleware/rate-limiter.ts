@@ -5,6 +5,8 @@ import rateLimit, {
   type errorResponseBuilderContext,
 } from '@fastify/rate-limit';
 
+import type { EffectiveQuotaPolicy } from '@the-dmz/shared/contracts';
+
 import { closeRedisClient, getRedisClient, type RedisRateLimitClient } from '../database/redis.js';
 import { tenantScopedKey, KEY_CATEGORIES } from '../cache/index.js';
 
@@ -17,6 +19,12 @@ import type {
   FastifyRequest,
   preHandlerAsyncHookHandler,
 } from 'fastify';
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    effectiveQuotaPolicy?: EffectiveQuotaPolicy;
+  }
+}
 
 const DEFAULT_RATE_LIMIT_MAX = 100;
 const DEFAULT_RATE_LIMIT_WINDOW_MS = 60_000;
@@ -352,6 +360,62 @@ const setRateLimitResetAsEpochSeconds = (app: FastifyInstance): void => {
   });
 };
 
+let rateLimiterState: StoreState | null = null;
+
+const generateHourlyQuotaKey = (request: FastifyRequest): string => {
+  const groupId = extractGroupIdFromRoute(request);
+  const tenantId = extractTenantIdFromRequest(request);
+  const key = request.ip;
+
+  if (!tenantId) {
+    const prefix = buildRateLimitKeyPrefix(groupId);
+    return `${KEY_CATEGORIES.RATE_LIMIT}:${prefix}${key}:unauthenticated`;
+  }
+
+  const prefix = buildRateLimitKeyPrefix(groupId);
+  return tenantScopedKey(KEY_CATEGORIES.RATE_LIMIT, `${prefix}${key}`, tenantId);
+};
+
+const setQuotaHeaders = (app: FastifyInstance): void => {
+  app.addHook('onSend', async (request, reply, payload) => {
+    const effectivePolicy = request.effectiveQuotaPolicy;
+    if (!effectivePolicy) {
+      return payload;
+    }
+
+    const remaining = reply.getHeader('x-ratelimit-remaining');
+    const remainingNum = Number(remaining);
+    const remainingValue = Number.isNaN(remainingNum) ? 0 : remainingNum;
+
+    const hourlyKey = generateHourlyQuotaKey(request);
+    let hourlyRemaining = effectivePolicy.requestsPerHour;
+
+    if (rateLimiterState?.redis) {
+      try {
+        const result = await rateLimiterState.redis.incrementHourlyQuotaKey(
+          hourlyKey,
+          effectivePolicy.requestsPerHour,
+        );
+        hourlyRemaining = result.remaining;
+      } catch {
+        hourlyRemaining = effectivePolicy.requestsPerHour;
+      }
+    } else if (rateLimiterState?.memoryBuckets.size) {
+      const existing = rateLimiterState.memoryBuckets.get(hourlyKey);
+      if (existing) {
+        hourlyRemaining = Math.max(0, effectivePolicy.requestsPerHour - existing.current);
+      }
+    }
+
+    reply.header('x-quota-limit-minute', effectivePolicy.requestsPerMinute);
+    reply.header('x-quota-remaining-minute', remainingValue);
+    reply.header('x-quota-limit-hour', effectivePolicy.requestsPerHour);
+    reply.header('x-quota-remaining-hour', hourlyRemaining);
+
+    return payload;
+  });
+};
+
 const extractPathname = (request: FastifyRequest): string => {
   const source = request.raw.url ?? request.url;
   const trimmed = source.split('?')[0];
@@ -376,6 +440,8 @@ const buildRateLimitPluginOptions = (
     redisFallbackWarningLogged: false,
   };
 
+  rateLimiterState = state;
+
   if (!redis && config.NODE_ENV !== 'test') {
     logger.warn('Redis unavailable, using in-memory rate limit store');
   }
@@ -394,12 +460,28 @@ const buildRateLimitPluginOptions = (
     return tenantScopedKey(KEY_CATEGORIES.RATE_LIMIT, `${prefix}${key}`, tenantId);
   };
 
+  const rateLimitMaxGenerator = (request: FastifyRequest): number => {
+    const effectivePolicy = request.effectiveQuotaPolicy;
+    if (effectivePolicy) {
+      return Math.min(effectivePolicy.requestsPerMinute, config.RATE_LIMIT_MAX);
+    }
+    return config.RATE_LIMIT_MAX;
+  };
+
+  const rateLimitTimeWindowGenerator = (request: FastifyRequest): number => {
+    const effectivePolicy = request.effectiveQuotaPolicy;
+    if (effectivePolicy) {
+      return config.RATE_LIMIT_WINDOW_MS;
+    }
+    return config.RATE_LIMIT_WINDOW_MS;
+  };
+
   return {
     global: true,
     hook: 'onRequest',
     keyGenerator: rateLimitKeyGenerator,
-    max: config.RATE_LIMIT_MAX,
-    timeWindow: config.RATE_LIMIT_WINDOW_MS,
+    max: rateLimitMaxGenerator,
+    timeWindow: rateLimitTimeWindowGenerator,
     allowList: (request) => isRateLimitExemptPath(request),
     store: createRateLimitStore(state),
     errorResponseBuilder: rateLimitErrorResponse,
@@ -476,6 +558,7 @@ export const registerRateLimiter = (app: FastifyInstance, config: AppConfig): vo
 
   app.register(rateLimit, options);
   setRateLimitResetAsEpochSeconds(app);
+  setQuotaHeaders(app);
 
   app.addHook('onClose', async () => {
     await closeRedisClient();

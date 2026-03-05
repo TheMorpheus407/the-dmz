@@ -66,6 +66,18 @@ const GAME_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     retryLabel: 'CONTACT_ADMIN',
     dismissLabel: 'DISMISS',
   },
+  limit: {
+    title: 'QUOTA_EXCEEDED',
+    message: 'Resource limit reached. Upgrade plan or contact administrator.',
+    retryLabel: 'CONTACT_ADMIN',
+    dismissLabel: 'DISMISS',
+  },
+  conflict: {
+    title: 'CONFLICT_DETECTED',
+    message: 'Resource conflict detected. Resolve and retry.',
+    retryLabel: 'RETRY',
+    dismissLabel: 'DISMISS',
+  },
 };
 
 const ADMIN_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
@@ -123,6 +135,18 @@ const ADMIN_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     retryLabel: 'Contact Support',
     dismissLabel: 'Dismiss',
   },
+  limit: {
+    title: 'Limit Exceeded',
+    message: 'Resource limit has been reached. Please upgrade your plan.',
+    retryLabel: 'Contact Support',
+    dismissLabel: 'Dismiss',
+  },
+  conflict: {
+    title: 'Conflict Detected',
+    message: 'A resource conflict was detected. Please resolve and try again.',
+    retryLabel: 'Retry',
+    dismissLabel: 'Dismiss',
+  },
 };
 
 const AUTH_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
@@ -171,6 +195,16 @@ const AUTH_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
     message: 'Your activity has been flagged. Please contact support.',
     retryLabel: 'Contact Support',
   },
+  limit: {
+    title: 'Limit Reached',
+    message: 'You have reached your resource limit. Please contact support.',
+    retryLabel: 'Contact Support',
+  },
+  conflict: {
+    title: 'Conflict',
+    message: 'A conflict occurred. Please try again.',
+    retryLabel: 'Try Again',
+  },
 };
 
 const PUBLIC_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
@@ -217,6 +251,16 @@ const PUBLIC_ERROR_COPY: Record<ApiErrorCategory, ErrorCopy> = {
   abuse: {
     title: 'Activity Restricted',
     message: 'Your activity has been flagged.',
+    retryLabel: 'Go Home',
+  },
+  limit: {
+    title: 'Limit Reached',
+    message: 'You have reached the maximum limit for this resource.',
+    retryLabel: 'Go Home',
+  },
+  conflict: {
+    title: 'Conflict',
+    message: 'A conflict occurred. Please try again.',
     retryLabel: 'Go Home',
   },
 };

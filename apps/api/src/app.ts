@@ -7,6 +7,7 @@ import { validateManifest, getRegistrationOrder } from './modules/bootstrap.js';
 import { swaggerPlugin } from './plugins/swagger.js';
 import { AppError, createErrorHandler, ErrorCodes } from './shared/middleware/error-handler.js';
 import { globalRateLimiter, registerRateLimiter } from './shared/middleware/rate-limiter.js';
+import { registerQuotaPolicyHook } from './shared/middleware/quota-policy.js';
 import { requestLogger } from './shared/middleware/request-logger.js';
 import { sanitizeInputHook } from './shared/middleware/sanitize-input.js';
 import { registerSecurityHeaders } from './shared/middleware/security-headers.js';
@@ -181,6 +182,7 @@ export const buildApp = (
   });
 
   registerSecurityHeaders(app, config);
+  registerQuotaPolicyHook(app);
   registerRateLimiter(app, config);
 
   app.addHook('preValidation', sanitizeInputHook);

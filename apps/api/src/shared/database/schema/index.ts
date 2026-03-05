@@ -8,5 +8,6 @@ export * from './auth/sso-connections.js';
 export * from './auth/user-profiles.js';
 export * from './auth/user-roles.js';
 export * from './tenant-policy.js';
+export * from './tenant-quota.js';
 export * from '../../../db/schema/auth/index.js';
 export * from '../../../db/schema/game/index.js';
