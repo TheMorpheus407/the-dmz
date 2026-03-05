@@ -19,19 +19,41 @@ vi.mock('$lib/api/auth', () => ({
   getCurrentUser: vi.fn(),
 }));
 
+vi.mock('$lib/api/client', () => ({
+  apiClient: {
+    setCsrfToken: vi.fn(),
+    clearCsrfToken: vi.fn(),
+  },
+}));
+
 vi.mock('$app/environment', () => ({
   browser: true,
 }));
+
+const mockDocumentElement = {
+  dataset: {} as Record<string, string>,
+  style: {
+    setProperty: vi.fn(),
+  },
+};
 
 vi.stubGlobal('window', {
   matchMedia: vi.fn().mockReturnValue({ matches: false }),
 });
 
+vi.stubGlobal('document', {
+  documentElement: mockDocumentElement,
+  cookie: '',
+});
+
 const { login, register, logout, getCurrentUser } = await import('$lib/api/auth');
+const { apiClient } = await import('$lib/api/client');
 
 describe('sessionStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockDocumentElement.dataset = {};
+    document.cookie = '';
     sessionStore.clear();
   });
 
@@ -228,6 +250,84 @@ describe('sessionStore', () => {
       const state = get(sessionStore);
       expect(state.status).toBe('anonymous');
     });
+
+    it('parses csrf-token from cookie correctly with equals signs', async () => {
+      const csrfToken = 'abc123==';
+      document.cookie = `csrf-token=${csrfToken};other-cookie=value`;
+
+      vi.mocked(login).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'test@example.com',
+            displayName: 'Test User',
+            tenantId: '456',
+            role: 'player',
+            isActive: true,
+          },
+          accessToken: 'access-token',
+        },
+      });
+
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'test@example.com',
+            displayName: 'Test User',
+            tenantId: '456',
+            role: 'player',
+            isActive: true,
+          },
+        },
+      });
+
+      await sessionStore.login({
+        email: 'test@example.com',
+        password: 'valid pass 1234',
+      });
+
+      expect(apiClient.setCsrfToken).toHaveBeenCalledWith(csrfToken);
+    });
+
+    it('parses csrf-token from cookie correctly with multiple equals signs', async () => {
+      const csrfToken = 'base64encoded===';
+      document.cookie = `other=value;csrf-token=${csrfToken};session=abc`;
+
+      vi.mocked(login).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'test@example.com',
+            displayName: 'Test User',
+            tenantId: '456',
+            role: 'player',
+            isActive: true,
+          },
+          accessToken: 'access-token',
+        },
+      });
+
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'test@example.com',
+            displayName: 'Test User',
+            tenantId: '456',
+            role: 'player',
+            isActive: true,
+          },
+        },
+      });
+
+      await sessionStore.login({
+        email: 'test@example.com',
+        password: 'valid pass 1234',
+      });
+
+      expect(apiClient.setCsrfToken).toHaveBeenCalledWith(csrfToken);
+    });
   });
 
   describe('register', () => {
@@ -256,6 +356,46 @@ describe('sessionStore', () => {
       const state = get(sessionStore);
       expect(state.status).toBe('authenticated');
       expect(state.user?.email).toBe('new@example.com');
+    });
+
+    it('parses csrf-token from cookie correctly with equals signs', async () => {
+      const csrfToken = 'xyz789==';
+      document.cookie = `csrf-token=${csrfToken};other=value`;
+
+      vi.mocked(register).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'new@example.com',
+            displayName: 'New User',
+            tenantId: '456',
+            role: 'player',
+            isActive: true,
+          },
+          accessToken: 'access-token',
+        },
+      });
+
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'new@example.com',
+            displayName: 'New User',
+            tenantId: '456',
+            role: 'player',
+            isActive: true,
+          },
+        },
+      });
+
+      await sessionStore.register({
+        email: 'new@example.com',
+        password: 'valid pass 1234',
+        displayName: 'New User',
+      });
+
+      expect(apiClient.setCsrfToken).toHaveBeenCalledWith(csrfToken);
     });
   });
 

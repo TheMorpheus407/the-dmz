@@ -209,10 +209,15 @@ function createSessionStore() {
       if (result.data) {
         const cookies = document.cookie.split(';');
         for (const cookie of cookies) {
-          const [name, value] = cookie.trim().split('=');
-          if (name === 'csrf-token' && value) {
-            apiClient.setCsrfToken(value);
-            break;
+          const trimmed = cookie.trim();
+          const idx = trimmed.indexOf('=');
+          if (idx !== -1) {
+            const name = trimmed.substring(0, idx);
+            const value = trimmed.substring(idx + 1);
+            if (name === 'csrf-token' && value) {
+              apiClient.setCsrfToken(value);
+              break;
+            }
           }
         }
 
@@ -272,10 +277,15 @@ function createSessionStore() {
       if (result.data) {
         const cookies = document.cookie.split(';');
         for (const cookie of cookies) {
-          const [name, value] = cookie.trim().split('=');
-          if (name === 'csrf-token' && value) {
-            apiClient.setCsrfToken(value);
-            break;
+          const trimmed = cookie.trim();
+          const idx = trimmed.indexOf('=');
+          if (idx !== -1) {
+            const name = trimmed.substring(0, idx);
+            const value = trimmed.substring(idx + 1);
+            if (name === 'csrf-token' && value) {
+              apiClient.setCsrfToken(value);
+              break;
+            }
           }
         }
 
