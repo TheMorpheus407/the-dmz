@@ -165,7 +165,8 @@ export const resolvePermissions = async (
         resource: permissions.resource,
         action: permissions.action,
       })
-      .from(permissions);
+      .from(permissions)
+      .where(inArray(permissions.id, permissionIds));
 
     const permMap = new Map(permRecords.map((p) => [p.id, p]));
 
