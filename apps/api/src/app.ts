@@ -19,6 +19,7 @@ import { authPlugin, jwksPlugin, signingKeyInitPlugin } from './modules/auth/ind
 import { scimPlugin } from './modules/scim/index.js';
 import { gamePlugin } from './modules/game/game.plugin.js';
 import { webhookPlugin } from './modules/webhooks/index.js';
+import { emailPlugin } from './modules/email/index.js';
 
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
@@ -28,6 +29,7 @@ const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }>
   scim: { plugin: scimPlugin, routePrefix: '/scim' },
   game: { plugin: gamePlugin, routePrefix: '/game' },
   webhooks: { plugin: webhookPlugin, routePrefix: '/webhooks' },
+  email: { plugin: emailPlugin, routePrefix: '/email' },
 };
 
 const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {

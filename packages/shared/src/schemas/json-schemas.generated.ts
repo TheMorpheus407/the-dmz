@@ -2714,3 +2714,954 @@ export const apiKeyWithSecretJsonSchema = {
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
+
+export const createEmailIntegrationJsonSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 255,
+    },
+    providerType: {
+      type: 'string',
+      enum: ['smtp', 'exchange_online', 'google_workspace'],
+    },
+    config: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            host: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 255,
+            },
+            port: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 65535,
+            },
+            encryption: {
+              type: 'string',
+              enum: ['none', 'starttls', 'tls'],
+            },
+            username: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            passwordRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            fromAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            fromName: {
+              type: 'string',
+              maxLength: 100,
+            },
+            replyToAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            maxConnections: {
+              type: 'integer',
+              exclusiveMinimum: 0,
+              maximum: 100,
+            },
+            timeoutMs: {
+              type: 'integer',
+              exclusiveMinimum: 0,
+              maximum: 60000,
+            },
+            providerType: {
+              type: 'string',
+              const: 'smtp',
+            },
+          },
+          required: ['host', 'port', 'fromAddress', 'providerType'],
+          additionalProperties: false,
+        },
+        {
+          type: 'object',
+          properties: {
+            authType: {
+              type: 'string',
+              enum: ['oauth2', 'basic'],
+            },
+            tenantId: {
+              type: 'string',
+              format: 'uuid',
+            },
+            clientId: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            clientSecretRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            authorityHost: {
+              type: 'string',
+              format: 'uri',
+            },
+            scopes: {
+              type: 'array',
+              items: {
+                type: 'string',
+                minLength: 1,
+              },
+              minItems: 1,
+            },
+            fromAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            fromName: {
+              type: 'string',
+              maxLength: 100,
+            },
+            replyToAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            webhooks: {
+              type: 'object',
+              properties: {
+                statusCallbackUrl: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                bounceCallbackUrl: {
+                  type: 'string',
+                  format: 'uri',
+                },
+              },
+              additionalProperties: false,
+            },
+            providerType: {
+              type: 'string',
+              const: 'exchange_online',
+            },
+          },
+          required: ['tenantId', 'clientId', 'scopes', 'fromAddress', 'providerType'],
+          additionalProperties: false,
+        },
+        {
+          type: 'object',
+          properties: {
+            authType: {
+              type: 'string',
+              enum: ['oauth2', 'service_account'],
+            },
+            clientId: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            clientSecretRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            refreshTokenRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            serviceAccountKeyRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 4096,
+            },
+            delegatedUser: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            scopes: {
+              type: 'array',
+              items: {
+                type: 'string',
+                minLength: 1,
+              },
+              minItems: 1,
+            },
+            fromAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            fromName: {
+              type: 'string',
+              maxLength: 100,
+            },
+            replyToAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            providerType: {
+              type: 'string',
+              const: 'google_workspace',
+            },
+          },
+          required: ['clientId', 'scopes', 'fromAddress', 'providerType'],
+          additionalProperties: false,
+        },
+      ],
+    },
+    capabilities: {
+      type: 'object',
+      properties: {
+        maxDailyVolume: {
+          type: 'integer',
+          exclusiveMinimum: 0,
+        },
+        supportsTracking: {
+          type: 'boolean',
+        },
+        supportsTemplates: {
+          type: 'boolean',
+        },
+        supportsWebhooks: {
+          type: 'boolean',
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  required: ['name', 'providerType', 'config'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const updateEmailIntegrationJsonSchema = {
+  type: 'object',
+  properties: {
+    name: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 255,
+    },
+    config: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            host: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 255,
+            },
+            port: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 65535,
+            },
+            encryption: {
+              type: 'string',
+              enum: ['none', 'starttls', 'tls'],
+            },
+            username: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            passwordRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            fromAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            fromName: {
+              type: 'string',
+              maxLength: 100,
+            },
+            replyToAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            maxConnections: {
+              type: 'integer',
+              exclusiveMinimum: 0,
+              maximum: 100,
+            },
+            timeoutMs: {
+              type: 'integer',
+              exclusiveMinimum: 0,
+              maximum: 60000,
+            },
+            providerType: {
+              type: 'string',
+              const: 'smtp',
+            },
+          },
+          required: ['host', 'port', 'fromAddress', 'providerType'],
+          additionalProperties: false,
+        },
+        {
+          type: 'object',
+          properties: {
+            authType: {
+              type: 'string',
+              enum: ['oauth2', 'basic'],
+            },
+            tenantId: {
+              type: 'string',
+              format: 'uuid',
+            },
+            clientId: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            clientSecretRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            authorityHost: {
+              type: 'string',
+              format: 'uri',
+            },
+            scopes: {
+              type: 'array',
+              items: {
+                type: 'string',
+                minLength: 1,
+              },
+              minItems: 1,
+            },
+            fromAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            fromName: {
+              type: 'string',
+              maxLength: 100,
+            },
+            replyToAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            webhooks: {
+              type: 'object',
+              properties: {
+                statusCallbackUrl: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                bounceCallbackUrl: {
+                  type: 'string',
+                  format: 'uri',
+                },
+              },
+              additionalProperties: false,
+            },
+            providerType: {
+              type: 'string',
+              const: 'exchange_online',
+            },
+          },
+          required: ['tenantId', 'clientId', 'scopes', 'fromAddress', 'providerType'],
+          additionalProperties: false,
+        },
+        {
+          type: 'object',
+          properties: {
+            authType: {
+              type: 'string',
+              enum: ['oauth2', 'service_account'],
+            },
+            clientId: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            clientSecretRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            refreshTokenRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            serviceAccountKeyRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 4096,
+            },
+            delegatedUser: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            scopes: {
+              type: 'array',
+              items: {
+                type: 'string',
+                minLength: 1,
+              },
+              minItems: 1,
+            },
+            fromAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            fromName: {
+              type: 'string',
+              maxLength: 100,
+            },
+            replyToAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            providerType: {
+              type: 'string',
+              const: 'google_workspace',
+            },
+          },
+          required: ['clientId', 'scopes', 'fromAddress', 'providerType'],
+          additionalProperties: false,
+        },
+      ],
+    },
+    status: {
+      type: 'string',
+      enum: ['draft', 'validating', 'ready', 'degraded', 'disabled'],
+    },
+  },
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const emailIntegrationJsonSchema = {
+  type: 'object',
+  properties: {
+    id: {
+      type: 'string',
+      format: 'uuid',
+    },
+    tenantId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    name: {
+      type: 'string',
+      minLength: 1,
+      maxLength: 255,
+    },
+    providerType: {
+      type: 'string',
+      enum: ['smtp', 'exchange_online', 'google_workspace'],
+    },
+    config: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            host: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 255,
+            },
+            port: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 65535,
+            },
+            encryption: {
+              type: 'string',
+              enum: ['none', 'starttls', 'tls'],
+              default: 'tls',
+            },
+            username: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            passwordRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            fromAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            fromName: {
+              type: 'string',
+              maxLength: 100,
+            },
+            replyToAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            maxConnections: {
+              type: 'integer',
+              exclusiveMinimum: 0,
+              maximum: 100,
+              default: 5,
+            },
+            timeoutMs: {
+              type: 'integer',
+              exclusiveMinimum: 0,
+              maximum: 60000,
+              default: 30000,
+            },
+            providerType: {
+              type: 'string',
+              const: 'smtp',
+            },
+          },
+          required: ['host', 'port', 'fromAddress', 'providerType'],
+          additionalProperties: false,
+        },
+        {
+          type: 'object',
+          properties: {
+            authType: {
+              type: 'string',
+              enum: ['oauth2', 'basic'],
+              default: 'oauth2',
+            },
+            tenantId: {
+              type: 'string',
+              format: 'uuid',
+            },
+            clientId: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            clientSecretRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            authorityHost: {
+              type: 'string',
+              format: 'uri',
+              default: 'https://login.microsoftonline.com',
+            },
+            scopes: {
+              type: 'array',
+              items: {
+                type: 'string',
+                minLength: 1,
+              },
+              minItems: 1,
+            },
+            fromAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            fromName: {
+              type: 'string',
+              maxLength: 100,
+            },
+            replyToAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            webhooks: {
+              type: 'object',
+              properties: {
+                statusCallbackUrl: {
+                  type: 'string',
+                  format: 'uri',
+                },
+                bounceCallbackUrl: {
+                  type: 'string',
+                  format: 'uri',
+                },
+              },
+              additionalProperties: false,
+            },
+            providerType: {
+              type: 'string',
+              const: 'exchange_online',
+            },
+          },
+          required: ['tenantId', 'clientId', 'scopes', 'fromAddress', 'providerType'],
+          additionalProperties: false,
+        },
+        {
+          type: 'object',
+          properties: {
+            authType: {
+              type: 'string',
+              enum: ['oauth2', 'service_account'],
+              default: 'oauth2',
+            },
+            clientId: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            clientSecretRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            refreshTokenRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 256,
+            },
+            serviceAccountKeyRef: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 4096,
+            },
+            delegatedUser: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            scopes: {
+              type: 'array',
+              items: {
+                type: 'string',
+                minLength: 1,
+              },
+              minItems: 1,
+            },
+            fromAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            fromName: {
+              type: 'string',
+              maxLength: 100,
+            },
+            replyToAddress: {
+              type: 'string',
+              format: 'email',
+              maxLength: 320,
+            },
+            providerType: {
+              type: 'string',
+              const: 'google_workspace',
+            },
+          },
+          required: ['clientId', 'scopes', 'fromAddress', 'providerType'],
+          additionalProperties: false,
+        },
+      ],
+    },
+    status: {
+      type: 'string',
+      enum: ['draft', 'validating', 'ready', 'degraded', 'disabled'],
+    },
+    authenticationPosture: {
+      type: 'object',
+      properties: {
+        spf: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'string',
+              enum: ['pending', 'valid', 'invalid', 'unknown'],
+            },
+            record: {
+              type: 'string',
+              maxLength: 255,
+            },
+            aligned: {
+              type: 'boolean',
+            },
+            checkedAt: {
+              type: 'string',
+              format: 'date-time',
+            },
+          },
+          required: ['status'],
+          additionalProperties: false,
+        },
+        dkim: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'string',
+              enum: ['pending', 'valid', 'invalid', 'unknown'],
+            },
+            selector: {
+              type: 'string',
+              maxLength: 100,
+            },
+            publicKeySize: {
+              type: 'integer',
+            },
+            aligned: {
+              type: 'boolean',
+            },
+            checkedAt: {
+              type: 'string',
+              format: 'date-time',
+            },
+          },
+          required: ['status'],
+          additionalProperties: false,
+        },
+        dmarc: {
+          type: 'object',
+          properties: {
+            status: {
+              type: 'string',
+              enum: ['pending', 'valid', 'invalid', 'unknown'],
+            },
+            policy: {
+              type: 'string',
+              enum: ['none', 'quarantine', 'reject'],
+            },
+            aligned: {
+              type: 'boolean',
+            },
+            checkedAt: {
+              type: 'string',
+              format: 'date-time',
+            },
+          },
+          required: ['status'],
+          additionalProperties: false,
+        },
+      },
+      required: ['spf', 'dkim', 'dmarc'],
+      additionalProperties: false,
+    },
+    validationFailures: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          reason: {
+            type: 'string',
+            enum: [
+              'dkim_key_too_short',
+              'dkim_key_invalid',
+              'spf_not_configured',
+              'spf_invalid',
+              'dmarc_not_configured',
+              'dmarc_invalid',
+              'credential_expired',
+              'credential_invalid',
+              'credential_revoked',
+              'tenant_isolation_violated',
+              'configuration_invalid',
+              'network_unreachable',
+              'rate_limit_exceeded',
+            ],
+          },
+          field: {
+            type: 'string',
+          },
+          message: {
+            type: 'string',
+            maxLength: 500,
+          },
+          detectedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+        },
+        required: ['reason', 'message', 'detectedAt'],
+        additionalProperties: false,
+      },
+      default: [],
+    },
+    capabilities: {
+      type: 'object',
+      properties: {
+        maxDailyVolume: {
+          type: 'integer',
+          exclusiveMinimum: 0,
+        },
+        supportsTracking: {
+          type: 'boolean',
+          default: false,
+        },
+        supportsTemplates: {
+          type: 'boolean',
+          default: false,
+        },
+        supportsWebhooks: {
+          type: 'boolean',
+          default: false,
+        },
+      },
+      additionalProperties: false,
+      default: {},
+    },
+    tenantIsolationMetadata: {
+      type: 'object',
+      properties: {
+        isolatedTenantId: {
+          type: 'string',
+          format: 'uuid',
+        },
+        dedicatedIpPool: {
+          type: 'string',
+          maxLength: 100,
+        },
+        ipWarmupStatus: {
+          type: 'string',
+          enum: ['not_started', 'in_progress', 'complete'],
+        },
+      },
+      required: ['isolatedTenantId'],
+      additionalProperties: false,
+    },
+    createdAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    updatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    lastValidatedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: [
+    'id',
+    'tenantId',
+    'name',
+    'providerType',
+    'config',
+    'status',
+    'createdAt',
+    'updatedAt',
+  ],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const emailReadinessCheckJsonSchema = {
+  type: 'object',
+  properties: {
+    integrationId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    requireSpf: {
+      type: 'boolean',
+      default: true,
+    },
+    requireDkim: {
+      type: 'boolean',
+      default: true,
+    },
+    requireDmarc: {
+      type: 'boolean',
+      default: true,
+    },
+    minDkimKeySize: {
+      type: 'integer',
+      minimum: 1024,
+      maximum: 4096,
+      default: 2048,
+    },
+    enforceTenantIsolation: {
+      type: 'boolean',
+      default: true,
+    },
+  },
+  required: ['integrationId'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const emailReadinessResultJsonSchema = {
+  type: 'object',
+  properties: {
+    integrationId: {
+      type: 'string',
+      format: 'uuid',
+    },
+    ready: {
+      type: 'boolean',
+    },
+    checksPassed: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    failures: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          reason: {
+            type: 'string',
+            enum: [
+              'dkim_key_too_short',
+              'dkim_key_invalid',
+              'spf_not_configured',
+              'spf_invalid',
+              'dmarc_not_configured',
+              'dmarc_invalid',
+              'credential_expired',
+              'credential_invalid',
+              'credential_revoked',
+              'tenant_isolation_violated',
+              'configuration_invalid',
+              'network_unreachable',
+              'rate_limit_exceeded',
+            ],
+          },
+          field: {
+            type: 'string',
+          },
+          message: {
+            type: 'string',
+            maxLength: 500,
+          },
+          detectedAt: {
+            type: 'string',
+            format: 'date-time',
+          },
+        },
+        required: ['reason', 'message', 'detectedAt'],
+        additionalProperties: false,
+      },
+    },
+    checkedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+  },
+  required: ['integrationId', 'ready', 'checksPassed', 'failures', 'checkedAt'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;

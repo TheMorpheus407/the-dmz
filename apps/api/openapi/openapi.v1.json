@@ -13288,6 +13288,594 @@
           }
         }
       }
+    },
+    "/api/v1/email/integrations": {
+      "post": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "providerType": {
+                    "type": "string",
+                    "enum": ["smtp", "exchange_online", "google_workspace"]
+                  },
+                  "config": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "host": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          },
+                          "port": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 65535
+                          },
+                          "encryption": {
+                            "type": "string",
+                            "enum": ["none", "starttls", "tls"]
+                          },
+                          "username": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "passwordRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "fromAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "fromName": {
+                            "type": "string",
+                            "maxLength": 100
+                          },
+                          "replyToAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "maxConnections": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 100
+                          },
+                          "timeoutMs": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 60000
+                          },
+                          "providerType": {
+                            "type": "string",
+                            "enum": ["smtp"]
+                          }
+                        },
+                        "required": ["host", "port", "fromAddress", "providerType"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "authType": {
+                            "type": "string",
+                            "enum": ["oauth2", "basic"]
+                          },
+                          "tenantId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "clientId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "clientSecretRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "authorityHost": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "scopes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "minItems": 1
+                          },
+                          "fromAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "fromName": {
+                            "type": "string",
+                            "maxLength": 100
+                          },
+                          "replyToAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "webhooks": {
+                            "type": "object",
+                            "properties": {
+                              "statusCallbackUrl": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "bounceCallbackUrl": {
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "providerType": {
+                            "type": "string",
+                            "enum": ["exchange_online"]
+                          }
+                        },
+                        "required": [
+                          "tenantId",
+                          "clientId",
+                          "scopes",
+                          "fromAddress",
+                          "providerType"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "authType": {
+                            "type": "string",
+                            "enum": ["oauth2", "service_account"]
+                          },
+                          "clientId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "clientSecretRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "refreshTokenRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "serviceAccountKeyRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          },
+                          "delegatedUser": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "scopes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "minItems": 1
+                          },
+                          "fromAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "fromName": {
+                            "type": "string",
+                            "maxLength": 100
+                          },
+                          "replyToAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "providerType": {
+                            "type": "string",
+                            "enum": ["google_workspace"]
+                          }
+                        },
+                        "required": ["clientId", "scopes", "fromAddress", "providerType"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "capabilities": {
+                    "type": "object",
+                    "properties": {
+                      "maxDailyVolume": {
+                        "type": "integer",
+                        "exclusiveMinimum": 0
+                      },
+                      "supportsTracking": {
+                        "type": "boolean"
+                      },
+                      "supportsTemplates": {
+                        "type": "boolean"
+                      },
+                      "supportsWebhooks": {
+                        "type": "boolean"
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["name", "providerType", "config"],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/email/integrations/{integrationId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "integrationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "patch": {
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  },
+                  "config": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "host": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255
+                          },
+                          "port": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 65535
+                          },
+                          "encryption": {
+                            "type": "string",
+                            "enum": ["none", "starttls", "tls"]
+                          },
+                          "username": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "passwordRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "fromAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "fromName": {
+                            "type": "string",
+                            "maxLength": 100
+                          },
+                          "replyToAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "maxConnections": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 100
+                          },
+                          "timeoutMs": {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 60000
+                          },
+                          "providerType": {
+                            "type": "string",
+                            "enum": ["smtp"]
+                          }
+                        },
+                        "required": ["host", "port", "fromAddress", "providerType"],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "authType": {
+                            "type": "string",
+                            "enum": ["oauth2", "basic"]
+                          },
+                          "tenantId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "clientId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "clientSecretRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "authorityHost": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "scopes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "minItems": 1
+                          },
+                          "fromAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "fromName": {
+                            "type": "string",
+                            "maxLength": 100
+                          },
+                          "replyToAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "webhooks": {
+                            "type": "object",
+                            "properties": {
+                              "statusCallbackUrl": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "bounceCallbackUrl": {
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            },
+                            "additionalProperties": false
+                          },
+                          "providerType": {
+                            "type": "string",
+                            "enum": ["exchange_online"]
+                          }
+                        },
+                        "required": [
+                          "tenantId",
+                          "clientId",
+                          "scopes",
+                          "fromAddress",
+                          "providerType"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "authType": {
+                            "type": "string",
+                            "enum": ["oauth2", "service_account"]
+                          },
+                          "clientId": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "clientSecretRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "refreshTokenRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 256
+                          },
+                          "serviceAccountKeyRef": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 4096
+                          },
+                          "delegatedUser": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "scopes": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "minItems": 1
+                          },
+                          "fromAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "fromName": {
+                            "type": "string",
+                            "maxLength": 100
+                          },
+                          "replyToAddress": {
+                            "type": "string",
+                            "format": "email",
+                            "maxLength": 320
+                          },
+                          "providerType": {
+                            "type": "string",
+                            "enum": ["google_workspace"]
+                          }
+                        },
+                        "required": ["clientId", "scopes", "fromAddress", "providerType"],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": ["draft", "validating", "ready", "degraded", "disabled"]
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "integrationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "delete": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "integrationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/email/integrations/{integrationId}/ready": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "integrationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      },
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "integrationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/email/integrations/{integrationId}/validate": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "integrationId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
     }
   },
   "servers": [

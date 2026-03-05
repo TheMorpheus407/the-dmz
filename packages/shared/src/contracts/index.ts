@@ -818,3 +818,54 @@ export type {
   DmzCliMutationContract,
   DmzCliAdminContract,
 } from './dmz-cli-contract.js';
+
+export {
+  PROOFPOINT_INTEGRATION_VERSION,
+  PROOFPOINT_COMPATIBILITY_NOTES,
+  proofpointAllowlistPayloadSchema,
+  proofpointAuthRequirementsSchema,
+  proofpointBounceNotificationSchema,
+  m1ProofpointAllowlistContractSchema,
+  PROOFPOINT_ERROR_CODES,
+  isValidProofpointPayload,
+  validateProofpointAuthRequirements,
+  type ProofpointAllowlistPayload,
+  type ProofpointAuthRequirements,
+  type ProofpointBounceNotification,
+  type M1ProofpointAllowlistContract,
+  type ProofpointErrorCode,
+} from './proofpoint-contract.js';
+
+export {
+  MIMECAST_INTEGRATION_VERSION,
+  MIMECAST_COMPATIBILITY_NOTES,
+  mimecastAllowlistPayloadSchema,
+  mimecastAuthRequirementsSchema,
+  mimecastBounceNotificationSchema,
+  m1MimecastAllowlistContractSchema,
+  MIMECAST_ERROR_CODES,
+  isValidMimecastPayload,
+  validateMimecastAuthRequirements,
+  type MimecastAllowlistPayload,
+  type MimecastAuthRequirements,
+  type MimecastBounceNotification,
+  type M1MimecastAllowlistContract,
+  type MimecastErrorCode,
+} from './mimecast-contract.js';
+
+export {
+  DEFENDER_INTEGRATION_VERSION,
+  DEFENDER_COMPATIBILITY_NOTES,
+  defenderAllowlistPayloadSchema,
+  defenderAuthRequirementsSchema,
+  defenderNotificationSchema,
+  m1DefenderAllowlistContractSchema,
+  DEFENDER_ERROR_CODES,
+  isValidDefenderPayload,
+  validateDefenderAuthRequirements,
+  type DefenderAllowlistPayload,
+  type DefenderAuthRequirements,
+  type DefenderNotification,
+  type M1DefenderAllowlistContract,
+  type DefenderErrorCode,
+} from './defender-contract.js';

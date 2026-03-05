@@ -72,6 +72,13 @@ import {
   apiKeyResponseSchema,
   apiKeyWithSecretSchema,
 } from '../src/auth/api-key-contract.js';
+import {
+  createEmailIntegrationSchema,
+  updateEmailIntegrationSchema,
+  emailIntegrationSchema,
+  emailReadinessCheckSchema,
+  emailReadinessResultSchema,
+} from '../src/schemas/email.schema.js';
 
 const entries: Array<[string, Record<string, unknown>]> = [
   ['loginJsonSchema', createJsonSchema(loginSchema)],
@@ -137,6 +144,11 @@ const entries: Array<[string, Record<string, unknown>]> = [
   ['revokeApiKeyJsonSchema', createJsonSchema(revokeApiKeySchema)],
   ['apiKeyResponseJsonSchema', createJsonSchema(apiKeyResponseSchema)],
   ['apiKeyWithSecretJsonSchema', createJsonSchema(apiKeyWithSecretSchema)],
+  ['createEmailIntegrationJsonSchema', createJsonSchema(createEmailIntegrationSchema)],
+  ['updateEmailIntegrationJsonSchema', createJsonSchema(updateEmailIntegrationSchema)],
+  ['emailIntegrationJsonSchema', createJsonSchema(emailIntegrationSchema)],
+  ['emailReadinessCheckJsonSchema', createJsonSchema(emailReadinessCheckSchema)],
+  ['emailReadinessResultJsonSchema', createJsonSchema(emailReadinessResultSchema)],
 ];
 
 const renderExport = (name: string, schema: Record<string, unknown>): string =>

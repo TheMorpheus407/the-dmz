@@ -147,6 +147,25 @@ export const ErrorCodes = {
   API_KEY_ROTATION_IN_PROGRESS: 'API_KEY_ROTATION_IN_PROGRESS',
   API_KEY_ROTATION_GRACE_EXPIRED: 'API_KEY_ROTATION_GRACE_EXPIRED',
   API_KEY_TOO_MANY: 'API_KEY_TOO_MANY',
+  EMAIL_CONFIG_INVALID: 'EMAIL_CONFIG_INVALID',
+  EMAIL_CONFIG_NOT_FOUND: 'EMAIL_CONFIG_NOT_FOUND',
+  EMAIL_AUTH_POSTURE_INSUFFICIENT: 'EMAIL_AUTH_POSTURE_INSUFFICIENT',
+  EMAIL_DKIM_KEY_TOO_SHORT: 'EMAIL_DKIM_KEY_TOO_SHORT',
+  EMAIL_DKIM_KEY_INVALID: 'EMAIL_DKIM_KEY_INVALID',
+  EMAIL_SPF_NOT_CONFIGURED: 'EMAIL_SPF_NOT_CONFIGURED',
+  EMAIL_SPF_INVALID: 'EMAIL_SPF_INVALID',
+  EMAIL_DMARC_NOT_CONFIGURED: 'EMAIL_DMARC_NOT_CONFIGURED',
+  EMAIL_DMARC_INVALID: 'EMAIL_DMARC_INVALID',
+  EMAIL_TENANT_ISOLATION_VIOLATED: 'EMAIL_TENANT_ISOLATION_VIOLATED',
+  EMAIL_CREDENTIAL_EXPIRED: 'EMAIL_CREDENTIAL_EXPIRED',
+  EMAIL_CREDENTIAL_INVALID: 'EMAIL_CREDENTIAL_INVALID',
+  EMAIL_CREDENTIAL_REVOKED: 'EMAIL_CREDENTIAL_REVOKED',
+  EMAIL_GATEWAY_CONFIG_INVALID: 'EMAIL_GATEWAY_CONFIG_INVALID',
+  EMAIL_GATEWAY_NOT_SUPPORTED: 'EMAIL_GATEWAY_NOT_SUPPORTED',
+  EMAIL_STATUS_TRANSITION_INVALID: 'EMAIL_STATUS_TRANSITION_INVALID',
+  EMAIL_VALIDATION_FAILED: 'EMAIL_VALIDATION_FAILED',
+  EMAIL_NETWORK_UNREACHABLE: 'EMAIL_NETWORK_UNREACHABLE',
+  EMAIL_RATE_LIMIT_EXCEEDED: 'EMAIL_RATE_LIMIT_EXCEEDED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -817,6 +836,101 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.LIMIT,
     retryable: false,
     messageKey: 'errors.apiKey.tooMany',
+  },
+  [ErrorCodes.EMAIL_CONFIG_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.configInvalid',
+  },
+  [ErrorCodes.EMAIL_CONFIG_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.email.configNotFound',
+  },
+  [ErrorCodes.EMAIL_AUTH_POSTURE_INSUFFICIENT]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.authPostureInsufficient',
+  },
+  [ErrorCodes.EMAIL_DKIM_KEY_TOO_SHORT]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.dkimKeyTooShort',
+  },
+  [ErrorCodes.EMAIL_DKIM_KEY_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.dkimKeyInvalid',
+  },
+  [ErrorCodes.EMAIL_SPF_NOT_CONFIGURED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.spfNotConfigured',
+  },
+  [ErrorCodes.EMAIL_SPF_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.spfInvalid',
+  },
+  [ErrorCodes.EMAIL_DMARC_NOT_CONFIGURED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.dmarcNotConfigured',
+  },
+  [ErrorCodes.EMAIL_DMARC_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.dmarcInvalid',
+  },
+  [ErrorCodes.EMAIL_TENANT_ISOLATION_VIOLATED]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.email.tenantIsolationViolated',
+  },
+  [ErrorCodes.EMAIL_CREDENTIAL_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.email.credentialExpired',
+  },
+  [ErrorCodes.EMAIL_CREDENTIAL_INVALID]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.email.credentialInvalid',
+  },
+  [ErrorCodes.EMAIL_CREDENTIAL_REVOKED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.email.credentialRevoked',
+  },
+  [ErrorCodes.EMAIL_GATEWAY_CONFIG_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.gatewayConfigInvalid',
+  },
+  [ErrorCodes.EMAIL_GATEWAY_NOT_SUPPORTED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.gatewayNotSupported',
+  },
+  [ErrorCodes.EMAIL_STATUS_TRANSITION_INVALID]: {
+    category: ErrorCodeCategory.CONFLICT,
+    retryable: false,
+    messageKey: 'errors.email.statusTransitionInvalid',
+  },
+  [ErrorCodes.EMAIL_VALIDATION_FAILED]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.email.validationFailed',
+  },
+  [ErrorCodes.EMAIL_NETWORK_UNREACHABLE]: {
+    category: ErrorCodeCategory.NETWORK,
+    retryable: true,
+    messageKey: 'errors.email.networkUnreachable',
+  },
+  [ErrorCodes.EMAIL_RATE_LIMIT_EXCEEDED]: {
+    category: ErrorCodeCategory.RATE_LIMITING,
+    retryable: true,
+    messageKey: 'errors.email.rateLimitExceeded',
   },
 };
 

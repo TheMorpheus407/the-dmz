@@ -50,6 +50,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'email',
+      pluginPath: './modules/email/index.js',
+      routePrefix: '/email',
+      dependencies: ['eventBus'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 
