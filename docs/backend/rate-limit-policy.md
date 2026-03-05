@@ -213,6 +213,69 @@ If contract tests fail:
 }
 ```
 
+## Redis Requirements for Multi-Instance Deployments
+
+The rate limiter uses Redis as the primary storage engine for distributed rate limiting. In multi-instance (horizontally scaled) deployments, Redis is **required** for consistent rate limiting across all instances.
+
+### Storage Behavior
+
+| Scenario          | Single Instance                      | Multi-Instance                    |
+| ----------------- | ------------------------------------ | --------------------------------- |
+| Redis available   | Redis (recommended)                  | Redis (required)                  |
+| Redis unavailable | In-memory fallback (not recommended) | In-memory fallback (inconsistent) |
+
+### In-Memory Fallback
+
+When Redis becomes unavailable, the rate limiter falls back to an in-memory Map for tracking rate limits. This fallback:
+
+- **Works correctly for single-instance deployments**
+- **Causes inconsistent rate limiting in multi-instance deployments** because each instance maintains its own separate in-memory state
+
+### Strict Mode (Recommended for Multi-Instance)
+
+For multi-instance deployments, enable strict mode to ensure rate limiting integrity:
+
+```bash
+RATE_LIMIT_STRICT_MODE=true
+```
+
+When strict mode is enabled:
+
+- If Redis becomes unavailable, requests are rejected with HTTP 503 (Service Unavailable)
+- This prevents rate limit bypass attacks where users could route requests to different instances
+- The error response includes:
+
+```json
+{
+  "success": false,
+  "error": {
+    "code": "SERVICE_UNAVAILABLE",
+    "message": "Rate limiting service temporarily unavailable. Retry later.",
+    "details": {
+      "retryAfterSeconds": 5
+    },
+    "requestId": "uuid-string"
+  }
+}
+```
+
+### Response Headers
+
+All rate-limited responses include the `X-RateLimit-Store` header indicating the storage backend:
+
+- `X-RateLimit-Store: redis` - Redis is available and functioning
+- `X-RateLimit-Store: memory` - Fallback to in-memory storage (Redis unavailable)
+
+Monitor this header in production to detect Redis connectivity issues.
+
+### Configuration
+
+| Environment Variable     | Default | Description                            |
+| ------------------------ | ------- | -------------------------------------- |
+| `RATE_LIMIT_MAX`         | 100     | Maximum requests per window            |
+| `RATE_LIMIT_WINDOW_MS`   | 60,000  | Window size in milliseconds            |
+| `RATE_LIMIT_STRICT_MODE` | false   | Reject requests when Redis unavailable |
+
 ## Dependencies
 
 This policy depends on:

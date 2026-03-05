@@ -57,6 +57,7 @@ type StoreState = {
   readonly logger: FastifyBaseLogger;
   readonly redis: RedisRateLimitClient | null;
   readonly memoryBuckets: Map<string, MemoryBucket>;
+  readonly strictMode: boolean;
   redisAvailable: boolean;
   redisRetryAtMs: number;
   redisFallbackWarningLogged: boolean;
@@ -270,6 +271,7 @@ const markRedisAvailable = (state: StoreState): void => {
   state.redisAvailable = true;
   state.redisRetryAtMs = 0;
   state.redisFallbackWarningLogged = false;
+  lastRedisUnavailableErrorMs = 0;
 };
 
 export const createRateLimitStore = (state: StoreState): FastifyRateLimitStoreCtor =>
@@ -306,7 +308,21 @@ export const createRateLimitStore = (state: StoreState): FastifyRateLimitStoreCt
             return result;
           } catch (error) {
             markRedisUnavailable(state, error);
+
+            if (state.strictMode) {
+              state.logger.error(
+                { err: error },
+                'Redis unavailable in strict mode - rejecting request',
+              );
+              lastRedisUnavailableErrorMs = Date.now();
+              throw new Error(RATE_LIMIT_REDIS_UNAVAILABLE_ERROR);
+            }
           }
+        }
+
+        if (state.strictMode && state.redis && !state.redisAvailable) {
+          lastRedisUnavailableErrorMs = Date.now();
+          throw new Error(RATE_LIMIT_REDIS_UNAVAILABLE_ERROR);
         }
 
         return incrementWithMemory(
@@ -331,11 +347,29 @@ export const createRateLimitStore = (state: StoreState): FastifyRateLimitStoreCt
     }
   };
 
+const RATE_LIMIT_REDIS_UNAVAILABLE_ERROR = 'RATE_LIMIT_REDIS_UNAVAILABLE';
+
+let lastRedisUnavailableErrorMs = 0;
+
 const rateLimitErrorResponse = (
   _request: FastifyRequest,
   context: errorResponseBuilderContext,
-): AppError =>
-  new AppError({
+): AppError => {
+  const now = Date.now();
+  const isRedisUnavailable = now - lastRedisUnavailableErrorMs < REDIS_RETRY_COOLDOWN_MS * 2;
+
+  if (isRedisUnavailable) {
+    return new AppError({
+      code: ErrorCodes.SERVICE_UNAVAILABLE,
+      message: 'Rate limiting service temporarily unavailable. Retry later.',
+      statusCode: 503,
+      details: {
+        retryAfterSeconds: Math.ceil(REDIS_RETRY_COOLDOWN_MS / 1000),
+      },
+    });
+  }
+
+  return new AppError({
     code: ErrorCodes.RATE_LIMIT_EXCEEDED,
     message: 'Rate limit exceeded. Retry later.',
     statusCode: context.statusCode,
@@ -343,6 +377,7 @@ const rateLimitErrorResponse = (
       retryAfterSeconds: calculateRetryAfterSeconds(context),
     },
   });
+};
 
 const setRateLimitResetAsEpochSeconds = (app: FastifyInstance): void => {
   app.addHook('onSend', async (_request, reply, payload) => {
@@ -354,6 +389,11 @@ const setRateLimitResetAsEpochSeconds = (app: FastifyInstance): void => {
         const resetEpochSeconds = Math.floor(Date.now() / 1000) + Math.trunc(ttlSeconds);
         reply.header('x-ratelimit-reset', resetEpochSeconds);
       }
+    }
+
+    if (!reply.getHeader('x-ratelimit-store')) {
+      const storeType = rateLimiterState?.redisAvailable ? 'redis' : 'memory';
+      reply.header('x-ratelimit-store', storeType);
     }
 
     return payload;
@@ -431,10 +471,12 @@ const buildRateLimitPluginOptions = (
   logger: FastifyBaseLogger,
 ): RateLimitPluginOptions => {
   const redis = getRedisClient(config);
+  const strictMode = config.RATE_LIMIT_STRICT_MODE ?? false;
   const state: StoreState = {
     logger,
     redis,
     memoryBuckets: new Map<string, MemoryBucket>(),
+    strictMode,
     redisAvailable: redis !== null,
     redisRetryAtMs: 0,
     redisFallbackWarningLogged: false,
@@ -444,6 +486,10 @@ const buildRateLimitPluginOptions = (
 
   if (!redis && config.NODE_ENV !== 'test') {
     logger.warn('Redis unavailable, using in-memory rate limit store');
+  } else if (strictMode && redis) {
+    logger.info(
+      'Rate limiter strict mode enabled - requests will be rejected when Redis is unavailable',
+    );
   }
 
   const rateLimitKeyGenerator = (request: FastifyRequest): string => {

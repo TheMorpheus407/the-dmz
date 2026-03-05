@@ -478,6 +478,7 @@ describe('rate limiter middleware', () => {
         logger,
         redis: redisClient,
         memoryBuckets: new Map(),
+        strictMode: false,
         redisAvailable: true,
         redisRetryAtMs: 0,
         redisFallbackWarningLogged: false,
@@ -521,6 +522,7 @@ describe('rate limiter middleware', () => {
         logger,
         redis: redisClient,
         memoryBuckets: new Map(),
+        strictMode: false,
         redisAvailable: true,
         redisRetryAtMs: 0,
         redisFallbackWarningLogged: false,
@@ -570,6 +572,7 @@ describe('rate limiter middleware', () => {
           logger,
           redis: redisClient,
           memoryBuckets: new Map(),
+          strictMode: false,
           redisAvailable: true,
           redisRetryAtMs: 0,
           redisFallbackWarningLogged: false,
@@ -598,6 +601,95 @@ describe('rate limiter middleware', () => {
       } finally {
         vi.useRealTimers();
       }
+    });
+
+    it('rejects requests when Redis is unavailable in strict mode', async () => {
+      const connect = vi.fn(async () => undefined);
+      const incrementRateLimitKey = vi
+        .fn(async () => ({ current: 99, ttl: 60_000 }))
+        .mockRejectedValueOnce(new Error('redis down'));
+
+      const redisClient = {
+        status: 'ready',
+        connect,
+        ping: vi.fn(async () => 'PONG'),
+        incrementRateLimitKey,
+        incrementHourlyQuotaKey: vi.fn(async () => ({ current: 1, remaining: 99 })),
+        getValue: vi.fn(async () => null),
+        setValue: vi.fn(async () => undefined),
+        deleteKey: vi.fn(async () => undefined),
+        getKeys: vi.fn(async () => []),
+        quit: vi.fn(async () => undefined),
+        disconnect: vi.fn(),
+      } satisfies RedisRateLimitClient;
+
+      const logger = {
+        error: vi.fn(),
+        warn: vi.fn(),
+        info: vi.fn(),
+      } as unknown as FastifyBaseLogger;
+      const state: RateLimitStoreState = {
+        logger,
+        redis: redisClient,
+        memoryBuckets: new Map(),
+        strictMode: true,
+        redisAvailable: true,
+        redisRetryAtMs: 0,
+        redisFallbackWarningLogged: false,
+      };
+
+      const Store = createRateLimitStore(state);
+      const store = new Store({});
+
+      await expect(callStoreIncr(store, '4.4.4.4', 60_000, 5)).rejects.toThrow(
+        'RATE_LIMIT_REDIS_UNAVAILABLE',
+      );
+      expect(state.redisAvailable).toBe(false);
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    it('uses memory fallback when strict mode is disabled', async () => {
+      const connect = vi.fn(async () => undefined);
+      const incrementRateLimitKey = vi
+        .fn(async () => ({ current: 99, ttl: 60_000 }))
+        .mockRejectedValueOnce(new Error('redis down'));
+
+      const redisClient = {
+        status: 'ready',
+        connect,
+        ping: vi.fn(async () => 'PONG'),
+        incrementRateLimitKey,
+        incrementHourlyQuotaKey: vi.fn(async () => ({ current: 1, remaining: 99 })),
+        getValue: vi.fn(async () => null),
+        setValue: vi.fn(async () => undefined),
+        deleteKey: vi.fn(async () => undefined),
+        getKeys: vi.fn(async () => []),
+        quit: vi.fn(async () => undefined),
+        disconnect: vi.fn(),
+      } satisfies RedisRateLimitClient;
+
+      const logger = {
+        error: vi.fn(),
+        warn: vi.fn(),
+        info: vi.fn(),
+      } as unknown as FastifyBaseLogger;
+      const state: RateLimitStoreState = {
+        logger,
+        redis: redisClient,
+        memoryBuckets: new Map(),
+        strictMode: false,
+        redisAvailable: true,
+        redisRetryAtMs: 0,
+        redisFallbackWarningLogged: false,
+      };
+
+      const Store = createRateLimitStore(state);
+      const store = new Store({});
+
+      const first = await callStoreIncr(store, '5.5.5.5', 60_000, 5);
+      expect(first.current).toBe(1);
+      expect(state.redisAvailable).toBe(false);
+      expect(logger.error).not.toHaveBeenCalled();
     });
   });
 });
