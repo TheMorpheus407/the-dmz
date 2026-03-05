@@ -30,13 +30,6 @@ declare module 'fastify' {
   }
 }
 
-const permissionCache = new Map<
-  string,
-  { permissions: string[]; roles: string[]; expiresAt: number }
->();
-
-const CACHE_TTL_MS = 30_000;
-
 export interface RoleAssignmentValidity {
   isValid: boolean;
   reason?: 'expired' | 'scope_mismatch';
@@ -82,41 +75,6 @@ export const isRoleAssignmentValid = (
   };
 };
 
-const buildPermissionCacheKey = (tenantId: string, userId: string): string =>
-  `permissions:${tenantId}:${userId}`;
-
-const getCachedPermissions = (
-  tenantId: string,
-  userId: string,
-): { permissions: string[]; roles: string[] } | null => {
-  const key = buildPermissionCacheKey(tenantId, userId);
-  const cached = permissionCache.get(key);
-
-  if (cached && Date.now() < cached.expiresAt) {
-    return {
-      permissions: cached.permissions,
-      roles: cached.roles,
-    };
-  }
-
-  permissionCache.delete(key);
-  return null;
-};
-
-const setCachedPermissions = (
-  tenantId: string,
-  userId: string,
-  permissions: string[],
-  roles: string[],
-): void => {
-  const key = buildPermissionCacheKey(tenantId, userId);
-  permissionCache.set(key, {
-    permissions,
-    roles,
-    expiresAt: Date.now() + CACHE_TTL_MS,
-  });
-};
-
 export const resolvePermissions = async (
   config: AppConfig,
   tenantId: string,
@@ -126,22 +84,11 @@ export const resolvePermissions = async (
 
   const redisCached = await getABACCachedPermissions(config, tenantId, userId);
   if (redisCached) {
-    setCachedPermissions(tenantId, userId, redisCached.permissions, redisCached.roles);
     const latencyMs = performance.now() - startTime;
     recordAuthorizationEvaluation(latencyMs, true);
     return {
       permissions: redisCached.permissions,
       roles: redisCached.roles,
-    };
-  }
-
-  const cached = getCachedPermissions(tenantId, userId);
-  if (cached) {
-    const latencyMs = performance.now() - startTime;
-    recordAuthorizationEvaluation(latencyMs, true);
-    return {
-      permissions: cached.permissions,
-      roles: cached.roles,
     };
   }
 
@@ -228,7 +175,6 @@ export const resolvePermissions = async (
       .map((p) => `${p.resource}:${p.action}`);
   }
 
-  setCachedPermissions(tenantId, userId, permissionKeys, roleNames);
   await setABACCachedPermissions(config, tenantId, userId, permissionKeys, roleNames);
 
   const latencyMs = performance.now() - startTime;
@@ -423,18 +369,7 @@ export const clearPermissionCache = async (
   tenantId?: string,
   userId?: string,
 ): Promise<void> => {
-  if (tenantId && userId) {
-    const key = buildPermissionCacheKey(tenantId, userId);
-    permissionCache.delete(key);
+  if (tenantId) {
     await invalidateABACCache(config, tenantId, userId);
-  } else if (tenantId) {
-    for (const key of permissionCache.keys()) {
-      if (key.startsWith(`permissions:${tenantId}:`)) {
-        permissionCache.delete(key);
-      }
-    }
-    await invalidateABACCache(config, tenantId);
-  } else {
-    permissionCache.clear();
   }
 };

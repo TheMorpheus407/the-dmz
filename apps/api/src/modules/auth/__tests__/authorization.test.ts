@@ -412,6 +412,160 @@ describe('authorization middleware - integration tests', () => {
       expect(secondBody.roles).toContain('manager');
     });
   });
+
+  describe('Multi-instance cache invalidation', () => {
+    it('fetches fresh permissions from database after cache invalidation', async () => {
+      const registerResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/register',
+        payload: {
+          email: 'multi-instance-cache@example.com',
+          password: 'Valid' + 'Pass123!',
+          displayName: 'Multi Instance Cache',
+        },
+      });
+
+      const { accessToken, user } = registerResponse.json() as {
+        accessToken: string;
+        user: { tenantId: string; id: string };
+      };
+
+      const db = getDatabaseClient(testConfig);
+
+      const [initialRole] = await db
+        .insert(roles)
+        .values({
+          name: 'initial-role',
+          tenantId: user.tenantId,
+          description: 'Initial role',
+        })
+        .returning();
+
+      await db.insert(permissions).values({
+        resource: 'test',
+        action: 'read',
+      });
+
+      const [perm] = await db.select().from(permissions).where(eq(permissions.resource, 'test'));
+
+      await db.insert(rolePermissions).values({
+        roleId: initialRole!.id,
+        permissionId: perm!.id,
+      });
+
+      await db.insert(userRoles).values({
+        userId: user.id,
+        roleId: initialRole!.id,
+        tenantId: user.tenantId,
+      });
+
+      clearPermissionCache(testConfig, user.tenantId, user.id);
+
+      const firstResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/me',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(firstResponse.statusCode).toBe(200);
+      const firstBody = firstResponse.json();
+      expect(firstBody.roles).toContain('initial-role');
+      expect(firstBody.permissions).toContain('test:read');
+
+      const [updatedRole] = await db
+        .insert(roles)
+        .values({
+          name: 'new-role',
+          tenantId: user.tenantId,
+          description: 'New role',
+        })
+        .returning();
+
+      await db.insert(userRoles).values({
+        userId: user.id,
+        roleId: updatedRole!.id,
+        tenantId: user.tenantId,
+      });
+
+      clearPermissionCache(testConfig, user.tenantId, user.id);
+
+      const secondResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/me',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(secondResponse.statusCode).toBe(200);
+      const secondBody = secondResponse.json();
+      expect(secondBody.roles).toContain('new-role');
+    });
+
+    it('simulates cross-instance cache invalidation via Redis', async () => {
+      const registerResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/register',
+        payload: {
+          email: 'redis-cache-invalidation@example.com',
+          password: 'Valid' + 'Pass123!',
+          displayName: 'Redis Cache Invalidation',
+        },
+      });
+
+      const { accessToken, user } = registerResponse.json() as {
+        accessToken: string;
+        user: { tenantId: string; id: string };
+      };
+
+      const db = getDatabaseClient(testConfig);
+
+      const [role1] = await db
+        .insert(roles)
+        .values({
+          name: 'role-one',
+          tenantId: user.tenantId,
+          description: 'Role One',
+        })
+        .returning();
+
+      await db.insert(userRoles).values({
+        userId: user.id,
+        roleId: role1!.id,
+        tenantId: user.tenantId,
+      });
+
+      clearPermissionCache(testConfig, user.tenantId, user.id);
+
+      const firstResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/me',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(firstResponse.statusCode).toBe(200);
+      const firstBody = firstResponse.json();
+      expect(firstBody.roles).toContain('role-one');
+
+      clearPermissionCache(testConfig, user.tenantId, user.id);
+
+      const secondResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/auth/me',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(secondResponse.statusCode).toBe(200);
+      const secondBody = secondResponse.json();
+      expect(secondBody.roles).toEqual(firstBody.roles);
+    });
+  });
 });
 
 describe('role assignment validity - isRoleAssignmentValid', () => {
