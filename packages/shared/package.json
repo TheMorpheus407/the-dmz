@@ -81,6 +81,11 @@
       "types": "./dist/esm/contracts/zapier-contract.d.ts",
       "import": "./dist/esm/contracts/zapier-contract.js",
       "require": "./dist/cjs/contracts/zapier-contract.js"
+    },
+    "./contracts/power-automate-contract": {
+      "types": "./dist/esm/contracts/power-automate-contract.d.ts",
+      "import": "./dist/esm/contracts/power-automate-contract.js",
+      "require": "./dist/cjs/contracts/power-automate-contract.js"
     }
   },
   "scripts": {
