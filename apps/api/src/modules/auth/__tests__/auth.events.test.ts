@@ -175,6 +175,30 @@ describe('auth events', () => {
       app.eventBus.unsubscribe(AUTH_EVENTS.LOGIN_FAILED, handler as never);
     });
 
+    it('emits auth.login.failed with fallback tenantId when no tenant context provided', async () => {
+      const handler = vi.fn();
+      app.eventBus.subscribe(AUTH_EVENTS.LOGIN_FAILED, handler as never);
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/auth/login',
+        payload: {
+          email: 'nonexistent@example.com',
+          password: 'wrong pass 1234',
+        },
+      });
+
+      expect(response.statusCode).toBe(401);
+      expect(handler).toHaveBeenCalledTimes(1);
+
+      const event = handler.mock.calls[0]![0]!;
+      expect(event.eventType).toBe(AUTH_EVENTS.LOGIN_FAILED);
+      expect(event.tenantId).toBe('default');
+      expect(event.payload!.tenantId).toBe('default');
+
+      app.eventBus.unsubscribe(AUTH_EVENTS.LOGIN_FAILED, handler as never);
+    });
+
     it('emits auth.session.revoked on logout', async () => {
       const registerResponse = await app.inject({
         method: 'POST',

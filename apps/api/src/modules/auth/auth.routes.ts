@@ -288,7 +288,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
     async (request, reply) => {
       const tenantId = request.preAuthTenantContext?.tenantId;
       const clientIp = getClientIp(request);
-      const eventTenantId = tenantId ?? '';
+      const eventTenantId = tenantId ?? config.TENANT_FALLBACK_SLUG ?? '';
 
       const abuseService = getAbuseCounterService(config);
 
