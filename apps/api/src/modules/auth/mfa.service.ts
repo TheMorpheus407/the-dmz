@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { eq, and } from 'drizzle-orm';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
+import { getRedisClient, type RedisRateLimitClient } from '../../shared/database/redis.js';
 import { sessions as sessionsTable } from '../../db/schema/auth/sessions.js';
 import { webauthnCredentials as webauthnCredentialsTable } from '../../db/schema/auth/webauthn-credentials.js';
 import { users } from '../../shared/database/schema/users.js';
@@ -12,6 +13,8 @@ import type { AppConfig } from '../../config.js';
 import type { AuthenticatedUser } from './auth.types.js';
 
 const CHALLENGE_EXPIRY_MS = 5 * 60 * 1000;
+const CHALLENGE_TTL_SECONDS = Math.ceil(CHALLENGE_EXPIRY_MS / 1000);
+const CHALLENGE_KEY_PREFIX = 'mfa:webauthn:challenge:';
 
 interface WebauthnChallenge {
   id: string;
@@ -25,7 +28,84 @@ interface WebauthnChallenge {
   used: boolean;
 }
 
-const challengeStore = new Map<string, WebauthnChallenge>();
+const getChallengeKey = (challengeId: string): string => `${CHALLENGE_KEY_PREFIX}${challengeId}`;
+
+const serializeChallenge = (challenge: WebauthnChallenge): string =>
+  JSON.stringify({
+    ...challenge,
+    createdAt: challenge.createdAt.toISOString(),
+    expiresAt: challenge.expiresAt.toISOString(),
+  });
+
+const deserializeChallenge = (data: string): WebauthnChallenge | null => {
+  try {
+    const parsed = JSON.parse(data) as Record<string, unknown>;
+    const createdAt = parsed['createdAt'];
+    const expiresAt = parsed['expiresAt'];
+    const id = parsed['id'];
+    const userId = parsed['userId'];
+    const tenantId = parsed['tenantId'];
+    const sessionId = parsed['sessionId'];
+    const challenge = parsed['challenge'];
+    const type = parsed['type'];
+    const used = parsed['used'];
+
+    if (
+      typeof createdAt !== 'string' ||
+      typeof expiresAt !== 'string' ||
+      typeof id !== 'string' ||
+      typeof userId !== 'string' ||
+      typeof tenantId !== 'string' ||
+      typeof sessionId !== 'string' ||
+      typeof challenge !== 'string' ||
+      typeof type !== 'string' ||
+      typeof used !== 'boolean'
+    ) {
+      return null;
+    }
+
+    return {
+      id,
+      userId,
+      tenantId,
+      sessionId,
+      challenge,
+      type: type as 'registration' | 'verification',
+      createdAt: new Date(createdAt),
+      expiresAt: new Date(expiresAt),
+      used,
+    };
+  } catch {
+    return null;
+  }
+};
+
+const storeChallenge = async (
+  redis: RedisRateLimitClient,
+  challengeId: string,
+  challenge: WebauthnChallenge,
+): Promise<void> => {
+  await redis.setValue(
+    getChallengeKey(challengeId),
+    serializeChallenge(challenge),
+    CHALLENGE_TTL_SECONDS,
+  );
+};
+
+const getChallenge = async (
+  redis: RedisRateLimitClient,
+  challengeId: string,
+): Promise<WebauthnChallenge | null> => {
+  const data = await redis.getValue(getChallengeKey(challengeId));
+  if (!data) {
+    return null;
+  }
+  return deserializeChallenge(data);
+};
+
+const deleteChallenge = async (redis: RedisRateLimitClient, challengeId: string): Promise<void> => {
+  await redis.deleteKey(getChallengeKey(challengeId));
+};
 
 export const createWebauthnChallenge = async (
   config: AppConfig,
@@ -91,7 +171,17 @@ export const createWebauthnChallenge = async (
     used: false,
   };
 
-  challengeStore.set(challengeId, webauthnChallenge);
+  const redis = getRedisClient(config);
+  if (redis) {
+    await redis.connect();
+    await storeChallenge(redis, challengeId, webauthnChallenge);
+  } else {
+    throw new AppError({
+      code: ErrorCodes.INTERNAL_ERROR,
+      message: 'Redis is not available for challenge storage',
+      statusCode: 503,
+    });
+  }
 
   const rpId = config.WEBAUTHN_RP_ID || 'localhost';
   const rpName = config.WEBAUTHN_RP_NAME || 'The DMZ';
@@ -146,7 +236,17 @@ export const registerWebauthnCredential = async (
   },
   challengeId: string,
 ): Promise<{ credentialId: string }> => {
-  const challenge = challengeStore.get(challengeId);
+  const redis = getRedisClient(config);
+  if (!redis) {
+    throw new AppError({
+      code: ErrorCodes.INTERNAL_ERROR,
+      message: 'Redis is not available for challenge verification',
+      statusCode: 503,
+    });
+  }
+
+  await redis.connect();
+  const challenge = await getChallenge(redis, challengeId);
 
   if (!challenge) {
     throw new AppError({
@@ -189,6 +289,8 @@ export const registerWebauthnCredential = async (
   }
 
   challenge.used = true;
+  await storeChallenge(redis, challengeId, challenge);
+  await deleteChallenge(redis, challengeId);
 
   const db = getDatabaseClient(config);
 
@@ -228,7 +330,17 @@ export const verifyWebauthnAssertion = async (
   },
   challengeId: string,
 ): Promise<{ success: boolean; mfaVerifiedAt: Date }> => {
-  const challenge = challengeStore.get(challengeId);
+  const redis = getRedisClient(config);
+  if (!redis) {
+    throw new AppError({
+      code: ErrorCodes.INTERNAL_ERROR,
+      message: 'Redis is not available for challenge verification',
+      statusCode: 503,
+    });
+  }
+
+  await redis.connect();
+  const challenge = await getChallenge(redis, challengeId);
 
   if (!challenge) {
     throw new AppError({
@@ -271,6 +383,7 @@ export const verifyWebauthnAssertion = async (
   }
 
   challenge.used = true;
+  await deleteChallenge(redis, challengeId);
 
   const db = getDatabaseClient(config);
 
