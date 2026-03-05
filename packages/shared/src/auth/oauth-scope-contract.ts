@@ -20,6 +20,21 @@ export const OAuthScope = {
   TEAMS_WRITE: 'teams.write',
   TEAMS_NOTIFICATION: 'teams.notification',
   TEAMS_ADAPTIVE_CARD: 'teams.adaptive_card',
+  WORKATO_READ: 'workato.read',
+  WORKATO_WRITE: 'workato.write',
+  WORKATO_RECIPE: 'workato.recipe',
+  TRAY_IO_READ: 'tray_io.read',
+  TRAY_IO_WRITE: 'tray_io.write',
+  TRAY_IO_CONNECTOR: 'tray_io.connector',
+  N8N_READ: 'n8n.read',
+  N8N_WRITE: 'n8n.write',
+  N8N_TEMPLATE: 'n8n.template',
+  MAKE_COM_READ: 'makecom.read',
+  MAKE_COM_WRITE: 'makecom.write',
+  MAKE_COM_TEMPLATE: 'makecom.template',
+  DMZ_CLI_QUERY: 'dmz_cli.query',
+  DMZ_CLI_MUTATION: 'dmz_cli.mutation',
+  DMZ_CLI_ADMIN: 'dmz_cli.admin',
 } as const;
 
 export type OAuthScope = (typeof OAuthScope)[keyof typeof OAuthScope];
@@ -36,6 +51,21 @@ export const oauthScopeSchema = z.enum([
   OAuthScope.TEAMS_WRITE,
   OAuthScope.TEAMS_NOTIFICATION,
   OAuthScope.TEAMS_ADAPTIVE_CARD,
+  OAuthScope.WORKATO_READ,
+  OAuthScope.WORKATO_WRITE,
+  OAuthScope.WORKATO_RECIPE,
+  OAuthScope.TRAY_IO_READ,
+  OAuthScope.TRAY_IO_WRITE,
+  OAuthScope.TRAY_IO_CONNECTOR,
+  OAuthScope.N8N_READ,
+  OAuthScope.N8N_WRITE,
+  OAuthScope.N8N_TEMPLATE,
+  OAuthScope.MAKE_COM_READ,
+  OAuthScope.MAKE_COM_WRITE,
+  OAuthScope.MAKE_COM_TEMPLATE,
+  OAuthScope.DMZ_CLI_QUERY,
+  OAuthScope.DMZ_CLI_MUTATION,
+  OAuthScope.DMZ_CLI_ADMIN,
 ]);
 
 export const oauthScopes = [
@@ -50,6 +80,21 @@ export const oauthScopes = [
   OAuthScope.TEAMS_WRITE,
   OAuthScope.TEAMS_NOTIFICATION,
   OAuthScope.TEAMS_ADAPTIVE_CARD,
+  OAuthScope.WORKATO_READ,
+  OAuthScope.WORKATO_WRITE,
+  OAuthScope.WORKATO_RECIPE,
+  OAuthScope.TRAY_IO_READ,
+  OAuthScope.TRAY_IO_WRITE,
+  OAuthScope.TRAY_IO_CONNECTOR,
+  OAuthScope.N8N_READ,
+  OAuthScope.N8N_WRITE,
+  OAuthScope.N8N_TEMPLATE,
+  OAuthScope.MAKE_COM_READ,
+  OAuthScope.MAKE_COM_WRITE,
+  OAuthScope.MAKE_COM_TEMPLATE,
+  OAuthScope.DMZ_CLI_QUERY,
+  OAuthScope.DMZ_CLI_MUTATION,
+  OAuthScope.DMZ_CLI_ADMIN,
 ] as const;
 
 export const oauthScopesArray = oauthScopes as unknown as string[];
@@ -82,6 +127,38 @@ export const oauthClientScopeConfigs: Record<string, OAuthClientScopeConfig> = {
       OAuthScope.TEAMS_ADAPTIVE_CARD,
     ],
     defaultScopes: [OAuthScope.TEAMS_READ, OAuthScope.TEAMS_NOTIFICATION],
+  },
+  workato: {
+    allowedScopes: [OAuthScope.WORKATO_READ, OAuthScope.WORKATO_WRITE, OAuthScope.WORKATO_RECIPE],
+    defaultScopes: [OAuthScope.WORKATO_READ, OAuthScope.WORKATO_RECIPE],
+  },
+  tray_io: {
+    allowedScopes: [
+      OAuthScope.TRAY_IO_READ,
+      OAuthScope.TRAY_IO_WRITE,
+      OAuthScope.TRAY_IO_CONNECTOR,
+    ],
+    defaultScopes: [OAuthScope.TRAY_IO_READ, OAuthScope.TRAY_IO_CONNECTOR],
+  },
+  n8n: {
+    allowedScopes: [OAuthScope.N8N_READ, OAuthScope.N8N_WRITE, OAuthScope.N8N_TEMPLATE],
+    defaultScopes: [OAuthScope.N8N_READ, OAuthScope.N8N_TEMPLATE],
+  },
+  makecom: {
+    allowedScopes: [
+      OAuthScope.MAKE_COM_READ,
+      OAuthScope.MAKE_COM_WRITE,
+      OAuthScope.MAKE_COM_TEMPLATE,
+    ],
+    defaultScopes: [OAuthScope.MAKE_COM_READ, OAuthScope.MAKE_COM_TEMPLATE],
+  },
+  dmz_cli: {
+    allowedScopes: [
+      OAuthScope.DMZ_CLI_QUERY,
+      OAuthScope.DMZ_CLI_MUTATION,
+      OAuthScope.DMZ_CLI_ADMIN,
+    ],
+    defaultScopes: [OAuthScope.DMZ_CLI_QUERY],
   },
 };
 

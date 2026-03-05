@@ -86,6 +86,31 @@
       "types": "./dist/esm/contracts/power-automate-contract.d.ts",
       "import": "./dist/esm/contracts/power-automate-contract.js",
       "require": "./dist/cjs/contracts/power-automate-contract.js"
+    },
+    "./contracts/workato-contract": {
+      "types": "./dist/esm/contracts/workato-contract.d.ts",
+      "import": "./dist/esm/contracts/workato-contract.js",
+      "require": "./dist/cjs/contracts/workato-contract.js"
+    },
+    "./contracts/tray-io-contract": {
+      "types": "./dist/esm/contracts/tray-io-contract.d.ts",
+      "import": "./dist/esm/contracts/tray-io-contract.js",
+      "require": "./dist/cjs/contracts/tray-io-contract.js"
+    },
+    "./contracts/n8n-contract": {
+      "types": "./dist/esm/contracts/n8n-contract.d.ts",
+      "import": "./dist/esm/contracts/n8n-contract.js",
+      "require": "./dist/cjs/contracts/n8n-contract.js"
+    },
+    "./contracts/make-com-contract": {
+      "types": "./dist/esm/contracts/make-com-contract.d.ts",
+      "import": "./dist/esm/contracts/make-com-contract.js",
+      "require": "./dist/cjs/contracts/make-com-contract.js"
+    },
+    "./contracts/dmz-cli-contract": {
+      "types": "./dist/esm/contracts/dmz-cli-contract.d.ts",
+      "import": "./dist/esm/contracts/dmz-cli-contract.js",
+      "require": "./dist/cjs/contracts/dmz-cli-contract.js"
     }
   },
   "scripts": {
