@@ -16,6 +16,10 @@ export const OAuthScope = {
   ZAPIER_TRIGGER: 'zapier.trigger',
   ZAPIER_ACTION: 'zapier.action',
   ZAPIER_SEARCH: 'zapier.search',
+  TEAMS_READ: 'teams.read',
+  TEAMS_WRITE: 'teams.write',
+  TEAMS_NOTIFICATION: 'teams.notification',
+  TEAMS_ADAPTIVE_CARD: 'teams.adaptive_card',
 } as const;
 
 export type OAuthScope = (typeof OAuthScope)[keyof typeof OAuthScope];
@@ -28,6 +32,10 @@ export const oauthScopeSchema = z.enum([
   OAuthScope.ZAPIER_TRIGGER,
   OAuthScope.ZAPIER_ACTION,
   OAuthScope.ZAPIER_SEARCH,
+  OAuthScope.TEAMS_READ,
+  OAuthScope.TEAMS_WRITE,
+  OAuthScope.TEAMS_NOTIFICATION,
+  OAuthScope.TEAMS_ADAPTIVE_CARD,
 ]);
 
 export const oauthScopes = [
@@ -38,6 +46,10 @@ export const oauthScopes = [
   OAuthScope.ZAPIER_TRIGGER,
   OAuthScope.ZAPIER_ACTION,
   OAuthScope.ZAPIER_SEARCH,
+  OAuthScope.TEAMS_READ,
+  OAuthScope.TEAMS_WRITE,
+  OAuthScope.TEAMS_NOTIFICATION,
+  OAuthScope.TEAMS_ADAPTIVE_CARD,
 ] as const;
 
 export const oauthScopesArray = oauthScopes as unknown as string[];
@@ -61,6 +73,15 @@ export const oauthClientScopeConfigs: Record<string, OAuthClientScopeConfig> = {
       OAuthScope.ZAPIER_SEARCH,
     ],
     defaultScopes: [OAuthScope.ZAPIER_READ, OAuthScope.ZAPIER_TRIGGER],
+  },
+  teams: {
+    allowedScopes: [
+      OAuthScope.TEAMS_READ,
+      OAuthScope.TEAMS_WRITE,
+      OAuthScope.TEAMS_NOTIFICATION,
+      OAuthScope.TEAMS_ADAPTIVE_CARD,
+    ],
+    defaultScopes: [OAuthScope.TEAMS_READ, OAuthScope.TEAMS_NOTIFICATION],
   },
 };
 
