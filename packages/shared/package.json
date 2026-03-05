@@ -76,6 +76,11 @@
       "types": "./dist/esm/contracts/index.d.ts",
       "import": "./dist/esm/contracts/index.js",
       "require": "./dist/cjs/contracts/index.js"
+    },
+    "./contracts/zapier-contract": {
+      "types": "./dist/esm/contracts/zapier-contract.d.ts",
+      "import": "./dist/esm/contracts/zapier-contract.js",
+      "require": "./dist/cjs/contracts/zapier-contract.js"
     }
   },
   "scripts": {

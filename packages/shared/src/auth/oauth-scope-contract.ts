@@ -11,13 +11,34 @@ export const oauthGrantTypeSchema = z.enum([OAuthGrantType.CLIENT_CREDENTIALS]);
 export const OAuthScope = {
   SCIM_READ: 'scim.read',
   SCIM_WRITE: 'scim.write',
+  ZAPIER_READ: 'zapier.read',
+  ZAPIER_WRITE: 'zapier.write',
+  ZAPIER_TRIGGER: 'zapier.trigger',
+  ZAPIER_ACTION: 'zapier.action',
+  ZAPIER_SEARCH: 'zapier.search',
 } as const;
 
 export type OAuthScope = (typeof OAuthScope)[keyof typeof OAuthScope];
 
-export const oauthScopeSchema = z.enum([OAuthScope.SCIM_READ, OAuthScope.SCIM_WRITE]);
+export const oauthScopeSchema = z.enum([
+  OAuthScope.SCIM_READ,
+  OAuthScope.SCIM_WRITE,
+  OAuthScope.ZAPIER_READ,
+  OAuthScope.ZAPIER_WRITE,
+  OAuthScope.ZAPIER_TRIGGER,
+  OAuthScope.ZAPIER_ACTION,
+  OAuthScope.ZAPIER_SEARCH,
+]);
 
-export const oauthScopes = [OAuthScope.SCIM_READ, OAuthScope.SCIM_WRITE] as const;
+export const oauthScopes = [
+  OAuthScope.SCIM_READ,
+  OAuthScope.SCIM_WRITE,
+  OAuthScope.ZAPIER_READ,
+  OAuthScope.ZAPIER_WRITE,
+  OAuthScope.ZAPIER_TRIGGER,
+  OAuthScope.ZAPIER_ACTION,
+  OAuthScope.ZAPIER_SEARCH,
+] as const;
 
 export const oauthScopesArray = oauthScopes as unknown as string[];
 
@@ -30,6 +51,16 @@ export const oauthClientScopeConfigs: Record<string, OAuthClientScopeConfig> = {
   scim: {
     allowedScopes: [OAuthScope.SCIM_READ, OAuthScope.SCIM_WRITE],
     defaultScopes: [OAuthScope.SCIM_READ],
+  },
+  zapier: {
+    allowedScopes: [
+      OAuthScope.ZAPIER_READ,
+      OAuthScope.ZAPIER_WRITE,
+      OAuthScope.ZAPIER_TRIGGER,
+      OAuthScope.ZAPIER_ACTION,
+      OAuthScope.ZAPIER_SEARCH,
+    ],
+    defaultScopes: [OAuthScope.ZAPIER_READ, OAuthScope.ZAPIER_TRIGGER],
   },
 };
 
