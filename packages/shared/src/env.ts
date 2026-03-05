@@ -95,7 +95,7 @@ export const backendEnvSchema = z
       DATABASE_SSL: config.DATABASE_SSL ?? isProd,
       ENABLE_SWAGGER: config.ENABLE_SWAGGER ?? config.NODE_ENV !== 'production',
       CORS_ORIGINS_LIST: config.CORS_ORIGINS.split(',').map((o) => o.trim()),
-      TENANT_FALLBACK_ENABLED: (config.TENANT_FALLBACK_ENABLED ?? isDev) || isTest,
+      TENANT_FALLBACK_ENABLED: config.TENANT_FALLBACK_ENABLED ?? (isDev || isTest),
       TENANT_RESOLVER_ENABLED: config.TENANT_RESOLVER_ENABLED ?? false,
     };
   })

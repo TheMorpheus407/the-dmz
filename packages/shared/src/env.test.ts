@@ -273,6 +273,77 @@ describe('parseBackendEnv', () => {
     expect(config.DATABASE_POOL_MIN).toBe(3);
     expect(config.DATABASE_POOL_MAX).toBe(15);
   });
+
+  describe('TENANT_FALLBACK_ENABLED', () => {
+    it('defaults to true in development', () => {
+      const config = parseBackendEnv(validBackendEnv);
+
+      expect(config.TENANT_FALLBACK_ENABLED).toBe(true);
+    });
+
+    it('defaults to true in test', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        NODE_ENV: 'test',
+      });
+
+      expect(config.TENANT_FALLBACK_ENABLED).toBe(true);
+    });
+
+    it('defaults to false in production', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        NODE_ENV: 'production',
+        JWT_SECRET: 'prod-jwt',
+        TOKEN_HASH_SALT: 'prod-salt',
+        JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
+      });
+
+      expect(config.TENANT_FALLBACK_ENABLED).toBe(false);
+    });
+
+    it('respects explicit true in test environment', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        NODE_ENV: 'test',
+        TENANT_FALLBACK_ENABLED: 'true',
+      });
+
+      expect(config.TENANT_FALLBACK_ENABLED).toBe(true);
+    });
+
+    it('respects explicit false in test environment', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        NODE_ENV: 'test',
+        TENANT_FALLBACK_ENABLED: 'false',
+      });
+
+      expect(config.TENANT_FALLBACK_ENABLED).toBe(false);
+    });
+
+    it('respects explicit false in development environment', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        TENANT_FALLBACK_ENABLED: 'false',
+      });
+
+      expect(config.TENANT_FALLBACK_ENABLED).toBe(false);
+    });
+
+    it('respects explicit true in production environment', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        NODE_ENV: 'production',
+        JWT_SECRET: 'prod-jwt',
+        TOKEN_HASH_SALT: 'prod-salt',
+        JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
+        TENANT_FALLBACK_ENABLED: 'true',
+      });
+
+      expect(config.TENANT_FALLBACK_ENABLED).toBe(true);
+    });
+  });
 });
 
 const validFrontendEnv = {
