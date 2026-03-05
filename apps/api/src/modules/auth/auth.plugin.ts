@@ -4,7 +4,7 @@ import { registerAuthRoutes } from './auth.routes.js';
 import { registerMfaRoutes } from './mfa.routes.js';
 import { registerSSORoutes } from './auth.sso.routes.js';
 import { preflightRoutes } from './auth.preflight.routes.js';
-import apiKeyRoutes from './api-key.routes.js';
+import { apiKeyRoutes } from './api-key.routes.js';
 import { registerQuotaOverrideRoutes } from './quota-override.routes.js';
 
 import type { FastifyPluginAsync } from 'fastify';

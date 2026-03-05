@@ -353,4 +353,4 @@ async function apiKeyRoutes(fastify: FastifyInstance) {
   );
 }
 
-export default apiKeyRoutes;
+export { apiKeyRoutes };

@@ -9,6 +9,7 @@
     "dev": "node --watch --import tsx src/server.ts",
     "start": "node dist/server.js",
     "lint": "tsx scripts/validate-modules.ts && tsx scripts/validate-data-boundaries.ts && tsx scripts/validate-event-boundaries.ts && tsx scripts/validate-route-boundaries.ts && tsx scripts/validate-schema-boundaries.ts && tsx scripts/validate-api-versioning.ts && tsx scripts/validate-redis-keyspace.ts && tsx scripts/validate-db-tenant-context.ts src && eslint .",
+    "lint:contracts": "cd ../.. && node scripts/check-backend-exports.mjs",
     "lint:fix": "eslint . --fix",
     "lint:architecture": "eslint . --quiet --rule 'import-x/no-cycle:error' --rule 'import-x/no-restricted-paths:error'",
     "lint:modules": "tsx scripts/validate-modules.ts",
