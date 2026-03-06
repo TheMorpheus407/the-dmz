@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  bigint,
   index,
   integer,
   pgTable,
@@ -24,6 +25,7 @@ export const gameSessions = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.userId, { onDelete: 'cascade' }),
+    seed: bigint('seed', { mode: 'bigint' }).notNull(),
     day: integer('day').notNull().default(1),
     funds: integer('funds').notNull().default(1000),
     clientCount: integer('client_count').notNull().default(5),

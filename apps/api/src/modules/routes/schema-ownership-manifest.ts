@@ -82,7 +82,7 @@ export const SCHEMA_OWNERSHIP_MANIFEST: SchemaOwnershipManifest = {
       ownedSchemas: ['gameSessionBootstrapResponseJsonSchema'],
       ownedComponents: ['GameSessionBootstrapResponse', 'GameSession', 'GamePlayer', 'GameState'],
       componentPatterns: ['^Game'],
-      sharedSources: ['@the-dmz/shared/schemas'],
+      sharedSources: ['@the-dmz/shared/schemas', '@the-dmz/shared/game'],
       exemptions: [],
     },
     {

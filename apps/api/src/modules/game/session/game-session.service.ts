@@ -1,3 +1,5 @@
+import { generateSeed } from '@the-dmz/shared/game';
+
 import { getDatabaseClient } from '../../../shared/database/connection.js';
 
 import {
@@ -52,6 +54,7 @@ export const bootstrapGameSession = async (
   const sessionData: GameSessionData = {
     tenantId: user.tenantId,
     userId: user.userId,
+    seed: generateSeed(),
     day: 1,
     funds: 1000,
     clientCount: 5,

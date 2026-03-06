@@ -8,6 +8,7 @@ import type { GameSession } from '../../../db/schema/game/index.js';
 export type GameSessionData = {
   tenantId: string;
   userId: string;
+  seed: bigint;
   day?: number;
   funds?: number;
   clientCount?: number;
@@ -41,6 +42,7 @@ export const createGameSession = async (db: DB, data: GameSessionData): Promise<
     .values({
       tenantId: data.tenantId,
       userId: data.userId,
+      seed: data.seed,
       day: data.day ?? 1,
       funds: data.funds ?? 1000,
       clientCount: data.clientCount ?? 5,

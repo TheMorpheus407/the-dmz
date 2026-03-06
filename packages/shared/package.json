@@ -72,6 +72,11 @@
       "import": "./dist/esm/testing/index.js",
       "require": "./dist/cjs/testing/index.js"
     },
+    "./game": {
+      "types": "./dist/esm/game/index.d.ts",
+      "import": "./dist/esm/game/index.js",
+      "require": "./dist/cjs/game/index.js"
+    },
     "./contracts": {
       "types": "./dist/esm/contracts/index.d.ts",
       "import": "./dist/esm/contracts/index.js",
