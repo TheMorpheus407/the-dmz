@@ -22,6 +22,7 @@ export interface GameState {
   playerXP: number;
   threatTier: GameThreatTier;
   facilityTier: FacilityTierLevel;
+  facility: FacilityState;
   inbox: EmailState[];
   emailInstances: Record<string, EmailInstance>;
   verificationPackets: Record<string, VerificationPacket>;
@@ -108,7 +109,12 @@ export type GameActionPayload =
   | AdjustResourcePayload
   | PauseSessionPayload
   | ResumeSessionPayload
-  | AbandonSessionPayload;
+  | AbandonSessionPayload
+  | OnboardClientPayload
+  | EvictClientPayload
+  | UpgradeFacilityTierPayload
+  | ProcessFacilityTickPayload
+  | PurchaseFacilityUpgradePayload;
 
 export interface LoadInboxPayload {
   type: 'LOAD_INBOX';
@@ -307,4 +313,93 @@ export interface ResumeSessionPayload {
 export interface AbandonSessionPayload {
   type: 'ABANDON_SESSION';
   reason?: string;
+}
+
+export type ResourceType = 'rack' | 'power' | 'cooling' | 'bandwidth';
+
+export type ResourceUtilizationLevel = 'normal' | 'advisory' | 'critical' | 'failure';
+
+export interface FacilityResourceCapacities {
+  rackCapacityU: number;
+  powerCapacityKw: number;
+  coolingCapacityTons: number;
+  bandwidthCapacityMbps: number;
+}
+
+export interface FacilityResourceUsage {
+  rackUsedU: number;
+  powerUsedKw: number;
+  coolingUsedTons: number;
+  bandwidthUsedMbps: number;
+}
+
+export interface ClientLease {
+  clientId: string;
+  clientName: string;
+  organization: string;
+  rackUnitsU: number;
+  powerKw: number;
+  coolingTons: number;
+  bandwidthMbps: number;
+  dailyRate: number;
+  leaseStartDay: number;
+  leaseEndDay: number | null;
+  isActive: boolean;
+  burstProfile: 'steady' | 'moderate' | 'spiky';
+}
+
+export interface FacilityUpgrade {
+  upgradeId: string;
+  upgradeType: 'rack' | 'power' | 'cooling' | 'bandwidth';
+  tierLevel: number;
+  isCompleted: boolean;
+  completionDay?: number;
+}
+
+export interface FacilityState {
+  tier: string;
+  capacities: FacilityResourceCapacities;
+  usage: FacilityResourceUsage;
+  clients: ClientLease[];
+  upgrades: FacilityUpgrade[];
+  maintenanceDebt: number;
+  facilityHealth: number;
+  operatingCostPerDay: number;
+  attackSurfaceScore: number;
+  lastTickDay: number;
+}
+
+export interface OnboardClientPayload {
+  type: 'ONBOARD_CLIENT';
+  clientId: string;
+  clientName: string;
+  organization: string;
+  rackUnitsU: number;
+  powerKw: number;
+  coolingTons: number;
+  bandwidthMbps: number;
+  dailyRate: number;
+  durationDays?: number;
+  burstProfile?: 'steady' | 'moderate' | 'spiky';
+}
+
+export interface EvictClientPayload {
+  type: 'EVICT_CLIENT';
+  clientId: string;
+  reason?: string;
+}
+
+export interface UpgradeFacilityTierPayload {
+  type: 'UPGRADE_FACILITY_TIER';
+  targetTier: string;
+}
+
+export interface ProcessFacilityTickPayload {
+  type: 'PROCESS_FACILITY_TICK';
+  dayNumber: number;
+}
+
+export interface PurchaseFacilityUpgradePayload {
+  type: 'PURCHASE_FACILITY_UPGRADE';
+  upgradeType: 'rack' | 'power' | 'cooling' | 'bandwidth';
 }

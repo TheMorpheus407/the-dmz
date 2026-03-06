@@ -25,6 +25,28 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
     playerXP: 0,
     threatTier: 'low',
     facilityTier: 'outpost',
+    facility: {
+      tier: 'outpost',
+      capacities: {
+        rackCapacityU: 42,
+        powerCapacityKw: 10,
+        coolingCapacityTons: 5,
+        bandwidthCapacityMbps: 100,
+      },
+      usage: {
+        rackUsedU: 0,
+        powerUsedKw: 0,
+        coolingUsedTons: 0,
+        bandwidthUsedMbps: 0,
+      },
+      clients: [],
+      upgrades: [],
+      maintenanceDebt: 0,
+      facilityHealth: 100,
+      operatingCostPerDay: 50,
+      attackSurfaceScore: 10,
+      lastTickDay: 1,
+    },
     inbox: [],
     emailInstances: {},
     verificationPackets: {},
@@ -759,5 +781,449 @@ describe('sequence number', () => {
     const result = reduce(state, action);
 
     expect(result.newState.sequenceNumber).toBe(1);
+  });
+});
+
+describe('reduce - ONBOARD_CLIENT', () => {
+  it('should onboard a new client and update facility usage', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+    });
+    const action = {
+      type: 'ONBOARD_CLIENT' as const,
+      clientId: 'client-1',
+      clientName: 'Acme Corp',
+      organization: 'Acme',
+      rackUnitsU: 10,
+      powerKw: 2,
+      coolingTons: 1,
+      bandwidthMbps: 50,
+      dailyRate: 100,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.facility.usage.rackUsedU).toBe(10);
+    expect(result.newState.facility.usage.powerUsedKw).toBe(2);
+    expect(result.newState.facility.usage.coolingUsedTons).toBe(1);
+    expect(result.newState.facility.usage.bandwidthUsedMbps).toBe(50);
+    expect(result.newState.facility.clients).toHaveLength(1);
+    expect(result.newState.facility.clients[0]?.clientName).toBe('Acme Corp');
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0]?.eventType).toBe('facility.client.onboarded');
+  });
+
+  it('should fail if not in RESOURCE_MANAGEMENT phase', () => {
+    const state = createTestState({ currentPhase: DAY_PHASES.PHASE_DAY_START });
+    const action = {
+      type: 'ONBOARD_CLIENT' as const,
+      clientId: 'client-1',
+      clientName: 'Acme Corp',
+      organization: 'Acme',
+      rackUnitsU: 10,
+      powerKw: 2,
+      coolingTons: 1,
+      bandwidthMbps: 50,
+      dailyRate: 100,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+
+  it('should fail if adding client exceeds 100% rack capacity', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      facility: {
+        tier: 'outpost',
+        capacities: {
+          rackCapacityU: 42,
+          powerCapacityKw: 10,
+          coolingCapacityTons: 5,
+          bandwidthCapacityMbps: 100,
+        },
+        usage: {
+          rackUsedU: 40,
+          powerUsedKw: 0,
+          coolingUsedTons: 0,
+          bandwidthUsedMbps: 0,
+        },
+        clients: [],
+        upgrades: [],
+        maintenanceDebt: 0,
+        facilityHealth: 100,
+        operatingCostPerDay: 50,
+        attackSurfaceScore: 10,
+        lastTickDay: 1,
+      },
+    });
+    const action = {
+      type: 'ONBOARD_CLIENT' as const,
+      clientId: 'client-1',
+      clientName: 'Acme Corp',
+      organization: 'Acme',
+      rackUnitsU: 10,
+      powerKw: 0,
+      coolingTons: 0,
+      bandwidthMbps: 0,
+      dailyRate: 100,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(result.error?.message).toContain('Capacity exceeded');
+    expect(result.error?.message).toContain('rack');
+  });
+
+  it('should fail if adding client exceeds 100% power capacity', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      facility: {
+        tier: 'outpost',
+        capacities: {
+          rackCapacityU: 42,
+          powerCapacityKw: 10,
+          coolingCapacityTons: 5,
+          bandwidthCapacityMbps: 100,
+        },
+        usage: {
+          rackUsedU: 0,
+          powerUsedKw: 9,
+          coolingUsedTons: 0,
+          bandwidthUsedMbps: 0,
+        },
+        clients: [],
+        upgrades: [],
+        maintenanceDebt: 0,
+        facilityHealth: 100,
+        operatingCostPerDay: 50,
+        attackSurfaceScore: 10,
+        lastTickDay: 1,
+      },
+    });
+    const action = {
+      type: 'ONBOARD_CLIENT' as const,
+      clientId: 'client-1',
+      clientName: 'Acme Corp',
+      organization: 'Acme',
+      rackUnitsU: 0,
+      powerKw: 5,
+      coolingTons: 0,
+      bandwidthMbps: 0,
+      dailyRate: 100,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+    expect(result.error?.message).toContain('Capacity exceeded');
+    expect(result.error?.message).toContain('power');
+  });
+});
+
+describe('reduce - EVICT_CLIENT', () => {
+  it('should evict a client and free resources', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      facility: {
+        tier: 'outpost',
+        capacities: {
+          rackCapacityU: 42,
+          powerCapacityKw: 10,
+          coolingCapacityTons: 5,
+          bandwidthCapacityMbps: 100,
+        },
+        usage: {
+          rackUsedU: 10,
+          powerUsedKw: 2,
+          coolingUsedTons: 1,
+          bandwidthUsedMbps: 50,
+        },
+        clients: [
+          {
+            clientId: 'client-1',
+            clientName: 'Acme Corp',
+            organization: 'Acme',
+            rackUnitsU: 10,
+            powerKw: 2,
+            coolingTons: 1,
+            bandwidthMbps: 50,
+            dailyRate: 100,
+            leaseStartDay: 1,
+            leaseEndDay: null,
+            isActive: true,
+            burstProfile: 'steady',
+          },
+        ],
+        upgrades: [],
+        maintenanceDebt: 0,
+        facilityHealth: 100,
+        operatingCostPerDay: 50,
+        attackSurfaceScore: 10,
+        lastTickDay: 1,
+      },
+    });
+    const action = {
+      type: 'EVICT_CLIENT' as const,
+      clientId: 'client-1',
+      reason: 'Payment overdue',
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.facility.usage.rackUsedU).toBe(0);
+    expect(result.newState.facility.usage.powerUsedKw).toBe(0);
+    expect(result.newState.facility.clients).toHaveLength(0);
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0]?.eventType).toBe('facility.client.evicted');
+  });
+
+  it('should fail if client not found', () => {
+    const state = createTestState({ currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT });
+    const action = {
+      type: 'EVICT_CLIENT' as const,
+      clientId: 'nonexistent',
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+
+  it('should not let attackSurfaceScore go below 0', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      facility: {
+        tier: 'outpost',
+        capacities: {
+          rackCapacityU: 42,
+          powerCapacityKw: 10,
+          coolingCapacityTons: 5,
+          bandwidthCapacityMbps: 100,
+        },
+        usage: {
+          rackUsedU: 10,
+          powerUsedKw: 2,
+          coolingUsedTons: 1,
+          bandwidthUsedMbps: 50,
+        },
+        clients: [
+          {
+            clientId: 'client-1',
+            clientName: 'Acme Corp',
+            organization: 'Acme',
+            rackUnitsU: 10,
+            powerKw: 2,
+            coolingTons: 1,
+            bandwidthMbps: 50,
+            dailyRate: 100,
+            leaseStartDay: 1,
+            leaseEndDay: null,
+            isActive: true,
+            burstProfile: 'steady',
+          },
+        ],
+        upgrades: [],
+        maintenanceDebt: 0,
+        facilityHealth: 100,
+        operatingCostPerDay: 50,
+        attackSurfaceScore: 1,
+        lastTickDay: 1,
+      },
+    });
+    const action = {
+      type: 'EVICT_CLIENT' as const,
+      clientId: 'client-1',
+      reason: 'Payment overdue',
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.facility.attackSurfaceScore).toBe(0);
+  });
+});
+
+describe('reduce - PROCESS_FACILITY_TICK', () => {
+  it('should process tick and generate revenue from clients', () => {
+    const state = createTestState({
+      currentDay: 2,
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      facility: {
+        tier: 'outpost',
+        capacities: {
+          rackCapacityU: 42,
+          powerCapacityKw: 10,
+          coolingCapacityTons: 5,
+          bandwidthCapacityMbps: 100,
+        },
+        usage: {
+          rackUsedU: 10,
+          powerUsedKw: 2,
+          coolingUsedTons: 1,
+          bandwidthUsedMbps: 50,
+        },
+        clients: [
+          {
+            clientId: 'client-1',
+            clientName: 'Acme Corp',
+            organization: 'Acme',
+            rackUnitsU: 10,
+            powerKw: 2,
+            coolingTons: 1,
+            bandwidthMbps: 50,
+            dailyRate: 100,
+            leaseStartDay: 1,
+            leaseEndDay: null,
+            isActive: true,
+            burstProfile: 'steady',
+          },
+        ],
+        upgrades: [],
+        maintenanceDebt: 0,
+        facilityHealth: 100,
+        operatingCostPerDay: 50,
+        attackSurfaceScore: 10,
+        lastTickDay: 1,
+      },
+    });
+    const action = {
+      type: 'PROCESS_FACILITY_TICK' as const,
+      dayNumber: 2,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.funds).toBe(1029);
+    expect(result.newState.facility.lastTickDay).toBe(2);
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0]?.eventType).toBe('facility.tick.processed');
+  });
+
+  it('should accumulate maintenance debt when utilization is critical', () => {
+    const state = createTestState({
+      currentDay: 2,
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      facility: {
+        tier: 'outpost',
+        capacities: {
+          rackCapacityU: 42,
+          powerCapacityKw: 10,
+          coolingCapacityTons: 5,
+          bandwidthCapacityMbps: 100,
+        },
+        usage: {
+          rackUsedU: 40,
+          powerUsedKw: 9,
+          coolingUsedTons: 4,
+          bandwidthUsedMbps: 90,
+        },
+        clients: [],
+        upgrades: [],
+        maintenanceDebt: 0,
+        facilityHealth: 100,
+        operatingCostPerDay: 50,
+        attackSurfaceScore: 10,
+        lastTickDay: 1,
+      },
+    });
+    const action = {
+      type: 'PROCESS_FACILITY_TICK' as const,
+      dayNumber: 2,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.facility.maintenanceDebt).toBeGreaterThan(0);
+    expect(result.newState.facility.facilityHealth).toBeLessThan(100);
+  });
+});
+
+describe('reduce - UPGRADE_FACILITY_TIER', () => {
+  it('should upgrade facility tier and increase capacities', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 20000,
+    });
+    const action = {
+      type: 'UPGRADE_FACILITY_TIER' as const,
+      targetTier: 'station',
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.facilityTier).toBe('station');
+    expect(result.newState.facility.tier).toBe('station');
+    expect(result.newState.facility.capacities.rackCapacityU).toBe(168);
+    expect(result.newState.facility.capacities.powerCapacityKw).toBe(50);
+    expect(result.newState.funds).toBe(5000);
+    expect(result.events).toHaveLength(1);
+    expect(result.events[0]?.eventType).toBe('facility.tier.upgraded');
+  });
+
+  it('should fail if insufficient funds', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 100,
+    });
+    const action = {
+      type: 'UPGRADE_FACILITY_TIER' as const,
+      targetTier: 'station',
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+});
+
+describe('reduce - PURCHASE_FACILITY_UPGRADE', () => {
+  it('should purchase facility upgrade and increase capacity', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 1000,
+    });
+    const action = {
+      type: 'PURCHASE_FACILITY_UPGRADE' as const,
+      upgradeType: 'rack' as const,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.funds).toBe(500);
+    expect(result.newState.facility.capacities.rackCapacityU).toBe(63);
+    expect(result.newState.facility.upgrades).toHaveLength(1);
+    expect(result.events).toHaveLength(2);
+    expect(result.events[0]?.eventType).toBe('facility.upgrade.purchased');
+    expect(result.events[1]?.eventType).toBe('facility.upgrade.completed');
+  });
+
+  it('should fail if insufficient funds', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 100,
+    });
+    const action = {
+      type: 'PURCHASE_FACILITY_UPGRADE' as const,
+      upgradeType: 'rack' as const,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
   });
 });

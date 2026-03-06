@@ -21,6 +21,13 @@ export const GAME_EVENT_TYPES = {
   SESSION_RESUMED: 'game.session.resumed',
   SESSION_ABANDONED: 'game.session.abandoned',
   SESSION_COMPLETED: 'game.session.completed',
+  FACILITY_CLIENT_ONBOARDED: 'facility.client.onboarded',
+  FACILITY_CLIENT_EVICTED: 'facility.client.evicted',
+  FACILITY_RESOURCE_CRITICAL: 'facility.resource.critical',
+  FACILITY_TIER_UPGRADED: 'facility.tier.upgraded',
+  FACILITY_UPGRADE_PURCHASED: 'facility.upgrade.purchased',
+  FACILITY_UPGRADE_COMPLETED: 'facility.upgrade.completed',
+  FACILITY_TICK_PROCESSED: 'facility.tick.processed',
 } as const;
 
 export type GameEventType = (typeof GAME_EVENT_TYPES)[keyof typeof GAME_EVENT_TYPES];
@@ -48,6 +55,13 @@ export const GAME_EVENT_TYPE_ARRAY: readonly GameEventType[] = [
   GAME_EVENT_TYPES.SESSION_RESUMED,
   GAME_EVENT_TYPES.SESSION_ABANDONED,
   GAME_EVENT_TYPES.SESSION_COMPLETED,
+  GAME_EVENT_TYPES.FACILITY_CLIENT_ONBOARDED,
+  GAME_EVENT_TYPES.FACILITY_CLIENT_EVICTED,
+  GAME_EVENT_TYPES.FACILITY_RESOURCE_CRITICAL,
+  GAME_EVENT_TYPES.FACILITY_TIER_UPGRADED,
+  GAME_EVENT_TYPES.FACILITY_UPGRADE_PURCHASED,
+  GAME_EVENT_TYPES.FACILITY_UPGRADE_COMPLETED,
+  GAME_EVENT_TYPES.FACILITY_TICK_PROCESSED,
 ];
 
 export function isValidGameEventType(value: string): value is GameEventType {

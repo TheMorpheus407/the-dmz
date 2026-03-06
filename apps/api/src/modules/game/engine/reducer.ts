@@ -52,6 +52,28 @@ const createInitialState = (
   playerXP: 0,
   threatTier: 'low',
   facilityTier: 'outpost',
+  facility: {
+    tier: 'outpost',
+    capacities: {
+      rackCapacityU: 42,
+      powerCapacityKw: 10,
+      coolingCapacityTons: 5,
+      bandwidthCapacityMbps: 100,
+    },
+    usage: {
+      rackUsedU: 0,
+      powerUsedKw: 0,
+      coolingUsedTons: 0,
+      bandwidthUsedMbps: 0,
+    },
+    clients: [],
+    upgrades: [],
+    maintenanceDebt: 0,
+    facilityHealth: 100,
+    operatingCostPerDay: 50,
+    attackSurfaceScore: 10,
+    lastTickDay: 1,
+  },
   inbox: [],
   emailInstances: {},
   verificationPackets: {},
@@ -392,6 +414,310 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
           payload: { resourceId: action.resourceId, delta: action.delta },
         });
         break;
+
+      case 'ONBOARD_CLIENT': {
+        if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+          throw new Error('ONBOARD_CLIENT not allowed in current phase');
+        }
+        const facility = newState.facility;
+
+        const newRackUsage = facility.usage.rackUsedU + action.rackUnitsU;
+        const newPowerUsage = facility.usage.powerUsedKw + action.powerKw;
+        const newCoolingUsage = facility.usage.coolingUsedTons + action.coolingTons;
+        const newBandwidthUsage = facility.usage.bandwidthUsedMbps + action.bandwidthMbps;
+
+        const rackPercent = newRackUsage / facility.capacities.rackCapacityU;
+        const powerPercent = newPowerUsage / facility.capacities.powerCapacityKw;
+        const coolingPercent = newCoolingUsage / facility.capacities.coolingCapacityTons;
+        const bandwidthPercent = newBandwidthUsage / facility.capacities.bandwidthCapacityMbps;
+
+        if (rackPercent > 1 || powerPercent > 1 || coolingPercent > 1 || bandwidthPercent > 1) {
+          const bottleneck = [
+            { resource: 'rack', percent: rackPercent },
+            { resource: 'power', percent: powerPercent },
+            { resource: 'cooling', percent: coolingPercent },
+            { resource: 'bandwidth', percent: bandwidthPercent },
+          ].reduce((max, curr) => (curr.percent > max.percent ? curr : max));
+
+          throw new Error(
+            `Capacity exceeded: ${bottleneck.resource} at ${Math.floor(bottleneck.percent * 100)}%`,
+          );
+        }
+
+        const newClient = {
+          clientId: action.clientId,
+          clientName: action.clientName,
+          organization: action.organization,
+          rackUnitsU: action.rackUnitsU,
+          powerKw: action.powerKw,
+          coolingTons: action.coolingTons,
+          bandwidthMbps: action.bandwidthMbps,
+          dailyRate: action.dailyRate,
+          leaseStartDay: newState.currentDay,
+          leaseEndDay: action.durationDays ? newState.currentDay + action.durationDays : null,
+          isActive: true,
+          burstProfile: action.burstProfile || 'steady',
+        };
+        facility.usage.rackUsedU += action.rackUnitsU;
+        facility.usage.powerUsedKw += action.powerKw;
+        facility.usage.coolingUsedTons += action.coolingTons;
+        facility.usage.bandwidthUsedMbps += action.bandwidthMbps;
+        facility.clients.push(newClient);
+        facility.attackSurfaceScore += Math.floor(
+          (action.rackUnitsU + action.powerKw + action.coolingTons + action.bandwidthMbps) / 10,
+        );
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'facility.client.onboarded',
+          timestamp: newState.updatedAt,
+          payload: {
+            clientId: action.clientId,
+            clientName: action.clientName,
+            organization: action.organization,
+            resources: {
+              rackUnitsU: action.rackUnitsU,
+              powerKw: action.powerKw,
+              coolingTons: action.coolingTons,
+              bandwidthMbps: action.bandwidthMbps,
+            },
+            dailyRate: action.dailyRate,
+          },
+        });
+        break;
+      }
+
+      case 'EVICT_CLIENT': {
+        if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+          throw new Error('EVICT_CLIENT not allowed in current phase');
+        }
+        const facility = newState.facility;
+        const clientIndex = facility.clients.findIndex((c) => c.clientId === action.clientId);
+        if (clientIndex === -1) {
+          throw new Error('Client not found');
+        }
+        const client = facility.clients[clientIndex];
+        if (!client) {
+          throw new Error('Client not found');
+        }
+        facility.usage.rackUsedU -= client.rackUnitsU;
+        facility.usage.powerUsedKw -= client.powerKw;
+        facility.usage.coolingUsedTons -= client.coolingTons;
+        facility.usage.bandwidthUsedMbps -= client.bandwidthMbps;
+        facility.attackSurfaceScore = Math.max(
+          0,
+          facility.attackSurfaceScore -
+            Math.floor(
+              (client.rackUnitsU + client.powerKw + client.coolingTons + client.bandwidthMbps) / 10,
+            ),
+        );
+        facility.clients.splice(clientIndex, 1);
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'facility.client.evicted',
+          timestamp: newState.updatedAt,
+          payload: {
+            clientId: action.clientId,
+            reason: action.reason,
+          },
+        });
+        break;
+      }
+
+      case 'PROCESS_FACILITY_TICK': {
+        if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+          throw new Error('PROCESS_FACILITY_TICK not allowed in current phase');
+        }
+        const facility = newState.facility;
+        let totalRevenue = 0;
+        let totalConsumption = 1.0;
+        for (const client of facility.clients) {
+          if (!client.isActive) continue;
+          totalRevenue += client.dailyRate;
+          const burstMultiplier =
+            client.burstProfile === 'spiky' ? 1.5 : client.burstProfile === 'moderate' ? 1.2 : 1.0;
+          totalConsumption *= burstMultiplier;
+        }
+        newState.funds += totalRevenue;
+        facility.usage.rackUsedU = Math.floor(facility.usage.rackUsedU * totalConsumption);
+        facility.usage.powerUsedKw = Math.floor(facility.usage.powerUsedKw * totalConsumption);
+        facility.usage.coolingUsedTons = Math.floor(
+          facility.usage.coolingUsedTons * totalConsumption,
+        );
+        facility.usage.bandwidthUsedMbps = Math.floor(
+          facility.usage.bandwidthUsedMbps * totalConsumption,
+        );
+        const utilizationPercent = Math.max(
+          facility.usage.rackUsedU / facility.capacities.rackCapacityU,
+          facility.usage.powerUsedKw / facility.capacities.powerCapacityKw,
+          facility.usage.coolingUsedTons / facility.capacities.coolingCapacityTons,
+          facility.usage.bandwidthUsedMbps / facility.capacities.bandwidthCapacityMbps,
+        );
+        if (utilizationPercent > 0.9) {
+          facility.maintenanceDebt += Math.floor((utilizationPercent - 0.9) * 100);
+          facility.facilityHealth = Math.max(0, facility.facilityHealth - 2);
+          events.push({
+            eventId: crypto.randomUUID(),
+            eventType: 'facility.resource.critical',
+            timestamp: newState.updatedAt,
+            payload: {
+              utilizationPercent,
+              maintenanceDebt: facility.maintenanceDebt,
+              facilityHealth: facility.facilityHealth,
+            },
+          });
+        } else if (utilizationPercent > 0.7) {
+          facility.maintenanceDebt += 1;
+          facility.facilityHealth = Math.max(0, facility.facilityHealth - 1);
+        }
+        facility.operatingCostPerDay = Math.floor(
+          50 *
+            (1 +
+              facility.usage.rackUsedU / facility.capacities.rackCapacityU +
+              facility.usage.powerUsedKw / facility.capacities.powerCapacityKw),
+        );
+        newState.funds -= facility.operatingCostPerDay;
+        facility.lastTickDay = action.dayNumber;
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'facility.tick.processed',
+          timestamp: newState.updatedAt,
+          payload: {
+            dayNumber: action.dayNumber,
+            revenue: totalRevenue,
+            operatingCost: facility.operatingCostPerDay,
+            utilizationPercent,
+            maintenanceDebt: facility.maintenanceDebt,
+            facilityHealth: facility.facilityHealth,
+          },
+        });
+        break;
+      }
+
+      case 'UPGRADE_FACILITY_TIER': {
+        if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+          throw new Error('UPGRADE_FACILITY_TIER not allowed in current phase');
+        }
+        const tierUpgrades: Record<
+          string,
+          { rack: number; power: number; cooling: number; bandwidth: number; cost: number }
+        > = {
+          outpost: { rack: 84, power: 25, cooling: 12, bandwidth: 500, cost: 5000 },
+          station: { rack: 168, power: 50, cooling: 25, bandwidth: 1000, cost: 15000 },
+          vault: { rack: 336, power: 100, cooling: 50, bandwidth: 2500, cost: 50000 },
+          fortress: { rack: 672, power: 200, cooling: 100, bandwidth: 5000, cost: 150000 },
+        };
+        const upgrade = tierUpgrades[action.targetTier];
+        if (!upgrade) {
+          throw new Error('Invalid target tier');
+        }
+        if (newState.funds < upgrade.cost) {
+          throw new Error('Insufficient funds for tier upgrade');
+        }
+        newState.funds -= upgrade.cost;
+        newState.facilityTier = action.targetTier as typeof newState.facilityTier;
+        newState.facility.tier = action.targetTier;
+        newState.facility.capacities.rackCapacityU = upgrade.rack;
+        newState.facility.capacities.powerCapacityKw = upgrade.power;
+        newState.facility.capacities.coolingCapacityTons = upgrade.cooling;
+        newState.facility.capacities.bandwidthCapacityMbps = upgrade.bandwidth;
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'facility.tier.upgraded',
+          timestamp: newState.updatedAt,
+          payload: {
+            fromTier: state.facilityTier,
+            toTier: action.targetTier,
+            cost: upgrade.cost,
+          },
+        });
+        break;
+      }
+
+      case 'PURCHASE_FACILITY_UPGRADE': {
+        if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+          throw new Error('PURCHASE_FACILITY_UPGRADE not allowed in current phase');
+        }
+        const upgradeCosts: Record<string, number> = {
+          rack: 500,
+          power: 750,
+          cooling: 1000,
+          bandwidth: 600,
+        };
+        const cost = upgradeCosts[action.upgradeType];
+        if (!cost || newState.funds < cost) {
+          throw new Error('Insufficient funds for upgrade');
+        }
+        newState.funds -= cost;
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'facility.upgrade.purchased',
+          timestamp: newState.updatedAt,
+          payload: {
+            upgradeType: action.upgradeType,
+            cost,
+          },
+        });
+        const existingUpgrade = newState.facility.upgrades.find(
+          (u) => u.upgradeType === action.upgradeType && !u.isCompleted,
+        );
+        if (existingUpgrade) {
+          existingUpgrade.tierLevel += 1;
+          existingUpgrade.isCompleted = true;
+          existingUpgrade.completionDay = newState.currentDay;
+        } else {
+          newState.facility.upgrades.push({
+            upgradeId: crypto.randomUUID(),
+            upgradeType: action.upgradeType,
+            tierLevel: 1,
+            isCompleted: true,
+            completionDay: newState.currentDay,
+          });
+        }
+        let capacityKey:
+          | 'rackCapacityU'
+          | 'powerCapacityKw'
+          | 'coolingCapacityTons'
+          | 'bandwidthCapacityMbps' = 'rackCapacityU';
+        let usedKey: 'rackUsedU' | 'powerUsedKw' | 'coolingUsedTons' | 'bandwidthUsedMbps' =
+          'rackUsedU';
+
+        switch (action.upgradeType) {
+          case 'rack':
+            capacityKey = 'rackCapacityU';
+            usedKey = 'rackUsedU';
+            break;
+          case 'power':
+            capacityKey = 'powerCapacityKw';
+            usedKey = 'powerUsedKw';
+            break;
+          case 'cooling':
+            capacityKey = 'coolingCapacityTons';
+            usedKey = 'coolingUsedTons';
+            break;
+          case 'bandwidth':
+            capacityKey = 'bandwidthCapacityMbps';
+            usedKey = 'bandwidthUsedMbps';
+            break;
+        }
+
+        newState.facility.capacities[capacityKey] = Math.floor(
+          newState.facility.capacities[capacityKey] * 1.5,
+        );
+        const usagePercent =
+          newState.facility.usage[usedKey] / newState.facility.capacities[capacityKey];
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'facility.upgrade.completed',
+          timestamp: newState.updatedAt,
+          payload: {
+            upgradeType: action.upgradeType,
+            cost,
+            newCapacity: newState.facility.capacities[capacityKey],
+            usagePercentAfter: usagePercent,
+          },
+        });
+        break;
+      }
 
       case 'PAUSE_SESSION':
         if (
