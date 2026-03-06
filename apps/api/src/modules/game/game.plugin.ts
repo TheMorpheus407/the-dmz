@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin';
 
 import { registerGameSessionRoutes } from './session/game-session.routes.js';
+import { registerIncidentRoutes } from './incident/incident.routes.js';
 
 import type { FastifyPluginAsync } from 'fastify';
 
@@ -10,6 +11,7 @@ const gamePluginImpl: FastifyPluginAsync = async (fastify) => {
   }
 
   await registerGameSessionRoutes(fastify);
+  await registerIncidentRoutes(fastify);
 };
 
 export const gamePlugin = fp(gamePluginImpl, { name: 'game', dependencies: ['eventBus'] });

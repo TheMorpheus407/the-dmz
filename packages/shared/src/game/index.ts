@@ -5,6 +5,7 @@ export * from './rng.js';
 export * from './email-instance.js';
 export * from './indicator-catalog.js';
 export * from './threat-catalog.js';
+export * from './incident.js';
 
 export type { DecisionType, DayPhase } from '../types/game-engine.js';
 export type {
