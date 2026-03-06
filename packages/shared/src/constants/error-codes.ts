@@ -166,6 +166,12 @@ export const ErrorCodes = {
   EMAIL_VALIDATION_FAILED: 'EMAIL_VALIDATION_FAILED',
   EMAIL_NETWORK_UNREACHABLE: 'EMAIL_NETWORK_UNREACHABLE',
   EMAIL_RATE_LIMIT_EXCEEDED: 'EMAIL_RATE_LIMIT_EXCEEDED',
+  GAME_ACTION_INVALID: 'GAME_ACTION_INVALID',
+  GAME_ACTION_FORBIDDEN: 'GAME_ACTION_FORBIDDEN',
+  GAME_INVALID_TRANSITION: 'GAME_INVALID_TRANSITION',
+  GAME_EMAIL_NOT_FOUND: 'GAME_EMAIL_NOT_FOUND',
+  GAME_INCIDENT_NOT_FOUND: 'GAME_INCIDENT_NOT_FOUND',
+  GAME_UPGRADE_NOT_FOUND: 'GAME_UPGRADE_NOT_FOUND',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -931,6 +937,36 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.RATE_LIMITING,
     retryable: true,
     messageKey: 'errors.email.rateLimitExceeded',
+  },
+  [ErrorCodes.GAME_ACTION_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.game.actionInvalid',
+  },
+  [ErrorCodes.GAME_ACTION_FORBIDDEN]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.game.actionForbidden',
+  },
+  [ErrorCodes.GAME_INVALID_TRANSITION]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.game.invalidTransition',
+  },
+  [ErrorCodes.GAME_EMAIL_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.game.emailNotFound',
+  },
+  [ErrorCodes.GAME_INCIDENT_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.game.incidentNotFound',
+  },
+  [ErrorCodes.GAME_UPGRADE_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.game.upgradeNotFound',
   },
 };
 

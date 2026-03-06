@@ -201,6 +201,12 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.EMAIL_VALIDATION_FAILED]: 400,
   [ErrorCodes.EMAIL_NETWORK_UNREACHABLE]: 503,
   [ErrorCodes.EMAIL_RATE_LIMIT_EXCEEDED]: 429,
+  [ErrorCodes.GAME_ACTION_INVALID]: 400,
+  [ErrorCodes.GAME_ACTION_FORBIDDEN]: 403,
+  [ErrorCodes.GAME_INVALID_TRANSITION]: 400,
+  [ErrorCodes.GAME_EMAIL_NOT_FOUND]: 404,
+  [ErrorCodes.GAME_INCIDENT_NOT_FOUND]: 404,
+  [ErrorCodes.GAME_UPGRADE_NOT_FOUND]: 404,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -380,6 +386,12 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.EMAIL_VALIDATION_FAILED]: 'Email validation failed',
   [ErrorCodes.EMAIL_NETWORK_UNREACHABLE]: 'Email server is unreachable',
   [ErrorCodes.EMAIL_RATE_LIMIT_EXCEEDED]: 'Email rate limit exceeded',
+  [ErrorCodes.GAME_ACTION_INVALID]: 'Invalid game action for current state',
+  [ErrorCodes.GAME_ACTION_FORBIDDEN]: 'Game action not allowed',
+  [ErrorCodes.GAME_INVALID_TRANSITION]: 'Invalid state transition',
+  [ErrorCodes.GAME_EMAIL_NOT_FOUND]: 'Email not found in inbox',
+  [ErrorCodes.GAME_INCIDENT_NOT_FOUND]: 'Incident not found',
+  [ErrorCodes.GAME_UPGRADE_NOT_FOUND]: 'Upgrade not found',
 } as const;
 
 export type AppErrorOptions = {

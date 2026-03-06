@@ -5,7 +5,7 @@
 ## Current State
 
 - **Phase:** Pre-implementation (documentation complete, issues created)
-- **Active milestone:** M0 — Project Bootstrap (33 issues created on GitHub, #1–#33)
+- **Active milestone:** M2 — Core Game Loop (issue #131 created, more to follow)
 - **Blocker:** Monorepo needs bootstrapping (M0)
 
 ## Completed Work
@@ -36,7 +36,42 @@
 | Monorepo layout | `apps/*` + `packages/*` | Apps (deployables) vs packages (libraries) separation | 2026-02-05 |
 | auto-develop finalization | Dedicated finalizer agent for commit/push/close | Keeps final git operations in-agent with unbounded retries and validation checks | 2026-02-06 |
 
-## Next Up: M0 — Project Bootstrap (33 issues, #1–#33)
+## Completed Work (M0, M1)
+- [x] M0: Project Bootstrap (33 issues completed #1–#33)
+- [x] M1: Foundation (issues #34–#130 completed)
+
+## Next Up: M2 — Core Game Loop
+
+### Backend - Game Engine (#131–#136)
+- [ ] #131 M2-01: Game engine module with session lifecycle and day cycle state machine
+- [ ] M2-02: Event sourcing system (immutable game.events table, snapshots)
+- [ ] M2-03: Deterministic RNG for email selection and attack outcomes
+- [ ] M2-04: Email & decision system (instances, indicators, decisions)
+- [ ] M2-05: Verification packet system
+- [ ] #136 M2-06: Facility module (4 resource systems)
+
+### Backend - Game Systems (#137–#142)
+- [ ] M2-07: Threat engine v1 (attack generation, threat tiers)
+- [ ] M2-08: Consequence engine (trust score, funds, faction relations)
+- [ ] M2-09: Upgrade system (security tools, facility upgrades)
+- [ ] M2-10: Economy domain v1 (credits, trust score, intel fragments)
+- [ ] M2-11: Incident response system
+- [ ] M2-12: Breach & recovery (ransom mechanic, game over)
+
+### Frontend - Game Screens (#143–#155)
+- [ ] M2-13: Main terminal layout (3-panel CSS Grid)
+- [ ] M2-14: InboxList component with urgency indicators
+- [ ] M2-15: EmailViewer with header inspection
+- [ ] M2-16: ActionStamp (Approve/Deny/Flag/Verify)
+- [ ] M2-17: Phishing Analysis Worksheet
+- [ ] M2-18: Verification Packet viewer
+- [ ] M2-19: Facility dashboard
+- [ ] M2-20: Day summary panel
+- [ ] M2-21: State management (3-layer architecture)
+- [ ] M2-22: Phase-driven rendering
+- [ ] M2-23: Keyboard shortcuts (core: A/D/F/V)
+- [ ] M2-24: ResourceMeter components
+- [ ] M2-25: ThreatIndicator display
 
 ### Core Scaffolding (#1–#5)
 - [ ] #1 Initialize pnpm monorepo with Turborepo (`apps/web`, `apps/api`, `packages/shared`)
