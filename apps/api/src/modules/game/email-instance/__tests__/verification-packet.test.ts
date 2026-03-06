@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 
-import { SESSION_MACRO_STATES, DAY_PHASES, type GameState } from '@the-dmz/shared';
+import {
+  SESSION_MACRO_STATES,
+  DAY_PHASES,
+  type GameState,
+  createInitialBreachState,
+} from '@the-dmz/shared';
 
 import { reduce } from '../../engine/reducer.js';
 import {
@@ -52,6 +57,7 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
     verificationPackets: {},
     incidents: [],
     threats: [],
+    breachState: createInitialBreachState(),
     narrativeState: {
       currentChapter: 1,
       activeTriggers: [],

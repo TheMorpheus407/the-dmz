@@ -1,6 +1,11 @@
 import { describe, it, expect } from 'vitest';
 
-import { SESSION_MACRO_STATES, DAY_PHASES, type GameState } from '@the-dmz/shared';
+import {
+  SESSION_MACRO_STATES,
+  DAY_PHASES,
+  type GameState,
+  createInitialBreachState,
+} from '@the-dmz/shared';
 
 import {
   createInitialGameState,
@@ -53,6 +58,7 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
     verificationPackets: {},
     incidents: [],
     threats: [],
+    breachState: createInitialBreachState(),
     narrativeState: {
       currentChapter: 1,
       activeTriggers: [],
@@ -1510,5 +1516,282 @@ describe('reduce - OpEx deduction', () => {
     );
     expect(monitoringUpgrade?.status).toBe('completed');
     expect(result.newState.facility.securityToolOpExPerDay).toBe(5);
+  });
+});
+
+describe('Breach Reducer Actions', () => {
+  describe('TRIGGER_BREACH', () => {
+    it('should trigger breach with severity 3', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_THREAT_PROCESSING,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_ACTIVE,
+        trustScore: 100,
+        analyticsState: {
+          totalEmailsProcessed: 0,
+          totalDecisions: 0,
+          approvals: 0,
+          denials: 0,
+          flags: 0,
+          verificationsRequested: 0,
+          incidentsTriggered: 0,
+          breaches: 0,
+        },
+      });
+
+      const action = {
+        type: 'TRIGGER_BREACH' as const,
+        triggerType: 'accepted_phishing_email',
+        severity: 3 as const,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(true);
+      expect(result.newState.currentMacroState).toBe(SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY);
+      expect(result.newState.currentPhase).toBe(DAY_PHASES.PHASE_RANSOM);
+      expect(result.newState.analyticsState.breaches).toBe(1);
+      expect(result.events).toHaveLength(2);
+      expect(result.events[0]?.eventType).toBe('game.breach.occurred');
+      expect(result.events[1]?.eventType).toBe('game.breach.ransom_displayed');
+    });
+
+    it('should trigger non-breach incident with severity 2', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_THREAT_PROCESSING,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_ACTIVE,
+        trustScore: 100,
+      });
+
+      const action = {
+        type: 'TRIGGER_BREACH' as const,
+        triggerType: 'brute_force_success',
+        severity: 2 as const,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(true);
+      expect(result.newState.currentMacroState).toBe(SESSION_MACRO_STATES.SESSION_ACTIVE);
+      expect(result.newState.currentPhase).toBe(DAY_PHASES.PHASE_THREAT_PROCESSING);
+    });
+  });
+
+  describe('PAY_RANSOM', () => {
+    it('should pay ransom and transition to recovery', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_RANSOM,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY,
+        funds: 500,
+        breachState: {
+          hasActiveBreach: true,
+          currentSeverity: 3,
+          ransomAmount: 200,
+          ransomDeadline: 5,
+          recoveryDaysRemaining: 7,
+          recoveryStartDay: 3,
+          totalLifetimeEarningsAtBreach: 2000,
+          lastBreachDay: 3,
+          postBreachEffectsActive: true,
+          revenueDepressionDaysRemaining: 30,
+          increasedScrutinyDaysRemaining: 14,
+          reputationImpactDaysRemaining: 30,
+          toolsRequireReverification: false,
+          intelligenceRevealed: [],
+        },
+      });
+
+      const action = {
+        type: 'PAY_RANSOM' as const,
+        amount: 200,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(true);
+      expect(result.newState.funds).toBe(300);
+      expect(result.newState.currentPhase).toBe(DAY_PHASES.PHASE_RECOVERY);
+      expect(result.events).toHaveLength(2);
+      expect(result.events[0]?.eventType).toBe('game.breach.ransom_paid');
+      expect(result.events[1]?.eventType).toBe('game.breach.recovery_started');
+    });
+
+    it('should throw error when insufficient funds', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_RANSOM,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY,
+        funds: 100,
+        breachState: {
+          hasActiveBreach: true,
+          currentSeverity: 3,
+          ransomAmount: 200,
+          ransomDeadline: 5,
+          recoveryDaysRemaining: 7,
+          recoveryStartDay: 3,
+          totalLifetimeEarningsAtBreach: 2000,
+          lastBreachDay: 3,
+          postBreachEffectsActive: true,
+          revenueDepressionDaysRemaining: 30,
+          increasedScrutinyDaysRemaining: 14,
+          reputationImpactDaysRemaining: 30,
+          toolsRequireReverification: false,
+          intelligenceRevealed: [],
+        },
+      });
+
+      const action = {
+        type: 'PAY_RANSOM' as const,
+        amount: 200,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    });
+  });
+
+  describe('REFUSE_RANSOM', () => {
+    it('should refuse ransom and trigger game over at severity 4', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_RANSOM,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY,
+        funds: 100,
+        currentDay: 15,
+        breachState: {
+          hasActiveBreach: true,
+          currentSeverity: 4,
+          ransomAmount: 500,
+          ransomDeadline: 5,
+          recoveryDaysRemaining: 7,
+          recoveryStartDay: 10,
+          totalLifetimeEarningsAtBreach: 5000,
+          lastBreachDay: 10,
+          postBreachEffectsActive: true,
+          revenueDepressionDaysRemaining: 30,
+          increasedScrutinyDaysRemaining: 14,
+          reputationImpactDaysRemaining: 30,
+          toolsRequireReverification: true,
+          intelligenceRevealed: [],
+        },
+      });
+
+      const action = {
+        type: 'REFUSE_RANSOM' as const,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(true);
+      expect(result.newState.currentMacroState).toBe(SESSION_MACRO_STATES.SESSION_COMPLETED);
+      expect(result.newState.currentPhase).toBe(DAY_PHASES.PHASE_DAY_END);
+      expect(result.events).toHaveLength(2);
+      expect(result.events[0]?.eventType).toBe('game.session.game_over');
+      expect(result.events[1]?.eventType).toBe('game.breach.ransom_refused');
+    });
+
+    it('should refuse ransom and continue to recovery at severity 3', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_RANSOM,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY,
+        funds: 100,
+        breachState: {
+          hasActiveBreach: true,
+          currentSeverity: 3,
+          ransomAmount: 500,
+          ransomDeadline: 5,
+          recoveryDaysRemaining: 7,
+          recoveryStartDay: 3,
+          totalLifetimeEarningsAtBreach: 5000,
+          lastBreachDay: 3,
+          postBreachEffectsActive: true,
+          revenueDepressionDaysRemaining: 30,
+          increasedScrutinyDaysRemaining: 14,
+          reputationImpactDaysRemaining: 30,
+          toolsRequireReverification: false,
+          intelligenceRevealed: [],
+        },
+      });
+
+      const action = {
+        type: 'REFUSE_RANSOM' as const,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(true);
+      expect(result.newState.currentPhase).toBe(DAY_PHASES.PHASE_RECOVERY);
+    });
+  });
+
+  describe('ADVANCE_RECOVERY', () => {
+    it('should advance recovery day', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_RECOVERY,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY,
+        currentDay: 5,
+        breachState: {
+          hasActiveBreach: true,
+          currentSeverity: 3,
+          ransomAmount: null,
+          ransomDeadline: null,
+          recoveryDaysRemaining: 5,
+          recoveryStartDay: 3,
+          totalLifetimeEarningsAtBreach: 2000,
+          lastBreachDay: 3,
+          postBreachEffectsActive: true,
+          revenueDepressionDaysRemaining: 30,
+          increasedScrutinyDaysRemaining: 14,
+          reputationImpactDaysRemaining: 30,
+          toolsRequireReverification: false,
+          intelligenceRevealed: [],
+        },
+      });
+
+      const action = {
+        type: 'ADVANCE_RECOVERY' as const,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(true);
+      expect(result.newState.breachState.recoveryDaysRemaining).toBe(4);
+    });
+
+    it('should complete recovery when reaching day 0', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_RECOVERY,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY,
+        currentDay: 10,
+        breachState: {
+          hasActiveBreach: true,
+          currentSeverity: 3,
+          ransomAmount: null,
+          ransomDeadline: null,
+          recoveryDaysRemaining: 1,
+          recoveryStartDay: 3,
+          totalLifetimeEarningsAtBreach: 2000,
+          lastBreachDay: 3,
+          postBreachEffectsActive: true,
+          revenueDepressionDaysRemaining: 30,
+          increasedScrutinyDaysRemaining: 14,
+          reputationImpactDaysRemaining: 30,
+          toolsRequireReverification: false,
+          intelligenceRevealed: [],
+        },
+      });
+
+      const action = {
+        type: 'ADVANCE_RECOVERY' as const,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(true);
+      expect(result.newState.currentMacroState).toBe(SESSION_MACRO_STATES.SESSION_ACTIVE);
+      expect(result.newState.currentPhase).toBe(DAY_PHASES.PHASE_RESOURCE_MANAGEMENT);
+      expect(result.events).toHaveLength(2);
+      expect(result.events[0]?.eventType).toBe('game.breach.recovery_completed');
+      expect(result.events[1]?.eventType).toBe('game.breach.post_effects_started');
+    });
   });
 });

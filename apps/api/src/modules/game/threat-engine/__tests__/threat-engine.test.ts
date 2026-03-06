@@ -9,6 +9,7 @@ import {
   calculatePlayerCompetence,
   type GameState,
   type FacilityState,
+  createInitialBreachState,
 } from '@the-dmz/shared/game';
 
 import { ThreatEngineService, type PlayerProfileUpdate } from '../threat-engine.service.js';
@@ -68,6 +69,7 @@ describe('ThreatEngineService', () => {
       verificationPackets: {},
       incidents: [],
       threats: [],
+      breachState: createInitialBreachState(),
       narrativeState: {
         currentChapter: 1,
         activeTriggers: [],

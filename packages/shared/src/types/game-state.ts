@@ -7,6 +7,9 @@ import type {
 } from './game-engine.js';
 import type { EmailInstance, VerificationPacket } from '../game/email-instance.js';
 import type { GeneratedAttack } from '../game/threat-catalog.js';
+import type { BreachState } from '../game/breach.js';
+
+export type { BreachState } from '../game/breach.js';
 
 export interface GameState {
   sessionId: string;
@@ -29,6 +32,7 @@ export interface GameState {
   verificationPackets: Record<string, VerificationPacket>;
   incidents: IncidentState[];
   threats: GeneratedAttack[];
+  breachState: BreachState;
   narrativeState: NarrativeState;
   factionRelations: Record<string, number>;
   blacklist: string[];
@@ -107,6 +111,10 @@ export type GameActionPayload =
   | ApplyConsequencesPayload
   | ProcessThreatsPayload
   | ResolveIncidentPayload
+  | TriggerBreachPayload
+  | PayRansomPayload
+  | RefuseRansomPayload
+  | AdvanceRecoveryPayload
   | PurchaseUpgradePayload
   | AdjustResourcePayload
   | PauseSessionPayload
@@ -289,6 +297,26 @@ export interface ResolveIncidentPayload {
   incidentId: string;
   responseActions: string[];
   notes?: string;
+}
+
+export interface TriggerBreachPayload {
+  type: 'TRIGGER_BREACH';
+  triggerType: string;
+  severity: 1 | 2 | 3 | 4;
+  attackDifficulty?: number;
+}
+
+export interface PayRansomPayload {
+  type: 'PAY_RANSOM';
+  amount: number;
+}
+
+export interface RefuseRansomPayload {
+  type: 'REFUSE_RANSOM';
+}
+
+export interface AdvanceRecoveryPayload {
+  type: 'ADVANCE_RECOVERY';
 }
 
 export interface PurchaseUpgradePayload {

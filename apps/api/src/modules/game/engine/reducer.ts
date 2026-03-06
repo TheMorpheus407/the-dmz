@@ -6,11 +6,14 @@ import {
   type EmailState,
   type UpgradeDefinition,
   type UpgradeType,
+  createInitialBreachState,
+  type BreachTriggerType,
 } from '@the-dmz/shared';
 
 import { resolveDecision } from '../email-instance/decision-resolution.service.js';
 import { assembleVerificationPacket } from '../email-instance/verification-packet.service.js';
 import { ThreatEngineService } from '../threat-engine/index.js';
+import { breachService } from '../breach/index.js';
 import {
   clampTrustScore,
   calculateXPForLevel,
@@ -557,6 +560,7 @@ const createInitialState = (
   verificationPackets: {},
   incidents: [],
   threats: [],
+  breachState: createInitialBreachState(),
   narrativeState: {
     currentChapter: 1,
     activeTriggers: [],
@@ -970,6 +974,203 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
           timestamp: newState.updatedAt,
           payload: { incidentId: action.incidentId, responseActions: action.responseActions },
         });
+        break;
+      }
+
+      case 'TRIGGER_BREACH': {
+        if (!isActionAllowedInPhase('PROCESS_THREATS', state.currentPhase)) {
+          throw new Error('TRIGGER_BREACH only allowed during threat processing');
+        }
+
+        const securityTools = state.facility.upgrades
+          .filter((u) => u.isCompleted && u.securityDelta)
+          .map((u) => u.upgradeType);
+
+        const totalLifetimeEarnings = state.funds + state.analyticsState.totalDecisions * 10;
+
+        const breachResult = breachService.evaluateBreachTrigger(
+          state.sessionId,
+          action.triggerType as BreachTriggerType,
+          state.currentDay,
+          totalLifetimeEarnings,
+          state.threatTier,
+          securityTools,
+          1,
+        );
+
+        const isBreach = breachResult.breachOccurred;
+        const severity = breachResult.severity!;
+
+        if (isBreach) {
+          newState.currentMacroState = SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY;
+          newState.currentPhase = DAY_PHASES.PHASE_RANSOM;
+        }
+
+        newState.analyticsState.breaches += isBreach ? 1 : 0;
+
+        newState.trustScore = Math.max(0, newState.trustScore + breachResult.trustPenalty);
+
+        const breachState = breachService.applyBreach(
+          state.sessionId,
+          breachResult,
+          state.currentDay,
+          totalLifetimeEarnings,
+        );
+        newState.breachState = breachState;
+
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'game.breach.occurred',
+          timestamp: newState.updatedAt,
+          payload: {
+            triggerType: action.triggerType,
+            severity,
+            isBreach,
+            trustPenalty: breachResult.trustPenalty,
+          },
+        });
+
+        if (isBreach) {
+          events.push({
+            eventId: crypto.randomUUID(),
+            eventType: 'game.breach.ransom_displayed',
+            timestamp: newState.updatedAt,
+            payload: {
+              severity,
+              currentFunds: newState.funds,
+              ransomAmount: breachResult.ransomAmount,
+            },
+          });
+        }
+        break;
+      }
+
+      case 'PAY_RANSOM': {
+        if (!isActionAllowedInPhase('PAY_RANSOM', state.currentPhase)) {
+          throw new Error('PAY_RANSOM only allowed in RANSOM phase');
+        }
+        const breachState = state.breachState;
+        if (!breachState.ransomAmount) {
+          throw new Error('No active ransom to pay');
+        }
+        if (newState.funds < breachState.ransomAmount) {
+          throw new Error('Insufficient funds to pay ransom');
+        }
+
+        newState.funds -= breachState.ransomAmount;
+
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'game.breach.ransom_paid',
+          timestamp: newState.updatedAt,
+          payload: {
+            amount: breachState.ransomAmount,
+            remainingFunds: newState.funds,
+          },
+        });
+
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'game.breach.recovery_started',
+          timestamp: newState.updatedAt,
+          payload: {
+            recoveryDays: breachState.recoveryDaysRemaining,
+          },
+        });
+
+        newState.currentPhase = DAY_PHASES.PHASE_RECOVERY;
+        break;
+      }
+
+      case 'REFUSE_RANSOM': {
+        if (!isActionAllowedInPhase('REFUSE_RANSOM', state.currentPhase)) {
+          throw new Error('REFUSE_RANSOM only allowed in RANSOM phase');
+        }
+
+        const breachState = state.breachState;
+        const canCauseGameOver = breachState.currentSeverity === 4;
+
+        if (canCauseGameOver) {
+          newState.currentMacroState = SESSION_MACRO_STATES.SESSION_COMPLETED;
+          newState.currentPhase = DAY_PHASES.PHASE_DAY_END;
+
+          events.push({
+            eventId: crypto.randomUUID(),
+            eventType: 'game.session.game_over',
+            timestamp: newState.updatedAt,
+            payload: {
+              reason: 'Unable to pay ransom',
+              daysSurvived: newState.currentDay,
+              totalEarnings: breachState.totalLifetimeEarningsAtBreach ?? newState.funds,
+              breaches: newState.analyticsState.breaches,
+            },
+          });
+        } else {
+          newState.currentPhase = DAY_PHASES.PHASE_RECOVERY;
+        }
+
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'game.breach.ransom_refused',
+          timestamp: newState.updatedAt,
+          payload: {
+            severity: breachState.currentSeverity,
+          },
+        });
+        break;
+      }
+
+      case 'ADVANCE_RECOVERY': {
+        if (!isActionAllowedInPhase('ADVANCE_RECOVERY', state.currentPhase)) {
+          throw new Error('ADVANCE_RECOVERY only allowed in RECOVERY phase');
+        }
+
+        const breachState = state.breachState;
+        if (!breachState.recoveryDaysRemaining || breachState.recoveryDaysRemaining <= 0) {
+          throw new Error('No recovery to advance');
+        }
+
+        const newRecoveryDays = breachState.recoveryDaysRemaining - 1;
+        newState.breachState = {
+          ...breachState,
+          recoveryDaysRemaining: newRecoveryDays,
+        };
+
+        if (newRecoveryDays <= 0) {
+          newState.currentMacroState = SESSION_MACRO_STATES.SESSION_ACTIVE;
+          newState.currentPhase = DAY_PHASES.PHASE_RESOURCE_MANAGEMENT;
+
+          events.push({
+            eventId: crypto.randomUUID(),
+            eventType: 'game.breach.recovery_completed',
+            timestamp: newState.updatedAt,
+            payload: {
+              daysInRecovery: breachState.recoveryDaysRemaining,
+            },
+          });
+
+          events.push({
+            eventId: crypto.randomUUID(),
+            eventType: 'game.breach.post_effects_started',
+            timestamp: newState.updatedAt,
+            payload: {
+              revenueDepressionDays: 30,
+              increasedScrutinyDays: 14,
+              reputationImpactDays: 30,
+            },
+          });
+        } else {
+          events.push({
+            eventId: crypto.randomUUID(),
+            eventType: 'game.day.started',
+            timestamp: newState.updatedAt,
+            payload: {
+              day: newState.currentDay,
+              recoveryDaysRemaining: newRecoveryDays,
+              narrativeMessage: `Recovery day ${breachState.recoveryDaysRemaining - newRecoveryDays} complete.`,
+            },
+          });
+        }
         break;
       }
 
