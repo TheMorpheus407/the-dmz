@@ -151,3 +151,39 @@ export interface EmailQueueItem {
   age: number;
   order: number;
 }
+
+export type VerificationDocumentType =
+  | 'id_document'
+  | 'employee_badge'
+  | 'account_record'
+  | 'registration'
+  | 'transfer_log'
+  | 'approval_chain'
+  | 'threat_assessment'
+  | 'faction_report';
+
+export interface VerificationArtifact {
+  artifactId: string;
+  documentType: VerificationDocumentType;
+  title: string;
+  description: string;
+  issuer: string;
+  issuedDate: string;
+  validityIndicator: 'valid' | 'suspicious' | 'invalid' | 'unknown';
+  metadata: Record<string, unknown>;
+}
+
+export interface VerificationPacket {
+  packetId: string;
+  emailId: string;
+  sessionId: string;
+  createdAt: string;
+  artifacts: VerificationArtifact[];
+  hasIntelligenceBrief: boolean;
+}
+
+export interface VerificationState {
+  currentPacket: VerificationPacket | null;
+  flaggedDiscrepancies: string[];
+  reviewedArtifacts: string[];
+}

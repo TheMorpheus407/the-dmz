@@ -7,6 +7,7 @@ import {
 } from '@the-dmz/shared';
 
 import { resolveDecision } from '../email-instance/decision-resolution.service.js';
+import { assembleVerificationPacket } from '../email-instance/verification-packet.service.js';
 
 import {
   canTransitionMacroState,
@@ -53,6 +54,7 @@ const createInitialState = (
   facilityTier: 'outpost',
   inbox: [],
   emailInstances: {},
+  verificationPackets: {},
   incidents: [],
   narrativeState: {
     currentChapter: 1,
@@ -195,12 +197,47 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
           emailToVerify.verificationRequested = true;
           emailToVerify.status = 'request_verification';
         }
+
+        const emailInstance = newState.emailInstances[action.emailId];
+
+        newState.verificationPackets = newState.verificationPackets || {};
+
+        const packetParams: {
+          sessionSeed: bigint;
+          emailId: string;
+          sessionId: string;
+          faction?: string;
+        } = {
+          sessionSeed: BigInt(state.seed),
+          emailId: action.emailId,
+          sessionId: state.sessionId,
+        };
+
+        if (emailInstance?.faction) {
+          packetParams.faction = emailInstance.faction;
+        }
+
+        const packet = assembleVerificationPacket(packetParams);
+
+        newState.verificationPackets[action.emailId] = packet;
+
         newState.analyticsState.verificationsRequested++;
         events.push({
           eventId: crypto.randomUUID(),
           eventType: 'game.email.verification_requested',
           timestamp: newState.updatedAt,
           payload: { emailId: action.emailId },
+        });
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'game.verification.packet_generated',
+          timestamp: newState.updatedAt,
+          payload: {
+            emailId: action.emailId,
+            packetId: packet.packetId,
+            artifactCount: packet.artifacts.length,
+            hasIntelligenceBrief: packet.hasIntelligenceBrief,
+          },
         });
         break;
       }
@@ -445,6 +482,35 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
       case 'CLOSE_VERIFICATION':
       case 'OPEN_VERIFICATION':
         break;
+
+      case 'FLAG_DISCREPANCY': {
+        if (!isActionAllowedInPhase('FLAG_DISCREPANCY', state.currentPhase)) {
+          throw new Error('FLAG_DISCREPANCY not allowed in current phase');
+        }
+        const packet = newState.verificationPackets?.[action.emailId];
+        if (!packet) {
+          throw new Error('No verification packet found for this email');
+        }
+
+        const artifact = packet.artifacts.find((a) => a.artifactId === action.artifactId);
+        if (!artifact) {
+          throw new Error('Artifact not found in packet');
+        }
+
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'game.verification.discrepancy_flagged',
+          timestamp: newState.updatedAt,
+          payload: {
+            emailId: action.emailId,
+            packetId: packet.packetId,
+            artifactId: action.artifactId,
+            documentType: artifact.documentType,
+            reason: action.reason,
+          },
+        });
+        break;
+      }
 
       default:
         throw new Error(`Unknown action type: ${(action as GameActionPayload).type}`);

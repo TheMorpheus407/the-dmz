@@ -27,6 +27,7 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
     facilityTier: 'outpost',
     inbox: [],
     emailInstances: {},
+    verificationPackets: {},
     incidents: [],
     narrativeState: {
       currentChapter: 1,

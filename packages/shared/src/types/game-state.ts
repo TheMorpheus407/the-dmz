@@ -5,7 +5,7 @@ import type {
   GameThreatTier,
   FacilityTierLevel,
 } from './game-engine.js';
-import type { EmailInstance } from '../game/email-instance.js';
+import type { EmailInstance, VerificationPacket } from '../game/email-instance.js';
 
 export interface GameState {
   sessionId: string;
@@ -24,6 +24,7 @@ export interface GameState {
   facilityTier: FacilityTierLevel;
   inbox: EmailState[];
   emailInstances: Record<string, EmailInstance>;
+  verificationPackets: Record<string, VerificationPacket>;
   incidents: IncidentState[];
   narrativeState: NarrativeState;
   factionRelations: Record<string, number>;
@@ -98,6 +99,7 @@ export type GameActionPayload =
   | RequestVerificationPayload
   | OpenVerificationPayload
   | CloseVerificationPayload
+  | FlagDiscrepancyPayload
   | SubmitDecisionPayload
   | ApplyConsequencesPayload
   | ProcessThreatsPayload
@@ -244,6 +246,13 @@ export interface OpenVerificationPayload {
 export interface CloseVerificationPayload {
   type: 'CLOSE_VERIFICATION';
   emailId: string;
+}
+
+export interface FlagDiscrepancyPayload {
+  type: 'FLAG_DISCREPANCY';
+  emailId: string;
+  artifactId: string;
+  reason: string;
 }
 
 export interface SubmitDecisionPayload {
