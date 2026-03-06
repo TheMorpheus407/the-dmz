@@ -26,6 +26,7 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
     threatTier: 'low',
     facilityTier: 'outpost',
     inbox: [],
+    emailInstances: {},
     incidents: [],
     narrativeState: {
       currentChapter: 1,
@@ -177,6 +178,192 @@ describe('reduce - SUBMIT_DECISION', () => {
 
     expect(result.success).toBe(false);
   });
+
+  it('should apply trust and funds consequences when email instance exists', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_TRIAGE,
+      trustScore: 100,
+      funds: 1000,
+      inbox: [
+        {
+          emailId: 'email-1',
+          status: 'pending',
+          indicators: [],
+          verificationRequested: false,
+          timeSpentMs: 0,
+        },
+      ],
+      emailInstances: {
+        'email-1': {
+          emailId: 'email-1',
+          sessionId: 'test',
+          dayNumber: 1,
+          difficulty: 3,
+          intent: 'malicious',
+          technique: 'phishing',
+          threatTier: 'low',
+          faction: 'criminals',
+          sender: {
+            displayName: 'Test',
+            emailAddress: 'test@test.com',
+            domain: 'test.com',
+            jobRole: 'Test',
+            organization: 'Test',
+            relationshipHistory: 5,
+          },
+          headers: {
+            messageId: 'test',
+            returnPath: 'test',
+            received: [],
+            spfResult: 'pass',
+            dkimResult: 'pass',
+            dmarcResult: 'pass',
+            originalDate: new Date().toISOString(),
+            subject: 'Test',
+          },
+          body: { preview: 'test', fullBody: 'test', embeddedLinks: [] },
+          attachments: [],
+          accessRequest: {
+            applicantName: 'Test',
+            applicantRole: 'Test',
+            organization: 'Test',
+            requestedAssets: [],
+            requestedServices: [],
+            justification: 'test',
+            urgency: 'medium',
+            value: 100,
+          },
+          indicators: [],
+          groundTruth: {
+            isMalicious: true,
+            correctDecision: 'deny',
+            riskScore: 80,
+            explanation: 'test',
+            consequences: {
+              approved: {
+                trustImpact: -20,
+                fundsImpact: -500,
+                factionImpact: -5,
+                threatImpact: 10,
+              },
+              denied: { trustImpact: 5, fundsImpact: 0, factionImpact: 0, threatImpact: -5 },
+              flagged: { trustImpact: 2, fundsImpact: 0, factionImpact: 0, threatImpact: 0 },
+              deferred: { trustImpact: -3, fundsImpact: -50, factionImpact: 0, threatImpact: 2 },
+            },
+          },
+          createdAt: new Date().toISOString(),
+        },
+      },
+    });
+
+    const action = {
+      type: 'SUBMIT_DECISION' as const,
+      emailId: 'email-1',
+      decision: 'approve' as const,
+      timeSpentMs: 30000,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.trustScore).toBeLessThan(100);
+    expect(result.newState.funds).toBeLessThan(1000);
+    const decisionEvent = result.events.find(
+      (e) => e.eventType === 'game.email.decision_evaluated',
+    );
+    expect(decisionEvent).toBeDefined();
+    expect(decisionEvent?.payload).toHaveProperty('isCorrect', false);
+  });
+
+  it('should increment trust for correct decision', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_TRIAGE,
+      trustScore: 100,
+      funds: 1000,
+      inbox: [
+        {
+          emailId: 'email-1',
+          status: 'pending',
+          indicators: [],
+          verificationRequested: false,
+          timeSpentMs: 0,
+        },
+      ],
+      emailInstances: {
+        'email-1': {
+          emailId: 'email-1',
+          sessionId: 'test',
+          dayNumber: 1,
+          difficulty: 3,
+          intent: 'malicious',
+          technique: 'phishing',
+          threatTier: 'low',
+          faction: 'criminals',
+          sender: {
+            displayName: 'Test',
+            emailAddress: 'test@test.com',
+            domain: 'test.com',
+            jobRole: 'Test',
+            organization: 'Test',
+            relationshipHistory: 5,
+          },
+          headers: {
+            messageId: 'test',
+            returnPath: 'test',
+            received: [],
+            spfResult: 'pass',
+            dkimResult: 'pass',
+            dmarcResult: 'pass',
+            originalDate: new Date().toISOString(),
+            subject: 'Test',
+          },
+          body: { preview: 'test', fullBody: 'test', embeddedLinks: [] },
+          attachments: [],
+          accessRequest: {
+            applicantName: 'Test',
+            applicantRole: 'Test',
+            organization: 'Test',
+            requestedAssets: [],
+            requestedServices: [],
+            justification: 'test',
+            urgency: 'medium',
+            value: 100,
+          },
+          indicators: [],
+          groundTruth: {
+            isMalicious: true,
+            correctDecision: 'deny',
+            riskScore: 80,
+            explanation: 'test',
+            consequences: {
+              approved: {
+                trustImpact: -20,
+                fundsImpact: -500,
+                factionImpact: -5,
+                threatImpact: 10,
+              },
+              denied: { trustImpact: 5, fundsImpact: 0, factionImpact: 0, threatImpact: -5 },
+              flagged: { trustImpact: 2, fundsImpact: 0, factionImpact: 0, threatImpact: 0 },
+              deferred: { trustImpact: -3, fundsImpact: -50, factionImpact: 0, threatImpact: 2 },
+            },
+          },
+          createdAt: new Date().toISOString(),
+        },
+      },
+    });
+
+    const action = {
+      type: 'SUBMIT_DECISION' as const,
+      emailId: 'email-1',
+      decision: 'deny' as const,
+      timeSpentMs: 30000,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.trustScore).toBeGreaterThan(100);
+  });
 });
 
 describe('reduce - MARK_INDICATOR', () => {
@@ -255,7 +442,7 @@ describe('reduce - ADVANCE_DAY', () => {
     expect(result.events[1]?.eventType).toBe('game.day.started');
   });
 
-  it('should clear inbox when advancing day', () => {
+  it('should clear processed emails when advancing day', () => {
     const state = createTestState({
       currentPhase: DAY_PHASES.PHASE_DAY_END,
       inbox: [
@@ -275,6 +462,98 @@ describe('reduce - ADVANCE_DAY', () => {
 
     expect(result.success).toBe(true);
     expect(result.newState.inbox).toHaveLength(0);
+  });
+
+  it('should carry deferred emails to next day', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_DAY_END,
+      inbox: [
+        {
+          emailId: 'email-1',
+          status: 'deferred',
+          indicators: ['suspicious_link'],
+          verificationRequested: false,
+          timeSpentMs: 5000,
+        },
+      ],
+    });
+
+    const action = { type: 'ADVANCE_DAY' as const };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.inbox).toHaveLength(1);
+    expect(result.newState.inbox[0]?.emailId).toBe('email-1');
+    expect(result.newState.inbox[0]?.status).toBe('pending');
+    expect(result.newState.inbox[0]?.timeSpentMs).toBe(0);
+  });
+
+  it('should only keep deferred emails, remove processed ones', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_DAY_END,
+      inbox: [
+        {
+          emailId: 'email-1',
+          status: 'approved',
+          indicators: [],
+          verificationRequested: false,
+          timeSpentMs: 1000,
+        },
+        {
+          emailId: 'email-2',
+          status: 'denied',
+          indicators: [],
+          verificationRequested: false,
+          timeSpentMs: 2000,
+        },
+        {
+          emailId: 'email-3',
+          status: 'deferred',
+          indicators: [],
+          verificationRequested: false,
+          timeSpentMs: 3000,
+        },
+      ],
+    });
+
+    const action = { type: 'ADVANCE_DAY' as const };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.inbox).toHaveLength(1);
+    expect(result.newState.inbox[0]?.emailId).toBe('email-3');
+  });
+
+  it('should emit events with deferred email count', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_DAY_END,
+      inbox: [
+        {
+          emailId: 'email-1',
+          status: 'deferred',
+          indicators: [],
+          verificationRequested: false,
+          timeSpentMs: 1000,
+        },
+      ],
+    });
+
+    const action = { type: 'ADVANCE_DAY' as const };
+
+    const result = reduce(state, action);
+
+    expect(result.events).toHaveLength(2);
+    expect(result.events[0]?.payload).toEqual({
+      day: 1,
+      emailsProcessed: 0,
+      emailsDeferred: 1,
+    });
+    expect(result.events[1]?.payload).toEqual({
+      day: 2,
+      deferredEmailsCarried: 1,
+    });
   });
 });
 

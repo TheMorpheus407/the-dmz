@@ -6,6 +6,8 @@ import {
   type EmailState,
 } from '@the-dmz/shared';
 
+import { resolveDecision } from '../email-instance/decision-resolution.service.js';
+
 import {
   canTransitionMacroState,
   canTransitionPhase,
@@ -50,6 +52,7 @@ const createInitialState = (
   threatTier: 'low',
   facilityTier: 'outpost',
   inbox: [],
+  emailInstances: {},
   incidents: [],
   narrativeState: {
     currentChapter: 1,
@@ -109,6 +112,40 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
         });
         break;
 
+      case 'LOAD_INBOX': {
+        if (state.currentPhase !== DAY_PHASES.PHASE_EMAIL_INTAKE) {
+          throw new Error('LOAD_INBOX only allowed in EMAIL_INTAKE phase');
+        }
+        const emailInstances: Record<string, unknown> = {};
+        const inboxEntries: EmailState[] = [];
+
+        for (const email of action.emails) {
+          emailInstances[email.emailId] = email;
+          inboxEntries.push({
+            emailId: email.emailId,
+            status: 'pending',
+            indicators: [],
+            verificationRequested: false,
+            timeSpentMs: 0,
+          });
+        }
+
+        newState.emailInstances = emailInstances as GameState['emailInstances'];
+        newState.inbox = inboxEntries;
+        newState.currentPhase = DAY_PHASES.PHASE_TRIAGE;
+
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'game.inbox.loaded',
+          timestamp: newState.updatedAt,
+          payload: {
+            day: newState.currentDay,
+            emailCount: action.emails.length,
+          },
+        });
+        break;
+      }
+
       case 'OPEN_EMAIL': {
         if (!isActionAllowedInPhase('OPEN_EMAIL', state.currentPhase)) {
           throw new Error('OPEN_EMAIL not allowed in current phase');
@@ -116,6 +153,10 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
         const email = newState.inbox.find((e) => e.emailId === action.emailId);
         if (!email) {
           throw new Error('Email not found');
+        }
+        if (email.status === 'pending') {
+          email.status = 'opened';
+          email.openedAt = newState.updatedAt;
         }
         events.push({
           eventId: crypto.randomUUID(),
@@ -179,6 +220,75 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
           };
           emailToDecide.status = statusMap[action.decision] ?? 'pending';
           emailToDecide.timeSpentMs = action.timeSpentMs;
+
+          const emailInstance = newState.emailInstances[action.emailId];
+          if (emailInstance) {
+            try {
+              const evaluation = resolveDecision({
+                email: emailInstance,
+                decision: action.decision,
+                markedIndicators: emailToDecide.indicators,
+                timeSpentMs: action.timeSpentMs,
+                currentPhase: state.currentPhase,
+              });
+
+              newState.trustScore = Math.max(
+                0,
+                Math.min(200, newState.trustScore + evaluation.trustImpact),
+              );
+              newState.funds = Math.max(0, newState.funds + evaluation.fundsImpact);
+
+              if (emailInstance.faction && evaluation.factionImpact !== 0) {
+                const currentFactionRelation =
+                  newState.factionRelations[emailInstance.faction] ?? 50;
+                newState.factionRelations[emailInstance.faction] = Math.max(
+                  0,
+                  Math.min(100, currentFactionRelation + evaluation.factionImpact),
+                );
+              }
+
+              events.push({
+                eventId: crypto.randomUUID(),
+                eventType: 'game.email.decision_evaluated',
+                timestamp: newState.updatedAt,
+                payload: {
+                  emailId: action.emailId,
+                  decision: action.decision,
+                  isCorrect: evaluation.isCorrect,
+                  trustImpact: evaluation.trustImpact,
+                  fundsImpact: evaluation.fundsImpact,
+                  factionImpact: evaluation.factionImpact,
+                  threatImpact: evaluation.threatImpact,
+                  explanation: evaluation.explanation,
+                  indicatorsFound: evaluation.indicatorsFound,
+                  indicatorsMissed: evaluation.indicatorsMissed,
+                },
+              });
+            } catch {
+              events.push({
+                eventId: crypto.randomUUID(),
+                eventType: 'game.email.decision_submitted',
+                timestamp: newState.updatedAt,
+                payload: {
+                  emailId: action.emailId,
+                  decision: action.decision,
+                  timeSpentMs: action.timeSpentMs,
+                  evaluationError: true,
+                },
+              });
+            }
+          } else {
+            events.push({
+              eventId: crypto.randomUUID(),
+              eventType: 'game.email.decision_submitted',
+              timestamp: newState.updatedAt,
+              payload: {
+                emailId: action.emailId,
+                decision: action.decision,
+                timeSpentMs: action.timeSpentMs,
+              },
+            });
+          }
         }
         newState.analyticsState.totalDecisions++;
         if (action.decision === 'approve') {
@@ -188,16 +298,6 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
         } else if (action.decision === 'flag') {
           newState.analyticsState.flags++;
         }
-        events.push({
-          eventId: crypto.randomUUID(),
-          eventType: 'game.email.decision_submitted',
-          timestamp: newState.updatedAt,
-          payload: {
-            emailId: action.emailId,
-            decision: action.decision,
-            timeSpentMs: action.timeSpentMs,
-          },
-        });
         break;
       }
 
@@ -301,26 +401,45 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
         });
         break;
 
-      case 'ADVANCE_DAY':
+      case 'ADVANCE_DAY': {
         if (!isActionAllowedInPhase('ADVANCE_DAY', state.currentPhase)) {
           throw new Error('ADVANCE_DAY not allowed in current phase');
         }
         newState.currentDay++;
         newState.currentPhase = DAY_PHASES.PHASE_DAY_START;
-        newState.inbox = [];
+
+        const deferredEmails = newState.inbox.filter((e) => e.status === 'deferred');
+        const processedEmails = newState.inbox.filter((e) => e.status !== 'deferred');
+
+        newState.inbox = deferredEmails.map((email) => ({
+          ...email,
+          status: 'pending' as const,
+          timeSpentMs: 0,
+        }));
+
+        newState.analyticsState.totalEmailsProcessed += processedEmails.length;
+
         events.push({
           eventId: crypto.randomUUID(),
           eventType: 'game.day.ended',
           timestamp: newState.updatedAt,
-          payload: { day: newState.currentDay - 1 },
+          payload: {
+            day: newState.currentDay - 1,
+            emailsProcessed: processedEmails.length,
+            emailsDeferred: deferredEmails.length,
+          },
         });
         events.push({
           eventId: crypto.randomUUID(),
           eventType: 'game.day.started',
           timestamp: newState.updatedAt,
-          payload: { day: newState.currentDay },
+          payload: {
+            day: newState.currentDay,
+            deferredEmailsCarried: deferredEmails.length,
+          },
         });
         break;
+      }
 
       case 'APPLY_CONSEQUENCES':
       case 'CLOSE_VERIFICATION':

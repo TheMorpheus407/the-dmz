@@ -5,6 +5,7 @@ import type {
   GameThreatTier,
   FacilityTierLevel,
 } from './game-engine.js';
+import type { EmailInstance } from '../game/email-instance.js';
 
 export interface GameState {
   sessionId: string;
@@ -22,6 +23,7 @@ export interface GameState {
   threatTier: GameThreatTier;
   facilityTier: FacilityTierLevel;
   inbox: EmailState[];
+  emailInstances: Record<string, EmailInstance>;
   incidents: IncidentState[];
   narrativeState: NarrativeState;
   factionRelations: Record<string, number>;
@@ -35,10 +37,18 @@ export interface GameState {
 
 export interface EmailState {
   emailId: string;
-  status: 'pending' | 'flagged' | 'request_verification' | 'approved' | 'denied' | 'deferred';
+  status:
+    | 'pending'
+    | 'opened'
+    | 'flagged'
+    | 'request_verification'
+    | 'approved'
+    | 'denied'
+    | 'deferred';
   indicators: string[];
   verificationRequested: boolean;
   timeSpentMs: number;
+  openedAt?: string;
 }
 
 export interface IncidentState {
@@ -82,6 +92,7 @@ export interface GameAction {
 export type GameActionPayload =
   | AckDayStartPayload
   | AdvanceDayPayload
+  | LoadInboxPayload
   | OpenEmailPayload
   | MarkIndicatorPayload
   | RequestVerificationPayload
@@ -96,6 +107,106 @@ export type GameActionPayload =
   | PauseSessionPayload
   | ResumeSessionPayload
   | AbandonSessionPayload;
+
+export interface LoadInboxPayload {
+  type: 'LOAD_INBOX';
+  emails: Array<{
+    emailId: string;
+    sessionId: string;
+    dayNumber: number;
+    difficulty: number;
+    intent: string;
+    technique: string;
+    threatTier: string;
+    faction: string;
+    sender: {
+      displayName: string;
+      emailAddress: string;
+      domain: string;
+      jobRole: string;
+      organization: string;
+      relationshipHistory: number;
+    };
+    headers: {
+      messageId: string;
+      returnPath: string;
+      received: string[];
+      spfResult: string;
+      dkimResult: string;
+      dmarcResult: string;
+      originalDate: string;
+      subject: string;
+    };
+    body: {
+      preview: string;
+      fullBody: string;
+      embeddedLinks: Array<{
+        displayText: string;
+        actualUrl: string;
+        isSuspicious: boolean;
+      }>;
+    };
+    attachments: Array<{
+      attachmentId: string;
+      fileName: string;
+      fileType: string;
+      fileSize: number;
+      hash: string;
+      isSuspicious: boolean;
+    }>;
+    accessRequest: {
+      applicantName: string;
+      applicantRole: string;
+      organization: string;
+      requestedAssets: string[];
+      requestedServices: string[];
+      justification: string;
+      urgency: string;
+      value: number;
+    };
+    indicators: Array<{
+      indicatorId: string;
+      type: string;
+      location: string;
+      description: string;
+      severity: number;
+      isVisible: boolean;
+    }>;
+    groundTruth: {
+      isMalicious: boolean;
+      correctDecision: string;
+      riskScore: number;
+      explanation: string;
+      consequences: {
+        approved: {
+          trustImpact: number;
+          fundsImpact: number;
+          factionImpact: number;
+          threatImpact: number;
+        };
+        denied: {
+          trustImpact: number;
+          fundsImpact: number;
+          factionImpact: number;
+          threatImpact: number;
+        };
+        flagged: {
+          trustImpact: number;
+          fundsImpact: number;
+          factionImpact: number;
+          threatImpact: number;
+        };
+        deferred: {
+          trustImpact: number;
+          fundsImpact: number;
+          factionImpact: number;
+          threatImpact: number;
+        };
+      };
+    };
+    createdAt: string;
+  }>;
+}
 
 export interface AckDayStartPayload {
   type: 'ACK_DAY_START';
