@@ -39,6 +39,7 @@ describe('ThreatEngineService', () => {
       maintenanceDebt: 0,
       facilityHealth: 100,
       operatingCostPerDay: 50,
+      securityToolOpExPerDay: 0,
       attackSurfaceScore: 10,
       lastTickDay: 1,
     };
@@ -281,6 +282,7 @@ describe('ThreatEngineService', () => {
           maintenanceDebt: 0,
           facilityHealth: 100,
           operatingCostPerDay: 200,
+          securityToolOpExPerDay: 0,
           lastTickDay: 10,
           clients: Array.from({ length: 20 }, (_, i) => ({
             clientId: String(i + 1),

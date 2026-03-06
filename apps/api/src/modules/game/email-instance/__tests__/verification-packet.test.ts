@@ -43,6 +43,7 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
       maintenanceDebt: 0,
       facilityHealth: 100,
       operatingCostPerDay: 50,
+      securityToolOpExPerDay: 0,
       attackSurfaceScore: 10,
       lastTickDay: 1,
     },

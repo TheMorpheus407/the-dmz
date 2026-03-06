@@ -21,6 +21,14 @@ export interface ThreatEngineConfig {
   minHoldDays: number;
 }
 
+export interface AggregatedSecurityDeltas {
+  breachProbabilityModifier: number;
+  detectionProbabilityModifier: number;
+  mitigationBonus: number;
+  threatVectorModifiers: Record<string, number>;
+  securityToolCoverage: number;
+}
+
 const DEFAULT_CONFIG: ThreatEngineConfig = {
   hysteresisBuffer: 0.05,
   minHoldDays: 2,
@@ -188,6 +196,7 @@ export class ThreatEngineService {
     state: GameState,
     sessionId: string,
     dayNumber: number,
+    securityDeltas?: AggregatedSecurityDeltas,
   ): ThreatGenerationResult {
     const tier = this.getThreatTier(sessionId);
     const tierConfig = THREAT_TIER_CONFIG[tier];
@@ -206,6 +215,7 @@ export class ThreatEngineService {
       attacks.length > 0 && attacks[attacks.length - 1]
         ? attacks[attacks.length - 1]!.vector
         : null,
+      securityDeltas,
     );
 
     for (let i = 0; i < numAttacks; i++) {
@@ -255,10 +265,15 @@ export class ThreatEngineService {
     tier: ThreatTierLevel,
     playerProfile: PlayerBehaviorProfile | undefined,
     lastVector: AttackVector | null,
+    securityDeltas?: AggregatedSecurityDeltas,
   ): Record<AttackVector, number> {
     const weights: Record<AttackVector, number> = {} as Record<AttackVector, number>;
 
     const tierAvailability = THREAT_TIER_CONFIG[tier].availableVectors;
+
+    const effectiveSecurityToolCoverage = securityDeltas
+      ? securityDeltas.securityToolCoverage
+      : (playerProfile?.securityToolCoverage ?? 0);
 
     for (const attack of ATTACK_CATALOG) {
       if (!tierAvailability.includes(attack.vector)) {
@@ -268,29 +283,62 @@ export class ThreatEngineService {
       let weight = attack.baseWeight;
 
       if (playerProfile) {
-        const detectionRate = playerProfile.detectionRateByCategory[attack.vector];
+        const baseDetectionRate = playerProfile.detectionRateByCategory[attack.vector];
+
+        const vectorModifier = securityDeltas?.threatVectorModifiers?.[attack.vector] ?? 0;
+        const detectionModifier = securityDeltas?.detectionProbabilityModifier ?? 0;
+        const detectionRate = Math.max(
+          0,
+          Math.min(1, baseDetectionRate + detectionModifier + vectorModifier),
+        );
+
+        const breachModifier = securityDeltas?.breachProbabilityModifier ?? 0;
 
         switch (attack.vector) {
           case 'email_phishing':
             weight *= 1.0 - detectionRate * 0.7;
+            weight *= 1.0 + breachModifier;
             break;
           case 'spear_phishing':
             weight *= 1.0 - detectionRate * 0.6;
+            weight *= 1.0 + breachModifier;
             break;
           case 'bec':
             weight *= 1.0 - detectionRate * 0.5;
+            weight *= 1.0 + breachModifier;
             break;
           case 'supply_chain':
             weight *= 1.0 + detectionRate * 0.5;
+            weight *= 1.0 + breachModifier;
             break;
           case 'insider_threat':
-            weight *= 1.0 + playerProfile.securityToolCoverage * 0.4;
+            weight *= 1.0 + effectiveSecurityToolCoverage * 0.4;
+            weight *= 1.0 + breachModifier;
             break;
           case 'apt_campaign':
             weight *= 1.0 + calculatePlayerCompetence(playerProfile) * 0.6;
+            weight *= 1.0 + breachModifier;
             break;
           case 'zero_day':
             weight *= 1.0 + calculatePlayerCompetence(playerProfile) * 0.8;
+            weight *= 1.0 + breachModifier;
+            break;
+          case 'brute_force':
+            weight *= 1.0 + breachModifier;
+            break;
+          case 'ddos':
+            weight *= 1.0 + breachModifier;
+            break;
+          case 'coordinated_attack':
+            weight *= 1.0 + breachModifier;
+            break;
+          case 'whaling':
+            weight *= 1.0 - detectionRate * 0.65;
+            weight *= 1.0 + breachModifier;
+            break;
+          case 'credential_harvesting':
+            weight *= 1.0 - detectionRate * 0.55;
+            weight *= 1.0 + breachModifier;
             break;
         }
       }

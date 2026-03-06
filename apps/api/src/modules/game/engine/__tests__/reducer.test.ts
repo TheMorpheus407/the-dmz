@@ -44,6 +44,7 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
       maintenanceDebt: 0,
       facilityHealth: 100,
       operatingCostPerDay: 50,
+      securityToolOpExPerDay: 0,
       attackSurfaceScore: 10,
       lastTickDay: 1,
     },
@@ -857,6 +858,7 @@ describe('reduce - ONBOARD_CLIENT', () => {
         maintenanceDebt: 0,
         facilityHealth: 100,
         operatingCostPerDay: 50,
+        securityToolOpExPerDay: 0,
         attackSurfaceScore: 10,
         lastTickDay: 1,
       },
@@ -903,6 +905,7 @@ describe('reduce - ONBOARD_CLIENT', () => {
         maintenanceDebt: 0,
         facilityHealth: 100,
         operatingCostPerDay: 50,
+        securityToolOpExPerDay: 0,
         attackSurfaceScore: 10,
         lastTickDay: 1,
       },
@@ -966,6 +969,7 @@ describe('reduce - EVICT_CLIENT', () => {
         maintenanceDebt: 0,
         facilityHealth: 100,
         operatingCostPerDay: 50,
+        securityToolOpExPerDay: 0,
         attackSurfaceScore: 10,
         lastTickDay: 1,
       },
@@ -1036,6 +1040,7 @@ describe('reduce - EVICT_CLIENT', () => {
         maintenanceDebt: 0,
         facilityHealth: 100,
         operatingCostPerDay: 50,
+        securityToolOpExPerDay: 0,
         attackSurfaceScore: 1,
         lastTickDay: 1,
       },
@@ -1092,6 +1097,7 @@ describe('reduce - PROCESS_FACILITY_TICK', () => {
         maintenanceDebt: 0,
         facilityHealth: 100,
         operatingCostPerDay: 50,
+        securityToolOpExPerDay: 0,
         attackSurfaceScore: 10,
         lastTickDay: 1,
       },
@@ -1133,6 +1139,7 @@ describe('reduce - PROCESS_FACILITY_TICK', () => {
         maintenanceDebt: 0,
         facilityHealth: 100,
         operatingCostPerDay: 50,
+        securityToolOpExPerDay: 0,
         attackSurfaceScore: 10,
         lastTickDay: 1,
       },
@@ -1191,7 +1198,7 @@ describe('reduce - UPGRADE_FACILITY_TIER', () => {
 });
 
 describe('reduce - PURCHASE_FACILITY_UPGRADE', () => {
-  it('should purchase facility upgrade and increase capacity', () => {
+  it('should purchase capacity upgrade with installation timeline', () => {
     const state = createTestState({
       currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
       funds: 1000,
@@ -1199,17 +1206,18 @@ describe('reduce - PURCHASE_FACILITY_UPGRADE', () => {
     const action = {
       type: 'PURCHASE_FACILITY_UPGRADE' as const,
       upgradeType: 'rack' as const,
+      category: 'capacity' as const,
     };
 
     const result = reduce(state, action);
 
     expect(result.success).toBe(true);
     expect(result.newState.funds).toBe(500);
-    expect(result.newState.facility.capacities.rackCapacityU).toBe(63);
     expect(result.newState.facility.upgrades).toHaveLength(1);
-    expect(result.events).toHaveLength(2);
+    expect(result.newState.facility.upgrades[0]?.status).toBe('installing');
+    expect(result.newState.facility.upgrades[0]?.completesDay).toBe(3);
+    expect(result.events).toHaveLength(1);
     expect(result.events[0]?.eventType).toBe('facility.upgrade.purchased');
-    expect(result.events[1]?.eventType).toBe('facility.upgrade.completed');
   });
 
   it('should fail if insufficient funds', () => {
@@ -1220,11 +1228,287 @@ describe('reduce - PURCHASE_FACILITY_UPGRADE', () => {
     const action = {
       type: 'PURCHASE_FACILITY_UPGRADE' as const,
       upgradeType: 'rack' as const,
+      category: 'capacity' as const,
     };
 
     const result = reduce(state, action);
 
     expect(result.success).toBe(false);
     expect(result.error).toBeDefined();
+  });
+
+  it('should fail if tier requirement not met', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 5000,
+      facilityTier: 'outpost',
+      facility: {
+        ...createTestState().facility,
+        tier: 'outpost',
+      },
+    });
+    const action = {
+      type: 'PURCHASE_FACILITY_UPGRADE' as const,
+      upgradeType: 'power_efficiency' as const,
+      category: 'efficiency' as const,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(false);
+    expect(result.error?.message).toContain('Requires station tier');
+  });
+
+  it('should fail if prerequisite not met', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 5000,
+      facilityTier: 'station',
+      facility: {
+        ...createTestState().facility,
+        tier: 'station',
+      },
+    });
+    const action = {
+      type: 'PURCHASE_FACILITY_UPGRADE' as const,
+      upgradeType: 'ips' as const,
+      category: 'security' as const,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(false);
+    expect(result.error?.message).toContain('Prerequisite upgrade not completed');
+  });
+
+  it('should fail if upgrade already installed', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 1000,
+      facility: {
+        ...createTestState().facility,
+        upgrades: [
+          {
+            upgradeId: 'existing-1',
+            upgradeType: 'rack' as const,
+            category: 'capacity' as const,
+            tierLevel: 1,
+            status: 'completed' as const,
+            purchasedDay: 1,
+            completesDay: 2,
+            isCompleted: true,
+            completionDay: 2,
+            resourceDelta: { rackCapacity: 21 },
+            maintenanceDelta: 0.02,
+            opExPerDay: 5,
+            threatSurfaceDelta: 0.02,
+          },
+        ],
+      },
+    });
+    const action = {
+      type: 'PURCHASE_FACILITY_UPGRADE' as const,
+      upgradeType: 'rack' as const,
+      category: 'capacity' as const,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(false);
+    expect(result.error?.message).toContain('already installed');
+  });
+
+  it('should add security tool OpEx when purchasing security upgrade', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 5000,
+      facilityTier: 'station',
+    });
+    const action = {
+      type: 'PURCHASE_FACILITY_UPGRADE' as const,
+      upgradeType: 'threat_intel_feed' as const,
+      category: 'security' as const,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.facility.upgrades[0]?.status).toBe('installing');
+    expect(result.newState.facility.securityToolOpExPerDay).toBe(0);
+  });
+
+  it('should add security tool OpEx immediately for instant upgrades', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 5000,
+      facilityTier: 'station',
+      facility: {
+        ...createTestState().facility,
+        upgrades: [
+          {
+            upgradeId: 'monitoring-1',
+            upgradeType: 'monitoring' as const,
+            category: 'operations' as const,
+            tierLevel: 1,
+            status: 'installing' as const,
+            purchasedDay: 1,
+            completesDay: 2,
+            isCompleted: false,
+            resourceDelta: { rackUsage: 1 },
+            maintenanceDelta: -0.02,
+            opExPerDay: 5,
+            threatSurfaceDelta: 0.01,
+          },
+        ],
+      },
+    });
+    const action = {
+      type: 'PROCESS_FACILITY_TICK' as const,
+      dayNumber: 2,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    const monitoringUpgrade = result.newState.facility.upgrades.find(
+      (u) => u.upgradeType === 'monitoring',
+    );
+    expect(monitoringUpgrade?.status).toBe('completed');
+    expect(result.newState.facility.securityToolOpExPerDay).toBe(5);
+  });
+
+  it('should update attack surface when purchasing upgrade', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 1000,
+    });
+    const action = {
+      type: 'PURCHASE_FACILITY_UPGRADE' as const,
+      upgradeType: 'rack' as const,
+      category: 'capacity' as const,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.facility.attackSurfaceScore).toBeGreaterThan(10);
+  });
+});
+
+describe('reduce - upgrade installation completion', () => {
+  it('should complete upgrade installation on day tick', () => {
+    const state = createTestState({
+      currentDay: 3,
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      facility: {
+        ...createTestState().facility,
+        upgrades: [
+          {
+            upgradeId: 'installing-1',
+            upgradeType: 'rack' as const,
+            category: 'capacity' as const,
+            tierLevel: 1,
+            status: 'installing' as const,
+            purchasedDay: 1,
+            completesDay: 3,
+            isCompleted: false,
+            resourceDelta: { rackCapacity: 21 },
+            maintenanceDelta: 0.02,
+            opExPerDay: 5,
+            threatSurfaceDelta: 0.02,
+          },
+        ],
+      },
+    });
+    const action = {
+      type: 'PROCESS_FACILITY_TICK' as const,
+      dayNumber: 3,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    const rackUpgrade = result.newState.facility.upgrades.find((u) => u.upgradeType === 'rack');
+    expect(rackUpgrade?.status).toBe('completed');
+    expect(rackUpgrade?.isCompleted).toBe(true);
+    expect(result.newState.facility.capacities.rackCapacityU).toBe(63);
+    expect(result.events.some((e) => e.eventType === 'facility.upgrade.completed')).toBe(true);
+  });
+
+  it('should apply capacity effects when upgrade completes', () => {
+    const state = createTestState({
+      currentDay: 3,
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      facility: {
+        ...createTestState().facility,
+        upgrades: [
+          {
+            upgradeId: 'installing-power',
+            upgradeType: 'power' as const,
+            category: 'capacity' as const,
+            tierLevel: 1,
+            status: 'installing' as const,
+            purchasedDay: 1,
+            completesDay: 3,
+            isCompleted: false,
+            resourceDelta: { powerCapacity: 5 },
+            maintenanceDelta: 0.02,
+            opExPerDay: 10,
+            threatSurfaceDelta: 0.01,
+          },
+        ],
+      },
+    });
+    const action = {
+      type: 'PROCESS_FACILITY_TICK' as const,
+      dayNumber: 3,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.facility.capacities.powerCapacityKw).toBe(15);
+  });
+});
+
+describe('reduce - OpEx deduction', () => {
+  it('should complete installation and apply OpEx during facility tick', () => {
+    const state = createTestState({
+      currentDay: 2,
+      currentPhase: DAY_PHASES.PHASE_RESOURCE_MANAGEMENT,
+      funds: 1000,
+      facility: {
+        ...createTestState().facility,
+        upgrades: [
+          {
+            upgradeId: 'monitoring-1',
+            upgradeType: 'monitoring' as const,
+            category: 'operations' as const,
+            tierLevel: 1,
+            status: 'installing' as const,
+            purchasedDay: 1,
+            completesDay: 2,
+            isCompleted: false,
+            resourceDelta: { rackUsage: 1 },
+            maintenanceDelta: -0.02,
+            opExPerDay: 5,
+            threatSurfaceDelta: 0.01,
+          },
+        ],
+      },
+    });
+    const action = {
+      type: 'PROCESS_FACILITY_TICK' as const,
+      dayNumber: 2,
+    };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    const monitoringUpgrade = result.newState.facility.upgrades.find(
+      (u) => u.upgradeType === 'monitoring',
+    );
+    expect(monitoringUpgrade?.status).toBe('completed');
+    expect(result.newState.facility.securityToolOpExPerDay).toBe(5);
   });
 });

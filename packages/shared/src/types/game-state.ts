@@ -319,6 +319,77 @@ export interface AbandonSessionPayload {
 
 export type ResourceType = 'rack' | 'power' | 'cooling' | 'bandwidth';
 
+export type UpgradeCategory = 'capacity' | 'efficiency' | 'security' | 'operations' | 'maintenance';
+
+export type UpgradeStatus = 'available' | 'purchased' | 'installing' | 'completed' | 'maintained';
+
+export type CapacityUpgradeType = 'rack' | 'power' | 'cooling' | 'bandwidth';
+
+export type SecurityUpgradeType =
+  | 'firewall'
+  | 'ids'
+  | 'ips'
+  | 'siem'
+  | 'edr'
+  | 'waf'
+  | 'threat_intel_feed'
+  | 'soar'
+  | 'honeypots'
+  | 'zero_trust_gateway'
+  | 'ai_anomaly_detection';
+
+export type EfficiencyUpgradeType =
+  | 'power_efficiency'
+  | 'cooling_efficiency'
+  | 'bandwidth_efficiency';
+
+export type OperationsUpgradeType = 'monitoring' | 'maintenance_automation' | 'redundancy';
+
+export type MaintenanceUpgradeType = 'preventive_maintenance' | 'rapid_repair' | 'diagnostics';
+
+export type UpgradeType =
+  | CapacityUpgradeType
+  | SecurityUpgradeType
+  | EfficiencyUpgradeType
+  | OperationsUpgradeType
+  | MaintenanceUpgradeType;
+
+export interface ResourceDelta {
+  rackCapacity?: number;
+  powerCapacity?: number;
+  coolingCapacity?: number;
+  bandwidthCapacity?: number;
+  rackUsage?: number;
+  powerUsage?: number;
+  coolingUsage?: number;
+  bandwidthUsage?: number;
+  efficiencyMultiplier?: number;
+}
+
+export interface SecurityDelta {
+  breachProbabilityModifier?: number;
+  detectionProbabilityModifier?: number;
+  mitigationBonus?: number;
+  threatVectorModifiers?: Record<string, number>;
+}
+
+export interface UpgradeDefinition {
+  id: string;
+  category: UpgradeCategory;
+  name: string;
+  description: string;
+  baseCost: number;
+  installationDays: number;
+  installationOverhead?: number;
+  minTier: string;
+  prerequisites: string[];
+  resourceDelta: ResourceDelta;
+  securityDelta?: SecurityDelta;
+  maintenanceDelta?: number;
+  opExPerDay: number;
+  threatSurfaceDelta: number;
+}
+
 export type ResourceUtilizationLevel = 'normal' | 'advisory' | 'critical' | 'failure';
 
 export interface FacilityResourceCapacities {
@@ -352,10 +423,20 @@ export interface ClientLease {
 
 export interface FacilityUpgrade {
   upgradeId: string;
-  upgradeType: 'rack' | 'power' | 'cooling' | 'bandwidth';
+  upgradeType: UpgradeType;
+  category: UpgradeCategory;
   tierLevel: number;
+  status: UpgradeStatus;
+  purchasedDay: number;
+  completesDay?: number;
   isCompleted: boolean;
   completionDay?: number;
+  resourceDelta: ResourceDelta;
+  securityDelta?: SecurityDelta;
+  maintenanceDelta?: number;
+  opExPerDay: number;
+  threatSurfaceDelta: number;
+  installationOverhead?: number;
 }
 
 export interface FacilityState {
@@ -367,6 +448,7 @@ export interface FacilityState {
   maintenanceDebt: number;
   facilityHealth: number;
   operatingCostPerDay: number;
+  securityToolOpExPerDay: number;
   attackSurfaceScore: number;
   lastTickDay: number;
 }
@@ -403,5 +485,6 @@ export interface ProcessFacilityTickPayload {
 
 export interface PurchaseFacilityUpgradePayload {
   type: 'PURCHASE_FACILITY_UPGRADE';
-  upgradeType: 'rack' | 'power' | 'cooling' | 'bandwidth';
+  upgradeType: UpgradeType;
+  category: UpgradeCategory;
 }
