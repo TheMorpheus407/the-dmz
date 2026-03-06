@@ -8,6 +8,7 @@ import {
 
 import { resolveDecision } from '../email-instance/decision-resolution.service.js';
 import { assembleVerificationPacket } from '../email-instance/verification-packet.service.js';
+import { ThreatEngineService } from '../threat-engine/index.js';
 
 import {
   canTransitionMacroState,
@@ -17,6 +18,8 @@ import {
   type DayPhase,
   type SessionMacroState,
 } from './state-machine.js';
+
+const threatEngine = new ThreatEngineService();
 
 export interface ActionResult {
   success: boolean;
@@ -78,6 +81,7 @@ const createInitialState = (
   emailInstances: {},
   verificationPackets: {},
   incidents: [],
+  threats: [],
   narrativeState: {
     currentChapter: 1,
     activeTriggers: [],
@@ -360,17 +364,52 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
         break;
       }
 
-      case 'PROCESS_THREATS':
+      case 'PROCESS_THREATS': {
         if (!isActionAllowedInPhase('PROCESS_THREATS', state.currentPhase)) {
           throw new Error('PROCESS_THREATS not allowed in current phase');
         }
+
+        const sessionId = state.sessionId;
+        threatEngine.setThreatTier(sessionId, state.threatTier);
+
+        const threatResult = threatEngine.generateAttacks(newState, sessionId, action.dayNumber);
+
+        newState.threatTier = threatResult.newThreatTier;
+
+        if (!newState.threats) {
+          newState.threats = [];
+        }
+        newState.threats = [...newState.threats, ...threatResult.attacks];
+
         events.push({
           eventId: crypto.randomUUID(),
           eventType: 'game.threats.generated',
           timestamp: newState.updatedAt,
-          payload: { day: action.dayNumber },
+          payload: {
+            day: action.dayNumber,
+            attacks: threatResult.attacks,
+            threatTier: threatResult.newThreatTier,
+          },
         });
+
+        if (threatResult.tierChanged) {
+          const tierChangeResult = threatEngine.calculateThreatTier(newState, sessionId);
+          if (tierChangeResult.event) {
+            events.push({
+              eventId: crypto.randomUUID(),
+              eventType: 'game.threat.tier_changed',
+              timestamp: newState.updatedAt,
+              payload: {
+                previousTier: tierChangeResult.event.previousTier,
+                newTier: tierChangeResult.event.newTier,
+                reason: tierChangeResult.event.reason,
+                narrativeMessage: tierChangeResult.event.narrativeMessage,
+              },
+            });
+          }
+        }
         break;
+      }
 
       case 'RESOLVE_INCIDENT': {
         if (!isActionAllowedInPhase('RESOLVE_INCIDENT', state.currentPhase)) {

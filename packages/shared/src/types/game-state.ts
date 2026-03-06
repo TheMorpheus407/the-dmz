@@ -6,6 +6,7 @@ import type {
   FacilityTierLevel,
 } from './game-engine.js';
 import type { EmailInstance, VerificationPacket } from '../game/email-instance.js';
+import type { GeneratedAttack } from '../game/threat-catalog.js';
 
 export interface GameState {
   sessionId: string;
@@ -27,6 +28,7 @@ export interface GameState {
   emailInstances: Record<string, EmailInstance>;
   verificationPackets: Record<string, VerificationPacket>;
   incidents: IncidentState[];
+  threats: GeneratedAttack[];
   narrativeState: NarrativeState;
   factionRelations: Record<string, number>;
   blacklist: string[];

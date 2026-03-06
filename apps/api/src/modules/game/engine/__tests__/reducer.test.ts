@@ -51,6 +51,7 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
     emailInstances: {},
     verificationPackets: {},
     incidents: [],
+    threats: [],
     narrativeState: {
       currentChapter: 1,
       activeTriggers: [],
