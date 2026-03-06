@@ -18,7 +18,7 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
     currentMacroState: SESSION_MACRO_STATES.SESSION_ACTIVE,
     currentPhase: DAY_PHASES.PHASE_TRIAGE,
     funds: 1000,
-    trustScore: 100,
+    trustScore: 50,
     intelFragments: 0,
     playerLevel: 1,
     playerXP: 0,

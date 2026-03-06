@@ -53,7 +53,7 @@ describe('ThreatEngineService', () => {
       currentMacroState: 'SESSION_ACTIVE' as const,
       currentPhase: 'PHASE_THREAT_PROCESSING' as const,
       funds: 1000,
-      trustScore: 100,
+      trustScore: 50,
       intelFragments: 0,
       playerLevel: 1,
       playerXP: 0,

@@ -19,7 +19,7 @@ const createTestState = (overrides?: Partial<GameState>): GameState => {
     currentMacroState: SESSION_MACRO_STATES.SESSION_ACTIVE,
     currentPhase: DAY_PHASES.PHASE_DAY_START,
     funds: 1000,
-    trustScore: 100,
+    trustScore: 50,
     intelFragments: 0,
     playerLevel: 1,
     playerXP: 0,
@@ -96,7 +96,7 @@ describe('createInitialGameState', () => {
     expect(state.currentMacroState).toBe(SESSION_MACRO_STATES.SESSION_INIT);
     expect(state.currentPhase).toBe(DAY_PHASES.PHASE_DAY_START);
     expect(state.funds).toBe(1000);
-    expect(state.trustScore).toBe(100);
+    expect(state.trustScore).toBe(50);
     expect(state.threatTier).toBe('low');
     expect(state.facilityTier).toBe('outpost');
   });
@@ -207,7 +207,7 @@ describe('reduce - SUBMIT_DECISION', () => {
   it('should apply trust and funds consequences when email instance exists', () => {
     const state = createTestState({
       currentPhase: DAY_PHASES.PHASE_TRIAGE,
-      trustScore: 100,
+      trustScore: 50,
       funds: 1000,
       inbox: [
         {
@@ -291,7 +291,7 @@ describe('reduce - SUBMIT_DECISION', () => {
     const result = reduce(state, action);
 
     expect(result.success).toBe(true);
-    expect(result.newState.trustScore).toBeLessThan(100);
+    expect(result.newState.trustScore).toBeLessThan(50);
     expect(result.newState.funds).toBeLessThan(1000);
     const decisionEvent = result.events.find(
       (e) => e.eventType === 'game.email.decision_evaluated',
@@ -303,7 +303,7 @@ describe('reduce - SUBMIT_DECISION', () => {
   it('should increment trust for correct decision', () => {
     const state = createTestState({
       currentPhase: DAY_PHASES.PHASE_TRIAGE,
-      trustScore: 100,
+      trustScore: 50,
       funds: 1000,
       inbox: [
         {
@@ -387,7 +387,7 @@ describe('reduce - SUBMIT_DECISION', () => {
     const result = reduce(state, action);
 
     expect(result.success).toBe(true);
-    expect(result.newState.trustScore).toBeGreaterThan(100);
+    expect(result.newState.trustScore).toBeGreaterThan(50);
   });
 });
 
@@ -1112,8 +1112,8 @@ describe('reduce - PROCESS_FACILITY_TICK', () => {
     expect(result.success).toBe(true);
     expect(result.newState.funds).toBe(1029);
     expect(result.newState.facility.lastTickDay).toBe(2);
-    expect(result.events).toHaveLength(1);
-    expect(result.events[0]?.eventType).toBe('facility.tick.processed');
+    expect(result.events).toHaveLength(3);
+    expect(result.events[2]?.eventType).toBe('facility.tick.processed');
   });
 
   it('should accumulate maintenance debt when utilization is critical', () => {
@@ -1176,8 +1176,8 @@ describe('reduce - UPGRADE_FACILITY_TIER', () => {
     expect(result.newState.facility.capacities.rackCapacityU).toBe(168);
     expect(result.newState.facility.capacities.powerCapacityKw).toBe(50);
     expect(result.newState.funds).toBe(5000);
-    expect(result.events).toHaveLength(1);
-    expect(result.events[0]?.eventType).toBe('facility.tier.upgraded');
+    expect(result.events).toHaveLength(2);
+    expect(result.events[1]?.eventType).toBe('facility.tier.upgraded');
   });
 
   it('should fail if insufficient funds', () => {
@@ -1216,8 +1216,8 @@ describe('reduce - PURCHASE_FACILITY_UPGRADE', () => {
     expect(result.newState.facility.upgrades).toHaveLength(1);
     expect(result.newState.facility.upgrades[0]?.status).toBe('installing');
     expect(result.newState.facility.upgrades[0]?.completesDay).toBe(3);
-    expect(result.events).toHaveLength(1);
-    expect(result.events[0]?.eventType).toBe('facility.upgrade.purchased');
+    expect(result.events).toHaveLength(2);
+    expect(result.events[1]?.eventType).toBe('facility.upgrade.purchased');
   });
 
   it('should fail if insufficient funds', () => {

@@ -6,6 +6,77 @@ export type ClientTier = 1 | 2 | 3 | 4;
 
 export type TrustTier = 'LOCKED' | 'CRITICAL' | 'LOW' | 'MODERATE' | 'HIGH' | 'ELITE';
 
+export type PlayerLevel =
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 16
+  | 17
+  | 18
+  | 19
+  | 20
+  | 21
+  | 22
+  | 23
+  | 24
+  | 25
+  | 26
+  | 27
+  | 28
+  | 29
+  | 30
+  | 31
+  | 32
+  | 33
+  | 34
+  | 35
+  | 36
+  | 37
+  | 38
+  | 39
+  | 40
+  | 41
+  | 42
+  | 43
+  | 44
+  | 45
+  | 46
+  | 47
+  | 48
+  | 49
+  | 50;
+
+export type PlayerTitle =
+  | 'Intern'
+  | 'Junior Analyst'
+  | 'Analyst'
+  | 'Senior Analyst'
+  | 'Team Lead'
+  | 'Security Engineer'
+  | 'Senior Security Engineer'
+  | 'Security Manager'
+  | 'Senior Security Manager'
+  | 'Security Director'
+  | 'VP of Security'
+  | 'CISO'
+  | 'Chief Security Architect'
+  | 'Security Partner'
+  | 'Executive Security Advisor'
+  | 'Security Visionary'
+  | 'Industry Legend';
+
 export type FactionTier = 'HOSTILE' | 'UNFRIENDLY' | 'NEUTRAL' | 'FRIENDLY' | 'ALLIED';
 
 export const CANONICAL_FACTIONS = [
@@ -92,6 +163,70 @@ export const BACKLOG_CONFIG = {
   INCIDENT_THRESHOLD: 10,
   PENALTY_PER_EMAIL: -1,
 } as const;
+
+export const PLAYER_LEVEL_CONFIG = {
+  STARTING_LEVEL: 1,
+  STARTING_XP: 0,
+  MAX_NORMAL_LEVEL: 30,
+  MAX_PRESTIGE_LEVEL: 50,
+  XP_PER_CORRECT_DECISION: 10,
+  XP_PER_INCIDENT_RESOLVED: 25,
+  XP_PER_LEVEL_UP_BASE: 100,
+  XP_PER_LEVEL_UP_MULTIPLIER: 1.5,
+} as const;
+
+export const LEVEL_TITLES: Record<number, PlayerTitle> = {
+  1: 'Intern',
+  2: 'Junior Analyst',
+  3: 'Analyst',
+  4: 'Senior Analyst',
+  5: 'Team Lead',
+  6: 'Security Engineer',
+  7: 'Senior Security Engineer',
+  8: 'Security Manager',
+  9: 'Senior Security Manager',
+  10: 'Security Director',
+  11: 'VP of Security',
+  12: 'CISO',
+  13: 'Chief Security Architect',
+  14: 'Security Partner',
+  15: 'Executive Security Advisor',
+  16: 'Security Visionary',
+  17: 'Industry Legend',
+  18: 'Industry Legend',
+  19: 'Industry Legend',
+  20: 'Industry Legend',
+  21: 'Industry Legend',
+  22: 'Industry Legend',
+  23: 'Industry Legend',
+  24: 'Industry Legend',
+  25: 'Industry Legend',
+  26: 'Industry Legend',
+  27: 'Industry Legend',
+  28: 'Industry Legend',
+  29: 'Industry Legend',
+  30: 'Industry Legend',
+  31: 'Industry Legend',
+  32: 'Industry Legend',
+  33: 'Industry Legend',
+  34: 'Industry Legend',
+  35: 'Industry Legend',
+  36: 'Industry Legend',
+  37: 'Industry Legend',
+  38: 'Industry Legend',
+  39: 'Industry Legend',
+  40: 'Industry Legend',
+  41: 'Industry Legend',
+  42: 'Industry Legend',
+  43: 'Industry Legend',
+  44: 'Industry Legend',
+  45: 'Industry Legend',
+  46: 'Industry Legend',
+  47: 'Industry Legend',
+  48: 'Industry Legend',
+  49: 'Industry Legend',
+  50: 'Industry Legend',
+};
 
 export interface ConsequenceInput {
   decisionId: string;

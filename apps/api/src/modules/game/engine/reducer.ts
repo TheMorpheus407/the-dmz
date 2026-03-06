@@ -11,6 +11,12 @@ import {
 import { resolveDecision } from '../email-instance/decision-resolution.service.js';
 import { assembleVerificationPacket } from '../email-instance/verification-packet.service.js';
 import { ThreatEngineService } from '../threat-engine/index.js';
+import {
+  clampTrustScore,
+  calculateXPForLevel,
+  getLevelFromXP,
+  awardXPForDecision,
+} from '../../../game/consequence/index.js';
 
 import {
   canTransitionMacroState,
@@ -517,7 +523,7 @@ const createInitialState = (
   currentMacroState: SESSION_MACRO_STATES.SESSION_INIT,
   currentPhase: DAY_PHASES.PHASE_DAY_START,
   funds: 1000,
-  trustScore: 100,
+  trustScore: 50,
   intelFragments: 0,
   playerLevel: 1,
   playerXP: 0,
@@ -764,11 +770,40 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
                 currentPhase: state.currentPhase,
               });
 
-              newState.trustScore = Math.max(
-                0,
-                Math.min(200, newState.trustScore + evaluation.trustImpact),
+              const previousTrustScore = newState.trustScore;
+              const previousFunds = newState.funds;
+              const previousXP = newState.playerXP;
+
+              newState.trustScore = clampTrustScore(
+                Math.max(0, Math.min(500, newState.trustScore + evaluation.trustImpact)),
               );
               newState.funds = Math.max(0, newState.funds + evaluation.fundsImpact);
+
+              const xpAwarded = awardXPForDecision(
+                evaluation.isCorrect,
+                emailInstance.difficulty ?? 3,
+              );
+              if (xpAwarded > 0) {
+                newState.playerXP += xpAwarded;
+                const previousLevel = getLevelFromXP(previousXP);
+                const newLevel = getLevelFromXP(newState.playerXP);
+
+                if (newLevel > previousLevel) {
+                  newState.playerLevel = newLevel;
+                  events.push({
+                    eventId: crypto.randomUUID(),
+                    eventType: 'game.economy.level_up',
+                    timestamp: newState.updatedAt,
+                    payload: {
+                      sessionId: newState.sessionId,
+                      previousLevel,
+                      newLevel,
+                      xpRequired: calculateXPForLevel(newLevel),
+                      xpAwarded: newState.playerXP - previousXP,
+                    },
+                  });
+                }
+              }
 
               if (emailInstance.faction && evaluation.factionImpact !== 0) {
                 const currentFactionRelation =
@@ -777,6 +812,38 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
                   0,
                   Math.min(100, currentFactionRelation + evaluation.factionImpact),
                 );
+              }
+
+              if (evaluation.trustImpact !== 0) {
+                events.push({
+                  eventId: crypto.randomUUID(),
+                  eventType: 'game.economy.trust_changed',
+                  timestamp: newState.updatedAt,
+                  payload: {
+                    sessionId: newState.sessionId,
+                    amount: evaluation.trustImpact,
+                    balanceBefore: previousTrustScore,
+                    balanceAfter: newState.trustScore,
+                    reason: evaluation.isCorrect ? 'decision_correct' : 'decision_incorrect',
+                    context: { emailId: action.emailId, decision: action.decision },
+                  },
+                });
+              }
+
+              if (evaluation.fundsImpact !== 0) {
+                events.push({
+                  eventId: crypto.randomUUID(),
+                  eventType: 'game.economy.credits_changed',
+                  timestamp: newState.updatedAt,
+                  payload: {
+                    sessionId: newState.sessionId,
+                    amount: evaluation.fundsImpact,
+                    balanceBefore: previousFunds,
+                    balanceAfter: newState.funds,
+                    reason: evaluation.isCorrect ? 'client_approval' : 'client_denial',
+                    context: { emailId: action.emailId, decision: action.decision },
+                  },
+                });
               }
 
               events.push({
@@ -1054,6 +1121,21 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
           totalConsumption *= burstMultiplier;
         }
         newState.funds += totalRevenue;
+        if (totalRevenue > 0) {
+          events.push({
+            eventId: crypto.randomUUID(),
+            eventType: 'game.economy.credits_changed',
+            timestamp: newState.updatedAt,
+            payload: {
+              sessionId: newState.sessionId,
+              amount: totalRevenue,
+              balanceBefore: newState.funds - totalRevenue,
+              balanceAfter: newState.funds,
+              reason: 'client_approval',
+              context: { day: action.dayNumber, clientCount: facility.clients.length },
+            },
+          });
+        }
         facility.usage.rackUsedU = Math.floor(facility.usage.rackUsedU * totalConsumption);
         facility.usage.powerUsedKw = Math.floor(facility.usage.powerUsedKw * totalConsumption);
         facility.usage.coolingUsedTons = Math.floor(
@@ -1093,6 +1175,22 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
         );
         const totalOpEx = facility.operatingCostPerDay + (facility.securityToolOpExPerDay ?? 0);
         newState.funds -= totalOpEx;
+
+        if (totalOpEx > 0) {
+          events.push({
+            eventId: crypto.randomUUID(),
+            eventType: 'game.economy.credits_changed',
+            timestamp: newState.updatedAt,
+            payload: {
+              sessionId: newState.sessionId,
+              amount: -totalOpEx,
+              balanceBefore: newState.funds + totalOpEx,
+              balanceAfter: newState.funds,
+              reason: 'operational_cost',
+              context: { day: action.dayNumber },
+            },
+          });
+        }
 
         processInstallations(newState, events);
 
@@ -1136,6 +1234,19 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
           throw new Error('Insufficient funds for tier upgrade');
         }
         newState.funds -= upgrade.cost;
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'game.economy.credits_changed',
+          timestamp: newState.updatedAt,
+          payload: {
+            sessionId: newState.sessionId,
+            amount: -upgrade.cost,
+            balanceBefore: newState.funds + upgrade.cost,
+            balanceAfter: newState.funds,
+            reason: 'facility_upgrade',
+            context: { fromTier: state.facilityTier, toTier: action.targetTier },
+          },
+        });
         newState.facilityTier = action.targetTier as typeof newState.facilityTier;
         newState.facility.tier = action.targetTier;
         newState.facility.capacities.rackCapacityU = upgrade.rack;
@@ -1193,6 +1304,20 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
         }
 
         newState.funds -= upgradeDef.baseCost;
+
+        events.push({
+          eventId: crypto.randomUUID(),
+          eventType: 'game.economy.credits_changed',
+          timestamp: newState.updatedAt,
+          payload: {
+            sessionId: newState.sessionId,
+            amount: -upgradeDef.baseCost,
+            balanceBefore: newState.funds + upgradeDef.baseCost,
+            balanceAfter: newState.funds,
+            reason: 'upgrade_purchase',
+            context: { upgradeType: action.upgradeType, category: upgradeDef.category },
+          },
+        });
 
         const existingInProgress = newState.facility.upgrades.find(
           (u) => u.upgradeType === action.upgradeType && !u.isCompleted,

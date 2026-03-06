@@ -9,3 +9,4 @@ export * from './trust-score.js';
 export * from './funds.js';
 export * from './faction-relations.js';
 export * from './backlog.js';
+export * from './level-progression.js';

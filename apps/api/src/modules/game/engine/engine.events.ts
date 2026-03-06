@@ -22,6 +22,10 @@ export const GAME_ENGINE_EVENTS = {
   BREACH_OCCURRED: 'game.breach.occurred',
   UPGRADE_PURCHASED: 'game.upgrade.purchased',
   RESOURCE_ADJUSTED: 'game.resource.adjusted',
+  CREDITS_CHANGED: 'game.economy.credits_changed',
+  TRUST_CHANGED: 'game.economy.trust_changed',
+  INTEL_CHANGED: 'game.economy.intel_changed',
+  LEVEL_UP: 'game.economy.level_up',
 } as const;
 
 export type GameEngineEventType = (typeof GAME_ENGINE_EVENTS)[keyof typeof GAME_ENGINE_EVENTS];
@@ -155,6 +159,42 @@ export interface ResourceAdjustedPayload {
   delta: number;
 }
 
+export interface CreditsChangedPayload {
+  sessionId: string;
+  amount: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  reason: string;
+  context?: Record<string, unknown>;
+  relatedEntityId?: string;
+}
+
+export interface TrustChangedPayload {
+  sessionId: string;
+  amount: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  reason: string;
+  context?: Record<string, unknown>;
+}
+
+export interface IntelChangedPayload {
+  sessionId: string;
+  amount: number;
+  balanceBefore: number;
+  balanceAfter: number;
+  reason: string;
+  context?: Record<string, unknown>;
+}
+
+export interface LevelUpPayload {
+  sessionId: string;
+  previousLevel: number;
+  newLevel: number;
+  xpRequired: number;
+  xpAwarded: number;
+}
+
 export type GameEngineEventPayloadMap = {
   [GAME_ENGINE_EVENTS.SESSION_STARTED]: SessionStartedPayload;
   [GAME_ENGINE_EVENTS.SESSION_PAUSED]: SessionPausedPayload;
@@ -177,6 +217,10 @@ export type GameEngineEventPayloadMap = {
   [GAME_ENGINE_EVENTS.BREACH_OCCURRED]: BreachOccurredPayload;
   [GAME_ENGINE_EVENTS.UPGRADE_PURCHASED]: UpgradePurchasedPayload;
   [GAME_ENGINE_EVENTS.RESOURCE_ADJUSTED]: ResourceAdjustedPayload;
+  [GAME_ENGINE_EVENTS.CREDITS_CHANGED]: CreditsChangedPayload;
+  [GAME_ENGINE_EVENTS.TRUST_CHANGED]: TrustChangedPayload;
+  [GAME_ENGINE_EVENTS.INTEL_CHANGED]: IntelChangedPayload;
+  [GAME_ENGINE_EVENTS.LEVEL_UP]: LevelUpPayload;
 };
 
 export type GameEngineDomainEvent<T extends GameEngineEventType = GameEngineEventType> =
@@ -388,6 +432,70 @@ export const createBreachOccurredEvent = (
   return {
     eventId: crypto.randomUUID(),
     eventType: GAME_ENGINE_EVENTS.BREACH_OCCURRED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createCreditsChangedEvent = (
+  params: BaseGameEngineEventParams & { payload: CreditsChangedPayload },
+): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.CREDITS_CHANGED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: GAME_ENGINE_EVENTS.CREDITS_CHANGED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createTrustChangedEvent = (
+  params: BaseGameEngineEventParams & { payload: TrustChangedPayload },
+): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.TRUST_CHANGED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: GAME_ENGINE_EVENTS.TRUST_CHANGED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createIntelChangedEvent = (
+  params: BaseGameEngineEventParams & { payload: IntelChangedPayload },
+): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.INTEL_CHANGED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: GAME_ENGINE_EVENTS.INTEL_CHANGED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createLevelUpEvent = (
+  params: BaseGameEngineEventParams & { payload: LevelUpPayload },
+): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.LEVEL_UP> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: GAME_ENGINE_EVENTS.LEVEL_UP,
     timestamp: new Date().toISOString(),
     correlationId: params.correlationId,
     tenantId: params.tenantId,
