@@ -57,7 +57,7 @@ describe('ResourceMeter', () => {
       props: {
         label: 'Rack Space',
         used: 50,
-        capacity: 100,
+        total: 100,
         unit: 'U',
       },
     });
@@ -70,7 +70,7 @@ describe('ResourceMeter', () => {
       props: {
         label: 'Power',
         used: 25,
-        capacity: 50,
+        total: 50,
         unit: 'kW',
       },
     });
@@ -79,14 +79,44 @@ describe('ResourceMeter', () => {
     expect(container.textContent).toContain('50%');
   });
 
-  it('shows warning state at 80%', () => {
+  it('backward compatible with capacity prop', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 50,
+        capacity: 100,
+        unit: 'U',
+      },
+    });
+
+    expect(container.textContent).toContain('50%');
+  });
+
+  it('shows normal state at 60% (green)', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 60,
+        total: 100,
+        unit: 'U',
+      },
+    });
+
+    const meter = container.querySelector('.resource-meter');
+    expect(meter?.classList.contains('resource-meter--warning')).toBe(false);
+    expect(meter?.classList.contains('resource-meter--critical')).toBe(false);
+    expect(meter?.classList.contains('resource-meter--flashing')).toBe(false);
+    expect(container.textContent).not.toContain('WARNING');
+    expect(container.textContent).not.toContain('CRITICAL');
+  });
+
+  it('shows warning state at 61-80%', () => {
     const { container } = render(ResourceMeter, {
       props: {
         label: 'Cooling',
-        used: 80,
-        capacity: 100,
+        used: 70,
+        total: 100,
         unit: 'tons',
-        warningThreshold: 80,
       },
     });
 
@@ -96,14 +126,13 @@ describe('ResourceMeter', () => {
     ).toBe(true);
   });
 
-  it('shows critical state at 95%', () => {
+  it('shows critical state at 81-95%', () => {
     const { container } = render(ResourceMeter, {
       props: {
         label: 'Bandwidth',
-        used: 95,
-        capacity: 100,
+        used: 90,
+        total: 100,
         unit: 'Mbps',
-        criticalThreshold: 95,
       },
     });
 
@@ -111,6 +140,180 @@ describe('ResourceMeter', () => {
     expect(
       container.querySelector('.resource-meter')?.classList.contains('resource-meter--critical'),
     ).toBe(true);
+  });
+
+  it('shows flashing state at 96-100%', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 98,
+        total: 100,
+        unit: 'U',
+      },
+    });
+
+    expect(container.textContent).toContain('CRITICAL');
+    const meter = container.querySelector('.resource-meter');
+    expect(meter?.classList.contains('resource-meter--flashing')).toBe(true);
+    expect(
+      container
+        .querySelector('.resource-meter__fill')
+        ?.classList.contains('resource-meter__fill--flashing'),
+    ).toBe(true);
+  });
+
+  it('hides values when showValues is false', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 50,
+        total: 100,
+        unit: 'U',
+        showValues: false,
+      },
+    });
+
+    expect(container.textContent).not.toContain('50 / 100 U');
+  });
+
+  it('disables animation when animated is false', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 50,
+        total: 100,
+        unit: 'U',
+        animated: false,
+      },
+    });
+
+    expect(
+      container
+        .querySelector('.resource-meter__fill')
+        ?.classList.contains('resource-meter__fill--no-animation'),
+    ).toBe(true);
+  });
+
+  it('renders compact variant', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 50,
+        total: 100,
+        unit: 'U',
+        variant: 'compact',
+      },
+    });
+
+    expect(
+      container.querySelector('.resource-meter')?.classList.contains('resource-meter--compact'),
+    ).toBe(true);
+  });
+
+  it('renders vertical variant', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 50,
+        total: 100,
+        unit: 'U',
+        variant: 'vertical',
+      },
+    });
+
+    expect(
+      container.querySelector('.resource-meter')?.classList.contains('resource-meter--vertical'),
+    ).toBe(true);
+    expect(container.querySelector('.resource-meter__bar-vertical')).toBeTruthy();
+  });
+
+  it('renders trend variant with up arrow', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 50,
+        total: 100,
+        unit: 'U',
+        variant: 'trend',
+        trend: 'up',
+      },
+    });
+
+    expect(
+      container.querySelector('.resource-meter')?.classList.contains('resource-meter--trend'),
+    ).toBe(true);
+    expect(container.textContent).toContain('↑');
+  });
+
+  it('renders trend variant with down arrow', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 50,
+        total: 100,
+        unit: 'U',
+        variant: 'trend',
+        trend: 'down',
+      },
+    });
+
+    expect(container.textContent).toContain('↓');
+  });
+
+  it('renders trend variant with stable arrow', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 50,
+        total: 100,
+        unit: 'U',
+        variant: 'trend',
+        trend: 'stable',
+      },
+    });
+
+    expect(container.textContent).toContain('→');
+  });
+
+  it('handles used greater than total', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 150,
+        total: 100,
+        unit: 'U',
+      },
+    });
+
+    expect(container.textContent).toContain('100%');
+  });
+
+  it('handles zero total', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 0,
+        total: 0,
+        unit: 'U',
+      },
+    });
+
+    expect(container.textContent).toContain('0%');
+  });
+
+  it('uses custom thresholds', () => {
+    const { container } = render(ResourceMeter, {
+      props: {
+        label: 'Test',
+        used: 50,
+        total: 100,
+        unit: 'U',
+        warningThreshold: 40,
+        criticalThreshold: 60,
+      },
+    });
+
+    expect(container.textContent).toContain('WARNING');
   });
 });
 
