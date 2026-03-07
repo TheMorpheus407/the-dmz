@@ -8,6 +8,7 @@
   import KeyboardShortcutHandler from '$lib/game/components/KeyboardShortcutHandler.svelte';
   import HelpOverlay from '$lib/game/components/HelpOverlay.svelte';
   import ThunkFeedback from '$lib/game/components/ThunkFeedback.svelte';
+  import ThreatIndicator from '$lib/game/components/ThreatIndicator.svelte';
   import { uiStore } from '$lib/game/store/ui-store';
 
   import type { Snippet } from 'svelte';
@@ -184,6 +185,7 @@
           <span class="shell-game__header-time">Day {currentDay} | {currentTime}</span>
         </div>
         <div class="shell-game__header-right">
+          <ThreatIndicator level={threatLevel} variant="compact" showLabel={false} />
           <span class="shell-game__header-threat">
             THREAT: <span class="shell-game__threat-level shell-game__threat-level--{threatLevel}"
               >{threatLabel}</span

@@ -7,6 +7,7 @@
   import FinancialSummary from './FinancialSummary.svelte';
   import QuickActions from './QuickActions.svelte';
   import DashboardHeader from './DashboardHeader.svelte';
+  import ThreatIndicator from './ThreatIndicator.svelte';
 
   interface Props {
     organizationName?: string;
@@ -14,6 +15,7 @@
     currentTime?: string;
     funds: number;
     facility: FacilityState;
+    threatLevel?: 1 | 2 | 3 | 4 | 5;
     onviewclient?: (clientId: string) => void;
     onupgradeshop?: () => void;
     onintelbrief?: () => void;
@@ -26,6 +28,7 @@
     currentTime = '08:00',
     funds = 0,
     facility,
+    threatLevel = 1,
     onviewclient = () => {},
     onupgradeshop = () => {},
     onintelbrief = () => {},
@@ -41,6 +44,11 @@
     facilityTier={facility.tier as FacilityTierLevel}
     facilityHealth={facility.facilityHealth}
   />
+
+  <Panel variant="default" ariaLabel="Threat Level">
+    <h2 class="facility-dashboard__section-title">Threat Status</h2>
+    <ThreatIndicator level={threatLevel} variant="full" />
+  </Panel>
 
   <div class="facility-dashboard__grid">
     <Panel variant="default" ariaLabel="Resource Overview">
