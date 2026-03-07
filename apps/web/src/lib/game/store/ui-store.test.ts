@@ -14,6 +14,12 @@ import {
   currentRoute,
   isMobile,
   keyboardShortcutsEnabled,
+  currentPhase,
+  currentViewConfig,
+  canSelectEmail,
+  canMakeDecision,
+  canAdvanceDay,
+  canUpgradeFacility,
 } from './ui-store';
 
 describe('uiStore', () => {
@@ -23,7 +29,7 @@ describe('uiStore', () => {
 
   describe('active panel', () => {
     it('should have default active panel', () => {
-      expect(get(activePanel)).toBe('inbox');
+      expect(get(activePanel)).toBe('landing');
     });
 
     it('should set active panel', () => {
@@ -283,12 +289,112 @@ describe('uiStore', () => {
 
       uiStore.reset();
 
-      expect(get(activePanel)).toBe('inbox');
+      expect(get(activePanel)).toBe('landing');
       expect(get(modalState).isOpen).toBe(false);
       expect(get(notifications)).toEqual([]);
       expect(get(hoverState).emailId).toBe(null);
       expect(get(formInput).values).toEqual({});
       expect(get(sidebarCollapsed)).toBe(false);
+    });
+  });
+
+  describe('phase handling', () => {
+    it('should have null current phase initially', () => {
+      expect(get(currentPhase)).toBe(null);
+    });
+
+    it('should set phase and update view config', () => {
+      uiStore.setPhase('DAY_START');
+
+      expect(get(currentPhase)).toBe('DAY_START');
+      const viewConfig = get(currentViewConfig);
+      expect(viewConfig.mainPanel).toBe('facility');
+      expect(viewConfig.showFacility).toBe(true);
+    });
+
+    it('should set phase to EMAIL_TRIAGE and show inbox', () => {
+      uiStore.setPhase('EMAIL_TRIAGE');
+
+      expect(get(currentPhase)).toBe('EMAIL_TRIAGE');
+      const viewConfig = get(currentViewConfig);
+      expect(viewConfig.showInbox).toBe(true);
+      expect(viewConfig.showEmail).toBe(true);
+    });
+
+    it('should set phase to DAY_END and show day summary', () => {
+      uiStore.setPhase('DAY_END');
+
+      expect(get(currentPhase)).toBe('DAY_END');
+      const viewConfig = get(currentViewConfig);
+      expect(viewConfig.showDaySummary).toBe(true);
+      expect(viewConfig.mainPanel).toBe('day-summary');
+    });
+
+    it('should track previous phase', () => {
+      uiStore.setPhase('DAY_START');
+      uiStore.setPhase('EMAIL_TRIAGE');
+
+      const state = get(uiStore);
+      expect(state.previousPhase).toBe('DAY_START');
+      expect(state.currentPhase).toBe('EMAIL_TRIAGE');
+    });
+
+    it('should set transitioning state on phase change', () => {
+      uiStore.setPhase('DAY_START');
+      expect(get(animationState).isTransitioning).toBe(false);
+
+      uiStore.setPhase('EMAIL_TRIAGE');
+      expect(get(animationState).isTransitioning).toBe(true);
+      expect(get(animationState).transitionType).toBe('slide');
+    });
+  });
+
+  describe('phase action permissions', () => {
+    it('should allow selectEmail in EMAIL_TRIAGE phase', () => {
+      uiStore.setPhase('EMAIL_TRIAGE');
+      expect(get(canSelectEmail)).toBe(true);
+    });
+
+    it('should not allow selectEmail in DAY_START phase', () => {
+      uiStore.setPhase('DAY_START');
+      expect(get(canSelectEmail)).toBe(false);
+    });
+
+    it('should allow makeDecision in DECISION_RESOLUTION phase', () => {
+      uiStore.setPhase('DECISION_RESOLUTION');
+      expect(get(canMakeDecision)).toBe(true);
+    });
+
+    it('should not allow makeDecision in EMAIL_TRIAGE phase', () => {
+      uiStore.setPhase('EMAIL_TRIAGE');
+      expect(get(canMakeDecision)).toBe(false);
+    });
+
+    it('should allow advanceDay in DAY_START phase', () => {
+      uiStore.setPhase('DAY_START');
+      expect(get(canAdvanceDay)).toBe(true);
+    });
+
+    it('should allow upgradeFacility in DAY_START phase', () => {
+      uiStore.setPhase('DAY_START');
+      expect(get(canUpgradeFacility)).toBe(true);
+    });
+
+    it('should not allow upgradeFacility in EMAIL_TRIAGE phase', () => {
+      uiStore.setPhase('EMAIL_TRIAGE');
+      expect(get(canUpgradeFacility)).toBe(false);
+    });
+  });
+
+  describe('clearPhase', () => {
+    it('should clear current phase but preserve previous', () => {
+      uiStore.setPhase('DAY_START');
+      uiStore.setPhase('EMAIL_TRIAGE');
+      uiStore.clearPhase();
+
+      const state = get(uiStore);
+      expect(state.currentPhase).toBe(null);
+      expect(state.previousPhase).toBe('EMAIL_TRIAGE');
     });
   });
 });

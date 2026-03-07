@@ -1,6 +1,30 @@
 import { writable, derived } from 'svelte/store';
 
-export type ActivePanel = 'inbox' | 'email' | 'facility' | 'upgrades' | 'incident' | 'settings';
+import type { GamePhase } from '$lib/game/state/state-machine';
+import {
+  getViewConfig,
+  getActionConfig,
+  getShortcutConfig,
+  type PhaseViewConfig,
+  type PhaseActionConfig,
+  type PhaseKeyboardShortcutConfig,
+} from '$lib/game/state/phase-config';
+
+export type ActivePanel =
+  | 'inbox'
+  | 'email'
+  | 'facility'
+  | 'upgrades'
+  | 'incident'
+  | 'settings'
+  | 'day-summary'
+  | 'game-over'
+  | 'worksheet'
+  | 'verification'
+  | 'feedback'
+  | 'threat'
+  | 'landing'
+  | 'decision';
 
 export interface Toast {
   id: string;
@@ -38,6 +62,8 @@ export interface FormInputState {
 
 interface UiStoreState {
   activePanel: ActivePanel;
+  currentPhase: GamePhase | null;
+  previousPhase: GamePhase | null;
   modals: ModalState;
   notifications: Toast[];
   hoverState: HoverState;
@@ -51,7 +77,9 @@ interface UiStoreState {
 }
 
 const initialState: UiStoreState = {
-  activePanel: 'inbox',
+  activePanel: 'landing',
+  currentPhase: null,
+  previousPhase: null,
   modals: { isOpen: false, type: null, data: null },
   notifications: [],
   hoverState: { emailId: null, buttonId: null },
@@ -72,6 +100,30 @@ function createUiStore() {
 
     setActivePanel(panel: ActivePanel) {
       update((state) => ({ ...state, activePanel: panel }));
+    },
+
+    setPhase(phase: GamePhase) {
+      update((state) => {
+        const viewConfig = getViewConfig(phase);
+        return {
+          ...state,
+          previousPhase: state.currentPhase,
+          currentPhase: phase,
+          activePanel: viewConfig.mainPanel,
+          animationState: {
+            isTransitioning: state.currentPhase !== null && state.currentPhase !== phase,
+            transitionType: viewConfig.transitionType,
+          },
+        };
+      });
+    },
+
+    clearPhase() {
+      update((state) => ({
+        ...state,
+        previousPhase: state.currentPhase,
+        currentPhase: null,
+      }));
     },
 
     openModal(type: 'worksheet' | 'verification' | 'upgrade', data?: Record<string, unknown>) {
@@ -207,3 +259,73 @@ export const sidebarCollapsed = derived(uiStore, ($ui) => $ui.sidebarCollapsed);
 export const currentRoute = derived(uiStore, ($ui) => $ui.currentRoute);
 export const isMobile = derived(uiStore, ($ui) => $ui.isMobile);
 export const keyboardShortcutsEnabled = derived(uiStore, ($ui) => $ui.keyboardShortcutsEnabled);
+
+export const currentPhase = derived(uiStore, ($ui) => $ui.currentPhase);
+export const previousPhase = derived(uiStore, ($ui) => $ui.previousPhase);
+export const isTransitioning = derived(uiStore, ($ui) => $ui.animationState.isTransitioning);
+
+export const currentViewConfig = derived(uiStore, ($ui): PhaseViewConfig => {
+  if (!$ui.currentPhase) {
+    return getViewConfig('DAY_START');
+  }
+  return getViewConfig($ui.currentPhase);
+});
+
+export const currentActionConfig = derived(uiStore, ($ui): PhaseActionConfig => {
+  if (!$ui.currentPhase) {
+    return getActionConfig('DAY_START');
+  }
+  return getActionConfig($ui.currentPhase);
+});
+
+export const currentShortcutConfig = derived(uiStore, ($ui): PhaseKeyboardShortcutConfig => {
+  if (!$ui.currentPhase) {
+    return getShortcutConfig('DAY_START');
+  }
+  return getShortcutConfig($ui.currentPhase);
+});
+
+export const canSelectEmail = derived(uiStore, ($ui) => {
+  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+  return config.canSelectEmail;
+});
+
+export const canOpenWorksheet = derived(uiStore, ($ui) => {
+  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+  return config.canOpenWorksheet;
+});
+
+export const canRequestVerification = derived(uiStore, ($ui) => {
+  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+  return config.canRequestVerification;
+});
+
+export const canViewResults = derived(uiStore, ($ui) => {
+  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+  return config.canViewResults;
+});
+
+export const canMakeDecision = derived(uiStore, ($ui) => {
+  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+  return config.canMakeDecision;
+});
+
+export const canAdvanceDay = derived(uiStore, ($ui) => {
+  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+  return config.canAdvanceDay;
+});
+
+export const canUpgradeFacility = derived(uiStore, ($ui) => {
+  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+  return config.canUpgradeFacility;
+});
+
+export const canContainThreat = derived(uiStore, ($ui) => {
+  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+  return config.canContainThreat;
+});
+
+export const canRestart = derived(uiStore, ($ui) => {
+  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+  return config.canRestart;
+});

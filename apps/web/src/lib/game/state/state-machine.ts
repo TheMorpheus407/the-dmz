@@ -10,6 +10,7 @@ export const gamePhases = [
   'RESOURCE_MANAGEMENT',
   'UPGRADE_PHASE',
   'DAY_END',
+  'GAME_OVER',
 ] as const;
 
 export type GamePhase = (typeof gamePhases)[number];
@@ -19,4 +20,5 @@ export interface GameStateMachine {
   canAdvance: boolean;
 }
 
-export const isTerminalPhase = (phase: GamePhase): boolean => phase === 'DAY_END';
+export const isTerminalPhase = (phase: GamePhase): boolean =>
+  phase === 'DAY_END' || phase === 'GAME_OVER';
