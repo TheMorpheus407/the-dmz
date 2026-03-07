@@ -5,6 +5,10 @@
   import Drawer from '$lib/ui/components/Drawer.svelte';
   import Button from '$lib/ui/components/Button.svelte';
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
+  import KeyboardShortcutHandler from '$lib/game/components/KeyboardShortcutHandler.svelte';
+  import HelpOverlay from '$lib/game/components/HelpOverlay.svelte';
+  import ThunkFeedback from '$lib/game/components/ThunkFeedback.svelte';
+  import { uiStore } from '$lib/game/store/ui-store';
 
   import type { Snippet } from 'svelte';
 
@@ -19,6 +23,8 @@
   type PanelId = 'inbox' | 'document' | 'status';
   let activePanel: PanelId = $state('document');
   let isStatusDrawerOpen = $state(false);
+  let helpVisible = $state(false);
+  let selectedEmailIndex = $state(0);
 
   const currentDay = 14;
   const currentTime = '08:00 CEST';
@@ -43,21 +49,101 @@
     isStatusDrawerOpen = !isStatusDrawerOpen;
   }
 
+  let thunkVisible = $state(false);
+  let thunkType: 'approve' | 'deny' | 'flag' | 'verify' | 'default' = $state('default');
+
   function handleApprove() {
-    // Placeholder for approve action
+    thunkType = 'approve';
+    thunkVisible = true;
+    setTimeout(() => (thunkVisible = false), 400);
+    uiStore.addNotification('Request approved', 'success');
   }
 
   function handleDeny() {
-    // Placeholder for deny action
+    thunkType = 'deny';
+    thunkVisible = true;
+    setTimeout(() => (thunkVisible = false), 400);
+    uiStore.addNotification('Request denied', 'warning');
   }
 
   function handleFlag() {
-    // Placeholder for flag action
+    thunkType = 'flag';
+    thunkVisible = true;
+    setTimeout(() => (thunkVisible = false), 400);
+    uiStore.addNotification('Request flagged for review', 'info');
   }
 
   function handleVerify() {
-    // Placeholder for verify action
+    thunkType = 'verify';
+    thunkVisible = true;
+    setTimeout(() => (thunkVisible = false), 400);
+    uiStore.addNotification('Verification requested', 'info');
   }
+
+  function handleShowHelp() {
+    helpVisible = true;
+  }
+
+  function handleHideHelp() {
+    helpVisible = false;
+  }
+
+  function handleToggleFacility() {
+    if (activePanel === 'status') {
+      activePanel = 'document';
+    } else {
+      activePanel = 'status';
+    }
+  }
+
+  function handleToggleUpgrades() {
+    uiStore.openModal('upgrade');
+  }
+
+  function handleSelectNext() {
+    selectedEmailIndex = Math.min(selectedEmailIndex + 1, 2);
+  }
+
+  function handleSelectPrevious() {
+    selectedEmailIndex = Math.max(selectedEmailIndex - 1, 0);
+  }
+
+  function handleSelectNextEmail() {
+    selectedEmailIndex = Math.min(selectedEmailIndex + 1, 2);
+  }
+
+  function handleRefresh() {
+    uiStore.addNotification('Refreshing...', 'info');
+  }
+
+  function handleAdvanceDay() {
+    uiStore.addNotification('Advancing to next day...', 'info');
+  }
+
+  function handleCancel() {
+    if (helpVisible) {
+      helpVisible = false;
+    } else {
+      uiStore.closeModal();
+    }
+  }
+
+  const shortcutHandlers = $derived({
+    onApprove: handleApprove,
+    onDeny: handleDeny,
+    onFlag: handleFlag,
+    onVerify: handleVerify,
+    onShowHelp: handleShowHelp,
+    onHideHelp: handleHideHelp,
+    onToggleFacility: handleToggleFacility,
+    onToggleUpgrades: handleToggleUpgrades,
+    onSelectNext: handleSelectNext,
+    onSelectPrevious: handleSelectPrevious,
+    onSelectNextEmail: handleSelectNextEmail,
+    onRefresh: handleRefresh,
+    onAdvanceDay: handleAdvanceDay,
+    onCancel: handleCancel,
+  });
 
   onMount(() => {
     themeStore.init();
@@ -258,6 +344,10 @@
       <span class="shell-game__placeholder-label">Status</span>
     </div>
   </Drawer>
+
+  <KeyboardShortcutHandler handlers={shortcutHandlers} />
+  <HelpOverlay visible={helpVisible} onClose={handleHideHelp} />
+  <ThunkFeedback type={thunkType} visible={thunkVisible} />
 
   <nav class="shell-game__mobile-nav" aria-label="Panel navigation">
     <button

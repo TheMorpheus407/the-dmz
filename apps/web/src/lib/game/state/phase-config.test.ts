@@ -74,8 +74,8 @@ describe('phase-config', () => {
   describe('getShortcutConfig', () => {
     it('returns correct shortcuts for EMAIL_TRIAGE', () => {
       const config = getShortcutConfig('EMAIL_TRIAGE');
-      expect(config.shortcuts).toContain('j');
-      expect(config.shortcuts).toContain('k');
+      expect(config.shortcuts).toContain('ArrowUp');
+      expect(config.shortcuts).toContain('ArrowDown');
       expect(config.shortcuts).toContain('Enter');
     });
 
@@ -85,9 +85,9 @@ describe('phase-config', () => {
       expect(config.shortcuts).toContain('d');
     });
 
-    it('returns empty shortcuts for INBOX_INTAKE', () => {
+    it('returns shortcuts for INBOX_INTAKE', () => {
       const config = getShortcutConfig('INBOX_INTAKE');
-      expect(config.shortcuts).toHaveLength(0);
+      expect(config.shortcuts).toContain('r');
     });
 
     it('returns default shortcuts for unknown phase', () => {

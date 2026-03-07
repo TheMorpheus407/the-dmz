@@ -17,6 +17,12 @@
     onAdvanceDay?: () => void;
     onRestart?: () => void;
     onCancel?: () => void;
+    onShowHelp?: () => void;
+    onHideHelp?: () => void;
+    onToggleFacility?: () => void;
+    onToggleUpgrades?: () => void;
+    onSelectNextEmail?: () => void;
+    onRefresh?: () => void;
   }
 
   interface Props {
@@ -25,11 +31,27 @@
 
   const { handlers = {} }: Props = $props();
 
+  let helpVisible = $state(false);
+
   function handleKeyDown(event: KeyboardEvent) {
     if (!$keyboardShortcutsEnabled) return;
 
     const key = event.key;
     const allowedShortcuts = $currentShortcutConfig.shortcuts;
+
+    if (key === '?' && !helpVisible) {
+      helpVisible = true;
+      handlers.onShowHelp?.();
+      return;
+    }
+
+    if (key === 'Escape' && helpVisible) {
+      helpVisible = false;
+      handlers.onHideHelp?.();
+      return;
+    }
+
+    if (helpVisible) return;
 
     if (!allowedShortcuts.includes(key)) return;
 
@@ -37,10 +59,14 @@
       return;
     }
 
+    event.preventDefault();
+
     switch (key) {
+      case 'ArrowDown':
       case 'j':
         handlers.onSelectNext?.();
         break;
+      case 'ArrowUp':
       case 'k':
         handlers.onSelectPrevious?.();
         break;
@@ -48,6 +74,7 @@
         handlers.onOpen?.();
         handlers.onAdvanceDay?.();
         handlers.onRestart?.();
+        handlers.onUpgrade?.();
         break;
       case 'v':
         handlers.onVerify?.();
@@ -56,6 +83,7 @@
         handlers.onOpen?.();
         break;
       case 'r':
+        handlers.onRefresh?.();
         handlers.onVerify?.();
         handlers.onRestart?.();
         break;
@@ -83,15 +111,33 @@
         handlers.onUpgrade?.();
         break;
       case 'g':
-        handlers.onViewStats?.();
-        break;
       case 's':
         handlers.onViewStats?.();
         break;
-      case 'Esc':
+      case 'h':
+        handlers.onToggleFacility?.();
+        break;
+      case 'm':
+        handlers.onToggleUpgrades?.();
+        break;
+      case 'e':
+        handlers.onSelectNextEmail?.();
+        break;
+      case 'n':
+        handlers.onAdvanceDay?.();
+        break;
+      case 'Escape':
         handlers.onCancel?.();
         break;
     }
+  }
+
+  export function hideHelp() {
+    helpVisible = false;
+  }
+
+  export function isHelpVisible() {
+    return helpVisible;
   }
 </script>
 

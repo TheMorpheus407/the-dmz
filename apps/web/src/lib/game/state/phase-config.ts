@@ -30,6 +30,7 @@ export interface PhaseActionConfig {
 
 export interface PhaseKeyboardShortcutConfig {
   shortcuts: string[];
+  description?: string;
 }
 
 export const phaseToViewMap: Record<GamePhase, PhaseViewConfig> = {
@@ -340,40 +341,52 @@ export const phaseToActionMap: Record<GamePhase, PhaseActionConfig> = {
 
 export const phaseToShortcutsMap: Record<GamePhase, PhaseKeyboardShortcutConfig> = {
   DAY_START: {
-    shortcuts: ['Enter'],
+    shortcuts: ['Enter', 'h', 'r'],
+    description: 'Day start phase - view facility and advance',
   },
   INBOX_INTAKE: {
-    shortcuts: [],
+    shortcuts: ['r'],
+    description: 'Inbox loading phase',
   },
   EMAIL_TRIAGE: {
-    shortcuts: ['j', 'k', 'Enter', 'v', 'w', 'r'],
+    shortcuts: ['ArrowUp', 'ArrowDown', 'Enter', 'v', 'w', 'r', 'e', 'f', 'a', 'd', 'h'],
+    description: 'Email triage phase - review and decide on emails',
   },
   VERIFICATION_REVIEW: {
-    shortcuts: ['Tab', 'f'],
+    shortcuts: ['Tab', 'f', 'a', 'd', 'r', 'h'],
+    description: 'Verification review phase',
   },
   DECISION_RESOLUTION: {
-    shortcuts: ['a', 'd', 'f'],
+    shortcuts: ['a', 'd', 'f', 'Enter', 'h'],
+    description: 'Decision resolution phase',
   },
   CONSEQUENCE_APPLICATION: {
-    shortcuts: ['Enter', 'c'],
+    shortcuts: ['Enter', 'c', 'h'],
+    description: 'Consequence application phase',
   },
   THREAT_PROCESSING: {
-    shortcuts: ['i', 'c', 'r'],
+    shortcuts: ['i', 'c', 'r', 'h'],
+    description: 'Threat processing phase',
   },
   INCIDENT_RESPONSE: {
-    shortcuts: ['c', 'i', 'r', 'Esc'],
+    shortcuts: ['c', 'i', 'r', 'Escape', 'h'],
+    description: 'Incident response phase',
   },
   RESOURCE_MANAGEMENT: {
-    shortcuts: ['u', 'g'],
+    shortcuts: ['u', 'g', 'h', 'm', 'r'],
+    description: 'Resource management phase',
   },
   UPGRADE_PHASE: {
-    shortcuts: ['u', 'Enter', 'Esc'],
+    shortcuts: ['u', 'Enter', 'Escape', 'h', 'r'],
+    description: 'Upgrade phase',
   },
   DAY_END: {
-    shortcuts: ['Enter', 'd'],
+    shortcuts: ['Enter', 'd', 'n', 'h', 'r'],
+    description: 'Day end phase - review and advance',
   },
   GAME_OVER: {
-    shortcuts: ['r', 's'],
+    shortcuts: ['r', 's', 'h'],
+    description: 'Game over phase',
   },
 };
 
