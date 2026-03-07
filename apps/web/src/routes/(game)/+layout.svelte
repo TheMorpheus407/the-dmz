@@ -9,6 +9,7 @@
   import HelpOverlay from '$lib/game/components/HelpOverlay.svelte';
   import ThunkFeedback from '$lib/game/components/ThunkFeedback.svelte';
   import ThreatIndicator from '$lib/game/components/ThreatIndicator.svelte';
+  import ToastContainer from '$lib/ui/components/ToastContainer.svelte';
   import { uiStore } from '$lib/game/store/ui-store';
 
   import type { Snippet } from 'svelte';
@@ -350,6 +351,7 @@
   <KeyboardShortcutHandler handlers={shortcutHandlers} />
   <HelpOverlay visible={helpVisible} onClose={handleHideHelp} />
   <ThunkFeedback type={thunkType} visible={thunkVisible} />
+  <ToastContainer />
 
   <nav class="shell-game__mobile-nav" aria-label="Panel navigation">
     <button

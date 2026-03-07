@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { get } from 'svelte/store';
 
 import {
@@ -6,6 +6,7 @@ import {
   activePanel,
   modalState,
   notifications,
+  notificationQueue,
   hoverState,
   focusState,
   animationState,
@@ -116,6 +117,99 @@ describe('uiStore', () => {
       uiStore.clearNotifications();
 
       expect(get(notifications)).toEqual([]);
+      expect(get(notificationQueue)).toEqual([]);
+    });
+
+    it('should add game notification with title', () => {
+      uiStore.addGameNotification('Request approved', 'decision', {
+        title: 'Decision Made',
+      });
+
+      const notifs = get(notifications);
+      expect(notifs).toHaveLength(1);
+      expect(notifs[0]?.message).toBe('Request approved');
+      expect(notifs[0]?.title).toBe('Decision Made');
+      expect(notifs[0]?.type).toBe('decision');
+    });
+
+    it('should add all game notification types', () => {
+      uiStore.addGameNotification('Decision feedback', 'decision');
+      uiStore.addGameNotification('Threat detected', 'threat');
+      uiStore.addGameNotification('Incident created', 'incident');
+      uiStore.addGameNotification('Breach alert', 'breach');
+      uiStore.addGameNotification('System message', 'system');
+      uiStore.addGameNotification('Achievement unlocked', 'achievement');
+
+      const notifs = get(notifications);
+      const queued = get(notificationQueue);
+      expect(notifs).toHaveLength(3);
+      expect(queued).toHaveLength(3);
+      expect(notifs[0]?.type).toBe('decision');
+      expect(notifs[1]?.type).toBe('threat');
+      expect(notifs[2]?.type).toBe('incident');
+      expect(queued[0]?.type).toBe('breach');
+      expect(queued[1]?.type).toBe('system');
+      expect(queued[2]?.type).toBe('achievement');
+    });
+
+    it('should queue notifications when max visible exceeded', () => {
+      uiStore.addNotification('Toast 1', 'info', 0);
+      uiStore.addNotification('Toast 2', 'info', 0);
+      uiStore.addNotification('Toast 3', 'info', 0);
+      uiStore.addNotification('Toast 4', 'info', 0);
+      uiStore.addNotification('Toast 5', 'info', 0);
+
+      expect(get(notifications)).toHaveLength(3);
+      expect(get(notificationQueue)).toHaveLength(2);
+    });
+
+    it('should promote queued notification when one is removed', () => {
+      uiStore.addNotification('Toast 1', 'info', 0);
+      uiStore.addNotification('Toast 2', 'info', 0);
+      uiStore.addNotification('Toast 3', 'info', 0);
+      uiStore.addNotification('Toast 4', 'info', 0);
+
+      const notifsBefore = get(notifications);
+      const firstId = notifsBefore[0]?.id;
+
+      if (firstId) {
+        uiStore.removeNotification(firstId);
+      }
+
+      const notifsAfter = get(notifications);
+      expect(notifsAfter).toHaveLength(3);
+      expect(notifsAfter[2]?.message).toBe('Toast 4');
+      expect(get(notificationQueue)).toHaveLength(0);
+    });
+
+    it('should clear both notifications and queue', () => {
+      uiStore.addNotification('Toast 1', 'info', 0);
+      uiStore.addNotification('Toast 2', 'info', 0);
+      uiStore.addNotification('Toast 3', 'info', 0);
+      uiStore.addNotification('Toast 4', 'info', 0);
+
+      uiStore.clearNotifications();
+
+      expect(get(notifications)).toHaveLength(0);
+      expect(get(notificationQueue)).toHaveLength(0);
+    });
+
+    it('should add notification with source', () => {
+      uiStore.addNotification('Test message', 'info', 5000, { source: 'SYSOP-7' });
+
+      const notifs = get(notifications);
+      expect(notifs[0]?.source).toBe('SYSOP-7');
+    });
+
+    it('should add notification with action', () => {
+      const actionClick = vi.fn();
+      uiStore.addNotification('Test message', 'info', 5000, {
+        action: { label: 'View', onClick: actionClick },
+      });
+
+      const notifs = get(notifications);
+      expect(notifs[0]?.action).toBeDefined();
+      expect(notifs[0]?.action?.label).toBe('View');
     });
   });
 

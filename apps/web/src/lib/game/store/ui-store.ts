@@ -26,13 +26,35 @@ export type ActivePanel =
   | 'landing'
   | 'decision';
 
+export type ToastType =
+  | 'info'
+  | 'success'
+  | 'warning'
+  | 'error'
+  | 'decision'
+  | 'threat'
+  | 'incident'
+  | 'breach'
+  | 'system'
+  | 'achievement';
+
+export interface ToastAction {
+  label: string;
+  onClick: () => void;
+}
+
 export interface Toast {
   id: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: ToastType;
+  title?: string;
   duration?: number;
   createdAt: number;
+  action?: ToastAction;
+  source?: string;
 }
+
+export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
 
 export interface ModalState {
   isOpen: boolean;
@@ -66,6 +88,7 @@ interface UiStoreState {
   previousPhase: GamePhase | null;
   modals: ModalState;
   notifications: Toast[];
+  notificationQueue: Toast[];
   hoverState: HoverState;
   focusState: FocusState;
   animationState: AnimationState;
@@ -82,6 +105,7 @@ const initialState: UiStoreState = {
   previousPhase: null,
   modals: { isOpen: false, type: null, data: null },
   notifications: [],
+  notificationQueue: [],
   hoverState: { emailId: null, buttonId: null },
   focusState: { elementId: null },
   animationState: { isTransitioning: false, transitionType: 'none' },
@@ -134,33 +158,100 @@ function createUiStore() {
       update((state) => ({ ...state, modals: { isOpen: false, type: null, data: null } }));
     },
 
-    addNotification(message: string, type: Toast['type'] = 'info', duration = 5000) {
+    addNotification(
+      message: string,
+      type: Toast['type'] = 'info',
+      duration: number | undefined = 5000,
+      options?: { title?: string; action?: ToastAction; source?: string },
+    ) {
       const id = crypto.randomUUID();
-      const toast: Toast = { id, message, type, duration, createdAt: Date.now() };
+      const toast: Toast = {
+        id,
+        message,
+        type,
+        duration,
+        createdAt: Date.now(),
+      };
 
-      update((state) => ({ ...state, notifications: [...state.notifications, toast] }));
+      if (options?.title) {
+        toast.title = options.title;
+      }
+      if (options?.action) {
+        toast.action = options.action;
+      }
+      if (options?.source) {
+        toast.source = options.source;
+      }
 
-      if (duration > 0) {
-        setTimeout(() => {
-          update((state) => ({
+      update((state) => {
+        const MAX_VISIBLE = 3;
+        const currentVisible = state.notifications.length;
+
+        if (currentVisible >= MAX_VISIBLE) {
+          return {
             ...state,
-            notifications: state.notifications.filter((n) => n.id !== id),
-          }));
+            notificationQueue: [...state.notificationQueue, toast],
+          };
+        }
+
+        return { ...state, notifications: [...state.notifications, toast] };
+      });
+
+      if (duration && duration > 0) {
+        setTimeout(() => {
+          this.removeNotification(id);
         }, duration);
       }
 
       return id;
     },
 
+    addGameNotification(
+      message: string,
+      type: Toast['type'],
+      options?: { title?: string; duration?: number; action?: ToastAction; source?: string },
+    ) {
+      const DURATION_MAP: Record<ToastType, number> = {
+        info: 5000,
+        success: 5000,
+        warning: 8000,
+        error: 10000,
+        decision: 5000,
+        threat: 8000,
+        incident: 10000,
+        breach: 0,
+        system: 4000,
+        achievement: 6000,
+      };
+
+      const duration = options?.duration ?? DURATION_MAP[type] ?? 5000;
+      return this.addNotification(message, type, duration, options);
+    },
+
     removeNotification(id: string) {
-      update((state) => ({
-        ...state,
-        notifications: state.notifications.filter((n) => n.id !== id),
-      }));
+      update((state) => {
+        const filtered: Toast[] = state.notifications.filter((n) => n.id !== id);
+        const shouldPromote =
+          filtered.length < state.notifications.length && state.notificationQueue.length > 0;
+
+        if (shouldPromote && state.notificationQueue.length > 0) {
+          const [first, ...rest] = state.notificationQueue;
+          if (first) {
+            const newNotifications: Toast[] = [...filtered, first];
+            return {
+              ...state,
+              notifications: newNotifications,
+              notificationQueue: rest,
+            };
+          }
+        }
+
+        return { ...state, notifications: filtered };
+      });
     },
 
     clearNotifications() {
-      update((state) => ({ ...state, notifications: [] }));
+      update((state) => ({ ...state, notifications: [], notificationQueue: [] }));
     },
 
     setHoverEmail(emailId: string | null) {
@@ -251,6 +342,7 @@ export const uiStore = createUiStore();
 export const activePanel = derived(uiStore, ($ui) => $ui.activePanel);
 export const modalState = derived(uiStore, ($ui) => $ui.modals);
 export const notifications = derived(uiStore, ($ui) => $ui.notifications);
+export const notificationQueue = derived(uiStore, ($ui) => $ui.notificationQueue);
 export const hoverState = derived(uiStore, ($ui) => $ui.hoverState);
 export const focusState = derived(uiStore, ($ui) => $ui.focusState);
 export const animationState = derived(uiStore, ($ui) => $ui.animationState);
