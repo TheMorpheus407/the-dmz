@@ -11,3 +11,4 @@ export * from './tenant-policy.js';
 export * from './tenant-quota.js';
 export * from '../../../db/schema/auth/index.js';
 export * from '../../../db/schema/game/index.js';
+export * from '../../../db/schema/content/index.js';

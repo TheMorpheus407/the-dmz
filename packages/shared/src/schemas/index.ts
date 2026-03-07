@@ -1,6 +1,7 @@
 export * from './api-envelope.schema.js';
 export * from './auth.schema.js';
 export * from './common.schema.js';
+export * from './content.schema.js';
 export * from './email.schema.js';
 export * from './game-engine.schema.js';
 export * from './game-session.schema.js';
