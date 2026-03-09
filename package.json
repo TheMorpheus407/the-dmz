@@ -53,8 +53,8 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
-    "@commitlint/cli": "^20.4.1",
-    "@commitlint/config-conventional": "^20.4.1",
+    "@commitlint/cli": "^20.4.3",
+    "@commitlint/config-conventional": "^20.4.3",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.50.1",
     "@secretlint/secretlint-rule-pattern": "^11.3.1",
