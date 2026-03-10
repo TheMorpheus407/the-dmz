@@ -164,6 +164,7 @@ export interface ContentGenerationRequest {
   language?: string;
   locale?: string;
   context?: Record<string, unknown>;
+  isEnterprise?: boolean;
 }
 
 export interface PromptTemplateSelectionContext {
@@ -203,6 +204,7 @@ export interface GeneratedContentResult {
   quality: QualityScoreResult;
   difficulty: DifficultyClassificationResult;
   safety: SafetyValidationResult;
+  reviewStatus: HumanReviewStatus;
   storedContent: StoredContentReference;
   usage: UsageMetrics;
 }
@@ -404,4 +406,48 @@ export interface CreateAiPipelineServiceOptions {
   now?: () => Date;
   generateId?: () => string;
   emailPoolLowThreshold?: number;
+}
+
+export type HumanReviewTrigger =
+  | 'NEW_TEMPLATE_VERSION'
+  | 'LOW_CONFIDENCE'
+  | 'ENTERPRISE_CAMPAIGN'
+  | 'EDGE_CASE_PATTERN';
+
+export interface HumanReviewStatus {
+  requiresReview: boolean;
+  triggers: HumanReviewTrigger[];
+  confidenceScore?: number;
+  edgeCasePatterns?: string[];
+}
+
+export const DEFAULT_CONFIDENCE_THRESHOLD = 0.5;
+export const DEFAULT_QUALITY_SCORE_THRESHOLD = 0.4;
+
+export const EDGE_CASE_PATTERNS = [
+  { pattern: /urgent\s+(?:action|response|attention|request)/i, description: 'Urgency language' },
+  {
+    pattern: /immediately\s+(?:complete|verify|submit|process)/i,
+    description: 'Immediate action language',
+  },
+  {
+    pattern: /suspended?\s+(?:account|access|privilege)/i,
+    description: 'Account suspension threat',
+  },
+  { pattern: /verify\s+(?:your\s+)?identity/i, description: 'Identity verification request' },
+  { pattern: /click\s+(?:here|below|the\s+link)/i, description: 'Click directive' },
+  { pattern: /password\s+reset/i, description: 'Password reset mention' },
+  { pattern: /bank\s+(?:account|transfer|wire)/i, description: 'Financial transaction reference' },
+  { pattern: /social\s+security/i, description: 'SSN/PII reference' },
+  { pattern: /gift\s+card/i, description: 'Gift card request' },
+  { pattern: /wire\s+transfer/i, description: 'Wire transfer request' },
+] as const;
+
+export type EdgeCasePattern = (typeof EDGE_CASE_PATTERNS)[number];
+
+export interface SafetyCheckResult {
+  ok: boolean;
+  flags: string[];
+  findings: SafetyFinding[];
+  reviewStatus: HumanReviewStatus;
 }

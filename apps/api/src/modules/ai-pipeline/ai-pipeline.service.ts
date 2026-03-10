@@ -19,10 +19,13 @@ import {
   createAiGenerationFailedEvent,
   createAnalyticsAiGenerationRecordedEvent,
   createContentPoolLowEvent,
+  createHumanReviewRequiredEvent,
+  createSafetyCheckCompletedEvent,
 } from './ai-pipeline.events.js';
 import { buildPrompt } from './prompt-engine.service.js';
 import { scoreGeneratedContent } from './quality-scorer.service.js';
 import { validateGeneratedContentSafety } from './safety-validator.service.js';
+import { evaluateHumanReviewTriggers } from './human-review-trigger.service.js';
 import {
   fictionalFactions,
   type AiPipelineLogger,
@@ -33,6 +36,7 @@ import {
   type GeneratedContentResult,
   type GenerationFailureCategory,
   type GeneratablePromptTemplateCategory,
+  type HumanReviewStatus,
   type PromptTemplateInput,
   type PromptTemplateRepository,
   type PromptTemplateUpdate,
@@ -1657,6 +1661,11 @@ export const createAiPipelineService = (
   const generateId = options.generateId ?? defaultGenerateId;
   const emailPoolLowThreshold = options.emailPoolLowThreshold ?? DEFAULT_EMAIL_POOL_LOW_THRESHOLD;
 
+  const defaultReviewStatus: HumanReviewStatus = {
+    requiresReview: false,
+    triggers: [],
+  };
+
   const generateContent = async (
     tenantId: string,
     userId: string,
@@ -1929,6 +1938,69 @@ export const createAiPipelineService = (
     });
     usage = mergeUsageMetrics(usage, difficulty.usage ?? {});
 
+    let reviewStatus: HumanReviewStatus = defaultReviewStatus;
+    if (!fallbackApplied) {
+      reviewStatus = await evaluateHumanReviewTriggers(
+        effectiveRequest,
+        templateId,
+        templateVersion,
+        quality,
+        safety.findings,
+        content,
+      );
+
+      options.eventBus.publish(
+        createSafetyCheckCompletedEvent({
+          correlationId: requestId,
+          tenantId,
+          userId,
+          payload: {
+            generationId: requestId,
+            correlationId: requestId,
+            tenantId,
+            templateId,
+            templateVersion,
+            safetyOk: safety.ok,
+            safetyFlags: safety.flags,
+            safetyFindings: safety.findings,
+            requiresHumanReview: reviewStatus.requiresReview,
+            reviewTriggers: reviewStatus.triggers,
+            ...(reviewStatus.confidenceScore !== undefined
+              ? { confidenceScore: reviewStatus.confidenceScore }
+              : {}),
+            ...(reviewStatus.edgeCasePatterns !== undefined
+              ? { edgeCasePatterns: reviewStatus.edgeCasePatterns }
+              : {}),
+          },
+        }),
+      );
+
+      if (reviewStatus.requiresReview) {
+        options.eventBus.publish(
+          createHumanReviewRequiredEvent({
+            correlationId: requestId,
+            tenantId,
+            userId,
+            payload: {
+              generationId: requestId,
+              correlationId: requestId,
+              tenantId,
+              templateId,
+              templateVersion,
+              triggers: reviewStatus.triggers,
+              safetyFindings: safety.findings,
+              ...(reviewStatus.confidenceScore !== undefined
+                ? { confidenceScore: reviewStatus.confidenceScore }
+                : {}),
+              ...(reviewStatus.edgeCasePatterns !== undefined
+                ? { edgeCasePatterns: reviewStatus.edgeCasePatterns }
+                : {}),
+            },
+          }),
+        );
+      }
+    }
+
     const storedContent = await storeGeneratedContent(
       tenantId,
       requestId,
@@ -2019,6 +2091,15 @@ export const createAiPipelineService = (
           qualityScore: quality.score,
           difficulty: difficulty.difficulty,
           safetyFlags: safety.flags,
+          safetyFindings: safety.findings,
+          requiresHumanReview: reviewStatus.requiresReview,
+          reviewTriggers: reviewStatus.triggers,
+          ...(reviewStatus.confidenceScore !== undefined
+            ? { confidenceScore: reviewStatus.confidenceScore }
+            : {}),
+          ...(reviewStatus.edgeCasePatterns !== undefined
+            ? { edgeCasePatterns: reviewStatus.edgeCasePatterns }
+            : {}),
           storedContentId: storedContent.id,
           ...(failureCategory ? { failureCategory } : {}),
           ...(usage.inputTokens !== undefined ? { inputTokens: usage.inputTokens } : {}),
@@ -2068,6 +2149,7 @@ export const createAiPipelineService = (
       quality,
       difficulty,
       safety,
+      reviewStatus,
       storedContent,
       usage,
     };

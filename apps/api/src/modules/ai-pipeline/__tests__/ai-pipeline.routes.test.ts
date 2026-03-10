@@ -86,6 +86,10 @@ const generationResult = {
     flags: ['ok'],
     findings: [],
   },
+  reviewStatus: {
+    requiresReview: false,
+    triggers: [],
+  },
   storedContent: {
     kind: 'email' as const,
     id: 'email-template-1',
