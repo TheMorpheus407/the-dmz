@@ -23,6 +23,11 @@ const errorResponseSchema = {
   },
 };
 
+const passthroughObjectSchema = {
+  type: 'object',
+  additionalProperties: true,
+} as const;
+
 export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const config = fastify.config;
   const isTest = config.NODE_ENV === 'test';
@@ -48,14 +53,18 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
             properties: {
               schemas: { type: 'array', items: { type: 'string' } },
               documentationUri: { type: 'string' },
-              patch: { type: 'object', properties: { supported: { type: 'boolean' } } },
-              bulk: { type: 'object' },
-              filter: { type: 'object' },
-              changePassword: { type: 'object' },
-              sort: { type: 'object' },
-              etag: { type: 'object' },
+              patch: {
+                ...passthroughObjectSchema,
+                properties: { supported: { type: 'boolean' } },
+              },
+              bulk: passthroughObjectSchema,
+              filter: passthroughObjectSchema,
+              changePassword: passthroughObjectSchema,
+              sort: passthroughObjectSchema,
+              etag: passthroughObjectSchema,
               authenticationSchemes: { type: 'array' },
             },
+            additionalProperties: true,
           },
           401: errorResponseSchema,
         },
@@ -123,7 +132,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           required: ['id'],
         },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
           404: errorResponseSchema,
@@ -202,7 +211,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           required: ['id'],
         },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           404: errorResponseSchema,
         },
@@ -243,7 +252,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           },
         },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
         },
@@ -288,7 +297,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           required: ['id'],
         },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
           404: errorResponseSchema,
@@ -329,7 +338,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           required: ['userName'],
         },
         response: {
-          201: { type: 'object' },
+          201: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
         },
@@ -382,7 +391,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
         },
         body: { type: 'object' },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
           404: errorResponseSchema,
@@ -427,7 +436,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
         },
         body: { type: 'object' },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
           404: errorResponseSchema,
@@ -534,7 +543,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           },
         },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
         },
@@ -579,7 +588,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           required: ['id'],
         },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
           404: errorResponseSchema,
@@ -617,7 +626,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           required: ['displayName'],
         },
         response: {
-          201: { type: 'object' },
+          201: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
         },
@@ -664,7 +673,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
         },
         body: { type: 'object' },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
           404: errorResponseSchema,
@@ -707,7 +716,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
         },
         body: { type: 'object' },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
           404: errorResponseSchema,
@@ -803,7 +812,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           required: ['operations'],
         },
         response: {
-          200: { type: 'object' },
+          200: passthroughObjectSchema,
           401: errorResponseSchema,
           403: errorResponseSchema,
         },

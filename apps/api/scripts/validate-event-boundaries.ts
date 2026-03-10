@@ -8,11 +8,15 @@ import {
   EVENT_OWNERSHIP_MANIFEST,
   getEventOwnership,
 } from '../src/shared/events/ownership-manifest.js';
+import { MODULE_MANIFEST } from '../src/modules/manifest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MODULES_DIR = join(__dirname, '..', 'src', 'modules');
 
-const MODULE_DIRS = ['auth', 'game', 'health'];
+const MODULE_DISCOVERY = MODULE_MANIFEST.modules.map((entry) => ({
+  moduleName: entry.name,
+  directory: entry.pluginPath.replace('./modules/', '').split('/')[0] ?? entry.name,
+}));
 
 interface ValidationError {
   category: 'ownership' | 'metadata' | 'sensitive' | 'version' | 'duplicate';
@@ -188,8 +192,8 @@ function printErrors(errors: ValidationError[]): void {
 function findEventModules(): Map<string, { path: string; events: string[] }> {
   const moduleEvents = new Map<string, { path: string; events: string[] }>();
 
-  for (const moduleName of MODULE_DIRS) {
-    const modulePath = join(MODULES_DIR, moduleName);
+  for (const module of MODULE_DISCOVERY) {
+    const modulePath = join(MODULES_DIR, module.directory);
     if (!existsSync(modulePath)) continue;
 
     const files = readdirSync(modulePath).filter((f) => f.endsWith('.events.ts'));
@@ -208,7 +212,7 @@ function findEventModules(): Map<string, { path: string; events: string[] }> {
       }
 
       if (events.length > 0) {
-        moduleEvents.set(moduleName, { path: fullPath, events: [...new Set(events)] });
+        moduleEvents.set(module.moduleName, { path: fullPath, events: [...new Set(events)] });
       }
     }
   }

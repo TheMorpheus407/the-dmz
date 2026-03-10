@@ -1,3 +1,4 @@
+import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
@@ -8,13 +9,26 @@ import * as contentService from './content.service.js';
 import type { AuthenticatedUser } from '../game/session/game-session.service.js';
 import type { FastifyInstance } from 'fastify';
 
+const protectedRoutePreHandlers = [authGuard, tenantContext, tenantStatusGuard];
+const contentReadRoutePreHandlers = [
+  ...protectedRoutePreHandlers,
+  requirePermission('admin', 'read'),
+];
+const contentWriteRoutePreHandlers = [
+  ...protectedRoutePreHandlers,
+  requirePermission('admin', 'write'),
+];
+const tenantInactiveOrForbiddenResponseJsonSchema = {
+  oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
+} as const;
+
 export const registerContentRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const config = fastify.config;
 
   fastify.get(
     '/content/emails',
     {
-      preHandler: [tenantContext, tenantStatusGuard],
+      preHandler: contentReadRoutePreHandlers,
       schema: {
         security: [{ bearerAuth: [] }],
         querystring: {
@@ -23,9 +37,13 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
             contentType: { type: 'string' },
             difficulty: { type: 'integer', minimum: 1, maximum: 5 },
             faction: { type: 'string' },
+            attackType: { type: 'string', maxLength: 100 },
             threatLevel: { type: 'string', enum: ['LOW', 'GUARDED', 'ELEVATED', 'HIGH', 'SEVERE'] },
+            season: { type: 'integer', minimum: 1 },
+            chapter: { type: 'integer', minimum: 1 },
             isActive: { type: 'boolean' },
           },
+          additionalProperties: false,
         },
         response: {
           200: {
@@ -38,7 +56,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
             },
           },
           401: errorResponseSchemas.Unauthorized,
-          403: errorResponseSchemas.TenantInactive,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
           429: errorResponseSchemas.RateLimitExceeded,
         },
       },
@@ -49,7 +67,10 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
         contentType?: string;
         difficulty?: number;
         faction?: string;
+        attackType?: string;
         threatLevel?: string;
+        season?: number;
+        chapter?: number;
         isActive?: boolean;
       };
 
@@ -62,7 +83,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
   fastify.get(
     '/content/emails/:id',
     {
-      preHandler: [tenantContext, tenantStatusGuard],
+      preHandler: contentReadRoutePreHandlers,
       schema: {
         security: [{ bearerAuth: [] }],
         params: {
@@ -80,7 +101,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
             },
           },
           401: errorResponseSchemas.Unauthorized,
-          403: errorResponseSchemas.TenantInactive,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
           404: errorResponseSchemas.NotFound,
           429: errorResponseSchemas.RateLimitExceeded,
         },
@@ -110,7 +131,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
   fastify.post(
     '/content/emails',
     {
-      preHandler: [tenantContext, tenantStatusGuard],
+      preHandler: contentWriteRoutePreHandlers,
       schema: {
         security: [{ bearerAuth: [] }],
         body: {
@@ -145,7 +166,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
             },
           },
           401: errorResponseSchemas.Unauthorized,
-          403: errorResponseSchemas.TenantInactive,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
           429: errorResponseSchemas.RateLimitExceeded,
         },
       },
@@ -182,7 +203,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
   fastify.get(
     '/content/scenarios',
     {
-      preHandler: [tenantContext, tenantStatusGuard],
+      preHandler: contentReadRoutePreHandlers,
       schema: {
         security: [{ bearerAuth: [] }],
         querystring: {
@@ -205,7 +226,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
             },
           },
           401: errorResponseSchemas.Unauthorized,
-          403: errorResponseSchemas.TenantInactive,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
           429: errorResponseSchemas.RateLimitExceeded,
         },
       },
@@ -228,7 +249,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
   fastify.get(
     '/content/scenarios/:id',
     {
-      preHandler: [tenantContext, tenantStatusGuard],
+      preHandler: contentReadRoutePreHandlers,
       schema: {
         security: [{ bearerAuth: [] }],
         params: {
@@ -246,7 +267,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
             },
           },
           401: errorResponseSchemas.Unauthorized,
-          403: errorResponseSchemas.TenantInactive,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
           404: errorResponseSchemas.NotFound,
           429: errorResponseSchemas.RateLimitExceeded,
         },
@@ -276,7 +297,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
   fastify.get(
     '/content/templates/:type',
     {
-      preHandler: [tenantContext, tenantStatusGuard],
+      preHandler: contentReadRoutePreHandlers,
       schema: {
         security: [{ bearerAuth: [] }],
         params: {
@@ -305,7 +326,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
             },
           },
           401: errorResponseSchemas.Unauthorized,
-          403: errorResponseSchemas.TenantInactive,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
           429: errorResponseSchemas.RateLimitExceeded,
         },
       },
@@ -327,7 +348,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
   fastify.get(
     '/content/localized/:id',
     {
-      preHandler: [tenantContext, tenantStatusGuard],
+      preHandler: contentReadRoutePreHandlers,
       schema: {
         security: [{ bearerAuth: [] }],
         params: {
@@ -351,7 +372,7 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
             },
           },
           401: errorResponseSchemas.Unauthorized,
-          403: errorResponseSchemas.TenantInactive,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
           404: errorResponseSchemas.NotFound,
           429: errorResponseSchemas.RateLimitExceeded,
         },

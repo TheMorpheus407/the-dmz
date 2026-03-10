@@ -4,6 +4,10 @@ import { m1AuthEventContracts } from '@the-dmz/shared/contracts';
 
 import {
   AUTH_EVENTS,
+  createAuthDelegationDeniedEvent,
+  createAuthDelegationRoleAssignedEvent,
+  createAuthDelegationRoleCreatedEvent,
+  createAuthDelegationRoleUpdatedEvent,
   createAuthLoginFailedEvent,
   createAuthSessionCreatedEvent,
   createAuthSessionRevokedEvent,
@@ -218,6 +222,63 @@ function createTestEvent(eventType: string) {
           email: 'test@example.com',
           tenantId: 'test-tenant-id',
           riskContext: { ipAddress: '192.168.1.1' },
+        },
+      });
+
+    case 'auth.delegation.role.created':
+      return createAuthDelegationRoleCreatedEvent({
+        ...BASE_PARAMS,
+        payload: {
+          actorId: 'test-user-id',
+          tenantId: 'test-tenant-id',
+          roleId: 'test-role-id',
+          roleName: 'Delegated Admin',
+          permissions: ['admin:read', 'admin:write'],
+          correlationId: 'test-correlation-id',
+        },
+      });
+
+    case 'auth.delegation.role.updated':
+      return createAuthDelegationRoleUpdatedEvent({
+        ...BASE_PARAMS,
+        payload: {
+          actorId: 'test-user-id',
+          tenantId: 'test-tenant-id',
+          roleId: 'test-role-id',
+          roleName: 'Delegated Admin',
+          permissions: ['admin:read'],
+          correlationId: 'test-correlation-id',
+        },
+      });
+
+    case 'auth.delegation.role.assigned':
+      return createAuthDelegationRoleAssignedEvent({
+        ...BASE_PARAMS,
+        payload: {
+          actorId: 'test-user-id',
+          tenantId: 'test-tenant-id',
+          targetUserId: 'target-user-id',
+          roleId: 'test-role-id',
+          roleName: 'Delegated Admin',
+          scope: 'tenant',
+          expiresAt: new Date('2026-03-10T00:00:00.000Z').toISOString(),
+          correlationId: 'test-correlation-id',
+        },
+      });
+
+    case 'auth.delegation.denied':
+      return createAuthDelegationDeniedEvent({
+        ...BASE_PARAMS,
+        payload: {
+          actorId: 'test-user-id',
+          tenantId: 'test-tenant-id',
+          targetUserId: 'target-user-id',
+          roleId: 'test-role-id',
+          roleName: 'Delegated Admin',
+          permissions: ['admin:write'],
+          reason: 'permission_ceiling_exceeded',
+          outcome: 'denied',
+          correlationId: 'test-correlation-id',
         },
       });
 

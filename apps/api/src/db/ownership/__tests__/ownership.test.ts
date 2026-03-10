@@ -35,6 +35,11 @@ describe('getModuleOwnedTables', () => {
     expect(gameTables).toContainEqual({ schema: 'public', table: 'game_sessions' });
   });
 
+  it('should return tables owned by aiPipeline module', () => {
+    const aiTables = getModuleOwnedTables('aiPipeline');
+    expect(aiTables).toContainEqual({ schema: 'ai', table: 'prompt_templates' });
+  });
+
   it('should return empty array for unknown module', () => {
     const unknownTables = getModuleOwnedTables('unknown');
     expect(unknownTables).toHaveLength(0);
@@ -65,6 +70,7 @@ describe('isAccessAllowed', () => {
   it('should allow module to access its own tables', () => {
     expect(isAccessAllowed('auth', 'auth', 'sessions')).toBe(true);
     expect(isAccessAllowed('game', 'public', 'game_sessions')).toBe(true);
+    expect(isAccessAllowed('aiPipeline', 'ai', 'prompt_templates')).toBe(true);
   });
 
   it('should allow access to shared tables via exception', () => {
@@ -77,6 +83,7 @@ describe('isAccessAllowed', () => {
   it('should deny access to tables owned by other modules', () => {
     expect(isAccessAllowed('game', 'auth', 'sessions')).toBe(false);
     expect(isAccessAllowed('auth', 'public', 'game_sessions')).toBe(false);
+    expect(isAccessAllowed('auth', 'ai', 'prompt_templates')).toBe(false);
   });
 
   it('should allow access to unknown tables (legacy/new tables)', () => {

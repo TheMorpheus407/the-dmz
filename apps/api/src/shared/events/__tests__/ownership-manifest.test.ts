@@ -30,6 +30,16 @@ describe('EVENT_OWNERSHIP_MANIFEST', () => {
     );
     expect(gameEvents.length).toBeGreaterThan(0);
   });
+
+  it('should contain ai pipeline events', () => {
+    const aiEvents = EVENT_OWNERSHIP_MANIFEST.events.filter(
+      (e) =>
+        e.eventType.startsWith('ai.') ||
+        e.eventType.startsWith('analytics.ai.') ||
+        e.eventType === 'content.pool.low',
+    );
+    expect(aiEvents.length).toBeGreaterThan(0);
+  });
 });
 
 describe('getEventOwnership', () => {
@@ -37,6 +47,13 @@ describe('getEventOwnership', () => {
     const ownership = getEventOwnership('auth.user.created');
     expect(ownership).toBeDefined();
     expect(ownership?.owningModule).toBe('auth');
+    expect(ownership?.version).toBe(1);
+  });
+
+  it('should return ownership for ai pipeline events', () => {
+    const ownership = getEventOwnership('ai.generation.completed');
+    expect(ownership).toBeDefined();
+    expect(ownership?.owningModule).toBe('aiPipeline');
     expect(ownership?.version).toBe(1);
   });
 
@@ -50,6 +67,7 @@ describe('isEventOwnedByModule', () => {
   it('should return true when module owns event', () => {
     expect(isEventOwnedByModule('auth.user.created', 'auth')).toBe(true);
     expect(isEventOwnedByModule('game.session.started', 'game')).toBe(true);
+    expect(isEventOwnedByModule('ai.generation.failed', 'aiPipeline')).toBe(true);
   });
 
   it('should return false when module does not own event', () => {
@@ -81,6 +99,17 @@ describe('getAllOwnedEvents', () => {
     const gameEvents = getAllOwnedEvents('game');
     expect(gameEvents.length).toBeGreaterThan(0);
     expect(gameEvents.every((e) => e.eventType.startsWith('game.'))).toBe(true);
+
+    const aiEvents = getAllOwnedEvents('aiPipeline');
+    expect(aiEvents.length).toBeGreaterThan(0);
+    expect(
+      aiEvents.every(
+        (e) =>
+          e.eventType.startsWith('ai.') ||
+          e.eventType.startsWith('analytics.ai.') ||
+          e.eventType === 'content.pool.low',
+      ),
+    ).toBe(true);
   });
 
   it('should return empty array for module with no events', () => {

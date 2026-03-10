@@ -153,7 +153,10 @@ export const errorResponseSchemas = {
       error: {
         type: 'object',
         properties: {
-          code: { type: 'string', enum: ['NOT_FOUND', 'RESOURCE_NOT_FOUND', 'TENANT_NOT_FOUND'] },
+          code: {
+            type: 'string',
+            enum: ['NOT_FOUND', 'RESOURCE_NOT_FOUND', 'TENANT_NOT_FOUND', 'GAME_NOT_FOUND'],
+          },
           message: { type: 'string' },
           details: { type: 'object' },
           requestId: { type: 'string' },

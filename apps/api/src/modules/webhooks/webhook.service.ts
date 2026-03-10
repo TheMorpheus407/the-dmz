@@ -495,7 +495,7 @@ export class WebhookService {
       totalRequests: newTotalRequests,
       failedRequests: newFailedRequests,
       consecutiveFailures: newConsecutiveFailures,
-      isOpen: shouldOpen || breaker.isOpen,
+      isOpen: shouldOpen,
       openedAt: shouldOpen && !breaker.isOpen ? new Date() : breaker.openedAt,
       closedAt: !shouldOpen && breaker.isOpen ? new Date() : breaker.closedAt,
       lastCheckedAt: new Date(),

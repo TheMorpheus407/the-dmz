@@ -51,6 +51,33 @@ export const ROUTE_OWNERSHIP_MANIFEST: RouteOwnershipManifest = {
         },
       ],
     },
+    {
+      module: 'content',
+      routePrefix: '/content',
+      routeTags: ['Content'],
+      ownedRoutes: [
+        '/content/emails',
+        '/content/emails/:id',
+        '/content/scenarios',
+        '/content/scenarios/:id',
+        '/content/templates/:type',
+        '/content/localized/:id',
+      ],
+      exemptions: [],
+    },
+    {
+      module: 'aiPipeline',
+      routePrefix: '/ai',
+      routeTags: ['AI'],
+      ownedRoutes: [
+        '/ai/prompt-templates',
+        '/ai/prompt-templates/:id',
+        '/ai/generate/email',
+        '/ai/generate/intel-brief',
+        '/ai/generate/scenario-variation',
+      ],
+      exemptions: [],
+    },
   ],
 };
 

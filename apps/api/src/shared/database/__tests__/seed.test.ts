@@ -1,47 +1,87 @@
+import { randomUUID } from 'crypto';
+import { fileURLToPath } from 'node:url';
+
+import { and, eq } from 'drizzle-orm';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import postgres from 'postgres';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
 
 import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from '@the-dmz/shared/testing';
 
-import { getDatabaseClient, getDatabasePool } from '../connection.js';
-import { tenants, users } from '../schema/index.js';
+import { loadConfig, type AppConfig } from '../../../config.js';
+import { closeDatabase, getDatabaseClient } from '../connection.js';
+import { permissions, rolePermissions, roles, tenants, users } from '../schema/index.js';
 import { userProfiles } from '../schema/auth/user-profiles.js';
 import { seedDatabase } from '../seed.js';
 
-const originalNodeEnv = process.env['NODE_ENV'];
-const originalDatabaseUrl = process.env['DATABASE_URL'];
+const adminDatabaseUrl = 'postgresql://dmz:dmz_dev@localhost:5432/postgres';
+const migrationsFolder = fileURLToPath(new URL('../migrations', import.meta.url));
 
-const resetTestData = async (): Promise<void> => {
-  const pool = getDatabasePool();
-  await pool`TRUNCATE TABLE
-    auth.user_profiles,
-    auth.role_permissions,
-    auth.user_roles,
-    auth.sessions,
-    auth.sso_connections,
-    auth.roles,
-    auth.permissions,
-    users,
-    tenants
-    RESTART IDENTITY CASCADE`;
+const createTestConfig = (): AppConfig => {
+  const base = loadConfig();
+  return {
+    ...base,
+    NODE_ENV: 'test',
+    LOG_LEVEL: 'silent',
+    DATABASE_URL: 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test',
+  };
 };
 
-beforeEach(async () => {
-  process.env['NODE_ENV'] = 'test';
-  process.env['DATABASE_URL'] = 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test';
-  await resetTestData();
+const createIsolatedTestConfig = (databaseName: string): AppConfig => ({
+  ...createTestConfig(),
+  DATABASE_URL: `postgresql://dmz:dmz_dev@localhost:5432/${databaseName}`,
 });
 
-afterEach(() => {
-  process.env['NODE_ENV'] = originalNodeEnv ?? '';
-  process.env['DATABASE_URL'] = originalDatabaseUrl ?? '';
+const createIsolatedDatabase = async (config: AppConfig): Promise<() => Promise<void>> => {
+  const databaseName = new URL(config.DATABASE_URL).pathname.replace(/^\//, '');
+  const adminPool = postgres(adminDatabaseUrl, { max: 1 });
+
+  const cleanup = async (): Promise<void> => {
+    await adminPool.unsafe(`
+      SELECT pg_terminate_backend(pid)
+      FROM pg_stat_activity
+      WHERE datname = '${databaseName}'
+        AND pid <> pg_backend_pid()
+    `);
+    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
+    await adminPool.end({ timeout: 5 });
+  };
+
+  try {
+    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
+    await adminPool.unsafe(`CREATE DATABASE "${databaseName}"`);
+    return cleanup;
+  } catch (error) {
+    await adminPool.end({ timeout: 5 });
+    throw error;
+  }
+};
+
+let testConfig: AppConfig;
+let cleanupDatabase: (() => Promise<void>) | undefined;
+
+beforeEach(async () => {
+  const databaseName = `dmz_t_seed_${randomUUID().replace(/-/g, '_')}`;
+  testConfig = createIsolatedTestConfig(databaseName);
+  cleanupDatabase = await createIsolatedDatabase(testConfig);
+
+  const db = getDatabaseClient(testConfig);
+  await migrate(db, { migrationsFolder });
+});
+
+afterEach(async () => {
+  await closeDatabase();
+  if (cleanupDatabase) {
+    await cleanupDatabase();
+  }
+  cleanupDatabase = undefined;
 });
 
 describe('seedDatabase', () => {
   it('seeds tenants, users, and profiles with correct counts', async () => {
-    const db = getDatabaseClient();
+    const db = getDatabaseClient(testConfig);
 
-    await seedDatabase();
+    await seedDatabase(testConfig);
 
     const tenantCount = await db.select({ id: tenants.tenantId }).from(tenants);
     expect(tenantCount).toHaveLength(4);
@@ -54,9 +94,9 @@ describe('seedDatabase', () => {
   });
 
   it('seeds the system tenant with correct properties', async () => {
-    const db = getDatabaseClient();
+    const db = getDatabaseClient(testConfig);
 
-    await seedDatabase();
+    await seedDatabase(testConfig);
 
     const [systemTenant] = await db
       .select({
@@ -75,9 +115,9 @@ describe('seedDatabase', () => {
   });
 
   it('seeds users with correct tenant relationships', async () => {
-    const db = getDatabaseClient();
+    const db = getDatabaseClient(testConfig);
 
-    await seedDatabase();
+    await seedDatabase(testConfig);
 
     const acmeUsers = await db
       .select({
@@ -98,9 +138,9 @@ describe('seedDatabase', () => {
   });
 
   it('seeds profiles with correct user relationships', async () => {
-    const db = getDatabaseClient();
+    const db = getDatabaseClient(testConfig);
 
-    await seedDatabase();
+    await seedDatabase(testConfig);
 
     const learnerProfile = await db
       .select({
@@ -119,9 +159,9 @@ describe('seedDatabase', () => {
   });
 
   it('seeds profiles with correct tenant relationships', async () => {
-    const db = getDatabaseClient();
+    const db = getDatabaseClient(testConfig);
 
-    await seedDatabase();
+    await seedDatabase(testConfig);
 
     const consumerProfiles = await db
       .select({
@@ -138,10 +178,10 @@ describe('seedDatabase', () => {
   });
 
   it('is idempotent - running seed twice produces same results', async () => {
-    const db = getDatabaseClient();
+    const db = getDatabaseClient(testConfig);
 
-    await seedDatabase();
-    await seedDatabase();
+    await seedDatabase(testConfig);
+    await seedDatabase(testConfig);
 
     const tenantCount = await db.select({ id: tenants.tenantId }).from(tenants);
     const userCount = await db.select({ id: users.userId }).from(users);
@@ -153,9 +193,9 @@ describe('seedDatabase', () => {
   });
 
   it('seeds inactive tenant users as inactive', async () => {
-    const db = getDatabaseClient();
+    const db = getDatabaseClient(testConfig);
 
-    await seedDatabase();
+    await seedDatabase(testConfig);
 
     const inactiveUsers = await db
       .select({
@@ -170,9 +210,9 @@ describe('seedDatabase', () => {
   });
 
   it('seeds profiles with default accessibility and notification settings', async () => {
-    const db = getDatabaseClient();
+    const db = getDatabaseClient(testConfig);
 
-    await seedDatabase();
+    await seedDatabase(testConfig);
 
     const [profile] = await db
       .select({
@@ -195,5 +235,43 @@ describe('seedDatabase', () => {
       sms: false,
       marketing: false,
     });
+  });
+
+  it('seeds admin read/write permissions and grants them to seeded admin roles', async () => {
+    const db = getDatabaseClient(testConfig);
+
+    await seedDatabase(testConfig);
+
+    const adminPermissionRows = await db
+      .select({
+        resource: permissions.resource,
+        action: permissions.action,
+      })
+      .from(permissions)
+      .where(eq(permissions.resource, 'admin'));
+
+    expect(adminPermissionRows).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ resource: 'admin', action: 'read' }),
+        expect.objectContaining({ resource: 'admin', action: 'write' }),
+      ]),
+    );
+
+    const adminRolePermissions = await db
+      .select({
+        resource: permissions.resource,
+        action: permissions.action,
+      })
+      .from(rolePermissions)
+      .innerJoin(roles, eq(rolePermissions.roleId, roles.id))
+      .innerJoin(permissions, eq(rolePermissions.permissionId, permissions.id))
+      .where(and(eq(roles.tenantId, SEED_TENANT_IDS.acmeCorp), eq(roles.name, 'admin')));
+
+    expect(adminRolePermissions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ resource: 'admin', action: 'read' }),
+        expect.objectContaining({ resource: 'admin', action: 'write' }),
+      ]),
+    );
   });
 });

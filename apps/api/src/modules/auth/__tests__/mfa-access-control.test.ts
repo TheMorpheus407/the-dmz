@@ -1,5 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { randomUUID } from 'crypto';
+import { fileURLToPath } from 'node:url';
+
+import { eq, sql } from 'drizzle-orm';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
+import postgres from 'postgres';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
@@ -13,6 +18,13 @@ import { users } from '../../../shared/database/schema/users.js';
 import { getRefreshCookieName } from '../cookies.js';
 import { csrfCookieName } from '../csrf.js';
 
+import type { FastifyInstance } from 'fastify';
+
+const adminDatabaseUrl = 'postgresql://dmz:dmz_dev@localhost:5432/postgres';
+const migrationsFolder = fileURLToPath(
+  new URL('../../../shared/database/migrations', import.meta.url),
+);
+
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
   return {
@@ -24,7 +36,39 @@ const createTestConfig = (): AppConfig => {
   };
 };
 
-const testConfig = createTestConfig();
+const createIsolatedTestConfig = (databaseName: string): AppConfig => ({
+  ...createTestConfig(),
+  DATABASE_URL: `postgresql://dmz:dmz_dev@localhost:5432/${databaseName}`,
+});
+
+const createIsolatedDatabase = async (config: AppConfig): Promise<() => Promise<void>> => {
+  const databaseName = new URL(config.DATABASE_URL).pathname.replace(/^\//, '');
+  const adminPool = postgres(adminDatabaseUrl, { max: 1 });
+
+  const cleanup = async (): Promise<void> => {
+    await adminPool.unsafe(`
+      SELECT pg_terminate_backend(pid)
+      FROM pg_stat_activity
+      WHERE datname = '${databaseName}'
+        AND pid <> pg_backend_pid()
+    `);
+    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
+    await adminPool.end({ timeout: 5 });
+  };
+
+  try {
+    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
+    await adminPool.unsafe(`CREATE DATABASE "${databaseName}"`);
+    return cleanup;
+  } catch (error) {
+    await adminPool.end({ timeout: 5 });
+    throw error;
+  }
+};
+
+let testConfig: AppConfig;
+let app: FastifyInstance;
+let cleanupDatabase: (() => Promise<void>) | undefined;
 
 const resetTestData = async (): Promise<void> => {
   const pool = getDatabasePool(testConfig);
@@ -39,16 +83,31 @@ const resetTestData = async (): Promise<void> => {
 };
 
 describe('MFA Access Control - Super Admin Step-up Flow', () => {
-  const app = buildApp(testConfig);
-
   beforeAll(async () => {
-    await resetTestData();
+    const databaseName = `dmz_t_mfa_access_${randomUUID().replace(/-/g, '_')}`;
+    testConfig = createIsolatedTestConfig(databaseName);
+    cleanupDatabase = await createIsolatedDatabase(testConfig);
+
+    const db = getDatabaseClient(testConfig);
+    await migrate(db, { migrationsFolder });
+    await db.execute(
+      sql`ALTER TABLE "auth"."sessions" ADD COLUMN IF NOT EXISTS "device_fingerprint" varchar(128)`,
+    );
+
+    app = buildApp(testConfig, { skipHealthCheck: true });
     await app.ready();
   });
 
+  beforeEach(async () => {
+    await resetTestData();
+  });
+
   afterAll(async () => {
-    await closeDatabase();
     await app.close();
+    await closeDatabase();
+    if (cleanupDatabase) {
+      await cleanupDatabase();
+    }
   });
 
   describe('MFA status endpoint reflects correct state', () => {

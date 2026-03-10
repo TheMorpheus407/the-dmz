@@ -1,6 +1,6 @@
 import { randomUUID } from 'crypto';
 
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   WebhookSubscriptionStatus,
@@ -18,70 +18,77 @@ import {
   WebhookSignatureInvalidError,
   WebhookSignatureExpiredError,
 } from '../webhook.errors.js';
+import { webhookRepo } from '../webhook.repo.js';
+
+import type {
+  WebhookCircuitBreakerDb,
+  WebhookSubscriptionDb,
+} from '../../../db/schema/webhooks.js';
 
 vi.mock('../webhook.repo.js');
 
 describe('WebhookService', () => {
   let service: WebhookService;
-  let mockRepo: {
-    createSubscription: ReturnType<typeof vi.fn>;
-    getSubscriptionById: ReturnType<typeof vi.fn>;
-    listSubscriptions: ReturnType<typeof vi.fn>;
-    updateSubscription: ReturnType<typeof vi.fn>;
-    deleteSubscription: ReturnType<typeof vi.fn>;
-    getActiveSubscriptionsForEvent: ReturnType<typeof vi.fn>;
-    createDelivery: ReturnType<typeof vi.fn>;
-    getDeliveryById: ReturnType<typeof vi.fn>;
-    listDeliveries: ReturnType<typeof vi.fn>;
-    updateDelivery: ReturnType<typeof vi.fn>;
-    getOrCreateCircuitBreaker: ReturnType<typeof vi.fn>;
-    updateCircuitBreaker: ReturnType<typeof vi.fn>;
-  };
+  const mockRepo = vi.mocked(webhookRepo);
 
   const mockTenantId = randomUUID();
   const mockSubscriptionId = randomUUID();
   const mockSecret = 'test-secret';
   const mockSecretHash = 'hashed-secret';
+  const fixedDate = new Date('2026-03-10T00:00:00.000Z');
+
+  const buildSubscriptionDb = (
+    overrides: Partial<WebhookSubscriptionDb> = {},
+  ): WebhookSubscriptionDb => ({
+    id: mockSubscriptionId,
+    tenantId: mockTenantId,
+    name: 'Test Webhook',
+    targetUrl: 'https://example.com/webhook',
+    eventTypes: JSON.stringify(['auth.user.created']),
+    status: 'active',
+    secretHash: mockSecretHash,
+    filters: null,
+    createdAt: fixedDate,
+    updatedAt: fixedDate,
+    disabledAt: null,
+    testPendingAt: null,
+    failureDisabledAt: null,
+    ...overrides,
+  });
+
+  const buildCircuitBreakerDb = (
+    overrides: Partial<WebhookCircuitBreakerDb> = {},
+  ): WebhookCircuitBreakerDb => ({
+    id: randomUUID(),
+    subscriptionId: mockSubscriptionId,
+    totalRequests: 0,
+    failedRequests: 0,
+    consecutiveFailures: 0,
+    isOpen: false,
+    openedAt: null,
+    closedAt: null,
+    lastCheckedAt: fixedDate,
+    createdAt: fixedDate,
+    updatedAt: fixedDate,
+    ...overrides,
+  });
 
   beforeAll(() => {
     service = new WebhookService();
-    mockRepo = {
-      createSubscription: vi.fn(),
-      getSubscriptionById: vi.fn(),
-      listSubscriptions: vi.fn(),
-      updateSubscription: vi.fn(),
-      deleteSubscription: vi.fn(),
-      getActiveSubscriptionsForEvent: vi.fn(),
-      createDelivery: vi.fn(),
-      getDeliveryById: vi.fn(),
-      listDeliveries: vi.fn(),
-      updateDelivery: vi.fn(),
-      getOrCreateCircuitBreaker: vi.fn(),
-      updateCircuitBreaker: vi.fn(),
-    };
   });
 
-  afterAll(() => {
+  afterEach(() => {
     vi.clearAllMocks();
   });
 
   describe('createSubscription', () => {
     it('should create a webhook subscription with test_pending status', async () => {
-      const mockDbSubscription = {
-        id: mockSubscriptionId,
-        tenantId: mockTenantId,
-        name: 'Test Webhook',
-        targetUrl: 'https://example.com/webhook',
-        eventTypes: JSON.stringify(['auth.user.created']),
+      const mockDbSubscription = buildSubscriptionDb({
         status: 'test_pending',
-        secretHash: mockSecretHash,
-        filters: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
         testPendingAt: new Date(),
-      };
+      });
 
-      mockRepo.createSubscription.mockResolvedValue([mockDbSubscription]);
+      mockRepo.createSubscription.mockResolvedValue(mockDbSubscription);
 
       const result = await service.createSubscription(mockTenantId, {
         name: 'Test Webhook',
@@ -97,18 +104,7 @@ describe('WebhookService', () => {
 
   describe('getSubscription', () => {
     it('should return subscription when found', async () => {
-      const mockDbSubscription = {
-        id: mockSubscriptionId,
-        tenantId: mockTenantId,
-        name: 'Test Webhook',
-        targetUrl: 'https://example.com/webhook',
-        eventTypes: JSON.stringify(['auth.user.created']),
-        status: 'active',
-        secretHash: mockSecretHash,
-        filters: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
+      const mockDbSubscription = buildSubscriptionDb();
 
       mockRepo.getSubscriptionById.mockResolvedValue(mockDbSubscription);
 
@@ -129,20 +125,7 @@ describe('WebhookService', () => {
 
   describe('listSubscriptions', () => {
     it('should return subscriptions list', async () => {
-      const mockDbSubscriptions = [
-        {
-          id: mockSubscriptionId,
-          tenantId: mockTenantId,
-          name: 'Test Webhook',
-          targetUrl: 'https://example.com/webhook',
-          eventTypes: JSON.stringify(['auth.user.created']),
-          status: 'active',
-          secretHash: mockSecretHash,
-          filters: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ];
+      const mockDbSubscriptions = [buildSubscriptionDb()];
 
       mockRepo.listSubscriptions.mockResolvedValue({
         subscriptions: mockDbSubscriptions,
@@ -157,25 +140,16 @@ describe('WebhookService', () => {
 
   describe('updateSubscription', () => {
     it('should update subscription status', async () => {
-      const mockDbSubscription = {
-        id: mockSubscriptionId,
-        tenantId: mockTenantId,
-        name: 'Test Webhook',
-        targetUrl: 'https://example.com/webhook',
-        eventTypes: JSON.stringify(['auth.user.created']),
+      const mockDbSubscription = buildSubscriptionDb({
         status: 'disabled',
-        secretHash: mockSecretHash,
-        filters: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
         disabledAt: new Date(),
-      };
+      });
 
       mockRepo.getSubscriptionById.mockResolvedValue({
         ...mockDbSubscription,
         status: 'active',
       });
-      mockRepo.updateSubscription.mockResolvedValue([mockDbSubscription]);
+      mockRepo.updateSubscription.mockResolvedValue(mockDbSubscription);
 
       const result = await service.updateSubscription(mockTenantId, mockSubscriptionId, {
         status: WebhookSubscriptionStatus.DISABLED,
@@ -188,10 +162,7 @@ describe('WebhookService', () => {
 
   describe('deleteSubscription', () => {
     it('should delete subscription when found', async () => {
-      mockRepo.getSubscriptionById.mockResolvedValue({
-        id: mockSubscriptionId,
-        tenantId: mockTenantId,
-      });
+      mockRepo.getSubscriptionById.mockResolvedValue(buildSubscriptionDb());
       mockRepo.deleteSubscription.mockResolvedValue(true);
 
       await expect(
@@ -290,14 +261,12 @@ describe('WebhookService', () => {
 
   describe('Circuit Breaker', () => {
     it('should open circuit breaker when failure rate exceeds threshold', async () => {
-      const mockBreaker = {
-        id: randomUUID(),
-        subscriptionId: mockSubscriptionId,
+      const mockBreaker = buildCircuitBreakerDb({
         totalRequests: 19,
         failedRequests: 18,
         consecutiveFailures: 18,
         isOpen: false,
-      };
+      });
 
       mockRepo.getOrCreateCircuitBreaker.mockResolvedValue(mockBreaker);
       mockRepo.updateCircuitBreaker.mockResolvedValue({ ...mockBreaker, isOpen: true });
@@ -308,15 +277,13 @@ describe('WebhookService', () => {
     });
 
     it('should close circuit breaker when success occurs', async () => {
-      const mockBreaker = {
-        id: randomUUID(),
-        subscriptionId: mockSubscriptionId,
+      const mockBreaker = buildCircuitBreakerDb({
         totalRequests: 20,
         failedRequests: 19,
         consecutiveFailures: 1,
         isOpen: true,
         openedAt: new Date(),
-      };
+      });
 
       mockRepo.getOrCreateCircuitBreaker.mockResolvedValue(mockBreaker);
       mockRepo.updateCircuitBreaker.mockResolvedValue({ ...mockBreaker, isOpen: false });

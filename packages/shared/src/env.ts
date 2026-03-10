@@ -81,6 +81,12 @@ export const backendEnvSchema = z
       .string()
       .min(32, 'JWT_PRIVATE_KEY_ENCRYPTION_KEY must be at least 32 characters')
       .default('dev-encryption-key-change-in-prod'),
+    ANTHROPIC_API_KEY: z.string().optional(),
+    ANTHROPIC_API_URL: z.string().optional().default('https://api.anthropic.com'),
+    AI_GENERATION_MODEL: z.string().min(1).default('sonnet'),
+    AI_CLASSIFICATION_MODEL: z.string().min(1).default('haiku'),
+    AI_MAX_RETRIES: z.coerce.number().int().nonnegative().max(3).default(3),
+    AI_RETRY_DELAY_MS: z.coerce.number().int().positive().default(1000),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';

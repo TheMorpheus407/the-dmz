@@ -72,6 +72,16 @@ export const API_VERSIONING_POLICY: ApiVersioningPolicy = {
       requiredVersionPrefix: '/health',
       allowedUnversioned: true,
     },
+    {
+      module: 'content',
+      requiredVersionPrefix: '/api/v1/content',
+      allowedUnversioned: false,
+    },
+    {
+      module: 'aiPipeline',
+      requiredVersionPrefix: '/api/v1/ai',
+      allowedUnversioned: false,
+    },
   ],
   allowedUnversionedExceptions: [
     {

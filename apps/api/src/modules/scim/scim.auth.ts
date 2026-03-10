@@ -49,18 +49,20 @@ export const oauthGuard = async (request: FastifyRequest, _reply: FastifyReply):
 };
 
 export const requireScope = (requiredScope: OAuthScope) => {
-  return (request: FastifyRequest, reply: FastifyReply): void => {
+  return async (
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<FastifyReply | undefined> => {
     const client = request.oauthClient;
 
     if (!client) {
-      reply.code(401).send({
+      return reply.code(401).send({
         success: false,
         error: {
           code: 'OAUTH_INVALID_TOKEN',
           message: 'OAuth token not validated',
         },
       });
-      return;
     }
 
     const hasScope = client.scopes.includes(requiredScope);
@@ -82,15 +84,16 @@ export const requireScope = (requiredScope: OAuthScope) => {
         }),
       );
 
-      reply.code(403).send({
+      return reply.code(403).send({
         success: false,
         error: {
           code: OAuthInsufficientScopeError.code,
           message: `Required scope: ${requiredScope}. Available scopes: ${client.scopes.join(', ')}`,
         },
       });
-      return;
     }
+
+    return undefined;
   };
 };
 

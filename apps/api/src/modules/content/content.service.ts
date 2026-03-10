@@ -2,6 +2,7 @@ import { getDatabaseClient } from '../../shared/database/connection.js';
 
 import {
   findEmailTemplates,
+  findFallbackEmailTemplates,
   findEmailTemplateById,
   createEmailTemplate,
   findScenarios,
@@ -90,12 +91,33 @@ export const listEmailTemplates = async (
     contentType?: string;
     difficulty?: number;
     faction?: string;
+    attackType?: string;
     threatLevel?: string;
+    season?: number;
+    chapter?: number;
     isActive?: boolean;
   },
 ): Promise<EmailTemplate[]> => {
   const db = getDatabaseClient(config);
   return findEmailTemplates(db, tenantId, filters);
+};
+
+export const listFallbackEmailTemplates = async (
+  config: AppConfig,
+  tenantId: string,
+  filters?: {
+    contentType?: string;
+    difficulty?: number;
+    faction?: string;
+    attackType?: string;
+    threatLevel?: string;
+    season?: number;
+    chapter?: number;
+    isActive?: boolean;
+  },
+): Promise<EmailTemplate[]> => {
+  const db = getDatabaseClient(config);
+  return findFallbackEmailTemplates(db, tenantId, filters);
 };
 
 export const getEmailTemplate = async (

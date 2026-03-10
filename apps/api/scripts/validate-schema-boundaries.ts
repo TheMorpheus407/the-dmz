@@ -10,11 +10,24 @@ import {
   getSchemaOwner,
   type SchemaBoundaryViolation,
 } from '../src/modules/routes/index.js';
+import { MODULE_MANIFEST } from '../src/modules/manifest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MODULES_DIR = join(__dirname, '..', 'src', 'modules');
 
-const MODULE_DIRS = ['auth', 'game', 'health'];
+const MODULE_DIRECTORY_BY_NAME = new Map(
+  MODULE_MANIFEST.modules.map((entry) => [
+    entry.name,
+    entry.pluginPath.replace('./modules/', '').split('/')[0] ?? entry.name,
+  ]),
+);
+
+const MODULE_DISCOVERY = SCHEMA_OWNERSHIP_MANIFEST.ownership
+  .map((entry) => {
+    const directory = MODULE_DIRECTORY_BY_NAME.get(entry.module);
+    return directory ? { directory, moduleName: entry.module } : undefined;
+  })
+  .filter((entry): entry is { directory: string; moduleName: string } => entry !== undefined);
 
 interface DiscoveredSchema {
   file: string;
@@ -103,8 +116,8 @@ function extractImportsFromFile(filePath: string, moduleName: string): Discovere
 function discoverSchemas(): DiscoveredSchema[] {
   const allSchemas: DiscoveredSchema[] = [];
 
-  for (const moduleName of MODULE_DIRS) {
-    const modulePath = join(MODULES_DIR, moduleName);
+  for (const module of MODULE_DISCOVERY) {
+    const modulePath = join(MODULES_DIR, module.directory);
     if (!existsSync(modulePath)) continue;
 
     const files = readdirSync(modulePath, { recursive: true }).filter(
@@ -114,7 +127,7 @@ function discoverSchemas(): DiscoveredSchema[] {
     for (const file of files) {
       const fullPath = join(modulePath, file as string);
       if (existsSync(fullPath)) {
-        const schemas = extractExportedSchemasFromFile(fullPath, moduleName);
+        const schemas = extractExportedSchemasFromFile(fullPath, module.moduleName);
         allSchemas.push(...schemas);
       }
     }
@@ -126,8 +139,8 @@ function discoverSchemas(): DiscoveredSchema[] {
 function discoverImports(): DiscoveredImport[] {
   const allImports: DiscoveredImport[] = [];
 
-  for (const moduleName of MODULE_DIRS) {
-    const modulePath = join(MODULES_DIR, moduleName);
+  for (const module of MODULE_DISCOVERY) {
+    const modulePath = join(MODULES_DIR, module.directory);
     if (!existsSync(modulePath)) continue;
 
     const files = readdirSync(modulePath, { recursive: true }).filter(
@@ -137,7 +150,7 @@ function discoverImports(): DiscoveredImport[] {
     for (const file of files) {
       const fullPath = join(modulePath, file as string);
       if (existsSync(fullPath)) {
-        const imports = extractImportsFromFile(fullPath, moduleName);
+        const imports = extractImportsFromFile(fullPath, module.moduleName);
         allImports.push(...imports);
       }
     }
@@ -268,7 +281,7 @@ async function runValidation(): Promise<void> {
 
   console.log('\n[1/5] Discovering schemas from route files...');
   const schemas = discoverSchemas();
-  console.log(`  Found ${schemas.length} schema(s) in ${MODULE_DIRS.length} modules`);
+  console.log(`  Found ${schemas.length} schema(s) in ${MODULE_DISCOVERY.length} modules`);
 
   if (schemas.length === 0) {
     console.log('\n❌ ERROR: No schemas discovered. Aborting.');

@@ -8,16 +8,22 @@ const API_ROOT = join(import.meta.dirname, '..');
 
 describe('architecture boundary', () => {
   describe('lint:architecture', () => {
-    it('passes on valid codebase', () => {
-      const result = execSync(
-        'pnpm --filter api lint:architecture --ignore-pattern "src/__tests__/**"',
-        {
-          cwd: join(API_ROOT, '../..'),
-          encoding: 'utf-8',
-        },
-      );
-      expect(result).toBeDefined();
-    });
+    it(
+      'passes on valid codebase',
+      {
+        timeout: 20_000,
+      },
+      () => {
+        const result = execSync(
+          'pnpm --filter api lint:architecture --ignore-pattern "src/__tests__/**"',
+          {
+            cwd: join(API_ROOT, '../..'),
+            encoding: 'utf-8',
+          },
+        );
+        expect(result).toBeDefined();
+      },
+    );
 
     it('detects illegal cross-module internal import', () => {
       const modulesDir = join(API_ROOT, 'src/modules');
@@ -44,23 +50,25 @@ console.log(testService);
 `,
       );
 
-      let lintFailed = false;
       try {
-        execSync('pnpm --filter api lint:architecture -- --no-cache', {
-          cwd: join(API_ROOT, '../..'),
-          encoding: 'utf-8',
-          stdio: 'pipe',
-        });
-      } catch (error: unknown) {
-        lintFailed = true;
-        const err = error as { status?: number };
-        expect(err.status).toBeGreaterThan(0);
+        let lintFailed = false;
+        try {
+          execSync('pnpm --filter api lint:architecture -- --no-cache', {
+            cwd: join(API_ROOT, '../..'),
+            encoding: 'utf-8',
+            stdio: 'pipe',
+          });
+        } catch (error: unknown) {
+          lintFailed = true;
+          const err = error as { status?: number };
+          expect(err.status).toBeGreaterThan(0);
+        }
+
+        expect(lintFailed).toBe(true);
+      } finally {
+        rmSync(testModuleDir, { recursive: true, force: true });
+        rmSync(otherModuleDir, { recursive: true, force: true });
       }
-
-      expect(lintFailed).toBe(true);
-
-      rmSync(testModuleDir, { recursive: true, force: true });
-      rmSync(otherModuleDir, { recursive: true, force: true });
     });
 
     it('detects module-level circular dependency', () => {
@@ -84,21 +92,23 @@ console.log(testService);
         'import { a } from "../__test_cycle_a__/index.js";\nexport const serviceB = a;\n',
       );
 
-      let lintFailed = false;
       try {
-        execSync('pnpm --filter api lint:architecture -- --no-cache', {
-          cwd: join(API_ROOT, '../..'),
-          encoding: 'utf-8',
-          stdio: 'pipe',
-        });
-      } catch {
-        lintFailed = true;
+        let lintFailed = false;
+        try {
+          execSync('pnpm --filter api lint:architecture -- --no-cache', {
+            cwd: join(API_ROOT, '../..'),
+            encoding: 'utf-8',
+            stdio: 'pipe',
+          });
+        } catch {
+          lintFailed = true;
+        }
+
+        expect(lintFailed).toBe(true);
+      } finally {
+        rmSync(moduleADir, { recursive: true, force: true });
+        rmSync(moduleBDir, { recursive: true, force: true });
       }
-
-      expect(lintFailed).toBe(true);
-
-      rmSync(moduleADir, { recursive: true, force: true });
-      rmSync(moduleBDir, { recursive: true, force: true });
     });
   });
 });

@@ -11,6 +11,7 @@ export const OWNERSHIP_MANIFEST: OwnershipManifest = {
     { schema: 'auth', table: 'user_roles', module: 'auth' },
     { schema: 'auth', table: 'webauthn_credentials', module: 'auth' },
     { schema: 'public', table: 'game_sessions', module: 'game' },
+    { schema: 'ai', table: 'prompt_templates', module: 'aiPipeline' },
   ],
   sharedTables: ['tenants', 'users', 'tenant_policy'],
   exceptions: [

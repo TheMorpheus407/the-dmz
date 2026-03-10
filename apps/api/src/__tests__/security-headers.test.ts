@@ -11,6 +11,7 @@ const baseEnv = {
   REDIS_URL: 'redis://localhost:6379',
   LOG_LEVEL: 'silent',
   JWT_SECRET: 'test-secret',
+  JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'test-' + 'encryption-key-at-least-32-chars',
   CORS_ORIGINS: 'http://localhost:5173',
   TOKEN_HASH_SALT: 'test-token-salt',
 } as const;
@@ -50,6 +51,7 @@ describe('security headers', () => {
       const config = createTestConfig({
         NODE_ENV: 'production',
         JWT_SECRET: 'example-production-secret-key',
+        JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-at-least-32-chars',
         CORS_ORIGINS: 'https://app.example.com',
       });
       app = buildApp(config, { skipHealthCheck: true });
@@ -131,6 +133,7 @@ describe('security headers', () => {
         createTestConfig({
           NODE_ENV: 'production',
           JWT_SECRET: 'example-production-secret-key',
+          JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-at-least-32-chars',
           CORS_ORIGINS: 'https://app.example.com',
           CSP_FRAME_ANCESTORS: 'https://lms.example.com,https://canvas.example.com',
         }),

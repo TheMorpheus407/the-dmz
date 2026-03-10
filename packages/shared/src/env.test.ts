@@ -127,6 +127,21 @@ describe('parseBackendEnv', () => {
     expect(config.RATE_LIMIT_WINDOW_MS).toBe(90_000);
   });
 
+  it('accepts zero AI_MAX_RETRIES to disable extra retries', () => {
+    const config = parseBackendEnv({
+      ...validBackendEnv,
+      AI_MAX_RETRIES: '0',
+    });
+
+    expect(config.AI_MAX_RETRIES).toBe(0);
+  });
+
+  it('rejects AI_MAX_RETRIES values above the three-retry contract', () => {
+    expect(() => parseBackendEnv({ ...validBackendEnv, AI_MAX_RETRIES: '4' })).toThrow(
+      /Invalid backend environment configuration/,
+    );
+  });
+
   it('accepts configurable frame ancestors for LMS embedding', () => {
     const config = parseBackendEnv({
       ...validBackendEnv,

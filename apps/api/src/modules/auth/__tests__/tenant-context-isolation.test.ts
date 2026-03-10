@@ -126,12 +126,18 @@ describe('tenant-context DB isolation', () => {
             app.inject({
               method: 'GET',
               url: '/api/v1/auth/me',
-              headers: { authorization: `Bearer ${tokenA}` },
+              headers: {
+                authorization: `Bearer ${tokenA}`,
+                'x-tenant-id': fixture.tenantA.id,
+              },
             }),
             app.inject({
               method: 'GET',
               url: '/api/v1/auth/me',
-              headers: { authorization: `Bearer ${tokenB}` },
+              headers: {
+                authorization: `Bearer ${tokenB}`,
+                'x-tenant-id': fixture.tenantB.id,
+              },
             }),
           ]);
 
@@ -206,13 +212,19 @@ describe('tenant-context DB isolation', () => {
         const resA = await app.inject({
           method: 'GET',
           url: '/api/v1/auth/me',
-          headers: { authorization: `Bearer ${tokenA}` },
+          headers: {
+            authorization: `Bearer ${tokenA}`,
+            'x-tenant-id': fixture.tenantA.id,
+          },
         });
 
         const resB = await app.inject({
           method: 'GET',
           url: '/api/v1/auth/me',
-          headers: { authorization: `Bearer ${tokenB}` },
+          headers: {
+            authorization: `Bearer ${tokenB}`,
+            'x-tenant-id': fixture.tenantB.id,
+          },
         });
 
         expect(resA.json().user?.tenantId).toBe(fixture.tenantA.id);
@@ -280,13 +292,19 @@ describe('tenant-context DB isolation', () => {
         const resA = await app.inject({
           method: 'GET',
           url: '/api/v1/auth/me',
-          headers: { authorization: `Bearer ${tokenA}` },
+          headers: {
+            authorization: `Bearer ${tokenA}`,
+            'x-tenant-id': fixture.tenantA.id,
+          },
         });
 
         const resB = await app.inject({
           method: 'GET',
           url: '/api/v1/auth/me',
-          headers: { authorization: `Bearer ${tokenB}` },
+          headers: {
+            authorization: `Bearer ${tokenB}`,
+            'x-tenant-id': fixture.tenantB.id,
+          },
         });
 
         results.push({
@@ -349,7 +367,10 @@ describe('tenant-context DB isolation', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/auth/me',
-        headers: { authorization: `Bearer ${token}` },
+        headers: {
+          authorization: `Bearer ${token}`,
+          'x-tenant-id': fixture.tenantA.id,
+        },
       });
 
       expect(response.statusCode).toBe(200);

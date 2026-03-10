@@ -2,7 +2,12 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
-import { createRateLimitStore, rateLimiter, type RateLimitStoreState } from '../rate-limiter.js';
+import {
+  createRateLimitStore,
+  extractCredentialIdentifier,
+  rateLimiter,
+  type RateLimitStoreState,
+} from '../rate-limiter.js';
 
 import type { RedisRateLimitClient } from '../../database/redis.js';
 import type { FastifyBaseLogger, FastifyInstance, FastifyRequest } from 'fastify';
@@ -89,6 +94,34 @@ const createLoggerSpy = (): { logger: FastifyBaseLogger; warn: ReturnType<typeof
 };
 
 describe('rate limiter middleware', () => {
+  describe('credential identifier extraction', () => {
+    it('uses the API key id from bearer credentials without including the secret', () => {
+      const identifier = extractCredentialIdentifier({
+        apiKeyAuth: undefined,
+        headers: {
+          authorization: 'Bearer gateway-key-01:super-secret-value',
+        },
+        ip: '127.0.0.1',
+      } as unknown as FastifyRequest);
+
+      expect(identifier).toBe('key:gateway-key-01');
+      expect(identifier).not.toContain('super-secret-value');
+    });
+
+    it('hashes x-api-key header values before using them in quota keys', () => {
+      const identifier = extractCredentialIdentifier({
+        apiKeyAuth: undefined,
+        headers: {
+          'x-api-key': 'opaque-top-secret-api-key',
+        },
+        ip: '127.0.0.1',
+      } as unknown as FastifyRequest);
+
+      expect(identifier).toMatch(/^key-hash:[a-f0-9]{32}$/);
+      expect(identifier).not.toContain('opaque-top-secret-api-key');
+    });
+  });
+
   describe('global defaults', () => {
     let app: FastifyInstance;
 
@@ -212,6 +245,82 @@ describe('rate limiter middleware', () => {
       expect(getHeader(second.headers, 'x-ratelimit-remaining')).toBe('0');
       expect(third.statusCode).toBe(429);
       expect(getHeader(third.headers, 'x-ratelimit-limit')).toBe('2');
+
+      await isolatedApp.close();
+    });
+
+    it('applies the global limiter to real module routes before auth executes', async () => {
+      const isolatedApp = buildApp(
+        createTestConfig({
+          RATE_LIMIT_MAX: '1',
+          RATE_LIMIT_WINDOW_MS: '60000',
+        }),
+      );
+      await isolatedApp.ready();
+
+      const first = await isolatedApp.inject({
+        method: 'GET',
+        url: '/api/v1/content/emails',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
+      });
+      const second = await isolatedApp.inject({
+        method: 'GET',
+        url: '/api/v1/content/emails',
+        headers: { 'x-tenant-id': TEST_TENANT_ID },
+      });
+
+      expect(first.statusCode).toBe(401);
+      expect(getHeader(first.headers, 'x-ratelimit-limit')).toBe('1');
+      expect(getHeader(first.headers, 'x-ratelimit-remaining')).toBe('0');
+      expect(second.statusCode).toBe(429);
+      expect(getHeader(second.headers, 'x-ratelimit-limit')).toBe('1');
+      expect(getHeader(second.headers, 'x-ratelimit-remaining')).toBe('0');
+
+      await isolatedApp.close();
+    });
+
+    it('isolates bearer API key credentials by key id on the real authorization header path', async () => {
+      const isolatedApp = buildApp(
+        createTestConfig({
+          RATE_LIMIT_MAX: '1',
+          RATE_LIMIT_WINDOW_MS: '60000',
+        }),
+      );
+      await isolatedApp.ready();
+
+      const tenantId = '660e8400-e29b-41d4-a716-4466554400ff';
+
+      const firstKey = await isolatedApp.inject({
+        method: 'GET',
+        url: '/api/v1/',
+        headers: {
+          'x-tenant-id': tenantId,
+          authorization: 'Bearer archive-key-1:secret-a',
+        },
+      });
+      expect(firstKey.statusCode).toBe(200);
+      expect(getHeader(firstKey.headers, 'x-ratelimit-remaining')).toBe('0');
+
+      const secondKey = await isolatedApp.inject({
+        method: 'GET',
+        url: '/api/v1/',
+        headers: {
+          'x-tenant-id': tenantId,
+          authorization: 'Bearer archive-key-2:secret-b',
+        },
+      });
+      expect(secondKey.statusCode).toBe(200);
+      expect(getHeader(secondKey.headers, 'x-ratelimit-remaining')).toBe('0');
+
+      const repeatedFirstKey = await isolatedApp.inject({
+        method: 'GET',
+        url: '/api/v1/',
+        headers: {
+          'x-tenant-id': tenantId,
+          authorization: 'Bearer archive-key-1:rotated-secret',
+        },
+      });
+      expect(repeatedFirstKey.statusCode).toBe(429);
 
       await isolatedApp.close();
     });

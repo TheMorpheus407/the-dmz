@@ -4,7 +4,9 @@ import { eq, sql } from 'drizzle-orm';
 
 import { SEED_PROFILES, SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS } from '@the-dmz/shared/testing';
 
-import { closeDatabase, getDatabaseClient } from './connection.js';
+import { loadConfig, type AppConfig } from '../../config.js';
+
+import { closeDatabase, getDatabaseClient, type DatabaseClient } from './connection.js';
 import {
   permissions,
   rolePermissions,
@@ -18,6 +20,12 @@ import {
 export { SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS, SEED_PROFILES };
 
 const BASE_PERMISSIONS = [
+  { resource: 'admin', action: 'read', description: 'View tenant admin-only content and settings' },
+  {
+    resource: 'admin',
+    action: 'write',
+    description: 'Create and update tenant admin-only content and settings',
+  },
   { resource: 'users', action: 'read', description: 'View user profiles' },
   { resource: 'users', action: 'write', description: 'Create and update users' },
   { resource: 'users', action: 'delete', description: 'Deactivate or remove users' },
@@ -66,14 +74,166 @@ const resolveDefaultRoleName = (role: string): (typeof DEFAULT_ROLES)[number]['n
   return 'learner';
 };
 
+type PermissionSeedRow = {
+  id: string;
+  resource: string;
+  action: string;
+};
+
+type TenantUserRoleSeed = {
+  userId: string;
+  role: string;
+};
+
+const upsertBasePermissions = async (
+  db: DatabaseClient,
+): Promise<{
+  permissionRows: PermissionSeedRow[];
+  permissionByKey: Map<string, string>;
+}> => {
+  for (const permission of BASE_PERMISSIONS) {
+    await db
+      .insert(permissions)
+      .values({
+        resource: permission.resource,
+        action: permission.action,
+        description: permission.description,
+      })
+      .onConflictDoUpdate({
+        target: [permissions.resource, permissions.action],
+        set: {
+          description: sql`excluded.description`,
+        },
+      });
+  }
+
+  const permissionRows = await db
+    .select({
+      id: permissions.id,
+      resource: permissions.resource,
+      action: permissions.action,
+    })
+    .from(permissions);
+
+  return {
+    permissionRows,
+    permissionByKey: new Map(
+      permissionRows.map((permission) => [
+        `${permission.resource}:${permission.action}`,
+        permission.id,
+      ]),
+    ),
+  };
+};
+
+const provisionTenantAuthModel = async (
+  db: DatabaseClient,
+  tenantId: string,
+  permissionRows: readonly PermissionSeedRow[],
+  permissionByKey: ReadonlyMap<string, string>,
+  tenantUsers: readonly TenantUserRoleSeed[],
+): Promise<void> => {
+  await db.transaction(async (transaction) => {
+    // Keep both keys in sync while the codebase transitions to a single tenant context variable.
+    await transaction.execute(sql`select set_config('app.current_tenant_id', ${tenantId}, true)`);
+    await transaction.execute(sql`select set_config('app.tenant_id', ${tenantId}, true)`);
+
+    for (const role of DEFAULT_ROLES) {
+      await transaction
+        .insert(roles)
+        .values({
+          tenantId,
+          name: role.name,
+          description: role.description,
+          isSystem: true,
+        })
+        .onConflictDoUpdate({
+          target: [roles.tenantId, roles.name],
+          set: {
+            description: sql`excluded.description`,
+            isSystem: true,
+            updatedAt: sql`now()`,
+          },
+        });
+    }
+
+    const tenantRoleRows = await transaction
+      .select({ id: roles.id, name: roles.name })
+      .from(roles)
+      .where(eq(roles.tenantId, tenantId));
+
+    const roleIdByName = new Map(tenantRoleRows.map((role) => [role.name, role.id]));
+    const adminRoleId = roleIdByName.get('admin');
+    const managerRoleId = roleIdByName.get('manager');
+
+    if (adminRoleId) {
+      for (const permission of permissionRows) {
+        await transaction
+          .insert(rolePermissions)
+          .values({
+            roleId: adminRoleId,
+            permissionId: permission.id,
+          })
+          .onConflictDoNothing();
+      }
+    }
+
+    if (managerRoleId) {
+      for (const permissionKey of MANAGER_PERMISSION_KEYS) {
+        const permissionId = permissionByKey.get(permissionKey);
+
+        if (!permissionId) {
+          continue;
+        }
+
+        await transaction
+          .insert(rolePermissions)
+          .values({
+            roleId: managerRoleId,
+            permissionId,
+          })
+          .onConflictDoNothing();
+      }
+    }
+
+    for (const user of tenantUsers) {
+      const roleName = resolveDefaultRoleName(user.role);
+      const roleId = roleIdByName.get(roleName);
+
+      if (!roleId) {
+        continue;
+      }
+
+      await transaction
+        .insert(userRoles)
+        .values({
+          tenantId,
+          userId: user.userId,
+          roleId,
+        })
+        .onConflictDoNothing();
+    }
+  });
+};
+
+export const seedTenantAuthModel = async (
+  config: AppConfig = loadConfig(),
+  tenantId: string,
+  tenantUsers: readonly TenantUserRoleSeed[] = [],
+): Promise<void> => {
+  const db = getDatabaseClient(config);
+  const { permissionRows, permissionByKey } = await upsertBasePermissions(db);
+  await provisionTenantAuthModel(db, tenantId, permissionRows, permissionByKey, tenantUsers);
+};
+
 /**
  * Seed the database with deterministic tenant and user data.
  *
  * Idempotent: uses `ON CONFLICT ... DO UPDATE` so running the seed
  * multiple times always converges to the canonical seed state.
  */
-export const seedDatabase = async (): Promise<void> => {
-  const db = getDatabaseClient();
+export const seedDatabase = async (config: AppConfig = loadConfig()): Promise<void> => {
+  const db = getDatabaseClient(config);
 
   for (const tenant of SEED_TENANTS) {
     await db
@@ -96,22 +256,6 @@ export const seedDatabase = async (): Promise<void> => {
       });
   }
 
-  for (const permission of BASE_PERMISSIONS) {
-    await db
-      .insert(permissions)
-      .values({
-        resource: permission.resource,
-        action: permission.action,
-        description: permission.description,
-      })
-      .onConflictDoUpdate({
-        target: [permissions.resource, permissions.action],
-        set: {
-          description: sql`excluded.description`,
-        },
-      });
-  }
-
   const tenantRows = await db.select({ tenantId: tenants.tenantId }).from(tenants);
   const seedUsersByTenant = new Map<string, (typeof SEED_USERS)[number][]>();
 
@@ -121,20 +265,7 @@ export const seedDatabase = async (): Promise<void> => {
     seedUsersByTenant.set(seedUser.tenantId, tenantUsers);
   }
 
-  const permissionRows = await db
-    .select({
-      id: permissions.id,
-      resource: permissions.resource,
-      action: permissions.action,
-    })
-    .from(permissions);
-
-  const permissionByKey = new Map(
-    permissionRows.map((permission) => [
-      `${permission.resource}:${permission.action}`,
-      permission.id,
-    ]),
-  );
+  const { permissionRows, permissionByKey } = await upsertBasePermissions(db);
 
   // Verify the system tenant exists
   const tenantResult = await db
@@ -195,91 +326,17 @@ export const seedDatabase = async (): Promise<void> => {
   }
 
   for (const tenant of tenantRows) {
-    await db.transaction(async (transaction) => {
-      // Keep both keys in sync while the codebase transitions to a single tenant context variable.
-      await transaction.execute(
-        sql`select set_config('app.current_tenant_id', ${tenant.tenantId}, true)`,
-      );
-      await transaction.execute(sql`select set_config('app.tenant_id', ${tenant.tenantId}, true)`);
-
-      for (const role of DEFAULT_ROLES) {
-        await transaction
-          .insert(roles)
-          .values({
-            tenantId: tenant.tenantId,
-            name: role.name,
-            description: role.description,
-            isSystem: true,
-          })
-          .onConflictDoUpdate({
-            target: [roles.tenantId, roles.name],
-            set: {
-              description: sql`excluded.description`,
-              isSystem: true,
-              updatedAt: sql`now()`,
-            },
-          });
-      }
-
-      const tenantRoleRows = await transaction
-        .select({ id: roles.id, name: roles.name })
-        .from(roles)
-        .where(eq(roles.tenantId, tenant.tenantId));
-
-      const roleIdByName = new Map(tenantRoleRows.map((role) => [role.name, role.id]));
-      const adminRoleId = roleIdByName.get('admin');
-      const managerRoleId = roleIdByName.get('manager');
-
-      if (adminRoleId) {
-        for (const permission of permissionRows) {
-          await transaction
-            .insert(rolePermissions)
-            .values({
-              roleId: adminRoleId,
-              permissionId: permission.id,
-            })
-            .onConflictDoNothing();
-        }
-      }
-
-      if (managerRoleId) {
-        for (const permissionKey of MANAGER_PERMISSION_KEYS) {
-          const permissionId = permissionByKey.get(permissionKey);
-
-          if (!permissionId) {
-            continue;
-          }
-
-          await transaction
-            .insert(rolePermissions)
-            .values({
-              roleId: managerRoleId,
-              permissionId,
-            })
-            .onConflictDoNothing();
-        }
-      }
-
-      const tenantSeedUsers = seedUsersByTenant.get(tenant.tenantId) ?? [];
-
-      for (const user of tenantSeedUsers) {
-        const roleName = resolveDefaultRoleName(user.role);
-        const roleId = roleIdByName.get(roleName);
-
-        if (!roleId) {
-          continue;
-        }
-
-        await transaction
-          .insert(userRoles)
-          .values({
-            tenantId: tenant.tenantId,
-            userId: user.userId,
-            roleId,
-          })
-          .onConflictDoNothing();
-      }
-    });
+    const tenantSeedUsers = (seedUsersByTenant.get(tenant.tenantId) ?? []).map((user) => ({
+      userId: user.userId,
+      role: user.role,
+    }));
+    await provisionTenantAuthModel(
+      db,
+      tenant.tenantId,
+      permissionRows,
+      permissionByKey,
+      tenantSeedUsers,
+    );
   }
 
   console.warn(

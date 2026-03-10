@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 
 import { buildApp } from '../../../app.js';
@@ -108,8 +108,11 @@ describe('authorization middleware - integration tests', () => {
   const app = buildApp(testConfig);
 
   beforeAll(async () => {
-    await resetTestData();
     await app.ready();
+  });
+
+  beforeEach(async () => {
+    await resetTestData();
   });
 
   afterAll(async () => {

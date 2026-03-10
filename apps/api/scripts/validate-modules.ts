@@ -2,26 +2,46 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { validateManifest, getRegistrationOrder } from '../src/modules/bootstrap.js';
-import { getAllModuleNames } from '../src/modules/manifest.js';
+import { MODULE_MANIFEST, getAllModuleNames } from '../src/modules/manifest.js';
 
-const MODULE_DIRS = ['src/modules/auth', 'src/modules/game', 'src/modules/health'];
+const MODULE_NAME_BY_DIRECTORY = new Map(
+  MODULE_MANIFEST.modules.map((entry) => [
+    entry.pluginPath.replace('./modules/', '').split('/')[0] ?? entry.name,
+    entry.name,
+  ]),
+);
 
 function checkModuleDirectories(): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
   const manifestModuleNames = getAllModuleNames();
+  const modulesRoot = path.join(process.cwd(), 'src/modules');
 
-  for (const dir of MODULE_DIRS) {
-    const fullPath = path.join(process.cwd(), dir);
-    if (fs.existsSync(fullPath)) {
-      const indexFiles = fs
-        .readdirSync(fullPath)
-        .filter((f) => f === 'index.ts' || f.endsWith('.plugin.ts'));
-      if (indexFiles.length > 0) {
-        const dirName = dir.replace('src/modules/', '');
-        if (!manifestModuleNames.includes(dirName)) {
-          errors.push(`Module directory '${dir}' exists but is not represented in manifest`);
-        }
-      }
+  if (!fs.existsSync(modulesRoot)) {
+    return { valid: true, errors };
+  }
+
+  const moduleDirs = fs
+    .readdirSync(modulesRoot, { withFileTypes: true })
+    .filter(
+      (entry) => entry.isDirectory() && !entry.name.startsWith('__') && entry.name !== 'routes',
+    )
+    .map((entry) => entry.name);
+
+  for (const dirName of moduleDirs) {
+    const fullPath = path.join(modulesRoot, dirName);
+    const indexFiles = fs
+      .readdirSync(fullPath)
+      .filter((file) => file === 'index.ts' || file.endsWith('.plugin.ts'));
+
+    if (indexFiles.length === 0) {
+      continue;
+    }
+
+    const manifestName = MODULE_NAME_BY_DIRECTORY.get(dirName) ?? dirName;
+    if (!manifestModuleNames.includes(manifestName)) {
+      errors.push(
+        `Module directory 'src/modules/${dirName}' exists but is not represented in manifest`,
+      );
     }
   }
 

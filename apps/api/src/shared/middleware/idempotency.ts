@@ -207,7 +207,7 @@ const createIdempotencyMiddleware = (): preHandlerAsyncHookHandler => {
       });
     }
 
-    const db = getDatabaseClient();
+    const db = getDatabaseClient(request.server.config);
     const keyHash = hashKey(idempotencyKey);
     const route = request.routeOptions?.url || request.url;
     const method = request.method;

@@ -4,7 +4,7 @@ import {
   boolean,
   integer,
   jsonb,
-  pgTable,
+  pgSchema,
   text,
   timestamp,
   uuid,
@@ -13,7 +13,9 @@ import {
 
 import { tenants } from '../../../shared/database/schema/tenants.js';
 
-export const emailTemplates = pgTable(
+const contentSchema = pgSchema('content');
+
+export const emailTemplates = contentSchema.table(
   'email_templates',
   {
     id: uuid('id')
@@ -58,7 +60,7 @@ export const emailTemplates = pgTable(
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
 export type NewEmailTemplate = typeof emailTemplates.$inferInsert;
 
-export const scenarios = pgTable(
+export const scenarios = contentSchema.table(
   'scenarios',
   {
     id: uuid('id')
@@ -91,7 +93,7 @@ export const scenarios = pgTable(
 export type Scenario = typeof scenarios.$inferSelect;
 export type NewScenario = typeof scenarios.$inferInsert;
 
-export const scenarioBeats = pgTable(
+export const scenarioBeats = contentSchema.table(
   'scenario_beats',
   {
     id: uuid('id')
@@ -130,7 +132,7 @@ export const scenarioBeats = pgTable(
 export type ScenarioBeat = typeof scenarioBeats.$inferSelect;
 export type NewScenarioBeat = typeof scenarioBeats.$inferInsert;
 
-export const documentTemplates = pgTable(
+export const documentTemplates = contentSchema.table(
   'document_templates',
   {
     id: uuid('id')
@@ -165,7 +167,7 @@ export const documentTemplates = pgTable(
 export type DocumentTemplate = typeof documentTemplates.$inferSelect;
 export type NewDocumentTemplate = typeof documentTemplates.$inferInsert;
 
-export const localizedContent = pgTable(
+export const localizedContent = contentSchema.table(
   'localized_content',
   {
     id: uuid('id')
@@ -194,7 +196,7 @@ export const localizedContent = pgTable(
 export type LocalizedContent = typeof localizedContent.$inferSelect;
 export type NewLocalizedContent = typeof localizedContent.$inferInsert;
 
-export const aiGenerationLog = pgTable(
+export const aiGenerationLog = contentSchema.table(
   'ai_generation_log',
   {
     id: uuid('id')

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -13,13 +13,9 @@ interface MigrationFile {
 }
 
 function getMigrationFiles(): MigrationFile[] {
-  const migrations = [
-    '0000_rich_fantastic_four.sql',
-    '0001_initial_schema.sql',
-    '0002_auth_rbac_sessions.sql',
-    '0002_uuid_v7.sql',
-    '0003_auth_user_profiles.sql',
-  ];
+  const migrations = readdirSync(MIGRATIONS_DIR)
+    .filter((entry) => entry.endsWith('.sql'))
+    .sort();
 
   return migrations.map((name) => ({
     name,
@@ -40,7 +36,7 @@ function extractTableCreate(content: string, schema: string, table: string): str
 function extractForeignKeys(content: string, schema: string, table: string): string {
   const schemaPrefix = schema === 'public' ? '' : `["']?${schema}["']?\\.`;
   const regex = new RegExp(
-    `ALTER\\s+TABLE\\s+${schemaPrefix}["']?${table}["']?\\s+ADD\\s+CONSTRAINT.*?;`,
+    `ALTER\\s+TABLE\\s+${schemaPrefix}["']?${table}["']?\\s+[\\s\\S]*?ADD\\s+CONSTRAINT[\\s\\S]*?;`,
     'gi',
   );
   const matches = content.match(regex);

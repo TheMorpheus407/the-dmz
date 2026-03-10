@@ -57,6 +57,20 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'content',
+      pluginPath: './modules/content/index.js',
+      routePrefix: '/content',
+      dependencies: ['eventBus'],
+      startupFlags: { required: false, diagnostics: true },
+    },
+    {
+      name: 'aiPipeline',
+      pluginPath: './modules/ai-pipeline/index.js',
+      routePrefix: '/ai',
+      dependencies: ['eventBus', 'content'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 

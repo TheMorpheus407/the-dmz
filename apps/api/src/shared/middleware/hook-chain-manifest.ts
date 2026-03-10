@@ -200,6 +200,14 @@ export function getCategoryForRoute(routePath: string): RouteCategory {
   if (routePath.startsWith('/game')) {
     return 'game';
   }
+  if (
+    routePath.startsWith('/ai') ||
+    routePath.startsWith('/content') ||
+    routePath.startsWith('/api/v1/ai') ||
+    routePath.startsWith('/api/v1/content')
+  ) {
+    return 'protected';
+  }
   if (routePath.startsWith('/auth')) {
     return 'protected';
   }

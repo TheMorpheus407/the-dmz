@@ -105,6 +105,18 @@ describe('getRegistrationOrder', () => {
     expect(eventBusIndex).toBeLessThan(authIndex);
     expect(eventBusIndex).toBeLessThan(gameIndex);
   });
+
+  it('should place content before aiPipeline', () => {
+    const order = getRegistrationOrder();
+    const names = order.map((e) => e.name);
+
+    const contentIndex = names.indexOf('content');
+    const aiPipelineIndex = names.indexOf('aiPipeline');
+
+    expect(contentIndex).toBeGreaterThan(-1);
+    expect(aiPipelineIndex).toBeGreaterThan(-1);
+    expect(contentIndex).toBeLessThan(aiPipelineIndex);
+  });
 });
 
 describe('Manifest Validation - Error Cases', () => {

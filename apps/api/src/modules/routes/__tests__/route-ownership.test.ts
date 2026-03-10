@@ -31,6 +31,20 @@ describe('Route Ownership Manifest', () => {
       expect(ownership?.routePrefix).toBe('/health');
     });
 
+    it('should return ownership for content module', () => {
+      const ownership = getRouteOwnership('content');
+      expect(ownership).toBeDefined();
+      expect(ownership?.module).toBe('content');
+      expect(ownership?.routePrefix).toBe('/content');
+    });
+
+    it('should return ownership for aiPipeline module', () => {
+      const ownership = getRouteOwnership('aiPipeline');
+      expect(ownership).toBeDefined();
+      expect(ownership?.module).toBe('aiPipeline');
+      expect(ownership?.routePrefix).toBe('/ai');
+    });
+
     it('should return undefined for unknown module', () => {
       const ownership = getRouteOwnership('unknown');
       expect(ownership).toBeUndefined();
@@ -75,6 +89,24 @@ describe('Route Ownership Manifest', () => {
     it('should not allow health module to own routes under /auth prefix', () => {
       expect(isRouteOwnedByModule('health', '/auth/login')).toBe(false);
     });
+
+    it('should allow content module to own routes under /content prefix', () => {
+      expect(isRouteOwnedByModule('content', '/content/emails')).toBe(true);
+      expect(isRouteOwnedByModule('content', '/content/scenarios/123')).toBe(true);
+    });
+
+    it('should not allow content module to own routes under /ai prefix', () => {
+      expect(isRouteOwnedByModule('content', '/ai/prompt-templates')).toBe(false);
+    });
+
+    it('should allow aiPipeline to own routes under /ai prefix', () => {
+      expect(isRouteOwnedByModule('aiPipeline', '/ai/prompt-templates')).toBe(true);
+      expect(isRouteOwnedByModule('aiPipeline', '/ai/generate/email')).toBe(true);
+    });
+
+    it('should not allow aiPipeline to own routes under /content prefix', () => {
+      expect(isRouteOwnedByModule('aiPipeline', '/content/emails')).toBe(false);
+    });
   });
 
   describe('getRouteOwner', () => {
@@ -98,6 +130,16 @@ describe('Route Ownership Manifest', () => {
       expect(getRouteOwner('/health/authenticated')).toBe('auth');
     });
 
+    it('should return content for /content routes', () => {
+      expect(getRouteOwner('/content/emails')).toBe('content');
+      expect(getRouteOwner('/content/templates/:type')).toBe('content');
+    });
+
+    it('should return aiPipeline for /ai routes', () => {
+      expect(getRouteOwner('/ai/prompt-templates')).toBe('aiPipeline');
+      expect(getRouteOwner('/ai/generate/scenario-variation')).toBe('aiPipeline');
+    });
+
     it('should return undefined for unknown route', () => {
       expect(getRouteOwner('/unknown/path')).toBeUndefined();
     });
@@ -109,6 +151,8 @@ describe('Route Ownership Manifest', () => {
       expect(isRouteRegistered('/game/session')).toBe(true);
       expect(isRouteRegistered('/health')).toBe(true);
       expect(isRouteRegistered('/ready')).toBe(true);
+      expect(isRouteRegistered('/content/emails')).toBe(true);
+      expect(isRouteRegistered('/ai/prompt-templates')).toBe(true);
     });
 
     it('should return false for unregistered routes', () => {
@@ -123,6 +167,8 @@ describe('Route Ownership Manifest', () => {
       expect(modules).toContain('auth');
       expect(modules).toContain('game');
       expect(modules).toContain('health');
+      expect(modules).toContain('content');
+      expect(modules).toContain('aiPipeline');
     });
 
     it('should have routeTags for each module', () => {

@@ -36,6 +36,90 @@
       "when": 1771000000000,
       "tag": "0003_auth_user_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771100000000,
+      "tag": "0004_game_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1771200000000,
+      "tag": "0005_mfa_webauthn",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1771300000000,
+      "tag": "0006_jwt_signing_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1771400000000,
+      "tag": "0007_password_reset_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1771500000000,
+      "tag": "0008_oauth_clients",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1771600000000,
+      "tag": "0009_idempotency_records",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1771700000000,
+      "tag": "0010_game_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1771800000000,
+      "tag": "0011_game_sessions_seed",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1771900000000,
+      "tag": "0012_economy_domain",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1772000000000,
+      "tag": "0013_content_module",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1772800000000,
+      "tag": "0014_ai_prompt_templates",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1772900000000,
+      "tag": "0015_admin_permission_backfill",
+      "breakpoints": true
     }
   ]
 }

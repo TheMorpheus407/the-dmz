@@ -11,6 +11,7 @@ const baseEnv = {
   REDIS_URL: 'redis://localhost:6379',
   LOG_LEVEL: 'silent',
   JWT_SECRET: 'test-secret',
+  JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'test-' + 'encryption-key-at-least-32-chars',
   TOKEN_HASH_SALT: 'test-token-salt',
 } as const;
 
@@ -25,6 +26,7 @@ describe('CORS origin handling', () => {
       const config = createTestConfig({
         NODE_ENV: 'production',
         JWT_SECRET: 'prod-jwt-value',
+        JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-at-least-32-chars',
         CORS_ORIGINS: 'https://app.example.com,https://admin.example.com',
       });
       app = buildApp(config, { skipHealthCheck: true });
@@ -151,42 +153,15 @@ describe('CORS origin handling', () => {
   });
 
   describe('production mode with localhost in CORS_ORIGINS', () => {
-    let app: FastifyInstance;
-
-    beforeAll(async () => {
-      const config = createTestConfig({
-        NODE_ENV: 'production',
-        JWT_SECRET: 'prod-jwt-value',
-        CORS_ORIGINS: 'http://localhost:5173,https://app.example.com',
-      });
-      app = buildApp(config, { skipHealthCheck: true });
-      await app.ready();
-    });
-
-    afterAll(async () => {
-      await app.close();
-    });
-
-    it('allows explicitly configured localhost in production', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/health',
-        headers: { origin: 'http://localhost:5173' },
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.headers['access-control-allow-origin']).toBe('http://localhost:5173');
-    });
-
-    it('does not auto-add 127.0.0.1 variant in production', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/health',
-        headers: { origin: 'http://127.0.0.1:5173' },
-      });
-
-      expect(response.statusCode).toBe(200);
-      expect(response.headers['access-control-allow-origin']).toBeUndefined();
+    it('rejects localhost origins during production config validation', () => {
+      expect(() =>
+        createTestConfig({
+          NODE_ENV: 'production',
+          JWT_SECRET: 'prod-jwt-value',
+          JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-at-least-32-chars',
+          CORS_ORIGINS: 'http://localhost:5173,https://app.example.com',
+        }),
+      ).toThrow('CORS_ORIGINS contains localhost in production');
     });
   });
 });

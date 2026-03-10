@@ -21,6 +21,7 @@ import { gamePlugin } from './modules/game/game.plugin.js';
 import { webhookPlugin } from './modules/webhooks/index.js';
 import { emailPlugin } from './modules/email/index.js';
 import { contentPlugin } from './modules/content/index.js';
+import { aiPipelinePlugin } from './modules/ai-pipeline/index.js';
 
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
@@ -32,6 +33,7 @@ const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }>
   webhooks: { plugin: webhookPlugin, routePrefix: '/webhooks' },
   email: { plugin: emailPlugin, routePrefix: '/email' },
   content: { plugin: contentPlugin, routePrefix: '/content' },
+  aiPipeline: { plugin: aiPipelinePlugin, routePrefix: '/ai' },
 };
 
 const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {
@@ -211,10 +213,17 @@ export const buildApp = (
   app.register(signingKeyInitPlugin);
   app.register(jwksPlugin);
 
-  app.get('/api/v1/', async () => ({
-    status: 'ok',
-    version: 'v1',
-  }));
+  app.get(
+    '/api/v1/',
+    {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      preHandler: globalRateLimiter(),
+    },
+    async () => ({
+      status: 'ok',
+      version: 'v1',
+    }),
+  );
 
   for (const entry of rootLevelModules) {
     const registryEntry = MODULE_REGISTRY[entry.name];

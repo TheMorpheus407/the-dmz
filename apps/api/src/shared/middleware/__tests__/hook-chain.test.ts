@@ -41,6 +41,10 @@ describe('Hook Chain Manifest', () => {
       expect(getCategoryForRoute('/auth/me')).toBe('protected');
       expect(getCategoryForRoute('/auth/profile')).toBe('protected');
       expect(getCategoryForRoute('/auth/logout')).toBe('auth');
+      expect(getCategoryForRoute('/ai/prompt-templates')).toBe('protected');
+      expect(getCategoryForRoute('/content/emails')).toBe('protected');
+      expect(getCategoryForRoute('/api/v1/ai/prompt-templates')).toBe('protected');
+      expect(getCategoryForRoute('/api/v1/content/emails')).toBe('protected');
     });
 
     it('should default to public for unknown routes', () => {

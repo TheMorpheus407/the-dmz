@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 import {
   evaluatePermissionRequirements,
@@ -44,6 +44,25 @@ const resetTestData = async (): Promise<void> => {
     users,
     tenants
     RESTART IDENTITY CASCADE`;
+};
+
+const ensurePermission = async (
+  db: ReturnType<typeof getDatabaseClient>,
+  resource: string,
+  action: string,
+) => {
+  await db.insert(permissions).values({ resource, action }).onConflictDoNothing();
+
+  const [permission] = await db
+    .select()
+    .from(permissions)
+    .where(and(eq(permissions.resource, resource), eq(permissions.action, action)));
+
+  if (!permission) {
+    throw new Error(`Expected permission ${resource}:${action} to exist`);
+  }
+
+  return permission;
 };
 
 describe('permission declaration middleware - evaluatePermissionRequirements', () => {
@@ -211,17 +230,8 @@ describe('permission declaration middleware - integration tests', () => {
         })
         .returning();
 
-      await db.insert(permissions).values({ resource: 'admin', action: 'list' });
-      await db.insert(permissions).values({ resource: 'users', action: 'read' });
-
-      const [permAdminList] = await db
-        .select()
-        .from(permissions)
-        .where(eq(permissions.resource, 'admin'));
-      const [permUsersRead] = await db
-        .select()
-        .from(permissions)
-        .where(eq(permissions.resource, 'users'));
+      const permAdminList = await ensurePermission(db, 'admin', 'list');
+      const permUsersRead = await ensurePermission(db, 'users', 'read');
 
       await db.insert(rolePermissions).values([
         { roleId: role!.id, permissionId: permAdminList!.id },

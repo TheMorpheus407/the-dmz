@@ -7,6 +7,8 @@ import {
   setABACCachedPermissions,
   invalidateABACCache,
 } from '../cache/abac-cache.js';
+import { AuthError } from '../../modules/auth/auth.errors.js';
+import * as authService from '../../modules/auth/auth.service.js';
 
 import { AppError, ErrorCodes, insufficientPermissions } from './error-handler.js';
 import {
@@ -215,6 +217,34 @@ export const hasPermission = (
 export const hasRole = (userRoles: string[], requiredRoles: string[]): boolean => {
   const lowerUserRoles = userRoles.map((r) => r.toLowerCase());
   return requiredRoles.some((role) => lowerUserRoles.includes(role.toLowerCase()));
+};
+
+export const authGuard = async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
+  const config = request.server.config;
+  const authHeader = request.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    throw new AuthError({
+      message: 'Missing or invalid authorization header',
+      statusCode: 401,
+    });
+  }
+
+  const bearerValue = authHeader.substring(7);
+
+  try {
+    const user = await authService.verifyAccessToken(config, bearerValue);
+    request.user = user;
+  } catch (error) {
+    if (error instanceof AuthError) {
+      throw error;
+    }
+
+    throw new AuthError({
+      message: 'Invalid or expired token',
+      statusCode: 401,
+    });
+  }
 };
 
 export const requirePermission = (resource: string, action: string) => {

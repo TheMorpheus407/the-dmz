@@ -19,7 +19,11 @@ import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
 import { preAuthTenantStatusGuard } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
-import { requirePermission, resolvePermissions } from '../../shared/middleware/authorization.js';
+import {
+  authGuard,
+  requirePermission,
+  resolvePermissions,
+} from '../../shared/middleware/authorization.js';
 import { requireMfaForSuperAdmin } from '../../shared/middleware/mfa-guard.js';
 import { idempotency } from '../../shared/middleware/idempotency.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
@@ -57,7 +61,7 @@ import { validateCsrf, setCsrfCookie } from './csrf.js';
 import { setRefreshCookie, clearRefreshCookie, getRefreshCookieName } from './cookies.js';
 
 import type { UpdateProfileData } from './auth.repo.js';
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import type { AuthenticatedUser } from './auth.types.js';
 
 export const loginBodyJsonSchema = loginJsonSchema;
@@ -94,34 +98,7 @@ export const profileResponseJsonSchema = profileJsonSchema;
 export const passwordResetRequestBodyJsonSchema = passwordResetRequestJsonSchema;
 
 export const passwordChangeRequestBodyJsonSchema = passwordChangeRequestJsonSchema;
-
-export const authGuard = async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
-  const config = request.server.config;
-
-  const authHeader = request.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    throw new AuthError({
-      message: 'Missing or invalid authorization header',
-      statusCode: 401,
-    });
-  }
-
-  const bearerValue = authHeader.substring(7);
-
-  try {
-    const user = await authService.verifyAccessToken(config, bearerValue);
-    request.user = user;
-  } catch (error) {
-    if (error instanceof AuthError) {
-      throw error;
-    }
-    throw new AuthError({
-      message: 'Invalid or expired token',
-      statusCode: 401,
-    });
-  }
-};
+export { authGuard };
 
 declare module 'fastify' {
   interface FastifyRequest {

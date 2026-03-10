@@ -9,11 +9,24 @@ import {
   getRouteOwner,
   type RouteBoundaryViolation,
 } from '../src/modules/routes/index.js';
+import { MODULE_MANIFEST } from '../src/modules/manifest.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const MODULES_DIR = join(__dirname, '..', 'src', 'modules');
 
-const MODULE_DIRS = ['auth', 'game', 'health'];
+const MODULE_DIRECTORY_BY_NAME = new Map(
+  MODULE_MANIFEST.modules.map((entry) => [
+    entry.name,
+    entry.pluginPath.replace('./modules/', '').split('/')[0] ?? entry.name,
+  ]),
+);
+
+const MODULE_DISCOVERY = ROUTE_OWNERSHIP_MANIFEST.ownership
+  .map((entry) => {
+    const directory = MODULE_DIRECTORY_BY_NAME.get(entry.module);
+    return directory ? { directory, moduleName: entry.module } : undefined;
+  })
+  .filter((entry): entry is { directory: string; moduleName: string } => entry !== undefined);
 
 interface DiscoveredRoute {
   file: string;
@@ -58,8 +71,8 @@ function extractRoutesFromFile(filePath: string, moduleName: string): Discovered
 function discoverRoutes(): DiscoveredRoute[] {
   const allRoutes: DiscoveredRoute[] = [];
 
-  for (const moduleName of MODULE_DIRS) {
-    const modulePath = join(MODULES_DIR, moduleName);
+  for (const module of MODULE_DISCOVERY) {
+    const modulePath = join(MODULES_DIR, module.directory);
     if (!existsSync(modulePath)) continue;
 
     const files = readdirSync(modulePath, { recursive: true }).filter(
@@ -69,7 +82,7 @@ function discoverRoutes(): DiscoveredRoute[] {
     for (const file of files) {
       const fullPath = join(modulePath, file as string);
       if (existsSync(fullPath)) {
-        const routes = extractRoutesFromFile(fullPath, moduleName);
+        const routes = extractRoutesFromFile(fullPath, module.moduleName);
         allRoutes.push(...routes);
       }
     }
@@ -189,7 +202,7 @@ async function runValidation(): Promise<void> {
 
   console.log('\n[1/3] Discovering routes from module files...');
   const routes = discoverRoutes();
-  console.log(`  Found ${routes.length} route(s) in ${MODULE_DIRS.length} modules`);
+  console.log(`  Found ${routes.length} route(s) in ${MODULE_DISCOVERY.length} modules`);
 
   if (routes.length === 0) {
     console.log('\n❌ ERROR: No routes discovered. Aborting.');

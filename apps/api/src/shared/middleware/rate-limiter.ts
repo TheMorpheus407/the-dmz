@@ -1,3 +1,5 @@
+import { createHash } from 'crypto';
+
 import rateLimit, {
   type FastifyRateLimitStoreCtor,
   type RateLimitOptions,
@@ -70,6 +72,14 @@ const extractTenantIdFromRequest = (request: FastifyRequest): string | undefined
     return request.tenantContext.tenantId;
   }
 
+  if (request.user?.tenantId) {
+    return request.user.tenantId;
+  }
+
+  if (request.oauthClient?.tenantId) {
+    return request.oauthClient.tenantId;
+  }
+
   if (request.preAuthTenantContext?.tenantId) {
     return request.preAuthTenantContext.tenantId;
   }
@@ -96,6 +106,73 @@ const calculateRetryAfterSeconds = (context: errorResponseBuilderContext): numbe
 
 const buildRateLimitKeyPrefix = (groupId?: string): string =>
   groupId ? `${RATE_LIMIT_NAMESPACE}${groupId}-` : RATE_LIMIT_NAMESPACE;
+
+const getHeaderValue = (value: string | string[] | undefined): string | undefined => {
+  if (Array.isArray(value)) {
+    const [first] = value;
+    return typeof first === 'string' && first.length > 0 ? first : undefined;
+  }
+
+  return typeof value === 'string' && value.length > 0 ? value : undefined;
+};
+
+const hashCredentialIdentifier = (value: string): string =>
+  createHash('sha256').update(value).digest('hex').slice(0, 32);
+
+const extractApiKeyId = (credential: string): string | undefined => {
+  const separatorIndex = credential.indexOf(':');
+  if (separatorIndex <= 0 || separatorIndex >= credential.length - 1) {
+    return undefined;
+  }
+
+  return credential.slice(0, separatorIndex);
+};
+
+const extractBearerCredential = (request: FastifyRequest): string | undefined => {
+  const authorizationHeader = getHeaderValue(request.headers.authorization);
+  if (!authorizationHeader) {
+    return undefined;
+  }
+
+  const [scheme, credential, ...rest] = authorizationHeader.trim().split(/\s+/);
+  if (scheme?.toLowerCase() !== 'bearer' || !credential || rest.length > 0) {
+    return undefined;
+  }
+
+  return credential;
+};
+
+export const extractCredentialIdentifier = (request: FastifyRequest): string => {
+  if (request.apiKeyAuth?.keyId) {
+    return `key:${request.apiKeyAuth.keyId}`;
+  }
+
+  if (request.oauthClient?.clientId) {
+    return `oauth:${request.oauthClient.clientId}`;
+  }
+
+  if (request.user?.userId) {
+    return `user:${request.user.userId}`;
+  }
+
+  const bearerCredential = extractBearerCredential(request);
+  const authorizationApiKeyId = bearerCredential ? extractApiKeyId(bearerCredential) : undefined;
+  if (authorizationApiKeyId) {
+    return `key:${authorizationApiKeyId}`;
+  }
+
+  const apiKeyHeader = getHeaderValue(request.headers['x-api-key']);
+  if (apiKeyHeader) {
+    const apiKeyId = extractApiKeyId(apiKeyHeader);
+    if (apiKeyId) {
+      return `key:${apiKeyId}`;
+    }
+
+    return `key-hash:${hashCredentialIdentifier(apiKeyHeader)}`;
+  }
+
+  return `ip:${request.ip}`;
+};
 
 const extractGroupIdFromRoute = (request: FastifyRequest): string | undefined => {
   const routeOptions = request.routeOptions as
@@ -405,7 +482,7 @@ let rateLimiterState: StoreState | null = null;
 const generateHourlyQuotaKey = (request: FastifyRequest): string => {
   const groupId = extractGroupIdFromRoute(request);
   const tenantId = extractTenantIdFromRequest(request);
-  const key = request.ip;
+  const key = extractCredentialIdentifier(request);
 
   if (!tenantId) {
     const prefix = buildRateLimitKeyPrefix(groupId);
@@ -495,7 +572,7 @@ const buildRateLimitPluginOptions = (
   const rateLimitKeyGenerator = (request: FastifyRequest): string => {
     const groupId = extractGroupIdFromRoute(request);
     const tenantId = extractTenantIdFromRequest(request);
-    const key = request.ip;
+    const key = extractCredentialIdentifier(request);
 
     if (!tenantId) {
       const prefix = buildRateLimitKeyPrefix(groupId);

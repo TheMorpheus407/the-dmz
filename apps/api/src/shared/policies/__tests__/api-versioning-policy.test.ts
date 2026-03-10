@@ -53,6 +53,20 @@ describe('API Versioning Policy', () => {
       expect(rule?.allowedUnversioned).toBe(true);
     });
 
+    it('should have module rules for content', () => {
+      const rule = getModuleVersionRule('content');
+      expect(rule).toBeDefined();
+      expect(rule?.requiredVersionPrefix).toBe('/api/v1/content');
+      expect(rule?.allowedUnversioned).toBe(false);
+    });
+
+    it('should have module rules for aiPipeline', () => {
+      const rule = getModuleVersionRule('aiPipeline');
+      expect(rule).toBeDefined();
+      expect(rule?.requiredVersionPrefix).toBe('/api/v1/ai');
+      expect(rule?.allowedUnversioned).toBe(false);
+    });
+
     it('should return undefined for unknown module', () => {
       const rule = getModuleVersionRule('unknown');
       expect(rule).toBeUndefined();
@@ -65,6 +79,8 @@ describe('API Versioning Policy', () => {
       expect(isPathVersioned('/api/v1/auth')).toBe(true);
       expect(isPathVersioned('/api/v1/auth/login')).toBe(true);
       expect(isPathVersioned('/api/v1/game/session')).toBe(true);
+      expect(isPathVersioned('/api/v1/content/emails')).toBe(true);
+      expect(isPathVersioned('/api/v1/ai/prompt-templates')).toBe(true);
     });
 
     it('should return false for unversioned paths', () => {
@@ -98,6 +114,7 @@ describe('API Versioning Policy', () => {
     it('should not allow regular versioned paths as exceptions', () => {
       expect(isPathAllowedUnversioned('/api/v1/auth')).toBe(false);
       expect(isPathAllowedUnversioned('/api/v1/game')).toBe(false);
+      expect(isPathAllowedUnversioned('/api/v1/content')).toBe(false);
     });
 
     it('should not allow unauthorized paths', () => {

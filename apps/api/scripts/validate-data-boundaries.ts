@@ -6,12 +6,20 @@ import {
   isAccessAllowed,
   type BoundaryViolation,
 } from '../src/db/ownership/index.js';
+import { MODULE_MANIFEST } from '../src/modules/manifest.js';
 
 interface FileAnalysis {
   filePath: string;
   moduleName: string | null;
   imports: string[];
 }
+
+const MODULE_NAME_BY_DIRECTORY = new Map(
+  MODULE_MANIFEST.modules.map((entry) => [
+    entry.pluginPath.replace('./modules/', '').split('/')[0] ?? entry.name,
+    entry.name,
+  ]),
+);
 
 function getModuleFromFilePath(filePath: string): string | null {
   const relativePath = path.relative(process.cwd(), filePath);
@@ -22,7 +30,7 @@ function getModuleFromFilePath(filePath: string): string | null {
 
   const parts = relativePath.split(path.sep);
   if (parts.length >= 3 && parts[1] === 'modules' && parts[2] !== 'shared' && parts[2]) {
-    return parts[2];
+    return MODULE_NAME_BY_DIRECTORY.get(parts[2]) ?? parts[2];
   }
 
   return null;

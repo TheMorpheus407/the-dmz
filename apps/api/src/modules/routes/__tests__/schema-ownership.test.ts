@@ -35,6 +35,13 @@ describe('Schema Ownership Manifest', () => {
       expect(ownership?.schemaNamespace).toBe('Health');
     });
 
+    it('should return ownership for aiPipeline module', () => {
+      const ownership = getSchemaOwnership('aiPipeline');
+      expect(ownership).toBeDefined();
+      expect(ownership?.module).toBe('aiPipeline');
+      expect(ownership?.schemaNamespace).toBe('Ai');
+    });
+
     it('should return undefined for unknown module', () => {
       const ownership = getSchemaOwnership('unknown');
       expect(ownership).toBeUndefined();
@@ -63,6 +70,13 @@ describe('Schema Ownership Manifest', () => {
     it('should allow health module to own its schemas', () => {
       expect(isSchemaOwnedByModule('health', 'healthResponseJsonSchema')).toBe(true);
       expect(isSchemaOwnedByModule('health', 'healthQueryJsonSchema')).toBe(true);
+    });
+
+    it('should allow aiPipeline to own its schemas', () => {
+      expect(isSchemaOwnedByModule('aiPipeline', 'aiPromptTemplateCreateBodyJsonSchema')).toBe(
+        true,
+      );
+      expect(isSchemaOwnedByModule('aiPipeline', 'aiGenerationResponseJsonSchema')).toBe(true);
     });
   });
 
@@ -101,6 +115,11 @@ describe('Schema Ownership Manifest', () => {
       expect(isComponentOwnedByModule('health', 'HealthQuery')).toBe(true);
       expect(isComponentOwnedByModule('health', 'ReadinessResponse')).toBe(true);
     });
+
+    it('should allow aiPipeline to own components matching its patterns', () => {
+      expect(isComponentOwnedByModule('aiPipeline', 'AiPromptTemplate')).toBe(true);
+      expect(isComponentOwnedByModule('aiPipeline', 'AiGenerationResponse')).toBe(true);
+    });
   });
 
   describe('isSharedSourceAllowed', () => {
@@ -128,6 +147,10 @@ describe('Schema Ownership Manifest', () => {
     it('should return false for unknown module', () => {
       expect(isSharedSourceAllowed('unknown', '@the-dmz/shared/schemas')).toBe(false);
     });
+
+    it('should allow aiPipeline module to import from @the-dmz/shared/schemas', () => {
+      expect(isSharedSourceAllowed('aiPipeline', '@the-dmz/shared/schemas')).toBe(true);
+    });
   });
 
   describe('getSchemaOwner', () => {
@@ -143,6 +166,11 @@ describe('Schema Ownership Manifest', () => {
     it('should return health for health schemas', () => {
       expect(getSchemaOwner('healthResponseJsonSchema')).toBe('health');
       expect(getSchemaOwner('healthQueryJsonSchema')).toBe('health');
+    });
+
+    it('should return aiPipeline for AI schemas', () => {
+      expect(getSchemaOwner('aiPromptTemplateListQueryJsonSchema')).toBe('aiPipeline');
+      expect(getSchemaOwner('aiScenarioVariationGenerationBodyJsonSchema')).toBe('aiPipeline');
     });
 
     it('should return undefined for unknown schema', () => {
@@ -166,6 +194,11 @@ describe('Schema Ownership Manifest', () => {
       expect(getComponentOwner('ReadinessResponse')).toBe('health');
     });
 
+    it('should return aiPipeline for AI components', () => {
+      expect(getComponentOwner('AiPromptTemplate')).toBe('aiPipeline');
+      expect(getComponentOwner('AiScenarioVariationGenerationRequest')).toBe('aiPipeline');
+    });
+
     it('should return undefined for unknown component', () => {
       expect(getComponentOwner('UnknownComponent')).toBeUndefined();
     });
@@ -176,6 +209,7 @@ describe('Schema Ownership Manifest', () => {
       expect(isSchemaRegistered('loginBodyJsonSchema')).toBe(true);
       expect(isSchemaRegistered('gameSessionBootstrapResponseJsonSchema')).toBe(true);
       expect(isSchemaRegistered('healthResponseJsonSchema')).toBe(true);
+      expect(isSchemaRegistered('aiPromptTemplateResponseJsonSchema')).toBe(true);
     });
 
     it('should return false for unregistered schemas', () => {
@@ -188,6 +222,7 @@ describe('Schema Ownership Manifest', () => {
       expect(isComponentRegistered('AuthLoginResponse')).toBe(true);
       expect(isComponentRegistered('GameSession')).toBe(true);
       expect(isComponentRegistered('HealthResponse')).toBe(true);
+      expect(isComponentRegistered('AiPromptTemplate')).toBe(true);
     });
 
     it('should return false for unregistered components', () => {
@@ -201,6 +236,7 @@ describe('Schema Ownership Manifest', () => {
       expect(modules).toContain('auth');
       expect(modules).toContain('game');
       expect(modules).toContain('health');
+      expect(modules).toContain('aiPipeline');
     });
 
     it('should have schemaNamespace for each module', () => {

@@ -133,13 +133,7 @@ describe('quota policy runtime behavior', () => {
         headers: { 'x-tenant-id': tenant1 },
       });
       expect(t1Req2.statusCode).toBe(200);
-
-      const t1Req3 = await app.inject({
-        method: 'GET',
-        url: '/api/v1/',
-        headers: { 'x-tenant-id': tenant1 },
-      });
-      expect(t1Req3.statusCode).toBe(200);
+      expect(getHeader(t1Req2.headers, 'x-ratelimit-remaining')).toBe('0');
 
       const t2Req1 = await app.inject({
         method: 'GET',
@@ -147,6 +141,7 @@ describe('quota policy runtime behavior', () => {
         headers: { 'x-tenant-id': tenant2 },
       });
       expect(t2Req1.statusCode).toBe(200);
+      expect(getHeader(t2Req1.headers, 'x-ratelimit-remaining')).toBe('1');
 
       const t2Req2 = await app.inject({
         method: 'GET',
@@ -154,13 +149,14 @@ describe('quota policy runtime behavior', () => {
         headers: { 'x-tenant-id': tenant2 },
       });
       expect(t2Req2.statusCode).toBe(200);
+      expect(getHeader(t2Req2.headers, 'x-ratelimit-remaining')).toBe('0');
 
       await app.close();
     });
 
     it('maintains separate quota counters per tenant', async () => {
       const app = buildApp(
-        createTestConfig({ RATE_LIMIT_MAX: '1', RATE_LIMIT_WINDOW_MS: '60000' }),
+        createTestConfig({ RATE_LIMIT_MAX: '2', RATE_LIMIT_WINDOW_MS: '60000' }),
       );
       await app.ready();
 
@@ -173,6 +169,7 @@ describe('quota policy runtime behavior', () => {
         headers: { 'x-tenant-id': tenantA, 'x-forwarded-for': '1.1.1.1' },
       });
       expect(a1.statusCode).toBe(200);
+      expect(getHeader(a1.headers, 'x-ratelimit-remaining')).toBe('1');
 
       const b1 = await app.inject({
         method: 'GET',
@@ -180,6 +177,7 @@ describe('quota policy runtime behavior', () => {
         headers: { 'x-tenant-id': tenantB, 'x-forwarded-for': '1.1.1.1' },
       });
       expect(b1.statusCode).toBe(200);
+      expect(getHeader(b1.headers, 'x-ratelimit-remaining')).toBe('1');
 
       const a2 = await app.inject({
         method: 'GET',
@@ -187,6 +185,7 @@ describe('quota policy runtime behavior', () => {
         headers: { 'x-tenant-id': tenantA, 'x-forwarded-for': '1.1.1.1' },
       });
       expect(a2.statusCode).toBe(200);
+      expect(getHeader(a2.headers, 'x-ratelimit-remaining')).toBe('0');
 
       const b2 = await app.inject({
         method: 'GET',
@@ -194,6 +193,7 @@ describe('quota policy runtime behavior', () => {
         headers: { 'x-tenant-id': tenantB, 'x-forwarded-for': '1.1.1.1' },
       });
       expect(b2.statusCode).toBe(200);
+      expect(getHeader(b2.headers, 'x-ratelimit-remaining')).toBe('0');
 
       await app.close();
     });
@@ -213,21 +213,23 @@ describe('quota policy runtime behavior', () => {
         url: '/api/v1/',
         headers: {
           'x-tenant-id': tenant,
-          'x-api-key': 'test-api-key-1',
+          authorization: 'Bearer test-api-key-1:secret-a',
         },
       });
       expect(apiKeyReq1.statusCode).toBe(200);
+      expect(getHeader(apiKeyReq1.headers, 'x-ratelimit-remaining')).toBe('0');
 
       const patReq1 = await app.inject({
         method: 'GET',
         url: '/api/v1/',
         headers: {
           'x-tenant-id': tenant,
-          'x-api-key': 'test-pat-1',
+          authorization: 'Bearer test-api-key-2:secret-b',
         },
       });
 
       expect(patReq1.statusCode).toBe(200);
+      expect(getHeader(patReq1.headers, 'x-ratelimit-remaining')).toBe('0');
 
       await app.close();
     });

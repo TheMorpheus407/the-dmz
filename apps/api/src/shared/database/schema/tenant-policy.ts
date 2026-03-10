@@ -98,6 +98,15 @@ export const TENANT_SCOPED_TABLES = [
       },
     ],
   },
+  {
+    table: 'prompt_templates',
+    schema: 'ai',
+    description: 'Versioned AI prompt templates scoped to tenants',
+    reason: 'Prompt templates store tenant-owned AI generation rules and metadata',
+    hasNotNullTenantId: true,
+    hasTenantFk: true,
+    hasRls: true,
+  },
 ] as const;
 
 export const GLOBAL_TABLES = [
