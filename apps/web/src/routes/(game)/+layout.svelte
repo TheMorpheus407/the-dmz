@@ -166,8 +166,11 @@
   });
 </script>
 
-<section class="surface surface-game" data-surface="game">
-  <div class="shell-game">
+<section
+  class="surface surface-game crt-scanlines crt-noise crt-vignette crt-curvature"
+  data-surface="game"
+>
+  <div class="shell-game game-viewport">
     {#if $navigating}
       <div class="loading-overlay">
         <LoadingState
@@ -180,7 +183,9 @@
     {:else}
       <header class="shell-game__header">
         <div class="shell-game__header-left">
-          <span class="shell-game__header-title">[M] MATRICES GmbH SECURE TERMINAL v4.7</span>
+          <span class="shell-game__header-title crt-glow"
+            >[M] MATRICES GmbH SECURE TERMINAL v4.7</span
+          >
         </div>
         <div class="shell-game__header-center">
           <span class="shell-game__header-time">Day {currentDay} | {currentTime}</span>
@@ -334,7 +339,7 @@
         <Button variant="secondary" size="md" onclick={handleVerify}>VERIFY</Button>
       </div>
 
-      <footer class="shell-game__footer">
+      <footer class="shell-game__footer crt-glow">
         <span class="shell-game__footer-prompt">&gt; Terminal ready. Type 'help' for commands.</span
         >
         <span class="shell-game__footer-controls">[_][o][x]</span>

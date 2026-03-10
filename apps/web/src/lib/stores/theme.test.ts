@@ -158,4 +158,79 @@ describe('themeStore', () => {
       expect(STORAGE_KEY).toBe('dmz-theme-preference');
     });
   });
+
+  describe('applyThemeToDom', () => {
+    it('sets data attributes for scanlines when enabled', () => {
+      themeStore.setTheme('green');
+      expect(mockDocumentElement.dataset['scanlines']).toBe('on');
+    });
+
+    it('sets data attributes for scanlines when disabled', () => {
+      themeStore.setEffects({ scanlines: false });
+      expect(mockDocumentElement.dataset['scanlines']).toBe('off');
+    });
+
+    it('sets data attributes for curvature when enabled', () => {
+      themeStore.setTheme('green');
+      expect(mockDocumentElement.dataset['curvature']).toBe('on');
+    });
+
+    it('sets data attributes for curvature when disabled', () => {
+      themeStore.setEffects({ curvature: false });
+      expect(mockDocumentElement.dataset['curvature']).toBe('off');
+    });
+
+    it('sets data attributes for glow when enabled', () => {
+      themeStore.setTheme('green');
+      expect(mockDocumentElement.dataset['glow']).toBe('on');
+    });
+
+    it('sets data attributes for glow when disabled', () => {
+      themeStore.setEffects({ glow: false });
+      expect(mockDocumentElement.dataset['glow']).toBe('off');
+    });
+
+    it('sets data attributes for noise when enabled', () => {
+      themeStore.setEffects({ noise: true });
+      expect(mockDocumentElement.dataset['noise']).toBe('on');
+    });
+
+    it('sets data attributes for noise when disabled', () => {
+      themeStore.setEffects({ noise: false });
+      expect(mockDocumentElement.dataset['noise']).toBe('off');
+    });
+
+    it('sets data attributes for vignette when enabled', () => {
+      themeStore.setTheme('green');
+      expect(mockDocumentElement.dataset['vignette']).toBe('on');
+    });
+
+    it('sets data attributes for vignette when disabled', () => {
+      themeStore.setEffects({ vignette: false });
+      expect(mockDocumentElement.dataset['vignette']).toBe('off');
+    });
+
+    it('sets high-contrast data attribute for high-contrast theme', () => {
+      themeStore.setTheme('high-contrast');
+      expect(mockDocumentElement.dataset['highContrast']).toBe('on');
+    });
+
+    it('does not set high-contrast for green theme', () => {
+      themeStore.setTheme('green');
+      expect(mockDocumentElement.dataset['highContrast']).toBe('off');
+    });
+  });
+
+  describe('prefers-reduced-motion', () => {
+    it('disables all motion effects when prefers-reduced-motion is true', () => {
+      mockMatchMedia.mockReturnValue({ matches: true });
+      themeStore.init();
+      const state = get(themeStore);
+      expect(state.effects.scanlines).toBe(false);
+      expect(state.effects.curvature).toBe(false);
+      expect(state.effects.glow).toBe(false);
+      expect(state.effects.noise).toBe(false);
+      expect(state.effects.vignette).toBe(false);
+    });
+  });
 });
