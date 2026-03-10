@@ -1,0 +1,185 @@
+import { Worker, Queue, type WorkerOptions, type Job } from 'bullmq';
+
+import {
+  QUEUE_NAMES,
+  JOB_TYPES,
+  DEFAULT_JOB_OPTIONS,
+  DEFAULT_CONCURRENCY,
+  type AiGenerationJobData,
+  type GenerateEmailJobData,
+  type BatchGenerateJobData,
+  type RegenerateFailedJobData,
+} from './queues.js';
+import { createGenerateEmailProcessor } from './processors/generate-email.processor.js';
+import { createBatchGenerateProcessor } from './processors/batch-generate.processor.js';
+import { createRegenerateFailedProcessor } from './processors/regenerate-failed.processor.js';
+
+export interface WorkerDependencies {
+  generateEmail: (options: {
+    tenantId: string;
+    difficulty: number;
+    faction?: string;
+    attackType?: string;
+    metadata?: Record<string, unknown>;
+  }) => Promise<{
+    emailId: string;
+    templateId: string;
+    quality: number;
+  }>;
+  addToPool: (options: {
+    tenantId: string;
+    emailId: string;
+    templateId: string;
+    difficulty: number;
+    quality: number;
+    intent: 'legitimate' | 'malicious' | 'ambiguous';
+    faction?: string;
+    attackType?: string;
+  }) => Promise<void>;
+  getPoolHealth: (
+    tenantId: string,
+  ) => Promise<Map<number, { needsRefill: boolean; currentCount: number }>>;
+}
+
+export interface WorkerConfig {
+  redisUrl: string;
+  concurrency?: number;
+  maxAttempts?: number;
+}
+
+export interface WorkerHealth {
+  isRunning: boolean;
+  isPaused: boolean;
+  currentJobCount: number;
+  completedCount: number;
+  failedCount: number;
+}
+
+export class EmailGeneratorWorker {
+  private worker: Worker<AiGenerationJobData>;
+  private queue: Queue<AiGenerationJobData>;
+  private dependencies: WorkerDependencies;
+  private health: WorkerHealth;
+
+  constructor(config: WorkerConfig, dependencies: WorkerDependencies) {
+    this.dependencies = dependencies;
+    this.health = {
+      isRunning: false,
+      isPaused: false,
+      currentJobCount: 0,
+      completedCount: 0,
+      failedCount: 0,
+    };
+
+    const connection = this.getConnectionFromUrl(config.redisUrl);
+
+    this.queue = new Queue<AiGenerationJobData>(QUEUE_NAMES.AI_GENERATION, {
+      defaultJobOptions: DEFAULT_JOB_OPTIONS,
+      connection,
+    });
+
+    const workerOptions: WorkerOptions = {
+      connection,
+      concurrency: config.concurrency ?? DEFAULT_CONCURRENCY,
+    };
+
+    this.worker = new Worker<AiGenerationJobData>(
+      QUEUE_NAMES.AI_GENERATION,
+      async (job) => this.processJob(job),
+      workerOptions,
+    );
+
+    this.worker.on('completed', () => {
+      this.health.completedCount++;
+      this.health.currentJobCount = Math.max(0, this.health.currentJobCount - 1);
+    });
+
+    this.worker.on('failed', () => {
+      this.health.failedCount++;
+      this.health.currentJobCount = Math.max(0, this.health.currentJobCount - 1);
+    });
+
+    this.worker.on('active', () => {
+      this.health.currentJobCount++;
+    });
+  }
+
+  private getConnectionFromUrl(redisUrl: string) {
+    const url = new URL(redisUrl);
+    return {
+      host: url.hostname,
+      port: parseInt(url.port, 10) || 6379,
+    };
+  }
+
+  private async processJob(job: Job<AiGenerationJobData>): Promise<unknown> {
+    const { type } = job.data;
+
+    switch (type) {
+      case JOB_TYPES.GENERATE_EMAIL: {
+        const processor = createGenerateEmailProcessor(
+          this.dependencies.generateEmail,
+          this.dependencies.addToPool,
+        );
+        return processor(job as Job<GenerateEmailJobData>);
+      }
+      case JOB_TYPES.BATCH_GENERATE: {
+        const processor = createBatchGenerateProcessor(
+          this.dependencies.generateEmail,
+          this.dependencies.addToPool,
+          async (tenantId: string) => {
+            const health = await this.dependencies.getPoolHealth(tenantId);
+            return health;
+          },
+        );
+        return processor(job as Job<BatchGenerateJobData>);
+      }
+      case JOB_TYPES.REGENERATE_FAILED: {
+        const processor = createRegenerateFailedProcessor(
+          this.dependencies.generateEmail,
+          this.dependencies.addToPool,
+        );
+        return processor(job as Job<RegenerateFailedJobData>);
+      }
+      default:
+        throw new Error(`Unknown job type: ${type as string}`);
+    }
+  }
+
+  async start(): Promise<void> {
+    this.health.isRunning = true;
+    this.health.isPaused = false;
+    await this.worker.run();
+  }
+
+  async stop(): Promise<void> {
+    this.health.isRunning = false;
+    await this.worker.close();
+  }
+
+  async pause(): Promise<void> {
+    this.health.isPaused = true;
+    await this.worker.pause();
+  }
+
+  async resume(): Promise<void> {
+    this.health.isPaused = false;
+    this.worker.resume();
+  }
+
+  getHealth(): WorkerHealth {
+    return { ...this.health };
+  }
+
+  async close(): Promise<void> {
+    await this.worker.close();
+    await this.queue.close();
+  }
+}
+
+export function createEmailGeneratorWorker(
+  config: WorkerConfig,
+  dependencies: WorkerDependencies,
+): EmailGeneratorWorker {
+  return new EmailGeneratorWorker(config, dependencies);
+}

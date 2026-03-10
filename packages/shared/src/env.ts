@@ -87,6 +87,12 @@ export const backendEnvSchema = z
     AI_CLASSIFICATION_MODEL: z.string().min(1).default('haiku'),
     AI_MAX_RETRIES: z.coerce.number().int().nonnegative().max(3).default(3),
     AI_RETRY_DELAY_MS: z.coerce.number().int().positive().default(1000),
+    BULLMQ_CONCURRENCY: z.coerce.number().int().positive().default(5),
+    BULLMQ_MAX_ATTEMPTS: z.coerce.number().int().positive().max(10).default(10),
+    AI_POOL_MIN_PER_TIER: z.coerce.number().int().positive().default(20),
+    AI_POOL_TARGET_PER_TIER: z.coerce.number().int().positive().default(50),
+    AI_BATCH_SIZE: z.coerce.number().int().positive().default(10),
+    AI_GENERATION_SCHEDULE_CRON: z.string().default('0 3 * * *'),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';
