@@ -9,6 +9,7 @@ export const effectStateSchema = z
     glow: z.boolean(),
     noise: z.boolean(),
     vignette: z.boolean(),
+    flicker: z.boolean(),
   })
   .strict();
 
@@ -21,6 +22,7 @@ export const defaultEffectStates: Record<string, EffectState> = {
     glow: true,
     noise: false,
     vignette: true,
+    flicker: true,
   },
   amber: {
     scanlines: true,
@@ -28,6 +30,7 @@ export const defaultEffectStates: Record<string, EffectState> = {
     glow: true,
     noise: false,
     vignette: true,
+    flicker: true,
   },
   'high-contrast': {
     scanlines: false,
@@ -35,6 +38,7 @@ export const defaultEffectStates: Record<string, EffectState> = {
     glow: false,
     noise: false,
     vignette: false,
+    flicker: false,
   },
   enterprise: {
     scanlines: false,
@@ -42,6 +46,7 @@ export const defaultEffectStates: Record<string, EffectState> = {
     glow: false,
     noise: false,
     vignette: false,
+    flicker: false,
   },
 };
 

@@ -73,6 +73,7 @@ async function syncPreferencesToServer(preferences: {
       glow: boolean;
       noise: boolean;
       vignette: boolean;
+      flicker: boolean;
     };
     fontSize?: number;
   } = {};
@@ -90,6 +91,7 @@ async function syncPreferencesToServer(preferences: {
       glow: boolean;
       noise: boolean;
       vignette: boolean;
+      flicker: boolean;
     };
   }
   if (preferences.fontSize !== undefined) {

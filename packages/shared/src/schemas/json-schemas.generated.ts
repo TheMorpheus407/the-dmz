@@ -242,8 +242,11 @@ export const profileJsonSchema = {
                 vignette: {
                   type: 'boolean',
                 },
+                flicker: {
+                  type: 'boolean',
+                },
               },
-              required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+              required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
               additionalProperties: false,
             },
             fontSize: {
@@ -365,8 +368,11 @@ export const updateProfileJsonSchema = {
                 vignette: {
                   type: 'boolean',
                 },
+                flicker: {
+                  type: 'boolean',
+                },
               },
-              required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+              required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
               additionalProperties: false,
             },
             fontSize: {
@@ -495,8 +501,11 @@ export const meResponseJsonSchema = {
                     vignette: {
                       type: 'boolean',
                     },
+                    flicker: {
+                      type: 'boolean',
+                    },
                   },
-                  required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+                  required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
                   additionalProperties: false,
                 },
                 fontSize: {
@@ -963,8 +972,11 @@ export const effectStateJsonSchema = {
     vignette: {
       type: 'boolean',
     },
+    flicker: {
+      type: 'boolean',
+    },
   },
-  required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+  required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
@@ -997,8 +1009,11 @@ export const themePreferencesJsonSchema = {
         vignette: {
           type: 'boolean',
         },
+        flicker: {
+          type: 'boolean',
+        },
       },
-      required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+      required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
       additionalProperties: false,
     },
     fontSize: {
@@ -1061,8 +1076,11 @@ export const userPreferencesJsonSchema = {
             vignette: {
               type: 'boolean',
             },
+            flicker: {
+              type: 'boolean',
+            },
           },
-          required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+          required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
           additionalProperties: false,
         },
         fontSize: {
@@ -1452,8 +1470,11 @@ export const updatePreferencesJsonSchema = {
             vignette: {
               type: 'boolean',
             },
+            flicker: {
+              type: 'boolean',
+            },
           },
-          required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette'],
+          required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
           additionalProperties: false,
         },
         fontSize: {

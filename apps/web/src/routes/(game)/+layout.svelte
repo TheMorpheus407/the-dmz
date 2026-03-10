@@ -5,6 +5,8 @@
   import Drawer from '$lib/ui/components/Drawer.svelte';
   import Button from '$lib/ui/components/Button.svelte';
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
+  import Modal from '$lib/ui/components/Modal.svelte';
+  import CrtControlsPanel from '$lib/ui/components/CrtControlsPanel.svelte';
   import KeyboardShortcutHandler from '$lib/game/components/KeyboardShortcutHandler.svelte';
   import HelpOverlay from '$lib/game/components/HelpOverlay.svelte';
   import ThunkFeedback from '$lib/game/components/ThunkFeedback.svelte';
@@ -26,6 +28,7 @@
   let activePanel: PanelId = $state('document');
   let isStatusDrawerOpen = $state(false);
   let helpVisible = $state(false);
+  let crtControlsOpen = $state(false);
   let selectedEmailIndex = $state(0);
 
   const currentDay = 14;
@@ -201,6 +204,9 @@
           <span class="shell-game__header-funds">
             FUNDS: {funds.toLocaleString()} CR [+{fundsChange}]
           </span>
+          <Button variant="ghost" size="sm" onclick={() => (crtControlsOpen = true)}>
+            Effects
+          </Button>
         </div>
       </header>
 
@@ -357,6 +363,10 @@
   <HelpOverlay visible={helpVisible} onClose={handleHideHelp} />
   <ThunkFeedback type={thunkType} visible={thunkVisible} />
   <ToastContainer />
+
+  <Modal bind:open={crtControlsOpen} title="Display Effects" size="md">
+    <CrtControlsPanel />
+  </Modal>
 
   <nav class="shell-game__mobile-nav" aria-label="Panel navigation">
     <button

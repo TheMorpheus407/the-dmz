@@ -1632,6 +1632,9 @@
                                     },
                                     "vignette": {
                                       "type": "boolean"
+                                    },
+                                    "flicker": {
+                                      "type": "boolean"
                                     }
                                   },
                                   "required": [
@@ -1639,7 +1642,8 @@
                                     "curvature",
                                     "glow",
                                     "noise",
-                                    "vignette"
+                                    "vignette",
+                                    "flicker"
                                   ],
                                   "additionalProperties": false
                                 },
@@ -2061,9 +2065,19 @@
                               },
                               "vignette": {
                                 "type": "boolean"
+                              },
+                              "flicker": {
+                                "type": "boolean"
                               }
                             },
-                            "required": ["scanlines", "curvature", "glow", "noise", "vignette"],
+                            "required": [
+                              "scanlines",
+                              "curvature",
+                              "glow",
+                              "noise",
+                              "vignette",
+                              "flicker"
+                            ],
                             "additionalProperties": false
                           },
                           "fontSize": {
@@ -2171,9 +2185,19 @@
                                 },
                                 "vignette": {
                                   "type": "boolean"
+                                },
+                                "flicker": {
+                                  "type": "boolean"
                                 }
                               },
-                              "required": ["scanlines", "curvature", "glow", "noise", "vignette"],
+                              "required": [
+                                "scanlines",
+                                "curvature",
+                                "glow",
+                                "noise",
+                                "vignette",
+                                "flicker"
+                              ],
                               "additionalProperties": false
                             },
                             "fontSize": {

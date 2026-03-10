@@ -14,12 +14,118 @@ export interface EffectState {
   glow: boolean;
   noise: boolean;
   vignette: boolean;
+  flicker: boolean;
+}
+
+export interface EffectIntensities {
+  scanlines: number;
+  curvature: number;
+  glow: number;
+  noise: number;
+  vignette: number;
+  flicker: number;
+}
+
+export type CrtPreset = 'off' | 'light' | 'authentic' | 'heavy';
+
+export const CRT_PRESETS: Record<
+  CrtPreset,
+  { effects: Partial<EffectState>; intensities: Partial<EffectIntensities> }
+> = {
+  off: {
+    effects: {
+      scanlines: false,
+      curvature: false,
+      glow: false,
+      noise: false,
+      vignette: false,
+      flicker: false,
+    },
+    intensities: {
+      scanlines: 0,
+      curvature: 0,
+      glow: 0,
+      noise: 0,
+      vignette: 0,
+      flicker: 0,
+    },
+  },
+  light: {
+    effects: {
+      scanlines: true,
+      curvature: false,
+      glow: true,
+      noise: false,
+      vignette: true,
+      flicker: false,
+    },
+    intensities: {
+      scanlines: 30,
+      curvature: 0,
+      glow: 50,
+      noise: 0,
+      vignette: 20,
+      flicker: 30,
+    },
+  },
+  authentic: {
+    effects: {
+      scanlines: true,
+      curvature: true,
+      glow: true,
+      noise: false,
+      vignette: true,
+      flicker: true,
+    },
+    intensities: {
+      scanlines: 50,
+      curvature: 100,
+      glow: 100,
+      noise: 30,
+      vignette: 60,
+      flicker: 50,
+    },
+  },
+  heavy: {
+    effects: {
+      scanlines: true,
+      curvature: true,
+      glow: true,
+      noise: true,
+      vignette: true,
+      flicker: true,
+    },
+    intensities: {
+      scanlines: 100,
+      curvature: 100,
+      glow: 150,
+      noise: 80,
+      vignette: 100,
+      flicker: 100,
+    },
+  },
+};
+
+export const DEFAULT_INTENSITIES: EffectIntensities = {
+  scanlines: 50,
+  curvature: 100,
+  glow: 100,
+  noise: 30,
+  vignette: 60,
+  flicker: 50,
+};
+
+export interface CrtSettingsExport {
+  effects: EffectState;
+  intensities: EffectIntensities;
+  preset?: CrtPreset;
 }
 
 export interface ThemeState {
   name: ThemeName;
   enableTerminalEffects: boolean;
   effects: EffectState;
+  intensities: EffectIntensities;
   fontSize: number;
 }
 
@@ -43,6 +149,7 @@ const DEFAULT_EFFECTS: EffectState = {
   glow: true,
   noise: false,
   vignette: true,
+  flicker: true,
 };
 
 const HIGH_CONTRAST_EFFECTS: EffectState = {
@@ -51,6 +158,7 @@ const HIGH_CONTRAST_EFFECTS: EffectState = {
   glow: false,
   noise: false,
   vignette: false,
+  flicker: false,
 };
 
 const ENTERPRISE_EFFECTS: EffectState = {
@@ -59,6 +167,7 @@ const ENTERPRISE_EFFECTS: EffectState = {
   glow: false,
   noise: false,
   vignette: false,
+  flicker: false,
 };
 
 const DEFAULT_FONT_SIZE = 16;
@@ -67,6 +176,7 @@ export const initialThemeState: ThemeStoreState = {
   name: 'green',
   enableTerminalEffects: true,
   effects: { ...DEFAULT_EFFECTS },
+  intensities: { ...DEFAULT_INTENSITIES },
   fontSize: DEFAULT_FONT_SIZE,
   source: {
     theme: 'default',
@@ -120,10 +230,19 @@ function createThemeStore() {
     root.dataset['glow'] = state.effects.glow ? 'on' : 'off';
     root.dataset['noise'] = state.effects.noise ? 'on' : 'off';
     root.dataset['vignette'] = state.effects.vignette ? 'on' : 'off';
+    root.dataset['flicker'] = state.effects.flicker ? 'on' : 'off';
 
     root.dataset['highContrast'] = state.name === 'high-contrast' ? 'on' : 'off';
 
     root.style.setProperty('--base-font-size', `${state.fontSize}px`);
+
+    root.style.setProperty(
+      '--scanline-opacity',
+      String((state.intensities.scanlines / 100) * 0.15),
+    );
+    root.style.setProperty('--glow-intensity', String((state.intensities.glow / 100) * 2));
+    root.style.setProperty('--noise-opacity', String((state.intensities.noise / 100) * 0.1));
+    root.style.setProperty('--vignette-opacity', String((state.intensities.vignette / 100) * 0.5));
   }
 
   function determineDefaultTheme(): ThemeName {
@@ -148,6 +267,7 @@ function createThemeStore() {
           ...initialThemeState,
           ...parsed,
           effects: { ...DEFAULT_EFFECTS, ...parsed.effects },
+          intensities: { ...DEFAULT_INTENSITIES, ...parsed.intensities },
           source: {
             theme: 'local',
             enableTerminalEffects: 'local',
@@ -186,6 +306,7 @@ function createThemeStore() {
       name: defaultTheme,
       enableTerminalEffects: defaultTheme !== 'high-contrast',
       effects,
+      intensities: { ...DEFAULT_INTENSITIES },
       fontSize: DEFAULT_FONT_SIZE,
       source,
       lockedPreferences: [],
@@ -202,6 +323,7 @@ function createThemeStore() {
         name: state.name,
         enableTerminalEffects: state.enableTerminalEffects,
         effects: state.effects,
+        intensities: state.intensities,
         fontSize: state.fontSize,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
@@ -315,6 +437,7 @@ function createThemeStore() {
       name,
       enableTerminalEffects,
       effects,
+      intensities: { ...DEFAULT_INTENSITIES },
       fontSize,
       source,
       lockedPreferences: lockedKeys,
@@ -437,6 +560,161 @@ function createThemeStore() {
           enableTerminalEffects: enabled,
           source: {
             ...state.source,
+            enableTerminalEffects: 'local',
+          },
+        };
+
+        applyThemeToDom(newState);
+        persistTheme(newState);
+        debouncedSync();
+        return newState;
+      });
+    },
+
+    setIntensity: (effect: keyof EffectIntensities, value: number) => {
+      update((state) => {
+        if (state.lockedPreferences.includes('effects')) {
+          return state;
+        }
+
+        const clampedValue = Math.max(0, Math.min(100, value));
+        const newState: ThemeStoreState = {
+          ...state,
+          intensities: { ...state.intensities, [effect]: clampedValue },
+          source: {
+            ...state.source,
+            effects: 'local',
+          },
+        };
+
+        applyThemeToDom(newState);
+        persistTheme(newState);
+        debouncedSync();
+        return newState;
+      });
+    },
+
+    applyPreset: (preset: CrtPreset) => {
+      update((state) => {
+        if (state.lockedPreferences.includes('effects')) {
+          return state;
+        }
+
+        const presetConfig = CRT_PRESETS[preset];
+        const newState: ThemeStoreState = {
+          ...state,
+          effects: { ...state.effects, ...presetConfig.effects },
+          intensities: { ...DEFAULT_INTENSITIES, ...presetConfig.intensities },
+          source: {
+            ...state.source,
+            effects: 'local',
+          },
+        };
+
+        applyThemeToDom(newState);
+        persistTheme(newState);
+        debouncedSync();
+        return newState;
+      });
+    },
+
+    resetToDefaults: () => {
+      update((state) => {
+        if (state.lockedPreferences.includes('effects')) {
+          return state;
+        }
+
+        const newState: ThemeStoreState = {
+          ...state,
+          effects: { ...DEFAULT_EFFECTS },
+          intensities: { ...DEFAULT_INTENSITIES },
+          source: {
+            ...state.source,
+            effects: 'local',
+          },
+        };
+
+        applyThemeToDom(newState);
+        persistTheme(newState);
+        debouncedSync();
+        return newState;
+      });
+    },
+
+    exportSettings: (): CrtSettingsExport => {
+      const state = get({ subscribe });
+      return {
+        effects: state.effects,
+        intensities: state.intensities,
+      };
+    },
+
+    importSettings: (settings: CrtSettingsExport): boolean => {
+      try {
+        update((state) => {
+          if (state.lockedPreferences.includes('effects')) {
+            return state;
+          }
+
+          const validatedEffects: EffectState = {
+            scanlines: settings.effects.scanlines ?? state.effects.scanlines,
+            curvature: settings.effects.curvature ?? state.effects.curvature,
+            glow: settings.effects.glow ?? state.effects.glow,
+            noise: settings.effects.noise ?? state.effects.noise,
+            vignette: settings.effects.vignette ?? state.effects.vignette,
+            flicker: settings.effects.flicker ?? state.effects.flicker,
+          };
+
+          const validatedIntensities: EffectIntensities = {
+            scanlines: settings.intensities.scanlines ?? state.intensities.scanlines,
+            curvature: settings.intensities.curvature ?? state.intensities.curvature,
+            glow: settings.intensities.glow ?? state.intensities.glow,
+            noise: settings.intensities.noise ?? state.intensities.noise,
+            vignette: settings.intensities.vignette ?? state.intensities.vignette,
+            flicker: settings.intensities.flicker ?? state.intensities.flicker,
+          };
+
+          const newState: ThemeStoreState = {
+            ...state,
+            effects: validatedEffects,
+            intensities: validatedIntensities,
+            source: {
+              ...state.source,
+              effects: 'local',
+            },
+          };
+
+          applyThemeToDom(newState);
+          persistTheme(newState);
+          debouncedSync();
+          return newState;
+        });
+        return true;
+      } catch {
+        return false;
+      }
+    },
+
+    disableAllEffects: () => {
+      update((state) => {
+        if (state.lockedPreferences.includes('effects')) {
+          return state;
+        }
+
+        const newState: ThemeStoreState = {
+          ...state,
+          effects: {
+            scanlines: false,
+            curvature: false,
+            glow: false,
+            noise: false,
+            vignette: false,
+            flicker: false,
+          },
+          enableTerminalEffects: false,
+          source: {
+            ...state.source,
+            effects: 'local',
             enableTerminalEffects: 'local',
           },
         };
