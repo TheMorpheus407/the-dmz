@@ -5,6 +5,8 @@ import { sql } from 'drizzle-orm';
 import { getDatabaseClient, type DB } from '../../shared/database/connection.js';
 import { badRequest, conflict } from '../../shared/middleware/error-handler.js';
 import { generateId as defaultGenerateId } from '../../shared/utils/id.js';
+// eslint-disable-next-line import-x/no-restricted-paths
+import { scoreEmail as scoreContentQuality } from '../content/index.js';
 
 import * as aiPipelineRepo from './ai-pipeline.repo.js';
 import { createClaudeClient, resolveAnthropicModel } from './claude-client.service.js';
@@ -1937,6 +1939,30 @@ export const createAiPipelineService = (
       requestId,
     });
     usage = mergeUsageMetrics(usage, difficulty.usage ?? {});
+
+    const contentHeaders = isRecord(content['headers']) ? content['headers'] : {};
+    const contentQualityInput = {
+      subject: readString(contentHeaders['subject']) ?? '',
+      body: composeEmailBody(content),
+      fromName: readString(content['fromName']),
+      fromEmail: readString(content['fromEmail']),
+      replyTo: readString(contentHeaders['reply_to']),
+      headers: contentHeaders as Record<string, string>,
+      faction: resolvedContext.faction,
+      attackType: resolvedContext.attackType,
+      difficulty: difficulty.difficulty,
+      worldState: {
+        day: resolvedContext.season,
+        threatLevel: resolvedContext.threatLevel,
+      },
+    };
+    const contentQuality = scoreContentQuality(contentQualityInput);
+    content['content_quality'] = {
+      overall: contentQuality.overall,
+      status: contentQuality.status,
+      flags: contentQuality.flags,
+      breakdown: contentQuality.breakdown,
+    };
 
     let reviewStatus: HumanReviewStatus = defaultReviewStatus;
     if (!fallbackApplied) {
