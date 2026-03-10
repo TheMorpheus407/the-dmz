@@ -10,6 +10,7 @@ export const KEY_CATEGORIES = {
   STREAMS: 'streams',
   AUTH_ABUSE: 'auth-abuse',
   ABAC_POLICY: 'abac-policy',
+  EMAIL_POOL: 'email-pool',
 } as const;
 
 export type RedisKeyCategory = (typeof KEY_CATEGORIES)[keyof typeof KEY_CATEGORIES];
@@ -27,6 +28,7 @@ export const DEFAULT_TTL_SECONDS: Record<RedisKeyCategory, number> = {
   [KEY_CATEGORIES.STREAMS]: 3600,
   [KEY_CATEGORIES.AUTH_ABUSE]: 3600,
   [KEY_CATEGORIES.ABAC_POLICY]: 30,
+  [KEY_CATEGORIES.EMAIL_POOL]: 604800,
 };
 
 export interface TenantScopedKeyOptions {

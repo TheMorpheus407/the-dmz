@@ -82,6 +82,16 @@ export interface RedisRateLimitClient {
   setValue(key: string, value: string, ttlSeconds: number): Promise<void>;
   deleteKey(key: string): Promise<void>;
   getKeys(pattern: string): Promise<string[]>;
+  lpush(key: string, value: string): Promise<number>;
+  rpop(key: string): Promise<string | null>;
+  lrange(key: string, start: number, stop: number): Promise<string[]>;
+  llen(key: string): Promise<number>;
+  zadd(key: string, score: number, member: string): Promise<number>;
+  zpopmax(key: string): Promise<{ member: string; score: number } | null>;
+  zrange(key: string, start: number, stop: number): Promise<string[]>;
+  zscore(key: string, member: string): Promise<number | null>;
+  zcard(key: string): Promise<number>;
+  zrem(key: string, member: string): Promise<number>;
   quit(): Promise<void>;
   disconnect(): void;
 }
@@ -412,6 +422,135 @@ class RedisTcpClient implements RedisRateLimitClient {
     }
 
     throw new Error('Unexpected Redis KEYS response');
+  }
+
+  public async lpush(key: string, value: string): Promise<number> {
+    const result = await this.sendCommand(['LPUSH', key, value]);
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis LPUSH response');
+  }
+
+  public async rpop(key: string): Promise<string | null> {
+    const result = await this.sendCommand(['RPOP', key]);
+
+    if (result === null) {
+      return null;
+    }
+
+    if (typeof result === 'string') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis RPOP response');
+  }
+
+  public async lrange(key: string, start: number, stop: number): Promise<string[]> {
+    const result = await this.sendCommand(['LRANGE', key, String(start), String(stop)]);
+
+    if (result === null) {
+      return [];
+    }
+
+    if (Array.isArray(result)) {
+      return result.filter((item): item is string => typeof item === 'string');
+    }
+
+    throw new Error('Unexpected Redis LRANGE response');
+  }
+
+  public async llen(key: string): Promise<number> {
+    const result = await this.sendCommand(['LLEN', key]);
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis LLEN response');
+  }
+
+  public async zadd(key: string, score: number, member: string): Promise<number> {
+    const result = await this.sendCommand(['ZADD', key, String(score), member]);
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis ZADD response');
+  }
+
+  public async zpopmax(key: string): Promise<{ member: string; score: number } | null> {
+    const result = await this.sendCommand(['ZPOPMAX', key, '1']);
+
+    if (result === null) {
+      return null;
+    }
+
+    if (Array.isArray(result) && result.length >= 2) {
+      const score = result[0];
+      const member = result[1];
+
+      if (typeof score === 'number' && typeof member === 'string') {
+        return { member, score };
+      }
+    }
+
+    throw new Error('Unexpected Redis ZPOPMAX response');
+  }
+
+  public async zrange(key: string, start: number, stop: number): Promise<string[]> {
+    const result = await this.sendCommand(['ZRANGE', key, String(start), String(stop)]);
+
+    if (result === null) {
+      return [];
+    }
+
+    if (Array.isArray(result)) {
+      return result.filter((item): item is string => typeof item === 'string');
+    }
+
+    throw new Error('Unexpected Redis ZRANGE response');
+  }
+
+  public async zscore(key: string, member: string): Promise<number | null> {
+    const result = await this.sendCommand(['ZSCORE', key, member]);
+
+    if (result === null) {
+      return null;
+    }
+
+    if (typeof result === 'string') {
+      return Number(result);
+    }
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis ZSCORE response');
+  }
+
+  public async zcard(key: string): Promise<number> {
+    const result = await this.sendCommand(['ZCARD', key]);
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis ZCARD response');
+  }
+
+  public async zrem(key: string, member: string): Promise<number> {
+    const result = await this.sendCommand(['ZREM', key, member]);
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis ZREM response');
   }
 
   public async quit(): Promise<void> {
