@@ -289,3 +289,110 @@ export const localizedContentResponseSchema = z
   .strict();
 
 export type LocalizedContentResponse = z.infer<typeof localizedContentResponseSchema>;
+
+export const emailFeaturesSchema = z
+  .object({
+    id: z.string().uuid(),
+    tenantId: z.string().uuid(),
+    emailTemplateId: z.string().uuid().optional(),
+    indicatorCount: z.number().optional(),
+    wordCount: z.number().optional(),
+    hasSpoofedHeaders: z.boolean().optional(),
+    impersonationQuality: z.number().optional(),
+    hasVerificationHooks: z.boolean().optional(),
+    emotionalManipulationLevel: z.number().optional(),
+    grammarComplexity: z.number().optional(),
+    metadata: z.record(z.unknown()).default({}),
+    createdAt: z.string().datetime(),
+  })
+  .strict();
+
+export type EmailFeatures = z.infer<typeof emailFeaturesSchema>;
+
+export const classifyEmailBodySchema = z
+  .object({
+    subject: z.string().max(500),
+    body: z.string(),
+    fromName: z.string().max(255).optional(),
+    fromEmail: z.string().max(255).optional(),
+    replyTo: z.string().max(255).optional(),
+    headers: z.record(z.string()).optional(),
+    requestedDifficulty: z.number().int().min(1).max(5).optional(),
+    emailTemplateId: z.string().uuid().optional(),
+  })
+  .strict();
+
+export type ClassifyEmailBody = z.infer<typeof classifyEmailBodySchema>;
+
+export const classificationResultSchema = z
+  .object({
+    difficulty: z.number().int().min(1).max(5),
+    difficultyName: z.string(),
+    description: z.string(),
+    confidence: z.number().min(0).max(1),
+    method: z.enum(['haiku', 'rule-based', 'manual']),
+    features: z.object({
+      indicatorCount: z.number(),
+      wordCount: z.number(),
+      hasSpoofedHeaders: z.boolean(),
+      impersonationQuality: z.number().min(0).max(1),
+      hasVerificationHooks: z.boolean(),
+      emotionalManipulationLevel: z.number().min(0).max(1),
+      grammarComplexity: z.number().min(0).max(1),
+    }),
+    scores: z.record(z.number()),
+    passedQualityGate: z.boolean(),
+  })
+  .strict();
+
+export type ClassificationResult = z.infer<typeof classificationResultSchema>;
+
+export const classifyEmailResponseSchema = z
+  .object({
+    data: classificationResultSchema,
+  })
+  .strict();
+
+export type ClassifyEmailResponse = z.infer<typeof classifyEmailResponseSchema>;
+
+export const difficultyHistorySchema = z
+  .object({
+    id: z.string().uuid(),
+    tenantId: z.string().uuid(),
+    emailTemplateId: z.string().uuid().optional(),
+    requestedDifficulty: z.number().int().min(1).max(5).optional(),
+    classifiedDifficulty: z.number().int().min(1).max(5),
+    classificationMethod: z.enum(['haiku', 'rule-based', 'manual']),
+    confidence: z.number().min(0).max(1),
+    createdAt: z.string().datetime(),
+  })
+  .strict();
+
+export type DifficultyHistory = z.infer<typeof difficultyHistorySchema>;
+
+export const difficultyHistoryListResponseSchema = z
+  .object({
+    data: z.array(difficultyHistorySchema),
+  })
+  .strict();
+
+export type DifficultyHistoryListResponse = z.infer<typeof difficultyHistoryListResponseSchema>;
+
+export const difficultyStatsSchema = z
+  .object({
+    total: z.number().int().nonnegative(),
+    byDifficulty: z.record(z.number().int().nonnegative()),
+    byMethod: z.record(z.number().int().nonnegative()),
+    averageConfidence: z.number().min(0).max(1),
+  })
+  .strict();
+
+export type DifficultyStats = z.infer<typeof difficultyStatsSchema>;
+
+export const difficultyStatsResponseSchema = z
+  .object({
+    data: difficultyStatsSchema,
+  })
+  .strict();
+
+export type DifficultyStatsResponse = z.infer<typeof difficultyStatsResponseSchema>;
