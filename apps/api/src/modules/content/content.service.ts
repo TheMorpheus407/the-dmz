@@ -14,16 +14,35 @@ import {
   createDocumentTemplate,
   findLocalizedContent,
   createLocalizedContent,
+  findSeasons,
+  findSeasonById,
+  createSeason,
+  findChaptersBySeason,
+  findChapterById,
+  createChapter,
+  findMorpheusMessagesByTrigger,
+  findMorpheusMessageByKey,
   type EmailTemplate,
   type Scenario,
   type ScenarioBeat,
   type DocumentTemplate,
   type LocalizedContent,
+  type Season,
+  type Chapter,
+  type MorpheusMessage,
 } from './content.repo.js';
 
 import type { AppConfig } from '../../config.js';
 
-export type { EmailTemplate, Scenario, ScenarioBeat, DocumentTemplate, LocalizedContent };
+export type {
+  EmailTemplate,
+  Scenario,
+  ScenarioBeat,
+  DocumentTemplate,
+  LocalizedContent,
+  Season,
+  Chapter,
+};
 
 export type EmailTemplateInput = {
   name: string;
@@ -283,4 +302,139 @@ export const createLocalizedContentRecord = async (
     metadata: data.metadata ?? {},
     isActive: data.isActive ?? true,
   });
+};
+
+export type SeasonInput = {
+  seasonNumber: number;
+  title: string;
+  theme: string;
+  logline: string;
+  description?: string;
+  threatCurveStart?: string;
+  threatCurveEnd?: string;
+  metadata?: Record<string, unknown>;
+  isActive?: boolean;
+};
+
+export type ChapterInput = {
+  seasonId: string;
+  chapterNumber: number;
+  act: number;
+  title: string;
+  description?: string;
+  dayStart: number;
+  dayEnd: number;
+  difficultyStart?: number;
+  difficultyEnd?: number;
+  threatLevel?: string;
+  metadata?: Record<string, unknown>;
+  isActive?: boolean;
+};
+
+export const listSeasons = async (
+  config: AppConfig,
+  tenantId: string,
+  filters?: {
+    seasonNumber?: number;
+    isActive?: boolean;
+  },
+): Promise<Season[]> => {
+  const db = getDatabaseClient(config);
+  return findSeasons(db, tenantId, filters);
+};
+
+export const getSeason = async (
+  config: AppConfig,
+  tenantId: string,
+  id: string,
+): Promise<Season | undefined> => {
+  const db = getDatabaseClient(config);
+  return findSeasonById(db, tenantId, id);
+};
+
+export const createSeasonRecord = async (
+  config: AppConfig,
+  tenantId: string,
+  data: SeasonInput,
+): Promise<Season> => {
+  const db = getDatabaseClient(config);
+  return createSeason(db, {
+    tenantId,
+    seasonNumber: data.seasonNumber,
+    title: data.title,
+    theme: data.theme,
+    logline: data.logline,
+    description: data.description ?? null,
+    threatCurveStart: data.threatCurveStart ?? 'LOW',
+    threatCurveEnd: data.threatCurveEnd ?? 'HIGH',
+    metadata: data.metadata ?? {},
+    isActive: data.isActive ?? true,
+  });
+};
+
+export const listChaptersBySeason = async (
+  config: AppConfig,
+  tenantId: string,
+  seasonId: string,
+  filters?: {
+    act?: number;
+    isActive?: boolean;
+  },
+): Promise<Chapter[]> => {
+  const db = getDatabaseClient(config);
+  return findChaptersBySeason(db, tenantId, seasonId, filters);
+};
+
+export const getChapter = async (
+  config: AppConfig,
+  tenantId: string,
+  id: string,
+): Promise<Chapter | undefined> => {
+  const db = getDatabaseClient(config);
+  return findChapterById(db, tenantId, id);
+};
+
+export const createChapterRecord = async (
+  config: AppConfig,
+  tenantId: string,
+  data: ChapterInput,
+): Promise<Chapter> => {
+  const db = getDatabaseClient(config);
+  return createChapter(db, {
+    tenantId,
+    seasonId: data.seasonId,
+    chapterNumber: data.chapterNumber,
+    act: data.act,
+    title: data.title,
+    description: data.description ?? null,
+    dayStart: data.dayStart,
+    dayEnd: data.dayEnd,
+    difficultyStart: data.difficultyStart ?? 1,
+    difficultyEnd: data.difficultyEnd ?? 2,
+    threatLevel: data.threatLevel ?? 'LOW',
+    metadata: data.metadata ?? {},
+    isActive: data.isActive ?? true,
+  });
+};
+
+export const getMorpheusMessagesByTrigger = async (
+  config: AppConfig,
+  tenantId: string,
+  triggerType: string,
+  filters?: {
+    day?: number;
+    factionKey?: string;
+  },
+): Promise<MorpheusMessage[]> => {
+  const db = getDatabaseClient(config);
+  return findMorpheusMessagesByTrigger(db, tenantId, triggerType, filters);
+};
+
+export const getMorpheusMessageByKey = async (
+  config: AppConfig,
+  tenantId: string,
+  messageKey: string,
+): Promise<MorpheusMessage | undefined> => {
+  const db = getDatabaseClient(config);
+  return findMorpheusMessageByKey(db, tenantId, messageKey);
 };

@@ -404,4 +404,311 @@ export const registerContentRoutes = async (fastify: FastifyInstance): Promise<v
       return { data: content };
     },
   );
+
+  fastify.get(
+    '/content/seasons',
+    {
+      preHandler: contentReadRoutePreHandlers,
+      schema: {
+        security: [{ bearerAuth: [] }],
+        querystring: {
+          type: 'object',
+          properties: {
+            seasonNumber: { type: 'integer', minimum: 1 },
+            isActive: { type: 'boolean' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'array',
+                items: { type: 'object' },
+              },
+            },
+          },
+          401: errorResponseSchemas.Unauthorized,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
+          429: errorResponseSchemas.RateLimitExceeded,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const query = request.query as {
+        seasonNumber?: number;
+        isActive?: boolean;
+      };
+
+      const seasons = await contentService.listSeasons(config, user.tenantId, query);
+
+      return { data: seasons };
+    },
+  );
+
+  fastify.get(
+    '/content/seasons/:id',
+    {
+      preHandler: contentReadRoutePreHandlers,
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+          },
+          required: ['id'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              data: { type: 'object' },
+            },
+          },
+          401: errorResponseSchemas.Unauthorized,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
+          404: errorResponseSchemas.NotFound,
+          429: errorResponseSchemas.RateLimitExceeded,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const { id } = request.params as { id: string };
+
+      const season = await contentService.getSeason(config, user.tenantId, id);
+
+      if (!season) {
+        return _reply.status(404).send({
+          success: false,
+          error: {
+            code: 'CONTENT_NOT_FOUND',
+            message: 'Season not found',
+            details: {},
+          },
+        });
+      }
+
+      return { data: season };
+    },
+  );
+
+  fastify.get(
+    '/content/chapters/:seasonId',
+    {
+      preHandler: contentReadRoutePreHandlers,
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            seasonId: { type: 'string', format: 'uuid' },
+          },
+          required: ['seasonId'],
+        },
+        querystring: {
+          type: 'object',
+          properties: {
+            act: { type: 'integer', minimum: 1, maximum: 3 },
+            isActive: { type: 'boolean' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'array',
+                items: { type: 'object' },
+              },
+            },
+          },
+          401: errorResponseSchemas.Unauthorized,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
+          429: errorResponseSchemas.RateLimitExceeded,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const { seasonId } = request.params as { seasonId: string };
+      const query = request.query as {
+        act?: number;
+        isActive?: boolean;
+      };
+
+      const chapters = await contentService.listChaptersBySeason(
+        config,
+        user.tenantId,
+        seasonId,
+        query,
+      );
+
+      return { data: chapters };
+    },
+  );
+
+  fastify.get(
+    '/content/scenarios/act1',
+    {
+      preHandler: contentReadRoutePreHandlers,
+      schema: {
+        security: [{ bearerAuth: [] }],
+        querystring: {
+          type: 'object',
+          properties: {
+            difficulty: { type: 'integer', minimum: 1, maximum: 5 },
+            faction: { type: 'string' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'array',
+                items: { type: 'object' },
+              },
+            },
+          },
+          401: errorResponseSchemas.Unauthorized,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
+          429: errorResponseSchemas.RateLimitExceeded,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const query = request.query as {
+        difficulty?: number;
+        faction?: string;
+      };
+
+      const filters: {
+        season: number;
+        difficulty?: number;
+        faction?: string;
+        isActive: boolean;
+      } = {
+        season: 1,
+        isActive: true,
+      };
+
+      if (query.difficulty !== undefined) {
+        filters.difficulty = query.difficulty;
+      }
+      if (query.faction !== undefined) {
+        filters.faction = query.faction;
+      }
+
+      const emails = await contentService.listEmailTemplates(config, user.tenantId, filters);
+
+      return { data: emails };
+    },
+  );
+
+  fastify.get(
+    '/content/narrative/scripts/:trigger',
+    {
+      preHandler: contentReadRoutePreHandlers,
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            trigger: { type: 'string', maxLength: 50 },
+          },
+          required: ['trigger'],
+        },
+        querystring: {
+          type: 'object',
+          properties: {
+            day: { type: 'integer', minimum: 1 },
+            factionKey: { type: 'string', maxLength: 50 },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'array',
+                items: { type: 'object' },
+              },
+            },
+          },
+          401: errorResponseSchemas.Unauthorized,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
+          429: errorResponseSchemas.RateLimitExceeded,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const { trigger } = request.params as { trigger: string };
+      const query = request.query as {
+        day?: number;
+        factionKey?: string;
+      };
+
+      const messages = await contentService.getMorpheusMessagesByTrigger(
+        config,
+        user.tenantId,
+        trigger,
+        query,
+      );
+
+      return { data: messages };
+    },
+  );
+
+  fastify.get(
+    '/content/narrative/scripts/key/:key',
+    {
+      preHandler: contentReadRoutePreHandlers,
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            key: { type: 'string', maxLength: 100 },
+          },
+          required: ['key'],
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              data: { type: 'object' },
+            },
+          },
+          401: errorResponseSchemas.Unauthorized,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
+          404: errorResponseSchemas.NotFound,
+          429: errorResponseSchemas.RateLimitExceeded,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const { key } = request.params as { key: string };
+
+      const message = await contentService.getMorpheusMessageByKey(config, user.tenantId, key);
+
+      if (!message) {
+        return _reply.status(404).send({
+          success: false,
+          error: {
+            code: 'NARRATIVE_NOT_FOUND',
+            message: 'Narrative script not found',
+            details: {},
+          },
+        });
+      }
+
+      return { data: message };
+    },
+  );
 };

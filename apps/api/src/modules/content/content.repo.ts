@@ -1,4 +1,4 @@
-import { and, eq, isNull, or } from 'drizzle-orm';
+import { and, eq, isNull, isNotNull, or, gte, lte } from 'drizzle-orm';
 
 import { type DB } from '../../shared/database/connection.js';
 import {
@@ -7,14 +7,29 @@ import {
   scenarioBeats,
   documentTemplates,
   localizedContent,
+  seasons,
+  chapters,
+  morpheusMessages,
   type EmailTemplate,
   type Scenario,
   type ScenarioBeat,
   type DocumentTemplate,
   type LocalizedContent,
+  type Season,
+  type Chapter,
+  type MorpheusMessage,
 } from '../../db/schema/content/index.js';
 
-export type { EmailTemplate, Scenario, ScenarioBeat, DocumentTemplate, LocalizedContent };
+export type {
+  EmailTemplate,
+  Scenario,
+  ScenarioBeat,
+  DocumentTemplate,
+  LocalizedContent,
+  Season,
+  Chapter,
+  MorpheusMessage,
+};
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -360,4 +375,177 @@ export const createLocalizedContent = async (
     throw new Error('Failed to create localized content');
   }
   return created;
+};
+
+export const findSeasons = async (
+  db: DB,
+  tenantId: string,
+  filters?: {
+    seasonNumber?: number;
+    isActive?: boolean;
+  },
+): Promise<Season[]> => {
+  const conditions = [eq(seasons.tenantId, tenantId)];
+
+  if (filters?.seasonNumber !== undefined) {
+    conditions.push(eq(seasons.seasonNumber, filters.seasonNumber));
+  }
+  if (filters?.isActive !== undefined) {
+    conditions.push(eq(seasons.isActive, filters.isActive));
+  }
+
+  return db
+    .select()
+    .from(seasons)
+    .where(and(...conditions))
+    .orderBy(seasons.seasonNumber);
+};
+
+export const findSeasonById = async (
+  db: DB,
+  tenantId: string,
+  id: string,
+): Promise<Season | undefined> => {
+  const results = await db
+    .select()
+    .from(seasons)
+    .where(and(eq(seasons.id, id), eq(seasons.tenantId, tenantId)));
+
+  return results[0];
+};
+
+export const createSeason = async (
+  db: DB,
+  data: Omit<Season, 'id' | 'createdAt' | 'updatedAt'>,
+): Promise<Season> => {
+  const [created] = await db.insert(seasons).values(data).returning();
+  if (!created) {
+    throw new Error('Failed to create season');
+  }
+  return created;
+};
+
+export const findChaptersBySeason = async (
+  db: DB,
+  tenantId: string,
+  seasonId: string,
+  filters?: {
+    act?: number;
+    isActive?: boolean;
+  },
+): Promise<Chapter[]> => {
+  const conditions = [eq(chapters.tenantId, tenantId), eq(chapters.seasonId, seasonId)];
+
+  if (filters?.act !== undefined) {
+    conditions.push(eq(chapters.act, filters.act));
+  }
+  if (filters?.isActive !== undefined) {
+    conditions.push(eq(chapters.isActive, filters.isActive));
+  }
+
+  return db
+    .select()
+    .from(chapters)
+    .where(and(...conditions))
+    .orderBy(chapters.chapterNumber);
+};
+
+export const findChapterById = async (
+  db: DB,
+  tenantId: string,
+  id: string,
+): Promise<Chapter | undefined> => {
+  const results = await db
+    .select()
+    .from(chapters)
+    .where(and(eq(chapters.id, id), eq(chapters.tenantId, tenantId)));
+
+  return results[0];
+};
+
+export const createChapter = async (
+  db: DB,
+  data: Omit<Chapter, 'id' | 'createdAt' | 'updatedAt'>,
+): Promise<Chapter> => {
+  const [created] = await db.insert(chapters).values(data).returning();
+  if (!created) {
+    throw new Error('Failed to create chapter');
+  }
+  return created;
+};
+
+export const findMorpheusMessagesByTrigger = async (
+  db: DB,
+  tenantId: string,
+  triggerType: string,
+  filters?: {
+    day?: number;
+    factionKey?: string;
+  },
+): Promise<MorpheusMessage[]> => {
+  const conditions = [
+    eq(morpheusMessages.tenantId, tenantId),
+    eq(morpheusMessages.triggerType, triggerType),
+    eq(morpheusMessages.isActive, true),
+  ];
+
+  if (filters?.day !== undefined) {
+    const day = filters.day;
+    const dayCondition = or(
+      and(isNull(morpheusMessages.minDay), isNull(morpheusMessages.maxDay)),
+      and(
+        isNotNull(morpheusMessages.minDay),
+        isNull(morpheusMessages.maxDay),
+        lte(morpheusMessages.minDay, day),
+      ),
+      and(
+        isNull(morpheusMessages.minDay),
+        isNotNull(morpheusMessages.maxDay),
+        gte(morpheusMessages.maxDay, day),
+      ),
+      and(
+        isNotNull(morpheusMessages.minDay),
+        isNotNull(morpheusMessages.maxDay),
+        lte(morpheusMessages.minDay, day),
+        gte(morpheusMessages.maxDay, day),
+      ),
+    );
+    if (dayCondition) {
+      conditions.push(dayCondition);
+    }
+  }
+
+  if (filters?.factionKey) {
+    const factionCondition = or(
+      eq(morpheusMessages.factionKey, filters.factionKey),
+      isNull(morpheusMessages.factionKey),
+    );
+    if (factionCondition) {
+      conditions.push(factionCondition);
+    }
+  }
+
+  return db
+    .select()
+    .from(morpheusMessages)
+    .where(and(...conditions));
+};
+
+export const findMorpheusMessageByKey = async (
+  db: DB,
+  tenantId: string,
+  messageKey: string,
+): Promise<MorpheusMessage | undefined> => {
+  const results = await db
+    .select()
+    .from(morpheusMessages)
+    .where(
+      and(
+        eq(morpheusMessages.tenantId, tenantId),
+        eq(morpheusMessages.messageKey, messageKey),
+        eq(morpheusMessages.isActive, true),
+      ),
+    );
+
+  return results[0];
 };
