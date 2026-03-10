@@ -71,6 +71,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus', 'content'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'narrative',
+      pluginPath: './modules/narrative/index.js',
+      routePrefix: '/api/v1/narrative',
+      dependencies: ['eventBus', 'content'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 

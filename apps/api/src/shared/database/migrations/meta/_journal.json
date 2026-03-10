@@ -117,8 +117,15 @@
     {
       "idx": 16,
       "version": "7",
+      "when": 1773000000000,
+      "tag": "0015_narrative_module",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
       "when": 1772900000000,
-      "tag": "0015_admin_permission_backfill",
+      "tag": "0016_admin_permission_backfill",
       "breakpoints": true
     }
   ]
