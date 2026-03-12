@@ -15,6 +15,7 @@
   import ThreatIndicator from '$lib/game/components/ThreatIndicator.svelte';
   import ToastContainer from '$lib/ui/components/ToastContainer.svelte';
   import UpgradeShop from '$lib/game/components/UpgradeShop.svelte';
+  import RansomLockoutScreen from '$lib/game/components/RansomLockoutScreen.svelte';
   import { uiStore, modalState } from '$lib/game/store/ui-store';
   import { soundStore } from '$lib/stores/sound';
   import { soundManager, SoundCategory } from '$lib/audio';
@@ -403,6 +404,8 @@
       }}
     />
   </Modal>
+
+  <RansomLockoutScreen />
 
   <nav class="shell-game__mobile-nav" aria-label="Panel navigation">
     <button

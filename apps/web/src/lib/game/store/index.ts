@@ -32,3 +32,13 @@ export type {
   AnimationState,
   FormInputState,
 } from './ui-store';
+
+export {
+  ransomLockoutStore,
+  isRansomLockoutActive,
+  ransomPhase,
+  canPay,
+  canAttemptRecovery,
+  countdownTime,
+} from './ransom-lockout-store';
+export type { RansomLockoutState, RansomLockoutPhase } from './ransom-lockout-store';
