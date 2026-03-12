@@ -351,6 +351,57 @@
   animation: screen-flicker 0.4s ease-out 1;
 }
 
+@keyframes screen-glitch {
+  0% {
+    transform: translate(0);
+    filter: none;
+  }
+  10% {
+    transform: translate(-2px, 1px);
+    filter: hue-rotate(90deg) saturate(1.5);
+  }
+  20% {
+    transform: translate(2px, -1px);
+    filter: hue-rotate(-90deg) saturate(0.8);
+  }
+  30% {
+    transform: translate(-1px, 2px);
+    filter: hue-rotate(45deg);
+  }
+  40% {
+    transform: translate(1px, -2px);
+    filter: hue-rotate(-45deg) brightness(1.2);
+  }
+  50% {
+    transform: translate(-2px, 1px);
+    filter: saturate(2);
+  }
+  60% {
+    transform: translate(2px, 1px);
+    filter: hue-rotate(180deg);
+  }
+  70% {
+    transform: translate(-1px, -1px);
+    filter: brightness(0.8) saturate(1.5);
+  }
+  80% {
+    transform: translate(1px, 2px);
+    filter: hue-rotate(-90deg);
+  }
+  90% {
+    transform: translate(-2px, -1px);
+    filter: none;
+  }
+  100% {
+    transform: translate(0);
+    filter: none;
+  }
+}
+
+.crt-glitch--active {
+  animation: screen-glitch 0.6s ease-out 1;
+}
+
 /* ========================================
    CRT EFFECTS - CURVATURE
    ======================================== */
@@ -388,6 +439,12 @@
     animation: none;
     opacity: 0.9;
     transition: opacity 0.3s ease;
+  }
+
+  .crt-glitch--active {
+    animation: none;
+    filter: brightness(0.9);
+    transition: filter 0.3s ease;
   }
 
   .crt-curvature > .game-viewport {

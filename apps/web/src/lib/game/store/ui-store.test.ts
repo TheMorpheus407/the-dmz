@@ -491,4 +491,64 @@ describe('uiStore', () => {
       expect(state.previousPhase).toBe('EMAIL_TRIAGE');
     });
   });
+
+  describe('dialog', () => {
+    it('should have default dialog state', () => {
+      const state = get(uiStore);
+      expect(state.dialog.isActive).toBe(false);
+      expect(state.dialog.currentTreeId).toBe(null);
+      expect(state.dialog.currentNodeId).toBe(null);
+      expect(state.dialog.history).toEqual([]);
+    });
+
+    it('should start a dialog', () => {
+      uiStore.startDialog('test-dialog', 'node-1');
+      const state = get(uiStore);
+
+      expect(state.dialog.isActive).toBe(true);
+      expect(state.dialog.currentTreeId).toBe('test-dialog');
+      expect(state.dialog.currentNodeId).toBe('node-1');
+      expect(state.dialog.history).toEqual([]);
+    });
+
+    it('should advance dialog node', () => {
+      uiStore.startDialog('test-dialog', 'node-1');
+      uiStore.advanceDialogNode('node-2');
+
+      const state = get(uiStore);
+      expect(state.dialog.currentNodeId).toBe('node-2');
+    });
+
+    it('should record dialog choice', () => {
+      uiStore.startDialog('test-dialog', 'node-1');
+      uiStore.recordDialogChoice('morpheus', 'Hello there!', 'choice-1');
+
+      const state = get(uiStore);
+      expect(state.dialog.history).toHaveLength(1);
+      const entry = state.dialog.history[0];
+      expect(entry).toBeDefined();
+      expect(entry?.speaker).toBe('morpheus');
+      expect(entry?.text).toBe('Hello there!');
+      expect(entry?.choiceId).toBe('choice-1');
+    });
+
+    it('should end dialog', () => {
+      uiStore.startDialog('test-dialog', 'node-1');
+      uiStore.endDialog();
+
+      const state = get(uiStore);
+      expect(state.dialog.isActive).toBe(false);
+      expect(state.dialog.currentTreeId).toBe(null);
+      expect(state.dialog.currentNodeId).toBe(null);
+    });
+
+    it('should set player resources for dialog', () => {
+      uiStore.setPlayerResourcesForDialog(50, 500, ['flag1', 'flag2']);
+
+      const state = get(uiStore);
+      expect(state.dialog.playerTrust).toBe(50);
+      expect(state.dialog.playerCredits).toBe(500);
+      expect(state.dialog.playerFlags).toEqual(['flag1', 'flag2']);
+    });
+  });
 });

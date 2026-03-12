@@ -33,7 +33,11 @@ export type GameEventType =
   | 'action_submitted'
   | 'state_reconciled'
   | 'action_queued'
-  | 'action_failed';
+  | 'action_failed'
+  | 'dialog_started'
+  | 'dialog_node_advanced'
+  | 'dialog_choice_selected'
+  | 'dialog_completed';
 
 export interface GameEvent {
   id: string;
@@ -109,6 +113,33 @@ export interface UpgradePayload {
   upgradeType: string;
   cost: number;
   effect: Record<string, number>;
+}
+
+export interface DialogStartedPayload {
+  dialogId: string;
+  dialogName: string;
+  startNodeId: string;
+}
+
+export interface DialogNodeAdvancedPayload {
+  dialogId: string;
+  previousNodeId: string;
+  currentNodeId: string;
+  speaker: string;
+}
+
+export interface DialogChoiceSelectedPayload {
+  dialogId: string;
+  nodeId: string;
+  choiceId: string;
+  choiceText: string;
+  speaker: string;
+}
+
+export interface DialogCompletedPayload {
+  dialogId: string;
+  totalNodesVisited: number;
+  totalChoices: number;
 }
 
 export function createGameEvent(

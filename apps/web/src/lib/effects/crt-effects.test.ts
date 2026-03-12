@@ -92,6 +92,54 @@ describe('crt-effects', () => {
     });
   });
 
+  describe('triggerGlitch', () => {
+    it('adds glitch class to document element', async () => {
+      const { triggerGlitch } = await import('./crt-effects');
+      triggerGlitch();
+      expect(document.documentElement.classList.add).toHaveBeenCalledWith('crt-glitch--active');
+    });
+
+    it('removes glitch class after duration', async () => {
+      const { triggerGlitch } = await import('./crt-effects');
+      triggerGlitch();
+
+      expect(document.documentElement.classList.add).toHaveBeenCalledWith('crt-glitch--active');
+
+      vi.advanceTimersByTime(600);
+
+      expect(document.documentElement.classList.remove).toHaveBeenCalledWith('crt-glitch--active');
+    });
+
+    it('clears previous timeout if called again', async () => {
+      const { triggerGlitch } = await import('./crt-effects');
+      triggerGlitch();
+      vi.advanceTimersByTime(200);
+      triggerGlitch();
+
+      expect(document.documentElement.classList.add).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('triggerMorpheusGlitch', () => {
+    it('triggers glitch', async () => {
+      const { triggerMorpheusGlitch } = await import('./crt-effects');
+      triggerMorpheusGlitch();
+      expect(document.documentElement.classList.add).toHaveBeenCalledWith('crt-glitch--active');
+    });
+  });
+
+  describe('clearGlitch', () => {
+    it('removes glitch class immediately', async () => {
+      const { triggerGlitch, clearGlitch } = await import('./crt-effects');
+      triggerGlitch();
+      expect(document.documentElement.classList.add).toHaveBeenCalledWith('crt-glitch--active');
+
+      clearGlitch();
+
+      expect(document.documentElement.classList.remove).toHaveBeenCalledWith('crt-glitch--active');
+    });
+  });
+
   describe('browser check', () => {
     it('does nothing when not in browser', async () => {
       vi.resetModules();

@@ -9,6 +9,7 @@ import {
   type PhaseActionConfig,
   type PhaseKeyboardShortcutConfig,
 } from '$lib/game/state/phase-config';
+import type { DialogHistoryEntry, DialogSpeaker } from '@the-dmz/shared/types';
 
 export type ActivePanel =
   | 'inbox'
@@ -97,6 +98,15 @@ interface UiStoreState {
   currentRoute: string;
   isMobile: boolean;
   keyboardShortcutsEnabled: boolean;
+  dialog: {
+    isActive: boolean;
+    currentTreeId: string | null;
+    currentNodeId: string | null;
+    history: DialogHistoryEntry[];
+    playerTrust: number;
+    playerCredits: number;
+    playerFlags: string[];
+  };
 }
 
 const initialState: UiStoreState = {
@@ -114,6 +124,15 @@ const initialState: UiStoreState = {
   currentRoute: '/game',
   isMobile: false,
   keyboardShortcutsEnabled: true,
+  dialog: {
+    isActive: false,
+    currentTreeId: null,
+    currentNodeId: null,
+    history: [],
+    playerTrust: 100,
+    playerCredits: 1000,
+    playerFlags: [],
+  },
 };
 
 function createUiStore() {
@@ -331,6 +350,73 @@ function createUiStore() {
       update((state) => ({ ...state, keyboardShortcutsEnabled: enabled }));
     },
 
+    startDialog(treeId: string, startNodeId: string) {
+      update((state) => ({
+        ...state,
+        dialog: {
+          ...state.dialog,
+          isActive: true,
+          currentTreeId: treeId,
+          currentNodeId: startNodeId,
+          history: [],
+        },
+      }));
+    },
+
+    advanceDialogNode(nodeId: string) {
+      update((state) => ({
+        ...state,
+        dialog: {
+          ...state.dialog,
+          currentNodeId: nodeId,
+        },
+      }));
+    },
+
+    recordDialogChoice(speaker: DialogSpeaker, text: string, choiceId: string | undefined) {
+      update((state) => {
+        const entry: DialogHistoryEntry = {
+          dialogId: state.dialog.currentTreeId ?? '',
+          nodeId: state.dialog.currentNodeId ?? '',
+          speaker,
+          text,
+          choiceId,
+          timestamp: new Date().toISOString(),
+        };
+        return {
+          ...state,
+          dialog: {
+            ...state.dialog,
+            history: [...state.dialog.history, entry],
+          },
+        };
+      });
+    },
+
+    endDialog() {
+      update((state) => ({
+        ...state,
+        dialog: {
+          ...state.dialog,
+          isActive: false,
+          currentTreeId: null,
+          currentNodeId: null,
+        },
+      }));
+    },
+
+    setPlayerResourcesForDialog(trust: number, credits: number, flags: string[]) {
+      update((state) => ({
+        ...state,
+        dialog: {
+          ...state.dialog,
+          playerTrust: trust,
+          playerCredits: credits,
+          playerFlags: flags,
+        },
+      }));
+    },
+
     reset() {
       set(initialState);
     },
@@ -421,3 +507,13 @@ export const canRestart = derived(uiStore, ($ui) => {
   const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
   return config.canRestart;
 });
+
+export const dialogState = derived(uiStore, ($ui) => $ui.dialog);
+export const isDialogActive = derived(uiStore, ($ui) => $ui.dialog.isActive);
+export const dialogCurrentNodeId = derived(uiStore, ($ui) => $ui.dialog.currentNodeId);
+export const dialogHistory = derived(uiStore, ($ui) => $ui.dialog.history);
+export const dialogPlayerResources = derived(uiStore, ($ui) => ({
+  trust: $ui.dialog.playerTrust,
+  credits: $ui.dialog.playerCredits,
+  flags: $ui.dialog.playerFlags,
+}));
