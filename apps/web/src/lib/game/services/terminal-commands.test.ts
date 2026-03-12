@@ -14,6 +14,12 @@ describe('terminal-commands', () => {
       description: 'A test command',
       execute: () => 'test output',
     });
+
+    registerCommand({
+      name: 'help',
+      description: 'Show available commands',
+      execute: () => getHelpText(),
+    });
   });
 
   describe('registerCommand', () => {
@@ -55,11 +61,48 @@ describe('terminal-commands', () => {
     });
   });
 
+  describe('help command', () => {
+    it('should show general help index', () => {
+      const result = executeCommand('help');
+      expect(result).toContain('Available commands');
+      expect(result).toContain('SYSOP-7');
+    });
+
+    it('should show specific topic help', () => {
+      const result = executeCommand('help email');
+      expect(result).toContain('EMAIL HELP');
+      expect(result).toContain('READING EMAILS');
+    });
+
+    it('should handle topic case insensitively', () => {
+      const result = executeCommand('help EMAIL');
+      expect(result).toContain('EMAIL HELP');
+    });
+
+    it('should show error for unknown topic', () => {
+      const result = executeCommand('help nonexistent');
+      expect(result).toContain('Help topic not found');
+      expect(result).toContain('Available topics');
+    });
+
+    it('should show index with help topics', () => {
+      const result = executeCommand('help index');
+      expect(result).toContain('MATRICES GmbH OPERATOR MANUAL');
+      expect(result).toContain('general');
+      expect(result).toContain('email');
+    });
+  });
+
   describe('getHelpText', () => {
     it('should return help text with registered commands', () => {
       const help = getHelpText();
       expect(help).toContain('test');
       expect(help).toContain('A test command');
+    });
+
+    it('should include SYSOP-7 reference', () => {
+      const help = getHelpText();
+      expect(help).toContain('SYSOP-7');
     });
   });
 });

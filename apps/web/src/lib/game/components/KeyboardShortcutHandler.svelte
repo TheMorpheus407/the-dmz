@@ -39,7 +39,7 @@
     const key = event.key;
     const allowedShortcuts = $currentShortcutConfig.shortcuts;
 
-    if (key === '?' && !helpVisible) {
+    if ((key === '?' || key === 'F1') && !helpVisible) {
       helpVisible = true;
       handlers.onShowHelp?.();
       return;
