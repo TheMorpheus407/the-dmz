@@ -7,12 +7,16 @@
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
   import Modal from '$lib/ui/components/Modal.svelte';
   import CrtControlsPanel from '$lib/ui/components/CrtControlsPanel.svelte';
+  import SoundControlsPanel from '$lib/ui/components/SoundControlsPanel.svelte';
+  import SoundCaption from '$lib/ui/components/SoundCaption.svelte';
   import KeyboardShortcutHandler from '$lib/game/components/KeyboardShortcutHandler.svelte';
   import HelpOverlay from '$lib/game/components/HelpOverlay.svelte';
   import ThunkFeedback from '$lib/game/components/ThunkFeedback.svelte';
   import ThreatIndicator from '$lib/game/components/ThreatIndicator.svelte';
   import ToastContainer from '$lib/ui/components/ToastContainer.svelte';
   import { uiStore } from '$lib/game/store/ui-store';
+  import { soundStore } from '$lib/stores/sound';
+  import { soundManager, SoundCategory } from '$lib/audio';
 
   import type { Snippet } from 'svelte';
 
@@ -29,6 +33,7 @@
   let isStatusDrawerOpen = $state(false);
   let helpVisible = $state(false);
   let crtControlsOpen = $state(false);
+  let soundControlsOpen = $state(false);
   let selectedEmailIndex = $state(0);
 
   const currentDay = 14;
@@ -61,6 +66,7 @@
     thunkType = 'approve';
     thunkVisible = true;
     setTimeout(() => (thunkVisible = false), 400);
+    soundManager.play(SoundCategory.Stamps, 'approveStamp');
     uiStore.addNotification('Request approved', 'success');
   }
 
@@ -68,6 +74,7 @@
     thunkType = 'deny';
     thunkVisible = true;
     setTimeout(() => (thunkVisible = false), 400);
+    soundManager.play(SoundCategory.Stamps, 'denyStamp');
     uiStore.addNotification('Request denied', 'warning');
   }
 
@@ -75,6 +82,7 @@
     thunkType = 'flag';
     thunkVisible = true;
     setTimeout(() => (thunkVisible = false), 400);
+    soundManager.play(SoundCategory.UiFeedback, 'panelSwitch');
     uiStore.addNotification('Request flagged for review', 'info');
   }
 
@@ -82,6 +90,7 @@
     thunkType = 'verify';
     thunkVisible = true;
     setTimeout(() => (thunkVisible = false), 400);
+    soundManager.play(SoundCategory.UiFeedback, 'buttonPress');
     uiStore.addNotification('Verification requested', 'info');
   }
 
@@ -152,6 +161,7 @@
 
   onMount(() => {
     themeStore.init();
+    soundStore.init();
 
     const systemPrefs = themeStore.getSystemPreferences();
 
@@ -206,6 +216,9 @@
           </span>
           <Button variant="ghost" size="sm" onclick={() => (crtControlsOpen = true)}>
             Effects
+          </Button>
+          <Button variant="ghost" size="sm" onclick={() => (soundControlsOpen = true)}>
+            Sound
           </Button>
         </div>
       </header>
@@ -363,9 +376,14 @@
   <HelpOverlay visible={helpVisible} onClose={handleHideHelp} />
   <ThunkFeedback type={thunkType} visible={thunkVisible} />
   <ToastContainer />
+  <SoundCaption />
 
   <Modal bind:open={crtControlsOpen} title="Display Effects" size="md">
     <CrtControlsPanel />
+  </Modal>
+
+  <Modal bind:open={soundControlsOpen} title="Sound Settings" size="md">
+    <SoundControlsPanel />
   </Modal>
 
   <nav class="shell-game__mobile-nav" aria-label="Panel navigation">

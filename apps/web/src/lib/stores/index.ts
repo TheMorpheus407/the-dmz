@@ -20,3 +20,6 @@ export { themeStore, initialThemeState } from './theme';
 export type { ThemeName, ThemeState } from './theme';
 export { errorStore, toastErrorStore } from './errors';
 export type { ErrorState, ToastError } from './errors';
+export { soundStore } from './sound';
+export { soundCaptionStore } from './sound-caption';
+export { type SoundSettings, type SoundCategory } from '$lib/audio';
