@@ -274,6 +274,29 @@ export const profileJsonSchema = {
           },
           additionalProperties: false,
         },
+        animationPreferences: {
+          type: 'object',
+          properties: {
+            enableAnimations: {
+              type: 'boolean',
+            },
+            enableGlowPulse: {
+              type: 'boolean',
+            },
+            enableTypewriter: {
+              type: 'boolean',
+            },
+            enableScreenFlicker: {
+              type: 'boolean',
+            },
+            typewriterSpeed: {
+              type: 'number',
+              minimum: 20,
+              maximum: 100,
+            },
+          },
+          additionalProperties: false,
+        },
       },
       additionalProperties: false,
     },
@@ -299,6 +322,18 @@ export const profileJsonSchema = {
           type: 'boolean',
         },
         highContrast: {
+          type: 'boolean',
+        },
+        enableAnimations: {
+          type: 'boolean',
+        },
+        enableGlowPulse: {
+          type: 'boolean',
+        },
+        enableTypewriter: {
+          type: 'boolean',
+        },
+        enableScreenFlicker: {
           type: 'boolean',
         },
       },
@@ -396,6 +431,29 @@ export const updateProfileJsonSchema = {
               type: 'number',
               minimum: 12,
               maximum: 32,
+            },
+          },
+          additionalProperties: false,
+        },
+        animationPreferences: {
+          type: 'object',
+          properties: {
+            enableAnimations: {
+              type: 'boolean',
+            },
+            enableGlowPulse: {
+              type: 'boolean',
+            },
+            enableTypewriter: {
+              type: 'boolean',
+            },
+            enableScreenFlicker: {
+              type: 'boolean',
+            },
+            typewriterSpeed: {
+              type: 'number',
+              minimum: 20,
+              maximum: 100,
             },
           },
           additionalProperties: false,
@@ -533,6 +591,29 @@ export const meResponseJsonSchema = {
               },
               additionalProperties: false,
             },
+            animationPreferences: {
+              type: 'object',
+              properties: {
+                enableAnimations: {
+                  type: 'boolean',
+                },
+                enableGlowPulse: {
+                  type: 'boolean',
+                },
+                enableTypewriter: {
+                  type: 'boolean',
+                },
+                enableScreenFlicker: {
+                  type: 'boolean',
+                },
+                typewriterSpeed: {
+                  type: 'number',
+                  minimum: 20,
+                  maximum: 100,
+                },
+              },
+              additionalProperties: false,
+            },
           },
           additionalProperties: false,
         },
@@ -558,6 +639,18 @@ export const meResponseJsonSchema = {
               type: 'boolean',
             },
             highContrast: {
+              type: 'boolean',
+            },
+            enableAnimations: {
+              type: 'boolean',
+            },
+            enableGlowPulse: {
+              type: 'boolean',
+            },
+            enableTypewriter: {
+              type: 'boolean',
+            },
+            enableScreenFlicker: {
               type: 'boolean',
             },
           },
@@ -731,6 +824,107 @@ export const meResponseJsonSchema = {
             },
           },
           required: ['reducedMotion', 'highContrast', 'fontSize'],
+          additionalProperties: false,
+        },
+        animationPreferences: {
+          type: 'object',
+          properties: {
+            enableAnimations: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            enableGlowPulse: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            enableTypewriter: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            enableScreenFlicker: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            typewriterSpeed: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+          },
           additionalProperties: false,
         },
       },
@@ -1108,6 +1302,29 @@ export const userPreferencesJsonSchema = {
       },
       additionalProperties: false,
     },
+    animationPreferences: {
+      type: 'object',
+      properties: {
+        enableAnimations: {
+          type: 'boolean',
+        },
+        enableGlowPulse: {
+          type: 'boolean',
+        },
+        enableTypewriter: {
+          type: 'boolean',
+        },
+        enableScreenFlicker: {
+          type: 'boolean',
+        },
+        typewriterSpeed: {
+          type: 'number',
+          minimum: 20,
+          maximum: 100,
+        },
+      },
+      additionalProperties: false,
+    },
   },
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -1434,6 +1651,107 @@ export const effectivePreferencesJsonSchema = {
       required: ['reducedMotion', 'highContrast', 'fontSize'],
       additionalProperties: false,
     },
+    animationPreferences: {
+      type: 'object',
+      properties: {
+        enableAnimations: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        enableGlowPulse: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        enableTypewriter: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        enableScreenFlicker: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        typewriterSpeed: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+      },
+      additionalProperties: false,
+    },
   },
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -1502,6 +1820,29 @@ export const updatePreferencesJsonSchema = {
       },
       additionalProperties: false,
     },
+    animationPreferences: {
+      type: 'object',
+      properties: {
+        enableAnimations: {
+          type: 'boolean',
+        },
+        enableGlowPulse: {
+          type: 'boolean',
+        },
+        enableTypewriter: {
+          type: 'boolean',
+        },
+        enableScreenFlicker: {
+          type: 'boolean',
+        },
+        typewriterSpeed: {
+          type: 'number',
+          minimum: 20,
+          maximum: 100,
+        },
+      },
+      additionalProperties: false,
+    },
   },
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -1529,6 +1870,18 @@ export const policyLockedPreferencesJsonSchema = {
       type: 'boolean',
     },
     highContrast: {
+      type: 'boolean',
+    },
+    enableAnimations: {
+      type: 'boolean',
+    },
+    enableGlowPulse: {
+      type: 'boolean',
+    },
+    enableTypewriter: {
+      type: 'boolean',
+    },
+    enableScreenFlicker: {
       type: 'boolean',
     },
   },

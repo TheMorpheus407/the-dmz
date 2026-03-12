@@ -351,6 +351,48 @@
   animation: screen-flicker 0.4s ease-out 1;
 }
 
+/* ========================================
+   ANIMATION: GLOW PULSE
+   ======================================== */
+@keyframes glow-pulse {
+  0% {
+    filter: brightness(1);
+    box-shadow: 0 0 5px currentColor;
+  }
+  50% {
+    filter: brightness(1.3);
+    box-shadow:
+      0 0 15px currentColor,
+      0 0 25px currentColor;
+  }
+  100% {
+    filter: brightness(1);
+    box-shadow: 0 0 5px currentColor;
+  }
+}
+
+@keyframes glow-pulse-text {
+  0% {
+    text-shadow: 0 0 2px currentColor;
+  }
+  50% {
+    text-shadow:
+      0 0 8px currentColor,
+      0 0 12px currentColor;
+  }
+  100% {
+    text-shadow: 0 0 2px currentColor;
+  }
+}
+
+.glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.glow-pulse-text {
+  animation: glow-pulse-text 2s ease-in-out infinite;
+}
+
 @keyframes screen-glitch {
   0% {
     transform: translate(0);
@@ -452,6 +494,17 @@
     border-radius: 0;
     box-shadow: none;
   }
+
+  .glow-pulse {
+    animation: none;
+    filter: brightness(1.1);
+    box-shadow: 0 0 8px currentColor;
+  }
+
+  .glow-pulse-text {
+    animation: none;
+    text-shadow: 0 0 4px currentColor;
+  }
 }
 
 /* ========================================
@@ -478,6 +531,17 @@
 [data-high-contrast='on'] .crt-glow,
 [data-high-contrast='on'] .crt-glow--amber {
   text-shadow: none;
+}
+
+/* ========================================
+   EFFECT TOGGLE: GLOW PULSE ANIMATION
+   ======================================== */
+[data-animation-glow-pulse='off'] .glow-pulse,
+[data-animation-glow-pulse='off'] .glow-pulse-text {
+  animation: none;
+  filter: brightness(1);
+  text-shadow: none;
+  box-shadow: none;
 }
 
 /* ========================================

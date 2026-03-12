@@ -71,10 +71,31 @@ export const accessibilityPreferencesSchema = z
 
 export type AccessibilityPreferences = z.infer<typeof accessibilityPreferencesSchema>;
 
+export const animationPreferencesSchema = z
+  .object({
+    enableAnimations: z.boolean().optional(),
+    enableGlowPulse: z.boolean().optional(),
+    enableTypewriter: z.boolean().optional(),
+    enableScreenFlicker: z.boolean().optional(),
+    typewriterSpeed: z.number().min(20).max(100).optional(),
+  })
+  .strict();
+
+export type AnimationPreferences = z.infer<typeof animationPreferencesSchema>;
+
+export const defaultAnimationPreferences: AnimationPreferences = {
+  enableAnimations: true,
+  enableGlowPulse: true,
+  enableTypewriter: true,
+  enableScreenFlicker: true,
+  typewriterSpeed: 40,
+};
+
 export const userPreferencesSchema = z
   .object({
     themePreferences: themePreferencesSchema.optional(),
     accessibilityPreferences: accessibilityPreferencesSchema.optional(),
+    animationPreferences: animationPreferencesSchema.optional(),
   })
   .strict();
 
@@ -120,10 +141,23 @@ export type EffectiveAccessibilityPreferences = z.infer<
   typeof effectiveAccessibilityPreferencesSchema
 >;
 
+export const effectiveAnimationPreferencesSchema = z
+  .object({
+    enableAnimations: effectivePreferenceValueSchema.nullable().optional(),
+    enableGlowPulse: effectivePreferenceValueSchema.nullable().optional(),
+    enableTypewriter: effectivePreferenceValueSchema.nullable().optional(),
+    enableScreenFlicker: effectivePreferenceValueSchema.nullable().optional(),
+    typewriterSpeed: effectivePreferenceValueSchema.nullable().optional(),
+  })
+  .strict();
+
+export type EffectiveAnimationPreferences = z.infer<typeof effectiveAnimationPreferencesSchema>;
+
 export const effectivePreferencesSchema = z
   .object({
     themePreferences: effectiveThemePreferencesSchema.optional(),
     accessibilityPreferences: effectiveAccessibilityPreferencesSchema.optional(),
+    animationPreferences: effectiveAnimationPreferencesSchema.optional(),
   })
   .strict();
 
@@ -133,6 +167,7 @@ export const updatePreferencesSchema = z
   .object({
     themePreferences: themePreferencesSchema.optional(),
     accessibilityPreferences: accessibilityPreferencesSchema.optional(),
+    animationPreferences: animationPreferencesSchema.optional(),
   })
   .strict();
 
@@ -146,6 +181,10 @@ export const policyLockedPreferencesSchema = z
     fontSize: z.boolean().optional(),
     reducedMotion: z.boolean().optional(),
     highContrast: z.boolean().optional(),
+    enableAnimations: z.boolean().optional(),
+    enableGlowPulse: z.boolean().optional(),
+    enableTypewriter: z.boolean().optional(),
+    enableScreenFlicker: z.boolean().optional(),
   })
   .strict();
 

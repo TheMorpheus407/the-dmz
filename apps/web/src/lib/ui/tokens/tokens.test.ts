@@ -112,6 +112,13 @@ describe('Design Tokens', () => {
     it('includes high-contrast mode disable for effects', () => {
       expect(tokensCss).toContain('data-high-contrast');
     });
+
+    it('disables glow pulse animation for reduced motion', () => {
+      expect(tokensCss).toContain('.glow-pulse');
+      expect(tokensCss).toContain('.glow-pulse-text');
+      expect(tokensCss).toContain('@keyframes glow-pulse');
+      expect(tokensCss).toContain('@keyframes glow-pulse-text');
+    });
   });
 
   describe('Route Surface Groups', () => {
