@@ -1671,6 +1671,29 @@
                                 }
                               },
                               "additionalProperties": false
+                            },
+                            "animationPreferences": {
+                              "type": "object",
+                              "properties": {
+                                "enableAnimations": {
+                                  "type": "boolean"
+                                },
+                                "enableGlowPulse": {
+                                  "type": "boolean"
+                                },
+                                "enableTypewriter": {
+                                  "type": "boolean"
+                                },
+                                "enableScreenFlicker": {
+                                  "type": "boolean"
+                                },
+                                "typewriterSpeed": {
+                                  "type": "number",
+                                  "minimum": 20,
+                                  "maximum": 100
+                                }
+                              },
+                              "additionalProperties": false
                             }
                           },
                           "additionalProperties": false
@@ -1697,6 +1720,18 @@
                               "type": "boolean"
                             },
                             "highContrast": {
+                              "type": "boolean"
+                            },
+                            "enableAnimations": {
+                              "type": "boolean"
+                            },
+                            "enableGlowPulse": {
+                              "type": "boolean"
+                            },
+                            "enableTypewriter": {
+                              "type": "boolean"
+                            },
+                            "enableScreenFlicker": {
                               "type": "boolean"
                             }
                           },
@@ -1870,6 +1905,107 @@
                             }
                           },
                           "required": ["reducedMotion", "highContrast", "fontSize"],
+                          "additionalProperties": false
+                        },
+                        "animationPreferences": {
+                          "type": "object",
+                          "properties": {
+                            "enableAnimations": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "enableGlowPulse": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "enableTypewriter": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "enableScreenFlicker": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "typewriterSpeed": {
+                              "anyOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "value": {},
+                                    "source": {
+                                      "type": "string",
+                                      "enum": ["policy", "server", "local", "os", "default"]
+                                    }
+                                  },
+                                  "required": ["source"],
+                                  "additionalProperties": false
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
                           "additionalProperties": false
                         }
                       },
@@ -2104,6 +2240,29 @@
                           }
                         },
                         "additionalProperties": false
+                      },
+                      "animationPreferences": {
+                        "type": "object",
+                        "properties": {
+                          "enableAnimations": {
+                            "type": "boolean"
+                          },
+                          "enableGlowPulse": {
+                            "type": "boolean"
+                          },
+                          "enableTypewriter": {
+                            "type": "boolean"
+                          },
+                          "enableScreenFlicker": {
+                            "type": "boolean"
+                          },
+                          "typewriterSpeed": {
+                            "type": "number",
+                            "minimum": 20,
+                            "maximum": 100
+                          }
+                        },
+                        "additionalProperties": false
                       }
                     },
                     "additionalProperties": false
@@ -2224,6 +2383,29 @@
                             }
                           },
                           "additionalProperties": false
+                        },
+                        "animationPreferences": {
+                          "type": "object",
+                          "properties": {
+                            "enableAnimations": {
+                              "type": "boolean"
+                            },
+                            "enableGlowPulse": {
+                              "type": "boolean"
+                            },
+                            "enableTypewriter": {
+                              "type": "boolean"
+                            },
+                            "enableScreenFlicker": {
+                              "type": "boolean"
+                            },
+                            "typewriterSpeed": {
+                              "type": "number",
+                              "minimum": 20,
+                              "maximum": 100
+                            }
+                          },
+                          "additionalProperties": false
                         }
                       },
                       "additionalProperties": false
@@ -2250,6 +2432,18 @@
                           "type": "boolean"
                         },
                         "highContrast": {
+                          "type": "boolean"
+                        },
+                        "enableAnimations": {
+                          "type": "boolean"
+                        },
+                        "enableGlowPulse": {
+                          "type": "boolean"
+                        },
+                        "enableTypewriter": {
+                          "type": "boolean"
+                        },
+                        "enableScreenFlicker": {
                           "type": "boolean"
                         }
                       },

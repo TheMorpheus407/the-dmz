@@ -14,7 +14,8 @@
   import ThunkFeedback from '$lib/game/components/ThunkFeedback.svelte';
   import ThreatIndicator from '$lib/game/components/ThreatIndicator.svelte';
   import ToastContainer from '$lib/ui/components/ToastContainer.svelte';
-  import { uiStore } from '$lib/game/store/ui-store';
+  import UpgradeShop from '$lib/game/components/UpgradeShop.svelte';
+  import { uiStore, modalState } from '$lib/game/store/ui-store';
   import { soundStore } from '$lib/stores/sound';
   import { soundManager, SoundCategory } from '$lib/audio';
 
@@ -384,6 +385,23 @@
 
   <Modal bind:open={soundControlsOpen} title="Sound Settings" size="md">
     <SoundControlsPanel />
+  </Modal>
+
+  <Modal
+    open={$modalState.isOpen && $modalState.type === 'upgrade'}
+    title="Upgrade Shop"
+    size="lg"
+    onclose={() => uiStore.closeModal()}
+  >
+    <UpgradeShop
+      availableFunds={funds}
+      {currentDay}
+      onclose={() => uiStore.closeModal()}
+      onpurchase={(upgradeId: string) => {
+        uiStore.addNotification(`Upgrade ${upgradeId} purchased!`, 'success');
+        uiStore.closeModal();
+      }}
+    />
   </Modal>
 
   <nav class="shell-game__mobile-nav" aria-label="Panel navigation">
