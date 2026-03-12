@@ -18,6 +18,12 @@
 
 <script lang="ts">
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
+  import ContextMenu from '$lib/ui/components/ContextMenu.svelte';
+  import {
+    buildContextMenu,
+    getMenuPosition,
+    type ContextMenuState,
+  } from '$lib/ui/components/context-menu';
   import type { EmailInstance, EmbeddedLink } from '@the-dmz/shared';
 
   import {
@@ -34,6 +40,9 @@
     error?: string | null;
     onAttachmentClick?: (attachmentId: string) => void;
     onLinkClick?: (url: string) => void;
+    onAddNote?: (content: string) => void;
+    onMarkRead?: (read: boolean) => void;
+    onFlagForReview?: () => void;
   }
 
   const {
@@ -42,11 +51,21 @@
     error = null,
     onAttachmentClick,
     onLinkClick,
+    onAddNote,
+    onMarkRead,
+    onFlagForReview,
   }: Props = $props();
 
   let showFullHeaders = $state(false);
   let hoveredLink: string | null = $state(null);
   let focusedLink: string | null = $state(null);
+
+  let contextMenuState = $state<ContextMenuState>({
+    isOpen: false,
+    position: { x: 0, y: 0 },
+    sections: [],
+    documentType: 'email',
+  });
 
   const authInfo = $derived(
     email
@@ -94,6 +113,65 @@
     }
   }
 
+  function handleContextMenu(event: MouseEvent) {
+    event.preventDefault();
+    const selectedText = window.getSelection()?.toString() || '';
+    const targetElement = (event.target as HTMLElement).tagName.toLowerCase();
+
+    const sections = buildContextMenu({
+      documentType: 'email',
+      selectedText,
+      targetElement,
+    });
+
+    const position = getMenuPosition(event.clientX, event.clientY, 220, sections.length * 40);
+
+    contextMenuState = {
+      isOpen: true,
+      position,
+      sections,
+      documentType: 'email',
+      selectedText,
+      targetElement,
+    };
+  }
+
+  async function handleContextMenuSelect(itemId: string) {
+    switch (itemId) {
+      case 'copy-selection':
+        if (contextMenuState.selectedText) {
+          await navigator.clipboard.writeText(contextMenuState.selectedText);
+        }
+        break;
+      case 'select-all':
+        document.execCommand('selectAll');
+        break;
+      case 'add-note':
+        onAddNote?.(contextMenuState.selectedText || '');
+        break;
+      case 'mark-read':
+        onMarkRead?.(true);
+        break;
+      case 'mark-unread':
+        onMarkRead?.(false);
+        break;
+      case 'flag-review':
+        onFlagForReview?.();
+        break;
+      case 'view-headers':
+        showFullHeaders = true;
+        break;
+    }
+    closeContextMenu();
+  }
+
+  function closeContextMenu() {
+    contextMenuState = {
+      ...contextMenuState,
+      isOpen: false,
+    };
+  }
+
   function getActiveLink(): string | null {
     return hoveredLink || focusedLink;
   }
@@ -111,7 +189,17 @@
   }
 </script>
 
-<div class="email-viewer" role="region" aria-label="Email content">
+<div
+  class="email-viewer"
+  role="region"
+  aria-label="Email content"
+  oncontextmenu={handleContextMenu}
+>
+  <ContextMenu
+    contextState={contextMenuState}
+    onSelect={handleContextMenuSelect}
+    onClose={closeContextMenu}
+  />
   {#if isLoading}
     <div class="email-viewer__loading">
       <LoadingState

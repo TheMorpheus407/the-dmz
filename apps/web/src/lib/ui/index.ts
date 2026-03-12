@@ -8,4 +8,5 @@ export {
   ErrorPanel,
   ErrorToast,
   ErrorState,
+  ContextMenu,
 } from './components';

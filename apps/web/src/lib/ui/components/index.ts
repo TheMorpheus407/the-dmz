@@ -7,3 +7,7 @@ export { default as LoadingState } from './LoadingState.svelte';
 export { default as ErrorPanel } from './ErrorPanel.svelte';
 export { default as ErrorToast } from './ErrorToast.svelte';
 export { default as ErrorState } from './ErrorState.svelte';
+export { default as ContextMenu } from './ContextMenu.svelte';
+export * from './ContextMenu.svelte';
+export * from './context-menu';
+export * from './context-menu-types';
