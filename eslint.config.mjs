@@ -214,6 +214,7 @@ export default [
       '**/storybook-static/**',
       'eslint.config.mjs',
       'apps/api/vitest.log-contract.config.ts',
+      'tests/load/**',
     ],
   },
   {

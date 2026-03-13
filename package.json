@@ -51,7 +51,16 @@
     "mfa:parity": "pnpm --filter @the-dmz/api test -- --run src/modules/auth/__tests__/mfa-contract-drift.test.ts && pnpm --filter @the-dmz/web test -- --run src/lib/api/error-mapping-coverage.test.ts",
     "mfa:smoke": "pnpm --filter @the-dmz/api test -- --run src/modules/auth/__tests__/mfa-smoke.test.ts",
     "mfa:gate": "pnpm mfa:parity && pnpm mfa:smoke",
-    "error-contract:check": "pnpm --filter @the-dmz/shared test -- --run src/constants/error-contract.test.ts && pnpm --filter @the-dmz/web test -- --run src/lib/api/error-mapping-coverage.test.ts"
+    "error-contract:check": "pnpm --filter @the-dmz/shared test -- --run src/constants/error-contract.test.ts && pnpm --filter @the-dmz/web test -- --run src/lib/api/error-mapping-coverage.test.ts",
+    "test:load": "npx k6 run tests/load/scenarios/auth-storm.js",
+    "test:load:auth": "npx k6 run tests/load/scenarios/auth-storm.js",
+    "test:load:session": "npx k6 run tests/load/scenarios/game-session.js",
+    "test:load:email": "npx k6 run tests/load/scenarios/email-triage.js",
+    "test:load:ws": "npx k6 run tests/load/scenarios/websocket.js",
+    "test:load:mixed": "npx k6 run tests/load/scenarios/mixed-workload.js",
+    "test:load:sustained": "npx k6 run tests/load/scenarios/sustained-load.js",
+    "test:load:degradation": "npx k6 run tests/load/scenarios/degradation.js",
+    "test:load:all": "pnpm test:load:auth && pnpm test:load:session && pnpm test:load:mixed"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

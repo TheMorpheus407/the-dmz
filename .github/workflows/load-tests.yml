@@ -1,0 +1,126 @@
+name: Load Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_suite:
+        description: 'Test suite to run'
+        required: true
+        default: 'quick'
+        type: choice
+        options:
+          - quick
+          - full
+          - auth
+          - session
+          - email
+          - ws
+          - mixed
+          - sustained
+          - degradation
+  push:
+    branches:
+      - master
+  pull_request:
+    types:
+      - labeled
+    branches:
+      - master
+
+concurrency:
+  group: load-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  load-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared package
+        run: pnpm --filter @the-dmz/shared build
+
+      - name: Start services
+        run: docker compose up -d
+
+      - name: Wait for services
+        run: sleep 15
+
+      - name: Start API
+        run: |
+          export DATABASE_URL="postgresql://dmz:dmz_dev@localhost:5432/dmz_dev"
+          export REDIS_URL="redis://localhost:6379"
+          pnpm --filter @the-dmz/api dev &
+          sleep 10
+
+      - name: Run load tests - Auth Storm
+        if: github.event_name == 'workflow_dispatch' && (inputs.test_suite == 'quick' || inputs.test_suite == 'full' || inputs.test_suite == 'auth')
+        env:
+          API_BASE_URL: http://localhost:3001
+          WS_BASE_URL: ws://localhost:3001
+        run: pnpm test:load:auth
+
+      - name: Run load tests - Session
+        if: github.event_name == 'workflow_dispatch' && (inputs.test_suite == 'quick' || inputs.test_suite == 'full' || inputs.test_suite == 'session')
+        env:
+          API_BASE_URL: http://localhost:3001
+          WS_BASE_URL: ws://localhost:3001
+        run: pnpm test:load:session
+
+      - name: Run load tests - Email Triage
+        if: github.event_name == 'workflow_dispatch' && (inputs.test_suite == 'full' || inputs.test_suite == 'email')
+        env:
+          API_BASE_URL: http://localhost:3001
+          WS_BASE_URL: ws://localhost:3001
+        run: pnpm test:load:email
+
+      - name: Run load tests - WebSocket
+        if: github.event_name == 'workflow_dispatch' && (inputs.test_suite == 'full' || inputs.test_suite == 'ws')
+        env:
+          API_BASE_URL: http://localhost:3001
+          WS_BASE_URL: ws://localhost:3001
+        run: pnpm test:load:ws
+
+      - name: Run load tests - Mixed
+        if: github.event_name == 'workflow_dispatch' && (inputs.test_suite == 'quick' || inputs.test_suite == 'full' || inputs.test_suite == 'mixed')
+        env:
+          API_BASE_URL: http://localhost:3001
+          WS_BASE_URL: ws://localhost:3001
+        run: pnpm test:load:mixed
+
+      - name: Run load tests - Degradation
+        if: github.event_name == 'workflow_dispatch' && (inputs.test_suite == 'full' || inputs.test_suite == 'degradation')
+        env:
+          API_BASE_URL: http://localhost:3001
+          WS_BASE_URL: ws://localhost:3001
+        run: pnpm test:load:degradation
+
+      - name: Run load tests - Sustained (master only)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        env:
+          API_BASE_URL: http://localhost:3001
+          WS_BASE_URL: ws://localhost:3001
+        run: pnpm test:load:sustained
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-test-results
+          path: tests/load/results/
+          retention-days: 30
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down
