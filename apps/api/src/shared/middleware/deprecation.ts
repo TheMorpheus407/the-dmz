@@ -30,22 +30,17 @@ async function deprecationPlugin(fastify: FastifyInstance): Promise<void> {
     if (deprecationConfig) {
       const policy = getDeprecationPolicy();
 
-      if (policy.requiredHeaders.deprecation) {
-        const deprecationDate =
-          typeof deprecationConfig.sunsetDate === 'string'
-            ? new Date(deprecationConfig.sunsetDate)
-            : deprecationConfig.sunsetDate;
+      const deprecationDate =
+        typeof deprecationConfig.sunsetDate === 'string'
+          ? new Date(deprecationConfig.sunsetDate)
+          : deprecationConfig.sunsetDate;
 
+      if (policy.requiredHeaders.deprecation) {
         reply.header('Deprecation', `="${request.url}"; dt="${deprecationDate.toISOString()}"`);
       }
 
       if (policy.requiredHeaders.sunset) {
-        const sunsetDate =
-          typeof deprecationConfig.sunsetDate === 'string'
-            ? new Date(deprecationConfig.sunsetDate)
-            : deprecationConfig.sunsetDate;
-
-        reply.header('Sunset', sunsetDate.toUTCString());
+        reply.header('Sunset', deprecationDate.toUTCString());
       }
 
       if (policy.requiredHeaders.link && deprecationConfig.successorPath) {
@@ -55,6 +50,16 @@ async function deprecationPlugin(fastify: FastifyInstance): Promise<void> {
 
         reply.header('Link', `<${successorUrl}>; rel="successor-version"`);
       }
+
+      fastify.log.warn({
+        msg: 'Deprecated endpoint accessed',
+        endpoint: request.url,
+        method: request.method,
+        sunsetDate: deprecationDate.toISOString(),
+        successorPath: deprecationConfig.successorPath,
+        clientIp: request.headers['x-forwarded-for'] || request.ip,
+        userAgent: request.headers['user-agent'],
+      });
     }
   });
 }
@@ -84,6 +89,19 @@ export function createDeprecationHandler(options: DeprecationOptions) {
         : `${API_VERSIONING_POLICY.openApi.servers[0]?.url || ''}${options.successorPath}`;
 
       reply.header('Link', `<${successorUrl}>; rel="successor-version"`);
+    }
+
+    const logger = request.server?.log;
+    if (logger) {
+      logger.warn({
+        msg: 'Deprecated endpoint accessed via handler',
+        endpoint: request.url,
+        method: request.method,
+        sunsetDate: sunsetDate.toISOString(),
+        successorPath: options.successorPath,
+        clientIp: request.headers['x-forwarded-for'] || request.ip,
+        userAgent: request.headers['user-agent'],
+      });
     }
   };
 }

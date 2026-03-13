@@ -27,6 +27,9 @@ import { aiPipelinePlugin } from './modules/ai-pipeline/index.js';
 import { registerNotificationRoutes } from './modules/notification/index.js';
 import { registerAdminRateLimitRoutes } from './modules/admin/index.js';
 import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.js';
+import { versionHeadersMiddleware } from './shared/middleware/version-headers.js';
+import { registerVersionRoutes } from './shared/routes/version.routes.js';
+import { deprecationMiddleware } from './shared/middleware/deprecation.js';
 
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
@@ -235,6 +238,10 @@ export const buildApp = (
   app.setErrorHandler(createErrorHandler());
 
   app.register(swaggerPlugin);
+
+  app.register(deprecationMiddleware);
+  app.register(versionHeadersMiddleware);
+  registerVersionRoutes(app);
 
   app.register(signingKeyInitPlugin);
   app.register(jwksPlugin);

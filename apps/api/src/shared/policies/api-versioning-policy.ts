@@ -103,6 +103,12 @@ export const API_VERSIONING_POLICY: ApiVersioningPolicy = {
       allowSubpaths: false,
     },
     {
+      path: '/api/version',
+      reason: 'API version discovery endpoint - must be accessible without version prefix',
+      reviewRequired: false,
+      allowSubpaths: false,
+    },
+    {
       path: '/docs',
       reason: 'OpenAPI documentation UI',
       reviewRequired: false,
