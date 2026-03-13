@@ -107,6 +107,12 @@ async function metricsPlugin(fastify: FastifyInstance): Promise<void> {
     return output;
   });
 
+  fastify.get('/metrics/pool', async (_request, reply) => {
+    const output = formatPoolMetrics();
+    reply.header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
+    return output;
+  });
+
   fastify.get('/health/metrics', async (_request, _reply) => {
     return { status: 'ok', metrics: 'exposed' };
   });
@@ -256,6 +262,57 @@ function formatAiMetrics(): string {
       const sum = hist.values.reduce((a, b) => a + b, 0);
       bucketLines.push(`ai_generation_latency_seconds_sum{${labels}} ${sum.toFixed(6)}`);
       bucketLines.push(`ai_generation_latency_seconds_count{${labels}} ${hist.values.length}`);
+      lines.push(...bucketLines);
+    }
+  }
+
+  return lines.join('\n');
+}
+
+function formatPoolMetrics(): string {
+  const lines: string[] = [
+    '# HELP email_pool_size Current size of email pool per difficulty tier',
+    '# TYPE email_pool_size gauge',
+    '# HELP email_pool_depletion_rate Rate of pool depletion (emails per minute)',
+    '# TYPE email_pool_depletion_rate gauge',
+    '# HELP email_pool_replenishment_latency_seconds Time to replenish pool in seconds',
+    '# TYPE email_pool_replenishment_latency_seconds histogram',
+    '# HELP email_pool_low_watermark_alerts_total Total number of low watermark alerts',
+    '# TYPE email_pool_low_watermark_alerts_total counter',
+    '# HELP email_pool_low_watermark_duration_minutes Duration pool has been below watermark',
+    '# TYPE email_pool_low_watermark_duration_minutes gauge',
+  ];
+
+  for (const [key, value] of storage.gauges) {
+    if (
+      key.startsWith('email_pool_size') ||
+      key.startsWith('email_pool_depletion_rate') ||
+      key.startsWith('email_pool_low_watermark_duration_minutes')
+    ) {
+      lines.push(`${key} ${value}`);
+    }
+  }
+
+  for (const [key, value] of storage.counters) {
+    if (key.startsWith('email_pool_low_watermark_alerts_total')) {
+      lines.push(`${key} ${value}`);
+    }
+  }
+
+  for (const [key, hist] of storage.histograms) {
+    if (key.startsWith('email_pool_replenishment_latency_seconds')) {
+      const bucketLines: string[] = [];
+      const labels = key.match(/\{([^}]+)\}/)?.[1] ?? '';
+      for (const [bucket, count] of hist.buckets) {
+        bucketLines.push(
+          `email_pool_replenishment_latency_seconds_bucket{${labels},le="${bucket}"} ${count}`,
+        );
+      }
+      const sum = hist.values.reduce((a, b) => a + b, 0);
+      bucketLines.push(`email_pool_replenishment_latency_seconds_sum{${labels}} ${sum.toFixed(6)}`);
+      bucketLines.push(
+        `email_pool_replenishment_latency_seconds_count{${labels}} ${hist.values.length}`,
+      );
       lines.push(...bucketLines);
     }
   }

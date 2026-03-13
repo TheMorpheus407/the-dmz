@@ -1,7 +1,12 @@
 import { randomUUID } from 'crypto';
 
 import { getRedisClient, type RedisRateLimitClient } from '../../../shared/database/redis.js';
-import { recordQueueDepth } from '../../../shared/metrics/hooks.js';
+import {
+  recordQueueDepth,
+  recordPoolSize,
+  recordPoolLowWatermark,
+  recordPoolReplenishmentLatency,
+} from '../../../shared/metrics/hooks.js';
 
 import {
   POOL_KEYS,
@@ -83,6 +88,9 @@ export class EmailPoolService {
     const redis = await this.getRedis();
     const poolKey = POOL_KEYS.pool(options.difficulty, tenantId);
     const qualityKey = POOL_KEYS.qualitySet(options.difficulty, tenantId);
+    const versionKey = POOL_KEYS.servedVersions(options.difficulty, tenantId);
+
+    const version = options.version ?? 1;
 
     const pooledEmail: PooledEmail = {
       emailId: options.emailId,
@@ -90,6 +98,7 @@ export class EmailPoolService {
       difficulty: options.difficulty,
       quality: options.quality,
       intent: options.intent,
+      version,
       ...(options.attackType && { attackType: options.attackType }),
       ...(options.faction && { faction: options.faction }),
       ...(options.season && { season: options.season }),
@@ -107,7 +116,9 @@ export class EmailPoolService {
 
     await redis.lpush(POOL_KEYS.totalCount(tenantId), emailJson);
 
-    await this.recordPoolDepth(tenantId);
+    await redis.sadd(versionKey, `${options.emailId}:${version}`);
+
+    await this.recordPoolMetrics(tenantId);
   }
 
   async popEmail(tenantId: string, difficulty?: number): Promise<PopEmailResult | null> {
@@ -134,6 +145,7 @@ export class EmailPoolService {
   ): Promise<PopEmailResult | null> {
     const poolKey = POOL_KEYS.pool(difficulty, tenantId);
     const qualityKey = POOL_KEYS.qualitySet(difficulty, tenantId);
+    const versionKey = POOL_KEYS.servedVersions(difficulty, tenantId);
 
     const count = await redis.llen(poolKey);
     if (count === 0) {
@@ -153,16 +165,19 @@ export class EmailPoolService {
 
       await redis.zrem(qualityKey, email.emailId);
 
+      await redis.sadd(versionKey, `${email.emailId}:${email.version}`);
+
       await this.updateMetadata(tenantId, difficulty);
 
       await this.emitPoolEvent('email.pool.emailSelected', tenantId, {
         emailId: email.emailId,
         difficulty: email.difficulty,
         quality,
+        version: email.version,
         selectionMethod: 'weighted',
       });
 
-      await this.recordPoolDepth(tenantId);
+      await this.recordPoolMetrics(tenantId);
 
       return {
         email,
@@ -208,12 +223,33 @@ export class EmailPoolService {
     const lowWatermark = Math.floor(targetSize * POOL_CONFIG.LOW_WATERMARK_PERCENT);
     const highWatermark = Math.floor(targetSize * POOL_CONFIG.HIGH_WATERMARK_PERCENT);
 
+    const existingMetadataStr = await redis.getValue(metadataKey);
+    let existingMetadata: PoolMetadata | null = null;
+    if (existingMetadataStr) {
+      try {
+        existingMetadata = JSON.parse(existingMetadataStr) as PoolMetadata;
+      } catch {
+        existingMetadata = null;
+      }
+    }
+
+    let lowWatermarkSince: string | undefined;
+    if (count <= lowWatermark) {
+      if (existingMetadata?.lowWatermarkSince) {
+        lowWatermarkSince = existingMetadata.lowWatermarkSince;
+      } else {
+        lowWatermarkSince = new Date().toISOString();
+      }
+    }
+
     const metadata: PoolMetadata = {
       difficulty,
       count,
       targetSize,
       lowWatermark,
       highWatermark,
+      ...(lowWatermarkSince && { lowWatermarkSince }),
+      servedVersions: existingMetadata?.servedVersions ?? [],
     };
 
     await redis.setValue(metadataKey, JSON.stringify(metadata), POOL_CONFIG.TARGET_PER_TIER * 60);
@@ -225,6 +261,7 @@ export class EmailPoolService {
 
     for (const difficulty of DIFFICULTY_TIERS) {
       const poolKey = POOL_KEYS.pool(difficulty, tenantId);
+      const metadataKey = POOL_KEYS.metadata(difficulty, tenantId);
       const count = await redis.llen(poolKey);
       const targetSize = POOL_CONFIG.TARGET_PER_TIER;
       const lowWatermark = Math.floor(targetSize * POOL_CONFIG.LOW_WATERMARK_PERCENT);
@@ -245,12 +282,40 @@ export class EmailPoolService {
       healthResults.push(health);
 
       if (health.needsRefill) {
+        const metadataStr = await redis.getValue(metadataKey);
+        let lowWatermarkDurationMinutes = 0;
+        if (metadataStr) {
+          try {
+            const metadata = JSON.parse(metadataStr) as PoolMetadata;
+            if (metadata.lowWatermarkSince) {
+              const lowSince = new Date(metadata.lowWatermarkSince).getTime();
+              lowWatermarkDurationMinutes = Math.floor((Date.now() - lowSince) / 60000);
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+
+        recordPoolLowWatermark(difficulty, true, lowWatermarkDurationMinutes, tenantId);
+
         await this.emitPoolEvent('email.pool.lowWatermark', tenantId, {
           difficulty,
           currentCount: count,
           lowWatermark,
           targetSize,
+          durationMinutes: lowWatermarkDurationMinutes,
         });
+
+        if (lowWatermarkDurationMinutes >= POOL_CONFIG.SUSTAINED_LOW_POOL_THRESHOLD_MINUTES) {
+          await this.emitPoolEvent('email.pool.sustainedLowWatermark', tenantId, {
+            difficulty,
+            currentCount: count,
+            durationMinutes: lowWatermarkDurationMinutes,
+            thresholdMinutes: POOL_CONFIG.SUSTAINED_LOW_POOL_THRESHOLD_MINUTES,
+          });
+        }
+      } else {
+        recordPoolLowWatermark(difficulty, false, 0, tenantId);
       }
     }
 
@@ -280,10 +345,71 @@ export class EmailPoolService {
     return redis.llen(totalKey);
   }
 
-  private async recordPoolDepth(tenantId: string): Promise<void> {
-    const poolMetrics = await this.getPoolMetrics(tenantId);
+  private async recordPoolMetrics(tenantId: string): Promise<void> {
+    const healthResults = await this.getPoolHealth(tenantId);
     const queueName = 'email-pool';
-    recordQueueDepth(queueName, poolMetrics.totalPoolSize, tenantId);
+    recordQueueDepth(
+      queueName,
+      healthResults.reduce((sum, h) => sum + h.currentCount, 0),
+      tenantId,
+    );
+
+    for (const health of healthResults) {
+      recordPoolSize(health.difficulty, health.currentCount, tenantId);
+    }
+  }
+
+  async recordReplenishmentLatency(
+    tenantId: string,
+    difficulty: number,
+    latencyMs: number,
+  ): Promise<void> {
+    recordPoolReplenishmentLatency(latencyMs, difficulty, tenantId);
+
+    await this.emitPoolEvent('email.pool.replenished', tenantId, {
+      difficulty,
+      latencyMs,
+    });
+  }
+
+  async isVersionServed(
+    tenantId: string,
+    difficulty: number,
+    emailId: string,
+    version: number,
+  ): Promise<boolean> {
+    const redis = await this.getRedis();
+    const versionKey = POOL_KEYS.servedVersions(difficulty, tenantId);
+
+    const isMember = await redis.sismember(versionKey, `${emailId}:${version}`);
+    return isMember === 1;
+  }
+
+  async handleContentPublished(
+    tenantId: string,
+    contentId: string,
+    contentType: string,
+  ): Promise<void> {
+    if (contentType !== 'email') {
+      return;
+    }
+
+    await this.emitPoolEvent('content.published', tenantId, {
+      contentId,
+      contentType,
+      timestamp: new Date().toISOString(),
+    });
+
+    const healthResults = await this.getPoolHealth(tenantId);
+    for (const health of healthResults) {
+      if (health.needsRefill) {
+        await this.emitPoolEvent('email.pool.triggerRefill', tenantId, {
+          difficulty: health.difficulty,
+          currentCount: health.currentCount,
+          targetSize: health.targetSize,
+        });
+      }
+    }
   }
 
   async checkLowWatermark(tenantId: string): Promise<Map<DifficultyTier, boolean>> {
@@ -304,10 +430,12 @@ export class EmailPoolService {
       const poolKey = POOL_KEYS.pool(difficulty, tenantId);
       const qualityKey = POOL_KEYS.qualitySet(difficulty, tenantId);
       const metadataKey = POOL_KEYS.metadata(difficulty, tenantId);
+      const versionKey = POOL_KEYS.servedVersions(difficulty, tenantId);
 
       await redis.deleteKey(poolKey);
       await redis.deleteKey(qualityKey);
       await redis.deleteKey(metadataKey);
+      await redis.deleteKey(versionKey);
     }
 
     const totalKey = POOL_KEYS.totalCount(tenantId);

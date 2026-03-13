@@ -588,6 +588,8 @@ describe('rate limiter middleware', () => {
         zscore: vi.fn(async () => null),
         zcard: vi.fn(async () => 0),
         zrem: vi.fn(async () => 0),
+        sadd: vi.fn(async () => 0),
+        sismember: vi.fn(async () => 0),
         quit: vi.fn(async () => undefined),
         disconnect: vi.fn(),
       } satisfies RedisRateLimitClient;
@@ -642,6 +644,8 @@ describe('rate limiter middleware', () => {
         zscore: vi.fn(async () => null),
         zcard: vi.fn(async () => 0),
         zrem: vi.fn(async () => 0),
+        sadd: vi.fn(async () => 0),
+        sismember: vi.fn(async () => 0),
         quit: vi.fn(async () => undefined),
         disconnect: vi.fn(),
       } satisfies RedisRateLimitClient;
@@ -702,6 +706,8 @@ describe('rate limiter middleware', () => {
           zscore: vi.fn(async () => null),
           zcard: vi.fn(async () => 0),
           zrem: vi.fn(async () => 0),
+          sadd: vi.fn(async () => 0),
+          sismember: vi.fn(async () => 0),
           quit: vi.fn(async () => undefined),
           disconnect: vi.fn(),
         } satisfies RedisRateLimitClient;
@@ -768,6 +774,8 @@ describe('rate limiter middleware', () => {
         zscore: vi.fn(async () => null),
         zcard: vi.fn(async () => 0),
         zrem: vi.fn(async () => 0),
+        sadd: vi.fn(async () => 0),
+        sismember: vi.fn(async () => 0),
         quit: vi.fn(async () => undefined),
         disconnect: vi.fn(),
       } satisfies RedisRateLimitClient;
@@ -823,6 +831,8 @@ describe('rate limiter middleware', () => {
         zscore: vi.fn(async () => null),
         zcard: vi.fn(async () => 0),
         zrem: vi.fn(async () => 0),
+        sadd: vi.fn(async () => 0),
+        sismember: vi.fn(async () => 0),
         quit: vi.fn(async () => undefined),
         disconnect: vi.fn(),
       } satisfies RedisRateLimitClient;

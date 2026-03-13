@@ -7,6 +7,7 @@ export interface PooledEmail {
   attackType?: string;
   faction?: string;
   season?: number;
+  version: number;
   createdAt: string;
   metadata?: Record<string, unknown>;
 }
@@ -19,6 +20,8 @@ export interface PoolMetadata {
   highWatermark: number;
   lastRefillAt?: string;
   lastGenerationLatencyMs?: number;
+  lowWatermarkSince?: string;
+  servedVersions?: number[];
 }
 
 export interface PoolHealth {
@@ -47,6 +50,7 @@ export interface AddEmailOptions {
   attackType?: string;
   faction?: string;
   season?: number;
+  version?: number;
   metadata?: Record<string, unknown>;
 }
 
@@ -64,6 +68,7 @@ export const POOL_CONFIG = {
   TARGET_PER_TIER: 40,
   LOW_WATERMARK_PERCENT: 0.2,
   HIGH_WATERMARK_PERCENT: 0.8,
+  SUSTAINED_LOW_POOL_THRESHOLD_MINUTES: 15,
 } as const;
 
 export const POOL_KEYS = {
@@ -74,4 +79,6 @@ export const POOL_KEYS = {
   metadata: (difficulty: number, tenantId: string) =>
     `email_pool:metadata:${difficulty}:tenant:${tenantId}`,
   totalCount: (tenantId: string) => `email_pool:total:tenant:${tenantId}`,
+  servedVersions: (difficulty: number, tenantId: string) =>
+    `email_pool:served:${difficulty}:tenant:${tenantId}`,
 } as const;

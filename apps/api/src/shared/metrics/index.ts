@@ -6,7 +6,13 @@ export { activeWebSocketConnectionsGauge } from './websocket-metrics.js';
 export { activeGameSessionsGauge } from './game-metrics.js';
 export { aiGenerationLatencyHistogram } from './ai-metrics.js';
 export { formatAllMetricsPrometheus } from './format.js';
-export { recordHttpMetrics } from './hooks.js';
+export {
+  recordHttpMetrics,
+  recordPoolSize,
+  recordPoolDepletionRate,
+  recordPoolReplenishmentLatency,
+  recordPoolLowWatermark,
+} from './hooks.js';
 export {
   incrementCounter,
   observeHistogram,

@@ -164,3 +164,50 @@ export const recordAiGenerationError = (
     tenant_id: tenantId ?? 'none',
   });
 };
+
+export const recordPoolSize = (difficulty: number, size: number, tenantId?: string): void => {
+  setGauge('email_pool_size', size, {
+    difficulty: difficulty.toString(),
+    tenant_id: tenantId ?? 'none',
+  });
+};
+
+export const recordPoolDepletionRate = (
+  difficulty: number,
+  depletionRate: number,
+  tenantId?: string,
+): void => {
+  setGauge('email_pool_depletion_rate', depletionRate, {
+    difficulty: difficulty.toString(),
+    tenant_id: tenantId ?? 'none',
+  });
+};
+
+export const recordPoolReplenishmentLatency = (
+  latencyMs: number,
+  difficulty: number,
+  tenantId?: string,
+): void => {
+  observeHistogram('email_pool_replenishment_latency_seconds', latencyMs / 1000, {
+    difficulty: difficulty.toString(),
+    tenant_id: tenantId ?? 'none',
+  });
+};
+
+export const recordPoolLowWatermark = (
+  difficulty: number,
+  isLow: boolean,
+  durationMinutes: number,
+  tenantId?: string,
+): void => {
+  if (isLow) {
+    incrementCounter('email_pool_low_watermark_alerts_total', {
+      difficulty: difficulty.toString(),
+      tenant_id: tenantId ?? 'none',
+    });
+  }
+  setGauge('email_pool_low_watermark_duration_minutes', durationMinutes, {
+    difficulty: difficulty.toString(),
+    tenant_id: tenantId ?? 'none',
+  });
+};

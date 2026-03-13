@@ -92,6 +92,8 @@ export interface RedisRateLimitClient {
   zscore(key: string, member: string): Promise<number | null>;
   zcard(key: string): Promise<number>;
   zrem(key: string, member: string): Promise<number>;
+  sadd(key: string, member: string): Promise<number>;
+  sismember(key: string, member: string): Promise<number>;
   quit(): Promise<void>;
   disconnect(): void;
 }
@@ -551,6 +553,26 @@ class RedisTcpClient implements RedisRateLimitClient {
     }
 
     throw new Error('Unexpected Redis ZREM response');
+  }
+
+  public async sadd(key: string, member: string): Promise<number> {
+    const result = await this.sendCommand(['SADD', key, member]);
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis SADD response');
+  }
+
+  public async sismember(key: string, member: string): Promise<number> {
+    const result = await this.sendCommand(['SISMEMBER', key, member]);
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis SISMEMBER response');
   }
 
   public async quit(): Promise<void> {

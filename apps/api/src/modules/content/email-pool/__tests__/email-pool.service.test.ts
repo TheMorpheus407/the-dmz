@@ -37,6 +37,8 @@ const createMockRedisClient = (): RedisRateLimitClient => {
     zscore: createMockFn(null),
     zcard: createMockFn(0),
     zrem: createMockFn(0),
+    sadd: createMockFn(1),
+    sismember: createMockFn(0),
     quit: createMockFn(undefined),
     disconnect: createMockFn(),
   };
@@ -240,6 +242,7 @@ describe('EmailPoolService', () => {
         difficulty: 1,
         quality: 0.9,
         intent: 'legitimate' as const,
+        version: 1,
         createdAt: new Date().toISOString(),
       };
 
@@ -250,11 +253,142 @@ describe('EmailPoolService', () => {
       });
       mockRedis.rpop = vi.fn().mockResolvedValue(JSON.stringify(mockEmail));
       mockRedis.zrem = vi.fn().mockResolvedValue(1);
+      mockRedis.sadd = vi.fn().mockResolvedValue(1);
       mockRedis.setValue = vi.fn().mockResolvedValue(undefined);
 
       await service.popEmail(tenantId, 1);
 
       expect(eventHandler).toHaveBeenCalled();
+    });
+  });
+
+  describe('addEmail', () => {
+    it('should include version in pooled email', async () => {
+      mockRedis.sadd = vi.fn().mockResolvedValue(1);
+
+      await service.addEmail(tenantId, {
+        emailId: 'email-001',
+        templateId: 'template-001',
+        difficulty: 1,
+        quality: 0.9,
+        intent: 'legitimate',
+        version: 2,
+      });
+
+      expect(mockRedis.lpush).toHaveBeenCalled();
+      const callArgs = (mockRedis.lpush as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(callArgs).toBeDefined();
+      const emailData = JSON.parse(callArgs![1] as string);
+      expect(emailData.version).toBe(2);
+    });
+
+    it('should default version to 1 if not provided', async () => {
+      mockRedis.sadd = vi.fn().mockResolvedValue(1);
+
+      await service.addEmail(tenantId, {
+        emailId: 'email-001',
+        templateId: 'template-001',
+        difficulty: 1,
+        quality: 0.9,
+        intent: 'legitimate',
+      });
+
+      const callArgs = (mockRedis.lpush as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(callArgs).toBeDefined();
+      const emailData = JSON.parse(callArgs![1] as string);
+      expect(emailData.version).toBe(1);
+    });
+  });
+
+  describe('isVersionServed', () => {
+    it('should return true if version has been served', async () => {
+      mockRedis.sismember = vi.fn().mockResolvedValue(1);
+
+      const result = await (
+        service as unknown as {
+          isVersionServed: (
+            tenantId: string,
+            difficulty: number,
+            emailId: string,
+            version: number,
+          ) => Promise<boolean>;
+        }
+      ).isVersionServed(tenantId, 1, 'email-001', 1);
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false if version has not been served', async () => {
+      mockRedis.sismember = vi.fn().mockResolvedValue(0);
+
+      const result = await (
+        service as unknown as {
+          isVersionServed: (
+            tenantId: string,
+            difficulty: number,
+            emailId: string,
+            version: number,
+          ) => Promise<boolean>;
+        }
+      ).isVersionServed(tenantId, 1, 'email-001', 1);
+
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('handleContentPublished', () => {
+    it('should emit triggerRefill events when pool needs refill', async () => {
+      const eventHandler = vi.fn();
+      service.subscribe(eventHandler);
+
+      mockRedis.llen = vi.fn().mockResolvedValue(5);
+
+      await (
+        service as unknown as {
+          handleContentPublished: (
+            tenantId: string,
+            contentId: string,
+            contentType: string,
+          ) => Promise<void>;
+        }
+      ).handleContentPublished(tenantId, 'content-001', 'email');
+
+      const allCalls = (eventHandler as ReturnType<typeof vi.fn>).mock.calls;
+      let refillEventFound = false;
+      for (const call of allCalls) {
+        const event = call[0] as { eventType?: string } | undefined;
+        if (event && event.eventType === 'email.pool.triggerRefill') {
+          refillEventFound = true;
+          break;
+        }
+      }
+      expect(refillEventFound).toBe(true);
+    });
+
+    it('should not trigger refill for non-email content', async () => {
+      const eventHandler = vi.fn();
+      service.subscribe(eventHandler);
+
+      await (
+        service as unknown as {
+          handleContentPublished: (
+            tenantId: string,
+            contentId: string,
+            contentType: string,
+          ) => Promise<void>;
+        }
+      ).handleContentPublished(tenantId, 'content-001', 'game');
+
+      const allCalls = (eventHandler as ReturnType<typeof vi.fn>).mock.calls;
+      let refillEventFound = false;
+      for (const call of allCalls) {
+        const event = call[0] as { eventType?: string } | undefined;
+        if (event && event.eventType === 'email.pool.triggerRefill') {
+          refillEventFound = true;
+          break;
+        }
+      }
+      expect(refillEventFound).toBe(false);
     });
   });
 });
