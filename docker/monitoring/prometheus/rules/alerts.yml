@@ -1,0 +1,123 @@
+groups:
+  - name: api_latency
+    interval: 30s
+    rules:
+      - alert: ApiLatencyP95High
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'API P95 latency is above 200ms'
+          description: 'API P95 latency is {{ $value | humanizeDuration }} (threshold: 200ms)'
+
+      - alert: ApiLatencyP95Critical
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 0.5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'API P95 latency is critically high'
+          description: 'API P95 latency is {{ $value | humanizeDuration }} (threshold: 500ms)'
+
+  - name: websocket_latency
+    interval: 30s
+    rules:
+      - alert: WebSocketLatencyP95High
+        expr: histogram_quantile(0.95, rate(websocket_message_delivery_seconds_bucket[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'WebSocket P95 latency is above 50ms'
+          description: 'WebSocket P95 latency is {{ $value | humanizeDuration }} (threshold: 50ms)'
+
+  - name: error_rate
+    interval: 30s
+    rules:
+      - alert: HighErrorRate
+        expr: sum(rate(http_errors_total[5m])) / sum(rate(http_requests_total[5m])) > 0.01
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Error rate is above 1%'
+          description: 'Error rate is {{ $value | humanizePercentage }} (threshold: 1%)'
+
+      - alert: HighErrorRateCritical
+        expr: sum(rate(http_errors_total[5m])) / sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Error rate is critically high'
+          description: 'Error rate is {{ $value | humanizePercentage }} (threshold: 5%)'
+
+  - name: queue_depth
+    interval: 30s
+    rules:
+      - alert: QueueDepthHigh
+        expr: queue_depth > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Queue {{ $labels.queue_name }} depth is high'
+          description: 'Queue depth is {{ $value }} (threshold: 1000)'
+
+      - alert: QueueDepthCritical
+        expr: queue_depth > 5000
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Queue {{ $labels.queue_name }} depth is critically high'
+          description: 'Queue depth is {{ $value }} (threshold: 5000)'
+
+  - name: cache_hit_rate
+    interval: 30s
+    rules:
+      - alert: LowCacheHitRate
+        expr: cache_hit_rate < 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Cache hit rate is below 50%'
+          description: 'Cache hit rate is {{ $value | humanizePercentage }} (threshold: 50%)'
+
+  - name: health_checks
+    interval: 30s
+    rules:
+      - alert: HealthCheckFailed
+        expr: up{job="api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'API health check failed'
+          description: 'API at {{ $labels.instance }} is not responding'
+
+  - name: websocket_connections
+    interval: 30s
+    rules:
+      - alert: HighWebSocketConnections
+        expr: websocket_active_connections > 10000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High number of WebSocket connections'
+          description: 'There are {{ $value }} active WebSocket connections'
+
+  - name: game_sessions
+    interval: 30s
+    rules:
+      - alert: HighGameSessions
+        expr: game_active_sessions > 5000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'High number of active game sessions'
+          description: 'There are {{ $value }} active game sessions'

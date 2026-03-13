@@ -1,5 +1,7 @@
 import { Worker, Queue, type WorkerOptions, type Job } from 'bullmq';
 
+import { recordQueueDepth } from '../../../shared/metrics/hooks.js';
+
 import {
   QUEUE_NAMES,
   JOB_TYPES,
@@ -92,11 +94,13 @@ export class EmailGeneratorWorker {
     this.worker.on('completed', () => {
       this.health.completedCount++;
       this.health.currentJobCount = Math.max(0, this.health.currentJobCount - 1);
+      this.updateQueueDepth().catch(() => {});
     });
 
     this.worker.on('failed', () => {
       this.health.failedCount++;
       this.health.currentJobCount = Math.max(0, this.health.currentJobCount - 1);
+      this.updateQueueDepth().catch(() => {});
     });
 
     this.worker.on('active', () => {
@@ -110,6 +114,19 @@ export class EmailGeneratorWorker {
       host: url.hostname,
       port: parseInt(url.port, 10) || 6379,
     };
+  }
+
+  private async updateQueueDepth(): Promise<void> {
+    try {
+      const counts = await this.queue.getJobCounts('waiting', 'active', 'delayed');
+      const waiting = counts['waiting'] ?? 0;
+      const active = counts['active'] ?? 0;
+      const delayed = counts['delayed'] ?? 0;
+      const totalDepth = waiting + active + delayed;
+      recordQueueDepth(QUEUE_NAMES.AI_GENERATION, totalDepth);
+    } catch {
+      // Queue might be closed
+    }
   }
 
   private async processJob(job: Job<AiGenerationJobData>): Promise<unknown> {

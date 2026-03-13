@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
 import { generateId } from '../../../shared/utils/id.js';
+import {
+  recordWebSocketConnection,
+  recordWebSocketMessage,
+} from '../../../shared/metrics/hooks.js';
 
 import type { WebSocket } from '@fastify/websocket';
 import type { JWTAuthPayload, WSConnectionInfo, WSServerMessage } from './websocket.types.js';
@@ -46,6 +50,8 @@ export class WebSocketGateway {
 
     this.startHeartbeat(wsConnection);
 
+    recordWebSocketConnection('connect', authPayload.tenantId);
+
     return connectionInfo;
   }
 
@@ -59,7 +65,7 @@ export class WebSocketGateway {
       clearInterval(connection.heartbeatTimer);
     }
 
-    const { userId, subscriptions } = connection.connectionInfo;
+    const { userId, subscriptions, tenantId } = connection.connectionInfo;
 
     for (const channel of subscriptions) {
       this.removeChannelSubscription(channel, connectionId);
@@ -74,6 +80,8 @@ export class WebSocketGateway {
     }
 
     this.connections.delete(connectionId);
+
+    recordWebSocketConnection('disconnect', tenantId);
   }
 
   public subscribe(connectionId: string, channel: string): boolean {
@@ -112,6 +120,7 @@ export class WebSocketGateway {
     try {
       const payload = JSON.stringify(message);
       connection.socket.send(payload);
+      recordWebSocketMessage('sent', connection.connectionInfo.tenantId);
       return true;
     } catch {
       return false;

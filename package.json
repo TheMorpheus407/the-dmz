@@ -40,6 +40,8 @@
     "services:down": "docker compose down",
     "services:reset": "docker compose down -v && docker compose up -d",
     "services:logs": "docker compose logs -f",
+    "services:monitoring:up": "docker compose --profile monitoring up -d",
+    "services:monitoring:down": "docker compose --profile monitoring down",
     "test:scripts": "node --test scripts/*.test.mjs",
     "storybook": "pnpm --filter @the-dmz/web storybook",
     "storybook:build": "turbo run storybook:build",

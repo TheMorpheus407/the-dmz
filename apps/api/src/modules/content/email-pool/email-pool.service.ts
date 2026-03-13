@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 
 import { getRedisClient, type RedisRateLimitClient } from '../../../shared/database/redis.js';
+import { recordQueueDepth } from '../../../shared/metrics/hooks.js';
 
 import {
   POOL_KEYS,
@@ -105,6 +106,8 @@ export class EmailPoolService {
     await this.updateMetadata(tenantId, options.difficulty);
 
     await redis.lpush(POOL_KEYS.totalCount(tenantId), emailJson);
+
+    await this.recordPoolDepth(tenantId);
   }
 
   async popEmail(tenantId: string, difficulty?: number): Promise<PopEmailResult | null> {
@@ -158,6 +161,8 @@ export class EmailPoolService {
         quality,
         selectionMethod: 'weighted',
       });
+
+      await this.recordPoolDepth(tenantId);
 
       return {
         email,
@@ -273,6 +278,12 @@ export class EmailPoolService {
     const redis = await this.getRedis();
     const totalKey = POOL_KEYS.totalCount(tenantId);
     return redis.llen(totalKey);
+  }
+
+  private async recordPoolDepth(tenantId: string): Promise<void> {
+    const poolMetrics = await this.getPoolMetrics(tenantId);
+    const queueName = 'email-pool';
+    recordQueueDepth(queueName, poolMetrics.totalPoolSize, tenantId);
   }
 
   async checkLowWatermark(tenantId: string): Promise<Map<DifficultyTier, boolean>> {

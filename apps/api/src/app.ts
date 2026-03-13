@@ -25,6 +25,7 @@ import { contentPlugin } from './modules/content/index.js';
 import { aiPipelinePlugin } from './modules/ai-pipeline/index.js';
 import { registerNotificationRoutes } from './modules/notification/index.js';
 import { registerAdminRateLimitRoutes } from './modules/admin/index.js';
+import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.js';
 
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
@@ -163,6 +164,24 @@ export const buildApp = (
       app.register(registryEntry.plugin as never);
     }
   }
+
+  app.register(createMetricsPlugin);
+
+  app.addHook('preHandler', async (request, reply) => {
+    const url = request.url;
+    if (url.startsWith('/metrics') || url.startsWith('/health')) {
+      return;
+    }
+    (reply as unknown as { startTime: number }).startTime = Date.now();
+  });
+
+  app.addHook('onResponse', async (request, reply) => {
+    const url = request.url;
+    if (url.startsWith('/metrics') || url.startsWith('/health')) {
+      return;
+    }
+    await recordHttpMetrics(request, reply);
+  });
 
   const rootLevelModules = domainEntries.filter((e) => {
     const registryEntry = MODULE_REGISTRY[e.name];

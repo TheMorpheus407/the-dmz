@@ -1,6 +1,7 @@
 import { generateSeed } from '@the-dmz/shared/game';
 
 import { getDatabaseClient } from '../../../shared/database/connection.js';
+import { recordGameSession } from '../../../shared/metrics/hooks.js';
 
 import {
   findActiveGameSession,
@@ -65,6 +66,8 @@ export const bootstrapGameSession = async (
   };
 
   const createdSession = await createGameSession(db, sessionData);
+
+  recordGameSession('start', user.tenantId);
 
   return {
     session: mapToBootstrapData(createdSession),

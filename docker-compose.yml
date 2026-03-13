@@ -5,6 +5,9 @@
 #   redis     — Redis 7 on localhost:6379
 #   adminer   — Database UI on localhost:8080 (opt-in via --profile tools)
 #   migrate   — Run Drizzle database migrations (opt-in via --profile migrate)
+#   prometheus — Metrics collection on localhost:9090
+#   grafana   — Dashboards on localhost:3000
+#   alertmanager — Alert handling on localhost:9093
 #
 # Connection strings:
 #   PostgreSQL: postgresql://dmz:dmz_dev@localhost:5432/dmz_dev
@@ -13,11 +16,17 @@
 # Database tools (pgAdmin, TablePlus, DBeaver, Adminer):
 #   Host: localhost | Port: 5432 | User: dmz | Password: dmz_dev | Database: dmz_dev
 #
+# Monitoring:
+#   Prometheus: http://localhost:9090
+#   Grafana: http://localhost:3000 (admin/admin)
+#   Alertmanager: http://localhost:9093
+#
 # Startup ordering (enforced via depends_on + condition: service_healthy):
 #   1. postgres (healthy when pg_isready succeeds)
 #   2. redis (healthy when redis-cli ping succeeds)
 #   3. migrate (runs Drizzle migrations against healthy postgres, then exits)
 #   4. api/web application services (added in issue #32, depend on all above)
+#   5. monitoring services (prometheus, grafana, alertmanager)
 #
 # Migration state tracking:
 #   Drizzle ORM tracks applied migrations in the database itself via its
@@ -30,6 +39,7 @@
 #   pnpm services:logs     — tail service logs
 #   docker compose --profile tools up -d    — include Adminer
 #   docker compose --profile migrate up migrate  — run database migrations
+#   docker compose --profile monitoring up -d     — include monitoring stack
 
 services:
   postgres:
@@ -121,5 +131,83 @@ services:
   #       - '3000:3000'
   # -------------------------------------------------------------------------
 
+  # -------------------------------------------------------------------------
+  # Monitoring stack (issue #182 — Monitoring and Observability)
+  # -------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:v2.48.0
+    profiles: ['monitoring']
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./docker/monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    depends_on:
+      - redis
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '--spider', 'http://localhost:9090/-/healthy']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  alertmanager:
+    image: prom/alertmanager:v0.26.0
+    profiles: ['monitoring']
+    ports:
+      - '9093:9093'
+    volumes:
+      - ./docker/monitoring/alertmanager:/etc/alertmanager
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    depends_on:
+      - prometheus
+
+  grafana:
+    image: grafana/grafana:10.2.2
+    profiles: ['monitoring']
+    ports:
+      - '3000:3000'
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./docker/monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  redis-exporter:
+    image: oliver006/redis_exporter:v1.54.0
+    profiles: ['monitoring']
+    ports:
+      - '9121:9121'
+    environment:
+      - REDIS_ADDR=redis://redis:6379
+    depends_on:
+      - redis
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    profiles: ['monitoring']
+    ports:
+      - '9187:9187'
+    environment:
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD:-dmz_dev}@postgres:5432/${POSTGRES_DB:-dmz_dev}?sslmode=disable
+    depends_on:
+      - postgres
+
+  # -------------------------------------------------------------------------
+
 volumes:
   postgres_data:
+  prometheus_data:
+  alertmanager_data:
+  grafana_data:
