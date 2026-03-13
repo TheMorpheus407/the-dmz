@@ -124,7 +124,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           ? false
           : {
               max: 5,
-              timeWindow: '1 minute',
+              timeWindow: '1 hour',
             },
       },
       schema: {
@@ -237,7 +237,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           ? false
           : {
               max: 10,
-              timeWindow: '1 minute',
+              timeWindow: '15 minutes',
             },
       },
       schema: {

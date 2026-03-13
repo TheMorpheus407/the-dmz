@@ -24,6 +24,7 @@ import { emailPlugin } from './modules/email/index.js';
 import { contentPlugin } from './modules/content/index.js';
 import { aiPipelinePlugin } from './modules/ai-pipeline/index.js';
 import { registerNotificationRoutes } from './modules/notification/index.js';
+import { registerAdminRateLimitRoutes } from './modules/admin/index.js';
 
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
@@ -240,6 +241,8 @@ export const buildApp = (
   }
 
   app.register(registerNotificationRoutes);
+
+  app.register(registerAdminRateLimitRoutes);
 
   app.register(
     async (apiRouter) => {

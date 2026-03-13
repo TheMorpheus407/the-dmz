@@ -479,6 +479,26 @@ const setRateLimitResetAsEpochSeconds = (app: FastifyInstance): void => {
 
 let rateLimiterState: StoreState | null = null;
 
+export type RateLimitStatus = {
+  store: 'redis' | 'memory';
+  redisAvailable: boolean;
+  strictMode: boolean;
+};
+
+export const getRateLimitStatus = (): RateLimitStatus | null => {
+  if (!rateLimiterState) {
+    return null;
+  }
+
+  return {
+    store: rateLimiterState.redisAvailable ? 'redis' : 'memory',
+    redisAvailable: rateLimiterState.redisAvailable,
+    strictMode: rateLimiterState.strictMode,
+  };
+};
+
+export const getRateLimitState = (): StoreState | null => rateLimiterState;
+
 const generateHourlyQuotaKey = (request: FastifyRequest): string => {
   const groupId = extractGroupIdFromRoute(request);
   const tenantId = extractTenantIdFromRequest(request);

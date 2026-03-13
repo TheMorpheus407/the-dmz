@@ -48,6 +48,9 @@ const updateWebhookSubscriptionJsonSchema = {
 } as const;
 
 export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
+  const config = fastify.config;
+  const isTest = config.NODE_ENV === 'test';
+
   fastify.addHook(
     'preHandler',
     async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
@@ -84,6 +87,14 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
   }>(
     '/subscriptions',
     {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 20,
+              timeWindow: '1 minute',
+            },
+      },
       schema: {
         body: createWebhookSubscriptionJsonSchema,
       },

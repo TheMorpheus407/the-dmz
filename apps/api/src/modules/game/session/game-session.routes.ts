@@ -15,11 +15,20 @@ import type { AuthenticatedUser } from './game-session.service.js';
 
 export const registerGameSessionRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const config = fastify.config;
+  const isTest = config.NODE_ENV === 'test';
 
   fastify.post(
     '/game/session',
     {
       preHandler: [authGuard, tenantContext, tenantStatusGuard, idempotency],
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 30,
+              timeWindow: '1 minute',
+            },
+      },
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
@@ -63,6 +72,14 @@ export const registerGameSessionRoutes = async (fastify: FastifyInstance): Promi
     '/game/session',
     {
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 100,
+              timeWindow: '1 minute',
+            },
+      },
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
