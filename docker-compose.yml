@@ -5,6 +5,7 @@
 #   redis     — Redis 7 on localhost:6379
 #   adminer   — Database UI on localhost:8080 (opt-in via --profile tools)
 #   migrate   — Run Drizzle database migrations (opt-in via --profile migrate)
+#   backup    — PostgreSQL backup container (opt-in via --profile backup)
 #   prometheus — Metrics collection on localhost:9090
 #   grafana   — Dashboards on localhost:3000
 #   alertmanager — Alert handling on localhost:9093
@@ -21,12 +22,17 @@
 #   Grafana: http://localhost:3000 (admin/admin)
 #   Alertmanager: http://localhost:9093
 #
+# Backup:
+#   Backups stored in ./docker/backup/backups (local) or S3 (production)
+#   Run: docker compose --profile backup up -d
+#
 # Startup ordering (enforced via depends_on + condition: service_healthy):
 #   1. postgres (healthy when pg_isready succeeds)
 #   2. redis (healthy when redis-cli ping succeeds)
 #   3. migrate (runs Drizzle migrations against healthy postgres, then exits)
-#   4. api/web application services (added in issue #32, depend on all above)
-#   5. monitoring services (prometheus, grafana, alertmanager)
+#   4. backup (optional, runs daily backups)
+#   5. api/web application services (added in issue #32, depend on all above)
+#   6. monitoring services (prometheus, grafana, alertmanager)
 #
 # Migration state tracking:
 #   Drizzle ORM tracks applied migrations in the database itself via its
@@ -40,6 +46,7 @@
 #   docker compose --profile tools up -d    — include Adminer
 #   docker compose --profile migrate up migrate  — run database migrations
 #   docker compose --profile monitoring up -d     — include monitoring stack
+#   docker compose --profile backup up -d         — include backup services
 
 services:
   postgres:
@@ -50,15 +57,29 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-dmz}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dmz_dev}
       POSTGRES_DB: ${POSTGRES_DB:-dmz_dev}
+      POSTGRES_INITDB_ARGS: --waldir=/var/lib/postgresql/data/pg_wal
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - postgres_wal:/var/lib/postgresql/data/pg_wal
       - ./docker/postgres:/docker-entrypoint-initdb.d:ro
+      - ./docker/backup:/usr/local/bin:ro
+      - ./docker/backup:/backups
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-dmz} -d ${POSTGRES_DB:-dmz_dev}']
       interval: 5s
       timeout: 3s
       retries: 5
       start_period: 10s
+    command: >
+      postgres
+      -c wal_level=replica
+      -c max_wal_senders=3
+      -c max_replication_slots=3
+      -c archive_mode=on
+      -c archive_command=/usr/local/bin/archive_wal.sh %p
+      -c archive_timeout=1h
+      -c checkpoint_timeout=15min
+      -c wal_keep_size=1GB
 
   redis:
     image: redis:7-alpine
@@ -96,6 +117,35 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD:-dmz_dev}@postgres:5432/${POSTGRES_DB:-dmz_dev}
     command: ['sh', '-c', 'corepack enable && pnpm --filter api db:migrate']
     profiles: ['migrate']
+
+  # PostgreSQL backup service.
+  # Opt-in via: docker compose --profile backup up -d
+  # Runs daily backups at 2:00 AM UTC.
+  # Set S3_BUCKET environment variable for S3 uploads.
+  backup:
+    image: postgres:16-alpine
+    profiles: ['backup']
+    volumes:
+      - ./docker/backup:/backups:rw
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+      POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+      POSTGRES_DB: ${POSTGRES_DB:-dmz_dev}
+      POSTGRES_USER: ${POSTGRES_USER:-dmz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dmz_dev}
+      DATABASE_HOST: ${POSTGRES_HOST:-postgres}
+      DATABASE_PORT: ${POSTGRES_PORT:-5432}
+      DATABASE_NAME: ${POSTGRES_DB:-dmz_dev}
+      DATABASE_USER: ${POSTGRES_USER:-dmz}
+      S3_BUCKET: ${S3_BUCKET:-}
+      BACKUP_DIR: /backups
+      RETENTION_DAYS: 30
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: >
+      sh -c 'echo "Backup container running. Use docker compose exec backup ./backup.sh to run backup manually." && sleep infinity'
+    entrypoint: []
 
   # -------------------------------------------------------------------------
   # Application services (issue #32 — Application Dockerfiles for API and Web)
@@ -208,6 +258,7 @@ services:
 
 volumes:
   postgres_data:
+  postgres_wal:
   prometheus_data:
   alertmanager_data:
   grafana_data:

@@ -121,3 +121,54 @@ groups:
         annotations:
           summary: 'High number of active game sessions'
           description: 'There are {{ $value }} active game sessions'
+
+  # -------------------------------------------------------------------------
+  # Backup alerts (issue #186 — Disaster Recovery)
+  # -------------------------------------------------------------------------
+  - name: backup
+    interval: 30s
+    rules:
+      - alert: BackupFailed
+        expr: backup_status{status="error"} == 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'PostgreSQL backup failed'
+          description: 'The automated PostgreSQL backup has failed. Check backup logs immediately.'
+
+      - alert: BackupAgeWarning
+        expr: backup_age_hours > 25
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: 'PostgreSQL backup is older than 25 hours'
+          description: 'The latest PostgreSQL backup is {{ $value }} hours old. Expected daily backups.'
+
+      - alert: BackupAgeCritical
+        expr: backup_age_hours > 48
+        for: 1h
+        labels:
+          severity: critical
+        annotations:
+          summary: 'PostgreSQL backup is critically old'
+          description: 'The latest PostgreSQL backup is {{ $value }} hours old. Immediate action required.'
+
+      - alert: WALArchivingFailed
+        expr: wal_archive_failed == 1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'PostgreSQL WAL archiving is failing'
+          description: 'WAL archiving has failed. PITR capability may be compromised.'
+
+      - alert: BackupStorageLow
+        expr: (backup_storage_available / backup_storage_total) < 0.1
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Backup storage is running low'
+          description: 'Less than 10% of backup storage is available.'
