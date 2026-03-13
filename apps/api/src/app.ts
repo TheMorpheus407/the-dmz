@@ -23,6 +23,7 @@ import { webhookPlugin } from './modules/webhooks/index.js';
 import { emailPlugin } from './modules/email/index.js';
 import { contentPlugin } from './modules/content/index.js';
 import { aiPipelinePlugin } from './modules/ai-pipeline/index.js';
+import { registerNotificationRoutes } from './modules/notification/index.js';
 
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
@@ -36,6 +37,7 @@ const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }>
   email: { plugin: emailPlugin, routePrefix: '/email' },
   content: { plugin: contentPlugin, routePrefix: '/content' },
   aiPipeline: { plugin: aiPipelinePlugin, routePrefix: '/ai' },
+  notification: { plugin: registerNotificationRoutes },
 };
 
 const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {
@@ -236,6 +238,8 @@ export const buildApp = (
     }
     app.register(registryEntry.plugin as never);
   }
+
+  app.register(registerNotificationRoutes);
 
   app.register(
     async (apiRouter) => {

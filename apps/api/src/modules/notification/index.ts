@@ -2,6 +2,8 @@ export { notificationService, isSecurityEventMandatory } from './notification.se
 
 export { handleAuthSecurityEvent, notificationEventHandlers } from './notification.events.js';
 
+export { registerNotificationRoutes } from './notification.routes.js';
+
 export type {
   NotificationSendOptions,
   NotificationDeliveryResult,
