@@ -13,6 +13,7 @@ concurrency:
 permissions:
   contents: read
   actions: write
+  security-events: write
 
 jobs:
   dependency-audit:
@@ -51,6 +52,50 @@ jobs:
         run: |
           echo "Dependency audit failed due to high/critical vulnerabilities."
           exit 1
+
+  owasp-dependency-check:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Cache OWASP dependency-check
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository/org/owasp/dependency-check
+          key: owasp-${{ runner.os }}-6.8.1
+          restore-keys: |
+            owasp-${{ runner.os }}-
+      - name: Run OWASP Dependency-Check
+        run: |
+          mkdir -p security-reports
+          mvn org.owasp:dependency-check-maven:6.8.1:check \
+            -DoutputDirectory=security-reports \
+            -Dformat=HTML \
+            -Dformat=JSON \
+            -DfailBuildOnCVSS=7 \
+            -DsuppressionFile=.owasp-dependency-check-suppressions.xml \
+            -DassemblyArtifactEnabled=false
+      - name: Upload OWASP Dependency-Check results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-check-${{ matrix.node }}
+          path: security-reports/dependency-check*
+          if-no-files-found: warn
+      - name: Upload SARIF results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: security-reports/dependency-check.sarif
+          category: owasp-dependency-check
 
   lint-and-typecheck:
     runs-on: ubuntu-latest

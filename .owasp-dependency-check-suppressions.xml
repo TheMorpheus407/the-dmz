@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jerrylng.github.io/owasp-dependency-check-utils/suppressions/2.1">
+  <suppress>
+    <notes><![CDATA[
+      Suppress known false positives for development dependencies
+    ]]></notes>
+    <packageUrl regex="true">^pkg:npm/.*@types/.*</packageUrl>
+    <vulnerabilityName>CWE-</vulnerabilityName>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      Suppress devDependencies that are not deployed
+    ]]></notes>
+    <projectPath>apps/api/</projectPath>
+    <dependencyType>develop</dependencyType>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      Suppress devDependencies that are not deployed
+    ]]></notes>
+    <projectPath>apps/web/</projectPath>
+    <dependencyType>develop</dependencyType>
+  </suppress>
+  <suppress>
+    <notes><![CDATA[
+      Suppress devDependencies that are not deployed
+    ]]></notes>
+    <projectPath>packages/shared/</projectPath>
+    <dependencyType>develop</dependencyType>
+  </suppress>
+</suppressions>

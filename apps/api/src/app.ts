@@ -13,6 +13,7 @@ import { sanitizeInputHook } from './shared/middleware/sanitize-input.js';
 import { registerSecurityHeaders } from './shared/middleware/security-headers.js';
 import { generateId } from './shared/utils/id.js';
 import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js';
+import { ssrfProtectionPlugin } from './shared/plugins/ssrf-protection.plugin.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
 import { healthPlugin } from './modules/health/index.js';
 import { cachePlugin } from './modules/cache/index.js';
@@ -212,6 +213,7 @@ export const buildApp = (
   });
 
   registerSecurityHeaders(app, config);
+  app.register(ssrfProtectionPlugin);
   registerQuotaPolicyHook(app);
   registerRateLimiter(app, config);
 

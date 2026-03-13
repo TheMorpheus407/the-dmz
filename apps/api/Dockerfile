@@ -36,17 +36,19 @@ ARG VCS_REF
 WORKDIR /app
 
 RUN apk add --no-cache curl \
-  && addgroup -S app \
-  && adduser -S app -G app
+    && addgroup -S app \
+    && adduser -S app -G app
 
-ENV NODE_ENV=${NODE_ENV}
-ENV PORT=3001
+ENV NODE_ENV=${NODE_ENV} \
+    PORT=3001 \
+    NODE_NO_WARNINGS=1 \
+    NODE_OPTIONS="--max-old-space-size=384"
 
-LABEL org.opencontainers.image.source="https://github.com/matrices-gmbh/the-dmz"
-LABEL org.opencontainers.image.description="The DMZ: Archive Gate - API Server"
-LABEL org.opencontainers.image.licenses="UNLICENSED"
-LABEL org.opencontainers.image.created="${BUILD_DATE}"
-LABEL org.opencontainers.image.revision="${VCS_REF}"
+LABEL org.opencontainers.image.source="https://github.com/matrices-gmbh/the-dmz" \
+      org.opencontainers.image.description="The DMZ: Archive Gate - API Server" \
+      org.opencontainers.image.licenses="UNLICENSED" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.revision="${VCS_REF}"
 
 COPY --from=build /runtime/node_modules /app/node_modules
 COPY --from=build /runtime/apps/api/node_modules /app/apps/api/node_modules
@@ -59,9 +61,15 @@ COPY --from=build /app/packages/shared/dist /app/packages/shared/dist
 RUN find /app -type f -name '*.ts' ! -name '*.d.ts' -delete
 
 USER app
+
 EXPOSE 3001
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD curl -f http://localhost:3001/health || exit 1
+
+RUN mkdir -p /app/tmp /app/logs && chmod 755 /app/tmp /app/logs
+
+ENV TMPDIR=/app/tmp \
+    LOG_DIR=/app/logs
 
 CMD ["sh", "-ec", "if [ -z \"${JWT_SECRET:-}\" ]; then export JWT_SECRET=\"$(node -e 'process.stdout.write(require(\"node:crypto\").randomBytes(32).toString(\"hex\"))')\"; fi; exec node apps/api/dist/server.js"]

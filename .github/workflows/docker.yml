@@ -3,6 +3,8 @@ name: Docker Build
 on:
   push:
     branches: [master]
+  pull_request:
+    branches: [master]
 
 concurrency:
   group: docker-${{ github.workflow }}-${{ github.ref }}
@@ -10,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   build-images:
@@ -17,10 +20,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Lowercase owner
         run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
       - name: Build API image
         run: |
           docker build \
@@ -28,6 +34,7 @@ jobs:
             -t ghcr.io/${{ env.OWNER_LC }}/the-dmz-api:${{ github.sha }} \
             -t ghcr.io/${{ env.OWNER_LC }}/the-dmz-api:latest \
             .
+
       - name: Build Web image
         run: |
           docker build \
@@ -35,3 +42,72 @@ jobs:
             -t ghcr.io/${{ env.OWNER_LC }}/the-dmz-web:${{ github.sha }} \
             -t ghcr.io/${{ env.OWNER_LC }}/the-dmz-web:latest \
             .
+
+  trivy-scan:
+    needs: build-images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lowercase owner
+        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image for scanning
+        run: |
+          docker build \
+            -f apps/api/Dockerfile \
+            -t ghcr.io/${{ env.OWNER_LC }}/the-dmz-api:scan .
+
+      - name: Build Web image for scanning
+        run: |
+          docker build \
+            -f apps/web/Dockerfile \
+            -t ghcr.io/${{ env.OWNER_LC }}/the-dmz-web:scan .
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+      - name: Upload Trivy results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-container-scan
+
+      - name: Run Trivy vulnerability scanner (exit code)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'image'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          ignore-unfixed: true
+
+  trivy-config:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Trivy config scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          scanners: 'misconfig,secret'
+          format: 'sarif'
+          output: 'trivy-config-results.sarif'
+
+      - name: Upload Trivy config results to GitHub Security
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-config-results.sarif
+          category: trivy-config-scan
