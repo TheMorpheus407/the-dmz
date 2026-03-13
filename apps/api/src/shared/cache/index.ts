@@ -26,3 +26,88 @@ export {
   KeyTooLongError,
   validateTenantId,
 } from './redis-keys.js';
+
+export {
+  buildABACCacheKey,
+  getABACCachedPermissions,
+  setABACCachedPermissions,
+  invalidateABACCache,
+  invalidateABACCacheForRole,
+  isABACCacheHealthy,
+  getABACCacheMetrics,
+  resetABACCacheMetrics,
+  type ABACCachedEvaluation,
+  type ABACCacheMetrics,
+} from './abac-cache.js';
+
+export {
+  buildContentCacheKey,
+  getCachedContent,
+  setCachedContent,
+  invalidateContentCache,
+  isContentCacheHealthy,
+  getContentCacheMetrics,
+  resetContentCacheMetrics,
+  getContentCacheTTL,
+  type ContentType,
+  type CachedContent,
+  type ContentCacheMetrics,
+} from './content-cache.js';
+
+export {
+  buildTenantPolicyCacheKey,
+  buildUserPermissionsCacheKey,
+  buildFeatureFlagsCacheKey,
+  getCachedTenantPolicy,
+  setCachedTenantPolicy,
+  getCachedUserPermissions,
+  setCachedUserPermissions,
+  getCachedFeatureFlags,
+  setCachedFeatureFlags,
+  invalidateTenantPolicyCache,
+  invalidateUserPermissionsCache,
+  invalidateAllUserPermissionsCache,
+  invalidateFeatureFlagsCache,
+  isAuthPolicyCacheHealthy,
+  getAuthPolicyCacheMetrics,
+  resetAuthPolicyCacheMetrics,
+  type CachedAuthPolicy,
+  type CachedUserPermissions,
+  type CachedFeatureFlags,
+  type AuthPolicyCacheMetrics,
+} from './auth-policy-cache.js';
+
+export {
+  buildGameStateCacheKey,
+  getCachedGameState,
+  setCachedGameState,
+  deleteCachedGameState,
+  invalidateUserGameState,
+  invalidateTenantGameState,
+  isGameStateCacheHealthy,
+  getGameStateCacheMetrics,
+  resetGameStateCacheMetrics,
+  getOrFetchGameState,
+  type CachedGameState,
+  type GameStateCacheMetrics,
+} from './game-state-cache.js';
+
+export {
+  getAllCacheMetrics,
+  getCacheMetricsSummary,
+  formatCacheMetricsPrometheus,
+  type CacheMetrics,
+  type CacheMetricsSummary,
+} from './metrics.js';
+
+export {
+  handleCacheInvalidationEvent,
+  createContentInvalidationEvent,
+  createPolicyInvalidationEvent,
+  createPermissionsInvalidationEvent,
+  createFeatureFlagsInvalidationEvent,
+  createUserRoleChangeInvalidationEvent,
+  createTenantSettingsInvalidationEvent,
+  createGameSessionEndedInvalidationEvent,
+  type CacheInvalidationEvent,
+} from './cache-invalidation.js';

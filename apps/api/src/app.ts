@@ -15,6 +15,7 @@ import { generateId } from './shared/utils/id.js';
 import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
 import { healthPlugin } from './modules/health/index.js';
+import { cachePlugin } from './modules/cache/index.js';
 import { authPlugin, jwksPlugin, signingKeyInitPlugin } from './modules/auth/index.js';
 import { scimPlugin } from './modules/scim/index.js';
 import { gamePlugin } from './modules/game/game.plugin.js';
@@ -27,6 +28,7 @@ const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }>
   infrastructure: { plugin: infrastructurePlugin },
   eventBus: { plugin: eventBusPlugin },
   health: { plugin: healthPlugin },
+  cache: { plugin: cachePlugin },
   auth: { plugin: authPlugin, routePrefix: '/auth' },
   scim: { plugin: scimPlugin, routePrefix: '/scim' },
   game: { plugin: gamePlugin, routePrefix: '/game' },
