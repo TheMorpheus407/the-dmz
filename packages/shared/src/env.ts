@@ -75,6 +75,11 @@ export const backendEnvSchema = z
     TENANT_RESOLVER_ENABLED: booleanFromString.optional(),
     WEBAUTHN_RP_ID: z.string().min(1).default('localhost'),
     WEBAUTHN_RP_NAME: z.string().min(1).default('The DMZ'),
+    MFA_ISSUER: z.string().min(1).default('The DMZ'),
+    MFA_CODE_LENGTH: z.coerce.number().int().positive().default(6),
+    MFA_WINDOW: z.coerce.number().int().nonnegative().default(1),
+    MFA_BACKUP_CODES: z.coerce.number().int().positive().default(10),
+    MFA_MAX_ATTEMPTS: z.coerce.number().int().positive().default(10),
     ABAC_CACHE_TTL_SECONDS: z.coerce.number().int().positive().default(30),
     ABAC_SLOW_EVALUATION_THRESHOLD_MS: z.coerce.number().int().positive().default(10),
     JWT_PRIVATE_KEY_ENCRYPTION_KEY: z

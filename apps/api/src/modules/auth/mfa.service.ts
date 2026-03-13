@@ -6,6 +6,7 @@ import { getDatabaseClient } from '../../shared/database/connection.js';
 import { getRedisClient, type RedisRateLimitClient } from '../../shared/database/redis.js';
 import { sessions as sessionsTable } from '../../db/schema/auth/sessions.js';
 import { webauthnCredentials as webauthnCredentialsTable } from '../../db/schema/auth/webauthn-credentials.js';
+import { mfaCredentials as mfaCredentialsTable } from '../../db/schema/auth/mfa-credentials.js';
 import { users } from '../../shared/database/schema/users.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
 
@@ -440,6 +441,9 @@ export const getMfaStatus = async (
   method: string | null;
   mfaVerifiedAt: Date | null;
   hasCredentials: boolean;
+  totpEnabled: boolean;
+  webauthnEnabled: boolean;
+  mfaEnforcementLevel: 'none' | 'totp_required' | 'totp_and_webauthn_required';
 }> => {
   const db = getDatabaseClient(config);
 
@@ -447,7 +451,18 @@ export const getMfaStatus = async (
     where: eq(sessionsTable.id, user.sessionId),
   });
 
-  const credentials = await db
+  const totpCredentials = await db
+    .select({ id: mfaCredentialsTable.id })
+    .from(mfaCredentialsTable)
+    .where(
+      and(
+        eq(mfaCredentialsTable.userId, user.userId),
+        eq(mfaCredentialsTable.tenantId, user.tenantId),
+        eq(mfaCredentialsTable.type, 'totp'),
+      ),
+    );
+
+  const webauthnCredentials = await db
     .select({ id: webauthnCredentialsTable.id })
     .from(webauthnCredentialsTable)
     .where(
@@ -461,14 +476,27 @@ export const getMfaStatus = async (
     where: and(eq(users.userId, user.userId), eq(users.tenantId, user.tenantId)),
   });
 
-  const isSuperAdmin = userRecord?.role === 'super-admin';
+  const role = userRecord?.role;
+  let mfaEnforcementLevel: 'none' | 'totp_required' | 'totp_and_webauthn_required' = 'none';
+  let mfaRequired = false;
+
+  if (role === 'super-admin') {
+    mfaEnforcementLevel = 'totp_and_webauthn_required';
+    mfaRequired = true;
+  } else if (role === 'admin' || role === 'tenant-admin') {
+    mfaEnforcementLevel = 'totp_required';
+    mfaRequired = true;
+  }
 
   return {
-    mfaRequired: isSuperAdmin,
+    mfaRequired,
     mfaVerified: session?.mfaVerifiedAt !== null && session?.mfaVerifiedAt !== undefined,
     method: session?.mfaMethod ?? null,
     mfaVerifiedAt: session?.mfaVerifiedAt ?? null,
-    hasCredentials: credentials.length > 0,
+    hasCredentials: totpCredentials.length > 0 || webauthnCredentials.length > 0,
+    totpEnabled: totpCredentials.length > 0,
+    webauthnEnabled: webauthnCredentials.length > 0,
+    mfaEnforcementLevel,
   };
 };
 

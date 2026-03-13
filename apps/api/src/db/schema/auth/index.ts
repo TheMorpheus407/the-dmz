@@ -1,4 +1,6 @@
 export * from './api-keys.js';
+export * from './backup-codes.js';
+export * from './mfa-credentials.js';
 export * from './oauth-clients.js';
 export * from './password-reset-tokens.js';
 export * from './permissions.js';

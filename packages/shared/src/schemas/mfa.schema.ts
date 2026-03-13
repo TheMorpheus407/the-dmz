@@ -178,3 +178,81 @@ export const mfaStatusResponseSchema = z
   .strict();
 
 export type MfaStatusResponse = z.infer<typeof mfaStatusResponseSchema>;
+
+export const totpEnrollmentRequestSchema = z.object({}).strict();
+
+export type TotpEnrollmentRequest = z.infer<typeof totpEnrollmentRequestSchema>;
+
+export const totpEnrollmentResponseSchema = z
+  .object({
+    secret: z.string(),
+    qrCode: z.string(),
+    otpauthUri: z.string(),
+  })
+  .strict();
+
+export type TotpEnrollmentResponse = z.infer<typeof totpEnrollmentResponseSchema>;
+
+export const totpVerifyRequestSchema = z
+  .object({
+    code: z.string().length(6),
+    secret: z.string(),
+    name: z.string().optional(),
+  })
+  .strict();
+
+export type TotpVerifyRequest = z.infer<typeof totpVerifyRequestSchema>;
+
+export const totpVerifyResponseSchema = z
+  .object({
+    success: z.boolean(),
+  })
+  .strict();
+
+export type TotpVerifyResponse = z.infer<typeof totpVerifyResponseSchema>;
+
+export const mfaVerifyRequestSchema = z
+  .object({
+    code: z.string(),
+    method: z.enum(['totp', 'webauthn', 'backup']),
+    challengeId: z.string().uuid().optional(),
+  })
+  .strict();
+
+export type MfaVerifyRequest = z.infer<typeof mfaVerifyRequestSchema>;
+
+export const mfaVerifyResponseSchema = z
+  .object({
+    success: z.boolean(),
+    mfaVerifiedAt: z.string().datetime(),
+    method: z.enum(['totp', 'webauthn', 'backup']),
+  })
+  .strict();
+
+export type MfaVerifyResponse = z.infer<typeof mfaVerifyResponseSchema>;
+
+export const backupCodesResponseSchema = z
+  .object({
+    codes: z.array(z.string()),
+  })
+  .strict();
+
+export type BackupCodesResponse = z.infer<typeof backupCodesResponseSchema>;
+
+export const mfaEnrollmentStatusResponseSchema = z
+  .object({
+    totpEnabled: z.boolean(),
+    webauthnEnabled: z.boolean(),
+    backupCodesRemaining: z.number(),
+  })
+  .strict();
+
+export type MfaEnrollmentStatusResponse = z.infer<typeof mfaEnrollmentStatusResponseSchema>;
+
+export const mfaDisableRequestSchema = z
+  .object({
+    method: z.enum(['totp', 'webauthn']),
+  })
+  .strict();
+
+export type MfaDisableRequest = z.infer<typeof mfaDisableRequestSchema>;

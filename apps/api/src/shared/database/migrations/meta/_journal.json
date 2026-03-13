@@ -134,6 +134,13 @@
       "when": 1773000000000,
       "tag": "0017_difficulty_classification",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1773100000000,
+      "tag": "0018_mfa_credentials_backup_codes",
+      "breakpoints": true
     }
   ]
 }

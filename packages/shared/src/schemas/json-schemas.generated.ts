@@ -2468,6 +2468,149 @@ export const webauthnCredentialJsonSchema = {
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
 
+export const totpEnrollmentRequestJsonSchema = {
+  type: 'object',
+  properties: {},
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const totpEnrollmentResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    secret: {
+      type: 'string',
+    },
+    qrCode: {
+      type: 'string',
+    },
+    otpauthUri: {
+      type: 'string',
+    },
+  },
+  required: ['secret', 'qrCode', 'otpauthUri'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const totpVerifyRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    code: {
+      type: 'string',
+      minLength: 6,
+      maxLength: 6,
+    },
+    secret: {
+      type: 'string',
+    },
+    name: {
+      type: 'string',
+    },
+  },
+  required: ['code', 'secret'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const totpVerifyResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+    },
+  },
+  required: ['success'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const mfaVerifyRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    code: {
+      type: 'string',
+    },
+    method: {
+      type: 'string',
+      enum: ['totp', 'webauthn', 'backup'],
+    },
+    challengeId: {
+      type: 'string',
+      format: 'uuid',
+    },
+  },
+  required: ['code', 'method'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const mfaVerifyResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    success: {
+      type: 'boolean',
+    },
+    mfaVerifiedAt: {
+      type: 'string',
+      format: 'date-time',
+    },
+    method: {
+      type: 'string',
+      enum: ['totp', 'webauthn', 'backup'],
+    },
+  },
+  required: ['success', 'mfaVerifiedAt', 'method'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const backupCodesResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    codes: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+  },
+  required: ['codes'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const mfaEnrollmentStatusResponseJsonSchema = {
+  type: 'object',
+  properties: {
+    totpEnabled: {
+      type: 'boolean',
+    },
+    webauthnEnabled: {
+      type: 'boolean',
+    },
+    backupCodesRemaining: {
+      type: 'number',
+    },
+  },
+  required: ['totpEnabled', 'webauthnEnabled', 'backupCodesRemaining'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
+export const mfaDisableRequestJsonSchema = {
+  type: 'object',
+  properties: {
+    method: {
+      type: 'string',
+      enum: ['totp', 'webauthn'],
+    },
+  },
+  required: ['method'],
+  additionalProperties: false,
+  $schema: 'http://json-schema.org/draft-07/schema#',
+} as const;
+
 export const passwordResetRequestJsonSchema = {
   type: 'object',
   properties: {
