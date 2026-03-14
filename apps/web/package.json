@@ -26,6 +26,12 @@
   },
   "dependencies": {
     "@the-dmz/shared": "workspace:*",
+    "idb": "^8.0.0",
+    "workbox-cacheable-response": "^7.0.0",
+    "workbox-expiration": "^7.0.0",
+    "workbox-precaching": "^7.0.0",
+    "workbox-routing": "^7.0.0",
+    "workbox-strategies": "^7.0.0",
     "zod": "^3.23.0"
   },
   "devDependencies": {
@@ -50,6 +56,7 @@
     "svelte-check": "^3.6.0",
     "typescript": "^5.5.4",
     "vite": "^6.3.0",
+    "vite-plugin-pwa": "^0.20.0",
     "vitest": "^4.0.18",
     "vitest-axe": "^0.1.0"
   }

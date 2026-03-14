@@ -10,7 +10,14 @@ export {
   isPlayer,
 } from './session';
 export type { SessionState, SessionStatus, SessionUser } from './session';
-export { connectivityStore, initialConnectivityState } from './connectivity';
+export {
+  connectivityStore,
+  initialConnectivityState,
+  initializeConnectivityListeners,
+  triggerSync,
+  setSyncCallback,
+  updatePendingEvents,
+} from './connectivity';
 export type { ConnectivityState } from './connectivity';
 export { notificationsStore } from './notifications';
 export type { NotificationItem, NotificationLevel } from './notifications';
