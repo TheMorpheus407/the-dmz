@@ -31,6 +31,18 @@
       <div class="shell-game__placeholder">
         <span class="shell-game__placeholder-label">Status</span>
       </div>
+      <button type="button" class="shell-game__drawer-toggle">Status</button>
+    </div>
+
+    <div class="shell-game__tablet-drawer-toggle">
+      <button type="button">Facility</button>
+    </div>
+
+    <div class="shell-game__action-bar">
+      <button type="button">APPROVE</button>
+      <button type="button">DENY</button>
+      <button type="button">FLAG FOR REVIEW</button>
+      <button type="button">VERIFY</button>
     </div>
   </div>
 
@@ -39,10 +51,13 @@
       Inbox
     </button>
     <button type="button" class="shell-game__mobile-tab" aria-selected="false" role="tab">
-      Document
+      Email
     </button>
     <button type="button" class="shell-game__mobile-tab" aria-selected="false" role="tab">
-      Status
+      Facility
+    </button>
+    <button type="button" class="shell-game__mobile-tab" aria-selected="false" role="tab">
+      Settings
     </button>
   </nav>
 </div>

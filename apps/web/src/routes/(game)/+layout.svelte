@@ -19,6 +19,11 @@
   import { uiStore, modalState } from '$lib/game/store/ui-store';
   import { soundStore } from '$lib/stores/sound';
   import { soundManager, SoundCategory } from '$lib/audio';
+  import {
+    createTouchPanHandler,
+    createSwipeHandler,
+    type SwipeDirection,
+  } from '$lib/utils/gestures';
 
   import type { Snippet } from 'svelte';
 
@@ -33,6 +38,7 @@
   type PanelId = 'inbox' | 'document' | 'status';
   let activePanel: PanelId = $state('document');
   let isStatusDrawerOpen = $state(false);
+  let isTabletDrawerOpen = $state(false);
   let helpVisible = $state(false);
   let crtControlsOpen = $state(false);
   let soundControlsOpen = $state(false);
@@ -144,6 +150,39 @@
     }
   }
 
+  const tabletPanelGesture = createTouchPanHandler((direction) => {
+    if (direction === 'next' && activePanel === 'inbox') {
+      activePanel = 'document';
+    } else if (direction === 'prev' && activePanel === 'document') {
+      activePanel = 'inbox';
+    }
+  }, 40);
+
+  const mobileSwipeGesture = createSwipeHandler(
+    (direction: SwipeDirection) => {
+      if (direction === 'left') {
+        handleSelectNextEmail();
+      } else if (direction === 'right') {
+        selectedEmailIndex = Math.max(selectedEmailIndex - 1, 0);
+      }
+    },
+    { minSwipeDistance: 50, maxSwipeTime: 400 },
+  );
+
+  function handleTouchStart(event: TouchEvent) {
+    tabletPanelGesture.onTouchStart(event);
+    mobileSwipeGesture.onTouchStart(event);
+  }
+
+  function handleTouchMove(event: TouchEvent) {
+    tabletPanelGesture.onTouchMove(event);
+  }
+
+  function handleTouchEnd(event: TouchEvent) {
+    tabletPanelGesture.onTouchEnd();
+    mobileSwipeGesture.onTouchEnd(event);
+  }
+
   const shortcutHandlers = $derived({
     onApprove: handleApprove,
     onDeny: handleDeny,
@@ -184,6 +223,9 @@
 <section
   class="surface surface-game crt-scanlines crt-noise crt-vignette crt-curvature"
   data-surface="game"
+  ontouchstart={handleTouchStart}
+  ontouchmove={handleTouchMove}
+  ontouchend={handleTouchEnd}
 >
   <div class="shell-game game-viewport">
     {#if $navigating}
@@ -353,6 +395,17 @@
         </Button>
       </div>
 
+      <div class="shell-game__tablet-drawer-toggle">
+        <Button
+          variant="ghost"
+          size="sm"
+          onclick={() => (isTabletDrawerOpen = true)}
+          ariaLabel="Open facility panel"
+        >
+          Facility
+        </Button>
+      </div>
+
       <div class="shell-game__action-bar">
         <Button variant="primary" size="md" onclick={handleApprove}>APPROVE</Button>
         <Button variant="danger" size="md" onclick={handleDeny}>DENY</Button>
@@ -371,6 +424,59 @@
   <Drawer bind:open={isStatusDrawerOpen} ariaLabel="Status Panel">
     <div class="shell-game__placeholder">
       <span class="shell-game__placeholder-label">Status</span>
+    </div>
+  </Drawer>
+
+  <Drawer bind:open={isTabletDrawerOpen} position="right" ariaLabel="Facility Panel">
+    <div class="shell-game__drawer-facility">
+      <div class="shell-game__drawer-facility-header">
+        <span class="shell-game__drawer-facility-title">FACILITY STATUS</span>
+        <Button variant="ghost" size="sm" onclick={() => (isTabletDrawerOpen = false)}>
+          Close
+        </Button>
+      </div>
+      <div class="shell-game__drawer-facility-content">
+        <div class="shell-game__status-section">
+          <span class="shell-game__status-label">RACKS</span>
+          <div class="shell-game__status-meter">
+            <div
+              class="shell-game__status-meter-fill"
+              style="width: {(rackUsage / rackTotal) * 100}%"
+            ></div>
+          </div>
+          <span class="shell-game__status-value">{rackUsage}/{rackTotal}</span>
+        </div>
+
+        <div class="shell-game__status-section">
+          <span class="shell-game__status-label">POWER</span>
+          <div class="shell-game__status-meter">
+            <div class="shell-game__status-meter-fill" style="width: {powerUsage}%"></div>
+          </div>
+          <span class="shell-game__status-value">{powerUsage}%</span>
+        </div>
+
+        <div class="shell-game__status-section">
+          <span class="shell-game__status-label">COOLING</span>
+          <div class="shell-game__status-meter">
+            <div class="shell-game__status-meter-fill" style="width: {coolingUsage}%"></div>
+          </div>
+          <span class="shell-game__status-value">{coolingStatus}</span>
+        </div>
+
+        <div class="shell-game__status-section">
+          <span class="shell-game__status-label">BANDWIDTH</span>
+          <div class="shell-game__status-meter">
+            <div class="shell-game__status-meter-fill" style="width: {bandwidthUsage}%"></div>
+          </div>
+          <span class="shell-game__status-value">{bandwidthUsage}%</span>
+        </div>
+
+        <div class="shell-game__status-divider">-------</div>
+
+        <div class="shell-game__status-section">
+          <span class="shell-game__status-label">ACTIVE THREATS: {activeThreats}</span>
+        </div>
+      </div>
     </div>
   </Drawer>
 
@@ -426,7 +532,7 @@
       role="tab"
       onclick={() => setActivePanel('document')}
     >
-      Document
+      Email
     </button>
     <button
       type="button"
@@ -436,7 +542,16 @@
       role="tab"
       onclick={() => setActivePanel('status')}
     >
-      Status
+      Facility
+    </button>
+    <button
+      type="button"
+      class="shell-game__mobile-tab"
+      aria-selected={false}
+      role="tab"
+      aria-label="Settings"
+    >
+      Settings
     </button>
   </nav>
 </section>
@@ -451,7 +566,7 @@
 
   .shell-game {
     display: grid;
-    grid-template-columns: 250px 1fr 220px;
+    grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr) minmax(280px, 1fr);
     grid-template-rows: auto 1fr auto auto;
     grid-template-areas:
       'header header header'
@@ -463,6 +578,7 @@
     width: 100%;
     padding: var(--space-4);
     box-sizing: border-box;
+    transition: all 300ms ease;
   }
 
   .loading-overlay {
@@ -549,6 +665,9 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    transition:
+      opacity 300ms ease,
+      transform 300ms ease;
   }
 
   .shell-game__inbox {
@@ -637,6 +756,9 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    transition:
+      opacity 300ms ease,
+      transform 300ms ease;
   }
 
   .shell-game__panel--status {
@@ -645,6 +767,9 @@
     display: flex;
     flex-direction: column;
     position: relative;
+    transition:
+      opacity 300ms ease,
+      transform 300ms ease;
   }
 
   .shell-game__status {
@@ -750,6 +875,10 @@
     right: var(--space-2);
   }
 
+  .shell-game__tablet-drawer-toggle {
+    display: none;
+  }
+
   .shell-game__placeholder {
     display: flex;
     align-items: center;
@@ -801,13 +930,15 @@
 
   @media (min-width: var(--bp-desktop-lg)) {
     .shell-game {
-      grid-template-columns: 250px 1fr 220px;
+      grid-template-columns: minmax(280px, 1fr) minmax(0, 2fr) minmax(280px, 1fr);
+      transition: all 300ms ease;
     }
   }
 
   @media (min-width: var(--bp-desktop)) and (max-width: 1439px) {
     .shell-game {
-      grid-template-columns: 250px 1fr 180px;
+      grid-template-columns: minmax(280px, 1fr) minmax(0, 1.5fr) minmax(280px, 1fr);
+      transition: all 300ms ease;
     }
   }
 
@@ -820,6 +951,7 @@
         'inbox document'
         'action action'
         'footer footer';
+      transition: all 300ms ease;
     }
 
     .shell-game__panel--inbox {
@@ -833,6 +965,10 @@
     .shell-game__panel--status {
       display: none;
     }
+
+    .shell-game__drawer-toggle {
+      display: flex;
+    }
   }
 
   @media (max-width: 767px) {
@@ -843,6 +979,7 @@
       padding: var(--space-2);
       height: auto;
       min-height: calc(100vh - 60px);
+      transition: all 300ms ease;
     }
 
     .shell-game__header {
@@ -894,6 +1031,16 @@
     }
   }
 
+  @media (min-width: var(--bp-tablet)) and (max-width: 1023px) {
+    .shell-game__tablet-drawer-toggle {
+      display: flex;
+      position: absolute;
+      right: var(--space-4);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .shell-game__mobile-tab,
     .shell-game__panel--inbox,
@@ -902,5 +1049,34 @@
     .shell-game__status-meter-fill {
       transition: none;
     }
+  }
+
+  .shell-game__drawer-facility {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .shell-game__drawer-facility-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--space-3);
+    border-bottom: var(--border-default);
+    margin-bottom: var(--space-3);
+  }
+
+  .shell-game__drawer-facility-title {
+    font-family: var(--font-terminal);
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--color-text);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .shell-game__drawer-facility-content {
+    flex: 1;
+    overflow-y: auto;
   }
 </style>
