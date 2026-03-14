@@ -1,4 +1,20 @@
-export { getDB, clearDB, getStorageUsage, MAX_IDB_STORAGE_MB, type TheDmzDB } from './idb';
+export {
+  getDB,
+  clearDB,
+  getStorageUsage,
+  resetDB,
+  isIDBAvailable,
+  MAX_IDB_STORAGE_MB,
+  MAX_EMAILS_STORAGE_MB,
+  MAX_QUEUED_DECISIONS,
+  SYNCED_DECISIONS_TO_KEEP,
+  CLEANUP_AFTER_DAYS,
+  type TheDmzDB,
+  type CachedEmail,
+  type QueuedDecision,
+  type StoredGameState,
+  type StoredSetting,
+} from './idb';
 
 export {
   saveEvent,
@@ -40,3 +56,54 @@ export {
   type DocumentType,
   type DifficultyTier,
 } from './content';
+
+export {
+  cacheEmail,
+  cacheEmails,
+  getCachedEmail,
+  getAllCachedEmails,
+  getCachedEmailsByDifficulty,
+  getCachedEmailsByScenarioId,
+  deleteCachedEmail,
+  clearCachedEmails,
+  getEmailCacheCount,
+  getEmailStorageEstimate,
+  isEmailStorageQuotaExceeded,
+  type EmailContent,
+} from './emails';
+
+export {
+  queueDecision,
+  getPendingDecisions,
+  getPendingDecisionsBySession,
+  markDecisionSynced,
+  markDecisionsSynced,
+  deleteDecision,
+  getAllDecisions,
+  getDecisionCount,
+  clearSyncedData,
+  clearOldDecisions,
+  clearAllDecisions,
+  type DecisionInput,
+} from './decisions';
+
+export {
+  saveGameState,
+  loadGameState,
+  deleteGameState,
+  getAllGameStates,
+  clearAllGameStates,
+  markGameStateSynced,
+  getUnsyncedGameStates,
+  type GameStateInput,
+} from './game-state';
+
+export {
+  saveSetting,
+  getSetting,
+  deleteSetting,
+  getAllSettings,
+  clearAllSettings,
+  getSettingUpdatedAt,
+  settingExists,
+} from './settings';
