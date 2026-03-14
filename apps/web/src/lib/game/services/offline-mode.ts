@@ -4,15 +4,18 @@ import {
   connectivityStore,
   initializeConnectivityListeners,
   updatePendingEvents,
+  setSyncCallback,
 } from '$lib/stores/connectivity';
 import { getUnsyncedEvents } from '$lib/storage/event-queue';
-import { getLatestSessionSnapshot } from '$lib/storage/session';
+import { getLatestSessionSnapshot, clearStaleSnapshots } from '$lib/storage/session';
 
 import {
   getOfflineEngine,
   initializeOfflineGame,
   type OfflineGameEngine,
 } from '../services/offline-engine';
+
+import { performFullSync } from './sync-service';
 
 import { browser } from '$app/environment';
 
@@ -42,11 +45,28 @@ function createOfflineModeStore() {
   let engine: OfflineGameEngine | null = null;
   let syncInterval: ReturnType<typeof setInterval> | null = null;
 
+  const performSync = async (): Promise<void> => {
+    const result = await performFullSync();
+
+    const unsynced = await getUnsyncedEvents();
+    updatePendingEvents(unsynced.length);
+
+    update((state) => ({
+      ...state,
+      pendingEventCount: unsynced.length,
+      lastSyncAt: result.success ? new Date().toISOString() : state.lastSyncAt,
+    }));
+  };
+
+  setSyncCallback(performSync);
+
   return {
     subscribe,
 
     async initialize(): Promise<void> {
       if (!browser) return;
+
+      await clearStaleSnapshots();
 
       await initializeConnectivityListeners();
 

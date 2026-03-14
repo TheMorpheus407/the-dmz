@@ -1,9 +1,11 @@
 import type { EmailDifficulty } from '@the-dmz/shared/game';
 import { generateId } from '$lib/utils/id';
 import { getLatestSessionSnapshot, saveSessionSnapshot } from '$lib/storage/session';
-import { saveEvent, getUnsyncedEvents, markEventsSynced } from '$lib/storage/event-queue';
+import { saveEvent } from '$lib/storage/event-queue';
 
 import { getRandomOfflineEmails, type OfflineEmail } from '../data/offline-emails';
+
+import { performFullSync, type SyncResult } from './sync-service';
 
 export interface OfflineGameState {
   sessionId: string;
@@ -236,20 +238,12 @@ export class OfflineGameEngine {
   }
 
   async syncWithServer(): Promise<{ success: boolean; syncedEvents: number }> {
-    const unsyncedEvents = await getUnsyncedEvents();
+    const syncResult: SyncResult = await performFullSync();
 
-    if (unsyncedEvents.length === 0) {
-      return { success: true, syncedEvents: 0 };
-    }
-
-    try {
-      const eventIds = unsyncedEvents.map((e) => e.id);
-      await markEventsSynced(eventIds);
-
-      return { success: true, syncedEvents: unsyncedEvents.length };
-    } catch {
-      return { success: false, syncedEvents: 0 };
-    }
+    return {
+      success: syncResult.success,
+      syncedEvents: syncResult.syncedEvents,
+    };
   }
 
   isReady(): boolean {

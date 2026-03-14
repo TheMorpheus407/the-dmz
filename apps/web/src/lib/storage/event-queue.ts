@@ -2,6 +2,8 @@ import { generateId } from '$lib/utils/id';
 
 import { getDB } from './idb';
 
+export const MAX_QUEUE_SIZE = 100;
+
 export interface QueuedEvent {
   id: string;
   type: string;
@@ -13,7 +15,30 @@ export interface QueuedEvent {
 
 let clientSequenceId = 0;
 
+async function enforceQueueLimit(): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction('events', 'readwrite');
+  const index = tx.store.index('by-synced');
+  const unsyncedEvents = await index.getAll(0);
+
+  if (unsyncedEvents.length >= MAX_QUEUE_SIZE) {
+    const eventsToRemove = unsyncedEvents
+      .sort((a, b) => a.clientSequenceId - b.clientSequenceId)
+      .slice(0, unsyncedEvents.length - MAX_QUEUE_SIZE + 1);
+
+    console.warn(`[EventQueue] Queue overflow: dropping ${eventsToRemove.length} oldest events`);
+
+    for (const event of eventsToRemove) {
+      await tx.store.delete(event.id);
+    }
+  }
+
+  await tx.done;
+}
+
 export async function saveEvent(type: string, payload: unknown): Promise<QueuedEvent> {
+  await enforceQueueLimit();
+
   const db = await getDB();
   const event: QueuedEvent = {
     id: generateId(),
