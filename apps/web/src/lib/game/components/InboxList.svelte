@@ -2,6 +2,12 @@
   import { SvelteMap } from 'svelte/reactivity';
 
   import type { EmailInstance, EmailState } from '@the-dmz/shared';
+  import {
+    createSwipeHandler,
+    createLongPressHandler,
+    triggerHaptic,
+    type SwipeDirection,
+  } from '$lib/utils';
 
   import {
     URGENCY_COLORS,
@@ -30,6 +36,8 @@
     filterBy?: FilterOption;
     onSelectEmail?: (emailId: string) => void;
     onFlagEmail?: (emailId: string) => void;
+    onApproveEmail?: (emailId: string) => void;
+    onDenyEmail?: (emailId: string) => void;
     onNavigateCategory?: (category: EmailCategory) => void;
   }
 
@@ -42,8 +50,64 @@
     filterBy = 'all',
     onSelectEmail,
     onFlagEmail,
+    onApproveEmail,
+    onDenyEmail,
     onNavigateCategory,
   }: Props = $props();
+
+  let swipeRevealedEmailId = $state<string | null>(null);
+
+  const itemSwipeHandlers = new SvelteMap<string, ReturnType<typeof createSwipeHandler>>();
+  const itemLongPressHandlers = new SvelteMap<string, ReturnType<typeof createLongPressHandler>>();
+
+  function getItemSwipeHandler(emailId: string) {
+    if (!itemSwipeHandlers.has(emailId)) {
+      itemSwipeHandlers.set(
+        emailId,
+        createSwipeHandler(
+          (direction: SwipeDirection) => {
+            if (direction === 'right') {
+              triggerHaptic('medium');
+              swipeRevealedEmailId = emailId;
+            }
+          },
+          { minSwipeDistance: 30, maxSwipeTime: 400 },
+        ),
+      );
+    }
+    return itemSwipeHandlers.get(emailId)!;
+  }
+
+  function getItemLongPressHandler(emailId: string) {
+    if (!itemLongPressHandlers.has(emailId)) {
+      itemLongPressHandlers.set(
+        emailId,
+        createLongPressHandler({
+          duration: 500,
+          onLongPress: () => {
+            triggerHaptic('heavy');
+          },
+        }),
+      );
+    }
+    return itemLongPressHandlers.get(emailId)!;
+  }
+
+  function handleQuickAction(action: 'approve' | 'deny' | 'flag', emailId: string) {
+    triggerHaptic('medium');
+    if (action === 'approve') {
+      onApproveEmail?.(emailId);
+    } else if (action === 'deny') {
+      onDenyEmail?.(emailId);
+    } else if (action === 'flag') {
+      onFlagEmail?.(emailId);
+    }
+    swipeRevealedEmailId = null;
+  }
+
+  function closeSwipeReveal() {
+    swipeRevealedEmailId = null;
+  }
 
   const urgencyIcons: Record<UrgencyLevel, string> = {
     low: '⏱',
@@ -204,16 +268,72 @@
               {@const email = item.email}
               {@const urgency = item.urgency}
               {@const age = item.age}
+              {@const isSwipeRevealed = swipeRevealedEmailId === email.emailId}
               <li
                 class="email-item"
                 class:selected={isSelected(email.emailId)}
                 class:focused={isFocused(email.emailId)}
+                class:swipe-revealed={isSwipeRevealed}
                 role="option"
                 aria-selected={isSelected(email.emailId)}
                 style="--urgency-color: {URGENCY_COLORS[urgency]}"
-                onclick={() => onSelectEmail?.(email.emailId)}
+                onclick={() => {
+                  closeSwipeReveal();
+                  onSelectEmail?.(email.emailId);
+                }}
                 ondblclick={() => onSelectEmail?.(email.emailId)}
+                ontouchstart={(e) => {
+                  const handler = getItemSwipeHandler(email.emailId);
+                  handler.onTouchStart(e);
+                  const longPressHandler = getItemLongPressHandler(email.emailId);
+                  longPressHandler.onTouchStart(e);
+                }}
+                ontouchmove={(e) => {
+                  const handler = getItemSwipeHandler(email.emailId);
+                  handler.onTouchMove(e);
+                }}
+                ontouchend={(e) => {
+                  const handler = getItemSwipeHandler(email.emailId);
+                  handler.onTouchEnd(e);
+                  const longPressHandler = getItemLongPressHandler(email.emailId);
+                  longPressHandler.onTouchEnd(e);
+                }}
               >
+                <div class="swipe-reveal-actions">
+                  <button
+                    type="button"
+                    class="action-btn action-btn--approve"
+                    aria-label="Approve email"
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      handleQuickAction('approve', email.emailId);
+                    }}
+                  >
+                    ✓
+                  </button>
+                  <button
+                    type="button"
+                    class="action-btn action-btn--deny"
+                    aria-label="Deny email"
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      handleQuickAction('deny', email.emailId);
+                    }}
+                  >
+                    ✗
+                  </button>
+                  <button
+                    type="button"
+                    class="action-btn action-btn--flag"
+                    aria-label="Flag email"
+                    onclick={(e) => {
+                      e.stopPropagation();
+                      handleQuickAction('flag', email.emailId);
+                    }}
+                  >
+                    ⚑
+                  </button>
+                </div>
                 <div class="urgency-border" aria-hidden="true"></div>
                 <div class="email-content">
                   <div class="email-header">
@@ -450,5 +570,85 @@
 
   .empty-message {
     font-size: var(--text-sm);
+  }
+
+  .email-item {
+    touch-action: pan-y;
+    min-height: 44px;
+  }
+
+  .email-item.swipe-revealed .email-content {
+    transform: translateX(80px);
+  }
+
+  .swipe-reveal-actions {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
+    background-color: var(--color-bg-tertiary);
+    transform: translateX(-100%);
+    transition: transform 200ms ease-out;
+    z-index: 1;
+  }
+
+  .email-item.swipe-revealed .swipe-reveal-actions {
+    transform: translateX(0);
+  }
+
+  .action-btn {
+    width: 44px;
+    height: 44px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-lg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      transform 100ms ease,
+      opacity 100ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .action-btn:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+
+  .action-btn--approve {
+    background-color: var(--color-safe);
+    color: var(--color-bg-primary);
+  }
+
+  .action-btn--deny {
+    background-color: var(--color-danger);
+    color: var(--color-bg-primary);
+  }
+
+  .action-btn--flag {
+    background-color: var(--color-warning);
+    color: var(--color-bg-primary);
+  }
+
+  @media (pointer: coarse) {
+    .email-item {
+      padding: var(--space-1) 0;
+    }
+
+    .sender-initials {
+      width: 32px;
+      height: 32px;
+      font-size: var(--text-sm);
+    }
+
+    .email-content {
+      padding: var(--space-2) var(--space-3);
+    }
   }
 </style>

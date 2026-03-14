@@ -22,6 +22,8 @@ export function createSwipeHandler(
 ) {
   const { minSwipeDistance, maxSwipeTime } = { ...DEFAULT_CONFIG, ...config };
   let gestureState: GestureState | null = null;
+  let currentX: number | null = null;
+  let currentY: number | null = null;
 
   return {
     onTouchStart(event: TouchEvent) {
@@ -32,6 +34,16 @@ export function createSwipeHandler(
         startY: touch.clientY,
         startTime: Date.now(),
       };
+      currentX = touch.clientX;
+      currentY = touch.clientY;
+    },
+
+    onTouchMove(event: TouchEvent) {
+      if (!gestureState) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      currentX = touch.clientX;
+      currentY = touch.clientY;
     },
 
     onTouchEnd(event: TouchEvent) {
@@ -58,10 +70,23 @@ export function createSwipeHandler(
       }
 
       gestureState = null;
+      currentX = null;
+      currentY = null;
+    },
+
+    getCurrentPosition() {
+      return {
+        x: currentX,
+        y: currentY,
+        startX: gestureState?.startX,
+        startY: gestureState?.startY,
+      };
     },
 
     reset() {
       gestureState = null;
+      currentX = null;
+      currentY = null;
     },
   };
 }
@@ -105,4 +130,147 @@ export function createTouchPanHandler(
       currentX = null;
     },
   };
+}
+
+export interface PinchZoomConfig {
+  minScale: number;
+  maxScale: number;
+  onZoomChange?: (scale: number) => void;
+}
+
+const DEFAULT_PINCH_CONFIG: PinchZoomConfig = {
+  minScale: 0.75,
+  maxScale: 2.0,
+};
+
+export function createPinchZoomHandler(config: Partial<PinchZoomConfig> = {}) {
+  const { minScale, maxScale, onZoomChange } = { ...DEFAULT_PINCH_CONFIG, ...config };
+  let initialDistance: number | null = null;
+  let initialScale: number = 1;
+  let currentScale: number = 1;
+
+  function getDistance(touch1: Touch, touch2: Touch): number {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  return {
+    onTouchStart(event: TouchEvent) {
+      if (event.touches.length === 2) {
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        if (touch1 && touch2) {
+          initialDistance = getDistance(touch1, touch2);
+          initialScale = currentScale;
+        }
+      }
+    },
+
+    onTouchMove(event: TouchEvent) {
+      if (event.touches.length === 2 && initialDistance !== null) {
+        event.preventDefault();
+        const touch1 = event.touches[0];
+        const touch2 = event.touches[1];
+        if (touch1 && touch2) {
+          const currentDistance = getDistance(touch1, touch2);
+          const scale = (currentDistance / initialDistance) * initialScale;
+          currentScale = Math.min(Math.max(scale, minScale), maxScale);
+          onZoomChange?.(currentScale);
+        }
+      }
+    },
+
+    onTouchEnd() {
+      initialDistance = null;
+    },
+
+    getScale(): number {
+      return currentScale;
+    },
+
+    reset() {
+      initialDistance = null;
+      currentScale = 1;
+      initialScale = 1;
+    },
+  };
+}
+
+export interface LongPressConfig {
+  duration: number;
+  onLongPress: () => void;
+  onPressStart?: () => void;
+  onPressEnd?: () => void;
+}
+
+export function createLongPressHandler(config: LongPressConfig) {
+  const { duration, onLongPress, onPressStart, onPressEnd } = config;
+  let pressTimer: ReturnType<typeof setTimeout> | null = null;
+  let isPressed: boolean = false;
+
+  return {
+    onTouchStart(_event: TouchEvent) {
+      isPressed = true;
+      onPressStart?.();
+      pressTimer = setTimeout(() => {
+        if (isPressed) {
+          onLongPress();
+          isPressed = false;
+          onPressEnd?.();
+        }
+      }, duration);
+    },
+
+    onTouchEnd(_event: TouchEvent) {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+      if (isPressed) {
+        onPressEnd?.();
+      }
+      isPressed = false;
+    },
+
+    onTouchMove() {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+      isPressed = false;
+      onPressEnd?.();
+    },
+
+    reset() {
+      if (pressTimer) {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+      }
+      isPressed = false;
+    },
+  };
+}
+
+export type HapticType = 'light' | 'medium' | 'heavy' | 'error';
+
+export function triggerHaptic(type: HapticType): boolean {
+  if (typeof window === 'undefined' || !navigator.vibrate) {
+    return false;
+  }
+
+  const patterns: Record<HapticType, number | number[]> = {
+    light: 10,
+    medium: 20,
+    heavy: 40,
+    error: [50, 30, 50],
+  };
+
+  navigator.vibrate(patterns[type]);
+  return true;
+}
+
+export function isHapticSupported(): boolean {
+  if (typeof window === 'undefined') return false;
+  return typeof navigator.vibrate === 'function';
 }

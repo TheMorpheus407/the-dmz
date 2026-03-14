@@ -2,6 +2,7 @@
   /* eslint-disable @typescript-eslint/no-explicit-any */
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
   import Button from '$lib/ui/components/Button.svelte';
+  import { createPinchZoomHandler, triggerHaptic } from '$lib/utils';
 
   import EmailViewer from './EmailViewer.svelte';
   import PhishingAnalysisWorksheet from './PhishingAnalysisWorksheet.svelte';
@@ -69,6 +70,32 @@
     };
     return colors[classification];
   }
+
+  let currentZoom = $state(1);
+
+  const pinchZoomHandler = createPinchZoomHandler({
+    minScale: 0.75,
+    maxScale: 2.0,
+    onZoomChange: (scale) => {
+      currentZoom = scale;
+    },
+  });
+
+  function handleResetZoom() {
+    triggerHaptic('light');
+    currentZoom = 1;
+    pinchZoomHandler.reset();
+  }
+
+  function handleZoomIn() {
+    triggerHaptic('light');
+    currentZoom = Math.min(currentZoom + 0.25, 2.0);
+  }
+
+  function handleZoomOut() {
+    triggerHaptic('light');
+    currentZoom = Math.max(currentZoom - 0.25, 0.75);
+  }
 </script>
 
 <div class="document-viewer" role="region" aria-label={getDocumentTypeLabel(documentType)}>
@@ -128,9 +155,44 @@
         {#if onClose}
           <Button variant="ghost" size="sm" onclick={onClose} ariaLabel="Close document">✕</Button>
         {/if}
+        <div class="document-viewer__zoom-controls">
+          <button
+            type="button"
+            class="zoom-btn"
+            onclick={handleZoomOut}
+            aria-label="Zoom out"
+            disabled={currentZoom <= 0.75}
+          >
+            −
+          </button>
+          <span class="zoom-level">{Math.round(currentZoom * 100)}%</span>
+          <button
+            type="button"
+            class="zoom-btn"
+            onclick={handleZoomIn}
+            aria-label="Zoom in"
+            disabled={currentZoom >= 2.0}
+          >
+            +
+          </button>
+          <button
+            type="button"
+            class="zoom-btn zoom-btn--reset"
+            onclick={handleResetZoom}
+            aria-label="Reset zoom"
+          >
+            ↺
+          </button>
+        </div>
       </header>
 
-      <div class="document-viewer__body">
+      <div
+        class="document-viewer__body"
+        style="transform: scale({currentZoom}); transform-origin: top center;"
+        ontouchstart={(e) => pinchZoomHandler.onTouchStart(e)}
+        ontouchmove={(e) => pinchZoomHandler.onTouchMove(e)}
+        ontouchend={() => pinchZoomHandler.onTouchEnd()}
+      >
         {#if documentType === 'EMAIL'}
           <EmailViewer email={documentData.body['email'] as any} />
         {:else if documentType === 'PAW'}
@@ -377,5 +439,56 @@
 
   .document-viewer__custody {
     font-family: var(--font-terminal);
+  }
+
+  .document-viewer__zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-left: var(--space-2);
+  }
+
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--color-phosphor-green-dark);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-phosphor-green);
+    font-size: var(--text-lg);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 100ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .zoom-btn:hover:not(:disabled) {
+    background-color: var(--color-bg-hover);
+  }
+
+  .zoom-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .zoom-btn--reset {
+    font-size: var(--text-md);
+  }
+
+  .zoom-level {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    min-width: 40px;
+    text-align: center;
+    font-family: var(--font-terminal);
+  }
+
+  @media (pointer: coarse) {
+    .zoom-btn {
+      width: 44px;
+      height: 44px;
+    }
   }
 </style>

@@ -152,6 +152,9 @@
           {currentDay}
           {selectedEmailId}
           onSelectEmail={onSelectEmail ?? (() => {})}
+          onApproveEmail={onApprove ?? (() => {})}
+          onDenyEmail={onDeny ?? (() => {})}
+          onFlagEmail={onFlag ?? (() => {})}
         />
       </div>
     {/if}
