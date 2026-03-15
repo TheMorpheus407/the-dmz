@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { themeStore, getRouteDefaultTheme, STORAGE_KEY } from '$lib/stores/theme';
-  import { settingsStore } from '$lib/stores/settings';
+  import { themeStore, STORAGE_KEY } from '$lib/stores/theme';
+  import { settingsStore, effectiveVirtualization } from '$lib/stores/settings';
   import Drawer from '$lib/ui/components/Drawer.svelte';
   import Button from '$lib/ui/components/Button.svelte';
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
@@ -25,10 +25,19 @@
     createSwipeHandler,
     type SwipeDirection,
   } from '$lib/utils/gestures';
+  import {
+    detectDevicePerformance,
+    getRecommendedEffectsForTier,
+    getRecommendedEffectIntensityForTier,
+  } from '$lib/performance/device-detector';
+  import { initPerformanceMonitoring } from '$lib/performance/performance-monitor';
+  import { lazyImport } from '$lib/performance/lazy-loader';
+  import VirtualizedList from '$lib/ui/components/VirtualizedList.svelte';
 
   import type { Snippet } from 'svelte';
 
   import { navigating } from '$app/stores';
+  import { browser } from '$app/environment';
 
   interface Props {
     children?: Snippet;
@@ -59,6 +68,109 @@
   const coolingUsage = 52;
   const bandwidthUsage = 52;
   const activeThreats = 2;
+
+  interface InboxEmail {
+    id: string | number;
+    data: {
+      subject: string;
+      priority: 'high' | 'normal';
+      section: 'new' | 'pending' | 'archived' | 'flagged';
+    };
+  }
+
+  const generateSampleEmails = (): InboxEmail[] => {
+    const emails: InboxEmail[] = [];
+
+    const newEmails = [
+      { subject: 'Emergency Data Recovery', priority: 'high' as const },
+      { subject: 'Storage Lease Renewal', priority: 'high' as const },
+      { subject: 'Verification Request', priority: 'high' as const },
+    ];
+
+    const pendingEmails = [
+      { subject: 'Faculty Database Request', priority: 'normal' as const },
+      { subject: 'Research Archive Access', priority: 'normal' as const },
+      { subject: 'Network Upgrade Proposal', priority: 'normal' as const },
+      { subject: 'Backup System Maintenance', priority: 'normal' as const },
+    ];
+
+    const archivedEmails = [
+      { subject: 'Q4 Financial Report', priority: 'normal' as const },
+      { subject: 'Staff Meeting Minutes', priority: 'normal' as const },
+      { subject: 'Security Audit Results', priority: 'normal' as const },
+      { subject: 'Vendor Contract Renewal', priority: 'normal' as const },
+      { subject: 'System Update Notification', priority: 'normal' as const },
+      { subject: 'Customer Support Stats', priority: 'normal' as const },
+      { subject: 'Hardware Inventory Report', priority: 'normal' as const },
+      { subject: 'Software License Renewal', priority: 'normal' as const },
+      { subject: 'Training Schedule', priority: 'normal' as const },
+      { subject: 'Emergency Contact List', priority: 'normal' as const },
+      { subject: 'Data Retention Policy', priority: 'normal' as const },
+      { subject: 'Incident Response Plan', priority: 'normal' as const },
+    ];
+
+    const flaggedEmails = [{ subject: 'Suspicious Login Alert', priority: 'high' as const }];
+
+    let id = 0;
+    newEmails.forEach((email) => {
+      emails.push({ id: id++, data: { ...email, section: 'new' } });
+    });
+    pendingEmails.forEach((email) => {
+      emails.push({ id: id++, data: { ...email, section: 'pending' } });
+    });
+    archivedEmails.forEach((email) => {
+      emails.push({ id: id++, data: { ...email, section: 'archived' } });
+    });
+    flaggedEmails.forEach((email) => {
+      emails.push({ id: id++, data: { ...email, section: 'flagged' } });
+    });
+
+    for (let i = emails.length; i < 150; i++) {
+      const sections: InboxEmail['data']['section'][] = ['new', 'pending', 'archived', 'flagged'];
+      const sectionIndex = Math.floor(Math.random() * sections.length);
+      const section: InboxEmail['data']['section'] = sections[sectionIndex] ?? 'pending';
+      const priority = Math.random() > 0.7 ? ('high' as const) : ('normal' as const);
+      emails.push({
+        id: i,
+        data: {
+          subject: `Automated Report #${i - 20}`,
+          priority,
+          section,
+        },
+      });
+    }
+
+    return emails;
+  };
+
+  const sampleEmails = generateSampleEmails();
+  const virtualizationEnabled = $derived($effectiveVirtualization);
+
+  let crtEffectsLoaded = $state(false);
+  let analyticsLoaded = $state(false);
+
+  async function loadCrtEffects() {
+    if (crtEffectsLoaded || !browser) return;
+    try {
+      await lazyImport(() => import('$lib/effects/crt-effects'));
+      crtEffectsLoaded = true;
+    } catch (e) {
+      console.warn('Failed to load CRT effects:', e);
+    }
+  }
+
+  async function loadAnalytics() {
+    if (analyticsLoaded || !browser) return;
+    try {
+      const analytics = await lazyImport<{ initAnalytics: (config: { debug: boolean }) => void }>(
+        () => import('$lib/analytics/index'),
+      );
+      analytics.initAnalytics({ debug: true });
+      analyticsLoaded = true;
+    } catch (e) {
+      console.warn('Failed to load analytics:', e);
+    }
+  }
 
   function setActivePanel(panel: PanelId) {
     activePanel = panel;
@@ -202,9 +314,12 @@
   });
 
   onMount(() => {
+    initPerformanceMonitoring();
     themeStore.init();
     soundStore.init();
     settingsStore.init();
+
+    void loadAnalytics();
 
     const systemPrefs = themeStore.getSystemPreferences();
 
@@ -217,7 +332,23 @@
         vignette: false,
       });
     } else if (!localStorage.getItem(STORAGE_KEY)) {
-      themeStore.setTheme(getRouteDefaultTheme('game'));
+      const perfInfo = detectDevicePerformance();
+      settingsStore.updatePerformance({ tier: perfInfo.tier });
+
+      const recommendedEffects = getRecommendedEffectsForTier(perfInfo.tier);
+      const recommendedIntensity = getRecommendedEffectIntensityForTier(perfInfo.tier);
+
+      themeStore.setEffects(recommendedEffects);
+      themeStore.setIntensity('scanlines', recommendedIntensity.scanlines);
+      themeStore.setIntensity('curvature', recommendedIntensity.curvature);
+      themeStore.setIntensity('glow', recommendedIntensity.glow);
+      themeStore.setIntensity('noise', recommendedIntensity.noise);
+      themeStore.setIntensity('vignette', recommendedIntensity.vignette);
+      themeStore.setIntensity('flicker', recommendedIntensity.flicker);
+
+      if (perfInfo.tier === 'low') {
+        settingsStore.updatePerformance({ reduceAnimations: true });
+      }
     }
 
     let prevColorBlindMode = 'none';
@@ -273,7 +404,14 @@
           <span class="shell-game__header-funds">
             FUNDS: {funds.toLocaleString()} CR [+{fundsChange}]
           </span>
-          <Button variant="ghost" size="sm" onclick={() => (crtControlsOpen = true)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onclick={() => {
+              void loadCrtEffects();
+              crtControlsOpen = true;
+            }}
+          >
             Effects
           </Button>
           <Button variant="ghost" size="sm" onclick={() => (soundControlsOpen = true)}>
@@ -286,59 +424,93 @@
         <div class="shell-game__inbox">
           <div class="shell-game__inbox-header">
             <span class="shell-game__inbox-title">INBOX</span>
+            {#if virtualizationEnabled}
+              <span class="shell-game__inbox-badge">[Virtualized]</span>
+            {/if}
           </div>
 
-          <div class="shell-game__inbox-section">
-            <div class="shell-game__inbox-section-header">
-              <span class="shell-game__inbox-section-label">NEW</span>
-              <span class="shell-game__inbox-section-count">(3)</span>
+          {#if virtualizationEnabled}
+            <div class="shell-game__inbox-virtual">
+              <VirtualizedList
+                items={sampleEmails as Array<{ id: string | number; data: unknown }>}
+                itemHeight={32}
+                containerHeight={500}
+                overscan={5}
+              >
+                {#snippet renderItem({
+                  item,
+                }: {
+                  item: { id: string | number; data: unknown };
+                  index: number;
+                })}
+                  <div
+                    class="shell-game__inbox-item"
+                    class:shell-game__inbox-item--unread={(item.data as InboxEmail['data'])
+                      .priority === 'high'}
+                  >
+                    {#if (item.data as InboxEmail['data']).priority === 'high'}
+                      <span class="shell-game__inbox-item-priority">[!]</span>
+                    {/if}
+                    <span class="shell-game__inbox-item-subject"
+                      >{(item.data as InboxEmail['data']).subject}</span
+                    >
+                  </div>
+                {/snippet}
+              </VirtualizedList>
             </div>
-            <div class="shell-game__inbox-item shell-game__inbox-item--unread">
-              <span class="shell-game__inbox-item-priority">[!]</span>
-              <span class="shell-game__inbox-item-subject">Emergency Data Recovery</span>
+          {:else}
+            <div class="shell-game__inbox-section">
+              <div class="shell-game__inbox-section-header">
+                <span class="shell-game__inbox-section-label">NEW</span>
+                <span class="shell-game__inbox-section-count">(3)</span>
+              </div>
+              <div class="shell-game__inbox-item shell-game__inbox-item--unread">
+                <span class="shell-game__inbox-item-priority">[!]</span>
+                <span class="shell-game__inbox-item-subject">Emergency Data Recovery</span>
+              </div>
+              <div class="shell-game__inbox-item shell-game__inbox-item--unread">
+                <span class="shell-game__inbox-item-priority">[!]</span>
+                <span class="shell-game__inbox-item-subject">Storage Lease Renewal</span>
+              </div>
+              <div class="shell-game__inbox-item shell-game__inbox-item--unread">
+                <span class="shell-game__inbox-item-priority">[!]</span>
+                <span class="shell-game__inbox-item-subject">Verification Request</span>
+              </div>
             </div>
-            <div class="shell-game__inbox-item shell-game__inbox-item--unread">
-              <span class="shell-game__inbox-item-priority">[!]</span>
-              <span class="shell-game__inbox-item-subject">Storage Lease Renewal</span>
-            </div>
-            <div class="shell-game__inbox-item shell-game__inbox-item--unread">
-              <span class="shell-game__inbox-item-priority">[!]</span>
-              <span class="shell-game__inbox-item-subject">Verification Request</span>
-            </div>
-          </div>
 
-          <div class="shell-game__inbox-divider">-----</div>
+            <div class="shell-game__inbox-divider">-----</div>
 
-          <div class="shell-game__inbox-section">
-            <div class="shell-game__inbox-section-header">
-              <span class="shell-game__inbox-section-label">PENDING</span>
-              <span class="shell-game__inbox-section-count">(4)</span>
+            <div class="shell-game__inbox-section">
+              <div class="shell-game__inbox-section-header">
+                <span class="shell-game__inbox-section-label">PENDING</span>
+                <span class="shell-game__inbox-section-count">(4)</span>
+              </div>
+              <div class="shell-game__inbox-item">
+                <span class="shell-game__inbox-item-subject">Faculty Database Request</span>
+              </div>
+              <div class="shell-game__inbox-item">
+                <span class="shell-game__inbox-item-subject">Research Archive Access</span>
+              </div>
             </div>
-            <div class="shell-game__inbox-item">
-              <span class="shell-game__inbox-item-subject">Faculty Database Request</span>
-            </div>
-            <div class="shell-game__inbox-item">
-              <span class="shell-game__inbox-item-subject">Research Archive Access</span>
-            </div>
-          </div>
 
-          <div class="shell-game__inbox-divider">-----</div>
+            <div class="shell-game__inbox-divider">-----</div>
 
-          <div class="shell-game__inbox-section">
-            <div class="shell-game__inbox-section-header">
-              <span class="shell-game__inbox-section-label">ARCHIVED</span>
-              <span class="shell-game__inbox-section-count">(12)</span>
+            <div class="shell-game__inbox-section">
+              <div class="shell-game__inbox-section-header">
+                <span class="shell-game__inbox-section-label">ARCHIVED</span>
+                <span class="shell-game__inbox-section-count">(12)</span>
+              </div>
             </div>
-          </div>
 
-          <div class="shell-game__inbox-divider">-----</div>
+            <div class="shell-game__inbox-divider">-----</div>
 
-          <div class="shell-game__inbox-section">
-            <div class="shell-game__inbox-section-header">
-              <span class="shell-game__inbox-section-label">FLAGGED</span>
-              <span class="shell-game__inbox-section-count">(1)</span>
+            <div class="shell-game__inbox-section">
+              <div class="shell-game__inbox-section-header">
+                <span class="shell-game__inbox-section-label">FLAGGED</span>
+                <span class="shell-game__inbox-section-count">(1)</span>
+              </div>
             </div>
-          </div>
+          {/if}
         </div>
       </div>
 
@@ -707,6 +879,17 @@
     color: var(--color-text);
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+
+  .shell-game__inbox-badge {
+    font-size: var(--text-xs);
+    color: var(--color-accent);
+    margin-left: var(--space-2);
+  }
+
+  .shell-game__inbox-virtual {
+    flex: 1;
+    overflow: hidden;
   }
 
   .shell-game__inbox-section {

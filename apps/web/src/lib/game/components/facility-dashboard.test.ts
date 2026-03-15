@@ -362,7 +362,7 @@ describe('ClientList', () => {
     );
 
     const { container } = render(ClientList, {
-      props: { clients },
+      props: { clients, useVirtualization: false },
     });
 
     expect(container.textContent).toContain('Page 1 of 2');

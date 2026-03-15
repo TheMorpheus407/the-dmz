@@ -3,4 +3,7 @@ export {
   triggerBreachFlicker,
   triggerThreatEscalationFlicker,
   clearFlicker,
+  triggerGlitch,
+  triggerMorpheusGlitch,
+  clearGlitch,
 } from './crt-effects';

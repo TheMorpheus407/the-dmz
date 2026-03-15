@@ -1,14 +1,37 @@
 <script lang="ts">
   import { Button, Badge } from '$lib/ui';
   import type { ClientLease } from '@the-dmz/shared/types';
+  import VirtualizedList from '$lib/ui/components/VirtualizedList.svelte';
+  import { effectiveVirtualization } from '$lib/stores/settings';
 
   interface Props {
     clients: ClientLease[];
     pageSize?: number;
+    useVirtualization?: boolean;
     onviewclient?: (clientId: string) => void;
   }
 
-  const { clients = [], pageSize = 6, onviewclient = () => {} }: Props = $props();
+  const {
+    clients = [],
+    pageSize = 6,
+    useVirtualization: propUseVirtualization,
+    onviewclient = () => {},
+  }: Props = $props();
+
+  const storeVirtualizationEnabled = $derived($effectiveVirtualization);
+  const virtualizationEnabled = $derived(propUseVirtualization ?? storeVirtualizationEnabled);
+
+  interface VirtualClientItem {
+    id: string;
+    data: ClientLease;
+  }
+
+  const virtualClients: VirtualClientItem[] = $derived(
+    clients.map((client) => ({
+      id: client.clientId,
+      data: client,
+    })),
+  );
 
   let currentPage = $state(1);
   const totalPages = $derived(Math.ceil(clients.length / pageSize) || 1);
@@ -55,6 +78,68 @@
   {#if clients.length === 0}
     <div class="client-list__empty">
       <span class="client-list__empty-text">No active clients</span>
+    </div>
+  {:else if virtualizationEnabled}
+    <div class="client-list__virtual">
+      <VirtualizedList
+        items={virtualClients as Array<{ id: string | number; data: unknown }>}
+        itemHeight={120}
+        containerHeight={400}
+        overscan={3}
+      >
+        {#snippet renderItem({
+          item,
+        }: {
+          item: { id: string | number; data: unknown };
+          index: number;
+        })}
+          {@const client = item.data as ClientLease}
+          <div class="client-card">
+            <div class="client-card__header">
+              <span class="client-card__name">{client.clientName}</span>
+              <Badge
+                variant={getLeaseStatus(getDaysRemaining(client.leaseEndDay, 1)) === 'active'
+                  ? 'success'
+                  : getLeaseStatus(getDaysRemaining(client.leaseEndDay, 1)) === 'expiring'
+                    ? 'warning'
+                    : 'danger'}
+                size="sm"
+              >
+                {getLeaseStatus(getDaysRemaining(client.leaseEndDay, 1)) === 'active'
+                  ? 'ACTIVE'
+                  : getLeaseStatus(getDaysRemaining(client.leaseEndDay, 1)) === 'expiring'
+                    ? 'EXPIRING'
+                    : 'EXPIRED'}
+              </Badge>
+            </div>
+            <div class="client-card__details">
+              <div class="client-card__detail">
+                <span class="client-card__label">Storage:</span>
+                <span class="client-card__value">{formatStorage(client.rackUnitsU)}</span>
+              </div>
+              <div class="client-card__detail">
+                <span class="client-card__label">Contract:</span>
+                <span class="client-card__value">
+                  {#if client.leaseEndDay === null}
+                    ∞ days
+                  {:else}
+                    {getDaysRemaining(client.leaseEndDay, 1)} days
+                  {/if}
+                </span>
+              </div>
+              <div class="client-card__detail">
+                <span class="client-card__label">Rate:</span>
+                <span class="client-card__value">₵{client.dailyRate}/day</span>
+              </div>
+            </div>
+            <div class="client-card__actions">
+              <Button size="sm" variant="ghost" onclick={() => onviewclient?.(client.clientId)}>
+                View Details
+              </Button>
+            </div>
+          </div>
+        {/snippet}
+      </VirtualizedList>
     </div>
   {:else}
     <div class="client-list__grid">
@@ -174,6 +259,11 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: var(--space-3);
+  }
+
+  .client-list__virtual {
+    flex: 1;
+    overflow: hidden;
   }
 
   .client-card {

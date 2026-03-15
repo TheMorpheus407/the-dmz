@@ -20,6 +20,7 @@
 
 <style>
   .panel {
+    contain: layout style;
     background-color: var(--color-surface);
     border: var(--border-default);
     border-radius: var(--radius-md);

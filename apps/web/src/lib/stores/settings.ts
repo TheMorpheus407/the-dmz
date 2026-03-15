@@ -7,6 +7,7 @@ export type ColorBlindMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopi
 export type FocusIndicatorStyle = 'subtle' | 'strong';
 export type DifficultyLevel = 'tutorial' | 'easy' | 'normal' | 'hard';
 export type PrivacyMode = 'public' | 'friends' | 'private';
+export type PerformanceTier = 'low' | 'medium' | 'high';
 
 export interface DisplaySettings {
   theme: ThemeId;
@@ -74,12 +75,21 @@ export interface AccountSettings {
   privacyMode: PrivacyMode;
 }
 
+export interface PerformanceSettings {
+  tier: PerformanceTier;
+  userOverride: boolean;
+  autoDetect: boolean;
+  enableVirtualization: boolean;
+  reduceAnimations: boolean;
+}
+
 export interface SettingsState {
   display: DisplaySettings;
   accessibility: AccessibilitySettings;
   gameplay: GameplaySettings;
   audio: AudioSettings;
   account: AccountSettings;
+  performance: PerformanceSettings;
 }
 
 export const defaultDisplaySettings: DisplaySettings = {
@@ -148,12 +158,21 @@ export const defaultAccountSettings: AccountSettings = {
   privacyMode: 'public',
 };
 
+export const defaultPerformanceSettings: PerformanceSettings = {
+  tier: 'medium',
+  userOverride: false,
+  autoDetect: true,
+  enableVirtualization: true,
+  reduceAnimations: false,
+};
+
 export const initialSettingsState: SettingsState = {
   display: defaultDisplaySettings,
   accessibility: defaultAccessibilitySettings,
   gameplay: defaultGameplaySettings,
   audio: defaultAudioSettings,
   account: defaultAccountSettings,
+  performance: defaultPerformanceSettings,
 };
 
 const STORAGE_KEY = 'dmz-app-settings';
@@ -423,6 +442,50 @@ function createSettingsStore() {
       });
     },
 
+    updatePerformance(settings: Partial<PerformanceSettings>): void {
+      update((state) => {
+        const newState = {
+          ...state,
+          performance: { ...state.performance, ...settings },
+        };
+        persistSettings(newState);
+        return newState;
+      });
+    },
+
+    setPerformanceTier(tier: PerformanceTier): void {
+      update((state) => {
+        const newState = {
+          ...state,
+          performance: { ...state.performance, tier, userOverride: true },
+        };
+        persistSettings(newState);
+        return newState;
+      });
+    },
+
+    enableAutoPerformanceDetect(): void {
+      update((state) => {
+        const newState = {
+          ...state,
+          performance: { ...state.performance, autoDetect: true, userOverride: false },
+        };
+        persistSettings(newState);
+        return newState;
+      });
+    },
+
+    setVirtualization(enabled: boolean): void {
+      update((state) => {
+        const newState = {
+          ...state,
+          performance: { ...state.performance, enableVirtualization: enabled },
+        };
+        persistSettings(newState);
+        return newState;
+      });
+    },
+
     resetToDefaults(): void {
       set(initialSettingsState);
       persistSettings(initialSettingsState);
@@ -464,4 +527,22 @@ export const effectiveReducedMotion = derived(settingsStore, ($settings) => {
 
 export const effectiveColorBlindMode = derived(settingsStore, ($settings) => {
   return $settings.accessibility.colorBlindMode;
+});
+
+export const effectivePerformanceTier = derived(settingsStore, ($settings) => {
+  if ($settings.performance.userOverride) {
+    return $settings.performance.tier;
+  }
+  return $settings.performance.tier;
+});
+
+export const effectiveVirtualization = derived(settingsStore, ($settings) => {
+  return $settings.performance.enableVirtualization;
+});
+
+export const effectiveReduceAnimations = derived(settingsStore, ($settings) => {
+  if ($settings.accessibility.reducedMotion) {
+    return true;
+  }
+  return $settings.performance.reduceAnimations || $settings.performance.tier === 'low';
 });

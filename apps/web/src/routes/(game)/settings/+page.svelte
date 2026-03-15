@@ -6,6 +6,7 @@
     type FocusIndicatorStyle,
     type DifficultyLevel,
     type PrivacyMode,
+    type PerformanceTier,
   } from '$lib/stores/settings';
   import Panel from '$lib/ui/components/Panel.svelte';
   import Button from '$lib/ui/components/Button.svelte';
@@ -13,7 +14,9 @@
 
   import { browser } from '$app/environment';
 
-  let activeTab = $state<'display' | 'accessibility' | 'gameplay' | 'audio' | 'account'>('display');
+  let activeTab = $state<
+    'display' | 'accessibility' | 'gameplay' | 'audio' | 'performance' | 'account'
+  >('display');
 
   let displaySettings = $state({
     theme: 'green' as ThemeId,
@@ -64,6 +67,14 @@
     privacyMode: 'public' as PrivacyMode,
   });
 
+  let performanceSettings = $state({
+    tier: 'medium' as PerformanceTier,
+    userOverride: false,
+    autoDetect: true,
+    enableVirtualization: true,
+    reduceAnimations: false,
+  });
+
   if (browser) {
     settingsStore.subscribe((settings) => {
       displaySettings = {
@@ -98,6 +109,13 @@
       accountSettings = {
         displayName: settings.account.displayName,
         privacyMode: settings.account.privacyMode,
+      };
+      performanceSettings = {
+        tier: settings.performance.tier,
+        userOverride: settings.performance.userOverride,
+        autoDetect: settings.performance.autoDetect,
+        enableVirtualization: settings.performance.enableVirtualization,
+        reduceAnimations: settings.performance.reduceAnimations,
       };
     });
   }
@@ -264,6 +282,30 @@
     { id: 'friends', label: 'Friends Only' },
     { id: 'private', label: 'Private' },
   ];
+
+  const performanceTiers: { id: PerformanceTier; label: string; description: string }[] = [
+    { id: 'low', label: 'Low', description: 'Optimized for older devices' },
+    { id: 'medium', label: 'Medium', description: 'Balanced performance' },
+    { id: 'high', label: 'High', description: 'Maximum visual quality' },
+  ];
+
+  function handlePerformanceTierChange(tier: PerformanceTier) {
+    settingsStore.setPerformanceTier(tier);
+  }
+
+  function handleAutoDetectChange() {
+    if (!performanceSettings.autoDetect) {
+      settingsStore.enableAutoPerformanceDetect();
+    }
+  }
+
+  function handleVirtualizationChange() {
+    settingsStore.setVirtualization(!performanceSettings.enableVirtualization);
+  }
+
+  function handleReduceAnimationsChange() {
+    settingsStore.updatePerformance({ reduceAnimations: !performanceSettings.reduceAnimations });
+  }
 </script>
 
 <div class="settings-page">
@@ -302,6 +344,14 @@
         onclick={() => (activeTab = 'audio')}
       >
         Audio
+      </button>
+      <button
+        type="button"
+        class="settings-page__tab"
+        class:settings-page__tab--active={activeTab === 'performance'}
+        onclick={() => (activeTab = 'performance')}
+      >
+        Performance
       </button>
       <button
         type="button"
@@ -616,6 +666,77 @@
         </section>
       {/if}
 
+      {#if activeTab === 'performance'}
+        <section class="settings-section">
+          <h2 class="settings-section__title">Performance Tier</h2>
+          <p class="settings-section__description">
+            Adjust how The DMZ uses your device's resources. Lower tiers reduce visual quality but
+            improve performance.
+          </p>
+          <div class="settings-section__options">
+            {#each performanceTiers as tier (tier.id)}
+              <label class="settings-option">
+                <input
+                  type="radio"
+                  name="performanceTier"
+                  value={tier.id}
+                  checked={performanceSettings.tier === tier.id}
+                  onchange={() => handlePerformanceTierChange(tier.id)}
+                />
+                <span class="settings-option__label">{tier.label}</span>
+                <span class="settings-option__description">{tier.description}</span>
+              </label>
+            {/each}
+          </div>
+          <label class="settings-toggle">
+            <input
+              type="checkbox"
+              checked={performanceSettings.autoDetect}
+              onchange={handleAutoDetectChange}
+            />
+            <span>Auto-detect device performance</span>
+          </label>
+        </section>
+
+        <section class="settings-section">
+          <h2 class="settings-section__title">Optimization</h2>
+          <label class="settings-toggle">
+            <input
+              type="checkbox"
+              checked={performanceSettings.enableVirtualization}
+              onchange={handleVirtualizationChange}
+            />
+            <span>Enable virtualized lists</span>
+            <span class="settings-toggle__hint">Improves performance with long lists</span>
+          </label>
+          <label class="settings-toggle">
+            <input
+              type="checkbox"
+              checked={performanceSettings.reduceAnimations}
+              onchange={handleReduceAnimationsChange}
+            />
+            <span>Reduce animations</span>
+            <span class="settings-toggle__hint">Disables motion effects</span>
+          </label>
+        </section>
+
+        <section class="settings-section">
+          <h2 class="settings-section__title">Current Device</h2>
+          <div class="settings-section__info">
+            <p>Detected performance tier: <strong>{performanceSettings.tier}</strong></p>
+            <p class="settings-section__info-hint">
+              {#if performanceSettings.tier === 'low'}
+                Running in low performance mode for optimal experience.
+              {:else if performanceSettings.tier === 'medium'}
+                Running in balanced mode.
+              {:else}
+                Running in high quality mode.
+              {/if}
+            </p>
+          </div>
+        </section>
+      {/if}
+
       {#if activeTab === 'account'}
         <section class="settings-section">
           <h2 class="settings-section__title">Profile</h2>
@@ -779,6 +900,29 @@
     color: var(--color-text);
   }
 
+  .settings-option__description {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-left: var(--space-2);
+  }
+
+  .settings-section__description {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin: 0 0 var(--space-2) 0;
+  }
+
+  .settings-section__info {
+    font-size: var(--text-sm);
+    color: var(--color-text);
+  }
+
+  .settings-section__info-hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: var(--space-1);
+  }
+
   .settings-toggle {
     display: flex;
     align-items: center;
@@ -797,6 +941,12 @@
   .settings-toggle input:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+
+  .settings-toggle__hint {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-left: var(--space-2);
   }
 
   .settings-field {
