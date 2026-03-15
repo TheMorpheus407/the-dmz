@@ -1,5 +1,9 @@
 import { z } from 'zod';
 
+import { PhishingMetricsService } from './phishing-metrics.service.js';
+import { DecisionQualityService } from './decision-quality.service.js';
+import { metricsCache } from './metrics-cache.js';
+
 import type { FastifyPluginAsync } from 'fastify';
 
 const metricsResponseSchema = z.object({
@@ -16,7 +20,92 @@ const healthResponseSchema = z.object({
   details: z.record(z.unknown()),
 });
 
+const dateRangeSchema = z
+  .object({
+    startDate: z.string().datetime().optional(),
+    endDate: z.string().datetime().optional(),
+  })
+  .optional();
+
+const phishingMetricsRequestSchema = z.object({
+  tenantId: z.string().uuid(),
+  userId: z.string().uuid().optional(),
+  dateRange: dateRangeSchema,
+});
+
+const phishingMetricsResponseSchema = z.object({
+  clickRate: z.number(),
+  reportRate: z.number(),
+  falsePositiveRate: z.number(),
+  meanTimeToReportSeconds: z.number().nullable(),
+  meanTimeToDecisionSeconds: z.number().nullable(),
+  suspiciousIndicatorFlaggingRate: z.number(),
+  period: z.object({
+    start: z.string(),
+    end: z.string(),
+  }),
+  sampleSize: z.number(),
+});
+
+const scoringRequestSchema = z.object({
+  tenantId: z.string().uuid(),
+  userId: z.string().uuid().optional(),
+  dateRange: dateRangeSchema,
+});
+
+const decisionQualityScoreSchema = z.object({
+  overallScore: z.number(),
+  weightedCorrectness: z.number(),
+  difficultyAdjustedScore: z.number(),
+  contextWeightedScore: z.number(),
+  competencyBreakdown: z.record(z.string(), z.number()),
+  experienceLevel: z.enum(['new', 'intermediate', 'experienced', 'expert']),
+  evidenceCount: z.number(),
+});
+
+const scoringResponseSchema = z.object({
+  userId: z.string().uuid(),
+  scores: decisionQualityScoreSchema,
+  percentileRank: z.number().optional(),
+  trend: z.enum(['improving', 'declining', 'stable']).optional(),
+  previousScore: z.number().optional(),
+});
+
+const scoringListResponseSchema = z.array(scoringResponseSchema);
+
+const trendsRequestSchema = z.object({
+  tenantId: z.string().uuid(),
+  weeks: z.number().min(1).max(12).optional(),
+  months: z.number().min(1).max(12).optional(),
+});
+
+const trendPeriodSchema = z.object({
+  period: z.string(),
+  averageScore: z.number(),
+  playerCount: z.number(),
+  weekOverWeekChange: z.number().optional(),
+  monthOverMonthChange: z.number().optional(),
+});
+
+const trendsResponseSchema = z.object({
+  weeklyTrends: z.array(trendPeriodSchema),
+  monthlyTrends: z.array(trendPeriodSchema),
+  improvementRate: z.number(),
+  decliningRate: z.number(),
+  stableRate: z.number(),
+});
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    phishingMetrics: PhishingMetricsService;
+    decisionQuality: DecisionQualityService;
+  }
+}
+
 const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
+  fastify.decorate('phishingMetrics', new PhishingMetricsService(fastify.db));
+  fastify.decorate('decisionQuality', new DecisionQualityService(fastify.db));
+
   fastify.get(
     '/health',
     {
@@ -47,6 +136,119 @@ const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
         ...metrics,
         lastProcessedAt: metrics.lastProcessedAt?.toISOString() ?? null,
       });
+    },
+  );
+
+  fastify.post(
+    '/phishing',
+    {
+      schema: {
+        body: phishingMetricsRequestSchema,
+        response: {
+          200: phishingMetricsResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { tenantId, userId, dateRange } = request.body as z.infer<
+        typeof phishingMetricsRequestSchema
+      >;
+
+      const startDate = dateRange?.startDate ? new Date(dateRange.startDate) : undefined;
+      const endDate = dateRange?.endDate ? new Date(dateRange.endDate) : undefined;
+
+      const cacheKey = `phishing:${tenantId}:${userId ?? 'all'}:${startDate?.toISOString() ?? 'default'}:${endDate?.toISOString() ?? 'now'}`;
+
+      const cached = metricsCache.get<z.infer<typeof phishingMetricsResponseSchema>>(cacheKey);
+      if (cached) {
+        return reply.send(cached);
+      }
+
+      const metrics = await fastify.phishingMetrics.computeAggregatedMetrics(
+        tenantId,
+        startDate ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        endDate ?? new Date(),
+      );
+
+      metricsCache.set(cacheKey, metrics, 60000);
+
+      return reply.send(metrics);
+    },
+  );
+
+  fastify.post(
+    '/scoring',
+    {
+      schema: {
+        body: scoringRequestSchema,
+        response: {
+          200: z.union([scoringResponseSchema, scoringListResponseSchema]),
+          404: z.object({ error: z.string() }),
+        },
+      },
+    },
+    async (request, reply) => {
+      const { tenantId, userId, dateRange } = request.body as z.infer<typeof scoringRequestSchema>;
+
+      const startDate = dateRange?.startDate ? new Date(dateRange.startDate) : undefined;
+      const endDate = dateRange?.endDate ? new Date(dateRange.endDate) : undefined;
+
+      if (userId) {
+        const cacheKey = `scoring:${tenantId}:${userId}:${startDate?.toISOString() ?? 'default'}:${endDate?.toISOString() ?? 'now'}`;
+
+        const cached = metricsCache.get<z.infer<typeof scoringResponseSchema>>(cacheKey);
+        if (cached) {
+          return reply.send(cached);
+        }
+
+        const scoreInput: { tenantId: string; userId: string; startDate?: Date; endDate?: Date } = {
+          tenantId,
+          userId,
+        };
+        if (startDate) scoreInput.startDate = startDate;
+        if (endDate) scoreInput.endDate = endDate;
+
+        const score = await fastify.decisionQuality.computePlayerScore(scoreInput);
+
+        if (!score) {
+          return reply.status(404).send({ error: 'Player not found' });
+        }
+
+        metricsCache.set(cacheKey, score, 60000);
+
+        return reply.send(score);
+      }
+
+      const scores = await fastify.decisionQuality.computeAllPlayerScores(tenantId);
+      return reply.send(scores);
+    },
+  );
+
+  fastify.post(
+    '/trends',
+    {
+      schema: {
+        body: trendsRequestSchema,
+        response: {
+          200: trendsResponseSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { tenantId, weeks, months } = request.body as z.infer<typeof trendsRequestSchema>;
+
+      const cacheKey = `trends:${tenantId}:${weeks ?? 4}:${months ?? 3}`;
+
+      const cached = metricsCache.get<z.infer<typeof trendsResponseSchema>>(cacheKey);
+      if (cached) {
+        return reply.send(cached);
+      }
+
+      const trends = await fastify.decisionQuality.computeTrends(tenantId, weeks ?? 4, months ?? 3);
+
+      metricsCache.set(cacheKey, trends, 300000);
+
+      return reply.send(trends);
     },
   );
 };
