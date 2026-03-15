@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
 
   import { themeStore, getRouteDefaultTheme, STORAGE_KEY } from '$lib/stores/theme';
+  import { settingsStore } from '$lib/stores/settings';
   import Drawer from '$lib/ui/components/Drawer.svelte';
   import Button from '$lib/ui/components/Button.svelte';
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
@@ -203,6 +204,7 @@
   onMount(() => {
     themeStore.init();
     soundStore.init();
+    settingsStore.init();
 
     const systemPrefs = themeStore.getSystemPreferences();
 
@@ -217,6 +219,19 @@
     } else if (!localStorage.getItem(STORAGE_KEY)) {
       themeStore.setTheme(getRouteDefaultTheme('game'));
     }
+
+    let prevColorBlindMode = 'none';
+    const settingsUnsub = settingsStore.subscribe((settings) => {
+      const newColorBlindMode = settings.accessibility.colorBlindMode;
+      if (newColorBlindMode !== prevColorBlindMode) {
+        prevColorBlindMode = newColorBlindMode;
+        themeStore.setColorBlindMode(newColorBlindMode);
+      }
+    });
+
+    return () => {
+      settingsUnsub();
+    };
   });
 </script>
 

@@ -143,6 +143,7 @@ describe('themeStore', () => {
         },
         intensities: DEFAULT_INTENSITIES,
         fontSize: 18,
+        colorBlindMode: 'none',
       };
       mockLocalStorage.getItem.mockReturnValue(JSON.stringify(storedState));
 
@@ -534,6 +535,43 @@ describe('themeStore', () => {
 
       const state = get(themeStore);
       expect(state.name).toBe('green');
+    });
+  });
+
+  describe('color-blind mode', () => {
+    it('sets color-blind mode to protanopia', () => {
+      themeStore.setColorBlindMode('protanopia');
+      const state = get(themeStore);
+      expect(state.colorBlindMode).toBe('protanopia');
+      expect(mockDocumentElement.dataset['colorBlind']).toBe('protanopia');
+    });
+
+    it('sets color-blind mode to deuteranopia', () => {
+      themeStore.setColorBlindMode('deuteranopia');
+      const state = get(themeStore);
+      expect(state.colorBlindMode).toBe('deuteranopia');
+      expect(mockDocumentElement.dataset['colorBlind']).toBe('deuteranopia');
+    });
+
+    it('sets color-blind mode to tritanopia', () => {
+      themeStore.setColorBlindMode('tritanopia');
+      const state = get(themeStore);
+      expect(state.colorBlindMode).toBe('tritanopia');
+      expect(mockDocumentElement.dataset['colorBlind']).toBe('tritanopia');
+    });
+
+    it('sets color-blind mode to none', () => {
+      themeStore.setColorBlindMode('protanopia');
+      themeStore.setColorBlindMode('none');
+      const state = get(themeStore);
+      expect(state.colorBlindMode).toBe('none');
+      expect(mockDocumentElement.dataset['colorBlind']).toBe('none');
+    });
+
+    it('initializes with none by default', () => {
+      themeStore.init();
+      const state = get(themeStore);
+      expect(state.colorBlindMode).toBe('none');
     });
   });
 });

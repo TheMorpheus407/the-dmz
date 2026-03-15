@@ -461,3 +461,7 @@ export const effectiveFontSize = derived(settingsStore, ($settings) => {
 export const effectiveReducedMotion = derived(settingsStore, ($settings) => {
   return $settings.accessibility.reducedMotion;
 });
+
+export const effectiveColorBlindMode = derived(settingsStore, ($settings) => {
+  return $settings.accessibility.colorBlindMode;
+});

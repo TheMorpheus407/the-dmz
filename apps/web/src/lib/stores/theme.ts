@@ -1,6 +1,6 @@
 import { writable, get } from 'svelte/store';
 
-import type { ThemeId, SurfaceId } from '@the-dmz/shared';
+import type { ThemeId, SurfaceId, ColorBlindMode } from '@the-dmz/shared';
 import { defaultEffectStates } from '@the-dmz/shared/schemas';
 import type { EffectivePreferences } from '@the-dmz/shared/schemas';
 import type { ThemeColors } from '@the-dmz/shared/types';
@@ -128,6 +128,7 @@ export interface ThemeState {
   effects: EffectState;
   intensities: EffectIntensities;
   fontSize: number;
+  colorBlindMode: ColorBlindMode;
 }
 
 export interface PreferenceSourceState {
@@ -179,6 +180,7 @@ export const initialThemeState: ThemeStoreState = {
   effects: { ...DEFAULT_EFFECTS },
   intensities: { ...DEFAULT_INTENSITIES },
   fontSize: DEFAULT_FONT_SIZE,
+  colorBlindMode: 'none',
   source: {
     theme: 'default',
     enableTerminalEffects: 'default',
@@ -235,6 +237,8 @@ function createThemeStore() {
     root.dataset['flicker'] = state.effects.flicker ? 'on' : 'off';
 
     root.dataset['highContrast'] = state.name === 'high-contrast' ? 'on' : 'off';
+
+    root.dataset['colorBlind'] = state.colorBlindMode;
 
     root.style.setProperty('--base-font-size', `${state.fontSize}px`);
 
@@ -351,6 +355,7 @@ function createThemeStore() {
       effects,
       intensities: { ...DEFAULT_INTENSITIES },
       fontSize: DEFAULT_FONT_SIZE,
+      colorBlindMode: 'none',
       source,
       lockedPreferences: [],
       isSyncing: false,
@@ -482,6 +487,7 @@ function createThemeStore() {
       effects,
       intensities: { ...DEFAULT_INTENSITIES },
       fontSize,
+      colorBlindMode: 'none',
       source,
       lockedPreferences: lockedKeys,
       isSyncing: false,
@@ -588,6 +594,18 @@ function createThemeStore() {
         applyThemeToDom(newState);
         persistTheme(newState);
         debouncedSync();
+        return newState;
+      });
+    },
+
+    setColorBlindMode: (mode: ColorBlindMode) => {
+      update((state) => {
+        const newState: ThemeStoreState = {
+          ...state,
+          colorBlindMode: mode,
+        };
+
+        applyThemeToDom(newState);
         return newState;
       });
     },

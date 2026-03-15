@@ -975,8 +975,137 @@
 }
 
 /* ========================================
-   REDUCED MOTION FOR LAYOUT TRANSITIONS
+   COLOR-BLIND MODE: PROTANOPIA
+   Red-blind: Replace reds with blues/purples
    ======================================== */
+[data-color-blind='protanopia'] {
+  /* Semantic status - blue/purple alternatives */
+  --color-safe: #6699cc;
+  --color-warning: #ccaa66;
+  --color-danger: #9966cc;
+  --color-info: #6699cc;
+  --color-critical: #9966cc;
+  --color-flagged: #cc9966;
+
+  /* Threat tiers - distinguishable blues/purples */
+  --color-threat-1: #6699cc;
+  --color-threat-2: #66aaaa;
+  --color-threat-3: #ccaa66;
+  --color-threat-4: #cc8866;
+  --color-threat-5: #9966cc;
+
+  /* Faction colors - blue/purple variants */
+  --color-faction-sovereign: #6699cc;
+  --color-faction-nexion: #aa8866;
+  --color-faction-librarians: #66aa99;
+  --color-faction-hacktivist: #9966cc;
+  --color-faction-criminal: #9966aa;
+}
+
+/* ========================================
+   COLOR-BLIND MODE: DEUTERANOPIA
+   Green-blind: Replace greens with blues
+   ======================================== */
+[data-color-blind='deuteranopia'] {
+  /* Semantic status - blue alternatives */
+  --color-safe: #6699cc;
+  --color-warning: #ccaa66;
+  --color-danger: #cc6666;
+  --color-info: #6699cc;
+  --color-critical: #cc4444;
+  --color-flagged: #cc9966;
+
+  /* Threat tiers - blue/orange instead of green */
+  --color-threat-1: #6699cc;
+  --color-threat-2: #6699cc;
+  --color-threat-3: #ccaa66;
+  --color-threat-4: #cc8866;
+  --color-threat-5: #cc4444;
+
+  /* Faction colors - blue/purple variants */
+  --color-faction-sovereign: #6699cc;
+  --color-faction-nexion: #cc8866;
+  --color-faction-librarians: #6699aa;
+  --color-faction-hacktivist: #9966cc;
+  --color-faction-criminal: #aa6666;
+}
+
+/* ========================================
+   COLOR-BLIND MODE: TRITANOPIA
+   Blue-blind: Replace blues with oranges/yellows
+   ======================================== */
+[data-color-blind='tritanopia'] {
+  /* Semantic status - orange/yellow alternatives */
+  --color-safe: #66aa66;
+  --color-warning: #ddaa44;
+  --color-danger: #cc5544;
+  --color-info: #ddaa44;
+  --color-critical: #cc4433;
+  --color-flagged: #cc8844;
+
+  /* Threat tiers - orange/red variants */
+  --color-threat-1: #6699cc;
+  --color-threat-2: #66aa66;
+  --color-threat-3: #ddaa44;
+  --color-threat-4: #cc6644;
+  --color-threat-5: #cc3333;
+
+  /* Faction colors - orange/red variants */
+  --color-faction-sovereign: #7799bb;
+  --color-faction-nexion: #cc7744;
+  --color-faction-librarians: #66aa77;
+  --color-faction-hacktivist: #bb66cc;
+  --color-faction-criminal: #cc5555;
+}
+
+/* ========================================
+   COLOR-BLIND MODE: PATTERN DIFFERENTIATORS
+   Add visual patterns for color-blind accessibility
+   ======================================== */
+
+/* Action stamps with pattern backgrounds */
+[data-color-blind='protanopia'] .stamp-approve,
+[data-color-blind='deuteranopia'] .stamp-approve,
+[data-color-blind='tritanopia'] .stamp-approve {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 3px,
+    currentColor 3px,
+    currentColor 6px
+  );
+}
+
+[data-color-blind='protanopia'] .stamp-deny,
+[data-color-blind='deuteranopia'] .stamp-deny,
+[data-color-blind='tritanopia'] .stamp-deny {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 3px,
+    currentColor 3px,
+    currentColor 6px
+  );
+}
+
+/* Urgency badges with patterns */
+[data-color-blind='protanopia'] .urgency-critical,
+[data-color-blind='deuteranopia'] .urgency-critical,
+[data-color-blind='tritanopia'] .urgency-critical {
+  background-image: radial-gradient(circle, transparent 30%, currentColor 30%);
+  background-size: 6px 6px;
+}
+
+[data-color-blind='protanopia'] .urgency-high,
+[data-color-blind='deuteranopia'] .urgency-high,
+[data-color-blind='tritanopia'] .urgency-high {
+  background-image: linear-gradient(90deg, transparent 50%, currentColor 50%);
+  background-size: 4px 4px;
+}
+
+/* ========================================
+    REDUCED MOTION FOR LAYOUT TRANSITIONS
+    ======================================== */
 @media (prefers-reduced-motion: reduce) {
   .shell-game,
   .shell-admin,
