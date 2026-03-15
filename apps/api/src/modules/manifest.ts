@@ -78,6 +78,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus', 'content'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'settings',
+      pluginPath: './modules/settings/index.js',
+      routePrefix: '/api/v1/settings',
+      dependencies: ['eventBus', 'auth'],
+      startupFlags: { required: true, diagnostics: true },
+    },
   ],
 };
 

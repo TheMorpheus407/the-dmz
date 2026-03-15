@@ -249,10 +249,52 @@ export const profileJsonSchema = {
               required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
               additionalProperties: false,
             },
+            effectIntensity: {
+              type: 'object',
+              properties: {
+                scanlines: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                curvature: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                glow: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                noise: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                vignette: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                flicker: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+              },
+              required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
+              additionalProperties: false,
+            },
             fontSize: {
               type: 'number',
               minimum: 12,
               maximum: 32,
+            },
+            terminalGlowIntensity: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
             },
           },
           additionalProperties: false,
@@ -270,6 +312,20 @@ export const profileJsonSchema = {
               type: 'number',
               minimum: 12,
               maximum: 32,
+            },
+            colorBlindMode: {
+              type: 'string',
+              enum: ['none', 'protanopia', 'deuteranopia', 'tritanopia'],
+            },
+            screenReaderAnnouncements: {
+              type: 'boolean',
+            },
+            keyboardNavigationHints: {
+              type: 'boolean',
+            },
+            focusIndicatorStyle: {
+              type: 'string',
+              enum: ['subtle', 'strong'],
             },
           },
           additionalProperties: false,
@@ -297,6 +353,95 @@ export const profileJsonSchema = {
           },
           additionalProperties: false,
         },
+        gameplayPreferences: {
+          type: 'object',
+          properties: {
+            difficulty: {
+              type: 'string',
+              enum: ['tutorial', 'easy', 'normal', 'hard'],
+            },
+            notificationVolume: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            notificationCategoryVolumes: {
+              type: 'object',
+              additionalProperties: {
+                type: 'number',
+                minimum: 0,
+                maximum: 100,
+              },
+              propertyNames: {
+                enum: ['master', 'alerts', 'ui', 'ambient'],
+              },
+            },
+            notificationDuration: {
+              type: 'number',
+              minimum: 1,
+              maximum: 30,
+            },
+            autoAdvanceTiming: {
+              type: 'number',
+              minimum: 0,
+              maximum: 30,
+            },
+            queueBuildupRate: {
+              type: 'number',
+              minimum: 1,
+              maximum: 10,
+            },
+          },
+          additionalProperties: false,
+        },
+        audioPreferences: {
+          type: 'object',
+          properties: {
+            masterVolume: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            categoryVolumes: {
+              type: 'object',
+              additionalProperties: {
+                type: 'number',
+                minimum: 0,
+                maximum: 100,
+              },
+              propertyNames: {
+                enum: ['alerts', 'ui', 'ambient', 'narrative', 'effects'],
+              },
+            },
+            muteAll: {
+              type: 'boolean',
+            },
+            textToSpeechEnabled: {
+              type: 'boolean',
+            },
+            textToSpeechSpeed: {
+              type: 'number',
+              minimum: 50,
+              maximum: 200,
+            },
+          },
+          additionalProperties: false,
+        },
+        accountPreferences: {
+          type: 'object',
+          properties: {
+            displayName: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 50,
+            },
+            privacyMode: {
+              type: 'string',
+              enum: ['public', 'friends', 'private'],
+            },
+          },
+          additionalProperties: false,
+        },
       },
       additionalProperties: false,
     },
@@ -315,13 +460,34 @@ export const profileJsonSchema = {
             type: 'boolean',
           },
         },
+        effectIntensity: {
+          type: 'object',
+          additionalProperties: {
+            type: 'number',
+          },
+        },
         fontSize: {
+          type: 'boolean',
+        },
+        terminalGlowIntensity: {
           type: 'boolean',
         },
         reducedMotion: {
           type: 'boolean',
         },
         highContrast: {
+          type: 'boolean',
+        },
+        colorBlindMode: {
+          type: 'boolean',
+        },
+        screenReaderAnnouncements: {
+          type: 'boolean',
+        },
+        keyboardNavigationHints: {
+          type: 'boolean',
+        },
+        focusIndicatorStyle: {
           type: 'boolean',
         },
         enableAnimations: {
@@ -334,6 +500,45 @@ export const profileJsonSchema = {
           type: 'boolean',
         },
         enableScreenFlicker: {
+          type: 'boolean',
+        },
+        difficulty: {
+          type: 'boolean',
+        },
+        notificationVolume: {
+          type: 'boolean',
+        },
+        notificationCategoryVolumes: {
+          type: 'boolean',
+        },
+        notificationDuration: {
+          type: 'boolean',
+        },
+        autoAdvanceTiming: {
+          type: 'boolean',
+        },
+        queueBuildupRate: {
+          type: 'boolean',
+        },
+        masterVolume: {
+          type: 'boolean',
+        },
+        categoryVolumes: {
+          type: 'boolean',
+        },
+        muteAll: {
+          type: 'boolean',
+        },
+        textToSpeechEnabled: {
+          type: 'boolean',
+        },
+        textToSpeechSpeed: {
+          type: 'boolean',
+        },
+        displayName: {
+          type: 'boolean',
+        },
+        privacyMode: {
           type: 'boolean',
         },
       },
@@ -410,10 +615,52 @@ export const updateProfileJsonSchema = {
               required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
               additionalProperties: false,
             },
+            effectIntensity: {
+              type: 'object',
+              properties: {
+                scanlines: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                curvature: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                glow: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                noise: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                vignette: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                flicker: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+              },
+              required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
+              additionalProperties: false,
+            },
             fontSize: {
               type: 'number',
               minimum: 12,
               maximum: 32,
+            },
+            terminalGlowIntensity: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
             },
           },
           additionalProperties: false,
@@ -431,6 +678,20 @@ export const updateProfileJsonSchema = {
               type: 'number',
               minimum: 12,
               maximum: 32,
+            },
+            colorBlindMode: {
+              type: 'string',
+              enum: ['none', 'protanopia', 'deuteranopia', 'tritanopia'],
+            },
+            screenReaderAnnouncements: {
+              type: 'boolean',
+            },
+            keyboardNavigationHints: {
+              type: 'boolean',
+            },
+            focusIndicatorStyle: {
+              type: 'string',
+              enum: ['subtle', 'strong'],
             },
           },
           additionalProperties: false,
@@ -454,6 +715,95 @@ export const updateProfileJsonSchema = {
               type: 'number',
               minimum: 20,
               maximum: 100,
+            },
+          },
+          additionalProperties: false,
+        },
+        gameplayPreferences: {
+          type: 'object',
+          properties: {
+            difficulty: {
+              type: 'string',
+              enum: ['tutorial', 'easy', 'normal', 'hard'],
+            },
+            notificationVolume: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            notificationCategoryVolumes: {
+              type: 'object',
+              additionalProperties: {
+                type: 'number',
+                minimum: 0,
+                maximum: 100,
+              },
+              propertyNames: {
+                enum: ['master', 'alerts', 'ui', 'ambient'],
+              },
+            },
+            notificationDuration: {
+              type: 'number',
+              minimum: 1,
+              maximum: 30,
+            },
+            autoAdvanceTiming: {
+              type: 'number',
+              minimum: 0,
+              maximum: 30,
+            },
+            queueBuildupRate: {
+              type: 'number',
+              minimum: 1,
+              maximum: 10,
+            },
+          },
+          additionalProperties: false,
+        },
+        audioPreferences: {
+          type: 'object',
+          properties: {
+            masterVolume: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            categoryVolumes: {
+              type: 'object',
+              additionalProperties: {
+                type: 'number',
+                minimum: 0,
+                maximum: 100,
+              },
+              propertyNames: {
+                enum: ['alerts', 'ui', 'ambient', 'narrative', 'effects'],
+              },
+            },
+            muteAll: {
+              type: 'boolean',
+            },
+            textToSpeechEnabled: {
+              type: 'boolean',
+            },
+            textToSpeechSpeed: {
+              type: 'number',
+              minimum: 50,
+              maximum: 200,
+            },
+          },
+          additionalProperties: false,
+        },
+        accountPreferences: {
+          type: 'object',
+          properties: {
+            displayName: {
+              type: 'string',
+              minLength: 1,
+              maxLength: 50,
+            },
+            privacyMode: {
+              type: 'string',
+              enum: ['public', 'friends', 'private'],
             },
           },
           additionalProperties: false,
@@ -566,10 +916,52 @@ export const meResponseJsonSchema = {
                   required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
                   additionalProperties: false,
                 },
+                effectIntensity: {
+                  type: 'object',
+                  properties: {
+                    scanlines: {
+                      type: 'number',
+                      minimum: 0,
+                      maximum: 100,
+                    },
+                    curvature: {
+                      type: 'number',
+                      minimum: 0,
+                      maximum: 100,
+                    },
+                    glow: {
+                      type: 'number',
+                      minimum: 0,
+                      maximum: 100,
+                    },
+                    noise: {
+                      type: 'number',
+                      minimum: 0,
+                      maximum: 100,
+                    },
+                    vignette: {
+                      type: 'number',
+                      minimum: 0,
+                      maximum: 100,
+                    },
+                    flicker: {
+                      type: 'number',
+                      minimum: 0,
+                      maximum: 100,
+                    },
+                  },
+                  required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
+                  additionalProperties: false,
+                },
                 fontSize: {
                   type: 'number',
                   minimum: 12,
                   maximum: 32,
+                },
+                terminalGlowIntensity: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
                 },
               },
               additionalProperties: false,
@@ -587,6 +979,20 @@ export const meResponseJsonSchema = {
                   type: 'number',
                   minimum: 12,
                   maximum: 32,
+                },
+                colorBlindMode: {
+                  type: 'string',
+                  enum: ['none', 'protanopia', 'deuteranopia', 'tritanopia'],
+                },
+                screenReaderAnnouncements: {
+                  type: 'boolean',
+                },
+                keyboardNavigationHints: {
+                  type: 'boolean',
+                },
+                focusIndicatorStyle: {
+                  type: 'string',
+                  enum: ['subtle', 'strong'],
                 },
               },
               additionalProperties: false,
@@ -614,6 +1020,95 @@ export const meResponseJsonSchema = {
               },
               additionalProperties: false,
             },
+            gameplayPreferences: {
+              type: 'object',
+              properties: {
+                difficulty: {
+                  type: 'string',
+                  enum: ['tutorial', 'easy', 'normal', 'hard'],
+                },
+                notificationVolume: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                notificationCategoryVolumes: {
+                  type: 'object',
+                  additionalProperties: {
+                    type: 'number',
+                    minimum: 0,
+                    maximum: 100,
+                  },
+                  propertyNames: {
+                    enum: ['master', 'alerts', 'ui', 'ambient'],
+                  },
+                },
+                notificationDuration: {
+                  type: 'number',
+                  minimum: 1,
+                  maximum: 30,
+                },
+                autoAdvanceTiming: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 30,
+                },
+                queueBuildupRate: {
+                  type: 'number',
+                  minimum: 1,
+                  maximum: 10,
+                },
+              },
+              additionalProperties: false,
+            },
+            audioPreferences: {
+              type: 'object',
+              properties: {
+                masterVolume: {
+                  type: 'number',
+                  minimum: 0,
+                  maximum: 100,
+                },
+                categoryVolumes: {
+                  type: 'object',
+                  additionalProperties: {
+                    type: 'number',
+                    minimum: 0,
+                    maximum: 100,
+                  },
+                  propertyNames: {
+                    enum: ['alerts', 'ui', 'ambient', 'narrative', 'effects'],
+                  },
+                },
+                muteAll: {
+                  type: 'boolean',
+                },
+                textToSpeechEnabled: {
+                  type: 'boolean',
+                },
+                textToSpeechSpeed: {
+                  type: 'number',
+                  minimum: 50,
+                  maximum: 200,
+                },
+              },
+              additionalProperties: false,
+            },
+            accountPreferences: {
+              type: 'object',
+              properties: {
+                displayName: {
+                  type: 'string',
+                  minLength: 1,
+                  maxLength: 50,
+                },
+                privacyMode: {
+                  type: 'string',
+                  enum: ['public', 'friends', 'private'],
+                },
+              },
+              additionalProperties: false,
+            },
           },
           additionalProperties: false,
         },
@@ -632,13 +1127,34 @@ export const meResponseJsonSchema = {
                 type: 'boolean',
               },
             },
+            effectIntensity: {
+              type: 'object',
+              additionalProperties: {
+                type: 'number',
+              },
+            },
             fontSize: {
+              type: 'boolean',
+            },
+            terminalGlowIntensity: {
               type: 'boolean',
             },
             reducedMotion: {
               type: 'boolean',
             },
             highContrast: {
+              type: 'boolean',
+            },
+            colorBlindMode: {
+              type: 'boolean',
+            },
+            screenReaderAnnouncements: {
+              type: 'boolean',
+            },
+            keyboardNavigationHints: {
+              type: 'boolean',
+            },
+            focusIndicatorStyle: {
               type: 'boolean',
             },
             enableAnimations: {
@@ -651,6 +1167,45 @@ export const meResponseJsonSchema = {
               type: 'boolean',
             },
             enableScreenFlicker: {
+              type: 'boolean',
+            },
+            difficulty: {
+              type: 'boolean',
+            },
+            notificationVolume: {
+              type: 'boolean',
+            },
+            notificationCategoryVolumes: {
+              type: 'boolean',
+            },
+            notificationDuration: {
+              type: 'boolean',
+            },
+            autoAdvanceTiming: {
+              type: 'boolean',
+            },
+            queueBuildupRate: {
+              type: 'boolean',
+            },
+            masterVolume: {
+              type: 'boolean',
+            },
+            categoryVolumes: {
+              type: 'boolean',
+            },
+            muteAll: {
+              type: 'boolean',
+            },
+            textToSpeechEnabled: {
+              type: 'boolean',
+            },
+            textToSpeechSpeed: {
+              type: 'boolean',
+            },
+            displayName: {
+              type: 'boolean',
+            },
+            privacyMode: {
               type: 'boolean',
             },
           },
@@ -739,6 +1294,25 @@ export const meResponseJsonSchema = {
                 },
               ],
             },
+            effectIntensity: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
             fontSize: {
               anyOf: [
                 {
@@ -758,8 +1332,34 @@ export const meResponseJsonSchema = {
                 },
               ],
             },
+            terminalGlowIntensity: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
           },
-          required: ['theme', 'enableTerminalEffects', 'effects', 'fontSize'],
+          required: [
+            'theme',
+            'enableTerminalEffects',
+            'effects',
+            'effectIntensity',
+            'fontSize',
+            'terminalGlowIntensity',
+          ],
           additionalProperties: false,
         },
         accessibilityPreferences: {
@@ -822,8 +1422,92 @@ export const meResponseJsonSchema = {
                 },
               ],
             },
+            colorBlindMode: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            screenReaderAnnouncements: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            keyboardNavigationHints: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            focusIndicatorStyle: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
           },
-          required: ['reducedMotion', 'highContrast', 'fontSize'],
+          required: [
+            'reducedMotion',
+            'highContrast',
+            'fontSize',
+            'colorBlindMode',
+            'screenReaderAnnouncements',
+            'keyboardNavigationHints',
+            'focusIndicatorStyle',
+          ],
           additionalProperties: false,
         },
         animationPreferences: {
@@ -925,6 +1609,287 @@ export const meResponseJsonSchema = {
               ],
             },
           },
+          additionalProperties: false,
+        },
+        gameplayPreferences: {
+          type: 'object',
+          properties: {
+            difficulty: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            notificationVolume: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            notificationCategoryVolumes: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            notificationDuration: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            autoAdvanceTiming: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            queueBuildupRate: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+          },
+          required: [
+            'difficulty',
+            'notificationVolume',
+            'notificationCategoryVolumes',
+            'notificationDuration',
+            'autoAdvanceTiming',
+            'queueBuildupRate',
+          ],
+          additionalProperties: false,
+        },
+        audioPreferences: {
+          type: 'object',
+          properties: {
+            masterVolume: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            categoryVolumes: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            muteAll: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            textToSpeechEnabled: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            textToSpeechSpeed: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+          },
+          required: [
+            'masterVolume',
+            'categoryVolumes',
+            'muteAll',
+            'textToSpeechEnabled',
+            'textToSpeechSpeed',
+          ],
+          additionalProperties: false,
+        },
+        accountPreferences: {
+          type: 'object',
+          properties: {
+            displayName: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+            privacyMode: {
+              anyOf: [
+                {
+                  type: 'object',
+                  properties: {
+                    value: {},
+                    source: {
+                      type: 'string',
+                      enum: ['policy', 'server', 'local', 'os', 'default'],
+                    },
+                  },
+                  required: ['source'],
+                  additionalProperties: false,
+                },
+                {
+                  type: 'null',
+                },
+              ],
+            },
+          },
+          required: ['displayName', 'privacyMode'],
           additionalProperties: false,
         },
       },
@@ -1210,10 +2175,52 @@ export const themePreferencesJsonSchema = {
       required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
       additionalProperties: false,
     },
+    effectIntensity: {
+      type: 'object',
+      properties: {
+        scanlines: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+        curvature: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+        glow: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+        noise: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+        vignette: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+        flicker: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+      },
+      required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
+      additionalProperties: false,
+    },
     fontSize: {
       type: 'number',
       minimum: 12,
       maximum: 32,
+    },
+    terminalGlowIntensity: {
+      type: 'number',
+      minimum: 0,
+      maximum: 100,
     },
   },
   additionalProperties: false,
@@ -1233,6 +2240,20 @@ export const accessibilityPreferencesJsonSchema = {
       type: 'number',
       minimum: 12,
       maximum: 32,
+    },
+    colorBlindMode: {
+      type: 'string',
+      enum: ['none', 'protanopia', 'deuteranopia', 'tritanopia'],
+    },
+    screenReaderAnnouncements: {
+      type: 'boolean',
+    },
+    keyboardNavigationHints: {
+      type: 'boolean',
+    },
+    focusIndicatorStyle: {
+      type: 'string',
+      enum: ['subtle', 'strong'],
     },
   },
   additionalProperties: false,
@@ -1277,10 +2298,52 @@ export const userPreferencesJsonSchema = {
           required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
           additionalProperties: false,
         },
+        effectIntensity: {
+          type: 'object',
+          properties: {
+            scanlines: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            curvature: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            glow: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            noise: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            vignette: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            flicker: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+          },
+          required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
+          additionalProperties: false,
+        },
         fontSize: {
           type: 'number',
           minimum: 12,
           maximum: 32,
+        },
+        terminalGlowIntensity: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
         },
       },
       additionalProperties: false,
@@ -1298,6 +2361,20 @@ export const userPreferencesJsonSchema = {
           type: 'number',
           minimum: 12,
           maximum: 32,
+        },
+        colorBlindMode: {
+          type: 'string',
+          enum: ['none', 'protanopia', 'deuteranopia', 'tritanopia'],
+        },
+        screenReaderAnnouncements: {
+          type: 'boolean',
+        },
+        keyboardNavigationHints: {
+          type: 'boolean',
+        },
+        focusIndicatorStyle: {
+          type: 'string',
+          enum: ['subtle', 'strong'],
         },
       },
       additionalProperties: false,
@@ -1321,6 +2398,95 @@ export const userPreferencesJsonSchema = {
           type: 'number',
           minimum: 20,
           maximum: 100,
+        },
+      },
+      additionalProperties: false,
+    },
+    gameplayPreferences: {
+      type: 'object',
+      properties: {
+        difficulty: {
+          type: 'string',
+          enum: ['tutorial', 'easy', 'normal', 'hard'],
+        },
+        notificationVolume: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+        notificationCategoryVolumes: {
+          type: 'object',
+          additionalProperties: {
+            type: 'number',
+            minimum: 0,
+            maximum: 100,
+          },
+          propertyNames: {
+            enum: ['master', 'alerts', 'ui', 'ambient'],
+          },
+        },
+        notificationDuration: {
+          type: 'number',
+          minimum: 1,
+          maximum: 30,
+        },
+        autoAdvanceTiming: {
+          type: 'number',
+          minimum: 0,
+          maximum: 30,
+        },
+        queueBuildupRate: {
+          type: 'number',
+          minimum: 1,
+          maximum: 10,
+        },
+      },
+      additionalProperties: false,
+    },
+    audioPreferences: {
+      type: 'object',
+      properties: {
+        masterVolume: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+        categoryVolumes: {
+          type: 'object',
+          additionalProperties: {
+            type: 'number',
+            minimum: 0,
+            maximum: 100,
+          },
+          propertyNames: {
+            enum: ['alerts', 'ui', 'ambient', 'narrative', 'effects'],
+          },
+        },
+        muteAll: {
+          type: 'boolean',
+        },
+        textToSpeechEnabled: {
+          type: 'boolean',
+        },
+        textToSpeechSpeed: {
+          type: 'number',
+          minimum: 50,
+          maximum: 200,
+        },
+      },
+      additionalProperties: false,
+    },
+    accountPreferences: {
+      type: 'object',
+      properties: {
+        displayName: {
+          type: 'string',
+          minLength: 1,
+          maxLength: 50,
+        },
+        privacyMode: {
+          type: 'string',
+          enum: ['public', 'friends', 'private'],
         },
       },
       additionalProperties: false,
@@ -1410,6 +2576,25 @@ export const effectiveThemePreferencesJsonSchema = {
         },
       ],
     },
+    effectIntensity: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
     fontSize: {
       anyOf: [
         {
@@ -1429,8 +2614,34 @@ export const effectiveThemePreferencesJsonSchema = {
         },
       ],
     },
+    terminalGlowIntensity: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
   },
-  required: ['theme', 'enableTerminalEffects', 'effects', 'fontSize'],
+  required: [
+    'theme',
+    'enableTerminalEffects',
+    'effects',
+    'effectIntensity',
+    'fontSize',
+    'terminalGlowIntensity',
+  ],
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
@@ -1495,8 +2706,92 @@ export const effectiveAccessibilityPreferencesJsonSchema = {
         },
       ],
     },
+    colorBlindMode: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    screenReaderAnnouncements: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    keyboardNavigationHints: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    focusIndicatorStyle: {
+      anyOf: [
+        {
+          type: 'object',
+          properties: {
+            value: {},
+            source: {
+              type: 'string',
+              enum: ['policy', 'server', 'local', 'os', 'default'],
+            },
+          },
+          required: ['source'],
+          additionalProperties: false,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
   },
-  required: ['reducedMotion', 'highContrast', 'fontSize'],
+  required: [
+    'reducedMotion',
+    'highContrast',
+    'fontSize',
+    'colorBlindMode',
+    'screenReaderAnnouncements',
+    'keyboardNavigationHints',
+    'focusIndicatorStyle',
+  ],
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
 } as const;
@@ -1564,6 +2859,25 @@ export const effectivePreferencesJsonSchema = {
             },
           ],
         },
+        effectIntensity: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
         fontSize: {
           anyOf: [
             {
@@ -1583,8 +2897,34 @@ export const effectivePreferencesJsonSchema = {
             },
           ],
         },
+        terminalGlowIntensity: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
       },
-      required: ['theme', 'enableTerminalEffects', 'effects', 'fontSize'],
+      required: [
+        'theme',
+        'enableTerminalEffects',
+        'effects',
+        'effectIntensity',
+        'fontSize',
+        'terminalGlowIntensity',
+      ],
       additionalProperties: false,
     },
     accessibilityPreferences: {
@@ -1647,8 +2987,92 @@ export const effectivePreferencesJsonSchema = {
             },
           ],
         },
+        colorBlindMode: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        screenReaderAnnouncements: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        keyboardNavigationHints: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        focusIndicatorStyle: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
       },
-      required: ['reducedMotion', 'highContrast', 'fontSize'],
+      required: [
+        'reducedMotion',
+        'highContrast',
+        'fontSize',
+        'colorBlindMode',
+        'screenReaderAnnouncements',
+        'keyboardNavigationHints',
+        'focusIndicatorStyle',
+      ],
       additionalProperties: false,
     },
     animationPreferences: {
@@ -1750,6 +3174,287 @@ export const effectivePreferencesJsonSchema = {
           ],
         },
       },
+      additionalProperties: false,
+    },
+    gameplayPreferences: {
+      type: 'object',
+      properties: {
+        difficulty: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        notificationVolume: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        notificationCategoryVolumes: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        notificationDuration: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        autoAdvanceTiming: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        queueBuildupRate: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+      },
+      required: [
+        'difficulty',
+        'notificationVolume',
+        'notificationCategoryVolumes',
+        'notificationDuration',
+        'autoAdvanceTiming',
+        'queueBuildupRate',
+      ],
+      additionalProperties: false,
+    },
+    audioPreferences: {
+      type: 'object',
+      properties: {
+        masterVolume: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        categoryVolumes: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        muteAll: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        textToSpeechEnabled: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        textToSpeechSpeed: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+      },
+      required: [
+        'masterVolume',
+        'categoryVolumes',
+        'muteAll',
+        'textToSpeechEnabled',
+        'textToSpeechSpeed',
+      ],
+      additionalProperties: false,
+    },
+    accountPreferences: {
+      type: 'object',
+      properties: {
+        displayName: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+        privacyMode: {
+          anyOf: [
+            {
+              type: 'object',
+              properties: {
+                value: {},
+                source: {
+                  type: 'string',
+                  enum: ['policy', 'server', 'local', 'os', 'default'],
+                },
+              },
+              required: ['source'],
+              additionalProperties: false,
+            },
+            {
+              type: 'null',
+            },
+          ],
+        },
+      },
+      required: ['displayName', 'privacyMode'],
       additionalProperties: false,
     },
   },
@@ -1795,10 +3500,52 @@ export const updatePreferencesJsonSchema = {
           required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
           additionalProperties: false,
         },
+        effectIntensity: {
+          type: 'object',
+          properties: {
+            scanlines: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            curvature: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            glow: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            noise: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            vignette: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+            flicker: {
+              type: 'number',
+              minimum: 0,
+              maximum: 100,
+            },
+          },
+          required: ['scanlines', 'curvature', 'glow', 'noise', 'vignette', 'flicker'],
+          additionalProperties: false,
+        },
         fontSize: {
           type: 'number',
           minimum: 12,
           maximum: 32,
+        },
+        terminalGlowIntensity: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
         },
       },
       additionalProperties: false,
@@ -1816,6 +3563,20 @@ export const updatePreferencesJsonSchema = {
           type: 'number',
           minimum: 12,
           maximum: 32,
+        },
+        colorBlindMode: {
+          type: 'string',
+          enum: ['none', 'protanopia', 'deuteranopia', 'tritanopia'],
+        },
+        screenReaderAnnouncements: {
+          type: 'boolean',
+        },
+        keyboardNavigationHints: {
+          type: 'boolean',
+        },
+        focusIndicatorStyle: {
+          type: 'string',
+          enum: ['subtle', 'strong'],
         },
       },
       additionalProperties: false,
@@ -1843,6 +3604,95 @@ export const updatePreferencesJsonSchema = {
       },
       additionalProperties: false,
     },
+    gameplayPreferences: {
+      type: 'object',
+      properties: {
+        difficulty: {
+          type: 'string',
+          enum: ['tutorial', 'easy', 'normal', 'hard'],
+        },
+        notificationVolume: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+        notificationCategoryVolumes: {
+          type: 'object',
+          additionalProperties: {
+            type: 'number',
+            minimum: 0,
+            maximum: 100,
+          },
+          propertyNames: {
+            enum: ['master', 'alerts', 'ui', 'ambient'],
+          },
+        },
+        notificationDuration: {
+          type: 'number',
+          minimum: 1,
+          maximum: 30,
+        },
+        autoAdvanceTiming: {
+          type: 'number',
+          minimum: 0,
+          maximum: 30,
+        },
+        queueBuildupRate: {
+          type: 'number',
+          minimum: 1,
+          maximum: 10,
+        },
+      },
+      additionalProperties: false,
+    },
+    audioPreferences: {
+      type: 'object',
+      properties: {
+        masterVolume: {
+          type: 'number',
+          minimum: 0,
+          maximum: 100,
+        },
+        categoryVolumes: {
+          type: 'object',
+          additionalProperties: {
+            type: 'number',
+            minimum: 0,
+            maximum: 100,
+          },
+          propertyNames: {
+            enum: ['alerts', 'ui', 'ambient', 'narrative', 'effects'],
+          },
+        },
+        muteAll: {
+          type: 'boolean',
+        },
+        textToSpeechEnabled: {
+          type: 'boolean',
+        },
+        textToSpeechSpeed: {
+          type: 'number',
+          minimum: 50,
+          maximum: 200,
+        },
+      },
+      additionalProperties: false,
+    },
+    accountPreferences: {
+      type: 'object',
+      properties: {
+        displayName: {
+          type: 'string',
+          minLength: 1,
+          maxLength: 50,
+        },
+        privacyMode: {
+          type: 'string',
+          enum: ['public', 'friends', 'private'],
+        },
+      },
+      additionalProperties: false,
+    },
   },
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -1863,13 +3713,34 @@ export const policyLockedPreferencesJsonSchema = {
         type: 'boolean',
       },
     },
+    effectIntensity: {
+      type: 'object',
+      additionalProperties: {
+        type: 'number',
+      },
+    },
     fontSize: {
+      type: 'boolean',
+    },
+    terminalGlowIntensity: {
       type: 'boolean',
     },
     reducedMotion: {
       type: 'boolean',
     },
     highContrast: {
+      type: 'boolean',
+    },
+    colorBlindMode: {
+      type: 'boolean',
+    },
+    screenReaderAnnouncements: {
+      type: 'boolean',
+    },
+    keyboardNavigationHints: {
+      type: 'boolean',
+    },
+    focusIndicatorStyle: {
       type: 'boolean',
     },
     enableAnimations: {
@@ -1882,6 +3753,45 @@ export const policyLockedPreferencesJsonSchema = {
       type: 'boolean',
     },
     enableScreenFlicker: {
+      type: 'boolean',
+    },
+    difficulty: {
+      type: 'boolean',
+    },
+    notificationVolume: {
+      type: 'boolean',
+    },
+    notificationCategoryVolumes: {
+      type: 'boolean',
+    },
+    notificationDuration: {
+      type: 'boolean',
+    },
+    autoAdvanceTiming: {
+      type: 'boolean',
+    },
+    queueBuildupRate: {
+      type: 'boolean',
+    },
+    masterVolume: {
+      type: 'boolean',
+    },
+    categoryVolumes: {
+      type: 'boolean',
+    },
+    muteAll: {
+      type: 'boolean',
+    },
+    textToSpeechEnabled: {
+      type: 'boolean',
+    },
+    textToSpeechSpeed: {
+      type: 'boolean',
+    },
+    displayName: {
+      type: 'boolean',
+    },
+    privacyMode: {
       type: 'boolean',
     },
   },

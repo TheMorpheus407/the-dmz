@@ -6,6 +6,15 @@ import {
   effectiveAnimationPreferencesSchema,
   userPreferencesSchema,
   updatePreferencesSchema,
+  effectIntensitySchema,
+  accessibilityPreferencesSchema,
+  gameplayPreferencesSchema,
+  audioPreferencesSchema,
+  accountPreferencesSchema,
+  defaultEffectIntensity,
+  defaultGameplayPreferences,
+  defaultAudioPreferences,
+  defaultAccountPreferences,
 } from './preferences.schema.js';
 
 describe('animationPreferencesSchema', () => {
@@ -127,5 +136,137 @@ describe('effectiveAnimationPreferencesSchema', () => {
       enableAnimations: null,
     };
     expect(effectiveAnimationPreferencesSchema.parse(input)).toEqual(input);
+  });
+});
+
+describe('effectIntensitySchema', () => {
+  it('validates correct intensity values', () => {
+    expect(effectIntensitySchema.parse(defaultEffectIntensity)).toEqual(defaultEffectIntensity);
+  });
+
+  it('rejects intensity values below 0', () => {
+    const input = {
+      scanlines: -1,
+      curvature: 50,
+      glow: 50,
+      noise: 50,
+      vignette: 50,
+      flicker: 50,
+    };
+    expect(() => effectIntensitySchema.parse(input)).toThrow();
+  });
+
+  it('rejects intensity values above 100', () => {
+    const input = {
+      scanlines: 101,
+      curvature: 50,
+      glow: 50,
+      noise: 50,
+      vignette: 50,
+      flicker: 50,
+    };
+    expect(() => effectIntensitySchema.parse(input)).toThrow();
+  });
+});
+
+describe('accessibilityPreferencesSchema', () => {
+  it('validates full accessibility settings', () => {
+    const input = {
+      reducedMotion: true,
+      highContrast: false,
+      colorBlindMode: 'protanopia',
+      screenReaderAnnouncements: true,
+      keyboardNavigationHints: false,
+      focusIndicatorStyle: 'strong',
+    };
+    expect(accessibilityPreferencesSchema.parse(input)).toEqual(input);
+  });
+
+  it('accepts undefined for optional fields', () => {
+    expect(accessibilityPreferencesSchema.parse({})).toEqual({});
+  });
+
+  it('rejects invalid color blind mode', () => {
+    const input = { colorBlindMode: 'invalid' };
+    expect(() => accessibilityPreferencesSchema.parse(input)).toThrow();
+  });
+});
+
+describe('gameplayPreferencesSchema', () => {
+  it('validates correct gameplay settings', () => {
+    expect(gameplayPreferencesSchema.parse(defaultGameplayPreferences)).toEqual(
+      defaultGameplayPreferences,
+    );
+  });
+
+  it('accepts valid difficulty levels', () => {
+    const difficulties = ['tutorial', 'easy', 'normal', 'hard'];
+    for (const difficulty of difficulties) {
+      expect(gameplayPreferencesSchema.parse({ difficulty })).toEqual({ difficulty });
+    }
+  });
+
+  it('rejects invalid difficulty', () => {
+    expect(() => gameplayPreferencesSchema.parse({ difficulty: 'impossible' })).toThrow();
+  });
+});
+
+describe('audioPreferencesSchema', () => {
+  it('validates correct audio settings', () => {
+    expect(audioPreferencesSchema.parse(defaultAudioPreferences)).toEqual(defaultAudioPreferences);
+  });
+
+  it('validates text to speech speed range', () => {
+    expect(audioPreferencesSchema.parse({ textToSpeechSpeed: 150 })).toEqual({
+      textToSpeechSpeed: 150,
+    });
+  });
+
+  it('rejects text to speech speed below minimum', () => {
+    expect(() => audioPreferencesSchema.parse({ textToSpeechSpeed: 40 })).toThrow();
+  });
+});
+
+describe('accountPreferencesSchema', () => {
+  it('validates correct account settings', () => {
+    expect(accountPreferencesSchema.parse(defaultAccountPreferences)).toEqual(
+      defaultAccountPreferences,
+    );
+  });
+
+  it('validates privacy modes', () => {
+    const modes = ['public', 'friends', 'private'];
+    for (const mode of modes) {
+      expect(accountPreferencesSchema.parse({ privacyMode: mode })).toEqual({ privacyMode: mode });
+    }
+  });
+
+  it('validates display name length', () => {
+    expect(accountPreferencesSchema.parse({ displayName: 'a'.repeat(50) })).toEqual({
+      displayName: 'a'.repeat(50),
+    });
+  });
+
+  it('rejects display name too long', () => {
+    expect(() => accountPreferencesSchema.parse({ displayName: 'a'.repeat(51) })).toThrow();
+  });
+});
+
+describe('userPreferencesSchema with new categories', () => {
+  it('validates complete user preferences', () => {
+    const input = {
+      themePreferences: { theme: 'amber' },
+      accessibilityPreferences: { reducedMotion: true },
+      gameplayPreferences: { difficulty: 'hard' },
+      audioPreferences: { masterVolume: 80 },
+      accountPreferences: { privacyMode: 'private' },
+    };
+    expect(userPreferencesSchema.parse(input)).toEqual(input);
+  });
+
+  it('accepts partial preferences', () => {
+    expect(userPreferencesSchema.parse({ themePreferences: { theme: 'green' } })).toEqual({
+      themePreferences: { theme: 'green' },
+    });
   });
 });

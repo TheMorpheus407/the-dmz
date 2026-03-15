@@ -27,6 +27,7 @@ export const userProfiles = authSchema.table(
     userId: uuid('user_id').notNull(),
     locale: varchar('locale', { length: 10 }).notNull().default('en'),
     timezone: varchar('timezone', { length: 64 }).notNull().default('UTC'),
+    preferences: jsonb('preferences').notNull().default({}),
     accessibilitySettings: jsonb('accessibility_settings').notNull().default({}),
     notificationSettings: jsonb('notification_settings').notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),

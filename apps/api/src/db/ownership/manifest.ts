@@ -18,21 +18,28 @@ export const OWNERSHIP_MANIFEST: OwnershipManifest = {
     {
       schema: 'public',
       table: 'users',
-      allowedModules: ['auth', 'game'],
+      allowedModules: ['auth', 'game', 'settings'],
       justification:
         'Users table is a shared identity table required for authentication and game player references',
     },
     {
       schema: 'public',
       table: 'tenants',
-      allowedModules: ['auth', 'game'],
+      allowedModules: ['auth', 'game', 'settings'],
       justification: 'Tenants table is required for multi-tenancy isolation across all modules',
     },
     {
       schema: 'public',
       table: 'tenant_policy',
-      allowedModules: ['auth', 'game'],
+      allowedModules: ['auth', 'game', 'settings'],
       justification: 'Tenant policy is a cross-cutting concern for access control',
+    },
+    {
+      schema: 'auth',
+      table: 'user_profiles',
+      allowedModules: ['auth', 'settings'],
+      justification:
+        'User profiles contain user settings and preferences that require user profile access',
     },
   ],
 };
