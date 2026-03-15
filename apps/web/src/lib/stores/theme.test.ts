@@ -20,6 +20,8 @@ const mockDocumentElement = {
   style: {
     setProperty: vi.fn(),
   },
+  addEventListener: vi.fn(),
+  removeEventListener: vi.fn(),
 };
 
 const mockMatchMedia = vi.fn();
@@ -31,6 +33,8 @@ vi.mock('$app/environment', () => ({
 vi.stubGlobal('localStorage', mockLocalStorage);
 vi.stubGlobal('document', {
   documentElement: mockDocumentElement,
+  addEventListener: mockDocumentElement.addEventListener,
+  removeEventListener: mockDocumentElement.removeEventListener,
 });
 vi.stubGlobal('window', {
   matchMedia: mockMatchMedia,
@@ -381,6 +385,155 @@ describe('themeStore', () => {
       const invalidSettings = null;
       const result = themeStore.importSettings(invalidSettings as never);
       expect(result).toBe(false);
+    });
+  });
+
+  describe('toggleHighContrast', () => {
+    it('toggles from green to high-contrast theme', () => {
+      themeStore.setTheme('green');
+      themeStore.toggleHighContrast();
+      const state = get(themeStore);
+      expect(state.name).toBe('high-contrast');
+      expect(state.enableTerminalEffects).toBe(false);
+    });
+
+    it('toggles from high-contrast to green theme', () => {
+      themeStore.setTheme('high-contrast');
+      themeStore.toggleHighContrast();
+      const state = get(themeStore);
+      expect(state.name).toBe('green');
+      expect(state.enableTerminalEffects).toBe(true);
+    });
+
+    it('disables all effects when toggling to high-contrast', () => {
+      themeStore.setTheme('green');
+      themeStore.toggleHighContrast();
+      const state = get(themeStore);
+      expect(state.effects.scanlines).toBe(false);
+      expect(state.effects.curvature).toBe(false);
+      expect(state.effects.glow).toBe(false);
+      expect(state.effects.noise).toBe(false);
+      expect(state.effects.vignette).toBe(false);
+      expect(state.effects.flicker).toBe(false);
+    });
+
+    it('restores default effects when toggling from high-contrast', () => {
+      themeStore.setTheme('high-contrast');
+      themeStore.toggleHighContrast();
+      const state = get(themeStore);
+      expect(state.effects.scanlines).toBe(true);
+      expect(state.effects.glow).toBe(true);
+    });
+  });
+
+  describe('isHighContrastTheme', () => {
+    it('returns true when high-contrast theme is active', () => {
+      themeStore.setTheme('high-contrast');
+      expect(themeStore.isHighContrastTheme()).toBe(true);
+    });
+
+    it('returns false when green theme is active', () => {
+      themeStore.setTheme('green');
+      expect(themeStore.isHighContrastTheme()).toBe(false);
+    });
+
+    it('returns false when amber theme is active', () => {
+      themeStore.setTheme('amber');
+      expect(themeStore.isHighContrastTheme()).toBe(false);
+    });
+  });
+
+  describe('keyboard shortcut (Alt+H)', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+      mockDocumentElement.dataset = {};
+      themeStore.unregisterKeyboardShortcut();
+    });
+
+    it('registers keyboard shortcut', () => {
+      themeStore.registerKeyboardShortcut();
+      expect(mockDocumentElement.addEventListener).toHaveBeenCalledWith(
+        'keydown',
+        expect.any(Function),
+      );
+    });
+
+    it('unregisters keyboard shortcut', () => {
+      themeStore.registerKeyboardShortcut();
+      themeStore.unregisterKeyboardShortcut();
+      expect(mockDocumentElement.removeEventListener).toHaveBeenCalledWith(
+        'keydown',
+        expect.any(Function),
+      );
+    });
+
+    it('toggles theme on Alt+H keypress', () => {
+      themeStore.setTheme('green');
+      themeStore.registerKeyboardShortcut();
+
+      const registeredHandler = mockDocumentElement.addEventListener.mock.calls[0]![1]!;
+      const mockEvent = {
+        altKey: true,
+        key: 'H',
+        preventDefault: vi.fn(),
+      } as unknown as KeyboardEvent;
+
+      registeredHandler(mockEvent);
+
+      const state = get(themeStore);
+      expect(state.name).toBe('high-contrast');
+      expect(mockEvent.preventDefault).toHaveBeenCalled();
+    });
+
+    it('toggles back to green on Alt+H when high-contrast is active', () => {
+      themeStore.setTheme('high-contrast');
+      themeStore.registerKeyboardShortcut();
+
+      const registeredHandler = mockDocumentElement.addEventListener.mock.calls[0]![1]!;
+      const mockEvent = {
+        altKey: true,
+        key: 'h',
+        preventDefault: vi.fn(),
+      } as unknown as KeyboardEvent;
+
+      registeredHandler(mockEvent);
+
+      const state = get(themeStore);
+      expect(state.name).toBe('green');
+    });
+
+    it('does not toggle on keypress without Alt modifier', () => {
+      themeStore.setTheme('green');
+      themeStore.registerKeyboardShortcut();
+
+      const registeredHandler = mockDocumentElement.addEventListener.mock.calls[0]![1]!;
+      const mockEvent = {
+        altKey: false,
+        key: 'h',
+        preventDefault: vi.fn(),
+      } as unknown as KeyboardEvent;
+
+      registeredHandler(mockEvent);
+
+      const state = get(themeStore);
+      expect(state.name).toBe('green');
+    });
+
+    it('does not toggle on Alt+other key', () => {
+      themeStore.setTheme('green');
+      themeStore.registerKeyboardShortcut();
+
+      const registeredHandler = mockDocumentElement.addEventListener.mock.calls[0]![1]!;
+      const mockEvent = {
+        altKey: true,
+        key: 'A',
+        preventDefault: vi.fn(),
+      } as unknown as KeyboardEvent;
+
+      registeredHandler(mockEvent);
+
+      const state = get(themeStore);
+      expect(state.name).toBe('green');
     });
   });
 });

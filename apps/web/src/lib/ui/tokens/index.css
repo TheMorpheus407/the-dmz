@@ -183,8 +183,8 @@
 }
 
 /* ========================================
-    THEME: HIGH-CONTRAST (ACCESSIBILITY)
-    ======================================== */
+     THEME: HIGH-CONTRAST (ACCESSIBILITY)
+     ======================================== */
 [data-theme='high-contrast'] {
   --color-bg: #000000;
   --color-surface: #0a0a0a;
@@ -194,6 +194,26 @@
   --color-accent: #ffff00;
   --color-muted: #cccccc;
   --color-backdrop: rgba(0, 0, 0, 0.9);
+
+  /* Semantic status colors - WCAG 2.1 AA compliant (minimum 4.5:1) */
+  --color-safe: #00ff00;
+  --color-warning: #ffff00;
+  --color-danger: #ff0000;
+  --color-info: #00ffff;
+  --color-critical: #ff0000;
+  --color-flagged: #ffff00;
+  --color-archived: #888888;
+
+  /* Typography enhancements for accessibility */
+  --text-base: 1rem;
+  --line-height-base: 1.5;
+  --letter-spacing-base: 0.05em;
+
+  /* Component-specific high-contrast tokens */
+  --button-border-width: 3px;
+  --input-border-width: 2px;
+  --focus-ring-width: 3px;
+  --touch-target-min: 44px;
 
   /* Disable CRT effects in high-contrast */
   --effect-scanlines: 0;
@@ -576,8 +596,8 @@
 }
 
 /* ========================================
-   HIGH-CONTRAST MODE TOGGLE
-   ======================================== */
+    HIGH-CONTRAST MODE TOGGLE
+    ======================================== */
 [data-high-contrast='on'] {
   --color-bg: #000000;
   --color-surface: #0a0a0a;
@@ -586,6 +606,100 @@
   --color-border: #ffffff;
   --color-accent: #ffff00;
   --color-muted: #cccccc;
+
+  /* Semantic status colors */
+  --color-safe: #00ff00;
+  --color-warning: #ffff00;
+  --color-danger: #ff0000;
+  --color-info: #00ffff;
+
+  /* Typography */
+  --line-height-base: 1.5;
+  --letter-spacing-base: 0.05em;
+
+  /* Component-specific */
+  --button-border-width: 3px;
+  --input-border-width: 2px;
+  --focus-ring-width: 3px;
+  --touch-target-min: 44px;
+}
+
+/* ========================================
+    HIGH-CONTRAST COMPONENT STYLES
+    ======================================== */
+
+/* Button high-contrast styles */
+[data-high-contrast='on'] .button,
+[data-theme='high-contrast'] .button {
+  border-width: var(--button-border-width, 3px);
+  font-weight: 700;
+  min-height: var(--touch-target-min, 44px);
+  min-width: var(--touch-target-min, 44px);
+  letter-spacing: var(--letter-spacing-base, 0.05em);
+}
+
+[data-high-contrast='on'] .button:focus-visible,
+[data-theme='high-contrast'] .button:focus-visible {
+  outline: var(--focus-ring-width, 3px) solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Input high-contrast styles */
+[data-high-contrast='on'] input,
+[data-theme='high-contrast'] input,
+[data-high-contrast='on'] textarea,
+[data-theme='high-contrast'] textarea,
+[data-high-contrast='on'] select,
+[data-theme='high-contrast'] select {
+  border-width: var(--input-border-width, 2px);
+  border-style: solid;
+  border-color: var(--color-border);
+  letter-spacing: var(--letter-spacing-base, 0.05em);
+}
+
+[data-high-contrast='on'] input:focus-visible,
+[data-theme='high-contrast'] input:focus-visible,
+[data-high-contrast='on'] textarea:focus-visible,
+[data-theme='high-contrast'] textarea:focus-visible,
+[data-high-contrast='on'] select:focus-visible,
+[data-theme='high-contrast'] select:focus-visible {
+  outline: var(--focus-ring-width, 3px) solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Touch target minimum size */
+[data-high-contrast='on'] a,
+[data-theme='high-contrast'] a,
+[data-high-contrast='on'] button,
+[data-theme='high-contrast'] button,
+[data-high-contrast='on'] [role='button'],
+[data-theme='high-contrast'] [role='button'],
+[data-high-contrast='on'] [tabindex],
+[data-theme='high-contrast'] [tabindex] {
+  min-height: var(--touch-target-min, 44px);
+  min-width: var(--touch-target-min, 44px);
+}
+
+/* Enhanced focus indicators for high-contrast */
+[data-high-contrast='on'] *:focus-visible,
+[data-theme='high-contrast'] *:focus-visible {
+  outline: var(--focus-ring-width, 3px) solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Link high-contrast styles */
+[data-high-contrast='on'] a,
+[data-theme='high-contrast'] a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  font-weight: 700;
+}
+
+[data-high-contrast='on'] a:hover,
+[data-theme='high-contrast'] a:hover {
+  text-decoration: none;
+  background-color: var(--color-accent);
+  color: #000000;
 }
 
 /* ========================================

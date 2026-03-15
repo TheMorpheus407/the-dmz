@@ -201,6 +201,7 @@ export type SyncCallback = (preferences: {
 
 let syncCallback: SyncCallback | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+let keyboardEventHandler: ((event: KeyboardEvent) => void) | null = null;
 const DEBOUNCE_DELAY_MS = 500;
 
 function createThemeStore() {
@@ -819,6 +820,80 @@ function createThemeStore() {
         persistTheme(newState);
         return newState;
       });
+    },
+
+    toggleHighContrast: () => {
+      const state = get({ subscribe });
+      if (state.lockedPreferences.includes('theme')) {
+        return;
+      }
+      const newTheme: ThemeName = state.name === 'high-contrast' ? 'green' : 'high-contrast';
+      update((s) => {
+        const effects = newTheme === 'high-contrast' ? HIGH_CONTRAST_EFFECTS : DEFAULT_EFFECTS;
+        const newState: ThemeStoreState = {
+          ...s,
+          name: newTheme,
+          enableTerminalEffects: newTheme !== 'high-contrast',
+          effects,
+          source: {
+            ...s.source,
+            theme: 'local',
+            effects: 'local',
+            enableTerminalEffects: 'local',
+          },
+        };
+        applyThemeToDom(newState);
+        persistTheme(newState);
+        debouncedSync();
+        return newState;
+      });
+    },
+
+    registerKeyboardShortcut: () => {
+      if (!browser || keyboardEventHandler) return;
+
+      keyboardEventHandler = (event: KeyboardEvent) => {
+        if (event.altKey && event.key.toLowerCase() === 'h') {
+          event.preventDefault();
+          const state = get({ subscribe });
+          if (!state.lockedPreferences.includes('theme')) {
+            const newTheme: ThemeName = state.name === 'high-contrast' ? 'green' : 'high-contrast';
+            update((s) => {
+              const effects =
+                newTheme === 'high-contrast' ? HIGH_CONTRAST_EFFECTS : DEFAULT_EFFECTS;
+              const newState: ThemeStoreState = {
+                ...s,
+                name: newTheme,
+                enableTerminalEffects: newTheme !== 'high-contrast',
+                effects,
+                source: {
+                  ...s.source,
+                  theme: 'local',
+                  effects: 'local',
+                  enableTerminalEffects: 'local',
+                },
+              };
+              applyThemeToDom(newState);
+              persistTheme(newState);
+              debouncedSync();
+              return newState;
+            });
+          }
+        }
+      };
+
+      document.addEventListener('keydown', keyboardEventHandler);
+    },
+
+    unregisterKeyboardShortcut: () => {
+      if (!browser || !keyboardEventHandler) return;
+      document.removeEventListener('keydown', keyboardEventHandler);
+      keyboardEventHandler = null;
+    },
+
+    isHighContrastTheme: (): boolean => {
+      const state = get({ subscribe });
+      return state.name === 'high-contrast';
     },
   };
 }
