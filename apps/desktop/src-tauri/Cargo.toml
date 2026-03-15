@@ -1,0 +1,35 @@
+[package]
+name = "the-dmz-desktop"
+version = "0.0.0"
+description = "The DMZ: Archive Gate - Desktop Application"
+authors = ["The DMZ Team"]
+edition = "2021"
+
+[lib]
+name = "the_dmz_desktop_lib"
+crate-type = ["lib", "cdylib", "staticlib"]
+
+[[bin]]
+name = "the-dmz-desktop"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+tauri = { version = "2.0", features = ["tray-icon"] }
+tauri-plugin-fs = "2.0"
+tauri-plugin-store = "2.0"
+tauri-plugin-window-state = "2.0"
+tauri-plugin-log = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = "0.4"
+chrono = "0.4"
+sha2 = "0.10"
+hex = "0.4"
+dirs = "5.0"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]

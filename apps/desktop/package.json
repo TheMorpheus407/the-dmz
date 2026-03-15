@@ -1,0 +1,30 @@
+{
+  "name": "@the-dmz/desktop",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "tauri": "tauri",
+    "lint": "cd ../.. && pnpm exec eslint .",
+    "lint:fix": "eslint . --fix",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@the-dmz/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.5.0",
+    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/plugin-fs": "^2.4.0",
+    "@tauri-apps/plugin-store": "^2.4.0",
+    "@tauri-apps/plugin-window-state": "^2.4.0",
+    "@tauri-apps/plugin-log": "^2.4.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.5.4",
+    "vite": "^6.3.0",
+    "vitest": "^4.0.18"
+  }
+}
