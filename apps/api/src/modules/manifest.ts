@@ -85,6 +85,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus', 'auth'],
       startupFlags: { required: true, diagnostics: true },
     },
+    {
+      name: 'analytics',
+      pluginPath: './modules/analytics/index.js',
+      routePrefix: '/api/v1/analytics',
+      dependencies: ['eventBus'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 
