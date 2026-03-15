@@ -219,7 +219,7 @@ export const profileJsonSchema = {
           properties: {
             theme: {
               type: 'string',
-              enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+              enum: ['green', 'amber', 'high-contrast', 'enterprise', 'custom'],
             },
             enableTerminalEffects: {
               type: 'boolean',
@@ -585,7 +585,7 @@ export const updateProfileJsonSchema = {
           properties: {
             theme: {
               type: 'string',
-              enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+              enum: ['green', 'amber', 'high-contrast', 'enterprise', 'custom'],
             },
             enableTerminalEffects: {
               type: 'boolean',
@@ -886,7 +886,7 @@ export const meResponseJsonSchema = {
               properties: {
                 theme: {
                   type: 'string',
-                  enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+                  enum: ['green', 'amber', 'high-contrast', 'enterprise', 'custom'],
                 },
                 enableTerminalEffects: {
                   type: 'boolean',
@@ -2145,7 +2145,7 @@ export const themePreferencesJsonSchema = {
   properties: {
     theme: {
       type: 'string',
-      enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+      enum: ['green', 'amber', 'high-contrast', 'enterprise', 'custom'],
     },
     enableTerminalEffects: {
       type: 'boolean',
@@ -2268,7 +2268,7 @@ export const userPreferencesJsonSchema = {
       properties: {
         theme: {
           type: 'string',
-          enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+          enum: ['green', 'amber', 'high-contrast', 'enterprise', 'custom'],
         },
         enableTerminalEffects: {
           type: 'boolean',
@@ -3470,7 +3470,7 @@ export const updatePreferencesJsonSchema = {
       properties: {
         theme: {
           type: 'string',
-          enum: ['green', 'amber', 'high-contrast', 'enterprise'],
+          enum: ['green', 'amber', 'high-contrast', 'enterprise', 'custom'],
         },
         enableTerminalEffects: {
           type: 'boolean',

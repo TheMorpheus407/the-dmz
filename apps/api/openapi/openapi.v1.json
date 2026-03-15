@@ -1702,7 +1702,13 @@
                               "properties": {
                                 "theme": {
                                   "type": "string",
-                                  "enum": ["green", "amber", "high-contrast", "enterprise"]
+                                  "enum": [
+                                    "green",
+                                    "amber",
+                                    "high-contrast",
+                                    "enterprise",
+                                    "custom"
+                                  ]
                                 },
                                 "enableTerminalEffects": {
                                   "type": "boolean"
@@ -2893,7 +2899,7 @@
                         "properties": {
                           "theme": {
                             "type": "string",
-                            "enum": ["green", "amber", "high-contrast", "enterprise"]
+                            "enum": ["green", "amber", "high-contrast", "enterprise", "custom"]
                           },
                           "enableTerminalEffects": {
                             "type": "boolean"
@@ -3188,7 +3194,7 @@
                           "properties": {
                             "theme": {
                               "type": "string",
-                              "enum": ["green", "amber", "high-contrast", "enterprise"]
+                              "enum": ["green", "amber", "high-contrast", "enterprise", "custom"]
                             },
                             "enableTerminalEffects": {
                               "type": "boolean"

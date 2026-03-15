@@ -7,3 +7,4 @@ export * from './game-engine.js';
 export * from './game-state.js';
 export * from './tenant.js';
 export * from './upgrades.js';
+export * from './theme.js';

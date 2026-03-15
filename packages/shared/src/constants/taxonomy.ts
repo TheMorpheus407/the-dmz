@@ -51,7 +51,7 @@ export const THREAT_TIER_METADATA: Record<
   },
 };
 
-export const THEME_IDS = ['green', 'amber', 'high-contrast', 'enterprise'] as const;
+export const THEME_IDS = ['green', 'amber', 'high-contrast', 'enterprise', 'custom'] as const;
 
 export type ThemeId = (typeof THEME_IDS)[number];
 
@@ -91,6 +91,12 @@ export const THEME_METADATA: Record<
     effectsEnabled: false,
     isAccessibility: false,
     defaultForSurfaces: ['admin', 'auth', 'public'],
+  },
+  custom: {
+    label: 'Custom',
+    effectsEnabled: true,
+    isAccessibility: false,
+    defaultForSurfaces: [],
   },
 };
 

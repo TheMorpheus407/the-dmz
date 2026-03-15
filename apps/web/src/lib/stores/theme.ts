@@ -3,6 +3,7 @@ import { writable, get } from 'svelte/store';
 import type { ThemeId, SurfaceId } from '@the-dmz/shared';
 import { defaultEffectStates } from '@the-dmz/shared/schemas';
 import type { EffectivePreferences } from '@the-dmz/shared/schemas';
+import type { ThemeColors } from '@the-dmz/shared/types';
 
 import { browser } from '$app/environment';
 
@@ -243,6 +244,47 @@ function createThemeStore() {
     root.style.setProperty('--glow-intensity', String((state.intensities.glow / 100) * 2));
     root.style.setProperty('--noise-opacity', String((state.intensities.noise / 100) * 0.1));
     root.style.setProperty('--vignette-opacity', String((state.intensities.vignette / 100) * 0.5));
+  }
+
+  function applyCustomThemeColors(colors: ThemeColors): void {
+    if (!browser) return;
+
+    const root = document.documentElement;
+
+    root.style.setProperty('--custom-bg-primary', colors.background.primary);
+    root.style.setProperty('--custom-bg-secondary', colors.background.secondary);
+    root.style.setProperty('--custom-text-primary', colors.text.primary);
+    root.style.setProperty('--custom-text-secondary', colors.text.secondary);
+    root.style.setProperty('--custom-text-accent', colors.text.accent);
+    root.style.setProperty('--custom-border', colors.border);
+    root.style.setProperty('--custom-highlight', colors.highlight);
+    root.style.setProperty('--custom-semantic-error', colors.semantic.error);
+    root.style.setProperty('--custom-semantic-warning', colors.semantic.warning);
+    root.style.setProperty('--custom-semantic-success', colors.semantic.success);
+    root.style.setProperty('--custom-semantic-info', colors.semantic.info);
+  }
+
+  function clearCustomThemeColors(): void {
+    if (!browser) return;
+
+    const root = document.documentElement;
+    const customProps = [
+      '--custom-bg-primary',
+      '--custom-bg-secondary',
+      '--custom-text-primary',
+      '--custom-text-secondary',
+      '--custom-text-accent',
+      '--custom-border',
+      '--custom-highlight',
+      '--custom-semantic-error',
+      '--custom-semantic-warning',
+      '--custom-semantic-success',
+      '--custom-semantic-info',
+    ];
+
+    customProps.forEach((prop) => {
+      root.style.removeProperty(prop);
+    });
   }
 
   function determineDefaultTheme(): ThemeName {
@@ -740,6 +782,43 @@ function createThemeStore() {
         debounceTimer = null;
       }
       update((s) => ({ ...s, pendingSync: false }));
+    },
+
+    applyCustomTheme(colors: ThemeColors): void {
+      update((state) => {
+        const newState: ThemeStoreState = {
+          ...state,
+          name: 'custom',
+          source: {
+            ...state.source,
+            theme: 'local',
+          },
+        };
+
+        applyThemeToDom(newState);
+        applyCustomThemeColors(colors);
+        persistTheme(newState);
+        return newState;
+      });
+    },
+
+    clearCustomTheme(): void {
+      update((state) => {
+        const currentTheme = state.name === 'custom' ? 'green' : state.name;
+        const newState: ThemeStoreState = {
+          ...state,
+          name: currentTheme,
+          source: {
+            ...state.source,
+            theme: 'local',
+          },
+        };
+
+        applyThemeToDom(newState);
+        clearCustomThemeColors();
+        persistTheme(newState);
+        return newState;
+      });
     },
   };
 }

@@ -331,6 +331,11 @@
               </label>
             {/each}
           </div>
+          <div class="settings-section__actions">
+            <Button variant="secondary" size="sm">
+              <a href="/settings/display">Custom Theme Editor</a>
+            </Button>
+          </div>
         </section>
 
         <section class="settings-section">

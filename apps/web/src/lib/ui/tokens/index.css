@@ -153,6 +153,23 @@
 }
 
 /* ========================================
+   THEME: CUSTOM (User-created)
+   ======================================== */
+[data-theme='custom'] {
+  --color-bg: var(--custom-bg-primary, #0a0e14);
+  --color-surface: var(--custom-bg-secondary, #141a22);
+  --color-text: var(--custom-text-primary, #33ff33);
+  --color-text-muted: var(--custom-text-secondary, #88aa88);
+  --color-border: var(--custom-border, #334433);
+  --color-accent: var(--custom-text-accent, #33ff33);
+  --color-muted: var(--custom-text-secondary, #88aa88);
+  --color-bg-primary: var(--custom-bg-primary, #0a0e14);
+  --color-bg-secondary: var(--custom-bg-secondary, #141a22);
+  --color-bg-tertiary: var(--custom-highlight, #1e2832);
+  --color-bg-hover: var(--custom-highlight, #253040);
+}
+
+/* ========================================
    THEME: AMBER (GAME VARIANT)
    ======================================== */
 [data-theme='amber'] {

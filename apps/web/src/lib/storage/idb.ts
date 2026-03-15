@@ -1,5 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 
+import type { ThemeConfig } from '@the-dmz/shared/types';
+
 export interface CachedEmail {
   id: string;
   scenarioId: string;
@@ -98,10 +100,15 @@ export interface DmzOfflineDB extends DBSchema {
     key: string;
     value: StoredSetting;
   };
+  customThemes: {
+    key: string;
+    value: ThemeConfig;
+    indexes: { 'by-createdAt': string };
+  };
 }
 
 const DB_NAME = 'dmz-offline';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbPromise: Promise<IDBPDatabase<DmzOfflineDB>> | null = null;
 
@@ -159,6 +166,13 @@ export async function getDB(): Promise<IDBPDatabase<DmzOfflineDB>> {
             keyPath: 'key',
           });
         }
+
+        if (oldVersion < 3) {
+          const themeStore = db.createObjectStore('customThemes', {
+            keyPath: 'id',
+          });
+          themeStore.createIndex('by-createdAt', 'createdAt');
+        }
       },
     });
   }
@@ -176,6 +190,7 @@ export async function clearDB(): Promise<void> {
   await db.clear('decisions');
   await db.clear('gameState');
   await db.clear('settings');
+  await db.clear('customThemes');
 }
 
 export async function getStorageUsage(): Promise<{ used: number; quota: number }> {
