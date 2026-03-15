@@ -142,6 +142,7 @@ export class PlayerProfileService {
 
       const difficultyTier = getPayloadField(payload, 'difficulty_tier') as string | undefined;
       const threatTier = getPayloadField(payload, 'threat_tier') as string | undefined;
+      const campaignPhase = getPayloadField(payload, 'campaign_phase') as string | undefined;
       const lastReviewedAt = getPayloadField(payload, 'last_reviewed_at') as string | undefined;
 
       competencyTags.forEach((domain) => {
@@ -153,10 +154,10 @@ export class PlayerProfileService {
 
         const baseValue = outcome === 'correct' ? 1.0 : outcome === 'partial' ? 0.5 : 0;
         const difficultyFactor = this.getDifficultyFactor(difficultyTier);
-        const threatFactor = this.getThreatFactor(threatTier);
+        const contextFactor = this.getContextFactor(threatTier, campaignPhase);
         const freshnessFactor = this.getFreshnessFactor(lastReviewedAt, current.lastUpdated);
 
-        let scoreDelta = baseValue * difficultyFactor * threatFactor * freshnessFactor * 10;
+        let scoreDelta = baseValue * difficultyFactor * contextFactor * freshnessFactor * 10;
 
         if (currentProfile.calibrationPhase === 'active') {
           scoreDelta = Math.abs(scoreDelta);
@@ -422,6 +423,23 @@ export class PlayerProfileService {
       severe: 1.4,
     };
     return factors[threatTier ?? ''] || 1.0;
+  }
+
+  private getCampaignPhaseFactor(campaignPhase?: string): number {
+    const factors: Record<string, number> = {
+      preparation: 0.9,
+      escalation: 1.1,
+      peak: 1.3,
+      resolution: 1.0,
+      aftermath: 0.9,
+    };
+    return factors[campaignPhase ?? ''] || 1.0;
+  }
+
+  public getContextFactor(threatTier?: string, campaignPhase?: string): number {
+    const threatFactor = this.getThreatFactor(threatTier);
+    const phaseFactor = this.getCampaignPhaseFactor(campaignPhase);
+    return threatFactor * phaseFactor;
   }
 
   public calculateSkillRating(competencyScores: Record<string, CompetencyScore>): number {
