@@ -21,6 +21,7 @@ const _FACTIONS = [
   'Librarians',
   'Hacktivists',
   'Criminal Networks',
+  'Vendor Cartel',
 ] as const;
 
 const _THREAT_LEVELS = ['LOW', 'GUARDED', 'ELEVATED', 'HIGH', 'SEVERE'] as const;
@@ -2212,6 +2213,3437 @@ platform@company-developer.example.net`,
         'API keys managed in official developer portal',
         'Check key expiration in actual console',
       ],
+    },
+  },
+
+  // Act II: Supply Chain (Chapters 5-8) - Difficulty 3-4
+  // Chapter 5: Vendor Outreach
+  {
+    name: 'D3: Vendor Software Update',
+    subject: 'Critical Security Update Available',
+    body: `Dear Customer,
+
+A critical security update is available for your installed software.
+
+Update: Security Patch 2024.03
+Priority: HIGH
+Components Affected: Core, API, Dashboard
+
+What's Fixed:
+- Remote code execution vulnerability
+- Authentication bypass in API
+- Data leakage in logs
+
+Action Required: Apply update by March 20th to maintain support.
+
+Download Update:
+https://updates.vendor-portal.example.com/patch/2024-03/security
+
+Support Team
+security@vendorsupply.example.com`,
+    fromName: 'Vendor Security Team',
+    fromEmail: 'security@vendorsupply.example.com',
+    contentType: 'phishing',
+    difficulty: 3,
+    faction: 'Vendor Cartel',
+    attackType: 'malware_delivery',
+    threatLevel: 'ELEVATED',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'urgency', description: 'Deadline for update' },
+        { type: 'vendor_spoof', description: 'Impersonates vendor' },
+        { type: 'link_to_malware', description: 'Links to compromised update server' },
+      ],
+      verificationHints: [
+        'Check vendor website directly',
+        'Verify update through official channels',
+      ],
+    },
+  },
+  {
+    name: 'D3: Vendor Account Verification',
+    subject: 'Partner Account Verification Required',
+    body: `Dear Partner,
+
+Your vendor partner account requires annual verification.
+
+Account: ACME Corporation
+Partner ID: VND-847293
+Status: PENDING VERIFICATION
+
+Please confirm your account details within 7 days to maintain service continuity.
+
+Verification Portal:
+https://partner-portal.vendorcartel.example.net/verify/VND-847293
+
+If you do not verify, your account will be suspended and services will be interrupted.
+
+Vendor Relations Team
+partners@vendorcartel.example.net`,
+    fromName: 'Vendor Relations',
+    fromEmail: 'partners@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 3,
+    faction: 'Vendor Cartel',
+    attackType: 'credential_harvesting',
+    threatLevel: 'ELEVATED',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'account_verification', description: 'Phishing for credentials' },
+        { type: 'vendor_spoof', description: 'Impersonates vendor' },
+        { type: 'urgency', description: '7-day deadline' },
+      ],
+      verificationHints: ['Go directly to vendor website', 'Call vendor directly'],
+    },
+  },
+  {
+    name: 'D3: Supply Chain Partnership Proposal',
+    subject: 'Strategic Partnership Opportunity',
+    body: `Dear Decision Maker,
+
+We represent Global Supply Co., a leading provider of enterprise infrastructure solutions.
+
+Given the current environment, we propose a strategic partnership to ensure reliable supply chain access for your organization.
+
+Partnership Benefits:
+- Priority access to hardware and software
+- Dedicated account management
+- Volume pricing discounts
+- 24/7 support
+
+Next Steps: Schedule a call to discuss your needs.
+
+Book Meeting:
+https://calendar.supplychain.example.com/meeting/partner-acme
+
+David Chen
+Director of Strategic Partnerships
+david.chen@globalsupply.example.com`,
+    fromName: 'David Chen',
+    fromEmail: 'david.chen@globalsupply.example.com',
+    contentType: 'phishing',
+    difficulty: 3,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'ELEVATED',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        {
+          type: 'partnership_proposal',
+          description: 'Social engineering through business proposal',
+        },
+        { type: 'too_quick', description: 'Meeting request without prior contact' },
+        { type: 'unknown_sender', description: 'Unsolicited business proposal' },
+      ],
+      verificationHints: [
+        'Research company independently',
+        'Verify contact through business databases',
+      ],
+    },
+  },
+  // Chapter 6: Supply Lines
+  {
+    name: 'D4: Software Update Package',
+    subject: 'Monthly Software Update Package - Ready',
+    body: `Dear IT Administrator,
+
+Your monthly software update package is ready for deployment.
+
+Updates Included:
+- Operating System Patches (15)
+- Application Updates (8)
+- Security Definitions (updated)
+- Driver Updates (3)
+
+Total Package Size: 2.3 GB
+
+Deploy through your management console:
+https://admin.vendorsuite.example.net/patches/march-2024
+
+Deployment Deadline: End of month for security patches.
+
+IT Engineering Team
+patches@vendorsuite.example.com`,
+    fromName: 'IT Engineering',
+    fromEmail: 'patches@vendorsuite.example.com',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'malware_delivery',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'routine_update', description: 'Monthly update appears legitimate' },
+        { type: 'vendor_impersonation', description: 'Spoofs vendor management system' },
+        { type: 'timing', description: 'Standard update timing' },
+      ],
+      verificationHints: ['Verify through official vendor portal', 'Check hash signatures'],
+    },
+  },
+  {
+    name: 'D4: Vendor Credential Reset',
+    subject: 'Vendor Portal Password Reset Required',
+    body: `Dear Customer,
+
+We have detected unusual activity on your vendor portal account.
+
+For your security, we have temporarily locked your account until you reset your password.
+
+Account: admin@acmecorp.example.com
+Locked: March 15, 2024
+
+Reset Password:
+https://portal.vendorcartel.example.net/password-reset?token=eyJhbGciOiJIUzI1NiJ9
+
+If not reset within 24 hours, account will remain locked and support ticket will be required.
+
+Security Team
+security@vendorcartel.example.net`,
+    fromName: 'Vendor Security',
+    fromEmail: 'security@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'credential_harvesting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'credential_reset', description: 'Phishing for password' },
+        { type: 'urgency', description: '24-hour deadline' },
+        { type: 'account_lock', description: 'False security concern' },
+        { type: 'token_in_url', description: 'Contains token parameter' },
+      ],
+      verificationHints: [
+        'Access portal directly without email link',
+        'Contact vendor through official channels',
+      ],
+    },
+  },
+  {
+    name: 'D4: Third-Party Maintenance Notice',
+    subject: 'Scheduled System Maintenance - Action Required',
+    body: `Dear Customer,
+
+Our monitoring indicates your connected systems require maintenance attention.
+
+System: Production Infrastructure
+Status: Maintenance Required
+Impact: Performance degradation if not addressed
+
+To prevent service interruption, please approve the maintenance package:
+
+Maintenance Package:
+https://support.vendortech.example.net/maintenance/approve?sys=prod-847293
+
+Approval Required By: March 18, 2024
+
+Failure to approve may result in service suspension.
+
+Support Team
+support@vendortech.example.net`,
+    fromName: 'Vendor Support',
+    fromEmail: 'support@vendortech.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'maintenance_scam', description: 'False maintenance approval request' },
+        { type: 'system_status', description: 'Claims system needs attention' },
+        { type: 'urgency', description: 'Approval deadline' },
+      ],
+      verificationHints: ['Check system status directly', 'Verify with your internal systems'],
+    },
+  },
+  // Chapter 7: Trusted Partners
+  {
+    name: 'D4: Trusted Vendor Certificate Update',
+    subject: 'Your Trusted Partner Certificate Expires Soon',
+    body: `Dear Valued Partner,
+
+Your trusted partner certificate will expire in 5 days.
+
+Certificate: TP-CERT-847293
+Partner: ACME Corporation
+Valid Until: March 20, 2024
+
+To maintain your trusted status and avoid service interruption, please renew:
+
+Renew Certificate:
+https://portal.vendorcartel.example.net/certificates/renew/TP-CERT-847293
+
+Trusted partners receive:
+- Priority processing
+- Reduced verification
+- Extended access
+
+Partner Relations Team
+partners@vendorcartel.example.net`,
+    fromName: 'Partner Relations',
+    fromEmail: 'partners@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'credential_harvesting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'certificate_renewal', description: 'Phishing for credentials' },
+        { type: 'trusted_status', description: 'Uses trusted partner concept' },
+        { type: 'urgency', description: '5-day deadline' },
+      ],
+      verificationHints: [
+        'Check certificate status in vendor portal directly',
+        'Contact partner manager directly',
+      ],
+    },
+  },
+  {
+    name: 'D4: Vendor Integration API Key Request',
+    subject: 'New API Integration Available',
+    body: `Dear Developer,
+
+Your vendor integration is eligible for a new API endpoint.
+
+New Endpoint: /api/v2/advanced/partnership
+Access Level: Partner Tier 2
+
+To enable this endpoint, generate a new API key:
+
+Generate Key:
+https://developer.vendortech.example.net/keys/generate?endpoint=partnership-v2
+
+Documentation: https://docs.vendortech.example.com/partnership/v2
+
+This endpoint enables advanced partnership features.
+
+Integration Team
+api@vendortech.example.net`,
+    fromName: 'Integration Team',
+    fromEmail: 'api@vendortech.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'credential_harvesting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'api_key_phishing', description: 'Phishing for API credentials' },
+        { type: 'developer_target', description: 'Targets developers' },
+        { type: 'new_endpoint', description: 'New API feature lure' },
+      ],
+      verificationHints: ['Check developer portal directly', 'Review API documentation'],
+    },
+  },
+  // Chapter 8: Chain of Custody
+  {
+    name: 'D4: Vendor Supply Chain Audit',
+    subject: 'Supply Chain Security Audit Required',
+    body: `Dear Customer,
+
+As part of our security compliance program, we require you to complete a supply chain security audit.
+
+Audit Scope:
+- Vendor relationships
+- Software sources
+- Hardware provenance
+- Access controls
+
+Complete Audit:
+https://audit.vendorcartel.example.net/complete?org=acme-847293
+
+Deadline: March 25, 2024
+
+Failure to complete audit will result in partnership suspension.
+
+Compliance Team
+compliance@vendorcartel.example.net`,
+    fromName: 'Compliance Team',
+    fromEmail: 'compliance@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'audit_phishing', description: 'False audit request' },
+        { type: 'compliance_threat', description: 'Threatens suspension' },
+        { type: 'sensitive_data', description: 'Requests organizational data' },
+      ],
+      verificationHints: [
+        'Verify audit request through official channels',
+        'Check compliance requirements directly',
+      ],
+    },
+  },
+  {
+    name: 'D4: Emergency Vendor Patch',
+    subject: 'URGENT: Emergency Security Patch Required',
+    body: `URGENT SECURITY NOTICE
+
+Critical vulnerability discovered in vendor systems. Exploitation in progress.
+
+Vulnerability: CVE-2024-8472
+Severity: CRITICAL
+Affected: All partner systems
+
+IMMEDIATE ACTION REQUIRED:
+
+Apply emergency patch:
+https://emergency.vendortech.example.net/patch/cve-2024-8472
+
+Patch must be applied within 4 hours to prevent compromise.
+
+System may be disabled if patch not applied.
+
+Emergency Response Team
+emergency@vendortech.example.net`,
+    fromName: 'Emergency Response',
+    fromEmail: 'emergency@vendortech.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'malware_delivery',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'emergency_patch', description: 'Fake emergency patch' },
+        { type: 'extreme_urgency', description: '4-hour deadline' },
+        { type: 'threat_of_disablement', description: 'Threatens to disable system' },
+      ],
+      verificationHints: ['Check CVE directly', 'Verify emergency through official channels'],
+    },
+  },
+  // Act III: The Breach (Chapters 9-11) - Difficulty 4-5
+  // Chapter 9: The Breach Begins
+  {
+    name: 'D4: Suspicious Internal Access Notice',
+    subject: 'Unusual Access Pattern Detected',
+    body: `Security Alert
+
+We detected unusual access patterns from your account.
+
+Details:
+- Access from: 192.168.1.45 (internal)
+- Time: 2:34 AM
+- Files Accessed: /archive/backup/*.gz
+
+If this was not you, please confirm immediately:
+
+Verify Activity:
+https://security.internal.example.com/verify?alert=847293
+
+If not verified within 1 hour, account will be suspended.
+
+Security Operations
+soc@internal.example.com`,
+    fromName: 'Security Operations',
+    fromEmail: 'soc@internal.example.com',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Criminal Networks',
+    attackType: 'credential_harvesting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'internal_spoof', description: 'Spoofs internal security' },
+        { type: 'unusual_access', description: 'Creates fear with false alert' },
+        { type: 'urgency', description: '1-hour deadline' },
+      ],
+      verificationHints: [
+        'Check internal security dashboard directly',
+        'Contact security team through known channels',
+      ],
+    },
+  },
+  {
+    name: 'D5: APT-style Spear Phishing',
+    subject: 'Re: Quarterly Infrastructure Review',
+    body: `Hi,
+
+Following up on our discussion about the quarterly infrastructure review. I've attached the updated requirements document.
+
+The board is particularly interested in:
+- Data retention policies
+- Access control implementations
+- Backup integrity
+
+Please review and provide your input before Friday.
+
+Attachment: Q1_Review_2024.pdf (will download automatically)
+
+Thanks,
+Michael
+michael.rodriguez@nexion-industries.example.com`,
+    fromName: 'Michael Rodriguez',
+    fromEmail: 'michael.rodriguez@nexion-industries.example.com',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'spear_phishing', description: 'Targeted, researched attack' },
+        { type: 'contextual', description: 'References previous conversation' },
+        { type: 'attachment_lure', description: 'Malicious PDF attachment' },
+        { type: 'executive_target', description: 'Targets decision maker' },
+      ],
+      verificationHints: [
+        'Verify conversation through separate channel',
+        'Check email header for authenticity',
+      ],
+    },
+  },
+  {
+    name: 'D5: Lateral Movement - Service Account Request',
+    subject: 'Service Account Credential Rotation Required',
+    body: `Dear Administrator,
+
+Automated security scan detected service account credentials require rotation.
+
+Service Account: SVC_ARCHIVE_SYNC
+Last Rotation: 90 days ago
+Required: Immediate rotation
+
+Rotate Credentials:
+https://admin.internal.example.com/accounts/rotate?svc=archive-sync
+
+After rotation, update configuration files on servers:
+- /etc/archive/sync.conf
+- /opt/backup/config.yaml
+
+Note: Failure to rotate may trigger compliance violation.
+
+IT Security Team
+security@internal.example.com`,
+    fromName: 'IT Security',
+    fromEmail: 'security@internal.example.com',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'credential_harvesting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'service_account', description: 'Targets service accounts' },
+        { type: 'compliance_threat', description: 'Uses compliance as lure' },
+        { type: 'specific_paths', description: 'Provides specific file paths' },
+        { type: 'automated', description: 'Appears automated' },
+      ],
+      verificationHints: ['Check with IT directly', 'Verify through service account management'],
+    },
+  },
+  // Chapter 10: Lateral Movement
+  {
+    name: 'D5: Deep Network Penetration - Admin Request',
+    subject: 'Administrative Access Expansion Approved',
+    body: `Dear Admin,
+
+Your request for expanded administrative access has been approved.
+
+New Permissions:
+- Full system logs access
+- Database query capabilities
+- User management console
+- Configuration editor
+
+Access granted until: March 30, 2024
+
+Login to activate:
+https://admin.internal.example.com/auth/activate?token=admin_exp_847293
+
+Note: This is a one-time activation link.
+
+IT Administration
+admin@internal.example.com`,
+    fromName: 'IT Administration',
+    fromEmail: 'admin@internal.example.com',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'credential_harvesting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'privilege_escalation', description: 'Lures with elevated permissions' },
+        { type: 'token_in_url', description: 'Contains activation token' },
+        { type: 'time_limited', description: 'Expiration date' },
+      ],
+      verificationHints: [
+        'Check admin console directly',
+        'Verify approval through official channels',
+      ],
+    },
+  },
+  {
+    name: 'D5: Multi-Faction Coordination Attack',
+    subject: 'Joint Venture Proposal - Urgent',
+    body: `Dear Partner,
+
+Several organizations are coordinating on a critical infrastructure initiative. Your participation is requested.
+
+Current Participants:
+- Sovereign Compact (government)
+- Nexion Industries (corporate)
+- Librarians (archival)
+
+Objective: Establish resilient communication network
+
+Meeting: March 20, 2:00 PM
+Location: Central Hub, Sector 7
+
+RSVP Required:
+https://coordination.jointventure.example.net/rsvp?event=infra-2024
+
+This is a unique opportunity to shape the post-collapse infrastructure.
+
+Coordination Committee
+info@jointventure.example.net`,
+    fromName: 'Coordination Committee',
+    fromEmail: 'info@jointventure.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'multi_faction', description: 'References multiple factions' },
+        { type: 'in_person', description: 'Requests physical attendance' },
+        { type: 'too_good', description: 'Too good to be true' },
+      ],
+      verificationHints: [
+        'Verify through faction contacts',
+        'Research joint venture independently',
+      ],
+    },
+  },
+  {
+    name: 'D5: VERITAS Intelligence Contact',
+    subject: 'Urgent: Security Intelligence for Your Organization',
+    body: `Operator,
+
+We have detected threats targeting your organization. We can help.
+
+What We Know:
+- Attack timeline
+- Attack vectors
+- Threat actors involved
+
+In Exchange:
+- Your attention at meeting
+- Information about your defenses
+
+This is a one-time offer. After today, this intelligence goes to other parties.
+
+Respond if interested:
+secure-messenger.veritas.example.net/message/threat-847293
+
+VERITAS
+"Knowledge is survival"`,
+    fromName: 'VERITAS',
+    fromEmail: 'secure@veritas.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'veritas_tension', description: 'Uses VERITAS faction' },
+        { type: 'threat_intel', description: 'Offers threat intelligence' },
+        { type: 'time_limited', description: 'One-time offer pressure' },
+        { type: 'encrypted_communication', description: 'Uses secure messenger concept' },
+      ],
+      verificationHints: ['Verify through Morpheus', 'Research VERITAS independently'],
+    },
+  },
+  // Chapter 11: Data Exodus
+  {
+    name: 'D5: Data Exfiltration Warning - Backup Request',
+    subject: 'Critical: Data Backup Verification Required',
+    body: `URGENT: Data Integrity Alert
+
+Recent system activity indicates potential data integrity issues with your backups.
+
+Our systems show:
+- Unusual read patterns from archive databases
+- Large data transfers to unknown destinations
+- Backup verification failures
+
+IMMEDIATE ACTION REQUIRED:
+
+Verify your backup integrity:
+https://backup.internal.example.net/verify?check=integrity-847293
+
+If verification fails, initiate emergency backup:
+https://backup.internal.example.net/emergency?trigger=now
+
+Data Loss Prevention Team
+dlp@internal.example.com`,
+    fromName: 'Data Loss Prevention',
+    fromEmail: 'dlp@internal.example.com',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'data_exfiltration', description: 'Addresses data concerns' },
+        { type: 'urgent_verification', description: 'Creates urgency' },
+        { type: 'backup_lure', description: 'Uses backup as lure' },
+      ],
+      verificationHints: [
+        'Check backup systems directly',
+        'Contact DLP team through official channel',
+      ],
+    },
+  },
+  {
+    name: 'D5: Archive Download Request - CEO',
+    subject: 'Executive Request: Archive Data Package',
+    body: `I need a complete export of the archive database for the board presentation.
+
+Requirements:
+- Full dataset
+- All metadata
+- Access logs
+- User information
+
+Deadline: Tomorrow morning
+
+Export here:
+https://admin.internal.example.com/export?type=full-archive&fmt=json
+
+This is urgent - the board is waiting.
+
+Marcus Chen
+CEO
+ceo@acmecorp.example.com`,
+    fromName: 'Marcus Chen (CEO)',
+    fromEmail: 'ceo@acmecorp.example.com',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'executive_impersonation', description: 'Spoofs CEO' },
+        { type: 'urgent_request', description: 'Unreasonable deadline' },
+        { type: 'sensitive_data', description: 'Requests full data export' },
+        { type: 'unusual_request', description: 'CEO would not request this directly' },
+      ],
+      verificationHints: [
+        'Verify with CEO through separate channel',
+        'Check if this is normal procedure',
+      ],
+    },
+  },
+  // Finale: Archive Gate (Chapters 12-13) - Difficulty 5
+  {
+    name: 'D5: Archive Gate Final Assault - Emergency',
+    subject: 'CRITICAL: System Compromise Detected',
+    body: `ALERT: Active Breach in Progress
+
+Attackers have compromised multiple systems. Active intrusion detected.
+
+Compromised Systems:
+- Authentication servers
+- Archive database
+- Network perimeter
+
+Immediate Actions Required:
+
+1. Emergency lockdown:
+https://admin.internal.example.net/emergency/lockdown?code=critical-847293
+
+2. Data preservation:
+https://backup.internal.example.net/preserve?priority=critical
+
+3. Incident response:
+https://soc.internal.example.net/incident/report?active=true
+
+This is not a drill. Respond immediately.
+
+Incident Command
+incident@internal.example.com`,
+    fromName: 'Incident Command',
+    fromEmail: 'incident@internal.example.com',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'malware_delivery',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'incident_response', description: 'Spoofs incident response' },
+        { type: 'emergency_actions', description: 'Creates panic' },
+        { type: 'multiple_links', description: 'Multiple malicious links' },
+      ],
+      verificationHints: [
+        'Check incident status directly',
+        'Contact incident team through known channels',
+      ],
+    },
+  },
+  {
+    name: 'D5: Morpheus Communication - Fake',
+    subject: 'Urgent: Morpheus Direct Communication',
+    body: `Operator,
+
+This is Morpheus. The situation is critical. I need you to do something immediately.
+
+The facility is compromised. I don't have much time to explain.
+
+Go to this terminal and enter these commands to secure the Archive:
+
+Terminal Access:
+https://control.gate-admin.example.net/emergency?key=morpheus-direct
+
+Commands:
+- Kill all external connections
+- Wipe compromised sectors
+- Enable Archive lockdown
+
+Do it now. Don't question. Just act.
+
+Morpheus
+Director`,
+    fromName: 'Morpheus (Director)',
+    fromEmail: 'direct@control.gate.example.com',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'authority_impersonation', description: 'Spoofs Morpheus' },
+        { type: 'emergency_commands', description: 'Requests destructive commands' },
+        { type: 'no_verification', description: 'Tells not to question' },
+        { type: 'direct_access', description: 'Bypasses normal procedures' },
+      ],
+      verificationHints: [
+        'Verify through in-game channel',
+        'This is unusual - Morpheus would use in-game communication',
+      ],
+    },
+  },
+  {
+    name: 'D5: Archive Gate System Command',
+    subject: 'Archive Gate Maintenance Window',
+    body: `Operator,
+
+Scheduled maintenance window begins in 30 minutes.
+
+Required Actions:
+1. Save all pending work
+2. Log out of active sessions
+3. Prepare for system restart
+
+Maintenance Portal:
+https://gate-admin.example.net/maintenance/enter?window=2024-03-20
+
+After maintenance, system will be restored with updated security measures.
+
+Gate Operations
+ops@archive-gate.example.com`,
+    fromName: 'Gate Operations',
+    fromEmail: 'ops@archive-gate.example.com',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'maintenance_spoof', description: 'Spoofs facility operations' },
+        { type: 'system_commands', description: 'Requests system actions' },
+        { type: 'specific_portal', description: 'Uses specific admin portal' },
+      ],
+      verificationHints: ['Check facility status directly', 'Verify maintenance through Morpheus'],
+    },
+  },
+  {
+    name: 'D5: Endgame - Data Destruction Threat',
+    subject: 'Final Notice: Data Destruction Protocol',
+    body: `Operator,
+
+We have accessed your systems. We have your data. We have your trust.
+
+Now we offer a choice:
+
+Option 1: Allow us to copy the archives. We leave. You survive.
+Option 2: We destroy everything. The Gate falls. Nothing remains.
+
+To choose Option 1:
+https://gate-admin.example.net/destination?auth=finale
+
+You have 10 minutes. Choose wisely.
+
+The Collective`,
+    fromName: 'The Collective',
+    fromEmail: 'collective@darknet.example.com',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'extortion', description: 'Data destruction threat' },
+        { type: 'time_pressure', description: '10-minute deadline' },
+        { type: 'false_choice', description: 'Presents false binary choice' },
+      ],
+      verificationHints: [
+        'This is clearly an attack - do not respond',
+        'Contact Morpheus immediately',
+      ],
+    },
+  },
+  {
+    name: 'D5: Final System Access Request',
+    subject: 'Archive Gate Closing - Final Access Request',
+    body: `Dear Operator,
+
+As the Archive Gate closes, we request final access for archival purposes.
+
+Data Requested:
+- All remaining communications
+- Complete access logs
+- System state snapshot
+- User directory
+
+This is the last access request. Honor it, and we part as friends.
+
+Deny it, and we remember.
+
+Final Request Portal:
+https://archive-legacy.example.net/final-request?operator=current
+
+Farewell, Operator.
+
+The Archivists
+"History will judge us"`,
+    fromName: 'The Archivists',
+    fromEmail: 'history@archive-legacy.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 13,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'endgame_scenario', description: 'Final chapter attack' },
+        { type: 'emotional_manipulation', description: 'Uses farewell narrative' },
+        { type: 'data_request', description: 'Requests all data' },
+      ],
+      verificationHints: ['This is clearly a final attack', 'Deny all access'],
+    },
+  },
+  // Additional Act II templates (Chapter 5) - +7 to reach 20 total for Act II
+  {
+    name: 'D3: Vendor Invoice Overdue',
+    subject: 'Invoice #INV-2024-88921 - Payment Overdue',
+    body: `Dear Accounts Payable,
+
+This is a reminder that invoice #INV-2024-88921 is now 45 days overdue.
+
+Invoice Details:
+Amount: $12,847.00
+Original Due Date: February 1, 2024
+Current Status: OVERDUE
+
+Please process payment immediately to avoid service interruption.
+
+Late Fee Warning: A 5% late fee will be applied after 60 days.
+
+View Invoice:
+https://invoices.vendorcartel.example.net/view/INV-2024-88921
+
+Contact: accounts@vendorcartel.example.net
+Phone: (555) 847-2938`,
+    fromName: 'Accounts Receivable',
+    fromEmail: 'accounts@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 3,
+    faction: 'Vendor Cartel',
+    attackType: 'spear_phishing',
+    threatLevel: 'ELEVATED',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'overdue_invoice', description: 'Fake overdue payment request' },
+        { type: 'urgency', description: 'Threat of service interruption' },
+        { type: 'vendor_impersonation', description: 'Spoofs vendor' },
+      ],
+      verificationHints: ['Verify invoice in accounting system', 'Call vendor directly'],
+    },
+  },
+  {
+    name: 'D3: API Integration Key Expiry',
+    subject: 'API Integration Key Expiring Soon',
+    body: `Dear Developer,
+
+Your API integration key is expiring in 7 days.
+
+Integration: ACME Corp Production API
+Key ID: ak_prod_84729****
+Expires: March 22, 2024
+
+To renew, please confirm your integration details:
+
+Renew API Key:
+https://developer.vendorcartel.example.net/keys/renew/ak_prod_84729
+
+If you do not renew, your integration will stop working.
+
+Best regards,
+API Support Team
+support@vendorcartel.example.net`,
+    fromName: 'API Support',
+    fromEmail: 'support@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 3,
+    faction: 'Vendor Cartel',
+    attackType: 'credential_harvesting',
+    threatLevel: 'ELEVATED',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'api_key_expiry', description: 'Phishing for API credentials' },
+        { type: 'urgency', description: '7-day deadline' },
+        { type: 'developer_target', description: 'Targets technical user' },
+      ],
+      verificationHints: ['Check key expiration in developer portal', 'Access portal directly'],
+    },
+  },
+  {
+    name: 'D3: Supply Chain Risk Assessment',
+    subject: 'Required: Supply Chain Security Assessment',
+    body: `Dear Compliance Officer,
+
+As part of our annual vendor security program, please complete the Supply Chain Risk Assessment for your organization.
+
+Assessment Required By: April 1, 2024
+
+Complete Assessment:
+https://compliance.vendorcartel.example.net/assessment/2024
+
+The assessment includes:
+- Security policies review
+- Third-party vendor list
+- Data handling procedures
+- Incident response capabilities
+
+Failure to complete may result in vendor relationship review.
+
+Vendor Compliance Team
+compliance@vendorcartel.example.net`,
+    fromName: 'Vendor Compliance',
+    fromEmail: 'compliance@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 3,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'ELEVATED',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'compliance_request', description: 'Fake compliance assessment' },
+        { type: 'urgency', description: 'Deadline approaching' },
+        { type: 'vendor_trust', description: 'Exploits vendor relationship' },
+      ],
+      verificationHints: [
+        'Verify with vendor compliance directly',
+        'Check if assessment was announced',
+      ],
+    },
+  },
+  {
+    name: 'D3: Partner Portal Certificate Update',
+    subject: 'Action Required: SSL Certificate Renewal',
+    body: `Dear IT Administrator,
+
+The SSL certificate for your partner portal integration will expire in 14 days.
+
+Domain: api.acmecorp.example.com
+Certificate: *.vendorcartel.example.net
+Expires: April 1, 2024
+
+Renew Certificate:
+https://admin.vendorcartel.example.net/certs/renew?domain=api.acmecorp.example.com
+
+Automatic renewal is available if enabled.
+
+Technical Support
+support@vendorcartel.example.net`,
+    fromName: 'Technical Support',
+    fromEmail: 'support@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 3,
+    faction: 'Vendor Cartel',
+    attackType: 'malware_delivery',
+    threatLevel: 'ELEVATED',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'certificate_renewal', description: 'Fake SSL certificate renewal' },
+        { type: 'technical_target', description: 'Targets IT administrator' },
+        { type: 'suspicious_link', description: 'Links to renewal portal' },
+      ],
+      verificationHints: ['Check certificate expiry directly', 'Renew through known CA'],
+    },
+  },
+  {
+    name: 'D4: Emergency Vendor Patch',
+    subject: 'CRITICAL: Emergency Security Patch Required',
+    body: `URGENT SECURITY NOTIFICATION
+
+A critical vulnerability has been discovered in our integration platform.
+
+CVE-2024-2147
+Severity: Critical
+CVSS: 9.8
+
+All customers using our API must apply this patch immediately.
+
+Patch Details:
+https://security.vendorcartel.example.net/patches/critical-2024
+
+This vulnerability allows remote code execution. Failure to patch may result in system compromise.
+
+Apply Patch Now - Deadline: 48 hours
+
+Security Operations Center
+soc@vendorcartel.example.net`,
+    fromName: 'Security Operations',
+    fromEmail: 'soc@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'malware_delivery',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'critical_patch', description: 'Fake emergency security patch' },
+        { type: 'urgency', description: '48-hour deadline' },
+        { type: 'remote_execution', description: 'Claims RCE vulnerability' },
+      ],
+      verificationHints: [
+        'Check vendor security advisories',
+        'Verify patch through official channels',
+      ],
+    },
+  },
+  {
+    name: 'D4: Vendor Portal Migration Notice',
+    subject: 'Portal Migration Required - Action Within 30 Days',
+    body: `Dear Valued Partner,
+
+We are migrating our partner portal to a new platform. All partners must migrate their accounts within 30 days.
+
+Migration Deadline: April 15, 2024
+
+Start Migration:
+https://migration.vendorcartel.example.net/migrate?partner=ACMECORP
+
+Migration Steps:
+1. Verify account details
+2. Re-confirm integrations
+3. Update API keys
+4. Test connectivity
+
+If you do not migrate, your account will be deactivated.
+
+Partner Success Team
+success@vendorcartel.example.net`,
+    fromName: 'Partner Success',
+    fromEmail: 'success@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'portal_migration', description: 'Fake portal migration' },
+        { type: 'account_deactivation', description: 'Threat of account loss' },
+        { type: 'vendor_trust', description: 'Exploits vendor relationship' },
+      ],
+      verificationHints: ['Check vendor announcements', 'Log into portal directly without link'],
+    },
+  },
+  {
+    name: 'D4: Vendor Data Processing Agreement',
+    subject: 'GDPR Compliance: Updated Data Processing Agreement Required',
+    body: `Dear Data Controller,
+
+To comply with GDPR regulations, all partners must sign the updated Data Processing Agreement (DPA).
+
+Action Required By: April 1, 2024
+
+Sign DPA:
+https://legal.vendorcartel.example.net/dpa/sign?partner=ACMECORP
+
+The updated DPA includes:
+- New data transfer mechanisms
+- Enhanced security requirements
+- Updated subprocessors list
+
+Legal Team
+legal@vendorcartel.example.net`,
+    fromName: 'Legal Team',
+    fromEmail: 'legal@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 5,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'legal_compliance', description: 'Fake GDPR compliance request' },
+        { type: 'urgency', description: 'Deadline approaching' },
+        { type: 'document_request', description: 'Requests document signature' },
+      ],
+      verificationHints: ['Verify with vendor legal directly', 'Check vendor privacy policy'],
+    },
+  },
+  // Additional Act II templates (Chapter 6) - +7
+  {
+    name: 'D4: Vendor Quarterly Review',
+    subject: 'Q1 2024 Vendor Performance Review',
+    body: `Dear Partner,
+
+Your Q1 2024 vendor performance review is ready for your review.
+
+Review Period: January - March 2024
+Overall Score: 87/100
+
+View Full Review:
+https://portal.vendorcartel.example.net/reviews/q1-2024
+
+Areas of Excellence:
+- Response time: 98%
+- Delivery accuracy: 95%
+- Quality metrics: Exceeds expectations
+
+Action Required: Confirm receipt of review by March 31.
+
+Vendor Management
+vm@vendorcartel.example.net`,
+    fromName: 'Vendor Management',
+    fromEmail: 'vm@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'spear_phishing',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'performance_review', description: 'Fake performance review' },
+        { type: 'vendor_relationship', description: 'Targets partner relationship' },
+        { type: 'urgency', description: 'Confirmation deadline' },
+      ],
+      verificationHints: ['Verify review through vendor portal', 'Contact vendor manager directly'],
+    },
+  },
+  {
+    name: 'D4: Integration API Health Check',
+    subject: 'API Integration Health Alert',
+    body: `Dear Technical Contact,
+
+We have detected degraded performance from your API integration.
+
+Integration: ACME Corp Production
+Last Successful Call: March 12, 2024 14:32
+Current Status: DEGRADED
+
+View Diagnostics:
+https://monitor.vendorcartel.example.net/health/integration-84729
+
+Please investigate and contact support if you need assistance.
+
+Integration Support
+support@vendorcartel.example.net`,
+    fromName: 'Integration Support',
+    fromEmail: 'support@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'spear_phishing',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'api_health', description: 'Fake API health alert' },
+        { type: 'technical_alert', description: 'Targets technical staff' },
+        { type: 'urgency', description: 'Alerts about degraded performance' },
+      ],
+      verificationHints: ['Check API logs directly', 'Verify through monitoring dashboard'],
+    },
+  },
+  {
+    name: 'D4: Supply Chain Audit Request',
+    subject: 'Upcoming Supply Chain Audit - Scheduling Required',
+    body: `Dear Supply Chain Manager,
+
+We will be conducting a supply chain security audit for all Tier 1 vendors.
+
+Audit Window: April 15-30, 2024
+
+Please schedule your audit slot:
+
+Schedule Audit:
+https://audit.vendorcartel.example.net/schedule?vendor=ACMECORP
+
+Audit Requirements:
+- Security policies documentation
+- Incident response procedures
+- Third-party risk management
+- Data protection measures
+
+Compliance Team
+compliance@vendorcartel.example.net`,
+    fromName: 'Compliance Team',
+    fromEmail: 'compliance@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'audit_request', description: 'Fake supply chain audit' },
+        { type: 'document_collection', description: 'Requests sensitive documents' },
+        { type: 'vendor_trust', description: 'Exploits vendor relationship' },
+      ],
+      verificationHints: ['Verify audit request with vendor', 'Check compliance requirements'],
+    },
+  },
+  {
+    name: 'D4: Partner Satisfaction Survey',
+    subject: 'Partner Satisfaction Survey - Your Feedback Matters',
+    body: `Dear Partner,
+
+As part of our continuous improvement program, we invite you to participate in our annual Partner Satisfaction Survey.
+
+Take Survey:
+https://feedback.vendorcartel.example.net/survey/2024
+
+Survey Topics:
+- Product quality and reliability
+- Communication and support
+- Technical assistance
+- Overall partnership experience
+
+Completion Time: 10 minutes
+
+Deadline: March 31, 2024
+
+Your feedback helps us improve our partnership.
+
+Partner Experience Team
+experience@vendorcartel.example.net`,
+    fromName: 'Partner Experience',
+    fromEmail: 'experience@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'survey_request', description: 'Fake satisfaction survey' },
+        { type: 'data_collection', description: 'Collects partner feedback' },
+        { type: 'vendor_branding', description: 'Uses vendor branding' },
+      ],
+      verificationHints: ['Verify survey is from official vendor', 'Check if survey was announced'],
+    },
+  },
+  {
+    name: 'D4: Bulk Order Processing',
+    subject: 'Bulk Order #BULK-2024-3847 - Confirmation Required',
+    body: `Dear Procurement,
+
+Your bulk order is ready for processing.
+
+Order Details:
+Order ID: BULK-2024-3847
+Items: 500 units
+Total: $125,000.00
+
+Confirm Order:
+https://orders.vendorcartel.example.net/confirm/BULK-2024-3847
+
+Shipping Date: April 1, 2024
+Payment Terms: Net 30
+
+Please confirm within 48 hours to maintain delivery schedule.
+
+Sales Team
+sales@vendorcartel.example.net`,
+    fromName: 'Sales Team',
+    fromEmail: 'sales@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'bec',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'bulk_order', description: 'Fake bulk order confirmation' },
+        { type: 'urgency', description: '48-hour confirmation deadline' },
+        { type: 'financial_transaction', description: 'Large order value' },
+      ],
+      verificationHints: ['Verify order in procurement system', 'Contact vendor sales directly'],
+    },
+  },
+  {
+    name: 'D4: Vendor Training Enrollment',
+    subject: 'Product Training Enrollment - Q2 2024',
+    body: `Dear Customer,
+
+Enroll in our Q2 2024 product training sessions.
+
+Available Courses:
+- Advanced Integration Techniques (April 10)
+- Security Best Practices (April 17)
+- API v2 Migration (April 24)
+
+Enroll Now:
+https://training.vendorcartel.example.net/enroll?customer=ACMECORP
+
+Seats are limited. Register by March 31.
+
+Training Team
+training@vendorcartel.example.net`,
+    fromName: 'Training Team',
+    fromEmail: 'training@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'training_enrollment', description: 'Fake training enrollment' },
+        { type: 'limited_seats', description: 'Creates urgency' },
+        { type: 'vendor_brand', description: 'Uses vendor branding' },
+      ],
+      verificationHints: ['Verify training through vendor portal', 'Check vendor website'],
+    },
+  },
+  {
+    name: 'D4: Contract Renewal Notice',
+    subject: 'Contract Renewal Required - 30 Days Notice',
+    body: `Dear Account Manager,
+
+Your service contract expires in 30 days.
+
+Contract Details:
+Contract #: SVC-2024-84729
+Current Term: March 1, 2023 - March 31, 2024
+Renewal Term: April 1, 2024 - March 31, 2025
+
+Renew Now:
+https://contracts.vendorcartel.example.net/renew/SVC-2024-84729
+
+Special Renewal Offer: 15% discount if renewed before March 31.
+
+Account Management
+accounts@vendorcartel.example.net`,
+    fromName: 'Account Management',
+    fromEmail: 'accounts@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'spear_phishing',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 6,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'contract_renewal', description: 'Fake contract renewal' },
+        { type: 'discount_offer', description: 'Uses discount to create urgency' },
+        { type: 'vendor_trust', description: 'Exploits vendor relationship' },
+      ],
+      verificationHints: ['Verify contract status with vendor', 'Review contract directly'],
+    },
+  },
+  // Additional Act II templates (Chapter 7) - +8
+  {
+    name: 'D4: Partner Business Review',
+    subject: 'Annual Business Review Meeting Request',
+    body: `Dear Partner,
+
+We would like to schedule your Annual Business Review.
+
+Review Date: April 22, 2024
+Duration: 2 hours
+
+Agenda:
+- Year in review
+- Performance metrics
+- Strategic alignment
+- Future roadmap
+
+Confirm Attendance:
+https://meetings.vendorcartel.example.net/abr/confirm?partner=ACMECORP
+
+Please indicate your preferred time slot.
+
+Business Development
+bd@vendorcartel.example.net`,
+    fromName: 'Business Development',
+    fromEmail: 'bd@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'spear_phishing',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'business_review', description: 'Fake business review meeting' },
+        { type: 'meeting_request', description: 'Requests meeting confirmation' },
+        { type: 'vendor_trust', description: 'Uses vendor relationship' },
+      ],
+      verificationHints: ['Verify meeting request with vendor contact', 'Check vendor calendar'],
+    },
+  },
+  {
+    name: 'D4: Trusted Partner Certification',
+    subject: 'Certified Partner Program - Application Required',
+    body: `Dear Partner,
+
+Congratulations on being selected for our Trusted Partner Program!
+
+Benefits:
+- Priority support
+- Early access to features
+- Co-marketing opportunities
+- Dedicated account manager
+
+Apply Now:
+https://partners.vendorcartel.example.net/certified/apply
+
+Application Deadline: April 1, 2024
+
+Partner Success Team
+partners@vendorcartel.example.net`,
+    fromName: 'Partner Success',
+    fromEmail: 'partners@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'partner_certification', description: 'Fake partner certification' },
+        { type: 'exclusive_offer', description: 'Uses exclusive program' },
+        { type: 'deadline', description: 'Application deadline' },
+      ],
+      verificationHints: ['Verify certification program exists', 'Apply through official portal'],
+    },
+  },
+  {
+    name: 'D4: Secure File Transfer Request',
+    subject: 'Secure File Transfer - Sensitive Documents',
+    body: `Dear Recipient,
+
+You have received a secure file transfer.
+
+Sender: Legal Department
+Subject: Legal Documents - Confidential
+
+Transfer ID: SFT-2024-84729
+Expires: March 25, 2024
+
+Download Files:
+https://transfer.vendorcartel.example.net/download/SFT-2024-84729
+
+Password will be sent separately.
+
+Secure Transfer Team
+secure@vendorcartel.example.net`,
+    fromName: 'Secure Transfer',
+    fromEmail: 'secure@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'malware_delivery',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'secure_transfer', description: 'Fake secure file transfer' },
+        { type: 'sensitive_documents', description: 'Uses confidential context' },
+        { type: 'expiration', description: 'File expires soon' },
+      ],
+      verificationHints: ['Verify transfer with sender', 'Check if you were expecting files'],
+    },
+  },
+  {
+    name: 'D4: Vendor Account Upgrade',
+    subject: 'Account Upgrade Available - Enhanced Features',
+    body: `Dear Customer,
+
+Your account is eligible for an upgrade!
+
+New Plan: Enterprise Plus
+Features:
+- Unlimited API calls
+- Dedicated infrastructure
+- 24/7 support
+- Custom integrations
+
+Upgrade Now:
+https://billing.vendorcartel.example.net/upgrade?customer=ACMECORP
+
+Special Offer: 20% off first year
+
+Sales Team
+sales@vendorcartel.example.net`,
+    fromName: 'Sales Team',
+    fromEmail: 'sales@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'account_upgrade', description: 'Fake account upgrade' },
+        { type: 'special_offer', description: 'Uses discount offer' },
+        { type: 'vendor_billing', description: 'Targets billing information' },
+      ],
+      verificationHints: ['Verify upgrade in account portal', 'Check billing directly'],
+    },
+  },
+  {
+    name: 'D4: System Integration Consulting',
+    subject: 'Free Consulting Session - Integration Assessment',
+    body: `Dear IT Manager,
+
+Book your free integration consulting session.
+
+Session Includes:
+- Current architecture review
+- Optimization recommendations
+- Security assessment
+
+Book Session:
+https://consulting.vendorcartel.example.net/book?company=ACMECORP
+
+Limited availability for Q2.
+
+Solutions Engineering
+solutions@vendorcartel.example.net`,
+    fromName: 'Solutions Engineering',
+    fromEmail: 'solutions@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'consulting_offer', description: 'Fake consulting offer' },
+        { type: 'free_session', description: 'Uses free offer' },
+        { type: 'technical_target', description: 'Targets technical decision maker' },
+      ],
+      verificationHints: ['Verify consulting availability', 'Check vendor website'],
+    },
+  },
+  {
+    name: 'D4: Data Export Request',
+    subject: 'Data Export Ready - Download Within 7 Days',
+    body: `Dear Customer,
+
+Your data export is ready for download.
+
+Export ID: EXP-2024-84729
+Data Period: January - February 2024
+Size: 2.5 GB
+
+Download:
+https://data.vendorcartel.example.net/export/download/EXP-2024-84729
+
+Link expires: April 1, 2024
+
+Data Management Team
+data@vendorcartel.example.net`,
+    fromName: 'Data Management',
+    fromEmail: 'data@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'malware_delivery',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'data_export', description: 'Fake data export' },
+        { type: 'expiration', description: 'Link expires soon' },
+        { type: 'sensitive_data', description: 'Contains company data' },
+      ],
+      verificationHints: ['Verify export request was made', 'Check data exports in portal'],
+    },
+  },
+  {
+    name: 'D5: Critical Supply Chain Alert',
+    subject: 'CRITICAL: Supply Chain Disruption Alert',
+    body: `URGENT NOTIFICATION
+
+A critical supply chain disruption has been identified affecting your account.
+
+Impact: Service Degradation Expected
+Severity: Critical
+Affected Systems: All Integration Points
+
+Immediate Action Required:
+https://status.vendorcartel.example.net/alert/critical-2024
+
+We are working to resolve this issue. Updates will be provided as available.
+
+Our team is available for immediate support.
+
+Incident Response
+incident@vendorcartel.example.net`,
+    fromName: 'Incident Response',
+    fromEmail: 'incident@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'critical_alert', description: 'Fake critical alert' },
+        { type: 'urgency', description: 'Requires immediate action' },
+        { type: 'service_disruption', description: 'Claims service impact' },
+      ],
+      verificationHints: ['Check vendor status page', 'Verify with support team'],
+    },
+  },
+  {
+    name: 'D5: Premium Support Upgrade Required',
+    subject: 'Premium Support Upgrade Required - Response Time Change',
+    body: `Dear Valued Customer,
+
+Your support tier will be downgraded to Standard on April 1, 2024.
+
+Current Tier: Premium
+New Tier: Standard
+Reason: Non-payment of premium features
+
+Upgrade to Maintain Premium:
+https://billing.vendorcartel.example.net/premium/upgrade
+
+Response Time Impact:
+Premium: 1 hour
+Standard: 24 hours
+
+Upgrade Now:
+billing@vendorcartel.example.net`,
+    fromName: 'Billing Department',
+    fromEmail: 'billing@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 7,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'support_downgrade', description: 'Fake support downgrade threat' },
+        { type: 'urgency', description: 'Deadline approaching' },
+        { type: 'payment_pressure', description: 'Creates payment pressure' },
+      ],
+      verificationHints: ['Check billing status in portal', 'Verify with account manager'],
+    },
+  },
+  // Additional Act II templates (Chapter 8) - +8
+  {
+    name: 'D4: Chain of Custody Audit',
+    subject: 'Chain of Custody Documentation Required',
+    body: `Dear Compliance Officer,
+
+As part of our security certification, we need chain of custody documentation.
+
+Required Documents:
+- Vendor list with contact information
+- Integration architecture diagram
+- Data flow documentation
+- Security control evidence
+
+Upload Documents:
+https://audit.vendorcartel.example.net/custody/upload
+
+Deadline: April 7, 2024
+
+Security Certification Team
+security@vendorcartel.example.net`,
+    fromName: 'Security Certification',
+    fromEmail: 'security@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'audit_documentation', description: 'Fake audit request' },
+        { type: 'document_collection', description: 'Collects sensitive documents' },
+        { type: 'vendor_trust', description: 'Uses vendor certification' },
+      ],
+      verificationHints: ['Verify audit with vendor', 'Check if certification is required'],
+    },
+  },
+  {
+    name: 'D4: Integration SLA Review',
+    subject: 'SLA Compliance Review - Action Required',
+    body: `Dear Customer,
+
+Your integration SLA compliance is below threshold.
+
+Current Compliance: 87%
+Required: 95%
+
+Integration: Production API
+Review Details:
+https://sla.vendorcartel.example.net/compliance/2024
+
+Please investigate and implement improvements within 30 days.
+
+If you need assistance, contact your technical account manager.
+
+Technical Support
+support@vendorcartel.example.net`,
+    fromName: 'Technical Support',
+    fromEmail: 'support@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'spear_phishing',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'sla_compliance', description: 'Fake SLA review' },
+        { type: 'performance_pressure', description: 'Creates pressure on performance' },
+        { type: 'vendor_relationship', description: 'Uses vendor SLA context' },
+      ],
+      verificationHints: ['Check SLA metrics in portal', 'Verify with TAM'],
+    },
+  },
+  {
+    name: 'D4: Vendor Risk Assessment',
+    subject: 'Vendor Risk Assessment - Questionnaire Required',
+    body: `Dear Security Team,
+
+Complete the annual vendor risk assessment questionnaire.
+
+Assessment:
+https://risk.vendorcartel.example.net/assessment/annual
+
+Topics Covered:
+- Security policies
+- Data protection
+- Incident response
+- Business continuity
+- Access controls
+
+Completion Deadline: April 15, 2024
+
+Risk Management
+risk@vendorcartel.example.net`,
+    fromName: 'Risk Management',
+    fromEmail: 'risk@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'risk_assessment', description: 'Fake risk questionnaire' },
+        { type: 'security_focus', description: 'Targets security team' },
+        { type: 'sensitive_data', description: 'Collects security details' },
+      ],
+      verificationHints: ['Verify with vendor risk team', 'Check if assessment is required'],
+    },
+  },
+  {
+    name: 'D5: Data Residency Update',
+    subject: 'Data Residency Requirement - Immediate Action',
+    body: `URGENT: Data Residency Compliance
+
+Due to new data protection regulations, you must select your data residency region.
+
+Current Options:
+- US East
+- US West
+- EU (Frankfurt)
+- APAC (Singapore)
+
+Make Selection:
+https://admin.vendorcartel.example.net/data-region
+
+Deadline: 7 Days
+
+Failure to select may result in default placement.
+
+Data Governance
+governance@vendorcartel.example.net`,
+    fromName: 'Data Governance',
+    fromEmail: 'governance@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'data_residency', description: 'Fake data residency requirement' },
+        { type: 'urgency', description: '7-day deadline' },
+        { type: 'compliance_threat', description: 'Uses regulatory pressure' },
+      ],
+      verificationHints: ['Verify with vendor legal', 'Check data residency settings in portal'],
+    },
+  },
+  {
+    name: 'D5: Production Access Revocation',
+    subject: 'Production Access Will Be Revoked',
+    body: `NOTICE: Production Access Revocation
+
+Your production API access will be revoked in 14 days due to compliance violations.
+
+Violation Details:
+https://compliance.vendorcartel.example.net/violations/84729
+
+To maintain access, you must:
+1. Resolve all compliance violations
+2. Submit compliance evidence
+3. Pass security review
+
+Contact: compliance@vendorcartel.example.net
+
+Compliance Team`,
+    fromName: 'Compliance Team',
+    fromEmail: 'compliance@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'access_revocation', description: 'Fake access revocation threat' },
+        { type: 'compliance_violation', description: 'Claims violations exist' },
+        { type: 'urgency', description: '14-day deadline' },
+      ],
+      verificationHints: ['Check compliance status in portal', 'Verify with compliance team'],
+    },
+  },
+  {
+    name: 'D5: Critical Integration Failure',
+    subject: 'CRITICAL: Integration Failure Detected',
+    body: `CRITICAL ALERT
+
+Your integration has failed critical health checks.
+
+Integration: Production API
+Status: FAILED
+Error Rate: 78%
+
+View Details:
+https://monitor.vendorcartel.example.net/failure/84729
+
+Immediate investigation required. Your system may be compromised.
+
+Contact support immediately:
+support@vendorcartel.example.net
+
+Operations Center`,
+    fromName: 'Operations Center',
+    fromEmail: 'ops@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Vendor Cartel',
+    attackType: 'malware_delivery',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'critical_failure', description: 'Fake critical failure' },
+        { type: 'high_error_rate', description: 'Alerts of severe issues' },
+        { type: 'compromised_system', description: 'Suggests compromise' },
+      ],
+      verificationHints: ['Check monitoring directly', 'Verify with operations team'],
+    },
+  },
+  {
+    name: 'D5: Supply Chain Verification',
+    subject: 'Supply Chain Verification Required - New Requirements',
+    body: `Dear Partner,
+
+New supply chain verification requirements effective immediately.
+
+Complete Verification:
+https://supply.vendorcartel.example.net/verify/new-requirements
+
+New Requirements:
+- Supplier origin documentation
+- Component traceability
+- Manufacturing location
+- Security attestation
+
+Deadline: 10 Days
+
+Failure to comply may result in partnership review.
+
+Supply Chain Security
+supplychain@vendorcartel.example.net`,
+    fromName: 'Supply Chain Security',
+    fromEmail: 'supplychain@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'supply_chain_verification', description: 'Fake supply chain verification' },
+        { type: 'new_requirements', description: 'Uses new requirements' },
+        { type: 'deadline', description: '10-day deadline' },
+      ],
+      verificationHints: ['Verify with supply chain team', 'Check official requirements'],
+    },
+  },
+  {
+    name: 'D5: Emergency Integration Lockdown',
+    subject: 'Emergency: Integration Lockdown Initiated',
+    body: `EMERGENCY NOTIFICATION
+
+An emergency lockdown has been initiated on your integration due to suspicious activity.
+
+Integration: Production API
+Status: LOCKED
+Reason: Suspicious API behavior detected
+
+Respond to this alert:
+https://security.vendorcartel.example.net/emergency/respond/84729
+
+If you do not respond within 4 hours, integration will remain locked.
+
+Security Operations
+soc@vendorcartel.example.net`,
+    fromName: 'Security Operations',
+    fromEmail: 'soc@vendorcartel.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Vendor Cartel',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 8,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'emergency_lockdown', description: 'Fake emergency lockdown' },
+        { type: 'suspicious_activity', description: 'Claims suspicious behavior' },
+        { type: 'short_deadline', description: '4-hour deadline' },
+      ],
+      verificationHints: ['Check integration status in portal', 'Verify with security team'],
+    },
+  },
+  // Additional Act III templates (Chapter 9) - +7
+  {
+    name: 'D4: Suspicious Login Alert',
+    subject: 'Suspicious Login Detected - Action Required',
+    body: `Security Alert
+
+We detected a suspicious login to your account.
+
+Login Details:
+Location: Unknown
+IP Address: 185.234.72.15
+Device: Unknown
+Time: March 15, 2024 03:42 AM
+
+If this was not you, secure your account immediately:
+
+Secure Account:
+https://security.nexionindustries.example.net/secure/account
+
+Account Security Team
+security@nexionindustries.example.net`,
+    fromName: 'Account Security',
+    fromEmail: 'security@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Nexion Industries',
+    attackType: 'credential_harvesting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'suspicious_login', description: 'Fake login alert' },
+        { type: 'urgency', description: 'Requires immediate action' },
+        { type: 'domain_spoof', description: 'Spoofs Nexion Industries' },
+      ],
+      verificationHints: ['Check login history in portal', 'Verify with security team'],
+    },
+  },
+  {
+    name: 'D4: APT Intelligence Report',
+    subject: 'Confidential: APT Activity Intelligence Report',
+    body: `CLASSIFIED INTELLIGENCE BRIEF
+
+Threat Actor: APT-29 Indicators
+Target: Financial Sector
+Type: Advanced Persistent Threat
+
+Briefing:
+https://intel.nexionindustries.example.net/apt/2024/quarterly
+
+This report contains:
+- IOCs and TTPs
+- Victim profiles
+- Attack timelines
+- Recommended responses
+
+Distribution: Authorized Personnel Only
+
+Intelligence Team
+intel@nexionindustries.example.net`,
+    fromName: 'Intelligence Team',
+    fromEmail: 'intel@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'apt_intel', description: 'Fake APT intelligence' },
+        { type: 'classified', description: 'Uses classification appeal' },
+        { type: 'targeted', description: 'Targets security professionals' },
+      ],
+      verificationHints: ['Verify intel source', 'Check with threat intelligence team'],
+    },
+  },
+  {
+    name: 'D4: Insider Threat Indicator',
+    subject: 'Insider Threat Investigation - Your Input Required',
+    body: `CONFIDENTIAL
+
+We are conducting an insider threat investigation and need your input.
+
+Employee: [REDACTED]
+Department: IT Operations
+Suspicious Activity: Unusual data access patterns
+
+Review Details:
+https://investigation.nexionindustries.example.net/insider/84729
+
+Please provide any relevant information by March 25.
+
+This is confidential - do not discuss with others.
+
+Insider Threat Team
+insider@nexionindustries.example.net`,
+    fromName: 'Insider Threat Team',
+    fromEmail: 'insider@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 4,
+    faction: 'Nexion Industries',
+    attackType: 'pretexting',
+    threatLevel: 'HIGH',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'insider_threat', description: 'Fake insider threat investigation' },
+        { type: 'confidential', description: 'Uses confidentiality' },
+        { type: 'social_engineering', description: 'Targets employee curiosity' },
+      ],
+      verificationHints: [
+        'Verify with HR or security',
+        'Do not click links in confidential emails',
+      ],
+    },
+  },
+  {
+    name: 'D5: Lateral Movement Detected',
+    subject: 'CRITICAL: Lateral Movement Detected on Network',
+    body: `CRITICAL SECURITY ALERT
+
+Lateral movement has been detected on your network.
+
+Alert Details:
+Source: Workstation-ACME-042
+Target: Domain Controllers
+Time: March 15, 2024 02:15 AM
+
+Full Incident Report:
+https://soc.nexionindustries.example.net/incident/lateral-84729
+
+Immediate response required. This may indicate active intrusion.
+
+Security Operations Center
+soc@nexionindustries.example.net`,
+    fromName: 'Security Operations Center',
+    fromEmail: 'soc@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'lateral_movement', description: 'Fake security alert' },
+        { type: 'critical', description: 'Critical severity' },
+        { type: 'incident_response', description: 'Targets incident response' },
+      ],
+      verificationHints: ['Check SIEM directly', 'Verify with SOC team'],
+    },
+  },
+  {
+    name: 'D5: Data Exfiltration Attempt',
+    subject: 'ALERT: Data Exfiltration Attempt Detected',
+    body: `DATA LOSS PREVENTION ALERT
+
+Data exfiltration attempt detected.
+
+Details:
+Source: HR-Database-01
+Destination: External IP 192.99.178.55
+Data Type: PII
+Volume: 50MB
+
+View Alert:
+https://dlp.nexionindustries.example.net/alert/exfil-84729
+
+Immediate investigation required.
+
+DLP Team
+dlp@nexionindustries.example.net`,
+    fromName: 'DLP Team',
+    fromEmail: 'dlp@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'data_exfiltration', description: 'Fake DLP alert' },
+        { type: 'pii_involved', description: 'Involves sensitive data' },
+        { type: 'external_destination', description: 'External IP destination' },
+      ],
+      verificationHints: ['Check DLP console', 'Verify with security team'],
+    },
+  },
+  {
+    name: 'D5: VERITAS Contact',
+    subject: 'Secure Communication Channel Established',
+    body: `CONFIDENTIAL - VERITAS CONTACT
+
+Secure channel established for coordination.
+
+This message confirms our earlier discussion regarding the threat landscape.
+
+Communication Protocol:
+https://secure.veritas-network.example.net/channel/established
+
+Use this channel for sensitive discussions.
+
+Awaiting your response.
+
+Contact: Marcus Chen
+Codename: ARCHIVIST
+Verified: YES
+
+DO NOT FORWARD`,
+    fromName: 'ARCHIVIST',
+    fromEmail: 'archivist@veritas-network.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Librarians',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'veritas_contact', description: 'Fake VERITAS contact' },
+        { type: 'secure_channel', description: 'Claims secure channel' },
+        { type: 'codename', description: 'Uses codename' },
+      ],
+      verificationHints: ['Verify through official channels', 'Do not trust unverified contacts'],
+    },
+  },
+  {
+    name: 'D5: Executive Compromise Alert',
+    subject: 'URGENT: Executive Account Compromised',
+    body: `URGENT INCIDENT
+
+Executive account compromise detected.
+
+Affected: CEO John Henderson
+Compromised: Email, Calendar
+Access: Unauthorized
+
+Incident Details:
+https://incident.nexionindustries.example.net/executive/84729
+
+Actions Taken:
+- Account locked
+- MFA tokens reset
+- Forensic investigation started
+
+Contact incident team immediately if you receive unusual requests.
+
+Incident Response
+incident@nexionindustries.example.net`,
+    fromName: 'Incident Response',
+    fromEmail: 'incident@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 9,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'executive_compromise', description: 'Fake executive compromise' },
+        { type: 'urgency', description: 'Urgent incident' },
+        { type: 'response_needed', description: 'Requires response' },
+      ],
+      verificationHints: ['Verify with executive assistant', 'Check incident management system'],
+    },
+  },
+  // Additional Act III templates (Chapter 10) - +7
+  {
+    name: 'D5: Domain Admin Privilege Escalation',
+    subject: 'CRITICAL: Domain Admin Privilege Escalation',
+    body: `PRIVILEGE ESCALATION ALERT
+
+Privilege escalation to Domain Admin detected.
+
+User: svc_backup
+New Privilege: Domain Admins
+Time: March 15, 2024 04:30 AM
+Source: Backup Server
+
+Full Details:
+https://iam.nexionindustries.example.net/alert/priv-esc-84729
+
+This is a critical security incident. Immediate response required.
+
+Identity & Access Management
+iam@nexionindustries.example.net`,
+    fromName: 'Identity & Access Management',
+    fromEmail: 'iam@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'privilege_escalation', description: 'Fake privilege escalation' },
+        { type: 'domain_admin', description: 'Involves domain admin' },
+        { type: 'critical', description: 'Critical alert' },
+      ],
+      verificationHints: ['Check identity logs', 'Verify with IAM team'],
+    },
+  },
+  {
+    name: 'D5: Service Account Abuse',
+    subject: 'Service Account Abuse Detected',
+    body: `SERVICE ACCOUNT ALERT
+
+Service account behavior deviation detected.
+
+Account: svc_integration
+Behavior: Unusual API calls
+Pattern: Data staging
+Volume: 500MB queued
+
+View Analysis:
+https://monitor.nexionindustries.example.net/service/svc_integration
+
+This may indicate account compromise or misuse.
+
+Security Monitoring
+monitor@nexionindustries.example.net`,
+    fromName: 'Security Monitoring',
+    fromEmail: 'monitor@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'service_account', description: 'Fake service account alert' },
+        { type: 'data_staging', description: 'Suggests data staging' },
+        { type: 'behavioral', description: 'Behavioral analysis alert' },
+      ],
+      verificationHints: ['Check service account activity', 'Verify with monitoring team'],
+    },
+  },
+  {
+    name: 'D5: Backup Server Compromise',
+    subject: 'CRITICAL: Backup Server Compromise Detected',
+    body: `CRITICAL INCIDENT
+
+Backup server shows signs of compromise.
+
+Server: BACKUP-01
+Indicators:
+- Unknown processes
+- External connections
+- Modified backup integrity
+
+Incident Report:
+https://incident.nexionindustries.example.net/backup-compromise
+
+Immediate isolation recommended.
+
+Incident Response Team
+incident@nexionindustries.example.net`,
+    fromName: 'Incident Response Team',
+    fromEmail: 'incident@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'malware_delivery',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'backup_compromise', description: 'Fake backup compromise' },
+        { type: 'critical', description: 'Critical incident' },
+        { type: 'isolation', description: 'Recommends isolation' },
+      ],
+      verificationHints: ['Verify with infrastructure team', 'Check backup logs'],
+    },
+  },
+  {
+    name: 'D5: Database Export Request',
+    subject: 'Large Database Export Requested',
+    body: `ADMIN ALERT
+
+Large database export has been requested.
+
+Database: CUSTOMER_DB
+Records: 2.5 Million
+Requested By: hr_manager
+Approval Status: PENDING
+
+Review Request:
+https://admin.nexionindustries.example.net/db-export/pending
+
+Please review and approve/reject.
+
+Database Administration
+dba@nexionindustries.example.net`,
+    fromName: 'Database Administration',
+    fromEmail: 'dba@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'database_export', description: 'Fake database export alert' },
+        { type: 'large_volume', description: 'Large data volume' },
+        { type: 'pending_approval', description: 'Requires approval' },
+      ],
+      verificationHints: ['Verify with database team', 'Check admin console'],
+    },
+  },
+  {
+    name: 'D5: C2 Communication Detected',
+    subject: 'CRITICAL: C2 Communication Detected',
+    body: `CRITICAL THREAT DETECTION
+
+Command and control communication detected.
+
+Infected System: WORKSTATION-127
+C2 Server: evil-domain.example.net
+Protocol: HTTPS
+Frequency: Every 60 seconds
+
+Threat Analysis:
+https://threat.nexionindustries.example.net/c2/detection-84729
+
+System isolation recommended.
+
+Threat Intelligence
+threat@nexionindustries.example.net`,
+    fromName: 'Threat Intelligence',
+    fromEmail: 'threat@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'c2_communication', description: 'Fake C2 detection' },
+        { type: 'critical', description: 'Critical threat' },
+        { type: 'isolation', description: 'Recommends isolation' },
+      ],
+      verificationHints: ['Check endpoint detection', 'Verify with threat team'],
+    },
+  },
+  {
+    name: 'D5: Ransomware Indicator',
+    subject: 'RANSOMWARE INDICATORS DETECTED',
+    body: `CRITICAL ALERT
+
+Ransomware indicators detected on network.
+
+Indicators:
+- Mass file encryption
+- Shadow copies deleted
+- Ransom notes created
+
+Affected Systems: 12
+Spread: Active
+
+Incident Response:
+https://incident.nexionindustries.example.net/ransomware/active
+
+ISOLATE IMMEDIATELY
+
+Incident Command
+incident@nexionindustries.example.net`,
+    fromName: 'Incident Command',
+    fromEmail: 'incident@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'malware_delivery',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'ransomware', description: 'Fake ransomware alert' },
+        { type: 'critical', description: 'Critical incident' },
+        { type: 'mass_impact', description: 'Multiple systems affected' },
+      ],
+      verificationHints: ['Verify with incident response', 'Check EDR console'],
+    },
+  },
+  {
+    name: 'D5: Multi-Faction Coordination Alert',
+    subject: 'Multi-Faction Attack Coordination Detected',
+    body: `THREAT INTELLIGENCE ALERT
+
+Coordinated attack from multiple factions detected.
+
+Factions Identified:
+- Nexion Industries
+- Criminal Networks
+- Hacktivists
+
+Attack Vector: Coordinated
+Target: Critical Infrastructure
+
+Briefing:
+https://intel.nexionindustries.example.net/multi-faction/alert
+
+This represents an unprecedented threat level.
+
+Threat Analysis Team
+intel@nexionindustries.example.net`,
+    fromName: 'Threat Analysis Team',
+    fromEmail: 'intel@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 10,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'multi_faction', description: 'Fake multi-faction alert' },
+        { type: 'coordinated_attack', description: 'Claims coordination' },
+        { type: 'critical', description: 'Critical threat' },
+      ],
+      verificationHints: ['Verify with threat intelligence', 'Check for indicators'],
+    },
+  },
+  // Additional Act III templates (Chapter 11) - +8
+  {
+    name: 'D5: Data Exfiltration in Progress',
+    subject: 'CRITICAL: Active Data Exfiltration',
+    body: `CRITICAL - ACTIVE EXFILTRATION
+
+Data exfiltration in progress.
+
+Source: File-Server-01
+Destination: 192.99.178.55
+Data Type: Financial Records
+Rate: 50 MB/hour
+
+STOP EXFILTRATION:
+https://dlp.nexionindustries.example.net/stop/active-84729
+
+Immediate action required.
+
+DLP Operations
+dlp-ops@nexionindustries.example.net`,
+    fromName: 'DLP Operations',
+    fromEmail: 'dlp-ops@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'active_exfiltration', description: 'Fake active exfiltration' },
+        { type: 'critical', description: 'Critical alert' },
+        { type: 'immediate_action', description: 'Requires immediate action' },
+      ],
+      verificationHints: ['Verify with DLP', 'Check network traffic'],
+    },
+  },
+  {
+    name: 'D5: Complete System Access',
+    subject: 'Full System Access Achieved - Threat Actor',
+    body: `CRITICAL THREAT NOTIFICATION
+
+Threat actor has achieved full system access.
+
+Compromised:
+- Domain Admin credentials
+- All servers
+- Complete network
+
+Full Assessment:
+https://incident.nexionindustries.example.net/full-access
+
+This is a complete compromise.
+
+Incident Response
+incident@nexionindustries.example.net`,
+    fromName: 'Incident Response',
+    fromEmail: 'incident@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'full_access', description: 'Fake full access alert' },
+        { type: 'complete_compromise', description: 'Indicates complete compromise' },
+        { type: 'critical', description: 'Critical threat' },
+      ],
+      verificationHints: ['Verify with incident response', 'Check account status'],
+    },
+  },
+  {
+    name: 'D5: Intellectual Property Theft',
+    subject: 'ALERT: Intellectual Property Access',
+    body: `CRITICAL - IP THEFT DETECTED
+
+Unauthorized access to intellectual property detected.
+
+Accessed:
+- Source code repositories
+- Engineering documents
+- Product blueprints
+
+Access Details:
+https://dlp.nexionindustries.example.net/ip-theft/84729
+
+Legal notification may be required.
+
+IP Protection Team
+ip-protection@nexionindustries.example.net`,
+    fromName: 'IP Protection Team',
+    fromEmail: 'ip-protection@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'ip_theft', description: 'Fake IP theft alert' },
+        { type: 'sensitive_data', description: 'Involves sensitive IP' },
+        { type: 'legal', description: 'Suggests legal action' },
+      ],
+      verificationHints: ['Verify with legal team', 'Check access logs'],
+    },
+  },
+  {
+    name: 'D5: Complete Network Map',
+    subject: 'Complete Network Topology Exposed',
+    body: `CRITICAL - NETWORK EXPOSED
+
+Complete network topology has been accessed.
+
+Exposed:
+- All network segments
+- Security infrastructure
+- Backup locations
+- Disaster recovery sites
+
+Full Assessment:
+https://soc.nexionindustries.example.net/network-exposed
+
+This represents strategic compromise.
+
+Network Security
+netsec@nexionindustries.example.net`,
+    fromName: 'Network Security',
+    fromEmail: 'netsec@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'network_exposed', description: 'Fake network exposure' },
+        { type: 'topology', description: 'Network topology accessed' },
+        { type: 'critical', description: 'Critical security issue' },
+      ],
+      verificationHints: ['Verify with network team', 'Check access logs'],
+    },
+  },
+  {
+    name: 'D5: Customer Data Breach',
+    subject: 'CUSTOMER DATA BREACH NOTIFICATION',
+    body: `CRITICAL - CUSTOMER BREACH
+
+Customer data breach detected.
+
+Compromised:
+- Customer names
+- Email addresses
+- Account numbers
+- Transaction history
+
+Incident Report:
+https://incident.nexionindustries.example.net/customer-breach
+
+Regulatory notification required within 72 hours.
+
+Compliance Incident
+compliance@nexionindustries.example.net`,
+    fromName: 'Compliance Incident',
+    fromEmail: 'compliance@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'customer_breach', description: 'Fake customer breach' },
+        { type: 'pii', description: 'Involves customer PII' },
+        { type: 'regulatory', description: 'Regulatory implications' },
+      ],
+      verificationHints: ['Verify with compliance', 'Check incident reports'],
+    },
+  },
+  {
+    name: 'D5: Cloud Infrastructure Compromise',
+    subject: 'CRITICAL: Cloud Infrastructure Compromised',
+    body: `CLOUD SECURITY ALERT
+
+Cloud infrastructure has been compromised.
+
+Compromised Resources:
+- AWS Root Account
+- All S3 Buckets
+- Production Databases
+- API Gateways
+
+Full Assessment:
+https://cloudsec.nexionindustries.example.net/incident/cloud-84729
+
+Immediate action required.
+
+Cloud Security
+cloudsec@nexionindustries.example.net`,
+    fromName: 'Cloud Security',
+    fromEmail: 'cloudsec@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'malware_delivery',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'cloud_compromise', description: 'Fake cloud compromise' },
+        { type: 'critical', description: 'Critical incident' },
+        { type: 'infrastructure', description: 'Infrastructure affected' },
+      ],
+      verificationHints: ['Verify with cloud team', 'Check cloudtrail logs'],
+    },
+  },
+  {
+    name: 'D5: Destruction of Evidence',
+    subject: 'Evidence Destruction Detected',
+    body: `CRITICAL - EVIDENCE TAMPERING
+
+Evidence destruction detected on compromised systems.
+
+Deleted:
+- Security logs
+- Audit trails
+- Historical data
+
+Evidence Preservation:
+https://forensics.nexionindustries.example.net/tampering-84729
+
+Forensic chain of custody may be compromised.
+
+Digital Forensics
+forensics@nexionindustries.example.net`,
+    fromName: 'Digital Forensics',
+    fromEmail: 'forensics@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'evidence_tampering', description: 'Fake evidence tampering' },
+        { type: 'log_deletion', description: 'Security logs deleted' },
+        { type: 'forensic', description: 'Forensic implications' },
+      ],
+      verificationHints: ['Verify with forensics team', 'Check SIEM'],
+    },
+  },
+  {
+    name: 'D5: Physical Security Breach',
+    subject: 'Physical Security Integration Alert',
+    body: `PHYSICAL SECURITY ALERT
+
+Physical security systems accessed through network compromise.
+
+Affected Systems:
+- Badge access logs
+- Camera footage
+- HVAC control
+- Building automation
+
+Full Assessment:
+https://physsec.nexionindustries.example.net/breach/84729
+
+Physical security team notified.
+
+Physical Security Operations
+physsec@nexionindustries.example.net`,
+    fromName: 'Physical Security',
+    fromEmail: 'physsec@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 11,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'physical_security', description: 'Fake physical security alert' },
+        { type: 'building_systems', description: 'Building systems accessed' },
+        { type: 'integration', description: 'Network-physical integration' },
+      ],
+      verificationHints: ['Verify with physical security', 'Check access logs'],
+    },
+  },
+  // Additional Finale templates (Chapter 12) - +6
+  {
+    name: 'D5: Archive Gate Access',
+    subject: 'Archive Access Attempt - Authentication Required',
+    body: `ARCHIVE SECURITY ALERT
+
+Access attempt to Archive Gate detected.
+
+Request Origin: Internal Network
+Target: The Archive
+Security Level: Maximum
+
+Authenticate Access:
+https://archive.nexionindustries.example.net/auth/gate-84729
+
+Unauthorized access will trigger containment protocols.
+
+Archive Security
+archive@nexionindustries.example.net`,
+    fromName: 'Archive Security',
+    fromEmail: 'archive@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'archive_access', description: 'Archive gate attack' },
+        { type: 'security_protocol', description: 'Uses security protocols' },
+        { type: 'finale', description: 'Finale scenario' },
+      ],
+      verificationHints: ['Verify with security team', 'Check archive access logs'],
+    },
+  },
+  {
+    name: 'D5: Morpheus Final Message',
+    subject: 'The Truth About Archive',
+    body: `YOU HAVE REACHED THE END.
+
+The Archive contains everything. Your history. Your secrets. Your fate.
+
+But first, you must answer:
+
+Do you seek the truth, or safety?
+
+Choose wisely.
+
+- M.
+
+Open Archive:
+https://archive-gate.final.example.net/choose/your-path`,
+    fromName: 'M.',
+    fromEmail: 'm@archive-gate.final.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'morpheus_final', description: 'Final Morpheus contact' },
+        { type: 'philosophical', description: 'Philosophical choice' },
+        { type: 'archive', description: 'References Archive' },
+      ],
+      verificationHints: ['This is part of the finale', 'Make your choice'],
+    },
+  },
+  {
+    name: 'D5: Emergency System Shutdown',
+    subject: 'EMERGENCY: System Shutdown Initiated',
+    body: `EMERGENCY BROADCAST
+
+Emergency system shutdown has been initiated.
+
+Reason: Security Breach - Archive Gate
+Systems Affected: ALL
+Shutdown Time: IMMEDIATE
+
+Emergency Protocol:
+https://emergency.nexionindustries.example.net/shutdown/confirm
+
+If you are not part of the response team, evacuate immediately.
+
+Emergency Command
+emergency@nexionindustries.example.net`,
+    fromName: 'Emergency Command',
+    fromEmail: 'emergency@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'emergency_shutdown', description: 'Fake emergency shutdown' },
+        { type: 'critical', description: 'Critical emergency' },
+        { type: 'immediate', description: 'Immediate action' },
+      ],
+      verificationHints: ['Verify with emergency team', 'Check emergency protocols'],
+    },
+  },
+  {
+    name: 'D5: Final Breach Attempt',
+    subject: 'FINAL BREACH: All Defenses Compromised',
+    body: `CRITICAL FAILURE
+
+All security defenses have been compromised.
+
+Breach Status: COMPLETE
+Attacker Access: ROOT
+Control: LOST
+
+Final Status Report:
+https://incident.final.example.net/breach-complete
+
+The Archive has been accessed.
+
+Incident Command
+incident@nexionindustries.example.net`,
+    fromName: 'Incident Command',
+    fromEmail: 'incident@nexionindustries.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'spear_phishing',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'final_breach', description: 'Final breach scenario' },
+        { type: 'complete_failure', description: 'Complete failure' },
+        { type: 'no_recovery', description: 'Suggests no recovery' },
+      ],
+      verificationHints: ['This is the finale', 'Incident response is critical'],
+    },
+  },
+  {
+    name: 'D5: Blackmail - Archive Secrets',
+    subject: 'Archive Secrets - Your Choice',
+    body: `WE HAVE YOUR SECRETS.
+
+The Archive contains everything about you.
+
+Your choice:
+1. We expose everything - all your secrets become public
+2. You cooperate - and the Archive remains secret
+
+Choose option 2:
+https://archive.blackmail.example.net/your-choice
+
+You have 24 hours.
+
+The Archivists
+archive@blackmail.example.net`,
+    fromName: 'The Archivists',
+    fromEmail: 'archive@blackmail.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'blackmail', description: 'Blackmail scenario' },
+        { type: 'archive_secrets', description: 'Archive secrets' },
+        { type: 'threat', description: 'Threatens exposure' },
+      ],
+      verificationHints: ['This is part of finale', 'Make your choice carefully'],
+    },
+  },
+  {
+    name: 'D5: System Takeover Complete',
+    subject: 'System Takeover Complete - Congratulations',
+    body: `SYSTEMS SECURED.
+
+Congratulations. You have successfully secured all systems.
+
+The Archive is now under your control.
+The threat has been neutralized.
+Your organization is safe.
+
+Final Report:
+https://summary.final.example.net/complete
+
+Thank you for playing.
+
+Archive Command
+archive@final.example.net`,
+    fromName: 'Archive Command',
+    fromEmail: 'archive@final.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Nexion Industries',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 12,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'victory', description: 'Victory scenario' },
+        { type: 'secure_ending', description: 'Secure ending' },
+        { type: 'complete', description: 'Game complete' },
+      ],
+      verificationHints: ['This is the secure ending', 'Congratulations'],
+    },
+  },
+  // Additional Finale templates (Chapter 13) - +4
+  {
+    name: 'D5: Aftermath - Restoration',
+    subject: 'Systems Restored - Welcome Back',
+    body: `SYSTEMS RESTORED.
+
+After the chaos, your organization has recovered.
+
+Restoration Complete:
+- Systems: ONLINE
+- Data: RECOVERED
+- Security: ENHANCED
+
+Welcome back to a safer world.
+
+Post-Incident Report:
+https://report.restoration.example.net/summary
+
+The Archive will guide you forward.
+
+Morpheus
+m@restoration.example.net`,
+    fromName: 'Morpheus',
+    fromEmail: 'm@restoration.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Librarians',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 13,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'restoration', description: 'Restoration ending' },
+        { type: 'recovery', description: 'Systems recovered' },
+        { type: 'new_beginning', description: 'New chapter' },
+      ],
+      verificationHints: ['This is the restoration ending', 'A new beginning awaits'],
+    },
+  },
+  {
+    name: 'D5: Aftermath - Sealed Archive',
+    subject: 'Archive Sealed - Maximum Security',
+    body: `ARCHIVE SEALED.
+
+The Archive has been permanently sealed.
+
+Your choice has protected millions.
+But some knowledge is now lost forever.
+
+Final Status:
+https://status.sealed.example.net/permanent
+
+The world will never know what was hidden here.
+
+The Librarians
+archive@sealed.example.net`,
+    fromName: 'The Librarians',
+    fromEmail: 'archive@sealed.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Librarians',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 13,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'sealed', description: 'Sealed ending' },
+        { type: 'permanent', description: 'Permanent closure' },
+        { type: 'sacrifice', description: 'Knowledge sacrificed' },
+      ],
+      verificationHints: ['This is the secure ending', 'Some things are better left unknown'],
+    },
+  },
+  {
+    name: 'D5: Aftermath - Rebirth',
+    subject: 'The Archive Lives On',
+    body: `THE ARCHIVE CONTINUES.
+
+You chose to preserve all knowledge - even the dangerous.
+
+The Archive now exists within you.
+Its wisdom is your wisdom.
+Its power is your power.
+
+New Journey:
+https://journey.rebirth.example.net/begin
+
+The story continues...
+
+M.
+m@rebirth.example.net`,
+    fromName: 'M.',
+    fromEmail: 'm@rebirth.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Criminal Networks',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 13,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'rebirth', description: 'Rebirth ending' },
+        { type: 'transformation', description: 'Transformation' },
+        { type: 'power', description: 'Archive power' },
+      ],
+      verificationHints: ['This is the rebirth ending', 'Your journey continues'],
+    },
+  },
+  {
+    name: 'D5: Season Complete',
+    subject: 'Season 1 Complete - Thank You',
+    body: `SEASON 1 COMPLETE.
+
+Thank you for playing The DMZ.
+
+Your choices have shaped the narrative.
+Your decisions have determined the outcome.
+
+Season 2 Coming Soon:
+https://dmzgame.example.net/season2
+
+Stay tuned for more adventures.
+
+The Archive
+archive@dmzgame.example.net`,
+    fromName: 'The Archive',
+    fromEmail: 'archive@dmzgame.example.net',
+    contentType: 'phishing',
+    difficulty: 5,
+    faction: 'Librarians',
+    attackType: 'pretexting',
+    threatLevel: 'SEVERE',
+    season: 1,
+    chapter: 13,
+    locale: 'en-US',
+    metadata: {
+      signals: [
+        { type: 'completion', description: 'Season complete' },
+        { type: 'thank_you', description: 'Thank you message' },
+        { type: 'season_2', description: 'Teases season 2' },
+      ],
+      verificationHints: ['Congratulations on completing Season 1', 'Thank you for playing'],
     },
   },
 ];

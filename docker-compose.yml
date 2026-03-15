@@ -50,19 +50,16 @@
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:16
     ports:
       - '5432:5432'
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-dmz}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dmz_dev}
       POSTGRES_DB: ${POSTGRES_DB:-dmz_dev}
-      POSTGRES_INITDB_ARGS: --waldir=/var/lib/postgresql/data/pg_wal
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - postgres_wal:/var/lib/postgresql/data/pg_wal
       - ./docker/postgres:/docker-entrypoint-initdb.d:ro
-      - ./docker/backup:/usr/local/bin:ro
       - ./docker/backup:/backups
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-dmz} -d ${POSTGRES_DB:-dmz_dev}']
@@ -75,11 +72,7 @@ services:
       -c wal_level=replica
       -c max_wal_senders=3
       -c max_replication_slots=3
-      -c archive_mode=on
-      -c archive_command=/usr/local/bin/archive_wal.sh %p
-      -c archive_timeout=1h
-      -c checkpoint_timeout=15min
-      -c wal_keep_size=1GB
+      -c archive_mode=off
 
   redis:
     image: redis:7-alpine
@@ -258,7 +251,6 @@ services:
 
 volumes:
   postgres_data:
-  postgres_wal:
   prometheus_data:
   alertmanager_data:
   grafana_data:

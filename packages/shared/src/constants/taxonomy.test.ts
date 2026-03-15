@@ -48,12 +48,13 @@ describe('THREAT_TIER_METADATA', () => {
 });
 
 describe('THEME_IDS', () => {
-  it('exports all four theme IDs', () => {
-    expect(THEME_IDS).toHaveLength(4);
+  it('exports all five theme IDs', () => {
+    expect(THEME_IDS).toHaveLength(5);
     expect(THEME_IDS).toContain('green');
     expect(THEME_IDS).toContain('amber');
     expect(THEME_IDS).toContain('high-contrast');
     expect(THEME_IDS).toContain('enterprise');
+    expect(THEME_IDS).toContain('custom');
   });
 });
 
@@ -118,6 +119,7 @@ describe('isThemeId', () => {
     expect(isThemeId('amber')).toBe(true);
     expect(isThemeId('high-contrast')).toBe(true);
     expect(isThemeId('enterprise')).toBe(true);
+    expect(isThemeId('custom')).toBe(true);
   });
 
   it('returns false for invalid theme IDs', () => {
