@@ -125,6 +125,22 @@ describe('PlayerProfileService', () => {
         skillRating: 1000,
         lastComputedAt: new Date(),
         createdAt: new Date(),
+        calibrationPhase: 'active' as const,
+        calibrationStartDate: new Date(),
+        trend30d: {} as Record<
+          string,
+          { slope: number; dataPoints: number; lastCalculated: string }
+        >,
+        trend90d: {} as Record<
+          string,
+          { slope: number; dataPoints: number; lastCalculated: string }
+        >,
+        recommendedFocus: [] as string[],
+        confidenceIntervals: {} as Record<
+          string,
+          { lower: number; upper: number; confidence: number }
+        >,
+        lastSnapshotAt: new Date(),
       };
 
       const event: DomainEvent = {
@@ -159,6 +175,22 @@ describe('PlayerProfileService', () => {
         skillRating: 1000,
         lastComputedAt: new Date(),
         createdAt: new Date(),
+        calibrationPhase: 'active' as const,
+        calibrationStartDate: new Date(),
+        trend30d: {} as Record<
+          string,
+          { slope: number; dataPoints: number; lastCalculated: string }
+        >,
+        trend90d: {} as Record<
+          string,
+          { slope: number; dataPoints: number; lastCalculated: string }
+        >,
+        recommendedFocus: [] as string[],
+        confidenceIntervals: {} as Record<
+          string,
+          { lower: number; upper: number; confidence: number }
+        >,
+        lastSnapshotAt: new Date(),
       };
 
       const event: DomainEvent = {
