@@ -155,6 +155,20 @@
       "when": 1773300000000,
       "tag": "0020_analytics_module",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1773400000000,
+      "tag": "0021_row_level_security_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1773500000000,
+      "tag": "0022_tenant_provisioning",
+      "breakpoints": true
     }
   ]
 }

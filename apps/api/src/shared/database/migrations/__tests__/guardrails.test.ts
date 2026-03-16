@@ -45,12 +45,28 @@ function extractForeignKeys(content: string, schema: string, table: string): str
 
 function extractPolicies(content: string, schema: string, table: string): string {
   const schemaPrefix = schema === 'public' ? '' : `["']?${schema}["']?\\.`;
-  const regex = new RegExp(
+  const directRegex = new RegExp(
     `CREATE\\s+POLICY\\s+["']?tenant_isolation_${table}["']?\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
     'gi',
   );
-  const matches = content.match(regex);
-  return matches ? matches.join(' ') : '';
+  const doBlockRegex = new RegExp(`DO\\s+\\$\\$[\\s\\S]*?END\\s+\\$\\$`, 'gi');
+
+  const directMatches = content.match(directRegex) ?? [];
+
+  const doBlockMatches = content.match(doBlockRegex) ?? [];
+  const policyInDoBlocks = doBlockMatches
+    .map((block) => {
+      const match = block.match(
+        new RegExp(
+          `CREATE\\s+POLICY\\s+["']?tenant_isolation_${table}["']?\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
+          'i',
+        ),
+      );
+      return match ? match[0] : '';
+    })
+    .filter((p) => p.length > 0);
+
+  return [...directMatches, ...policyInDoBlocks].join(' ');
 }
 
 describe('Migration Guardrails: Tenant Schema Invariants', () => {
