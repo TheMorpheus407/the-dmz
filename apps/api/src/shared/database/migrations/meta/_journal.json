@@ -169,6 +169,13 @@
       "when": 1773500000000,
       "tag": "0022_tenant_provisioning",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1773600000000,
+      "tag": "0023_audit_log",
+      "breakpoints": true
     }
   ]
 }

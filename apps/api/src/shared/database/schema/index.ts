@@ -13,3 +13,4 @@ export * from '../../../db/schema/auth/index.js';
 export * from '../../../db/schema/game/index.js';
 export * from '../../../db/schema/ai/index.js';
 export * from '../../../db/schema/content/index.js';
+export * from '../../../db/schema/audit/index.js';

@@ -30,6 +30,7 @@ import {
   registerAdminTenantRoutes,
   registerAdminRoleRoutes,
 } from './modules/admin/index.js';
+import { registerAuditRoutes, registerAuditHook } from './modules/audit/index.js';
 import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.js';
 import { versionHeadersMiddleware } from './shared/middleware/version-headers.js';
 import { registerVersionRoutes } from './shared/routes/version.routes.js';
@@ -148,6 +149,10 @@ export const buildApp = (
   }
 
   app.register(cookie);
+
+  registerAuditHook(app).catch((err) => {
+    app.log.error(err, 'Failed to register audit hook');
+  });
 
   const registrationOrder = getRegistrationOrder();
 
@@ -279,6 +284,8 @@ export const buildApp = (
   app.register(registerAdminTenantRoutes);
 
   app.register(registerAdminRoleRoutes);
+
+  app.register(registerAuditRoutes);
 
   app.register(
     async (apiRouter) => {
