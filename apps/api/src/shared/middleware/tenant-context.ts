@@ -13,6 +13,7 @@ export interface TenantContext {
   userId: string;
   sessionId: string;
   role: string;
+  isSuperAdmin: boolean;
 }
 
 declare module 'fastify' {
@@ -36,6 +37,8 @@ export const tenantContext = async (
   }
 
   const { tenantId, userId, sessionId, role } = user;
+
+  const isSuperAdmin = role === 'super_admin';
 
   if (!tenantId) {
     throw new AppError({
@@ -67,10 +70,18 @@ export const tenantContext = async (
   const pool = getDatabasePool(config);
 
   try {
-    await pool.unsafe(
-      `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false)`,
-      [tenantId],
-    );
+    const queries = [
+      pool.unsafe(
+        `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false)`,
+        [tenantId],
+      ),
+    ];
+
+    if (isSuperAdmin) {
+      queries.push(pool.unsafe(`SELECT set_config('app.is_super_admin', 'true', false)`));
+    }
+
+    await Promise.all(queries);
   } catch (error) {
     request.log.error({ err: error }, 'tenant context set failed');
     throw new AppError({
@@ -85,6 +96,7 @@ export const tenantContext = async (
     userId,
     sessionId: sessionId ?? '',
     role,
+    isSuperAdmin,
   };
 };
 
