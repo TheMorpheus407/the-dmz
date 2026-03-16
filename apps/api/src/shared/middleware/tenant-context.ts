@@ -72,13 +72,13 @@ export const tenantContext = async (
   try {
     const queries = [
       pool.unsafe(
-        `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false)`,
+        `SELECT set_config('app.current_tenant_id', $1, true), set_config('app.tenant_id', $1, true)`,
         [tenantId],
       ),
     ];
 
     if (isSuperAdmin) {
-      queries.push(pool.unsafe(`SELECT set_config('app.is_super_admin', 'true', false)`));
+      queries.push(pool.unsafe(`SELECT set_config('app.is_super_admin', 'true', true)`));
     }
 
     await Promise.all(queries);
