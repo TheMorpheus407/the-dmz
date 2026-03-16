@@ -5,6 +5,8 @@ export const REQUIRED_THEME_IDS: readonly ThemeId[] = [
   'amber',
   'high-contrast',
   'enterprise',
+  'admin-light',
+  'admin-dark',
 ] as const;
 
 export const REQUIRED_SURFACE_IDS: readonly SurfaceId[] = [
@@ -94,6 +96,56 @@ export const THEME_OVERRIDE_TOKENS = {
     '--effect-noise',
     '--effect-vignette',
   ],
+  'admin-light': [
+    '--color-bg',
+    '--color-surface',
+    '--color-bg-tertiary',
+    '--color-bg-hover',
+    '--color-text',
+    '--color-text-muted',
+    '--color-text-document',
+    '--color-border',
+    '--color-accent',
+    '--color-muted',
+    '--color-backdrop',
+    '--color-safe',
+    '--color-warning',
+    '--color-danger',
+    '--color-info',
+    '--color-critical',
+    '--color-flagged',
+    '--color-archived',
+    '--effect-scanlines',
+    '--effect-curvature',
+    '--effect-glow',
+    '--effect-noise',
+    '--effect-vignette',
+  ],
+  'admin-dark': [
+    '--color-bg',
+    '--color-surface',
+    '--color-bg-tertiary',
+    '--color-bg-hover',
+    '--color-text',
+    '--color-text-muted',
+    '--color-text-document',
+    '--color-border',
+    '--color-accent',
+    '--color-muted',
+    '--color-backdrop',
+    '--color-safe',
+    '--color-warning',
+    '--color-danger',
+    '--color-info',
+    '--color-critical',
+    '--color-flagged',
+    '--color-archived',
+    '--effect-scanlines',
+    '--effect-curvature',
+    '--effect-glow',
+    '--effect-noise',
+    '--effect-vignette',
+  ],
 } as const;
 
 export const EFFECT_DISABLE_TOKENS = [
@@ -108,14 +160,18 @@ export type TokenGroup = keyof typeof TOKEN_GROUPS;
 
 export const ROUTE_SURFACE_DEFAULTS: Record<SurfaceId, ThemeId> = {
   game: 'green',
-  admin: 'enterprise',
-  auth: 'enterprise',
-  public: 'enterprise',
+  admin: 'admin-light',
+  auth: 'admin-light',
+  public: 'admin-light',
 };
 
 export const ACCESSIBILITY_THEMES: readonly ThemeId[] = ['high-contrast'] as const;
 
-export const ENTERPRISE_THEMES: readonly ThemeId[] = ['enterprise'] as const;
+export const ENTERPRISE_THEMES: readonly ThemeId[] = [
+  'enterprise',
+  'admin-light',
+  'admin-dark',
+] as const;
 
 export function getRequiredTokenGroupsForTheme(
   themeId: ThemeId,
@@ -129,7 +185,12 @@ export function getRequiredTokenGroupsForTheme(
     'spacing',
   ];
 
-  if (themeId === 'high-contrast' || themeId === 'enterprise') {
+  if (
+    themeId === 'high-contrast' ||
+    themeId === 'enterprise' ||
+    themeId === 'admin-light' ||
+    themeId === 'admin-dark'
+  ) {
     return [...baseGroups, 'effects'];
   }
 

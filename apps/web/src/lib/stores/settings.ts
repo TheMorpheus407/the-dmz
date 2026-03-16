@@ -2,7 +2,13 @@ import { writable, derived } from 'svelte/store';
 
 import { browser } from '$app/environment';
 
-export type ThemeId = 'green' | 'amber' | 'high-contrast' | 'enterprise';
+export type ThemeId =
+  | 'green'
+  | 'amber'
+  | 'high-contrast'
+  | 'enterprise'
+  | 'admin-light'
+  | 'admin-dark';
 export type ColorBlindMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
 export type FocusIndicatorStyle = 'subtle' | 'strong';
 export type DifficultyLevel = 'tutorial' | 'easy' | 'normal' | 'hard';
@@ -504,7 +510,12 @@ export const effectiveTheme = derived(settingsStore, ($settings) => {
 
 export const effectiveEffects = derived(settingsStore, ($settings) => {
   const theme = $settings.display.theme;
-  if (theme === 'high-contrast' || theme === 'enterprise') {
+  if (
+    theme === 'high-contrast' ||
+    theme === 'enterprise' ||
+    theme === 'admin-light' ||
+    theme === 'admin-dark'
+  ) {
     return {
       scanlines: false,
       curvature: false,

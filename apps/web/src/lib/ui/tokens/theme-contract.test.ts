@@ -158,16 +158,16 @@ describe('Token Contract Validation', () => {
       expect(ROUTE_SURFACE_DEFAULTS.game).toBe('green');
     });
 
-    it('admin surface uses enterprise theme by default', () => {
-      expect(ROUTE_SURFACE_DEFAULTS.admin).toBe('enterprise');
+    it('admin surface uses admin-light theme by default', () => {
+      expect(ROUTE_SURFACE_DEFAULTS.admin).toBe('admin-light');
     });
 
-    it('auth surface uses enterprise theme by default', () => {
-      expect(ROUTE_SURFACE_DEFAULTS.auth).toBe('enterprise');
+    it('auth surface uses admin-light theme by default', () => {
+      expect(ROUTE_SURFACE_DEFAULTS.auth).toBe('admin-light');
     });
 
-    it('public surface uses enterprise theme by default', () => {
-      expect(ROUTE_SURFACE_DEFAULTS.public).toBe('enterprise');
+    it('public surface uses admin-light theme by default', () => {
+      expect(ROUTE_SURFACE_DEFAULTS.public).toBe('admin-light');
     });
   });
 });
@@ -217,6 +217,16 @@ describe('Runtime Theme Contract', () => {
       expect(mockDataset['theme']).toBe('enterprise');
     });
 
+    it('applies admin-light theme correctly', () => {
+      themeStore.setTheme('admin-light');
+      expect(mockDataset['theme']).toBe('admin-light');
+    });
+
+    it('applies admin-dark theme correctly', () => {
+      themeStore.setTheme('admin-dark');
+      expect(mockDataset['theme']).toBe('admin-dark');
+    });
+
     it('high-contrast theme sets data-high-contrast attribute', () => {
       themeStore.setTheme('high-contrast');
       expect(mockDataset['highContrast']).toBe('on');
@@ -259,6 +269,16 @@ describe('Runtime Theme Contract', () => {
       expect(mockDataset['glow']).toBe('off');
     });
 
+    it('admin-light theme disables glow effects', () => {
+      themeStore.setTheme('admin-light');
+      expect(mockDataset['glow']).toBe('off');
+    });
+
+    it('admin-dark theme disables glow effects', () => {
+      themeStore.setTheme('admin-dark');
+      expect(mockDataset['glow']).toBe('off');
+    });
+
     it('green theme enables curvature', () => {
       themeStore.setTheme('green');
       expect(mockDataset['curvature']).toBe('on');
@@ -275,16 +295,16 @@ describe('Runtime Theme Contract', () => {
       expect(getRouteDefaultTheme('game')).toBe('green');
     });
 
-    it('returns enterprise for admin surface', () => {
-      expect(getRouteDefaultTheme('admin')).toBe('enterprise');
+    it('returns admin-light for admin surface', () => {
+      expect(getRouteDefaultTheme('admin')).toBe('admin-light');
     });
 
-    it('returns enterprise for auth surface', () => {
-      expect(getRouteDefaultTheme('auth')).toBe('enterprise');
+    it('returns admin-light for auth surface', () => {
+      expect(getRouteDefaultTheme('auth')).toBe('admin-light');
     });
 
-    it('returns enterprise for public surface', () => {
-      expect(getRouteDefaultTheme('public')).toBe('enterprise');
+    it('returns admin-light for public surface', () => {
+      expect(getRouteDefaultTheme('public')).toBe('admin-light');
     });
 
     it('matches contract ROUTE_SURFACE_DEFAULTS', () => {
@@ -313,6 +333,8 @@ describe('Runtime Theme Contract', () => {
       expect(tokensCss).toContain("[data-theme='amber']");
       expect(tokensCss).toContain("[data-theme='high-contrast']");
       expect(tokensCss).toContain("[data-theme='enterprise']");
+      expect(tokensCss).toContain("[data-theme='admin-light']");
+      expect(tokensCss).toContain("[data-theme='admin-dark']");
     });
 
     it('uses CSS custom properties for typography', () => {

@@ -65,7 +65,7 @@ async function syncPreferencesToServer(preferences: {
   fontSize?: number;
 }): Promise<void> {
   const themePrefs: {
-    theme?: 'green' | 'amber' | 'high-contrast' | 'enterprise';
+    theme?: 'green' | 'amber' | 'high-contrast' | 'enterprise' | 'admin-light' | 'admin-dark';
     enableTerminalEffects?: boolean;
     effects?: {
       scanlines: boolean;
@@ -79,7 +79,13 @@ async function syncPreferencesToServer(preferences: {
   } = {};
 
   if (preferences.theme !== undefined) {
-    themePrefs.theme = preferences.theme as 'green' | 'amber' | 'high-contrast' | 'enterprise';
+    themePrefs.theme = preferences.theme as
+      | 'green'
+      | 'amber'
+      | 'high-contrast'
+      | 'enterprise'
+      | 'admin-light'
+      | 'admin-dark';
   }
   if (preferences.enableTerminalEffects !== undefined) {
     themePrefs.enableTerminalEffects = preferences.enableTerminalEffects;

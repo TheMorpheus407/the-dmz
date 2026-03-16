@@ -91,6 +91,22 @@ describe('themeStore', () => {
       expect(state.enableTerminalEffects).toBe(false);
       expect(state.effects.scanlines).toBe(false);
     });
+
+    it('disables all effects for admin-light theme', () => {
+      themeStore.setTheme('admin-light');
+      const state = get(themeStore);
+      expect(state.name).toBe('admin-light');
+      expect(state.enableTerminalEffects).toBe(false);
+      expect(state.effects.scanlines).toBe(false);
+    });
+
+    it('disables all effects for admin-dark theme', () => {
+      themeStore.setTheme('admin-dark');
+      const state = get(themeStore);
+      expect(state.name).toBe('admin-dark');
+      expect(state.enableTerminalEffects).toBe(false);
+      expect(state.effects.scanlines).toBe(false);
+    });
   });
 
   describe('setEffects', () => {
@@ -159,16 +175,16 @@ describe('themeStore', () => {
       expect(getRouteDefaultTheme('game')).toBe('green');
     });
 
-    it('returns enterprise for admin surface', () => {
-      expect(getRouteDefaultTheme('admin')).toBe('enterprise');
+    it('returns admin-light for admin surface', () => {
+      expect(getRouteDefaultTheme('admin')).toBe('admin-light');
     });
 
-    it('returns enterprise for auth surface', () => {
-      expect(getRouteDefaultTheme('auth')).toBe('enterprise');
+    it('returns admin-light for auth surface', () => {
+      expect(getRouteDefaultTheme('auth')).toBe('admin-light');
     });
 
-    it('returns enterprise for public surface', () => {
-      expect(getRouteDefaultTheme('public')).toBe('enterprise');
+    it('returns admin-light for public surface', () => {
+      expect(getRouteDefaultTheme('public')).toBe('admin-light');
     });
   });
 

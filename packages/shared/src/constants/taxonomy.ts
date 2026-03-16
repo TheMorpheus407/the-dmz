@@ -51,7 +51,15 @@ export const THREAT_TIER_METADATA: Record<
   },
 };
 
-export const THEME_IDS = ['green', 'amber', 'high-contrast', 'enterprise', 'custom'] as const;
+export const THEME_IDS = [
+  'green',
+  'amber',
+  'high-contrast',
+  'enterprise',
+  'admin-light',
+  'admin-dark',
+  'custom',
+] as const;
 
 export type ThemeId = (typeof THEME_IDS)[number];
 
@@ -90,7 +98,19 @@ export const THEME_METADATA: Record<
     label: 'Enterprise',
     effectsEnabled: false,
     isAccessibility: false,
+    defaultForSurfaces: [],
+  },
+  'admin-light': {
+    label: 'Admin Light',
+    effectsEnabled: false,
+    isAccessibility: false,
     defaultForSurfaces: ['admin', 'auth', 'public'],
+  },
+  'admin-dark': {
+    label: 'Admin Dark',
+    effectsEnabled: false,
+    isAccessibility: false,
+    defaultForSurfaces: [],
   },
   custom: {
     label: 'Custom',

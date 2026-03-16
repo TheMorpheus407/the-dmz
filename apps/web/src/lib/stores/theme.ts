@@ -172,6 +172,24 @@ const ENTERPRISE_EFFECTS: EffectState = {
   flicker: false,
 };
 
+const ADMIN_LIGHT_EFFECTS: EffectState = {
+  scanlines: false,
+  curvature: false,
+  glow: false,
+  noise: false,
+  vignette: false,
+  flicker: false,
+};
+
+const ADMIN_DARK_EFFECTS: EffectState = {
+  scanlines: false,
+  curvature: false,
+  glow: false,
+  noise: false,
+  vignette: false,
+  flicker: false,
+};
+
 const DEFAULT_FONT_SIZE = 16;
 
 export const initialThemeState: ThemeStoreState = {
@@ -529,6 +547,12 @@ function createThemeStore() {
           case 'enterprise':
             effects = ENTERPRISE_EFFECTS;
             break;
+          case 'admin-light':
+            effects = ADMIN_LIGHT_EFFECTS;
+            break;
+          case 'admin-dark':
+            effects = ADMIN_DARK_EFFECTS;
+            break;
           default:
             effects = { ...DEFAULT_EFFECTS };
         }
@@ -536,7 +560,11 @@ function createThemeStore() {
         const newState: ThemeStoreState = {
           ...state,
           name,
-          enableTerminalEffects: name !== 'high-contrast' && name !== 'enterprise',
+          enableTerminalEffects:
+            name !== 'high-contrast' &&
+            name !== 'enterprise' &&
+            name !== 'admin-light' &&
+            name !== 'admin-dark',
           effects,
           source: {
             ...state.source,
@@ -925,10 +953,10 @@ export function getRouteDefaultTheme(surface: SurfaceId): ThemeId {
     case 'game':
       return 'green';
     case 'admin':
-      return 'enterprise';
+      return 'admin-light';
     case 'auth':
     case 'public':
-      return 'enterprise';
+      return 'admin-light';
     default:
       return 'green';
   }

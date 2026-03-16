@@ -17,7 +17,14 @@ describe('Primitive Contract: State Matrix', () => {
 
   describe('Required Themes', () => {
     it('should have all required themes defined', () => {
-      const expected = ['green', 'amber', 'high-contrast', 'enterprise'];
+      const expected = [
+        'green',
+        'amber',
+        'high-contrast',
+        'enterprise',
+        'admin-light',
+        'admin-dark',
+      ];
       expect(REQUIRED_THEMES).toEqual(expected);
     });
   });
@@ -40,7 +47,7 @@ describe('Primitive Contract: State Matrix', () => {
 
   describe('Theme × Primitive Matrix', () => {
     it.each(REQUIRED_THEMES)('should validate each theme is supported: %s', (theme) => {
-      expect(theme).toMatch(/^(green|amber|high-contrast|enterprise)$/);
+      expect(theme).toMatch(/^(green|amber|high-contrast|enterprise|admin-light|admin-dark)$/);
     });
   });
 });

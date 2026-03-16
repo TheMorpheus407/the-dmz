@@ -2,7 +2,7 @@
   /* eslint-disable prefer-const */
   import type { Snippet } from 'svelte';
 
-  type Variant = 'default' | 'elevated' | 'outlined' | 'highlight';
+  type Variant = 'default' | 'elevated' | 'outlined' | 'highlight' | 'admin';
 
   interface Props {
     variant?: Variant;
@@ -46,5 +46,13 @@
   .panel--highlight {
     background-color: var(--color-bg-tertiary);
     border-color: var(--color-accent);
+  }
+
+  .panel--admin {
+    font-family: var(--font-admin);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 </style>

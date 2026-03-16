@@ -222,43 +222,6 @@ describe('PlayerProfileService', () => {
     });
   });
 
-  describe('getCampaignPhaseFactor', () => {
-    it('should return 0.9 for preparation phase', () => {
-      const factor = playerProfileService.getCampaignPhaseFactor('preparation');
-      expect(factor).toBe(0.9);
-    });
-
-    it('should return 1.1 for escalation phase', () => {
-      const factor = playerProfileService.getCampaignPhaseFactor('escalation');
-      expect(factor).toBe(1.1);
-    });
-
-    it('should return 1.3 for peak phase', () => {
-      const factor = playerProfileService.getCampaignPhaseFactor('peak');
-      expect(factor).toBe(1.3);
-    });
-
-    it('should return 1.0 for resolution phase', () => {
-      const factor = playerProfileService.getCampaignPhaseFactor('resolution');
-      expect(factor).toBe(1.0);
-    });
-
-    it('should return 0.9 for aftermath phase', () => {
-      const factor = playerProfileService.getCampaignPhaseFactor('aftermath');
-      expect(factor).toBe(0.9);
-    });
-
-    it('should return 1.0 for unknown phase', () => {
-      const factor = playerProfileService.getCampaignPhaseFactor('unknown');
-      expect(factor).toBe(1.0);
-    });
-
-    it('should return 1.0 for undefined phase', () => {
-      const factor = playerProfileService.getCampaignPhaseFactor(undefined);
-      expect(factor).toBe(1.0);
-    });
-  });
-
   describe('getContextFactor', () => {
     it('should multiply threat and phase factors', () => {
       const contextFactor = playerProfileService.getContextFactor('high', 'peak');

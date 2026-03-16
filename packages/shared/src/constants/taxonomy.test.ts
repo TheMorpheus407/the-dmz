@@ -48,12 +48,14 @@ describe('THREAT_TIER_METADATA', () => {
 });
 
 describe('THEME_IDS', () => {
-  it('exports all five theme IDs', () => {
-    expect(THEME_IDS).toHaveLength(5);
+  it('exports all seven theme IDs', () => {
+    expect(THEME_IDS).toHaveLength(7);
     expect(THEME_IDS).toContain('green');
     expect(THEME_IDS).toContain('amber');
     expect(THEME_IDS).toContain('high-contrast');
     expect(THEME_IDS).toContain('enterprise');
+    expect(THEME_IDS).toContain('admin-light');
+    expect(THEME_IDS).toContain('admin-dark');
     expect(THEME_IDS).toContain('custom');
   });
 });

@@ -2,7 +2,7 @@
   /* eslint-disable prefer-const */
   import type { Snippet } from 'svelte';
 
-  type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
+  type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'admin';
   type Size = 'sm' | 'md' | 'lg';
 
   interface Props {
@@ -32,6 +32,7 @@
 
 <button
   class="button button--{variant} button--{size} {className}"
+  class:button--admin={variant === 'admin'}
   {type}
   {disabled}
   aria-label={ariaLabel}
@@ -131,5 +132,28 @@
   .button--ghost:hover:not(:disabled) {
     background-color: var(--color-bg-hover);
     color: var(--color-text);
+  }
+
+  .button--admin {
+    font-family: var(--font-admin);
+    background-color: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+  }
+
+  .button--admin:hover:not(:disabled) {
+    filter: brightness(1.1);
+    background-color: var(--color-accent);
+  }
+
+  .button--admin:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .button--admin:hover:not(:disabled) {
+      filter: none;
+    }
   }
 </style>

@@ -73,7 +73,7 @@
   --color-backdrop: rgba(0, 0, 0, 0.7);
 
   /* ========================================
-     COLOR - ADMIN PALETTE
+     COLOR - ADMIN PALETTE (DARK - LEGACY)
      ======================================== */
   --admin-bg-primary: #1a1a2e;
   --admin-bg-secondary: #16213e;
@@ -85,6 +85,42 @@
   --admin-warning: #ffd44d;
   --admin-danger: #e85d6a;
   --admin-border: #2a2a4a;
+
+  /* ========================================
+     COLOR - ADMIN PALETTE (LIGHT - DEFAULT)
+     ======================================== */
+  --admin-light-bg-primary: #ffffff;
+  --admin-light-bg-secondary: #f8f9fa;
+  --admin-light-bg-tertiary: #e9ecef;
+  --admin-light-bg-hover: #dee2e6;
+  --admin-light-text-primary: #212529;
+  --admin-light-text-secondary: #6c757d;
+  --admin-light-text-muted: #adb5bd;
+  --admin-light-accent: #0d6efd;
+  --admin-light-accent-hover: #0b5ed7;
+  --admin-light-success: #198754;
+  --admin-light-warning: #ffc107;
+  --admin-light-danger: #dc3545;
+  --admin-light-info: #0dcaf0;
+  --admin-light-border: #dee2e6;
+
+  /* ========================================
+     COLOR - ADMIN PALETTE (DARK)
+     ======================================== */
+  --admin-dark-bg-primary: #1a1a2e;
+  --admin-dark-bg-secondary: #16213e;
+  --admin-dark-bg-tertiary: #1f2b47;
+  --admin-dark-bg-hover: #2a2a4a;
+  --admin-dark-text-primary: #e0e0e0;
+  --admin-dark-text-secondary: #a0a0b0;
+  --admin-dark-text-muted: #6c757d;
+  --admin-dark-accent: #4d9eff;
+  --admin-dark-accent-hover: #6bb3ff;
+  --admin-dark-success: #2ea96e;
+  --admin-dark-warning: #ffd44d;
+  --admin-dark-danger: #e85d6a;
+  --admin-dark-info: #5bc0de;
+  --admin-dark-border: #2a2a4a;
 
   /* ========================================
      TYPE SCALE - GAME
@@ -224,7 +260,7 @@
 }
 
 /* ========================================
-    THEME: ENTERPRISE (ADMIN)
+    THEME: ENTERPRISE (ADMIN - LEGACY DARK)
     ======================================== */
 [data-theme='enterprise'] {
   --color-bg: var(--admin-bg-primary);
@@ -237,6 +273,72 @@
   --color-backdrop: rgba(0, 0, 0, 0.6);
 
   /* Disable CRT effects in enterprise mode */
+  --effect-scanlines: 0;
+  --effect-curvature: 0;
+  --effect-glow: 0;
+  --effect-noise: 0;
+  --effect-vignette: 0;
+}
+
+/* ========================================
+    THEME: ADMIN LIGHT (DEFAULT FOR ADMIN)
+    ======================================== */
+[data-theme='admin-light'] {
+  --color-bg: var(--admin-light-bg-primary);
+  --color-surface: var(--admin-light-bg-secondary);
+  --color-bg-tertiary: var(--admin-light-bg-tertiary);
+  --color-bg-hover: var(--admin-light-bg-hover);
+  --color-text: var(--admin-light-text-primary);
+  --color-text-muted: var(--admin-light-text-secondary);
+  --color-text-document: var(--admin-light-text-primary);
+  --color-border: var(--admin-light-border);
+  --color-accent: var(--admin-light-accent);
+  --color-muted: var(--admin-light-text-muted);
+  --color-backdrop: rgba(0, 0, 0, 0.5);
+
+  /* Semantic colors - accessible on light */
+  --color-safe: #198754;
+  --color-warning: #ffc107;
+  --color-danger: #dc3545;
+  --color-info: #0d6efd;
+  --color-critical: #bb2d3b;
+  --color-flagged: #d63384;
+  --color-archived: #6c757d;
+
+  /* Disable CRT effects in admin */
+  --effect-scanlines: 0;
+  --effect-curvature: 0;
+  --effect-glow: 0;
+  --effect-noise: 0;
+  --effect-vignette: 0;
+}
+
+/* ========================================
+    THEME: ADMIN DARK (OPTIONAL)
+    ======================================== */
+[data-theme='admin-dark'] {
+  --color-bg: var(--admin-dark-bg-primary);
+  --color-surface: var(--admin-dark-bg-secondary);
+  --color-bg-tertiary: var(--admin-dark-bg-tertiary);
+  --color-bg-hover: var(--admin-dark-bg-hover);
+  --color-text: var(--admin-dark-text-primary);
+  --color-text-muted: var(--admin-dark-text-secondary);
+  --color-text-document: var(--admin-dark-text-primary);
+  --color-border: var(--admin-dark-border);
+  --color-accent: var(--admin-dark-accent);
+  --color-muted: var(--admin-dark-text-muted);
+  --color-backdrop: rgba(0, 0, 0, 0.6);
+
+  /* Semantic colors */
+  --color-safe: var(--admin-dark-success);
+  --color-warning: var(--admin-dark-warning);
+  --color-danger: var(--admin-dark-danger);
+  --color-info: var(--admin-dark-info);
+  --color-critical: #ff4444;
+  --color-flagged: #ff9900;
+  --color-archived: #6c757d;
+
+  /* Disable CRT effects in admin */
   --effect-scanlines: 0;
   --effect-curvature: 0;
   --effect-glow: 0;

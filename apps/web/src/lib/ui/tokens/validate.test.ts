@@ -271,9 +271,9 @@ export function runTokenValidation(): void {
 
   const runtimeRouteDefaults: typeof ROUTE_SURFACE_DEFAULTS = {
     game: 'green',
-    admin: 'enterprise',
-    auth: 'enterprise',
-    public: 'enterprise',
+    admin: 'admin-light',
+    auth: 'admin-light',
+    public: 'admin-light',
   };
 
   const result = validateTokenContract(cssContent, runtimeRouteDefaults);
@@ -308,9 +308,9 @@ const tokensCss = readFileSync(tokensPath, 'utf-8');
 
 const runtimeRouteDefaults: typeof ROUTE_SURFACE_DEFAULTS = {
   game: 'green',
-  admin: 'enterprise',
-  auth: 'enterprise',
-  public: 'enterprise',
+  admin: 'admin-light',
+  auth: 'admin-light',
+  public: 'admin-light',
 };
 
 describe('Token Contract Gate', () => {

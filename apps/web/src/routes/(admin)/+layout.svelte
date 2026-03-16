@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, type Snippet } from 'svelte';
 
   import { themeStore, getRouteDefaultTheme, STORAGE_KEY } from '$lib/stores/theme';
+  import { breadcrumbs } from '$lib/stores/breadcrumbs';
+  import { ADMIN_NAV_ITEMS, isActiveAdminNavItem, type AdminNavItem } from '$lib/config/admin-nav';
   import Drawer from '$lib/ui/components/Drawer.svelte';
   import Button from '$lib/ui/components/Button.svelte';
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
-
-  import type { Snippet } from 'svelte';
 
   import { navigating, page } from '$app/stores';
 
@@ -17,15 +17,7 @@
   const { children }: Props = $props();
 
   let isSidebarOpen = $state(false);
-
-  const adminNavItems = [
-    { href: '/admin', label: 'Dashboard', icon: '◉' },
-    { href: '/admin/users', label: 'Users', icon: '◯' },
-    { href: '/admin/campaigns', label: 'Campaigns', icon: '◎' },
-    { href: '/admin/reports', label: 'Reports', icon: '◈' },
-    { href: '/admin/audit', label: 'Audit', icon: '▣' },
-    { href: '/admin/settings', label: 'Settings', icon: '⚙' },
-  ];
+  let currentTheme = $state<'admin-light' | 'admin-dark'>('admin-light');
 
   function toggleSidebar() {
     isSidebarOpen = !isSidebarOpen;
@@ -33,6 +25,12 @@
 
   function closeSidebar() {
     isSidebarOpen = false;
+  }
+
+  function toggleTheme() {
+    const newTheme = currentTheme === 'admin-light' ? 'admin-dark' : 'admin-light';
+    themeStore.setTheme(newTheme);
+    currentTheme = newTheme;
   }
 
   onMount(() => {
@@ -51,10 +49,21 @@
     } else if (!localStorage.getItem(STORAGE_KEY) && !systemPrefs.prefersContrast) {
       themeStore.setTheme(getRouteDefaultTheme('admin'));
     }
+
+    const unsubscribe = themeStore.subscribe((state) => {
+      if (state.name === 'admin-light' || state.name === 'admin-dark') {
+        currentTheme = state.name;
+      }
+    });
+
+    return unsubscribe;
   });
 
-  // eslint-disable-next-line prefer-const
-  let currentPath = $derived($page.url.pathname);
+  const currentPath = $derived($page.url.pathname);
+
+  function isActive(item: AdminNavItem): boolean {
+    return isActiveAdminNavItem(item.href, currentPath);
+  }
 </script>
 
 <section class="surface surface-admin" data-surface="admin">
@@ -63,17 +72,27 @@
       <Button variant="ghost" ariaLabel="Toggle navigation menu" onclick={toggleSidebar}>☰</Button>
       <h1 class="shell-admin__title">Admin Console</h1>
       <div class="shell-admin__header-actions">
+        <Button
+          variant="ghost"
+          size="sm"
+          ariaLabel={currentTheme === 'admin-light'
+            ? 'Switch to dark mode'
+            : 'Switch to light mode'}
+          onclick={toggleTheme}
+        >
+          {currentTheme === 'admin-light' ? '🌙' : '☀️'}
+        </Button>
         <Button variant="ghost" size="sm">Logout</Button>
       </div>
     </header>
 
     <aside class="shell-admin__sidebar">
       <nav class="shell-admin__nav" aria-label="Admin navigation">
-        {#each adminNavItems as item (item.href)}
+        {#each ADMIN_NAV_ITEMS as item (item.href)}
           <a
             href={item.href}
             class="shell-admin__nav-item"
-            class:shell-admin__nav-item--active={currentPath === item.href}
+            class:shell-admin__nav-item--active={isActive(item)}
             onclick={closeSidebar}
           >
             <span class="shell-admin__nav-icon">{item.icon}</span>
@@ -84,6 +103,21 @@
     </aside>
 
     <main class="shell-admin__main">
+      {#if $breadcrumbs.items.length > 0}
+        <nav class="shell-admin__breadcrumbs" aria-label="Breadcrumb">
+          <ol class="shell-admin__breadcrumbs-list">
+            <li class="shell-admin__breadcrumbs-item">
+              <a href="/admin" class="shell-admin__breadcrumbs-link">Admin</a>
+            </li>
+            {#each $breadcrumbs.items as crumb (crumb.href)}
+              <li class="shell-admin__breadcrumbs-item">
+                <span class="shell-admin__breadcrumbs-separator" aria-hidden="true">/</span>
+                <a href={crumb.href} class="shell-admin__breadcrumbs-link">{crumb.label}</a>
+              </li>
+            {/each}
+          </ol>
+        </nav>
+      {/if}
       {#if $navigating}
         <div class="loading-boundary" role="status" aria-live="polite">
           <LoadingState
@@ -101,11 +135,11 @@
 
   <Drawer bind:open={isSidebarOpen} position="left" ariaLabel="Navigation Menu">
     <nav class="shell-admin__nav" aria-label="Admin navigation">
-      {#each adminNavItems as item (item.href)}
+      {#each ADMIN_NAV_ITEMS as item (item.href)}
         <a
           href={item.href}
           class="shell-admin__nav-item"
-          class:shell-admin__nav-item--active={currentPath === item.href}
+          class:shell-admin__nav-item--active={isActive(item)}
           onclick={closeSidebar}
         >
           <span class="shell-admin__nav-icon">{item.icon}</span>
@@ -139,12 +173,12 @@
     align-items: center;
     justify-content: space-between;
     padding: var(--space-3) var(--space-4);
-    border-bottom: var(--border-default);
+    border-bottom: 1px solid var(--color-border);
     background-color: var(--color-surface);
   }
 
   .shell-admin__title {
-    font-family: var(--font-ui);
+    font-family: var(--font-admin);
     font-size: var(--text-lg);
     font-weight: 600;
     color: var(--color-text);
@@ -154,13 +188,14 @@
   .shell-admin__header-actions {
     display: flex;
     gap: var(--space-2);
+    align-items: center;
   }
 
   .shell-admin__sidebar {
     grid-column: 1;
     grid-row: 2;
     padding: var(--space-4);
-    border-right: var(--border-default);
+    border-right: 1px solid var(--color-border);
     background-color: var(--color-bg);
     overflow-y: auto;
   }
@@ -176,8 +211,8 @@
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
-    font-family: var(--font-ui);
-    font-size: var(--text-sm);
+    font-family: var(--font-admin);
+    font-size: var(--admin-text-sm, 0.875rem);
     color: var(--color-text-muted);
     text-decoration: none;
     border-radius: var(--radius-sm);
@@ -219,6 +254,49 @@
     overflow-y: auto;
   }
 
+  .shell-admin__breadcrumbs {
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .shell-admin__breadcrumbs-list {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    font-family: var(--font-admin);
+    font-size: var(--admin-text-sm, 0.875rem);
+  }
+
+  .shell-admin__breadcrumbs-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+
+  .shell-admin__breadcrumbs-separator {
+    color: var(--color-text-muted);
+  }
+
+  .shell-admin__breadcrumbs-link {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 200ms ease-out;
+  }
+
+  .shell-admin__breadcrumbs-link:hover {
+    color: var(--color-accent);
+    text-decoration: underline;
+  }
+
+  .shell-admin__breadcrumbs-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
   .loading-boundary {
     display: flex;
     align-items: center;
@@ -228,7 +306,7 @@
     min-height: 200px;
     background-color: var(--color-surface);
     border-radius: var(--radius-md);
-    font-family: var(--font-ui);
+    font-family: var(--font-admin);
   }
 
   @media (max-width: 767px) {
@@ -251,7 +329,8 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .shell-admin__nav-item {
+    .shell-admin__nav-item,
+    .shell-admin__breadcrumbs-link {
       transition: none;
     }
   }
