@@ -25,7 +25,11 @@ import { emailPlugin } from './modules/email/index.js';
 import { contentPlugin } from './modules/content/index.js';
 import { aiPipelinePlugin } from './modules/ai-pipeline/index.js';
 import { registerNotificationRoutes } from './modules/notification/index.js';
-import { registerAdminRateLimitRoutes, registerAdminTenantRoutes } from './modules/admin/index.js';
+import {
+  registerAdminRateLimitRoutes,
+  registerAdminTenantRoutes,
+  registerAdminRoleRoutes,
+} from './modules/admin/index.js';
 import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.js';
 import { versionHeadersMiddleware } from './shared/middleware/version-headers.js';
 import { registerVersionRoutes } from './shared/routes/version.routes.js';
@@ -273,6 +277,8 @@ export const buildApp = (
   app.register(registerAdminRateLimitRoutes);
 
   app.register(registerAdminTenantRoutes);
+
+  app.register(registerAdminRoleRoutes);
 
   app.register(
     async (apiRouter) => {
