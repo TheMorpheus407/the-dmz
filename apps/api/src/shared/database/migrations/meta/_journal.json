@@ -190,6 +190,20 @@
       "when": 1773800000000,
       "tag": "0025_compliance_snapshots",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1773850000000,
+      "tag": "0026_feature_flags",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1773900000000,
+      "tag": "0027_scim_provisioning",
+      "breakpoints": true
     }
   ]
 }

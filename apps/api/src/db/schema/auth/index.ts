@@ -6,6 +6,7 @@ export * from './password-reset-tokens.js';
 export * from './permissions.js';
 export * from './role-permissions.js';
 export * from './roles.js';
+export * from './scim.js';
 export * from './sessions.js';
 export * from './signing-keys.js';
 export * from './sso-connections.js';

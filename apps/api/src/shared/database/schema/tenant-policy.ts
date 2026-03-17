@@ -324,6 +324,43 @@ export const TENANT_SCOPED_TABLES = [
     hasTenantFk: true,
     hasRls: true,
   },
+  {
+    table: 'scim_tokens',
+    schema: 'auth',
+    description: 'SCIM bearer tokens for IdP authentication',
+    reason: 'SCIM tokens are per-tenant for IdP provisioning',
+    hasNotNullTenantId: true,
+    hasTenantFk: true,
+    hasRls: true,
+  },
+  {
+    table: 'scim_groups',
+    schema: 'auth',
+    description: 'Persistent SCIM groups',
+    reason: 'SCIM groups are tenant-scoped',
+    hasNotNullTenantId: true,
+    hasTenantFk: true,
+    hasRls: true,
+  },
+  {
+    table: 'scim_group_members',
+    schema: 'auth',
+    description: 'SCIM group membership mappings',
+    reason: 'Group members inherit tenant scope from groups',
+    hasNotNullTenantId: false,
+    hasTenantFk: false,
+    hasRls: true,
+    note: 'Tenant isolation via FK to auth.scim_groups',
+  },
+  {
+    table: 'scim_sync_logs',
+    schema: 'auth',
+    description: 'SCIM sync status tracking',
+    reason: 'Sync logs are per-tenant',
+    hasNotNullTenantId: true,
+    hasTenantFk: true,
+    hasRls: true,
+  },
 ] as const;
 
 export const GLOBAL_TABLES = [

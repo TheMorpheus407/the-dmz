@@ -1,11 +1,17 @@
-import { randomUUID } from 'crypto';
+import { randomUUID, createHash, randomBytes } from 'crypto';
 
-import { eq, and, ilike, asc } from 'drizzle-orm';
+import { eq, and, ilike, asc, or } from 'drizzle-orm';
 
 import { SCIM_LIFECYCLE_CONTRACT_V1, SCIM_ADMIN_PROTECTED_FIELDS } from '@the-dmz/shared/auth';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { users } from '../../shared/database/schema/users.js';
+import {
+  scimGroups,
+  scimGroupMembers,
+  scimTokens,
+  scimSyncLogs,
+} from '../../db/schema/auth/scim.js';
 
 import type { AppConfig } from '../../config.js';
 import type {
@@ -57,10 +63,15 @@ interface DbUser {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  scimId: string | null;
+  externalId: string | null;
+  department: string | null;
+  title: string | null;
+  managerId: string | null;
 }
 
 const buildScimUserResponse = (user: DbUser): SCIMUser & { schemas: string[] } => {
-  return {
+  const response: SCIMUser & { schemas: string[] } = {
     schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
     id: user.userId,
     userName: user.email,
@@ -69,6 +80,13 @@ const buildScimUserResponse = (user: DbUser): SCIMUser & { schemas: string[] } =
       formatted: user.displayName ?? undefined,
     },
     active: user.isActive,
+    emails: [
+      {
+        value: user.email,
+        primary: true,
+      },
+    ],
+    title: user.title ?? undefined,
     meta: {
       resourceType: 'User',
       created: user.createdAt.toISOString(),
@@ -77,22 +95,61 @@ const buildScimUserResponse = (user: DbUser): SCIMUser & { schemas: string[] } =
       version: `W/"${user.updatedAt.getTime()}"`,
     },
   };
+
+  if (user.department) {
+    (response as Record<string, unknown>)['department'] = user.department;
+  }
+
+  if (user.managerId) {
+    response.manager = {
+      value: user.managerId,
+    };
+  }
+
+  return response;
 };
 
 interface DbGroup {
   id: string;
-  name: string;
+  displayName: string;
   tenantId: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+interface DbGroupMember {
+  userId: string;
+  scimUserId: string | null;
 }
 
 const buildScimGroupResponse = (group: DbGroup): SCIMGroup & { schemas: string[] } => {
   return {
     schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group'],
     id: group.id,
-    displayName: group.name,
+    displayName: group.displayName,
     members: [],
+    meta: {
+      resourceType: 'Group',
+      created: group.createdAt.toISOString(),
+      lastModified: group.updatedAt.toISOString(),
+      location: `/api/v1/scim/v2/Groups/${group.id}`,
+      version: `W/"${group.updatedAt.getTime()}"`,
+    },
+  };
+};
+
+const buildScimGroupResponseWithMembers = (
+  group: DbGroup,
+  members: DbGroupMember[],
+): SCIMGroup & { schemas: string[] } => {
+  return {
+    schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group'],
+    id: group.id,
+    displayName: group.displayName,
+    members: members.map((m) => ({
+      value: m.userId,
+      scimUserId: m.scimUserId ?? undefined,
+    })),
     meta: {
       resourceType: 'Group',
       created: group.createdAt.toISOString(),
@@ -120,21 +177,6 @@ const validateFilter = (filter: string | undefined): void => {
   }
 };
 
-const checkIdempotency = async (
-  config: AppConfig,
-  tenantId: string,
-  idempotencyKey: string,
-): Promise<DbUser | null> => {
-  const db = getDatabaseClient(config);
-  const existing = await db
-    .select()
-    .from(users)
-    .where(and(eq(users.tenantId, tenantId), eq(users.email as never, idempotencyKey)))
-    .limit(1);
-
-  return existing[0] ?? null;
-};
-
 export const listScimUsers = async (
   config: AppConfig,
   tenantId: string,
@@ -153,19 +195,29 @@ export const listScimUsers = async (
     validateFilter(options.filter);
   }
 
-  let query = db.select().from(users).where(eq(users.tenantId, tenantId));
+  let allUsers: DbUser[] = [];
 
   if (options?.filter) {
     const filterMatch = options.filter.match(/userName sw "(.*)"/);
     if (filterMatch) {
-      query = db
+      const results = await db
         .select()
         .from(users)
-        .where(and(eq(users.tenantId, ilike(users.email, `${filterMatch[1]}%`))));
+        .where(and(eq(users.tenantId, tenantId), ilike(users.email, `${filterMatch[1]}%`)))
+        .orderBy(asc(users.createdAt));
+      allUsers = results as DbUser[];
     }
   }
 
-  const allUsers = await query.orderBy(asc(users.createdAt));
+  if (!options?.filter || allUsers.length === 0) {
+    const results = await db
+      .select()
+      .from(users)
+      .where(eq(users.tenantId, tenantId))
+      .orderBy(asc(users.createdAt));
+    allUsers = results as DbUser[];
+  }
+
   const totalResults = allUsers.length;
   const paginatedUsers = allUsers.slice(startIndex - 1, startIndex - 1 + count);
 
@@ -194,7 +246,7 @@ export const getScimUser = async (
     throw new SCIMError(SCIM_ERRORS.USER_NOT_FOUND, 'User not found', 404);
   }
 
-  return buildScimUserResponse(user);
+  return buildScimUserResponse(user as DbUser);
 };
 
 export const createScimUser = async (
@@ -203,13 +255,6 @@ export const createScimUser = async (
   userData: SCIMUser & { idempotencyKey?: string },
 ): Promise<SCIMUser & { schemas: string[] }> => {
   const db = getDatabaseClient(config);
-
-  if (userData.idempotencyKey) {
-    const existing = await checkIdempotency(config, tenantId, userData.idempotencyKey);
-    if (existing) {
-      return buildScimUserResponse(existing);
-    }
-  }
 
   const [existingByEmail] = await db
     .select()
@@ -237,6 +282,8 @@ export const createScimUser = async (
   const userId = randomUUID();
   const now = new Date();
 
+  const userDataAny = userData as Record<string, unknown>;
+
   await db.insert(users).values({
     userId,
     email: userData.userName,
@@ -245,6 +292,9 @@ export const createScimUser = async (
     role: 'member',
     isActive: userData.active !== false,
     passwordHash: userData.password ?? '',
+    department: typeof userDataAny['department'] === 'string' ? userDataAny['department'] : null,
+    title: userData.title ?? null,
+    managerId: userData.manager?.value ?? null,
     createdAt: now,
     updatedAt: now,
   });
@@ -255,7 +305,7 @@ export const createScimUser = async (
     throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to create user', 500);
   }
 
-  return buildScimUserResponse(createdUser);
+  return buildScimUserResponse(createdUser as DbUser);
 };
 
 export const updateScimUser = async (
@@ -302,6 +352,17 @@ export const updateScimUser = async (
     updates['isActive'] = userData.active;
   }
 
+  const userDataAny = userData as Record<string, unknown>;
+  if (userDataAny['department'] !== undefined) {
+    updates['department'] = userDataAny['department'];
+  }
+  if (userData.title !== undefined) {
+    updates['title'] = userData.title;
+  }
+  if (userData.manager?.value !== undefined) {
+    updates['managerId'] = userData.manager.value;
+  }
+
   await db
     .update(users)
     .set(updates)
@@ -313,7 +374,7 @@ export const updateScimUser = async (
     throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to update user', 500);
   }
 
-  return buildScimUserResponse(updatedUser);
+  return buildScimUserResponse(updatedUser as DbUser);
 };
 
 export const deleteScimUser = async (
@@ -369,13 +430,11 @@ export const reactivateScimUser = async (
     throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to reactivate user', 500);
   }
 
-  return buildScimUserResponse(reactivatedUser);
+  return buildScimUserResponse(reactivatedUser as DbUser);
 };
 
-const mockGroups: Map<string, DbGroup> = new Map();
-
 export const listScimGroups = async (
-  _config: AppConfig,
+  config: AppConfig,
   tenantId: string,
   options?: {
     startIndex?: number;
@@ -383,6 +442,7 @@ export const listScimGroups = async (
     filter?: string;
   },
 ): Promise<SCIMListResponse> => {
+  const db = getDatabaseClient(config);
   const startIndex = options?.startIndex ?? 1;
   const count = Math.min(options?.count ?? 100, 1000);
 
@@ -390,41 +450,86 @@ export const listScimGroups = async (
     validateFilter(options.filter);
   }
 
-  const allGroups = Array.from(mockGroups.values()).filter((g) => g.tenantId === tenantId);
+  let query = db.select().from(scimGroups).where(eq(scimGroups.tenantId, tenantId));
+
+  if (options?.filter) {
+    const filterMatch = options.filter.match(/displayName sw "(.*)"/);
+    if (filterMatch) {
+      query = db
+        .select()
+        .from(scimGroups)
+        .where(
+          and(
+            eq(scimGroups.tenantId, tenantId),
+            ilike(scimGroups.displayName, `${filterMatch[1]}%`),
+          ),
+        );
+    }
+  }
+
+  const allGroups = (await query.orderBy(asc(scimGroups.createdAt))) as DbGroup[];
   const totalResults = allGroups.length;
   const paginatedGroups = allGroups.slice(startIndex - 1, startIndex - 1 + count);
+
+  const groupsWithMembers = await Promise.all(
+    paginatedGroups.map(async (group) => {
+      const members = (await db
+        .select()
+        .from(scimGroupMembers)
+        .where(eq(scimGroupMembers.scimGroupId, group.id))) as DbGroupMember[];
+      return buildScimGroupResponseWithMembers(group, members);
+    }),
+  );
 
   return {
     schemas: ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
     totalResults,
     startIndex,
     itemsPerPage: count,
-    Resources: paginatedGroups.map(buildScimGroupResponse),
+    Resources: groupsWithMembers,
   };
 };
 
 export const getScimGroup = async (
-  _config: AppConfig,
+  config: AppConfig,
   tenantId: string,
   groupId: string,
 ): Promise<SCIMGroup & { schemas: string[] }> => {
-  const group = mockGroups.get(groupId);
+  const db = getDatabaseClient(config);
 
-  if (!group || group.tenantId !== tenantId) {
+  const [group] = await db
+    .select()
+    .from(scimGroups)
+    .where(and(eq(scimGroups.id, groupId), eq(scimGroups.tenantId, tenantId)));
+
+  if (!group) {
     throw new SCIMError(SCIM_ERRORS.GROUP_NOT_FOUND, 'Group not found', 404);
   }
 
-  return buildScimGroupResponse(group);
+  const members = (await db
+    .select()
+    .from(scimGroupMembers)
+    .where(eq(scimGroupMembers.scimGroupId, group['id']))) as DbGroupMember[];
+
+  return buildScimGroupResponseWithMembers(group as DbGroup, members);
 };
 
 export const createScimGroup = async (
-  _config: AppConfig,
+  config: AppConfig,
   tenantId: string,
   groupData: SCIMGroup,
 ): Promise<SCIMGroup & { schemas: string[] }> => {
-  const existingGroup = Array.from(mockGroups.values()).find(
-    (g) => g.tenantId === tenantId && g.name === groupData.displayName,
-  );
+  const db = getDatabaseClient(config);
+
+  const [existingGroup] = await db
+    .select()
+    .from(scimGroups)
+    .where(
+      and(
+        eq(scimGroups.tenantId, tenantId),
+        eq(scimGroups.displayName, groupData.displayName ?? ''),
+      ),
+    );
 
   if (existingGroup) {
     throw new SCIMError(
@@ -437,68 +542,657 @@ export const createScimGroup = async (
   const groupId = randomUUID();
   const now = new Date();
 
-  const group: DbGroup = {
+  await db.insert(scimGroups).values({
     id: groupId,
-    name: groupData.displayName,
     tenantId,
+    scimId: groupId,
+    displayName: groupData.displayName ?? '',
     createdAt: now,
     updatedAt: now,
-  };
+  });
 
-  mockGroups.set(groupId, group);
+  if (groupData.members && groupData.members.length > 0) {
+    for (const member of groupData.members) {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.tenantId, tenantId),
+            or(eq(users.userId, member.value ?? ''), eq(users.email, member.value ?? '')),
+          ),
+        )
+        .limit(1);
 
-  return buildScimGroupResponse(group);
+      if (user) {
+        await db.insert(scimGroupMembers).values({
+          scimGroupId: groupId,
+          userId: user['userId'],
+          scimUserId: member.value ?? null,
+          createdAt: now,
+        });
+      }
+    }
+  }
+
+  const [createdGroup] = await db.select().from(scimGroups).where(eq(scimGroups.id, groupId));
+
+  if (!createdGroup) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to create group', 500);
+  }
+
+  return buildScimGroupResponse(createdGroup as DbGroup);
 };
 
 export const updateScimGroup = async (
-  _config: AppConfig,
+  config: AppConfig,
   tenantId: string,
   groupId: string,
   groupData: Partial<SCIMGroup>,
 ): Promise<SCIMGroup & { schemas: string[] }> => {
-  const group = mockGroups.get(groupId);
+  const db = getDatabaseClient(config);
 
-  if (!group || group.tenantId !== tenantId) {
+  const [existing] = await db
+    .select()
+    .from(scimGroups)
+    .where(and(eq(scimGroups.id, groupId), eq(scimGroups.tenantId, tenantId)));
+
+  if (!existing) {
     throw new SCIMError(SCIM_ERRORS.GROUP_NOT_FOUND, 'Group not found', 404);
   }
 
-  if (groupData.displayName !== undefined) {
-    group.name = groupData.displayName;
-  }
-  group.updatedAt = new Date();
+  const updates: Record<string, unknown> = {
+    updatedAt: new Date(),
+  };
 
-  return buildScimGroupResponse(group);
+  if (groupData.displayName !== undefined) {
+    updates['displayName'] = groupData.displayName;
+  }
+
+  await db.update(scimGroups).set(updates).where(eq(scimGroups.id, groupId));
+
+  if (groupData.members !== undefined) {
+    await db.delete(scimGroupMembers).where(eq(scimGroupMembers.scimGroupId, groupId));
+
+    const now = new Date();
+    for (const member of groupData.members) {
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(
+          and(
+            eq(users.tenantId, tenantId),
+            or(eq(users.userId, member.value ?? ''), eq(users.email, member.value ?? '')),
+          ),
+        )
+        .limit(1);
+
+      if (user) {
+        await db.insert(scimGroupMembers).values({
+          scimGroupId: groupId,
+          userId: user['userId'],
+          scimUserId: member.value ?? null,
+          createdAt: now,
+        });
+      }
+    }
+  }
+
+  const [updatedGroup] = await db.select().from(scimGroups).where(eq(scimGroups.id, groupId));
+
+  if (!updatedGroup) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to update group', 500);
+  }
+
+  const members = (await db
+    .select()
+    .from(scimGroupMembers)
+    .where(eq(scimGroupMembers.scimGroupId, updatedGroup['id']))) as DbGroupMember[];
+
+  return buildScimGroupResponseWithMembers(updatedGroup as DbGroup, members);
 };
 
 export const deleteScimGroup = async (
-  _config: AppConfig,
+  config: AppConfig,
   tenantId: string,
   groupId: string,
 ): Promise<void> => {
-  const group = mockGroups.get(groupId);
+  const db = getDatabaseClient(config);
 
-  if (!group || group.tenantId !== tenantId) {
+  const [existing] = await db
+    .select()
+    .from(scimGroups)
+    .where(and(eq(scimGroups.id, groupId), eq(scimGroups.tenantId, tenantId)));
+
+  if (!existing) {
     throw new SCIMError(SCIM_ERRORS.GROUP_NOT_FOUND, 'Group not found', 404);
   }
 
-  mockGroups.delete(groupId);
+  await db.delete(scimGroups).where(eq(scimGroups.id, groupId));
 };
 
 export const processBulkRequest = async (
-  _config: AppConfig,
-  _tenantId: string,
+  config: AppConfig,
+  tenantId: string,
   bulkRequest: SCIMBulkRequest,
 ): Promise<SCIMBulkResponse> => {
-  const operations = bulkRequest.operations.map((op) => ({
-    bulkId: op.bulkId,
-    method: op.method,
-    status: 200,
-  }));
+  const results: Array<{
+    bulkId?: string;
+    method: string;
+    status: number;
+    location?: string;
+  }> = [];
+
+  for (const op of bulkRequest.operations) {
+    try {
+      let location: string | undefined;
+      const status = 200;
+
+      if (op.method === 'post') {
+        if (op.path === '/Users') {
+          const created = await createScimUser(config, tenantId, op.data as SCIMUser);
+          location = `/api/v1/scim/v2/Users/${created.id}`;
+        } else if (op.path === '/Groups') {
+          const created = await createScimGroup(config, tenantId, op.data as SCIMGroup);
+          location = `/api/v1/scim/v2/Groups/${created.id}`;
+        }
+      } else if (op.method === 'put') {
+        const pathMatch = op.path.match(/\/(Users|Groups)\/(.+)/);
+        if (pathMatch) {
+          const [, resourceType, id] = pathMatch;
+          if (resourceType === 'Users' && id) {
+            const updated = await updateScimUser(
+              config,
+              tenantId,
+              id,
+              op.data as Partial<SCIMUser>,
+            );
+            location = `/api/v1/scim/v2/Users/${updated.id}`;
+          } else if (resourceType === 'Groups' && id) {
+            const updated = await updateScimGroup(
+              config,
+              tenantId,
+              id,
+              op.data as Partial<SCIMGroup>,
+            );
+            location = `/api/v1/scim/v2/Groups/${updated.id}`;
+          }
+        }
+      } else if (op.method === 'patch') {
+        const pathMatch = op.path.match(/\/(Users|Groups)\/(.+)/);
+        if (pathMatch) {
+          const [, resourceType, id] = pathMatch;
+          if (resourceType === 'Users' && id) {
+            const patchData = op.data as Partial<SCIMUser>;
+            const updated = await updateScimUser(config, tenantId, id, patchData);
+            location = `/api/v1/scim/v2/Users/${updated.id}`;
+          } else if (resourceType === 'Groups' && id) {
+            const patchData = op.data as Partial<SCIMGroup>;
+            const updated = await updateScimGroup(config, tenantId, id, patchData);
+            location = `/api/v1/scim/v2/Groups/${updated.id}`;
+          }
+        }
+      } else if (op.method === 'delete') {
+        const pathMatch = op.path.match(/\/(Users|Groups)\/(.+)/);
+        if (pathMatch) {
+          const [, resourceType, id] = pathMatch;
+          if (resourceType === 'Users' && id) {
+            await deleteScimUser(config, tenantId, id);
+          } else if (resourceType === 'Groups' && id) {
+            await deleteScimGroup(config, tenantId, id);
+          }
+        }
+      }
+
+      const result: { bulkId?: string; method: string; status: number; location?: string } = {
+        method: op.method,
+        status,
+      };
+      if (op.bulkId) result.bulkId = op.bulkId;
+      if (location) result.location = location;
+      results.push(result);
+    } catch {
+      const errorResult: { bulkId?: string; method: string; status: number } = {
+        method: op.method,
+        status: 500,
+      };
+      if (op.bulkId) errorResult.bulkId = op.bulkId;
+      results.push(errorResult);
+    }
+  }
 
   return {
     schemas: ['urn:ietf:params:scim:api:messages:2.0:BulkResponse'],
-    Operations: operations,
+    Operations: results,
   };
+};
+
+export const generateScimToken = async (
+  config: AppConfig,
+  tenantId: string,
+  name: string,
+  scopes: string[] = ['scim.read', 'scim.write'],
+  expiresInDays?: number,
+): Promise<{ token: string; tokenId: string }> => {
+  const db = getDatabaseClient(config);
+  const token = randomBytes(32).toString('hex');
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+  const now = new Date();
+
+  const expiresAt = expiresInDays
+    ? new Date(now.getTime() + expiresInDays * 24 * 60 * 60 * 1000)
+    : null;
+
+  const [createdToken] = await db
+    .insert(scimTokens)
+    .values({
+      tenantId,
+      name,
+      tokenHash,
+      scopes,
+      expiresAt,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+
+  if (!createdToken) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to generate SCIM token', 500);
+  }
+
+  return { token, tokenId: createdToken.id };
+};
+
+export const verifyScimToken = async (
+  config: AppConfig,
+  tenantId: string,
+  token: string,
+): Promise<{ valid: boolean; scopes: string[]; tokenId?: string }> => {
+  const db = getDatabaseClient(config);
+  const tokenHash = createHash('sha256').update(token).digest('hex');
+
+  const [scimToken] = await db
+    .select()
+    .from(scimTokens)
+    .where(
+      and(
+        eq(scimTokens.tokenHash, tokenHash),
+        eq(scimTokens.tenantId, tenantId),
+        eq(scimTokens.isRevoked, false),
+      ),
+    );
+
+  if (!scimToken) {
+    return { valid: false, scopes: [] };
+  }
+
+  if (scimToken['expiresAt'] && new Date(scimToken['expiresAt']) < new Date()) {
+    return { valid: false, scopes: [] };
+  }
+
+  await db
+    .update(scimTokens)
+    .set({ lastUsedAt: new Date() })
+    .where(eq(scimTokens.id, scimToken['id']));
+
+  return { valid: true, scopes: scimToken['scopes'], tokenId: scimToken['id'] };
+};
+
+export const revokeScimToken = async (
+  config: AppConfig,
+  tenantId: string,
+  tokenId: string,
+): Promise<void> => {
+  const db = getDatabaseClient(config);
+
+  await db
+    .update(scimTokens)
+    .set({ isRevoked: true, updatedAt: new Date() })
+    .where(and(eq(scimTokens.id, tokenId), eq(scimTokens.tenantId, tenantId)));
+};
+
+export const rotateScimToken = async (
+  config: AppConfig,
+  tenantId: string,
+  tokenId: string,
+  expiresInDays?: number,
+): Promise<{ token: string; tokenId: string }> => {
+  const db = getDatabaseClient(config);
+
+  const [existingToken] = await db
+    .select()
+    .from(scimTokens)
+    .where(and(eq(scimTokens.id, tokenId), eq(scimTokens.tenantId, tenantId)));
+
+  if (!existingToken) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'SCIM token not found', 404);
+  }
+
+  if (existingToken.isRevoked) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Cannot rotate a revoked token', 400);
+  }
+
+  await db
+    .update(scimTokens)
+    .set({ isRevoked: true, updatedAt: new Date() })
+    .where(eq(scimTokens.id, tokenId));
+
+  const newToken = randomBytes(32).toString('hex');
+  const tokenHash = createHash('sha256').update(newToken).digest('hex');
+  const now = new Date();
+
+  const expiresAt = expiresInDays
+    ? new Date(now.getTime() + expiresInDays * 24 * 60 * 60 * 1000)
+    : existingToken.expiresAt;
+
+  const [createdToken] = await db
+    .insert(scimTokens)
+    .values({
+      tenantId,
+      name: `${existingToken.name} (rotated)`,
+      tokenHash,
+      scopes: existingToken.scopes,
+      expiresAt,
+      createdAt: now,
+      updatedAt: now,
+    })
+    .returning();
+
+  if (!createdToken) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'Failed to rotate SCIM token', 500);
+  }
+
+  return { token: newToken, tokenId: createdToken.id };
+};
+
+export const listScimTokens = async (
+  config: AppConfig,
+  tenantId: string,
+): Promise<
+  Array<{
+    id: string;
+    name: string;
+    scopes: string[];
+    expiresAt: Date | null;
+    lastUsedAt: Date | null;
+    isRevoked: boolean;
+    createdAt: Date;
+  }>
+> => {
+  const db = getDatabaseClient(config);
+
+  const tokens = await db.select().from(scimTokens).where(eq(scimTokens.tenantId, tenantId));
+
+  return tokens.map((t) => ({
+    id: t['id'],
+    name: t['name'],
+    scopes: t['scopes'],
+    expiresAt: t['expiresAt'],
+    lastUsedAt: t['lastUsedAt'],
+    isRevoked: t['isRevoked'],
+    createdAt: t['createdAt'],
+  }));
+};
+
+export const testScimConnection = async (
+  config: AppConfig,
+  tenantId: string,
+  _tokenId: string,
+): Promise<{ success: boolean; message: string }> => {
+  const db = getDatabaseClient(config);
+
+  const [token] = await db
+    .select()
+    .from(scimTokens)
+    .where(and(eq(scimTokens.id, _tokenId), eq(scimTokens.tenantId, tenantId)));
+
+  if (!token) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'SCIM token not found', 404);
+  }
+
+  if (token.isRevoked) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'SCIM token is revoked', 400);
+  }
+
+  if (token['expiresAt'] && new Date(token['expiresAt']) < new Date()) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'SCIM token has expired', 400);
+  }
+
+  return {
+    success: true,
+    message: 'Successfully connected to SCIM endpoint. Token is valid.',
+  };
+};
+
+export const testScimProvisioning = async (
+  config: AppConfig,
+  tenantId: string,
+  tokenId: string,
+): Promise<{ success: boolean; message: string; testUserId?: string }> => {
+  const db = getDatabaseClient(config);
+
+  const [token] = await db
+    .select()
+    .from(scimTokens)
+    .where(and(eq(scimTokens.id, tokenId), eq(scimTokens.tenantId, tenantId)));
+
+  if (!token) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'SCIM token not found', 404);
+  }
+
+  if (token.isRevoked) {
+    throw new SCIMError(SCIM_ERRORS.INVALID_REQUEST, 'SCIM token is revoked', 400);
+  }
+
+  const testUserId = randomUUID();
+  const now = new Date();
+  const testEmail = `scim-test-${testUserId.slice(0, 8)}@test.local`;
+
+  try {
+    await db.insert(users).values({
+      userId: testUserId,
+      tenantId,
+      email: testEmail,
+      displayName: 'SCIM Test User',
+      role: 'member',
+      isActive: true,
+      passwordHash: '',
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await db.delete(users).where(eq(users.userId, testUserId));
+
+    return {
+      success: true,
+      message: 'Successfully created and removed test user via SCIM.',
+      testUserId,
+    };
+  } catch {
+    return {
+      success: false,
+      message: 'Failed to create test user',
+    };
+  }
+};
+
+export const getScimSyncStatus = async (
+  config: AppConfig,
+  tenantId: string,
+): Promise<{
+  lastSync: Date | null;
+  status: string;
+  stats: {
+    usersCreated: number;
+    usersUpdated: number;
+    usersDeleted: number;
+    groupsCreated: number;
+    groupsUpdated: number;
+    groupsDeleted: number;
+    errors: unknown[];
+  };
+}> => {
+  const db = getDatabaseClient(config);
+
+  const [lastSyncLog] = await db
+    .select()
+    .from(scimSyncLogs)
+    .where(eq(scimSyncLogs.tenantId, tenantId))
+    .orderBy(asc(scimSyncLogs.startedAt))
+    .limit(1);
+
+  if (!lastSyncLog) {
+    return {
+      lastSync: null,
+      status: 'never_synced',
+      stats: {
+        usersCreated: 0,
+        usersUpdated: 0,
+        usersDeleted: 0,
+        groupsCreated: 0,
+        groupsUpdated: 0,
+        groupsDeleted: 0,
+        errors: [],
+      },
+    };
+  }
+
+  return {
+    lastSync: lastSyncLog['startedAt'],
+    status: lastSyncLog['status'],
+    stats: {
+      usersCreated: lastSyncLog['usersCreated'],
+      usersUpdated: lastSyncLog['usersUpdated'],
+      usersDeleted: lastSyncLog['usersDeleted'],
+      groupsCreated: lastSyncLog['groupsCreated'],
+      groupsUpdated: lastSyncLog['groupsUpdated'],
+      groupsDeleted: lastSyncLog['groupsDeleted'],
+      errors: (lastSyncLog['errors'] as unknown[]) || [],
+    },
+  };
+};
+
+export const syncScimGroupToRole = async (
+  config: AppConfig,
+  tenantId: string,
+  groupId: string,
+): Promise<void> => {
+  const db = getDatabaseClient(config);
+
+  const [scimGroup] = await db
+    .select()
+    .from(scimGroups)
+    .where(and(eq(scimGroups.id, groupId), eq(scimGroups.tenantId, tenantId)));
+
+  if (!scimGroup) {
+    throw new SCIMError(SCIM_ERRORS.GROUP_NOT_FOUND, 'SCIM group not found', 404);
+  }
+
+  if (!scimGroup['roleId']) {
+    return;
+  }
+
+  const groupMembers = await db
+    .select()
+    .from(scimGroupMembers)
+    .where(eq(scimGroupMembers.scimGroupId, groupId));
+
+  for (const member of groupMembers) {
+    await db
+      .update(users)
+      .set({ role: 'member', updatedAt: new Date() })
+      .where(and(eq(users.userId, member.userId), eq(users.tenantId, tenantId)));
+  }
+};
+
+export const updateScimGroupRole = async (
+  config: AppConfig,
+  tenantId: string,
+  groupId: string,
+  roleId: string | null,
+): Promise<void> => {
+  const db = getDatabaseClient(config);
+
+  const [existing] = await db
+    .select()
+    .from(scimGroups)
+    .where(and(eq(scimGroups.id, groupId), eq(scimGroups.tenantId, tenantId)));
+
+  if (!existing) {
+    throw new SCIMError(SCIM_ERRORS.GROUP_NOT_FOUND, 'SCIM group not found', 404);
+  }
+
+  await db
+    .update(scimGroups)
+    .set({ roleId: roleId ?? null, updatedAt: new Date() })
+    .where(and(eq(scimGroups.id, groupId), eq(scimGroups.tenantId, tenantId)));
+};
+
+export const listScimGroupsWithRoles = async (
+  config: AppConfig,
+  tenantId: string,
+): Promise<
+  Array<{
+    id: string;
+    displayName: string;
+    roleId: string | null;
+    roleName: string | null;
+    membersCount: number;
+  }>
+> => {
+  const db = getDatabaseClient(config);
+
+  const allGroups = await db.select().from(scimGroups).where(eq(scimGroups.tenantId, tenantId));
+
+  const { roles: rolesTable } = await import('../../db/schema/auth/roles.js');
+
+  const groupsWithRoles = await Promise.all(
+    allGroups.map(async (group) => {
+      let roleName: string | null = null;
+      if (group.roleId) {
+        const [role] = await db.select().from(rolesTable).where(eq(rolesTable.id, group.roleId));
+        roleName = role?.name ?? null;
+      }
+
+      const membersCountResult = await db
+        .select({ count: scimGroupMembers.id })
+        .from(scimGroupMembers)
+        .where(eq(scimGroupMembers.scimGroupId, group.id));
+
+      return {
+        id: group.id,
+        displayName: group.displayName,
+        roleId: group.roleId,
+        roleName,
+        membersCount: membersCountResult.length,
+      };
+    }),
+  );
+
+  return groupsWithRoles;
+};
+
+export const listRoles = async (
+  config: AppConfig,
+  tenantId: string,
+): Promise<Array<{ id: string; name: string; description: string | null }>> => {
+  const db = getDatabaseClient(config);
+  const { roles: rolesTable } = await import('../../db/schema/auth/roles.js');
+
+  const rolesList = await db
+    .select({
+      id: rolesTable.id,
+      name: rolesTable.name,
+      description: rolesTable.description,
+    })
+    .from(rolesTable)
+    .where(eq(rolesTable.tenantId, tenantId));
+
+  return rolesList.map((r) => ({
+    id: r.id,
+    name: r.name,
+    description: r.description,
+  }));
 };
 
 export { SCIM_LIFECYCLE_CONTRACT_V1 };

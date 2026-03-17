@@ -33,6 +33,7 @@ import {
   registerAdminUserRoutes,
   registerAdminSAMLRoutes,
   registerAdminOIDCRoutes,
+  registerAdminSCIMRoutes,
   registerTrainerRoutes,
   registerCertificateRoutes,
   registerComplianceRoutes,
@@ -304,6 +305,8 @@ export const buildApp = (
   app.register(registerAdminSAMLRoutes);
 
   app.register(registerAdminOIDCRoutes);
+
+  app.register(registerAdminSCIMRoutes);
 
   app.register(registerTrainerRoutes);
 

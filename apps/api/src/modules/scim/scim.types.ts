@@ -20,6 +20,7 @@ export const scimUserSchema = z.object({
   nickName: z.string().optional(),
   profileUrl: z.string().url().optional(),
   title: z.string().optional(),
+  department: z.string().optional(),
   userType: z.string().optional(),
   preferredLanguage: z.string().optional(),
   locale: z.string().optional(),
@@ -61,6 +62,13 @@ export const scimUserSchema = z.object({
         display: z.string().optional(),
       }),
     )
+    .optional(),
+  manager: z
+    .object({
+      value: z.string().optional(),
+      $ref: z.string().optional(),
+      displayName: z.string().optional(),
+    })
     .optional(),
   meta: z
     .object({
