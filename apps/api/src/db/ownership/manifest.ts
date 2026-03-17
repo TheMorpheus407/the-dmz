@@ -41,6 +41,13 @@ export const OWNERSHIP_MANIFEST: OwnershipManifest = {
       justification:
         'User profiles contain user settings and preferences that require user profile access',
     },
+    {
+      schema: 'auth',
+      table: 'sessions',
+      allowedModules: ['admin'],
+      justification:
+        'Admin module requires session data for user activity tracking and login history in the user management interface',
+    },
   ],
 };
 

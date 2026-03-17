@@ -38,3 +38,5 @@ export { login, register, refresh, logout, getCurrentUser } from './auth';
 export type { AuthResponse, RefreshResponse } from './auth';
 export { bootstrapGameSession, getGameSession } from './game';
 export type { GameSessionBootstrapResponse } from './game';
+export * from './users';
+export * from './admin';
