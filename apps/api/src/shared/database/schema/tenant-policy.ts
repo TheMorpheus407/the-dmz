@@ -315,6 +315,15 @@ export const TENANT_SCOPED_TABLES = [
     hasTenantFk: true,
     hasRls: true,
   },
+  {
+    table: 'certificates',
+    schema: 'training',
+    description: 'Tenant-scoped training completion certificates',
+    reason: 'Certificates are per-tenant compliance evidence',
+    hasNotNullTenantId: true,
+    hasTenantFk: true,
+    hasRls: true,
+  },
 ] as const;
 
 export const GLOBAL_TABLES = [

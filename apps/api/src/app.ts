@@ -32,6 +32,8 @@ import {
   registerAdminDashboardRoutes,
   registerAdminUserRoutes,
   registerTrainerRoutes,
+  registerCertificateRoutes,
+  registerCertificateEventHandlers,
 } from './modules/admin/index.js';
 import { registerAuditRoutes, registerAuditHook } from './modules/audit/index.js';
 import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.js';
@@ -181,6 +183,10 @@ export const buildApp = (
     }
   }
 
+  if (app.eventBus) {
+    registerCertificateEventHandlers(app.eventBus);
+  }
+
   app.register(createMetricsPlugin);
 
   app.addHook('preHandler', async (request, reply) => {
@@ -293,6 +299,8 @@ export const buildApp = (
   app.register(registerAdminUserRoutes);
 
   app.register(registerTrainerRoutes);
+
+  app.register(registerCertificateRoutes);
 
   app.register(registerAuditRoutes);
 

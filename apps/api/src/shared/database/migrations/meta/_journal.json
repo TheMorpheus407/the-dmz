@@ -176,6 +176,13 @@
       "when": 1773600000000,
       "tag": "0023_audit_log",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1773700000000,
+      "tag": "0024_training_certificates",
+      "breakpoints": true
     }
   ]
 }
