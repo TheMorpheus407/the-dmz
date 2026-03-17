@@ -31,6 +31,7 @@ import {
   registerAdminRoleRoutes,
   registerAdminDashboardRoutes,
   registerAdminUserRoutes,
+  registerTrainerRoutes,
 } from './modules/admin/index.js';
 import { registerAuditRoutes, registerAuditHook } from './modules/audit/index.js';
 import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.js';
@@ -290,6 +291,8 @@ export const buildApp = (
   app.register(registerAdminDashboardRoutes);
 
   app.register(registerAdminUserRoutes);
+
+  app.register(registerTrainerRoutes);
 
   app.register(registerAuditRoutes);
 
