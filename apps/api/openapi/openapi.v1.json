@@ -958,6 +958,181 @@
         }
       }
     },
+    "/admin/dashboard": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "tenantInfo": {
+                          "type": "object",
+                          "properties": {
+                            "tenantId": {
+                              "type": "string"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "slug": {
+                              "type": "string"
+                            },
+                            "domain": {
+                              "type": "string",
+                              "nullable": true
+                            },
+                            "tier": {
+                              "type": "string"
+                            },
+                            "status": {
+                              "type": "string"
+                            },
+                            "dataRegion": {
+                              "type": "string"
+                            },
+                            "planId": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "updatedAt": {
+                              "type": "string"
+                            },
+                            "featureFlags": {
+                              "type": "object",
+                              "properties": {
+                                "trainingCampaigns": {
+                                  "type": "boolean"
+                                },
+                                "advancedAnalytics": {
+                                  "type": "boolean"
+                                },
+                                "customBranding": {
+                                  "type": "boolean"
+                                },
+                                "apiAccess": {
+                                  "type": "boolean"
+                                },
+                                "ssoEnabled": {
+                                  "type": "boolean"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "activeUsers": {
+                          "type": "object",
+                          "properties": {
+                            "activeSessionCount": {
+                              "type": "number"
+                            },
+                            "usersOnlineLast15Min": {
+                              "type": "number"
+                            },
+                            "dailyActiveUsers": {
+                              "type": "number"
+                            },
+                            "weeklyActiveUsers": {
+                              "type": "number"
+                            },
+                            "monthlyActiveUsers": {
+                              "type": "number"
+                            },
+                            "userGrowthTrend": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "date": {
+                                    "type": "string"
+                                  },
+                                  "count": {
+                                    "type": "number"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "metrics": {
+                          "type": "object",
+                          "properties": {
+                            "totalUsers": {
+                              "type": "number"
+                            },
+                            "usersByRole": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "role": {
+                                    "type": "string"
+                                  },
+                                  "count": {
+                                    "type": "number"
+                                  }
+                                }
+                              }
+                            },
+                            "recentAdminActionsCount": {
+                              "type": "number"
+                            },
+                            "campaignCompletionRate": {
+                              "type": "number",
+                              "nullable": true
+                            },
+                            "averageCompetencyScore": {
+                              "type": "number",
+                              "nullable": true
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/audit/logs": {
       "get": {
         "parameters": [

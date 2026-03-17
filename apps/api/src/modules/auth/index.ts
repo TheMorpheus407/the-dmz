@@ -32,11 +32,14 @@ export {
   getOldestActiveSession,
   deleteOldestUserSessions,
   findActiveSessionWithContext,
+  getSessionMetrics,
   type ProfileData,
   type OAuthClientData,
   type SessionListItem,
   type ActiveSessionInfo,
   type ListTenantSessionsParams,
+  type SessionMetricsParams,
+  type SessionMetrics,
 } from './auth.repo.js';
 export * from './auth.types.js';
 export * from './auth.errors.js';

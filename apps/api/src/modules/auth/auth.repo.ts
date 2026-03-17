@@ -1,4 +1,4 @@
-import { eq, and, sql, isNull, lt, desc } from 'drizzle-orm';
+import { eq, and, sql, isNull, lt, desc, gte } from 'drizzle-orm';
 
 import { type DB } from '../../shared/database/connection.js';
 import { users } from '../../shared/database/schema/users.js';
@@ -1146,5 +1146,87 @@ export const findActiveSessionWithContext = async (
     ipAddress: row.ipAddress,
     userAgent: row.userAgent,
     deviceFingerprint: row.deviceFingerprint,
+  };
+};
+
+export interface SessionMetricsParams {
+  tenantId: string;
+  fifteenMinutesAgo: Date;
+  oneDayAgo: Date;
+  sevenDaysAgo: Date;
+  thirtyDaysAgo: Date;
+  now: Date;
+}
+
+export interface SessionMetrics {
+  activeSessionCount: number;
+  usersOnlineLast15Min: number;
+  dailyActiveUsers: number;
+  weeklyActiveUsers: number;
+  monthlyActiveUsers: number;
+  userGrowthTrend: Array<{ date: string; count: number }>;
+}
+
+export const getSessionMetrics = async (
+  db: DB,
+  params: SessionMetricsParams,
+): Promise<SessionMetrics> => {
+  const { tenantId, fifteenMinutesAgo, oneDayAgo, sevenDaysAgo, thirtyDaysAgo, now } = params;
+
+  const [activeSessionCountResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(sessionsTable)
+    .where(and(eq(sessionsTable.tenantId, tenantId), gte(sessionsTable.expiresAt, now)));
+
+  const [usersOnlineLast15MinResult] = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(sessionsTable)
+    .where(
+      and(
+        eq(sessionsTable.tenantId, tenantId),
+        gte(sessionsTable.lastActiveAt, fifteenMinutesAgo),
+        gte(sessionsTable.expiresAt, now),
+      ),
+    );
+
+  const [dailyActiveUsersResult] = await db
+    .select({ count: sql<number>`count(DISTINCT ${sessionsTable.userId})` })
+    .from(sessionsTable)
+    .where(and(eq(sessionsTable.tenantId, tenantId), gte(sessionsTable.lastActiveAt, oneDayAgo)));
+
+  const [weeklyActiveUsersResult] = await db
+    .select({ count: sql<number>`count(DISTINCT ${sessionsTable.userId})` })
+    .from(sessionsTable)
+    .where(
+      and(eq(sessionsTable.tenantId, tenantId), gte(sessionsTable.lastActiveAt, sevenDaysAgo)),
+    );
+
+  const [monthlyActiveUsersResult] = await db
+    .select({ count: sql<number>`count(DISTINCT ${sessionsTable.userId})` })
+    .from(sessionsTable)
+    .where(
+      and(eq(sessionsTable.tenantId, tenantId), gte(sessionsTable.lastActiveAt, thirtyDaysAgo)),
+    );
+
+  const userGrowthTrendRaw = await db
+    .select({
+      date: sql<string>`DATE(${sessionsTable.createdAt})`,
+      count: sql<number>`count(*)`,
+    })
+    .from(sessionsTable)
+    .where(and(eq(sessionsTable.tenantId, tenantId), gte(sessionsTable.createdAt, thirtyDaysAgo)))
+    .groupBy(sql`DATE(${sessionsTable.createdAt})`)
+    .orderBy(sql`DATE(${sessionsTable.createdAt})`);
+
+  return {
+    activeSessionCount: activeSessionCountResult?.count ?? 0,
+    usersOnlineLast15Min: usersOnlineLast15MinResult?.count ?? 0,
+    dailyActiveUsers: Number(dailyActiveUsersResult?.count ?? 0),
+    weeklyActiveUsers: Number(weeklyActiveUsersResult?.count ?? 0),
+    monthlyActiveUsers: Number(monthlyActiveUsersResult?.count ?? 0),
+    userGrowthTrend: userGrowthTrendRaw.map((row) => ({
+      date: row.date,
+      count: Number(row.count),
+    })),
   };
 };
