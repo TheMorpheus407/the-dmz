@@ -63,7 +63,7 @@ export const defaultRetryConfig: RetryConfig = {
 };
 
 export interface RequestOptions<TRequest = unknown> {
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE';
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE' | 'PUT';
   path?: string;
   body?: TRequest;
   params?: Record<string, string | number | boolean>;

@@ -31,6 +31,12 @@ export const ADMIN_NAV_ITEMS: AdminNavItem[] = [
     icon: '▣',
     description: 'Compliance tracking and reports',
   },
+  {
+    href: '/admin/saml',
+    label: 'SSO / SAML',
+    icon: '🔐',
+    description: 'SAML Single Sign-On configuration',
+  },
   { href: '/admin/reports', label: 'Reports', icon: '◧', description: 'Analytics and reports' },
   {
     href: '/admin/integrations',

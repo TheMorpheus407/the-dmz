@@ -3,6 +3,7 @@ export { registerAdminTenantRoutes } from './admin-tenants.routes.js';
 export { registerAdminRoleRoutes } from './admin-roles.routes.js';
 export { registerAdminDashboardRoutes } from './admin-dashboard.routes.js';
 export { registerAdminUserRoutes } from './admin-users.routes.js';
+export { registerAdminSAMLRoutes } from './admin-saml.routes.js';
 export { registerTrainerRoutes } from './trainer.routes.js';
 export { registerCertificateRoutes } from './certificate.routes.js';
 export { registerComplianceRoutes } from './compliance.routes.js';

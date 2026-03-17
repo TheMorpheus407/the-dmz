@@ -293,6 +293,25 @@ export class ApiClient {
     );
   }
 
+  async put<TResponse = unknown, TRequest = unknown>(
+    path: string,
+    body: TRequest,
+    options: Omit<RequestOptions<TRequest>, 'method' | 'body'> = {},
+  ): Promise<{ data?: TResponse; error?: CategorizedApiError; requestId?: string }> {
+    return this.request<TResponse, TRequest>(
+      {
+        method: 'PUT',
+        path,
+        body,
+        ...options,
+      },
+      {
+        ...defaultRetryConfig,
+        ...options.retry,
+      },
+    );
+  }
+
   setBaseUrl(baseUrl: string): void {
     this.config.baseUrl = baseUrl;
   }

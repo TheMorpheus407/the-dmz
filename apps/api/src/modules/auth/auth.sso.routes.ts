@@ -13,11 +13,14 @@ import { SSOError } from './auth.sso.service.js';
 import * as authService from './auth.service.js';
 import {
   createSSOLoginInitiatedEvent,
+  createSSOLoginSuccessEvent,
   createSSOLoginFailedEvent,
   createSSOLogoutInitiatedEvent,
   createSSOLogoutProcessedEvent,
   createSSOLogoutFailedEvent,
 } from './auth.events.js';
+
+import { signJWT, createSession, findUserById } from './index.js';
 
 import type { FastifyInstance } from 'fastify';
 
@@ -365,6 +368,126 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
     },
   );
 
+  fastify.get<{
+    Params: { providerId: string };
+    Querystring: { redirectUri?: string; relayState?: string };
+  }>(
+    '/auth/sso/saml/login/:providerId',
+    {
+      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard],
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 10,
+              timeWindow: '1 minute',
+            },
+      },
+      schema: {
+        params: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string', format: 'uuid' },
+          },
+          required: ['providerId'],
+        },
+        querystring: {
+          type: 'object',
+          properties: {
+            redirectUri: { type: 'string', format: 'uri' },
+            relayState: { type: 'string' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              authorizationUrl: { type: 'string' },
+              relayState: { type: 'string' },
+            },
+            required: ['authorizationUrl'],
+          },
+          400: errorResponseSchemas.BadRequest,
+          403: {
+            oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
+          },
+          404: errorResponseSchemas.NotFound,
+          429: errorResponseSchemas.RateLimitExceeded,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request) => {
+      const tenantId = request.preAuthTenantContext?.tenantId;
+      if (!tenantId) {
+        throw new SSOError({
+          message: 'Tenant context required',
+          code: ErrorCodes.TENANT_CONTEXT_MISSING,
+          statusCode: 400,
+        });
+      }
+
+      const { providerId } = request.params;
+      const { redirectUri, relayState } = request.query;
+
+      const provider = await ssoService.getSSOProvider(providerId, tenantId);
+      if (!provider) {
+        throw new SSOError({
+          message: 'SSO provider not found',
+          code: ErrorCodes.SSO_PROVIDER_NOT_FOUND,
+          statusCode: 404,
+        });
+      }
+
+      if (!provider.isActive) {
+        throw new SSOError({
+          message: 'SSO provider is inactive',
+          code: ErrorCodes.SSO_PROVIDER_INACTIVE,
+          statusCode: 403,
+        });
+      }
+
+      if (provider.provider !== 'saml') {
+        throw new SSOError({
+          message: 'Invalid provider type for this endpoint',
+          code: ErrorCodes.SSO_CONFIGURATION_ERROR,
+          statusCode: 400,
+        });
+      }
+
+      const baseUrl = config.CORS_ORIGINS_LIST[0] || 'http://localhost:5173';
+      const acsUrl = `${baseUrl}/api/v1/auth/sso/saml/acs/${providerId}`;
+
+      const authorizationUrl = ssoService.buildSAMLAuthnRequest(
+        provider,
+        acsUrl,
+        tenantId,
+        relayState || redirectUri,
+      );
+
+      const eventBus = fastify.eventBus;
+      eventBus.publish(
+        createSSOLoginInitiatedEvent({
+          source: 'auth-sso-module',
+          correlationId: request.id,
+          tenantId,
+          version: 1,
+          payload: {
+            tenantId,
+            ssoProviderId: providerId,
+            providerType: 'saml',
+            redirectUri: redirectUri || baseUrl,
+          },
+        }),
+      );
+
+      return {
+        authorizationUrl,
+        relayState: relayState || redirectUri,
+      };
+    },
+  );
+
   fastify.post<{ Body: SAMLACSRequest; Params: { providerId: string } }>(
     '/auth/sso/saml/acs/:providerId',
     {
@@ -417,7 +540,7 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
       }
 
       const { providerId } = request.params;
-      const { SAMLResponse: _SAMLResponse, RelayState: _RelayState } = request.body;
+      const { SAMLResponse, RelayState: _RelayState } = request.body;
 
       const provider = await ssoService.getSSOProvider(providerId, tenantId);
       if (!provider || !provider.isActive || provider.provider !== 'saml') {
@@ -428,9 +551,179 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         });
       }
 
+      if (!SAMLResponse) {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOLoginFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              providerType: 'saml',
+              reason: 'Missing SAMLResponse parameter',
+              failureCode: 'MISSING_PARAMETER',
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        throw new SSOError({
+          message: 'SAMLResponse is required',
+          code: ErrorCodes.SSO_INVALID_REQUEST,
+          statusCode: 400,
+          correlationId: request.id,
+        });
+      }
+
+      const baseUrl = config.CORS_ORIGINS_LIST[0] || 'http://localhost:5173';
+      const acsUrl = `${baseUrl}/api/v1/auth/sso/saml/acs/${providerId}`;
+      const validationResult = await ssoService.validateSAMLResponse(
+        SAMLResponse,
+        provider,
+        acsUrl,
+        request.id,
+      );
+
+      if (!validationResult.valid || !validationResult.claims) {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOLoginFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              providerType: 'saml',
+              reason: validationResult.failureReason || 'Invalid SAML assertion',
+              failureCode: validationResult.failureReason || 'INVALID_ASSERTION',
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        throw new SSOError({
+          message: 'SAML assertion validation failed',
+          code: ErrorCodes.SSO_ASSERTION_INVALID,
+          statusCode: 401,
+          correlationId: request.id,
+        });
+      }
+
+      const claims = validationResult.claims;
+      const allowedRoles = ['super_admin', 'tenant_admin', 'manager', 'trainer', 'learner'];
+      const defaultRole = 'learner';
+
+      const linkingResult = await ssoService.resolveSSOAccountLinking(
+        tenantId,
+        providerId,
+        claims,
+        defaultRole,
+        allowedRoles,
+      );
+
+      if (linkingResult.outcome === 'denied_no_email') {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOLoginFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              providerType: 'saml',
+              reason: 'Email claim required but not provided',
+              failureCode: 'MISSING_EMAIL',
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        throw new SSOError({
+          message: 'Email claim is required for SSO login',
+          code: ErrorCodes.SSO_MISSING_EMAIL,
+          statusCode: 400,
+          correlationId: request.id,
+        });
+      }
+
+      if (linkingResult.outcome === 'denied_role_escalation') {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOLoginFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              providerType: 'saml',
+              reason: 'Role escalation denied',
+              failureCode: 'ROLE_ESCALATION_DENIED',
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        throw new SSOError({
+          message: 'Role cannot be assigned due to security policy',
+          code: ErrorCodes.SSO_ROLE_ESCALATION_DENIED,
+          statusCode: 403,
+          correlationId: request.id,
+        });
+      }
+
+      let userId: string;
+
+      if (linkingResult.outcome === 'linked_existing' && linkingResult.userId) {
+        userId = linkingResult.userId;
+      } else if (linkingResult.outcome === 'linked_new_jit' && linkingResult.email) {
+        const role = ssoService.mapGroupsToRole(claims.groups || [], [], defaultRole, allowedRoles);
+
+        userId = await ssoService.createSSOUser(
+          tenantId,
+          linkingResult.email,
+          claims.displayName,
+          role,
+        );
+      } else {
+        throw new SSOError({
+          message: 'Failed to resolve SSO account',
+          code: ErrorCodes.SSO_ACCOUNT_LINKING_FAILED,
+          statusCode: 500,
+          correlationId: request.id,
+        });
+      }
+
+      await ssoService.linkUserToSSOIdentity(userId, tenantId, providerId, claims.subject, claims);
+
+      const session = await createSession({} as Parameters<typeof createSession>[0], {
+        userId,
+        tenantId,
+        tokenHash: '',
+        expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000),
+      });
+
+      const user = await findUserById({} as Parameters<typeof findUserById>[0], userId, tenantId);
+      const userRole = user?.role ?? 'learner';
+
+      const token = await signJWT(config, {
+        sub: userId,
+        tenantId,
+        sessionId: session.id,
+        role: userRole,
+      });
+
       const eventBus = fastify.eventBus;
       eventBus.publish(
-        createSSOLoginFailedEvent({
+        createSSOLoginSuccessEvent({
           source: 'auth-sso-module',
           correlationId: request.id,
           tenantId,
@@ -439,19 +732,19 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
             tenantId,
             ssoProviderId: providerId,
             providerType: 'saml',
-            reason: 'SAML login not fully implemented - placeholder',
-            failureCode: 'SSO_NOT_IMPLEMENTED',
-            correlationId: request.id,
+            userId,
+            email: claims.email || '',
+            subject: claims.subject,
+            linkingOutcome: linkingResult.outcome,
           },
         }),
       );
 
-      throw new SSOError({
-        message: 'SAML assertion processing not fully implemented',
-        code: ErrorCodes.SSO_CONFIGURATION_ERROR,
-        statusCode: 501,
-        correlationId: request.id,
-      });
+      return {
+        userId,
+        email: claims.email,
+        accessToken: token,
+      };
     },
   );
 
@@ -622,8 +915,9 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         });
       }
 
+      const user = request.user as { userId?: string; tenantId: string } | undefined;
       const { providerId } = request.params;
-      const { SAMLResponse: _SAMLResponse, RelayState: _RelayState } = request.body;
+      const { SAMLResponse, SAMLRequest, RelayState: _RelayState } = request.body;
 
       const provider = await ssoService.getSSOProvider(providerId, tenantId);
       if (!provider || !provider.isActive || provider.provider !== 'saml') {
@@ -634,29 +928,153 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         });
       }
 
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createSSOLogoutInitiatedEvent({
-          source: 'auth-sso-module',
-          correlationId: request.id,
-          tenantId,
-          version: 1,
-          payload: {
-            tenantId,
-            ssoProviderId: providerId,
-            providerType: 'saml',
-            logoutType: 'idp_initiated',
-            correlationId: request.id,
-          },
-        }),
-      );
+      let userIdToRevoke: string | undefined;
 
-      throw new SSOError({
-        message: 'SAML logout processing not fully implemented',
-        code: ErrorCodes.SSO_CONFIGURATION_ERROR,
-        statusCode: 501,
-        correlationId: request.id,
-      });
+      if (user?.userId) {
+        userIdToRevoke = user.userId;
+      }
+
+      if (!SAMLResponse && !SAMLRequest && userIdToRevoke) {
+        const revocationResult = await authService.revokeUserSessionsByFederatedIdentity(config, {
+          tenantId,
+          userId: userIdToRevoke,
+          sourceType: 'saml',
+          ssoProviderId: providerId,
+        });
+
+        const eventBus = fastify.eventBus;
+        if (revocationResult.result === 'revoked' && revocationResult.userId) {
+          eventBus.publish(
+            createSSOLogoutProcessedEvent({
+              source: 'auth-sso-module',
+              correlationId: request.id,
+              tenantId,
+              version: 1,
+              payload: {
+                tenantId,
+                ssoProviderId: providerId,
+                providerType: 'saml',
+                userId: revocationResult.userId || '',
+                sessionsRevoked: revocationResult.sessionsRevoked,
+                result:
+                  revocationResult.result === 'revoked' ||
+                  revocationResult.result === 'already_revoked'
+                    ? revocationResult.result
+                    : 'failed',
+                correlationId: request.id,
+              },
+            }),
+          );
+        }
+
+        return revocationResult;
+      }
+
+      if (SAMLRequest) {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOLogoutInitiatedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              providerType: 'saml',
+              logoutType: 'idp_initiated',
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        return {
+          result: 'ignored_invalid',
+          sessionsRevoked: 0,
+          userId: undefined,
+          reason: 'SAML logout request processing not fully implemented',
+        };
+      }
+
+      if (SAMLResponse) {
+        const baseUrl = config.CORS_ORIGINS_LIST[0] || 'http://localhost:5173';
+        const sloUrl = `${baseUrl}/api/v1/auth/sso/saml/logout/${providerId}`;
+
+        const validationResult = await ssoService.validateSAMLResponse(
+          SAMLResponse,
+          provider,
+          sloUrl,
+          request.id,
+        );
+
+        if (!validationResult.valid) {
+          const eventBus = fastify.eventBus;
+          eventBus.publish(
+            createSSOLogoutFailedEvent({
+              source: 'auth-sso-module',
+              correlationId: request.id,
+              tenantId,
+              version: 1,
+              payload: {
+                tenantId,
+                ssoProviderId: providerId,
+                providerType: 'saml',
+                reason: validationResult.failureReason || 'Invalid SAML logout response',
+                errorCode: 'LOGOUT_VALIDATION_FAILED',
+                correlationId: request.id,
+              },
+            }),
+          );
+
+          return {
+            result: 'failed',
+            sessionsRevoked: 0,
+            userId: undefined,
+            reason: validationResult.failureReason || 'Invalid SAML logout response',
+          };
+        }
+
+        if (userIdToRevoke) {
+          const revocationResult = await authService.revokeUserSessionsByFederatedIdentity(config, {
+            tenantId,
+            userId: userIdToRevoke,
+            sourceType: 'saml',
+            ssoProviderId: providerId,
+          });
+
+          const eventBus = fastify.eventBus;
+          eventBus.publish(
+            createSSOLogoutProcessedEvent({
+              source: 'auth-sso-module',
+              correlationId: request.id,
+              tenantId,
+              version: 1,
+              payload: {
+                tenantId,
+                ssoProviderId: providerId,
+                providerType: 'saml',
+                userId: revocationResult.userId || '',
+                sessionsRevoked: revocationResult.sessionsRevoked,
+                result:
+                  revocationResult.result === 'revoked' ||
+                  revocationResult.result === 'already_revoked'
+                    ? revocationResult.result
+                    : 'failed',
+                correlationId: request.id,
+              },
+            }),
+          );
+
+          return revocationResult;
+        }
+      }
+
+      return {
+        result: 'ignored_invalid',
+        sessionsRevoked: 0,
+        userId: undefined,
+        reason: 'No valid user session to revoke',
+      };
     },
   );
 

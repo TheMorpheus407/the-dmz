@@ -89,6 +89,11 @@ export const ErrorCodes = {
   SSO_CONFIGURATION_ERROR: 'SSO_CONFIGURATION_ERROR',
   SSO_ACCOUNT_LINKING_FAILED: 'SSO_ACCOUNT_LINKING_FAILED',
   SSO_JIT_PROVISIONING_DENIED: 'SSO_JIT_PROVISIONING_DENIED',
+  SSO_INVALID_REQUEST: 'SSO_INVALID_REQUEST',
+  SSO_ASSERTION_INVALID: 'SSO_ASSERTION_INVALID',
+  SSO_MISSING_EMAIL: 'SSO_MISSING_EMAIL',
+  SSO_ROLE_ESCALATION_DENIED: 'SSO_ROLE_ESCALATION_DENIED',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
   SCIM_INVALID_REQUEST: 'SCIM_INVALID_REQUEST',
   SCIM_USER_NOT_FOUND: 'SCIM_USER_NOT_FOUND',
   SCIM_USER_ALREADY_EXISTS: 'SCIM_USER_ALREADY_EXISTS',
@@ -552,6 +557,31 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHENTICATION,
     retryable: false,
     messageKey: 'errors.sso.jitProvisioningDenied',
+  },
+  [ErrorCodes.SSO_INVALID_REQUEST]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.sso.invalidRequest',
+  },
+  [ErrorCodes.SSO_ASSERTION_INVALID]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.assertionInvalid',
+  },
+  [ErrorCodes.SSO_MISSING_EMAIL]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.missingEmail',
+  },
+  [ErrorCodes.SSO_ROLE_ESCALATION_DENIED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.sso.roleEscalationDenied',
+  },
+  [ErrorCodes.USER_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.user.notFound',
   },
   [ErrorCodes.SCIM_INVALID_REQUEST]: {
     category: ErrorCodeCategory.VALIDATION,
