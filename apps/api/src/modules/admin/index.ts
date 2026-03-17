@@ -5,6 +5,7 @@ export { registerAdminDashboardRoutes } from './admin-dashboard.routes.js';
 export { registerAdminUserRoutes } from './admin-users.routes.js';
 export { registerTrainerRoutes } from './trainer.routes.js';
 export { registerCertificateRoutes } from './certificate.routes.js';
+export { registerComplianceRoutes } from './compliance.routes.js';
 
 export {
   generateCertificate,
@@ -48,3 +49,17 @@ export {
   type CampaignCompletion,
   type TrainerDashboardData,
 } from './trainer.service.js';
+
+export {
+  getComplianceSummary,
+  getComplianceDetail,
+  getFrameworkRequirements,
+  calculateComplianceSnapshot,
+  calculateAllComplianceSnapshots,
+  type ComplianceStatus,
+  type ComplianceSnapshotData,
+  type FrameworkRequirementData,
+  type ComplianceSummary,
+  type ComplianceDetail,
+  type ComplianceDashboardData,
+} from './compliance.service.js';

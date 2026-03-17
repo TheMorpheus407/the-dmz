@@ -1760,6 +1760,111 @@
         }
       }
     },
+    "/admin/compliance": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/admin/compliance/{frameworkId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nist_800_50",
+                "iso_27001",
+                "pci_dss",
+                "hipaa",
+                "gdpr",
+                "soc_2",
+                "nis2_article_20",
+                "dora_article_5"
+              ]
+            },
+            "in": "path",
+            "name": "frameworkId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/admin/compliance/{frameworkId}/requirements": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nist_800_50",
+                "iso_27001",
+                "pci_dss",
+                "hipaa",
+                "gdpr",
+                "soc_2",
+                "nis2_article_20",
+                "dora_article_5"
+              ]
+            },
+            "in": "path",
+            "name": "frameworkId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/admin/compliance/calculate": {
+      "post": {
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/admin/compliance/{frameworkId}/calculate": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "nist_800_50",
+                "iso_27001",
+                "pci_dss",
+                "hipaa",
+                "gdpr",
+                "soc_2",
+                "nis2_article_20",
+                "dora_article_5"
+              ]
+            },
+            "in": "path",
+            "name": "frameworkId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
     "/audit/logs": {
       "get": {
         "parameters": [

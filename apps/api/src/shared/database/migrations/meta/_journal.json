@@ -183,6 +183,13 @@
       "when": 1773700000000,
       "tag": "0024_training_certificates",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1773800000000,
+      "tag": "0025_compliance_snapshots",
+      "breakpoints": true
     }
   ]
 }
