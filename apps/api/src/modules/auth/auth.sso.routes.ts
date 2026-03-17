@@ -316,7 +316,6 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
   fastify.get<{ Params: { providerId: string } }>(
     '/auth/sso/saml/metadata/:providerId',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard],
       schema: {
         params: {
           type: 'object',
@@ -327,27 +326,15 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         },
         response: {
           200: ssoSAMLMetadataResponseJsonSchema,
-          403: {
-            oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
-          },
           404: errorResponseSchemas.NotFound,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
     async (request) => {
-      const tenantId = request.preAuthTenantContext?.tenantId;
-      if (!tenantId) {
-        throw new SSOError({
-          message: 'Tenant context required',
-          code: ErrorCodes.TENANT_CONTEXT_MISSING,
-          statusCode: 400,
-        });
-      }
-
       const { providerId } = request.params;
 
-      const provider = await ssoService.getSSOProvider(providerId, tenantId);
+      const provider = await ssoService.getSSOProviderById(providerId);
       if (!provider) {
         throw new SSOError({
           message: 'SSO provider not found',
@@ -375,11 +362,124 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
       return {
         entityId: `${config.CORS_ORIGINS_LIST[0] || 'http://localhost:5173'}/auth/sso/saml/metadata/${providerId}`,
         ssoUrl: provider.metadataUrl || '',
-        certificates: [],
+        certificates: provider.idpCertificate ? [provider.idpCertificate] : [],
         signatureAlgorithm: 'RSA-SHA256',
         wantAssertionsSigned: true,
         wantMessagesSigned: false,
       };
+    },
+  );
+
+  fastify.get<{ Params: { providerId: string } }>(
+    '/auth/sso/oidc/.well-known/openid-configuration/:providerId',
+    {
+      schema: {
+        params: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string', format: 'uuid' },
+          },
+          required: ['providerId'],
+        },
+        response: {
+          200: {
+            type: 'object',
+          },
+          404: errorResponseSchemas.NotFound,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request) => {
+      const { providerId } = request.params;
+
+      const provider = await ssoService.getSSOProviderById(providerId);
+      if (!provider) {
+        throw new SSOError({
+          message: 'SSO provider not found',
+          code: ErrorCodes.SSO_PROVIDER_NOT_FOUND,
+          statusCode: 404,
+        });
+      }
+
+      if (!provider.isActive) {
+        throw new SSOError({
+          message: 'SSO provider is inactive',
+          code: ErrorCodes.SSO_PROVIDER_INACTIVE,
+          statusCode: 403,
+        });
+      }
+
+      if (provider.provider !== 'oidc') {
+        throw new SSOError({
+          message: 'Invalid provider type',
+          code: ErrorCodes.SSO_CONFIGURATION_ERROR,
+          statusCode: 400,
+        });
+      }
+
+      const baseUrl = config.CORS_ORIGINS_LIST[0] || 'http://localhost:5173';
+
+      try {
+        const { metadata } = await ssoService.getOIDCProviderConfig(provider);
+
+        return {
+          issuer: metadata.issuer,
+          authorization_endpoint: `${baseUrl}/api/v1/auth/sso/oidc/authorize/${providerId}`,
+          token_endpoint: `${baseUrl}/api/v1/auth/sso/oidc/token/${providerId}`,
+          userinfo_endpoint: metadata.userinfoEndpoint || undefined,
+          jwks_uri: metadata.jwksUri,
+          end_session_endpoint: metadata.endSessionEndpoint
+            ? `${baseUrl}/api/v1/auth/sso/oidc/logout/${providerId}`
+            : undefined,
+          revocation_endpoint: `${baseUrl}/api/v1/auth/sso/oidc/revoke/${providerId}`,
+          introspection_endpoint: metadata.introspectionEndpoint || undefined,
+          response_types_supported: ['code'],
+          response_modes_supported: ['query', 'fragment'],
+          grant_types_supported: ['authorization_code', 'refresh_token'],
+          subject_types_supported: ['public'],
+          id_token_signing_alg_values_supported: [
+            'RS256',
+            'RS384',
+            'RS512',
+            'ES256',
+            'ES384',
+            'ES512',
+          ],
+          token_endpoint_auth_methods_supported: [
+            'client_secret_basic',
+            'client_secret_post',
+            'client_secret_jwt',
+            'private_key_jwt',
+          ],
+          claims_supported: [
+            'sub',
+            'iss',
+            'aud',
+            'exp',
+            'iat',
+            'nonce',
+            'email',
+            'email_verified',
+            'name',
+            'given_name',
+            'family_name',
+            'middle_name',
+            'nickname',
+            'picture',
+            'groups',
+          ],
+          scopes_supported: ['openid', 'profile', 'email', 'groups'],
+          ui_locales_supported: ['en-US'],
+          code_challenge_methods_supported: ['S256'],
+        };
+      } catch {
+        throw new SSOError({
+          message: 'Failed to retrieve OIDC provider configuration',
+          code: ErrorCodes.SSO_CONFIGURATION_ERROR,
+          statusCode: 500,
+        });
+      }
     },
   );
 
@@ -1170,6 +1270,132 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         email: claims.email,
         accessToken: token,
       };
+    },
+  );
+
+  fastify.post<{
+    Params: { providerId: string };
+    Body: { grant_type: string; refresh_token?: string; code?: string; redirect_uri?: string };
+  }>(
+    '/auth/sso/oidc/token/:providerId',
+    {
+      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard],
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 10,
+              timeWindow: '1 minute',
+            },
+      },
+      schema: {
+        params: {
+          type: 'object',
+          properties: {
+            providerId: { type: 'string', format: 'uuid' },
+          },
+          required: ['providerId'],
+        },
+        body: {
+          type: 'object',
+          properties: {
+            grant_type: { type: 'string', enum: ['authorization_code', 'refresh_token'] },
+            refresh_token: { type: 'string' },
+            code: { type: 'string' },
+            redirect_uri: { type: 'string', format: 'uri' },
+          },
+          required: ['grant_type'],
+        },
+      },
+    },
+    async (request, _reply) => {
+      const tenantId = request.preAuthTenantContext?.tenantId;
+      if (!tenantId) {
+        throw new SSOError({
+          message: 'Tenant context required',
+          code: ErrorCodes.TENANT_CONTEXT_MISSING,
+          statusCode: 400,
+        });
+      }
+
+      const { providerId } = request.params;
+      const { grant_type, refresh_token, code } = request.body;
+
+      const provider = await ssoService.getSSOProvider(providerId, tenantId);
+      if (!provider || !provider.isActive || provider.provider !== 'oidc') {
+        throw new SSOError({
+          message: 'SSO provider not found or inactive',
+          code: ErrorCodes.SSO_PROVIDER_NOT_FOUND,
+          statusCode: 404,
+        });
+      }
+
+      if (grant_type === 'refresh_token') {
+        if (!refresh_token) {
+          throw new SSOError({
+            message: 'Refresh token is required',
+            code: ErrorCodes.SSO_INVALID_REQUEST,
+            statusCode: 400,
+          });
+        }
+
+        try {
+          const { metadata, clientId, clientSecret } =
+            await ssoService.getOIDCProviderConfig(provider);
+
+          if (!metadata.tokenEndpoint) {
+            throw new SSOError({
+              message: 'Token endpoint not configured',
+              code: ErrorCodes.SSO_CONFIGURATION_ERROR,
+              statusCode: 500,
+            });
+          }
+
+          const refreshedTokens = await ssoService.refreshAccessToken(
+            metadata.tokenEndpoint,
+            clientId,
+            clientSecret,
+            refresh_token,
+          );
+
+          return {
+            access_token: refreshedTokens.accessToken,
+            token_type: 'Bearer',
+            expires_in: refreshedTokens.expiresIn,
+            refresh_token: refreshedTokens.refreshToken || refresh_token,
+            id_token: refreshedTokens.idToken,
+          };
+        } catch (err) {
+          const ssoError = err as SSOError;
+          throw new SSOError({
+            message: ssoError.message || 'Token refresh failed',
+            code: ErrorCodes.SSO_TOKEN_INVALID,
+            statusCode: 401,
+          });
+        }
+      }
+
+      if (grant_type === 'authorization_code') {
+        if (!code) {
+          throw new SSOError({
+            message: 'Authorization code is required',
+            code: ErrorCodes.SSO_INVALID_REQUEST,
+            statusCode: 400,
+          });
+        }
+
+        throw new SSOError({
+          message: 'Use the OIDC callback endpoint for authorization code exchange',
+          code: ErrorCodes.SSO_INVALID_REQUEST,
+          statusCode: 400,
+        });
+      }
+
+      throw new SSOError({
+        message: 'Unsupported grant type',
+        code: ErrorCodes.SSO_INVALID_REQUEST,
+        statusCode: 400,
+      });
     },
   );
 

@@ -487,6 +487,41 @@ export const getSSOProvider = async (
   };
 };
 
+export const getSSOProviderById = async (providerId: string): Promise<SSOProvider | null> => {
+  const result = await db
+    .select()
+    .from(ssoConnections)
+    .where(eq(ssoConnections.id, providerId))
+    .limit(1);
+
+  if (result.length === 0) {
+    return null;
+  }
+
+  const row = result[0];
+  if (!row) {
+    return null;
+  }
+
+  return {
+    id: row.id,
+    tenantId: row.tenantId,
+    provider: row.provider as 'saml' | 'oidc',
+    name: row.name,
+    metadataUrl: row.metadataUrl,
+    clientId: row.clientId,
+    clientSecretEncrypted: row.clientSecretEncrypted,
+    idpCertificate: (row as { idpCertificate?: string }).idpCertificate ?? null,
+    spPrivateKey: (row as { spPrivateKey?: string }).spPrivateKey ?? null,
+    spCertificate: (row as { spCertificate?: string }).spCertificate ?? null,
+    isActive: row.isActive,
+    roleMappingRules: (row as { roleMappingRules?: RoleMappingRule[] }).roleMappingRules ?? null,
+    defaultRole: (row as { defaultRole?: string }).defaultRole ?? 'learner',
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+};
+
 export interface CreateSAMLProviderInput {
   tenantId: string;
   name: string;
@@ -1911,6 +1946,77 @@ export const exchangeCodeForTokens = async (
   };
 
   return tokens;
+};
+
+export interface RefreshedTokens {
+  accessToken: string;
+  idToken?: string;
+  refreshToken?: string;
+  expiresIn: number;
+}
+
+export const refreshAccessToken = async (
+  tokenEndpoint: string,
+  clientId: string,
+  clientSecret: string,
+  refreshToken: string,
+): Promise<RefreshedTokens> => {
+  const params = new URLSearchParams({
+    grant_type: 'refresh_token',
+    client_id: clientId,
+    client_secret: clientSecret,
+    refresh_token: refreshToken,
+  });
+
+  const response = await fetch(tokenEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Accept: 'application/json',
+    },
+    body: params.toString(),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    let errorMessage = 'Token refresh failed';
+    try {
+      const errorJson = JSON.parse(errorBody) as { error_description?: string; error?: string };
+      errorMessage = errorJson.error_description || errorJson.error || errorMessage;
+    } catch {
+      errorMessage = errorBody || errorMessage;
+    }
+
+    throw new SSOError({
+      message: `Token refresh failed: ${errorMessage}`,
+      code: ErrorCodes.SSO_TOKEN_INVALID,
+      statusCode: 401,
+    });
+  }
+
+  const tokenData = (await response.json()) as {
+    access_token: string;
+    id_token?: string;
+    refresh_token?: string;
+    expires_in: number;
+    token_type: string;
+    scope?: string;
+  };
+
+  const result: RefreshedTokens = {
+    accessToken: tokenData.access_token,
+    expiresIn: tokenData.expires_in,
+  };
+
+  if (tokenData.id_token) {
+    result.idToken = tokenData.id_token;
+  }
+
+  if (tokenData.refresh_token) {
+    result.refreshToken = tokenData.refresh_token;
+  }
+
+  return result;
 };
 
 export interface OIDCUserInfoResponse {

@@ -17,6 +17,7 @@ import {
   decodeJWT,
   buildOIDCLogoutUrl,
   clearOIDCMetadataCache,
+  refreshAccessToken,
 } from '../auth.sso.service.js';
 
 vi.mock('../../../shared/database/connection.js', () => ({
@@ -611,6 +612,87 @@ describe('OIDC Service - Transitive Group Memberships', () => {
       const result = await fetchTransitiveGroupMemberships('access-token', 'user-id');
 
       expect(result).toEqual([]);
+    });
+  });
+});
+
+describe('OIDC Service - Token Refresh', () => {
+  describe('refreshAccessToken', () => {
+    beforeEach(() => {
+      vi.stubGlobal('fetch', vi.fn());
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('should throw error when token endpoint is empty', async () => {
+      await expect(
+        refreshAccessToken('', 'client-id', 'client-secret', 'refresh-token'),
+      ).rejects.toThrow();
+    });
+
+    it('should throw error when refresh fails', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: false,
+        status: 400,
+        json: async () => ({ error: 'invalid_grant', error_description: 'Invalid refresh token' }),
+      } as Response);
+
+      await expect(
+        refreshAccessToken(
+          'https://idp.example.com/token',
+          'client-id',
+          'client-secret',
+          'invalid-refresh-token',
+        ),
+      ).rejects.toThrow();
+    });
+
+    it('should return tokens on successful refresh', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: 'new-access-token',
+          refresh_token: 'new-refresh-token',
+          id_token: 'new-id-token',
+          expires_in: 3600,
+          token_type: 'Bearer',
+        }),
+      } as Response);
+
+      const result = await refreshAccessToken(
+        'https://idp.example.com/token',
+        'client-id',
+        'client-secret',
+        'valid-refresh-token',
+      );
+
+      expect(result.accessToken).toBe('new-access-token');
+      expect(result.refreshToken).toBe('new-refresh-token');
+      expect(result.idToken).toBe('new-id-token');
+      expect(result.expiresIn).toBe(3600);
+    });
+
+    it('should handle refresh token rotation', async () => {
+      vi.mocked(fetch).mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: 'new-access-token',
+          expires_in: 3600,
+          token_type: 'Bearer',
+        }),
+      } as Response);
+
+      const result = await refreshAccessToken(
+        'https://idp.example.com/token',
+        'client-id',
+        'client-secret',
+        'valid-refresh-token',
+      );
+
+      expect(result.accessToken).toBe('new-access-token');
+      expect(result.refreshToken).toBeUndefined();
     });
   });
 });
