@@ -1,4 +1,5 @@
 import { ErrorCodes } from '@the-dmz/shared/constants';
+import type { SSOIdentityClaim } from '@the-dmz/shared/auth';
 
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
 import { preAuthTenantStatusGuard } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
@@ -17,6 +18,7 @@ import {
   createSSOLogoutInitiatedEvent,
   createSSOLogoutProcessedEvent,
   createSSOLogoutFailedEvent,
+  createSSOJitProvisionedEvent,
 } from './auth.events.js';
 
 import { signJWT, createSession, findUserById } from './index.js';
@@ -729,9 +731,18 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         });
       }
 
-      const claims = validationResult.claims;
+      const claims: SSOIdentityClaim | undefined = validationResult.claims;
       const allowedRoles = ['super_admin', 'tenant_admin', 'manager', 'trainer', 'learner'];
       const defaultRole = 'learner';
+
+      if (!claims) {
+        throw new SSOError({
+          message: 'Failed to validate SSO assertion',
+          code: ErrorCodes.SSO_TOKEN_INVALID,
+          statusCode: 400,
+          correlationId: request.id,
+        });
+      }
 
       const linkingResult = await ssoService.resolveSSOAccountLinking(
         tenantId,
@@ -807,11 +818,62 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
           allowedRoles,
         );
 
-        userId = await ssoService.createSSOUser(
+        const ssoUserParams: ssoService.CreateSSOUserInput = {
           tenantId,
-          linkingResult.email,
-          claims.displayName,
+          email: linkingResult.email,
           role,
+          isJitCreated: true,
+          idpSource: 'saml',
+          idpAttributes: {
+            groups: claims.groups,
+            subject: claims.subject,
+          },
+        };
+
+        if (claims.displayName) {
+          ssoUserParams.displayName = claims.displayName;
+        }
+        if (claims.department) {
+          ssoUserParams.department = claims.department;
+        }
+        if (claims.title) {
+          ssoUserParams.title = claims.title;
+        }
+        if (claims.manager) {
+          ssoUserParams.managerEmail = claims.manager;
+        }
+
+        userId = await ssoService.createSSOUser(ssoUserParams);
+
+        const jitNotificationParams: ssoService.NotifyJITUserCreatedOptions = {
+          tenantId,
+          jitUserId: userId,
+          jitUserEmail: linkingResult.email,
+          idpSource: 'saml',
+          idpProviderName: provider.name,
+        };
+
+        if (claims.displayName) {
+          jitNotificationParams.jitUserDisplayName = claims.displayName;
+        }
+
+        await ssoService.notifyJITUserCreated(jitNotificationParams);
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOJitProvisionedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              userId,
+              email: linkingResult.email,
+              role,
+            },
+          }),
         );
       } else {
         throw new SSOError({
@@ -1117,11 +1179,14 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
       }
 
       // Extract claims from ID token or UserInfo
-      const claims = {
+      const claims: SSOIdentityClaim = {
         subject: (idTokenClaims['sub'] as string) || (userInfo?.sub as string) || '',
         email: (idTokenClaims['email'] as string) || (userInfo?.email as string) || undefined,
         displayName: (idTokenClaims['name'] as string) || (userInfo?.name as string) || undefined,
         groups: (idTokenClaims['groups'] as string[]) || [],
+        department: (idTokenClaims['department'] as string) || undefined,
+        title: (idTokenClaims['title'] as string) || undefined,
+        manager: (idTokenClaims['manager'] as string) || undefined,
       };
 
       if (!claims.subject) {
@@ -1212,11 +1277,62 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
           transitiveGroups,
         );
 
-        userId = await ssoService.createSSOUser(
+        const ssoUserParams: ssoService.CreateSSOUserInput = {
           tenantId,
-          linkingResult.email,
-          claims.displayName,
+          email: linkingResult.email,
           role,
+          isJitCreated: true,
+          idpSource: 'oidc',
+          idpAttributes: {
+            groups: claims.groups,
+            subject: claims.subject,
+          },
+        };
+
+        if (claims.displayName) {
+          ssoUserParams.displayName = claims.displayName;
+        }
+        if (claims.department) {
+          ssoUserParams.department = claims.department;
+        }
+        if (claims.title) {
+          ssoUserParams.title = claims.title;
+        }
+        if (claims.manager) {
+          ssoUserParams.managerEmail = claims.manager;
+        }
+
+        userId = await ssoService.createSSOUser(ssoUserParams);
+
+        const jitNotificationParams: ssoService.NotifyJITUserCreatedOptions = {
+          tenantId,
+          jitUserId: userId,
+          jitUserEmail: linkingResult.email,
+          idpSource: 'oidc',
+          idpProviderName: provider.name,
+        };
+
+        if (claims.displayName) {
+          jitNotificationParams.jitUserDisplayName = claims.displayName;
+        }
+
+        await ssoService.notifyJITUserCreated(jitNotificationParams);
+
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOJitProvisionedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              userId,
+              email: linkingResult.email,
+              role,
+            },
+          }),
         );
       } else {
         throw new SSOError({

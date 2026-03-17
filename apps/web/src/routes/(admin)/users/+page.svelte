@@ -16,6 +16,7 @@
   let search = $state('');
   let roleFilter = $state('');
   let statusFilter = $state('');
+  let jitFilter = $state('');
   let dateFrom = $state('');
   let dateTo = $state('');
   let sortBy = $state<'displayName' | 'email' | 'role' | 'createdAt' | 'lastActive'>('createdAt');
@@ -36,6 +37,12 @@
     { value: 'false', label: 'Inactive' },
   ];
 
+  const jitOptions = [
+    { value: '', label: 'All Users' },
+    { value: 'true', label: 'JIT Created' },
+    { value: 'false', label: 'Manually Created' },
+  ];
+
   async function loadUsers() {
     loading = true;
     error = null;
@@ -46,6 +53,7 @@
       search?: string;
       role?: string;
       isActive?: boolean;
+      isJitCreated?: boolean;
       sortBy?: 'displayName' | 'email' | 'role' | 'createdAt' | 'lastActive';
       sortOrder?: 'asc' | 'desc';
       createdAfter?: string;
@@ -60,6 +68,7 @@
     if (search) params.search = search;
     if (roleFilter) params.role = roleFilter;
     if (statusFilter) params.isActive = statusFilter === 'true';
+    if (jitFilter) params.isJitCreated = jitFilter === 'true';
     if (dateFrom) params.createdAfter = new Date(dateFrom).toISOString();
     if (dateTo) params.createdBefore = new Date(dateTo).toISOString();
 
@@ -170,6 +179,11 @@
             <option value={option.value}>{option.label}</option>
           {/each}
         </select>
+        <select class="filters__select" bind:value={jitFilter} onchange={handleFilterChange}>
+          {#each jitOptions as option (option.value)}
+            <option value={option.value}>{option.label}</option>
+          {/each}
+        </select>
         <input
           type="date"
           class="filters__date-input"
@@ -227,6 +241,7 @@
                 {/if}
               </th>
               <th>Status</th>
+              <th>Source</th>
               <th class="sortable" onclick={() => handleSort('createdAt')}>
                 Created
                 {#if sortBy === 'createdAt'}
@@ -245,7 +260,7 @@
           <tbody>
             {#if users.length === 0}
               <tr>
-                <td colspan="7" class="empty-message">No users found</td>
+                <td colspan="8" class="empty-message">No users found</td>
               </tr>
             {:else}
               {#each users as user (user.userId)}
@@ -261,6 +276,15 @@
                     <Badge variant={user.isActive ? 'success' : 'default'}>
                       {user.isActive ? 'Active' : 'Inactive'}
                     </Badge>
+                  </td>
+                  <td>
+                    {#if user.isJitCreated}
+                      <Badge variant="info">
+                        {user.idpSource?.toUpperCase() || 'JIT'}
+                      </Badge>
+                    {:else}
+                      <span class="source-manual">Manual</span>
+                    {/if}
                   </td>
                   <td>{formatDate(user.createdAt)}</td>
                   <td>{user.lastActive ? formatDate(user.lastActive) : '-'}</td>
@@ -474,6 +498,11 @@
 
   .user-name {
     font-weight: 500;
+  }
+
+  .source-manual {
+    color: var(--admin-text-secondary);
+    font-size: var(--admin-text-sm);
   }
 
   .empty-message {

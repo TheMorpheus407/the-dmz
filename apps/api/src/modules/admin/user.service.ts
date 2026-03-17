@@ -29,6 +29,7 @@ export interface UserListParams {
   search?: string;
   role?: string;
   isActive?: boolean;
+  isJitCreated?: boolean;
   createdAfter?: Date;
   createdBefore?: Date;
 }
@@ -65,6 +66,8 @@ export interface UserListItem {
   displayName: string | null;
   role: string;
   isActive: boolean;
+  isJitCreated: boolean;
+  idpSource: string | null;
   createdAt: Date;
   lastActive: Date | null;
 }
@@ -297,6 +300,10 @@ export const listUsers = async (
     conditions.push(eq(users.isActive, params.isActive));
   }
 
+  if (params.isJitCreated !== undefined) {
+    conditions.push(eq(users.isJitCreated, params.isJitCreated));
+  }
+
   if (params.createdAfter) {
     conditions.push(sql`${users.createdAt} >= ${params.createdAfter}`);
   }
@@ -333,6 +340,8 @@ export const listUsers = async (
       displayName: users.displayName,
       role: users.role,
       isActive: users.isActive,
+      isJitCreated: users.isJitCreated,
+      idpSource: users.idpSource,
       createdAt: users.createdAt,
       lastActive: users.createdAt,
     })

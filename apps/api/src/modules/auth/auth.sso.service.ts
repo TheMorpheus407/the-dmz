@@ -13,6 +13,7 @@ import { ErrorCodes } from '@the-dmz/shared/constants';
 
 import { ssoConnections } from '../../db/schema/auth/sso-connections.js';
 import { userSsoIdentities } from '../../db/schema/auth/user-sso-identities.js';
+import { adminNotifications } from '../../db/schema/auth/admin-notifications.js';
 import { users } from '../../shared/database/schema/users.js';
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { loadConfig } from '../../config.js';
@@ -933,12 +934,32 @@ export const linkUserToSSOIdentity = async (
     .onConflictDoNothing();
 };
 
-export const createSSOUser = async (
-  tenantId: string,
-  email: string,
-  displayName?: string,
-  role: string = 'learner',
-): Promise<string> => {
+export interface CreateSSOUserInput {
+  tenantId: string;
+  email: string;
+  displayName?: string;
+  role?: string;
+  isJitCreated?: boolean;
+  idpSource?: 'saml' | 'oidc';
+  department?: string;
+  title?: string;
+  managerEmail?: string;
+  idpAttributes?: Record<string, unknown>;
+}
+
+export const createSSOUser = async (input: CreateSSOUserInput): Promise<string> => {
+  const {
+    tenantId,
+    email,
+    displayName,
+    role = 'learner',
+    isJitCreated = false,
+    idpSource,
+    department,
+    title,
+    idpAttributes,
+  } = input;
+
   const [user] = await db
     .insert(users)
     .values({
@@ -948,6 +969,11 @@ export const createSSOUser = async (
       role,
       passwordHash: null,
       isActive: true,
+      isJitCreated,
+      idpSource: idpSource ?? null,
+      department: department ?? null,
+      title: title ?? null,
+      idpAttributes: idpAttributes ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     })
@@ -958,6 +984,55 @@ export const createSSOUser = async (
   }
 
   return user.userId;
+};
+
+export interface NotifyJITUserCreatedOptions {
+  tenantId: string;
+  jitUserId: string;
+  jitUserEmail: string;
+  jitUserDisplayName?: string;
+  idpSource: 'saml' | 'oidc';
+  idpProviderName: string;
+}
+
+export const notifyJITUserCreated = async (options: NotifyJITUserCreatedOptions): Promise<void> => {
+  const { tenantId, jitUserId, jitUserEmail, jitUserDisplayName, idpSource, idpProviderName } =
+    options;
+
+  const tenantAdmins = await db
+    .select({
+      userId: users.userId,
+      email: users.email,
+      displayName: users.displayName,
+    })
+    .from(users)
+    .where(
+      and(eq(users.tenantId, tenantId), eq(users.role, 'tenant_admin'), eq(users.isActive, true)),
+    );
+
+  const notificationTitle = 'New JIT User Provisioned';
+  const notificationMessage = `A new user "${jitUserDisplayName || jitUserEmail}" (${jitUserEmail}) was automatically provisioned via ${idpSource.toUpperCase()} provider "${idpProviderName}". Review the user and assign appropriate permissions.`;
+
+  for (const admin of tenantAdmins) {
+    console.warn(
+      `[JIT Notification] Notifying tenant admin ${admin.email} about new JIT user: ${jitUserEmail} (${jitUserId}) from ${idpSource} provider "${idpProviderName}"`,
+    );
+
+    await db.insert(adminNotifications).values({
+      tenantId,
+      adminUserId: admin.userId,
+      notificationType: 'jit_user_provisioned',
+      title: notificationTitle,
+      message: notificationMessage,
+      metadata: {
+        jitUserId,
+        jitUserEmail,
+        jitUserDisplayName,
+        idpSource,
+        idpProviderName,
+      },
+    });
+  }
 };
 
 export const validateOIDCProviderTrust = async (
@@ -985,6 +1060,9 @@ export const validateOIDCProviderTrust = async (
   const email = idTokenClaims['email'] as string | undefined;
   const name = idTokenClaims['name'] as string | undefined;
   const groups = idTokenClaims['groups'] as string[] | undefined;
+  const department = idTokenClaims['department'] as string | undefined;
+  const title = idTokenClaims['title'] as string | undefined;
+  const manager = idTokenClaims['manager'] as string | undefined;
 
   if (!subject) {
     return {
@@ -1039,6 +1117,9 @@ export const validateOIDCProviderTrust = async (
       email,
       displayName: name,
       groups,
+      department,
+      title,
+      manager,
     },
   };
 };
@@ -1077,6 +1158,9 @@ export const validateSAMLAssertion = async (
       email,
       displayName: attributes?.['displayName'] as string | undefined,
       groups: attributes?.['groups'] as string[] | undefined,
+      department: attributes?.['department'] as string | undefined,
+      title: attributes?.['title'] as string | undefined,
+      manager: attributes?.['manager'] as string | undefined,
     },
   };
 };
@@ -1532,6 +1616,26 @@ export const validateSAMLResponse = async (
       }
     }
 
+    const department =
+      (attributes[attributeMapping.department] as string | undefined) ||
+      (attributes['department'] as string | undefined) ||
+      (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/department'] as
+        | string
+        | undefined);
+
+    const title =
+      (attributes[attributeMapping.title] as string | undefined) ||
+      (attributes['title'] as string | undefined) ||
+      (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle'] as
+        | string
+        | undefined);
+
+    const manager =
+      (attributes['manager'] as string | undefined) ||
+      (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/manager'] as
+        | string
+        | undefined);
+
     const emailValue: string | undefined = emailRaw ? String(emailRaw).toLowerCase() : undefined;
 
     const displayNameValue =
@@ -1542,6 +1646,9 @@ export const validateSAMLResponse = async (
       email: emailValue,
       displayName: displayNameValue,
       groups,
+      department,
+      title,
+      manager,
     };
 
     return {

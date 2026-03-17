@@ -7,13 +7,18 @@ import {
   generateSPMetadata,
   fetchAndParseIdPMetadata,
   clearIdPMetadataCache,
+  notifyJITUserCreated,
 } from '../auth.sso.service.js';
 
 import type { SSOProvider } from '../auth.sso.service.js';
 
 vi.mock('../../../shared/database/connection.js', () => ({
   getDatabaseClient: vi.fn(() => ({
-    select: vi.fn(() => Promise.resolve([])),
+    select: vi.fn(() => ({
+      from: vi.fn(() => ({
+        where: vi.fn(() => Promise.resolve([])),
+      })),
+    })),
     insert: vi.fn(() => Promise.resolve([{ userId: 'test-user-id' }])),
     update: vi.fn(() => Promise.resolve({})),
   })),
@@ -257,6 +262,34 @@ describe('SAML Service', () => {
       await expect(
         fetchAndParseIdPMetadata('https://invalid-url-that-does-not-exist.example.com/metadata'),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('notifyJITUserCreated', () => {
+    it('should handle case with no tenant admins', async () => {
+      const { getDatabaseClient } = await import('../../../shared/database/connection.js');
+      type MockDb = {
+        select: ReturnType<typeof vi.fn>;
+        insert: ReturnType<typeof vi.fn>;
+      };
+      const mockDb = getDatabaseClient() as unknown as MockDb;
+
+      const mockSelect = mockDb.select;
+      mockSelect.mockReturnValue({
+        from: () => ({
+          where: () => Promise.resolve([]),
+        }),
+      });
+
+      await notifyJITUserCreated({
+        tenantId: 'tenant-123',
+        jitUserId: 'user-456',
+        jitUserEmail: 'newuser@example.com',
+        idpSource: 'saml',
+        idpProviderName: 'Okta SAML',
+      });
+
+      expect(mockDb.insert).not.toHaveBeenCalled();
     });
   });
 });

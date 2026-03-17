@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   boolean,
   index,
+  jsonb,
   pgTable,
   timestamp,
   uniqueIndex,
@@ -30,6 +31,9 @@ export const users = pgTable(
     department: varchar('department', { length: 128 }),
     title: varchar('title', { length: 128 }),
     managerId: uuid('manager_id'),
+    isJitCreated: boolean('is_jit_created').notNull().default(false),
+    idpSource: varchar('idp_source', { length: 32 }),
+    idpAttributes: jsonb('idp_attributes'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   },

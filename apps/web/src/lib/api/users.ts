@@ -18,6 +18,8 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   lastActive: string | null;
+  isJitCreated?: boolean;
+  idpSource?: 'saml' | 'oidc' | null;
 }
 
 export interface UserListParams {
@@ -28,6 +30,7 @@ export interface UserListParams {
   search?: string;
   role?: string;
   isActive?: boolean;
+  isJitCreated?: boolean;
   createdAfter?: string;
   createdBefore?: string;
 }
@@ -83,6 +86,8 @@ function buildQueryString(params: UserListParams): string {
   if (params.search) searchParams.set('search', params.search);
   if (params.role) searchParams.set('role', params.role);
   if (params.isActive !== undefined) searchParams.set('isActive', String(params.isActive));
+  if (params.isJitCreated !== undefined)
+    searchParams.set('isJitCreated', String(params.isJitCreated));
   if (params.createdAfter) searchParams.set('createdAfter', params.createdAfter);
   if (params.createdBefore) searchParams.set('createdBefore', params.createdBefore);
 

@@ -130,6 +130,9 @@ export const SSOIdentityClaimSchema = z.object({
   displayName: z.string().optional(),
   groups: z.array(z.string()).optional(),
   tenantHint: z.string().optional(),
+  department: z.string().optional(),
+  title: z.string().optional(),
+  manager: z.string().optional(),
 });
 
 export type SSOIdentityClaim = z.infer<typeof SSOIdentityClaimSchema>;
