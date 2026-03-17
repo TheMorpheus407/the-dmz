@@ -92,6 +92,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'featureFlags',
+      pluginPath: './modules/feature-flags/index.js',
+      routePrefix: '/api/v1',
+      dependencies: ['eventBus', 'auth'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 

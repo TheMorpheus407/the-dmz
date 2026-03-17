@@ -15,3 +15,5 @@ export * from '../../../db/schema/game/index.js';
 export * from '../../../db/schema/ai/index.js';
 export * from '../../../db/schema/content/index.js';
 export * from '../../../db/schema/audit/index.js';
+export * from '../../../db/schema/feature-flags/index.js';
+export * from '../../../db/schema/compliance/index.js';
