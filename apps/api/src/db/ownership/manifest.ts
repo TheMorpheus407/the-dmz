@@ -48,6 +48,13 @@ export const OWNERSHIP_MANIFEST: OwnershipManifest = {
       justification:
         'Admin module requires session data for user activity tracking and login history in the user management interface',
     },
+    {
+      schema: 'auth',
+      table: 'sso_connections',
+      allowedModules: ['admin'],
+      justification:
+        'Admin module requires SSO connection data for managing IdP configurations in the admin panel',
+    },
   ],
 };
 

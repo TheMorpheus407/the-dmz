@@ -32,6 +32,8 @@ describe('SAML Service', () => {
     spPrivateKey: null,
     spCertificate: null,
     isActive: true,
+    roleMappingRules: null,
+    defaultRole: 'learner',
     createdAt: new Date(),
     updatedAt: new Date(),
   };

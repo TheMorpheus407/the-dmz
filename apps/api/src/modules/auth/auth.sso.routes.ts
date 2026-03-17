@@ -1,5 +1,4 @@
 import { ErrorCodes } from '@the-dmz/shared/constants';
-import { SSOProviderType } from '@the-dmz/shared/auth';
 
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
 import { preAuthTenantStatusGuard } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
@@ -253,27 +252,43 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
       const state = ssoService.generateState();
       const nonce = ssoService.generateNonce();
 
-      const defaultRedirectUri = `${config.CORS_ORIGINS_LIST[0] || 'http://localhost:5173'}/auth/sso/oidc/callback`;
+      // Generate PKCE code_verifier
+      const codeVerifier = ssoService.generatePKCECodeVerifier();
+      const codeChallenge = await ssoService.generatePKCECodeChallenge(codeVerifier);
+
+      // Store state with code_verifier for later verification
+      await ssoService.storeOIDCState(state, {
+        providerId,
+        redirectUri: redirectUri || '',
+        tenantId,
+        nonce,
+        pkceCodeVerifier: codeVerifier,
+      });
+
+      const defaultRedirectUri = `${config.CORS_ORIGINS_LIST[0] || 'http://localhost:5173'}/auth/sso/oidc/callback/${providerId}`;
       const finalRedirectUri = redirectUri || defaultRedirectUri;
 
-      const authorizationUrl = ssoService.buildOIDCAuthorizationUrl(
-        {
-          type: SSOProviderType.OIDC,
-          issuer: provider.metadataUrl || '',
-          clientId: provider.clientId || '',
-          authorizationEndpoint: 'https://idp.example.com/authorize',
-          tokenEndpoint: 'https://idp.example.com/token',
-          jwksUri: 'https://idp.example.com/.well-known/jwks.json',
-          scopes: ['openid', 'email', 'profile'],
-          idTokenSignedResponseAlg: 'RS256',
-          allowedClockSkewSeconds: 60,
-          responseType: 'code',
-        },
-        provider.clientId || '',
-        finalRedirectUri,
+      // Get OIDC provider configuration (fetch discovery metadata)
+      const { metadata, clientId } = await ssoService.getOIDCProviderConfig(provider);
+
+      const scopes = ['openid', 'email', 'profile'];
+      if (metadata.scopesSupported?.includes('groups')) {
+        scopes.push('groups');
+      }
+
+      // Build authorization URL with PKCE
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: clientId,
+        redirect_uri: finalRedirectUri,
+        scope: scopes.join(' '),
         state,
         nonce,
-      );
+        code_challenge: codeChallenge,
+        code_challenge_method: 'S256',
+      });
+
+      const authorizationUrl = `${metadata.authorizationEndpoint}?${params.toString()}`;
 
       const eventBus = fastify.eventBus;
       eventBus.publish(
@@ -685,7 +700,12 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
       if (linkingResult.outcome === 'linked_existing' && linkingResult.userId) {
         userId = linkingResult.userId;
       } else if (linkingResult.outcome === 'linked_new_jit' && linkingResult.email) {
-        const role = ssoService.mapGroupsToRole(claims.groups || [], [], defaultRole, allowedRoles);
+        const role = ssoService.mapGroupsToRole(
+          claims.groups || [],
+          provider.roleMappingRules || [],
+          provider.defaultRole || 'learner',
+          allowedRoles,
+        );
 
         userId = await ssoService.createSSOUser(
           tenantId,
@@ -800,7 +820,7 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
       }
 
       const { providerId } = request.params;
-      const { code, state, error, error_description } = request.query;
+      const { code, state: queryState, error, error_description } = request.query;
 
       if (error) {
         const eventBus = fastify.eventBus;
@@ -829,7 +849,7 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         });
       }
 
-      if (!code || !state) {
+      if (!code || !queryState) {
         throw new SSOError({
           message: 'Missing required parameters',
           code: ErrorCodes.SSO_INVALID_STATE,
@@ -846,9 +866,289 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         });
       }
 
+      // Retrieve stored state and code_verifier
+      const stateData = await ssoService.getOIDCState(queryState);
+      if (!stateData) {
+        throw new SSOError({
+          message: 'Invalid or expired state parameter',
+          code: ErrorCodes.SSO_INVALID_STATE,
+          statusCode: 400,
+        });
+      }
+
+      // Verify state matches
+      if (stateData.providerId !== providerId || stateData.tenantId !== tenantId) {
+        throw new SSOError({
+          message: 'State parameter mismatch',
+          code: ErrorCodes.SSO_INVALID_STATE,
+          statusCode: 400,
+        });
+      }
+
+      // Clean up state after use
+      await ssoService.deleteOIDCState(queryState);
+
+      const { metadata, clientId, clientSecret } = await ssoService.getOIDCProviderConfig(provider);
+
+      const redirectUri =
+        stateData.redirectUri ||
+        `${config.CORS_ORIGINS_LIST[0] || 'http://localhost:5173'}/auth/sso/oidc/callback/${providerId}`;
+
+      // Exchange code for tokens
+      let tokens: ssoService.OIDCTokens;
+      try {
+        tokens = await ssoService.exchangeCodeForTokens(
+          metadata.tokenEndpoint,
+          clientId,
+          clientSecret,
+          code,
+          redirectUri,
+          stateData.pkceCodeVerifier || '',
+        );
+      } catch (err) {
+        const ssoError = err as SSOError;
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOLoginFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              providerType: 'oidc',
+              reason: ssoError.message || 'Token exchange failed',
+              failureCode: 'TOKEN_EXCHANGE_FAILED',
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        throw new SSOError({
+          message: ssoError.message || 'Token exchange failed',
+          code: ErrorCodes.SSO_TOKEN_EXCHANGE_FAILED,
+          statusCode: 401,
+          correlationId: request.id,
+        });
+      }
+
+      // Validate ID token
+      if (!tokens.idToken) {
+        throw new SSOError({
+          message: 'No ID token received from provider',
+          code: ErrorCodes.SSO_TOKEN_INVALID,
+          statusCode: 401,
+          correlationId: request.id,
+        });
+      }
+
+      const jwksUri = metadata.jwksUri;
+      if (!jwksUri) {
+        throw new SSOError({
+          message: 'JWKS URI not configured for provider',
+          code: ErrorCodes.SSO_CONFIGURATION_ERROR,
+          statusCode: 500,
+        });
+      }
+
+      const idTokenValidation = await ssoService.validateOIDCIdToken(
+        tokens.idToken,
+        jwksUri,
+        metadata.issuer,
+        clientId,
+        stateData.nonce,
+      );
+
+      if (!idTokenValidation.valid) {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOLoginFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              providerType: 'oidc',
+              reason: idTokenValidation.failureReason || 'ID token validation failed',
+              failureCode: 'ID_TOKEN_INVALID',
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        throw new SSOError({
+          message: 'ID token validation failed',
+          code: ErrorCodes.SSO_TOKEN_INVALID,
+          statusCode: 401,
+          correlationId: request.id,
+        });
+      }
+
+      const idTokenClaims = idTokenValidation.claims || {};
+
+      // Fetch UserInfo if available
+      let userInfo: ssoService.OIDCUserInfoResponse | null = null;
+      if (metadata.userinfoEndpoint && tokens.accessToken) {
+        try {
+          userInfo = await ssoService.fetchOIDCUserInfo(
+            metadata.userinfoEndpoint,
+            tokens.accessToken,
+          );
+        } catch {
+          // UserInfo is optional, continue without it
+        }
+      }
+
+      // Fetch transitive group memberships for Entra ID nested group support
+      let transitiveGroups: string[] = [];
+      const idTokenSubject = (idTokenValidation.claims?.['sub'] as string) || '';
+      if (tokens.accessToken && idTokenSubject) {
+        try {
+          transitiveGroups = await ssoService.fetchTransitiveGroupMemberships(
+            tokens.accessToken,
+            idTokenSubject,
+          );
+        } catch {
+          // Transitive groups are optional, continue without them
+        }
+      }
+
+      // Extract claims from ID token or UserInfo
+      const claims = {
+        subject: (idTokenClaims['sub'] as string) || (userInfo?.sub as string) || '',
+        email: (idTokenClaims['email'] as string) || (userInfo?.email as string) || undefined,
+        displayName: (idTokenClaims['name'] as string) || (userInfo?.name as string) || undefined,
+        groups: (idTokenClaims['groups'] as string[]) || [],
+      };
+
+      if (!claims.subject) {
+        throw new SSOError({
+          message: 'No subject claim in ID token',
+          code: ErrorCodes.SSO_MISSING_REQUIRED_CLAIM,
+          statusCode: 401,
+          correlationId: request.id,
+        });
+      }
+
+      // Resolve account linking
+      const allowedRoles = ['super_admin', 'tenant_admin', 'manager', 'trainer', 'learner'];
+      const defaultRole = 'learner';
+
+      const linkingResult = await ssoService.resolveSSOAccountLinking(
+        tenantId,
+        providerId,
+        claims,
+        defaultRole,
+        allowedRoles,
+      );
+
+      if (linkingResult.outcome === 'denied_no_email') {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOLoginFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              providerType: 'oidc',
+              reason: 'Email claim required but not provided',
+              failureCode: 'MISSING_EMAIL',
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        throw new SSOError({
+          message: 'Email claim is required for SSO login',
+          code: ErrorCodes.SSO_MISSING_EMAIL,
+          statusCode: 400,
+          correlationId: request.id,
+        });
+      }
+
+      if (linkingResult.outcome === 'denied_role_escalation') {
+        const eventBus = fastify.eventBus;
+        eventBus.publish(
+          createSSOLoginFailedEvent({
+            source: 'auth-sso-module',
+            correlationId: request.id,
+            tenantId,
+            version: 1,
+            payload: {
+              tenantId,
+              ssoProviderId: providerId,
+              providerType: 'oidc',
+              reason: 'Role escalation denied',
+              failureCode: 'ROLE_ESCALATION_DENIED',
+              correlationId: request.id,
+            },
+          }),
+        );
+
+        throw new SSOError({
+          message: 'Role cannot be assigned due to security policy',
+          code: ErrorCodes.SSO_ROLE_ESCALATION_DENIED,
+          statusCode: 403,
+          correlationId: request.id,
+        });
+      }
+
+      let userId: string;
+
+      if (linkingResult.outcome === 'linked_existing' && linkingResult.userId) {
+        userId = linkingResult.userId;
+      } else if (linkingResult.outcome === 'linked_new_jit' && linkingResult.email) {
+        const role = ssoService.mapGroupsToRole(
+          claims.groups || [],
+          provider.roleMappingRules || [],
+          provider.defaultRole || 'learner',
+          allowedRoles,
+          transitiveGroups,
+        );
+
+        userId = await ssoService.createSSOUser(
+          tenantId,
+          linkingResult.email,
+          claims.displayName,
+          role,
+        );
+      } else {
+        throw new SSOError({
+          message: 'Failed to resolve SSO account',
+          code: ErrorCodes.SSO_ACCOUNT_LINKING_FAILED,
+          statusCode: 500,
+          correlationId: request.id,
+        });
+      }
+
+      await ssoService.linkUserToSSOIdentity(userId, tenantId, providerId, claims.subject, claims);
+
+      const session = await createSession({} as Parameters<typeof createSession>[0], {
+        userId,
+        tenantId,
+        tokenHash: '',
+        expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000),
+      });
+
+      const user = await findUserById({} as Parameters<typeof findUserById>[0], userId, tenantId);
+      const userRole = user?.role ?? 'learner';
+
+      const token = await signJWT(config, {
+        sub: userId,
+        tenantId,
+        sessionId: session.id,
+        role: userRole,
+      });
+
       const eventBus = fastify.eventBus;
       eventBus.publish(
-        createSSOLoginFailedEvent({
+        createSSOLoginSuccessEvent({
           source: 'auth-sso-module',
           correlationId: request.id,
           tenantId,
@@ -857,19 +1157,19 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
             tenantId,
             ssoProviderId: providerId,
             providerType: 'oidc',
-            reason: 'OIDC callback not fully implemented - placeholder',
-            failureCode: 'SSO_NOT_IMPLEMENTED',
-            correlationId: request.id,
+            userId,
+            email: claims.email || '',
+            subject: claims.subject,
+            linkingOutcome: linkingResult.outcome,
           },
         }),
       );
 
-      throw new SSOError({
-        message: 'OIDC callback token exchange not fully implemented',
-        code: ErrorCodes.SSO_CONFIGURATION_ERROR,
-        statusCode: 501,
-        correlationId: request.id,
-      });
+      return {
+        userId,
+        email: claims.email,
+        accessToken: token,
+      };
     },
   );
 
@@ -1120,11 +1420,12 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         });
       }
 
+      const user = request.user as { userId?: string; tenantId: string } | undefined;
       const { providerId } = request.params;
       const {
-        id_token_hint: _idTokenHint,
-        post_logout_redirect_uri: _postLogoutRedirectUri,
-        state: _state,
+        id_token_hint: idTokenHint,
+        post_logout_redirect_uri: postLogoutRedirectUri,
+        state: logoutState,
       } = request.query;
 
       const provider = await ssoService.getSSOProvider(providerId, tenantId);
@@ -1137,6 +1438,76 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
       }
 
       const eventBus = fastify.eventBus;
+
+      let userIdToRevoke: string | undefined;
+
+      if (user?.userId) {
+        userIdToRevoke = user.userId;
+      }
+
+      // If we have a user ID, revoke their sessions
+      if (userIdToRevoke) {
+        const revocationResult = await authService.revokeUserSessionsByFederatedIdentity(config, {
+          tenantId,
+          userId: userIdToRevoke,
+          sourceType: 'oidc',
+          ssoProviderId: providerId,
+        });
+
+        if (revocationResult.result === 'revoked' && revocationResult.userId) {
+          eventBus.publish(
+            createSSOLogoutProcessedEvent({
+              source: 'auth-sso-module',
+              correlationId: request.id,
+              tenantId,
+              version: 1,
+              payload: {
+                tenantId,
+                ssoProviderId: providerId,
+                providerType: 'oidc',
+                userId: revocationResult.userId || '',
+                sessionsRevoked: revocationResult.sessionsRevoked,
+                result:
+                  revocationResult.result === 'revoked' ||
+                  revocationResult.result === 'already_revoked'
+                    ? revocationResult.result
+                    : 'failed',
+                correlationId: request.id,
+              },
+            }),
+          );
+        }
+
+        // If provider supports end_session_endpoint, redirect to it
+        if (provider.metadataUrl) {
+          try {
+            const { metadata } = await ssoService.getOIDCProviderConfig(provider);
+
+            if (metadata.endSessionEndpoint && idTokenHint) {
+              const logoutUrl = ssoService.buildOIDCLogoutUrl(
+                metadata.endSessionEndpoint,
+                idTokenHint,
+                postLogoutRedirectUri,
+                logoutState,
+              );
+
+              return {
+                result: 'revoked',
+                sessionsRevoked: revocationResult.sessionsRevoked,
+                userId: revocationResult.userId,
+                logoutUrl,
+                reason: 'Sessions revoked, redirect to IdP logout',
+              };
+            }
+          } catch {
+            // If we can't get metadata, just return the revocation result
+          }
+        }
+
+        return revocationResult;
+      }
+
+      // No user session to revoke
       eventBus.publish(
         createSSOLogoutInitiatedEvent({
           source: 'auth-sso-module',
@@ -1153,12 +1524,12 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
         }),
       );
 
-      throw new SSOError({
-        message: 'OIDC logout processing not fully implemented',
-        code: ErrorCodes.SSO_CONFIGURATION_ERROR,
-        statusCode: 501,
-        correlationId: request.id,
-      });
+      return {
+        result: 'ignored_invalid',
+        sessionsRevoked: 0,
+        userId: undefined,
+        reason: 'No valid user session to revoke',
+      };
     },
   );
 

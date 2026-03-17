@@ -14,6 +14,12 @@ import { tenants } from '../../../shared/database/schema/tenants.js';
 
 const authSchema = pgSchema('auth');
 
+export interface RoleMappingRule {
+  idpGroup: string;
+  rbRole: string;
+  transitiveGroupIds?: string[];
+}
+
 export const ssoConnections = authSchema.table(
   'sso_connections',
   {
@@ -33,6 +39,8 @@ export const ssoConnections = authSchema.table(
     spPrivateKey: text('sp_private_key'),
     spCertificate: text('sp_certificate'),
     enforceSSOOnly: boolean('enforce_sso_only').notNull().default(false),
+    roleMappingRules: jsonb('role_mapping_rules').$type<RoleMappingRule[]>(),
+    defaultRole: varchar('default_role', { length: 32 }).notNull().default('learner'),
     lastValidationId: uuid('last_validation_id'),
     lastValidationAt: timestamp('last_validation_at', { withTimezone: true, mode: 'date' }),
     lastValidationStatus: varchar('last_validation_status', { length: 32 }),
