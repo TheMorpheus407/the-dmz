@@ -6,6 +6,7 @@ export { registerAdminUserRoutes } from './admin-users.routes.js';
 export { registerAdminSAMLRoutes } from './admin-saml.routes.js';
 export { registerAdminOIDCRoutes } from './admin-oidc.routes.js';
 export { registerAdminSCIMRoutes } from './admin-scim.routes.js';
+export { registerOnboardingRoutes } from './onboarding.routes.js';
 export { registerTrainerRoutes } from './trainer.routes.js';
 export { registerCertificateRoutes } from './certificate.routes.js';
 export {
@@ -15,6 +16,25 @@ export {
 } from './certificate.events.js';
 export { registerComplianceRoutes } from './compliance.routes.js';
 export { registerCampaignRoutes } from './campaign.routes.js';
+
+export {
+  getOnboardingStatus,
+  startOnboarding,
+  saveOrgProfile,
+  saveIdpConfig,
+  generateScimToken,
+  saveComplianceFrameworks,
+  completeOnboarding,
+  resetOnboarding,
+  type OnboardingStatus,
+  type StartOnboardingResult,
+  type OrgProfileResult,
+  type IdpConfigResult,
+  type ScimTokenResult,
+  type ComplianceResult,
+  type CompleteOnboardingResult,
+  OnboardingError,
+} from './onboarding.service.js';
 
 export {
   getComplianceSummary,

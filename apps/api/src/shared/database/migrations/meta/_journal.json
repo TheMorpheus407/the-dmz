@@ -218,6 +218,13 @@
       "when": 1774000000000,
       "tag": "0029_campaign_management",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1774100000000,
+      "tag": "0030_enterprise_onboarding",
+      "breakpoints": true
     }
   ]
 }
