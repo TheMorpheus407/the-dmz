@@ -99,6 +99,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus', 'auth'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'scorm',
+      pluginPath: './modules/scorm/index.js',
+      routePrefix: '/api/v1/scorm',
+      dependencies: ['eventBus', 'auth'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 
