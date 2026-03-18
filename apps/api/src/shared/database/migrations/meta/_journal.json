@@ -225,6 +225,13 @@
       "when": 1774100000000,
       "tag": "0030_enterprise_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1774200000000,
+      "tag": "0031_phishing_simulation_engine",
+      "breakpoints": true
     }
   ]
 }

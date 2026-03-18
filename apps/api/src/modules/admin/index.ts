@@ -16,6 +16,7 @@ export {
 } from './certificate.events.js';
 export { registerComplianceRoutes } from './compliance.routes.js';
 export { registerCampaignRoutes } from './campaign.routes.js';
+export { registerPhishingSimulationRoutes } from './phishing-simulation.routes.js';
 
 export {
   getOnboardingStatus,
@@ -86,3 +87,48 @@ export {
   type CampaignListResult,
   type CampaignProgressMetrics,
 } from './campaign.service.js';
+
+export {
+  createPhishingSimulation,
+  listPhishingSimulations,
+  getPhishingSimulationById,
+  updatePhishingSimulation,
+  updateSimulationStatus,
+  deletePhishingSimulation,
+  setSimulationAudience,
+  getSimulationAudience,
+  getEligibleUsersForSimulation,
+  launchSimulation,
+  pauseSimulation,
+  resumeSimulation,
+  getSimulationResults,
+  getSimulationResultsSummary,
+  exportSimulationResults,
+  createPhishingTemplate,
+  listPhishingTemplates,
+  getPhishingTemplateById,
+  updatePhishingTemplate,
+  deletePhishingTemplate,
+  createTeachableMoment,
+  listTeachableMoments,
+  getTeachableMomentById,
+  recordLinkClick,
+  recordReport,
+  recordTeachableMomentView,
+  recordMicroTrainingEnrollment,
+  type SimulationStatus,
+  type UrgencyLevel,
+  type SimulationOutcome,
+  type PhishingSimulation,
+  type PhishingSimulationInput,
+  type PhishingSimulationUpdateInput,
+  type SimulationAudienceInput,
+  type PhishingSimulationAudience,
+  type PhishingSimulationResult,
+  type SimulationResultInput,
+  type PhishingSimulationTemplate,
+  type PhishingSimulationTemplateInput,
+  type TeachableMoment,
+  type TeachableMomentInput,
+  type SimulationResultsSummary,
+} from './phishing-simulation.service.js';
