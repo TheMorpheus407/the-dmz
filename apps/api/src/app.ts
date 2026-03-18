@@ -37,6 +37,7 @@ import {
   registerTrainerRoutes,
   registerCertificateRoutes,
   registerComplianceRoutes,
+  registerCampaignRoutes,
   registerCertificateEventHandlers,
 } from './modules/admin/index.js';
 import { registerAuditRoutes, registerAuditHook } from './modules/audit/index.js';
@@ -313,6 +314,8 @@ export const buildApp = (
   app.register(registerCertificateRoutes);
 
   app.register(registerComplianceRoutes);
+
+  app.register(registerCampaignRoutes);
 
   app.register(registerAuditRoutes);
 

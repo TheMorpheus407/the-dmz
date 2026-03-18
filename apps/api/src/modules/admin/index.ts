@@ -8,50 +8,13 @@ export { registerAdminOIDCRoutes } from './admin-oidc.routes.js';
 export { registerAdminSCIMRoutes } from './admin-scim.routes.js';
 export { registerTrainerRoutes } from './trainer.routes.js';
 export { registerCertificateRoutes } from './certificate.routes.js';
-export { registerComplianceRoutes } from './compliance.routes.js';
-
-export {
-  generateCertificate,
-  listCertificates,
-  getCertificateById,
-  getCertificatePDF,
-  bulkGenerateCertificates,
-  type Certificate,
-  type CertificateInput,
-  type CertificateListQuery,
-  type CertificateListResult,
-} from './certificate.service.js';
-
 export {
   createCertificateEventHandler,
   registerCertificateEventHandlers,
   type CertificateGenerationConfig,
 } from './certificate.events.js';
-
-export {
-  getTenantInfo,
-  getActiveUsers,
-  getUserMetrics,
-  getDashboardData,
-  type TenantInfo,
-  type ActiveUsersData,
-  type UserMetrics,
-  type DashboardData,
-} from './dashboard.service.js';
-
-export {
-  getCompetencyDistribution,
-  getErrorPatterns,
-  getLearnersByDomain,
-  getCampaignCompletion,
-  getTrainerDashboardData,
-  type DateRange,
-  type CompetencyDistribution,
-  type ErrorPattern,
-  type LearnerSummary,
-  type CampaignCompletion,
-  type TrainerDashboardData,
-} from './trainer.service.js';
+export { registerComplianceRoutes } from './compliance.routes.js';
+export { registerCampaignRoutes } from './campaign.routes.js';
 
 export {
   getComplianceSummary,
@@ -66,3 +29,40 @@ export {
   type ComplianceDetail,
   type ComplianceDashboardData,
 } from './compliance.service.js';
+
+export {
+  createCampaign,
+  listCampaigns,
+  getCampaignById,
+  updateCampaign,
+  updateCampaignStatus,
+  deleteCampaign,
+  setCampaignAudience,
+  addCampaignContent,
+  removeCampaignContent,
+  setCampaignEscalations,
+  getCampaignProgress,
+  enrollUsersInCampaign,
+  getEligibleUsersForCampaign,
+  checkInterventionThrottling,
+  saveCampaignAsTemplate,
+  listCampaignTemplates,
+  createCampaignFromTemplate,
+  deleteCampaignTemplate,
+  updateEnrollmentStatus,
+  type CampaignStatus,
+  type CampaignType,
+  type RecurrencePattern,
+  type ContentType,
+  type EnrollmentStatus,
+  type CampaignInput,
+  type CampaignUpdateInput,
+  type CampaignAudienceInput,
+  type CampaignContentInput,
+  type CampaignEscalationInput,
+  type CampaignTemplateInput,
+  type CampaignWithRelations,
+  type CampaignListQuery,
+  type CampaignListResult,
+  type CampaignProgressMetrics,
+} from './campaign.service.js';

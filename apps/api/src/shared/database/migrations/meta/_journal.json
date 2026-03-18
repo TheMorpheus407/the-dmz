@@ -211,6 +211,13 @@
       "when": 1773950000000,
       "tag": "0028_jit_provisioning",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1774000000000,
+      "tag": "0029_campaign_management",
+      "breakpoints": true
     }
   ]
 }
