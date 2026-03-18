@@ -25,6 +25,7 @@ import { emailPlugin } from './modules/email/index.js';
 import { contentPlugin } from './modules/content/index.js';
 import { aiPipelinePlugin } from './modules/ai-pipeline/index.js';
 import { registerNotificationRoutes } from './modules/notification/index.js';
+import { xapiPlugin } from './modules/xapi/index.js';
 import {
   registerAdminRateLimitRoutes,
   registerAdminTenantRoutes,
@@ -61,6 +62,7 @@ const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }>
   content: { plugin: contentPlugin, routePrefix: '/content' },
   aiPipeline: { plugin: aiPipelinePlugin, routePrefix: '/ai' },
   notification: { plugin: registerNotificationRoutes },
+  xapi: { plugin: xapiPlugin, routePrefix: '/api/v1/xapi' },
 };
 
 const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {

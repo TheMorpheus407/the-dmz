@@ -106,6 +106,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus', 'auth'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'xapi',
+      pluginPath: './modules/xapi/index.js',
+      routePrefix: '/api/v1/xapi',
+      dependencies: ['eventBus', 'auth'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 

@@ -98,6 +98,10 @@ export const backendEnvSchema = z
     AI_POOL_TARGET_PER_TIER: z.coerce.number().int().positive().default(50),
     AI_BATCH_SIZE: z.coerce.number().int().positive().default(10),
     AI_GENERATION_SCHEDULE_CRON: z.string().default('0 3 * * *'),
+    XAPI_ENCRYPTION_KEY: z
+      .string()
+      .min(32, 'XAPI_ENCRYPTION_KEY must be at least 32 characters')
+      .optional(),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';
