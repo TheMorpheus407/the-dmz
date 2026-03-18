@@ -232,6 +232,20 @@
       "when": 1774200000000,
       "tag": "0031_phishing_simulation_engine",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1774300000000,
+      "tag": "0032_lti_platforms",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1774400000000,
+      "tag": "0033_lti_states",
+      "breakpoints": true
     }
   ]
 }

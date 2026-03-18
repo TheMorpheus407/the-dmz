@@ -44,6 +44,7 @@ import {
   registerCertificateEventHandlers,
 } from './modules/admin/index.js';
 import { registerAuditRoutes, registerAuditHook } from './modules/audit/index.js';
+import { ltiPlugin } from './modules/lti/index.js';
 import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.js';
 import { versionHeadersMiddleware } from './shared/middleware/version-headers.js';
 import { registerVersionRoutes } from './shared/routes/version.routes.js';
@@ -312,6 +313,8 @@ export const buildApp = (
   app.register(registerAdminOIDCRoutes);
 
   app.register(registerAdminSCIMRoutes);
+
+  app.register(ltiPlugin);
 
   app.register(registerOnboardingRoutes);
 
