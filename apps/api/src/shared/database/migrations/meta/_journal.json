@@ -302,6 +302,13 @@
       "when": 1775200000000,
       "tag": "0041_avatars",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1775300000000,
+      "tag": "0042_enterprise_leaderboard",
+      "breakpoints": true
     }
   ]
 }

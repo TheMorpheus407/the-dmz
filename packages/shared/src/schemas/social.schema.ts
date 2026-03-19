@@ -141,3 +141,77 @@ export type SetAvatarInput = z.infer<typeof setAvatarInputSchema>;
 export type QuickSignalTemplate = z.infer<typeof quickSignalTemplateSchema>;
 export type QuickSignalUsage = z.infer<typeof quickSignalUsageSchema>;
 export type SendSignalInput = z.infer<typeof sendSignalInputSchema>;
+
+export const enterpriseScopeSchema = z.enum(['department', 'tenant', 'corporation']);
+export type EnterpriseScope = z.infer<typeof enterpriseScopeSchema>;
+
+export const privacyLevelSchema = z.enum(['full_name', 'pseudonym', 'anonymous_aggregate']);
+export type PrivacyLevel = z.infer<typeof privacyLevelSchema>;
+
+export const leaderboardTypeSchema = z.enum([
+  'accuracy',
+  'response_time',
+  'incident_resolution',
+  'verification_discipline',
+  'composite',
+]);
+export type LeaderboardType = z.infer<typeof leaderboardTypeSchema>;
+
+export const enterpriseLeaderboardBaseSchema = z.object({
+  id: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  scope: enterpriseScopeSchema,
+  orgUnitId: z.string().uuid().nullable(),
+  corporationId: z.string().uuid().nullable(),
+  leaderboardType: leaderboardTypeSchema,
+  resetCadence: z.enum(['daily', 'weekly', 'seasonal']),
+  currentSeasonId: z.string(),
+  privacyLevel: privacyLevelSchema,
+  isActive: z.boolean(),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+});
+
+export const enterpriseLeaderboardEntryBaseSchema = z.object({
+  id: z.string().uuid(),
+  leaderboardId: z.string().uuid(),
+  playerId: z.string().uuid(),
+  tenantId: z.string().uuid(),
+  departmentId: z.string().uuid().nullable(),
+  corporationId: z.string().uuid().nullable(),
+  score: z.number().int(),
+  rank: z.number().int(),
+  metrics: z.object({
+    accuracy: z.number(),
+    avgDecisionTime: z.number(),
+    incidentsResolved: z.number(),
+    resourceEfficiency: z.number(),
+  }),
+  periodStart: z.string().datetime(),
+  periodEnd: z.string().datetime(),
+  updatedAt: z.string().datetime(),
+  displayName: z.string().optional(),
+  avatarId: z.string().nullable().optional(),
+});
+
+export const teamSummarySchema = z.object({
+  teamId: z.string().uuid(),
+  averageScore: z.number().int(),
+  totalPlayers: z.number().int(),
+  topPerformers: z.array(
+    z.object({
+      playerId: z.string().uuid(),
+      score: z.number().int(),
+      rank: z.number().int(),
+    }),
+  ),
+});
+
+export const updatePrivacyLevelInputSchema = z.object({
+  privacyLevel: privacyLevelSchema,
+});
+
+export type EnterpriseLeaderboardBase = z.infer<typeof enterpriseLeaderboardBaseSchema>;
+export type EnterpriseLeaderboardEntryBase = z.infer<typeof enterpriseLeaderboardEntryBaseSchema>;
+export type TeamSummary = z.infer<typeof teamSummarySchema>;
+export type UpdatePrivacyLevelInput = z.infer<typeof updatePrivacyLevelInputSchema>;
