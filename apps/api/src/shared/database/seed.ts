@@ -16,6 +16,8 @@ import {
   userRoles,
   users,
   avatars,
+  achievementDefinitions,
+  achievementIcons,
 } from './schema/index.js';
 
 export { SEED_TENANT_IDS, SEED_TENANTS, SEED_USERS, SEED_PROFILES };
@@ -581,6 +583,425 @@ const seedAvatars = async (db: DatabaseClient): Promise<void> => {
   }
 };
 
+const SEED_ACHIEVEMENT_ICONS = [
+  {
+    id: 'icon_001',
+    iconKey: 'shield-check',
+    category: 'competency',
+    rarity: 'common',
+    isAnimated: false,
+  },
+  {
+    id: 'icon_002',
+    iconKey: 'target-lock',
+    category: 'competency',
+    rarity: 'uncommon',
+    isAnimated: false,
+  },
+  {
+    id: 'icon_003',
+    iconKey: 'eye-closed',
+    category: 'competency',
+    rarity: 'rare',
+    isAnimated: false,
+  },
+  {
+    id: 'icon_004',
+    iconKey: 'fingerprint',
+    category: 'competency',
+    rarity: 'epic',
+    isAnimated: true,
+  },
+  {
+    id: 'icon_005',
+    iconKey: 'brain-circuit',
+    category: 'competency',
+    rarity: 'legendary',
+    isAnimated: true,
+  },
+  {
+    id: 'icon_006',
+    iconKey: 'mail-warning',
+    category: 'competency',
+    rarity: 'uncommon',
+    isAnimated: false,
+  },
+  { id: 'icon_007', iconKey: 'eagle', category: 'animal', rarity: 'rare', isAnimated: false },
+  { id: 'icon_008', iconKey: 'wolf', category: 'animal', rarity: 'uncommon', isAnimated: false },
+  { id: 'icon_009', iconKey: 'snake', category: 'animal', rarity: 'rare', isAnimated: false },
+  { id: 'icon_010', iconKey: 'phoenix', category: 'animal', rarity: 'legendary', isAnimated: true },
+  { id: 'icon_011', iconKey: 'bot', category: 'robot', rarity: 'common', isAnimated: false },
+  { id: 'icon_012', iconKey: 'android', category: 'robot', rarity: 'uncommon', isAnimated: false },
+  { id: 'icon_013', iconKey: 'cpu', category: 'robot', rarity: 'rare', isAnimated: false },
+  { id: 'icon_014', iconKey: 'sentinel', category: 'robot', rarity: 'epic', isAnimated: true },
+  {
+    id: 'icon_015',
+    iconKey: 'hexagon',
+    category: 'geometric',
+    rarity: 'common',
+    isAnimated: false,
+  },
+  {
+    id: 'icon_016',
+    iconKey: 'prism',
+    category: 'geometric',
+    rarity: 'uncommon',
+    isAnimated: false,
+  },
+  { id: 'icon_017', iconKey: 'cube', category: 'geometric', rarity: 'rare', isAnimated: false },
+  { id: 'icon_018', iconKey: 'nova', category: 'geometric', rarity: 'epic', isAnimated: true },
+  { id: 'icon_019', iconKey: 'star', category: 'milestone', rarity: 'common', isAnimated: false },
+  {
+    id: 'icon_020',
+    iconKey: 'trophy',
+    category: 'milestone',
+    rarity: 'uncommon',
+    isAnimated: false,
+  },
+  { id: 'icon_021', iconKey: 'crown', category: 'milestone', rarity: 'rare', isAnimated: false },
+  { id: 'icon_022', iconKey: 'medal', category: 'milestone', rarity: 'epic', isAnimated: true },
+  {
+    id: 'icon_023',
+    iconKey: 'badge-check',
+    category: 'milestone',
+    rarity: 'legendary',
+    isAnimated: true,
+  },
+  {
+    id: 'icon_024',
+    iconKey: 'user-check',
+    category: 'character',
+    rarity: 'common',
+    isAnimated: false,
+  },
+  {
+    id: 'icon_025',
+    iconKey: 'users',
+    category: 'character',
+    rarity: 'uncommon',
+    isAnimated: false,
+  },
+  {
+    id: 'icon_026',
+    iconKey: 'user-star',
+    category: 'character',
+    rarity: 'rare',
+    isAnimated: false,
+  },
+  { id: 'icon_027', iconKey: 'zap', category: 'competency', rarity: 'rare', isAnimated: true },
+  { id: 'icon_028', iconKey: 'flame', category: 'animal', rarity: 'epic', isAnimated: true },
+  {
+    id: 'icon_029',
+    iconKey: 'globe',
+    category: 'milestone',
+    rarity: 'uncommon',
+    isAnimated: false,
+  },
+  { id: 'icon_030', iconKey: 'rocket', category: 'milestone', rarity: 'rare', isAnimated: true },
+] as const;
+
+const seedAchievementIcons = async (db: DatabaseClient): Promise<void> => {
+  for (const icon of SEED_ACHIEVEMENT_ICONS) {
+    await db
+      .insert(achievementIcons)
+      .values({
+        id: icon.id,
+        iconKey: icon.iconKey,
+        category: icon.category,
+        rarity: icon.rarity,
+        isAnimated: icon.isAnimated,
+      })
+      .onConflictDoUpdate({
+        target: [achievementIcons.id],
+        set: {
+          iconKey: sql`excluded.icon_key`,
+          category: sql`excluded.category`,
+          rarity: sql`excluded.rarity`,
+          isAnimated: sql`excluded.is_animated`,
+        },
+      });
+  }
+};
+
+const SEED_ACHIEVEMENTS = [
+  {
+    achievementKey: 'phishing_hunter_100',
+    category: 'core_competency',
+    visibility: 'visible',
+    title: 'Phishing Hunter',
+    description: 'Correctly deny 100 phishing emails',
+    iconId: 'icon_006',
+    competencyDomains: ['phishing_detection'],
+    enterpriseReportable: true,
+    points: 100,
+    criteria: { eventType: 'game.decision.denied', conditions: { count: 100 } },
+  },
+  {
+    achievementKey: 'phishing_hunter_500',
+    category: 'core_competency',
+    visibility: 'visible',
+    title: 'Phishing Eliminator',
+    description: 'Correctly deny 500 phishing emails',
+    iconId: 'icon_006',
+    competencyDomains: ['phishing_detection'],
+    enterpriseReportable: true,
+    points: 250,
+    criteria: { eventType: 'game.decision.denied', conditions: { count: 500 } },
+  },
+  {
+    achievementKey: 'verification_pro',
+    category: 'core_competency',
+    visibility: 'visible',
+    title: 'Verification Pro',
+    description: 'Use verification packets on 50 suspicious emails',
+    iconId: 'icon_002',
+    competencyDomains: ['verification_discipline'],
+    enterpriseReportable: true,
+    points: 150,
+    criteria: { eventType: 'game.verification.packet_opened', conditions: { count: 50 } },
+  },
+  {
+    achievementKey: 'first_response',
+    category: 'core_competency',
+    visibility: 'visible',
+    title: 'First Response',
+    description: 'Resolve your first incident',
+    iconId: 'icon_024',
+    competencyDomains: ['incident_response'],
+    enterpriseReportable: true,
+    points: 50,
+    criteria: { eventType: 'game.incident.resolved', conditions: { count: 1 } },
+  },
+  {
+    achievementKey: 'accuracy_master',
+    category: 'core_competency',
+    visibility: 'visible',
+    title: 'Accuracy Master',
+    description: 'Maintain 95%+ accuracy over 30 sessions',
+    iconId: 'icon_003',
+    competencyDomains: ['decision_accuracy'],
+    enterpriseReportable: true,
+    points: 200,
+    criteria: {
+      eventType: 'game.session.completed',
+      conditions: { accuracyThreshold: 0.95, count: 30 },
+    },
+  },
+  {
+    achievementKey: 'efficient_operator',
+    category: 'operational_mastery',
+    visibility: 'visible',
+    title: 'Efficient Operator',
+    description: 'Complete 10 sessions with no resource warnings',
+    iconId: 'icon_011',
+    competencyDomains: ['resource_management'],
+    enterpriseReportable: false,
+    points: 100,
+    criteria: { eventType: 'game.session.completed', conditions: { count: 10 } },
+  },
+  {
+    achievementKey: 'facility_manager',
+    category: 'operational_mastery',
+    visibility: 'visible',
+    title: 'Facility Manager',
+    description: 'Purchase 5 facility upgrades',
+    iconId: 'icon_015',
+    competencyDomains: ['upgrade_planning'],
+    enterpriseReportable: false,
+    points: 100,
+    criteria: { eventType: 'game.upgrade.purchased', conditions: { count: 5 } },
+  },
+  {
+    achievementKey: 'streak_warrior_7',
+    category: 'operational_mastery',
+    visibility: 'visible',
+    title: 'Streak Warrior',
+    description: 'Maintain a 7-day login streak',
+    iconId: 'icon_027',
+    competencyDomains: ['consistency'],
+    enterpriseReportable: false,
+    points: 75,
+    criteria: { eventType: 'game.session.started', conditions: { consecutiveDays: 7 } },
+  },
+  {
+    achievementKey: 'streak_warrior_30',
+    category: 'operational_mastery',
+    visibility: 'visible',
+    title: 'Iron Will',
+    description: 'Maintain a 30-day login streak',
+    iconId: 'icon_027',
+    competencyDomains: ['consistency'],
+    enterpriseReportable: false,
+    points: 300,
+    criteria: { eventType: 'game.session.started', conditions: { consecutiveDays: 30 } },
+  },
+  {
+    achievementKey: 'team_player',
+    category: 'social_contribution',
+    visibility: 'visible',
+    title: 'Team Player',
+    description: 'Complete 5 co-op sessions',
+    iconId: 'icon_025',
+    competencyDomains: ['collaboration'],
+    enterpriseReportable: false,
+    points: 100,
+    criteria: { eventType: 'game.session.completed', conditions: { count: 5 } },
+  },
+  {
+    achievementKey: 'mentor',
+    category: 'social_contribution',
+    visibility: 'visible',
+    title: 'Mentor',
+    description: 'Help another player resolve an incident',
+    iconId: 'icon_026',
+    competencyDomains: ['leadership'],
+    enterpriseReportable: false,
+    points: 150,
+    criteria: { eventType: 'game.incident.resolved', conditions: { count: 1 } },
+  },
+  {
+    achievementKey: 'signal_restored',
+    category: 'narrative_milestone',
+    visibility: 'visible',
+    title: 'Signal Restored',
+    description: 'Complete Chapter 1',
+    iconId: 'icon_019',
+    competencyDomains: ['narrative_progress'],
+    enterpriseReportable: false,
+    points: 200,
+    criteria: { eventType: 'game.session.completed', conditions: { count: 1 } },
+  },
+  {
+    achievementKey: 'faction_ally',
+    category: 'narrative_milestone',
+    visibility: 'visible',
+    title: 'Faction Ally',
+    description: 'Reach Friendly status with any faction',
+    iconId: 'icon_029',
+    competencyDomains: ['faction_relations'],
+    enterpriseReportable: false,
+    points: 150,
+    criteria: { eventType: 'game.session.completed', conditions: { count: 1 } },
+  },
+  {
+    achievementKey: 'season_one_veteran',
+    category: 'narrative_milestone',
+    visibility: 'visible',
+    title: 'Season One Veteran',
+    description: 'Complete Season 1',
+    iconId: 'icon_023',
+    competencyDomains: ['season_progress'],
+    enterpriseReportable: true,
+    points: 500,
+    criteria: { eventType: 'game.session.completed', conditions: { count: 100 } },
+  },
+  {
+    achievementKey: 'eagle_eye',
+    category: 'hidden_badge',
+    visibility: 'hidden',
+    title: 'Eagle Eye',
+    description: 'Deny a phishing email in under 3 seconds',
+    iconId: 'icon_007',
+    competencyDomains: ['phishing_detection'],
+    enterpriseReportable: false,
+    points: 50,
+    criteria: { eventType: 'game.decision.denied', conditions: { count: 1 } },
+  },
+  {
+    achievementKey: 'hidden_gem',
+    category: 'hidden_badge',
+    visibility: 'hidden',
+    title: 'Hidden Gem',
+    description: 'Use all 5 verification methods in one session',
+    iconId: 'icon_014',
+    competencyDomains: ['verification_discipline'],
+    enterpriseReportable: false,
+    points: 100,
+    criteria: { eventType: 'game.verification.packet_opened', conditions: { count: 5 } },
+  },
+  {
+    achievementKey: 'perfectionist',
+    category: 'hidden_badge',
+    visibility: 'hidden',
+    title: 'Perfectionist',
+    description: 'Complete a day with 100% accuracy and no hints used',
+    iconId: 'icon_004',
+    competencyDomains: ['decision_accuracy'],
+    enterpriseReportable: false,
+    points: 200,
+    criteria: { eventType: 'game.session.completed', conditions: { accuracyThreshold: 1.0 } },
+  },
+  {
+    achievementKey: 'threat_hunter',
+    category: 'core_competency',
+    visibility: 'visible',
+    title: 'Threat Hunter',
+    description: 'Mitigate 50 attacks',
+    iconId: 'icon_001',
+    competencyDomains: ['threat_mitigation'],
+    enterpriseReportable: true,
+    points: 150,
+    criteria: { eventType: 'threat.attack.mitigated', conditions: { count: 50 } },
+  },
+  {
+    achievementKey: 'level_50_veteran',
+    category: 'narrative_milestone',
+    visibility: 'visible',
+    title: 'Level 50 Veteran',
+    description: 'Reach level 50',
+    iconId: 'icon_021',
+    competencyDomains: ['level_progression'],
+    enterpriseReportable: true,
+    points: 500,
+    criteria: { eventType: 'game.economy.level_up', conditions: { count: 50 } },
+  },
+  {
+    achievementKey: 'decade_defender',
+    category: 'core_competency',
+    visibility: 'visible',
+    title: 'Decade Defender',
+    description: 'Correctly deny 1000 phishing emails',
+    iconId: 'icon_005',
+    competencyDomains: ['phishing_detection'],
+    enterpriseReportable: true,
+    points: 500,
+    criteria: { eventType: 'game.decision.denied', conditions: { count: 1000 } },
+  },
+] as const;
+
+const seedAchievements = async (db: DatabaseClient): Promise<void> => {
+  for (const achievement of SEED_ACHIEVEMENTS) {
+    await db
+      .insert(achievementDefinitions)
+      .values({
+        achievementKey: achievement.achievementKey,
+        category: achievement.category,
+        visibility: achievement.visibility,
+        title: achievement.title,
+        description: achievement.description,
+        iconId: achievement.iconId,
+        competencyDomains: [...achievement.competencyDomains] as string[],
+        enterpriseReportable: achievement.enterpriseReportable,
+        points: achievement.points,
+        criteria: achievement.criteria,
+      })
+      .onConflictDoUpdate({
+        target: [achievementDefinitions.achievementKey],
+        set: {
+          category: sql`excluded.category`,
+          visibility: sql`excluded.visibility`,
+          title: sql`excluded.title`,
+          description: sql`excluded.description`,
+          iconId: sql`excluded.icon_id`,
+          competencyDomains: sql`excluded.competency_domains`,
+          enterpriseReportable: sql`excluded.enterprise_reportable`,
+          points: sql`excluded.points`,
+          criteria: sql`excluded.criteria`,
+        },
+      });
+  }
+};
+
 export const seedTenantAuthModel = async (
   config: AppConfig = loadConfig(),
   tenantId: string,
@@ -705,12 +1126,16 @@ export const seedDatabase = async (config: AppConfig = loadConfig()): Promise<vo
   }
 
   await seedAvatars(db);
+  await seedAchievementIcons(db);
+  await seedAchievements(db);
 
   console.warn(
     `Seeded ${SEED_TENANTS.length} tenants, ${SEED_USERS.length} users, ` +
       `${SEED_PROFILES.length} profiles, ` +
       `${BASE_PERMISSIONS.length} permissions, ${DEFAULT_ROLES.length} default roles, ` +
-      `and ${SEED_AVATARS.length} avatars.`,
+      `${SEED_AVATARS.length} avatars, ` +
+      `${SEED_ACHIEVEMENT_ICONS.length} achievement icons, ` +
+      `${SEED_ACHIEVEMENTS.length} achievements.`,
   );
 };
 

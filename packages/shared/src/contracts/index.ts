@@ -875,3 +875,19 @@ export {
   type M1DefenderAllowlistContract,
   type DefenderErrorCode,
 } from './defender-contract.js';
+
+export {
+  ACHIEVEMENT_CATEGORIES,
+  ACHIEVEMENT_VISIBILITIES,
+  ACHIEVEMENT_ICON_CATEGORIES,
+  ACHIEVEMENT_ICON_RARITIES,
+  type AchievementCategory,
+  type AchievementVisibility,
+  type AchievementIconCategory,
+  type AchievementIconRarity,
+  type AchievementCriteria,
+  type AchievementCriteriaCondition,
+  type AchievementDefinitionContract,
+  type PlayerAchievementContract,
+  type AchievementIconContract,
+} from './achievement-contract.js';

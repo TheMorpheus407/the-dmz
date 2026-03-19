@@ -97,3 +97,44 @@ export const updateGameSession = async (
 
   return updated || null;
 };
+
+export const updatePlayerXP = async (
+  db: DB,
+  sessionId: string,
+  xpToAdd: number,
+): Promise<{ newXP: number; newLevel: number; didLevelUp: boolean } | null> => {
+  const session = await db.query.gameSessions.findFirst({
+    where: eq(gameSessions.id, sessionId),
+  });
+
+  if (!session) {
+    return null;
+  }
+
+  const { getLevelFromXP } = await import('../../../game/consequence/level-progression.js');
+
+  const previousLevel = getLevelFromXP(session.playerXP);
+  const newTotalXP = session.playerXP + xpToAdd;
+  const newLevel = getLevelFromXP(newTotalXP);
+  const didLevelUp = newLevel > previousLevel;
+
+  const [updated] = await db
+    .update(gameSessions)
+    .set({
+      playerXP: newTotalXP,
+      playerLevel: newLevel,
+      updatedAt: new Date(),
+    })
+    .where(eq(gameSessions.id, sessionId))
+    .returning();
+
+  if (!updated) {
+    return null;
+  }
+
+  return {
+    newXP: updated.playerXP,
+    newLevel: updated.playerLevel,
+    didLevelUp,
+  };
+};

@@ -5,3 +5,6 @@ export * from './presence.js';
 export * from './quick-signals.js';
 export * from './leaderboard.js';
 export * from './tenant-avatar-restrictions.js';
+export * from './achievement-definitions.js';
+export * from './player-achievements.js';
+export * from './achievement-icon.js';

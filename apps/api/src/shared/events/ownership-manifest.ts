@@ -407,6 +407,21 @@ export const EVENT_OWNERSHIP_MANIFEST: EventOwnershipManifest = {
         'version',
       ],
     },
+    {
+      eventType: 'achievement.unlocked',
+      owningModule: 'achievements',
+      version: 1,
+      requiredMetadata: [
+        'eventId',
+        'eventType',
+        'timestamp',
+        'correlationId',
+        'tenantId',
+        'userId',
+        'source',
+        'version',
+      ],
+    },
   ],
   versionPolicy: {
     allowedChanges: 'additive',
