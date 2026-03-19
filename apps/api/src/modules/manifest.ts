@@ -113,6 +113,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus', 'auth'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'billing',
+      pluginPath: './modules/billing/index.js',
+      routePrefix: '/api/v1/billing',
+      dependencies: ['eventBus', 'auth'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 
