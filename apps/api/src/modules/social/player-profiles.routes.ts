@@ -5,6 +5,7 @@ import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
+import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
 
 import {
   getPlayerProfileById,
@@ -14,6 +15,7 @@ import {
   updatePrivacySettings,
   listAvatars,
   getAvatarById,
+  setPlayerAvatar,
 } from './player-profiles.service.js';
 
 import type { AppConfig } from '../../config.js';
@@ -73,8 +75,16 @@ const avatarResponseSchema = z.object({
   id: z.string(),
   category: z.string(),
   name: z.string(),
+  description: z.string(),
+  tags: z.array(z.string()),
+  rarityTier: z.string(),
+  unlockCondition: z.string(),
   imageUrl: z.string().nullable(),
   isActive: z.boolean(),
+});
+
+const setAvatarRequestSchema = z.object({
+  avatarId: z.string().max(36),
 });
 
 export async function playerProfilesRoutes(
@@ -280,14 +290,28 @@ export async function playerProfilesRoutes(
       },
     },
     async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
       const query = request.query as { category?: string } | undefined;
 
-      const avatars = await listAvatars(config, query?.category);
+      const avatarsEnabled = await evaluateFlag(config, user.tenantId, 'social.avatars_enabled');
+      if (!avatarsEnabled) {
+        throw new AppError({
+          code: ErrorCodes.SERVICE_UNAVAILABLE,
+          message: 'Avatar system is disabled',
+          statusCode: 503,
+        });
+      }
+
+      const avatars = await listAvatars(config, user.tenantId, query?.category);
 
       return avatars.map((avatar) => ({
         id: avatar.id,
         category: avatar.category,
         name: avatar.name,
+        description: avatar.description ?? '',
+        tags: avatar.tags ?? [],
+        rarityTier: avatar.rarityTier ?? 'common',
+        unlockCondition: avatar.unlockCondition ?? '',
         imageUrl: avatar.imageUrl,
         isActive: avatar.isActive,
       }));
@@ -314,7 +338,17 @@ export async function playerProfilesRoutes(
       },
     },
     async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
       const { avatarId } = request.params;
+
+      const avatarsEnabled = await evaluateFlag(config, user.tenantId, 'social.avatars_enabled');
+      if (!avatarsEnabled) {
+        throw new AppError({
+          code: ErrorCodes.SERVICE_UNAVAILABLE,
+          message: 'Avatar system is disabled',
+          statusCode: 503,
+        });
+      }
 
       const avatar = await getAvatarById(config, avatarId);
 
@@ -330,8 +364,61 @@ export async function playerProfilesRoutes(
         id: avatar.id,
         category: avatar.category,
         name: avatar.name,
+        description: avatar.description ?? '',
+        tags: avatar.tags ?? [],
+        rarityTier: avatar.rarityTier ?? 'common',
+        unlockCondition: avatar.unlockCondition ?? '',
         imageUrl: avatar.imageUrl,
         isActive: avatar.isActive,
+      };
+    },
+  );
+
+  fastify.post<{ Body: { avatarId: string } }>(
+    '/api/v1/players/me/avatar',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        body: setAvatarRequestSchema,
+        response: {
+          200: playerProfileResponseSchema,
+          400: errorResponseSchemas.BadRequest,
+          401: errorResponseSchemas.Unauthorized,
+          403: errorResponseSchemas.Forbidden,
+          404: errorResponseSchemas.NotFound,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const body = request.body as z.infer<typeof setAvatarRequestSchema>;
+
+      const avatarsEnabled = await evaluateFlag(config, user.tenantId, 'social.avatars_enabled');
+      if (!avatarsEnabled) {
+        throw new AppError({
+          code: ErrorCodes.SERVICE_UNAVAILABLE,
+          message: 'Avatar system is disabled',
+          statusCode: 503,
+        });
+      }
+
+      const profile = await setPlayerAvatar(config, user.tenantId, user.userId, body.avatarId);
+
+      if (!profile) {
+        throw new AppError({
+          code: ErrorCodes.NOT_FOUND,
+          message: 'Avatar not found or inactive',
+          statusCode: 404,
+        });
+      }
+
+      return {
+        ...profile,
+        createdAt: profile.createdAt.toISOString(),
+        updatedAt: profile.updatedAt.toISOString(),
+        lastActiveAt: profile.lastActiveAt?.toISOString() ?? null,
       };
     },
   );

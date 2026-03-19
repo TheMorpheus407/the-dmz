@@ -6,6 +6,20 @@ export type SocialPrivacyMode = z.infer<typeof socialPrivacyModeSchema>;
 export const avatarCategorySchema = z.enum(['animal', 'robot', 'geometric', 'character']);
 export type AvatarCategory = z.infer<typeof avatarCategorySchema>;
 
+export const avatarCategoryExtendedSchema = z.enum([
+  'character_silhouette',
+  'facility_theme',
+  'faction_emblem',
+  'animal',
+  'robot',
+  'geometric',
+  'character',
+]);
+export type AvatarCategoryExtended = z.infer<typeof avatarCategoryExtendedSchema>;
+
+export const rarityTierSchema = z.enum(['common', 'uncommon', 'rare', 'epic', 'legendary']);
+export type RarityTier = z.infer<typeof rarityTierSchema>;
+
 export const playerProfileBaseSchema = z.object({
   profileId: z.string().uuid(),
   userId: z.string().uuid(),
@@ -71,10 +85,18 @@ export const privacySettingsResponseSchema = z.object({
 
 export const avatarSchema = z.object({
   id: z.string().max(36),
-  category: avatarCategorySchema,
+  category: avatarCategoryExtendedSchema,
   name: z.string().max(100),
+  description: z.string(),
+  tags: z.array(z.string()),
+  rarityTier: rarityTierSchema,
+  unlockCondition: z.string(),
   imageUrl: z.string().max(500).nullable(),
   isActive: z.boolean(),
+});
+
+export const setAvatarInputSchema = z.object({
+  avatarId: z.string().max(36),
 });
 
 export const signalCategorySchema = z.enum(['decision', 'urgency', 'coordination', 'resource']);
@@ -115,6 +137,7 @@ export type UpdatePlayerProfileInput = z.infer<typeof updatePlayerProfileInputSc
 export type UpdatePrivacySettingsInput = z.infer<typeof updatePrivacySettingsInputSchema>;
 export type PrivacySettingsResponse = z.infer<typeof privacySettingsResponseSchema>;
 export type Avatar = z.infer<typeof avatarSchema>;
+export type SetAvatarInput = z.infer<typeof setAvatarInputSchema>;
 export type QuickSignalTemplate = z.infer<typeof quickSignalTemplateSchema>;
 export type QuickSignalUsage = z.infer<typeof quickSignalUsageSchema>;
 export type SendSignalInput = z.infer<typeof sendSignalInputSchema>;

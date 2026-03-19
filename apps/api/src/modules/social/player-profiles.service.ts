@@ -4,6 +4,7 @@ import { getDatabaseClient } from '../../shared/database/connection.js';
 import {
   playerProfiles,
   avatars,
+  tenantAvatarRestrictions,
   type PlayerProfile,
   type PrivacyMode,
 } from '../../db/schema/social/index.js';
@@ -233,18 +234,48 @@ export async function updatePrivacySettings(
 
 export async function listAvatars(
   config: AppConfig,
+  tenantId: string,
   category?: string,
 ): Promise<(typeof avatars.$inferSelect)[]> {
   const db = getDatabaseClient(config);
 
+  const restrictions = await db
+    .select({
+      avatarId: tenantAvatarRestrictions.avatarId,
+      isAllowed: tenantAvatarRestrictions.isAllowed,
+    })
+    .from(tenantAvatarRestrictions)
+    .where(eq(tenantAvatarRestrictions.tenantId, tenantId));
+
+  const hasRestrictions = restrictions.length > 0;
+
+  let baseQuery = db.select().from(avatars).where(eq(avatars.isActive, true));
+
   if (category) {
-    return db
+    baseQuery = db
       .select()
       .from(avatars)
-      .where(sql`${avatars.category} = ${category}`);
+      .where(and(eq(avatars.isActive, true), sql`${avatars.category} = ${category}`));
   }
 
-  return db.select().from(avatars);
+  const allAvatars = await baseQuery;
+
+  if (!hasRestrictions) {
+    return allAvatars;
+  }
+
+  const allowedAvatarIds = new Set(restrictions.filter((r) => r.isAllowed).map((r) => r.avatarId));
+  const deniedAvatarIds = new Set(restrictions.filter((r) => !r.isAllowed).map((r) => r.avatarId));
+
+  return allAvatars.filter((avatar) => {
+    if (deniedAvatarIds.has(avatar.id)) {
+      return false;
+    }
+    if (allowedAvatarIds.size > 0) {
+      return allowedAvatarIds.has(avatar.id);
+    }
+    return true;
+  });
 }
 
 export async function getAvatarById(
@@ -259,6 +290,49 @@ export async function getAvatarById(
     .where(sql`${avatars.id} = ${avatarId}`);
 
   return result[0] ?? null;
+}
+
+export async function setPlayerAvatar(
+  config: AppConfig,
+  tenantId: string,
+  userId: string,
+  avatarId: string,
+): Promise<PlayerProfile | null> {
+  const db = getDatabaseClient(config);
+
+  const avatar = await db
+    .select()
+    .from(avatars)
+    .where(sql`${avatars.id} = ${avatarId} AND ${avatars.isActive} = true`);
+
+  if (!avatar || avatar.length === 0) {
+    return null;
+  }
+
+  const profile = await db.query.playerProfiles.findFirst({
+    where: and(eq(playerProfiles.userId, userId), eq(playerProfiles.tenantId, tenantId)),
+  });
+
+  if (!profile) {
+    return null;
+  }
+
+  const [updated] = await db
+    .update(playerProfiles)
+    .set({
+      avatarId,
+      updatedAt: new Date(),
+    })
+    .where(
+      and(eq(playerProfiles.profileId, profile.profileId), eq(playerProfiles.tenantId, tenantId)),
+    )
+    .returning();
+
+  if (updated) {
+    await invalidatePlayerProfileCache(config, tenantId, profile.profileId);
+  }
+
+  return updated ?? null;
 }
 
 export async function updateLastActive(
