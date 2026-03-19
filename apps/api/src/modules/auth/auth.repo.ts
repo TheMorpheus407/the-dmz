@@ -1230,3 +1230,109 @@ export const getSessionMetrics = async (
     })),
   };
 };
+
+export interface ExpiredSession {
+  id: string;
+  userId: string;
+  tenantId: string;
+  expiresAt: Date;
+  createdAt: Date;
+  lastActiveAt: Date | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+}
+
+export interface CleanupExpiredSessionsParams {
+  tenantId: string;
+  expiryDate: Date;
+  limit: number;
+}
+
+export interface CleanupExpiredSessionsResult {
+  deletedCount: number;
+  deletedIds: string[];
+}
+
+export const cleanupExpiredSessions = async (
+  db: DB,
+  params: CleanupExpiredSessionsParams,
+): Promise<CleanupExpiredSessionsResult> => {
+  const { tenantId, expiryDate, limit } = params;
+
+  const expiredToDelete = await db
+    .select({ id: sessionsTable.id })
+    .from(sessionsTable)
+    .where(and(eq(sessionsTable.tenantId, tenantId), lt(sessionsTable.expiresAt, expiryDate)))
+    .limit(limit);
+
+  if (expiredToDelete.length === 0) {
+    return { deletedCount: 0, deletedIds: [] };
+  }
+
+  const idsToDelete = expiredToDelete.map((s) => s.id);
+
+  const deleted = await db
+    .delete(sessionsTable)
+    .where(
+      and(
+        eq(sessionsTable.tenantId, tenantId),
+        sql`${sessionsTable.id} IN (${sql.join(idsToDelete.map((id) => sql`${id}`))})`,
+      ),
+    )
+    .returning({ id: sessionsTable.id });
+
+  return {
+    deletedCount: deleted.length,
+    deletedIds: deleted.map((d) => d.id),
+  };
+};
+
+export interface GetExpiredSessionsParams {
+  tenantId: string;
+  expiryDate: Date;
+  limit: number;
+}
+
+export const getExpiredSessions = async (
+  db: DB,
+  params: GetExpiredSessionsParams,
+): Promise<ExpiredSession[]> => {
+  const { tenantId, expiryDate, limit } = params;
+
+  return db
+    .select({
+      id: sessionsTable.id,
+      userId: sessionsTable.userId,
+      tenantId: sessionsTable.tenantId,
+      expiresAt: sessionsTable.expiresAt,
+      createdAt: sessionsTable.createdAt,
+      lastActiveAt: sessionsTable.lastActiveAt,
+      ipAddress: sessionsTable.ipAddress,
+      userAgent: sessionsTable.userAgent,
+    })
+    .from(sessionsTable)
+    .where(and(eq(sessionsTable.tenantId, tenantId), lt(sessionsTable.expiresAt, expiryDate)))
+    .limit(limit);
+};
+
+export const deleteSessionsByIds = async (
+  db: DB,
+  tenantId: string,
+  sessionIds: string[],
+): Promise<number> => {
+  if (sessionIds.length === 0) {
+    return 0;
+  }
+
+  const deleted = await db
+    .delete(sessionsTable)
+    .where(
+      and(
+        eq(sessionsTable.tenantId, tenantId),
+        sql`${sessionsTable.id} IN (${sql.join(sessionIds.map((id) => sql`${id}`))})`,
+      ),
+    )
+    .returning({ id: sessionsTable.id });
+
+  return deleted.length;
+};

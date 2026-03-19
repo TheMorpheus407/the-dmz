@@ -33,6 +33,9 @@ export {
   deleteOldestUserSessions,
   findActiveSessionWithContext,
   getSessionMetrics,
+  cleanupExpiredSessions,
+  getExpiredSessions,
+  deleteSessionsByIds,
   type ProfileData,
   type OAuthClientData,
   type SessionListItem,
@@ -40,6 +43,8 @@ export {
   type ListTenantSessionsParams,
   type SessionMetricsParams,
   type SessionMetrics,
+  type CleanupExpiredSessionsParams,
+  type GetExpiredSessionsParams,
 } from './auth.repo.js';
 export * from './auth.types.js';
 export * from './auth.errors.js';
