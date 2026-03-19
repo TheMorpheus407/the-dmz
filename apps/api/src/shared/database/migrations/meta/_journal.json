@@ -267,6 +267,34 @@
       "when": 1774700000000,
       "tag": "0036_social_player_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1774800000000,
+      "tag": "0037_social_relationship",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1774900000000,
+      "tag": "0038_presence_service",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1775000000000,
+      "tag": "0039_quick_signals",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1775100000000,
+      "tag": "0040_leaderboard",
+      "breakpoints": true
     }
   ]
 }

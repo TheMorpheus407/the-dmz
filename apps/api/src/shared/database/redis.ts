@@ -92,6 +92,9 @@ export interface RedisRateLimitClient {
   zscore(key: string, member: string): Promise<number | null>;
   zcard(key: string): Promise<number>;
   zrem(key: string, member: string): Promise<number>;
+  zrevrange(key: string, start: number, stop: number): Promise<{ member: string; score: number }[]>;
+  zrevrank(key: string, member: string): Promise<number | null>;
+  zincrby(key: string, increment: number, member: string): Promise<number>;
   sadd(key: string, member: string): Promise<number>;
   sismember(key: string, member: string): Promise<number>;
   quit(): Promise<void>;
@@ -553,6 +556,66 @@ class RedisTcpClient implements RedisRateLimitClient {
     }
 
     throw new Error('Unexpected Redis ZREM response');
+  }
+
+  public async zrevrange(
+    key: string,
+    start: number,
+    stop: number,
+  ): Promise<{ member: string; score: number }[]> {
+    const result = await this.sendCommand([
+      'ZREVRANGE',
+      key,
+      String(start),
+      String(stop),
+      'WITHSCORES',
+    ]);
+
+    if (result === null) {
+      return [];
+    }
+
+    if (Array.isArray(result)) {
+      const items: { member: string; score: number }[] = [];
+      for (let i = 0; i < result.length; i += 2) {
+        const member = result[i];
+        const score = result[i + 1];
+        if (typeof member === 'string' && typeof score === 'number') {
+          items.push({ member, score });
+        }
+      }
+      return items;
+    }
+
+    throw new Error('Unexpected Redis ZREVRANGE response');
+  }
+
+  public async zrevrank(key: string, member: string): Promise<number | null> {
+    const result = await this.sendCommand(['ZREVRANK', key, member]);
+
+    if (result === null) {
+      return null;
+    }
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis ZREVRANK response');
+  }
+
+  public async zincrby(key: string, increment: number, member: string): Promise<number> {
+    const result = await this.sendCommand(['ZINCRBY', key, String(increment), member]);
+
+    if (typeof result === 'string') {
+      return Number(result);
+    }
+
+    if (typeof result === 'number') {
+      return result;
+    }
+
+    throw new Error('Unexpected Redis ZINCRBY response');
   }
 
   public async sadd(key: string, member: string): Promise<number> {

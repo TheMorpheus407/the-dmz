@@ -3,3 +3,4 @@ export * from './avatars.js';
 export * from './social-relationship.js';
 export * from './presence.js';
 export * from './quick-signals.js';
+export * from './leaderboard.js';
