@@ -123,6 +123,43 @@ describe('audit-service', () => {
       expect(result.previousHash).toHaveLength(64);
     });
 
+    it('should create an audit log entry with new fields', async () => {
+      const result = await auditService.createAuditLog(
+        {
+          tenantId: testTenantId,
+          userId: testUserId,
+          userEmail: 'test@example.com',
+          action: 'user.create',
+          resourceType: 'user',
+          correlationId: '00000000-0000-0000-0000-000000000003',
+          userAgent: 'Mozilla/5.0 Test Browser',
+        },
+        testConfig,
+      );
+
+      expect(result).toBeDefined();
+      expect(result.userEmail).toBe('test@example.com');
+      expect(result.correlationId).toBe('00000000-0000-0000-0000-000000000003');
+      expect(result.userAgent).toBe('Mozilla/5.0 Test Browser');
+    });
+
+    it('should truncate long user agent', async () => {
+      const longUserAgent = 'A'.repeat(600);
+      const result = await auditService.createAuditLog(
+        {
+          tenantId: testTenantId,
+          userId: testUserId,
+          action: 'user.create',
+          resourceType: 'user',
+          userAgent: longUserAgent,
+        },
+        testConfig,
+      );
+
+      expect(result).toBeDefined();
+      expect(result.userAgent).toHaveLength(512);
+    });
+
     it('should link previous hash correctly for sequential entries', async () => {
       const first = await auditService.createAuditLog(
         {
@@ -355,6 +392,96 @@ describe('audit-service', () => {
       expect(actions).toContain('user.create');
       expect(actions).toContain('role.assign');
       expect(actions.length).toBe(2);
+    });
+  });
+
+  describe('exportAuditLogs', () => {
+    beforeEach(async () => {
+      await auditService.createAuditLog(
+        {
+          tenantId: testTenantId,
+          userId: testUserId,
+          userEmail: 'export@example.com',
+          action: 'user.create',
+          resourceType: 'user',
+        },
+        testConfig,
+      );
+
+      await auditService.createAuditLog(
+        {
+          tenantId: testTenantId,
+          userId: testUserId,
+          action: 'role.assign',
+          resourceType: 'role',
+        },
+        testConfig,
+      );
+    });
+
+    it('should export logs in CSV format', async () => {
+      const chunks: string[] = [];
+      for await (const chunk of auditService.exportAuditLogs(
+        { tenantId: testTenantId, format: 'csv' },
+        testConfig,
+      )) {
+        chunks.push(chunk);
+      }
+
+      const result = chunks.join('');
+      expect(result).toContain('id,tenant_id,user_id,user_email,action');
+      expect(result).toContain('user.create');
+      expect(result).toContain('role.assign');
+      expect(result).toContain('export@example.com');
+    });
+
+    it('should export logs in JSON format', async () => {
+      const chunks: string[] = [];
+      for await (const chunk of auditService.exportAuditLogs(
+        { tenantId: testTenantId, format: 'json' },
+        testConfig,
+      )) {
+        chunks.push(chunk);
+      }
+
+      expect(chunks.length).toBeGreaterThan(0);
+      const firstEntry = JSON.parse(chunks[0]!);
+      expect(firstEntry).toHaveProperty('id');
+      expect(firstEntry).toHaveProperty('tenantId');
+    });
+
+    it('should filter exports by action', async () => {
+      const chunks: string[] = [];
+      for await (const chunk of auditService.exportAuditLogs(
+        { tenantId: testTenantId, action: 'user.create', format: 'csv' },
+        testConfig,
+      )) {
+        chunks.push(chunk);
+      }
+
+      const result = chunks.join('');
+      expect(result).toContain('user.create');
+      expect(result).not.toContain('role.assign');
+    });
+  });
+
+  describe('legal hold', () => {
+    it('should get default legal hold status (false)', async () => {
+      const result = await auditService.getLegalHoldStatus(testTenantId, testConfig);
+      expect(result).toBe(false);
+    });
+
+    it('should set legal hold to enabled', async () => {
+      await auditService.setLegalHold(testTenantId, true, testConfig);
+      const result = await auditService.getLegalHoldStatus(testTenantId, testConfig);
+      expect(result).toBe(true);
+    });
+
+    it('should set legal hold to disabled', async () => {
+      await auditService.setLegalHold(testTenantId, true, testConfig);
+      await auditService.setLegalHold(testTenantId, false, testConfig);
+      const result = await auditService.getLegalHoldStatus(testTenantId, testConfig);
+      expect(result).toBe(false);
     });
   });
 });

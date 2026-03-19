@@ -19,8 +19,23 @@ const RetentionConfigSchema = z.object({
   framework: z.string().optional(),
 });
 
+const ExportQuerySchema = z.object({
+  startDate: z.string().datetime().optional(),
+  endDate: z.string().datetime().optional(),
+  action: z.string().optional(),
+  userId: z.string().uuid().optional(),
+  resourceType: z.string().optional(),
+  format: z.enum(['csv', 'json']).default('csv'),
+});
+
+const LegalHoldSchema = z.object({
+  enabled: z.boolean(),
+});
+
 type AuditLogQueryParams = z.infer<typeof AuditLogQuerySchema>;
 type RetentionConfigBody = z.infer<typeof RetentionConfigSchema>;
+type ExportQueryParams = z.infer<typeof ExportQuerySchema>;
+type LegalHoldBody = z.infer<typeof LegalHoldSchema>;
 
 export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<void> => {
   fastify.get(
@@ -263,6 +278,182 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
         return reply.code(500).send({
           success: false,
           error: { code: 'INTERNAL_ERROR', message: 'Failed to update retention config' },
+        });
+      }
+    },
+  );
+
+  fastify.get(
+    '/audit/export',
+    {
+      schema: {
+        querystring: {
+          type: 'object',
+          properties: {
+            startDate: { type: 'string', format: 'date-time' },
+            endDate: { type: 'string', format: 'date-time' },
+            action: { type: 'string', maxLength: 128 },
+            userId: { type: 'string', format: 'uuid' },
+            resourceType: { type: 'string', maxLength: 64 },
+            format: { type: 'string', enum: ['csv', 'json'], default: 'csv' },
+          },
+        },
+      },
+    },
+    async (request: FastifyRequest<{ Querystring: ExportQueryParams }>, reply: FastifyReply) => {
+      const tenantContext = request.tenantContext;
+
+      if (!tenantContext) {
+        return reply.code(401).send({
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
+        });
+      }
+
+      const parsedQuery = ExportQuerySchema.safeParse(request.query);
+
+      if (!parsedQuery.success) {
+        return reply.code(400).send({
+          success: false,
+          error: { code: 'INVALID_QUERY', message: 'Invalid query parameters' },
+        });
+      }
+
+      const format = parsedQuery.data.format;
+      const contentType = format === 'csv' ? 'text/csv' : 'application/x-ndjson';
+
+      reply.raw.writeHead(200, {
+        'Content-Type': contentType,
+        'Content-Disposition': `attachment; filename="audit-export-${Date.now()}.${format}"`,
+      });
+
+      try {
+        for await (const chunk of auditService.exportAuditLogs({
+          tenantId: tenantContext.tenantId,
+          startDate: parsedQuery.data.startDate,
+          endDate: parsedQuery.data.endDate,
+          action: parsedQuery.data.action,
+          userId: parsedQuery.data.userId,
+          resourceType: parsedQuery.data.resourceType,
+          format,
+        })) {
+          reply.raw.write(chunk);
+        }
+        reply.raw.end();
+      } catch (error) {
+        request.log.error(error, 'Failed to export audit logs');
+        reply.raw.end();
+      }
+
+      return reply;
+    },
+  );
+
+  fastify.get('/audit/stream', async (request: FastifyRequest, reply: FastifyReply) => {
+    const tenantContext = request.tenantContext;
+
+    if (!tenantContext) {
+      return reply.code(401).send({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
+      });
+    }
+
+    reply.raw.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    });
+
+    reply.raw.write('event: connected\ndata: {"status":"connected"}\n\n');
+
+    const heartbeatInterval = setInterval(() => {
+      reply.raw.write(
+        'event: heartbeat\ndata: {"timestamp":"' + new Date().toISOString() + '"}\n\n',
+      );
+    }, 30000);
+
+    request.raw.on('close', () => {
+      clearInterval(heartbeatInterval);
+    });
+
+    reply.raw.on('close', () => {
+      clearInterval(heartbeatInterval);
+    });
+
+    return reply;
+  });
+
+  fastify.get('/audit/legal-hold', async (request: FastifyRequest, reply: FastifyReply) => {
+    const tenantContext = request.tenantContext;
+
+    if (!tenantContext) {
+      return reply.code(401).send({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
+      });
+    }
+
+    try {
+      const legalHold = await auditService.getLegalHoldStatus(tenantContext.tenantId);
+
+      return reply.send({
+        success: true,
+        data: { legalHold },
+      });
+    } catch (error) {
+      request.log.error(error, 'Failed to get legal hold status');
+      return reply.code(500).send({
+        success: false,
+        error: { code: 'INTERNAL_ERROR', message: 'Failed to get legal hold status' },
+      });
+    }
+  });
+
+  fastify.put(
+    '/audit/legal-hold',
+    {
+      schema: {
+        body: {
+          type: 'object',
+          required: ['enabled'],
+          properties: {
+            enabled: { type: 'boolean' },
+          },
+        },
+      },
+    },
+    async (request: FastifyRequest<{ Body: LegalHoldBody }>, reply: FastifyReply) => {
+      const tenantContext = request.tenantContext;
+
+      if (!tenantContext) {
+        return reply.code(401).send({
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
+        });
+      }
+
+      const parsedBody = LegalHoldSchema.safeParse(request.body);
+
+      if (!parsedBody.success) {
+        return reply.code(400).send({
+          success: false,
+          error: { code: 'INVALID_BODY', message: 'Invalid request body' },
+        });
+      }
+
+      try {
+        await auditService.setLegalHold(tenantContext.tenantId, parsedBody.data.enabled);
+
+        return reply.send({
+          success: true,
+          data: { legalHold: parsedBody.data.enabled },
+        });
+      } catch (error) {
+        request.log.error(error, 'Failed to set legal hold');
+        return reply.code(500).send({
+          success: false,
+          error: { code: 'INTERNAL_ERROR', message: 'Failed to set legal hold' },
         });
       }
     },

@@ -253,6 +253,13 @@
       "when": 1774500000000,
       "tag": "0034_service_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1774600000000,
+      "tag": "0035_audit_log_enhanced",
+      "breakpoints": true
     }
   ]
 }

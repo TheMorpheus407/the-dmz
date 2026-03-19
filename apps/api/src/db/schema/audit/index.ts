@@ -25,6 +25,7 @@ export const auditLogs = auditSchema.table(
       .notNull()
       .references(() => tenants.tenantId, { onDelete: 'restrict' }),
     userId: uuid('user_id').notNull(),
+    userEmail: varchar('user_email', { length: 255 }),
     action: varchar('action', { length: 128 }).notNull(),
     resourceType: varchar('resource_type', { length: 64 }).notNull(),
     resourceId: uuid('resource_id'),
@@ -34,6 +35,8 @@ export const auditLogs = auditSchema.table(
     previousHash: varchar('previous_hash', { length: 64 }).notNull().default(SEED_HASH),
     hash: varchar('hash', { length: 64 }).notNull(),
     partitionMonth: varchar('partition_month', { length: 7 }).notNull(),
+    correlationId: uuid('correlation_id'),
+    userAgent: varchar('user_agent', { length: 512 }),
   },
   (table) => ({
     tenantIdPartitionMonth: uniqueIndex('audit_logs_tenant_partition_idx').on(
@@ -67,6 +70,7 @@ export const auditRetentionConfig = auditSchema.table(
       .unique(),
     retentionYears: integer('retention_years').notNull().default(7),
     framework: varchar('framework', { length: 64 }),
+    legalHold: integer('legal_hold').notNull().default(0),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   },

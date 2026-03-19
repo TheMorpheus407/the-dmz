@@ -67,6 +67,8 @@ export function createAuditLogHook(options: AuditHookOptions = {}) {
             resourceId?: string;
             ipAddress?: string;
             metadata: Record<string, unknown>;
+            correlationId?: string;
+            userAgent?: string;
           } = {
             tenantId: tenantContext.tenantId,
             userId: user.userId,
@@ -80,6 +82,16 @@ export function createAuditLogHook(options: AuditHookOptions = {}) {
           }
           if (ipAddress) {
             logInput.ipAddress = ipAddress;
+          }
+
+          const correlationIdHeader = request.headers['x-correlation-id'];
+          if (typeof correlationIdHeader === 'string') {
+            logInput.correlationId = correlationIdHeader;
+          }
+
+          const userAgentHeader = request.headers['user-agent'];
+          if (typeof userAgentHeader === 'string') {
+            logInput.userAgent = userAgentHeader;
           }
 
           await createAuditLog(logInput);

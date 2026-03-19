@@ -11,11 +11,14 @@ const SEED_HASH = '0000000000000000000000000000000000000000000000000000000000000
 export interface CreateAuditLogInput {
   tenantId: string;
   userId: string;
+  userEmail?: string | undefined;
   action: string;
   resourceType: string;
   resourceId?: string | undefined;
   ipAddress?: string | undefined;
   metadata?: Record<string, unknown> | undefined;
+  correlationId?: string | undefined;
+  userAgent?: string | undefined;
 }
 
 export interface AuditLogQueryParams {
@@ -100,6 +103,7 @@ export async function createAuditLog(
     .values({
       tenantId: input.tenantId,
       userId: input.userId,
+      userEmail: input.userEmail ?? null,
       action: input.action,
       resourceType: input.resourceType,
       resourceId: input.resourceId ?? null,
@@ -109,6 +113,8 @@ export async function createAuditLog(
       previousHash,
       hash,
       partitionMonth,
+      correlationId: input.correlationId ?? null,
+      userAgent: input.userAgent ? input.userAgent.slice(0, 512) : null,
     })
     .returning();
 
@@ -344,4 +350,132 @@ export async function getResourceTypes(
     .orderBy(auditLogs.resourceType);
 
   return resourceTypes.map((r) => r.resourceType);
+}
+
+export interface ExportAuditLogsParams {
+  tenantId: string;
+  startDate?: string | undefined;
+  endDate?: string | undefined;
+  action?: string | undefined;
+  userId?: string | undefined;
+  resourceType?: string | undefined;
+  format: 'csv' | 'json';
+}
+
+export async function* exportAuditLogs(
+  params: ExportAuditLogsParams,
+  config: AppConfig = loadConfig(),
+): AsyncGenerator<string> {
+  const db = getDatabaseClient(config);
+
+  const conditions = [eq(auditLogs.tenantId, params.tenantId)];
+
+  if (params.startDate) {
+    conditions.push(gte(auditLogs.timestamp, new Date(params.startDate)));
+  }
+
+  if (params.endDate) {
+    conditions.push(lte(auditLogs.timestamp, new Date(params.endDate)));
+  }
+
+  if (params.action) {
+    conditions.push(eq(auditLogs.action, params.action));
+  }
+
+  if (params.userId) {
+    conditions.push(eq(auditLogs.userId, params.userId));
+  }
+
+  if (params.resourceType) {
+    conditions.push(eq(auditLogs.resourceType, params.resourceType));
+  }
+
+  if (params.format === 'csv') {
+    yield 'id,tenant_id,user_id,user_email,action,resource_type,resource_id,ip_address,timestamp,metadata,correlation_id,user_agent,previous_hash,hash\n';
+  }
+
+  let offset = 0;
+  const batchSize = 1000;
+
+  while (true) {
+    const entries = await db
+      .select()
+      .from(auditLogs)
+      .where(and(...conditions))
+      .orderBy(auditLogs.timestamp, auditLogs.id)
+      .limit(batchSize)
+      .offset(offset);
+
+    if (entries.length === 0) {
+      break;
+    }
+
+    for (const entry of entries) {
+      if (params.format === 'csv') {
+        const row = [
+          entry.id,
+          entry.tenantId,
+          entry.userId,
+          entry.userEmail ?? '',
+          entry.action,
+          entry.resourceType,
+          entry.resourceId ?? '',
+          entry.ipAddress ?? '',
+          entry.timestamp.toISOString(),
+          entry.metadata ? JSON.stringify(entry.metadata).replace(/"/g, '""') : '',
+          entry.correlationId ?? '',
+          entry.userAgent ?? '',
+          entry.previousHash,
+          entry.hash,
+        ].map((field) => `"${field}"`);
+
+        yield row.join(',') + '\n';
+      } else {
+        yield JSON.stringify(entry) + '\n';
+      }
+    }
+
+    offset += batchSize;
+
+    if (entries.length < batchSize) {
+      break;
+    }
+  }
+}
+
+export async function getLegalHoldStatus(
+  tenantId: string,
+  config: AppConfig = loadConfig(),
+): Promise<boolean> {
+  const db = getDatabaseClient(config);
+
+  const [configEntry] = await db
+    .select({ legalHold: auditRetentionConfig.legalHold })
+    .from(auditRetentionConfig)
+    .where(eq(auditRetentionConfig.tenantId, tenantId))
+    .limit(1);
+
+  return configEntry ? configEntry.legalHold === 1 : false;
+}
+
+export async function setLegalHold(
+  tenantId: string,
+  enabled: boolean,
+  config: AppConfig = loadConfig(),
+): Promise<void> {
+  const db = getDatabaseClient(config);
+
+  await db
+    .insert(auditRetentionConfig)
+    .values({
+      tenantId,
+      legalHold: enabled ? 1 : 0,
+    })
+    .onConflictDoUpdate({
+      target: auditRetentionConfig.tenantId,
+      set: {
+        legalHold: enabled ? 1 : 0,
+        updatedAt: new Date(),
+      },
+    });
 }
