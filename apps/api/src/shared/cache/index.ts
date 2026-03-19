@@ -137,3 +137,16 @@ export {
   type CachedRelationshipState,
   type RelationshipCacheMetrics,
 } from './relationship-cache.js';
+
+export {
+  buildPresenceCacheKey,
+  getCachedPresence,
+  setCachedPresence,
+  deleteCachedPresence,
+  refreshPresenceTTL,
+  isPresenceCacheHealthy,
+  getPresenceCacheMetrics,
+  resetPresenceCacheMetrics,
+  type CachedPresence,
+  type PresenceCacheMetrics,
+} from './presence-cache.js';
