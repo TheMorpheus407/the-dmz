@@ -48,6 +48,7 @@ describe('WebhookService', () => {
     status: 'active',
     secretHash: mockSecretHash,
     filters: null,
+    ipAllowlist: null,
     createdAt: fixedDate,
     updatedAt: fixedDate,
     disabledAt: null,
@@ -179,6 +180,118 @@ describe('WebhookService', () => {
     });
   });
 
+  describe('HTTPS Validation', () => {
+    it('should reject HTTP URLs in createSubscription', async () => {
+      await expect(
+        service.createSubscription(mockTenantId, {
+          name: 'Test Webhook',
+          targetUrl: 'http://example.com/webhook',
+          eventTypes: ['auth.user.created'],
+        }),
+      ).rejects.toThrow('Webhook target URL must use HTTPS protocol');
+    });
+
+    it('should accept HTTPS URLs in createSubscription', async () => {
+      const mockDbSubscription = buildSubscriptionDb({
+        status: 'test_pending',
+        testPendingAt: new Date(),
+      });
+
+      mockRepo.createSubscription.mockResolvedValue(mockDbSubscription);
+
+      const result = await service.createSubscription(mockTenantId, {
+        name: 'Test Webhook',
+        targetUrl: 'https://example.com/webhook',
+        eventTypes: ['auth.user.created'],
+      });
+
+      expect(result.name).toBe('Test Webhook');
+    });
+
+    it('should reject HTTP URLs in updateSubscription', async () => {
+      mockRepo.getSubscriptionById.mockResolvedValue(buildSubscriptionDb());
+
+      await expect(
+        service.updateSubscription(mockTenantId, mockSubscriptionId, {
+          targetUrl: 'http://example.com/webhook',
+        }),
+      ).rejects.toThrow('Webhook target URL must use HTTPS protocol');
+    });
+  });
+
+  describe('rotateSecret', () => {
+    it('should rotate secret and return new secret', async () => {
+      const mockDbSubscription = buildSubscriptionDb();
+
+      mockRepo.getSubscriptionById.mockResolvedValue(mockDbSubscription);
+      mockRepo.updateSubscription.mockResolvedValue({
+        ...mockDbSubscription,
+        secretHash: 'new-hashed-secret',
+      });
+
+      const result = await service.rotateSecret(mockTenantId, mockSubscriptionId);
+
+      expect(result.secret).toBeDefined();
+      expect(result.secret.length).toBeGreaterThan(0);
+      expect(result.rotatedAt).toBeDefined();
+      expect(mockRepo.updateSubscription).toHaveBeenCalled();
+    });
+
+    it('should throw error when subscription not found', async () => {
+      mockRepo.getSubscriptionById.mockResolvedValue(undefined);
+
+      await expect(service.rotateSecret(mockTenantId, randomUUID())).rejects.toThrow(
+        WebhookSubscriptionNotFoundError,
+      );
+    });
+  });
+
+  describe('IP Allowlist', () => {
+    it('should store ipAllowlist when creating subscription', async () => {
+      const mockDbSubscription = buildSubscriptionDb({
+        ipAllowlist: JSON.stringify(['192.168.1.1', '10.0.0.1']),
+      });
+
+      mockRepo.createSubscription.mockResolvedValue(mockDbSubscription);
+
+      const result = await service.createSubscription(mockTenantId, {
+        name: 'Test Webhook',
+        targetUrl: 'https://example.com/webhook',
+        eventTypes: ['auth.user.created'],
+        ipAllowlist: ['192.168.1.1', '10.0.0.1'],
+      });
+
+      expect(result.ipAllowlist).toEqual(['192.168.1.1', '10.0.0.1']);
+      expect(mockRepo.createSubscription).toHaveBeenCalledWith(
+        expect.objectContaining({
+          ipAllowlist: ['192.168.1.1', '10.0.0.1'],
+        }),
+      );
+    });
+
+    it('should update ipAllowlist when updating subscription', async () => {
+      const mockDbSubscription = buildSubscriptionDb({
+        ipAllowlist: JSON.stringify(['192.168.1.1']),
+      });
+
+      mockRepo.getSubscriptionById.mockResolvedValue(buildSubscriptionDb());
+      mockRepo.updateSubscription.mockResolvedValue(mockDbSubscription);
+
+      const result = await service.updateSubscription(mockTenantId, mockSubscriptionId, {
+        ipAllowlist: ['192.168.1.1', '10.0.0.1'],
+      });
+
+      expect(result.ipAllowlist).toEqual(['192.168.1.1']);
+      expect(mockRepo.updateSubscription).toHaveBeenCalledWith(
+        mockTenantId,
+        mockSubscriptionId,
+        expect.objectContaining({
+          ipAllowlist: ['192.168.1.1', '10.0.0.1'],
+        }),
+      );
+    });
+  });
+
   describe('HMAC Signature Generation', () => {
     it('should generate valid HMAC-SHA256 signature', () => {
       const payload = { eventId: '123', data: { test: true } };
@@ -305,6 +418,21 @@ describe('WebhookPolicy Contract Tests', () => {
     expect(WEBHOOK_EVENT_TYPES).toContain('enterprise.tenant.created');
   });
 
+  it('should have all required event types from issue #234', () => {
+    expect(WEBHOOK_EVENT_TYPES).toContain('auth.user.role_changed');
+    expect(WEBHOOK_EVENT_TYPES).toContain('campaign.started');
+    expect(WEBHOOK_EVENT_TYPES).toContain('campaign.completed');
+    expect(WEBHOOK_EVENT_TYPES).toContain('campaign.paused');
+    expect(WEBHOOK_EVENT_TYPES).toContain('training.completed');
+    expect(WEBHOOK_EVENT_TYPES).toContain('training.started');
+    expect(WEBHOOK_EVENT_TYPES).toContain('training.failed');
+    expect(WEBHOOK_EVENT_TYPES).toContain('session.created');
+    expect(WEBHOOK_EVENT_TYPES).toContain('session.updated');
+    expect(WEBHOOK_EVENT_TYPES).toContain('session.deleted');
+    expect(WEBHOOK_EVENT_TYPES).toContain('competency.updated');
+    expect(WEBHOOK_EVENT_TYPES).toContain('competency.domain_updated');
+  });
+
   it('should have valid WebhookSubscriptionStatus values', () => {
     expect(WebhookSubscriptionStatus.ACTIVE).toBe('active');
     expect(WebhookSubscriptionStatus.DISABLED).toBe('disabled');
@@ -323,7 +451,7 @@ describe('WebhookPolicy Contract Tests', () => {
   it('should have correct retry delays', () => {
     expect(WEBHOOK_RETRY_DELAYS_MS).toHaveLength(5);
     expect(WEBHOOK_RETRY_DELAYS_MS[0]).toBe(60 * 1000);
-    expect(WEBHOOK_RETRY_DELAYS_MS[4]).toBe(8 * 60 * 60 * 1000);
+    expect(WEBHOOK_RETRY_DELAYS_MS[4]).toBe(24 * 60 * 60 * 1000);
   });
 
   it('should have correct circuit breaker configuration', () => {

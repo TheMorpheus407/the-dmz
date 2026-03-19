@@ -31958,6 +31958,12 @@
                   },
                   "filters": {
                     "type": "object"
+                  },
+                  "ipAllowlist": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 },
                 "required": ["name", "targetUrl", "eventTypes"],
@@ -32028,6 +32034,12 @@
                   "status": {
                     "type": "string",
                     "enum": ["active", "disabled", "test_pending", "failure_disabled"]
+                  },
+                  "ipAllowlist": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
                   }
                 },
                 "additionalProperties": false
@@ -32070,6 +32082,25 @@
       }
     },
     "/api/v1/webhooks/subscriptions/{subscriptionId}/test": {
+      "post": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "subscriptionId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response"
+          }
+        }
+      }
+    },
+    "/api/v1/webhooks/subscriptions/{subscriptionId}/rotate-secret": {
       "post": {
         "parameters": [
           {

@@ -283,10 +283,13 @@ export {
   webhookEventEnvelopeSchema,
   webhookSignatureHeadersSchema,
   webhookTestResultSchema,
+  webhookSecretRotationSchema,
+  webhookRotateSecretResultSchema,
   WEBHOOK_SIGNATURE_VERSION,
   WEBHOOK_REPLAY_WINDOW_MS,
   WEBHOOK_DEFAULT_MAX_ATTEMPTS,
   WEBHOOK_RETRY_DELAYS_MS,
+  WEBHOOK_DELIVERY_TIMEOUT_MS,
   WEBHOOK_RATE_LIMITS,
   WEBHOOK_CIRCUIT_BREAKER,
   WEBHOOK_DELIVERY_LOG_RETENTION_DAYS,
@@ -294,6 +297,7 @@ export {
   isRetryableStatus,
   isTerminalStatus,
   getRetryDelayMs,
+  isValidHttpsUrl,
   type WebhookEventType,
   type WebhookSubscription,
   type CreateWebhookSubscriptionInput,
@@ -302,6 +306,8 @@ export {
   type WebhookEventEnvelope,
   type WebhookSignatureHeaders,
   type WebhookTestResult,
+  type WebhookSecretRotation,
+  type WebhookRotateSecretResult,
 } from './webhook-policy.js';
 
 export {

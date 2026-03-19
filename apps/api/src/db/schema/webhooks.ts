@@ -31,6 +31,7 @@ export const webhookSubscriptions = integrationSchema.table(
     status: varchar('status', { length: 50 }).notNull().default('test_pending'),
     secretHash: varchar('secret_hash', { length: 255 }).notNull(),
     filters: jsonb('filters'),
+    ipAllowlist: jsonb('ip_allowlist'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
     disabledAt: timestamp('disabled_at', { withTimezone: true, mode: 'date' }),

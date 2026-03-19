@@ -30,6 +30,7 @@ const createWebhookSubscriptionJsonSchema = {
     targetUrl: { type: 'string', format: 'uri' },
     eventTypes: { type: 'array', items: { type: 'string' }, minItems: 1 },
     filters: { type: 'object' },
+    ipAllowlist: { type: 'array', items: { type: 'string' } },
   },
   required: ['name', 'targetUrl', 'eventTypes'],
   additionalProperties: false,
@@ -43,6 +44,7 @@ const updateWebhookSubscriptionJsonSchema = {
     eventTypes: { type: 'array', items: { type: 'string' }, minItems: 1 },
     filters: { type: 'object' },
     status: { type: 'string', enum: ['active', 'disabled', 'test_pending', 'failure_disabled'] },
+    ipAllowlist: { type: 'array', items: { type: 'string' } },
   },
   additionalProperties: false,
 } as const;
@@ -83,6 +85,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       targetUrl: string;
       eventTypes: string[];
       filters?: Record<string, unknown>;
+      ipAllowlist?: string[];
     };
   }>(
     '/subscriptions',
@@ -106,6 +109,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
           targetUrl: string;
           eventTypes: string[];
           filters?: Record<string, unknown>;
+          ipAllowlist?: string[];
         };
       }>,
       reply: FastifyReply,
@@ -217,6 +221,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       eventTypes?: string[];
       filters?: Record<string, unknown>;
       status?: string;
+      ipAllowlist?: string[];
     };
   }>(
     '/subscriptions/:subscriptionId',
@@ -234,6 +239,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
           eventTypes?: string[];
           filters?: Record<string, unknown>;
           status?: string;
+          ipAllowlist?: string[];
         };
       }>,
       reply: FastifyReply,
@@ -248,6 +254,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
           eventTypes?: string[];
           filters?: Record<string, unknown>;
           status?: WebhookSubscriptionStatus;
+          ipAllowlist?: string[];
         } = {};
 
         if (request.body.name !== undefined) updateData.name = request.body.name;
@@ -257,11 +264,13 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
         if (request.body.status !== undefined) {
           updateData.status = request.body.status as WebhookSubscriptionStatus;
         }
+        if (request.body.ipAllowlist !== undefined)
+          updateData.ipAllowlist = request.body.ipAllowlist;
 
         const subscription = await webhookService.updateSubscription(
           tenantContext.tenantId,
           subscriptionId,
-          updateData,
+          updateData as Parameters<typeof webhookService.updateSubscription>[2],
         );
 
         return reply.send({ data: subscription });
@@ -359,6 +368,42 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         const err = error as Error;
         request.log.error({ err }, 'Failed to test webhook subscription');
+
+        return reply.status(500).send({
+          code: 'INTERNAL_ERROR',
+          message: err.message,
+          requestId: request.id,
+        });
+      }
+    },
+  );
+
+  fastify.post<{
+    Params: { subscriptionId: string };
+  }>(
+    '/subscriptions/:subscriptionId/rotate-secret',
+    async (
+      request: FastifyRequest<{ Params: { subscriptionId: string } }>,
+      reply: FastifyReply,
+    ) => {
+      const tenantContext = request.tenant as TenantContext;
+      const { subscriptionId } = request.params;
+
+      try {
+        const result = await webhookService.rotateSecret(tenantContext.tenantId, subscriptionId);
+
+        return reply.send({ data: result });
+      } catch (error) {
+        if (error instanceof WebhookSubscriptionNotFoundError) {
+          return reply.status(404).send({
+            code: WEBHOOK_ERROR_CODES.SUBSCRIPTION_NOT_FOUND,
+            message: error.message,
+            requestId: request.id,
+          });
+        }
+
+        const err = error as Error;
+        request.log.error({ err }, 'Failed to rotate webhook secret');
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',

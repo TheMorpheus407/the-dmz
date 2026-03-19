@@ -346,7 +346,12 @@ export const buildApp = (
             `Module '${entry.name}' has no routePrefix but was included in prefixedModules`,
           );
         }
-        await apiRouter.register(plugin as never, { prefix: routePrefix });
+
+        if (entry.name === 'webhooks') {
+          await apiRouter.register(plugin as never, { prefix: routePrefix, config });
+        } else {
+          await apiRouter.register(plugin as never, { prefix: routePrefix });
+        }
       }
     },
     { prefix: '/api/v1' },

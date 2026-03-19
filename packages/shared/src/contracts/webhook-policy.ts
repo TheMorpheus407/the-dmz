@@ -19,6 +19,7 @@ export const WEBHOOK_EVENT_TYPES = [
   'auth.user.created',
   'auth.user.updated',
   'auth.user.deleted',
+  'auth.user.role_changed',
   'auth.session.started',
   'auth.session.ended',
   'auth.mfa.enabled',
@@ -29,6 +30,17 @@ export const WEBHOOK_EVENT_TYPES = [
   'game.score.updated',
   'enterprise.tenant.created',
   'enterprise.tenant.updated',
+  'campaign.started',
+  'campaign.completed',
+  'campaign.paused',
+  'training.completed',
+  'training.started',
+  'training.failed',
+  'session.created',
+  'session.updated',
+  'session.deleted',
+  'competency.updated',
+  'competency.domain_updated',
 ] as const;
 
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
@@ -42,6 +54,7 @@ export const webhookSubscriptionSchema = z.object({
   status: z.nativeEnum(WebhookSubscriptionStatus),
   secretHash: z.string().min(1),
   filters: z.record(z.unknown()).optional(),
+  ipAllowlist: z.array(z.string()).optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
   disabledAt: z.date().optional(),
@@ -56,6 +69,7 @@ export const createWebhookSubscriptionSchema = z.object({
   targetUrl: z.string().url(),
   eventTypes: z.array(z.enum(WEBHOOK_EVENT_TYPES)).min(1),
   filters: z.record(z.unknown()).optional(),
+  ipAllowlist: z.array(z.string()).optional(),
 });
 
 export type CreateWebhookSubscriptionInput = z.infer<typeof createWebhookSubscriptionSchema>;
@@ -66,6 +80,7 @@ export const updateWebhookSubscriptionSchema = z.object({
   eventTypes: z.array(z.enum(WEBHOOK_EVENT_TYPES)).min(1).optional(),
   filters: z.record(z.unknown()).optional(),
   status: z.nativeEnum(WebhookSubscriptionStatus).optional(),
+  ipAllowlist: z.array(z.string()).optional(),
 });
 
 export type UpdateWebhookSubscriptionInput = z.infer<typeof updateWebhookSubscriptionSchema>;
@@ -104,9 +119,10 @@ export const webhookEventEnvelopeSchema = z.object({
 export type WebhookEventEnvelope = z.infer<typeof webhookEventEnvelopeSchema>;
 
 export const webhookSignatureHeadersSchema = z.object({
-  'x-dmz-webhook-id': z.string().uuid(),
-  'x-dmz-webhook-timestamp': z.string().datetime(),
-  'x-dmz-webhook-signature': z.string().startsWith('v1='),
+  'X-Webhook-Id': z.string().uuid(),
+  'X-Webhook-Timestamp': z.string().datetime(),
+  'X-Webhook-Signature': z.string().startsWith('v1='),
+  'X-Tenant-ID': z.string().uuid(),
 });
 
 export type WebhookSignatureHeaders = z.infer<typeof webhookSignatureHeadersSchema>;
@@ -121,15 +137,30 @@ export const webhookTestResultSchema = z.object({
 
 export type WebhookTestResult = z.infer<typeof webhookTestResultSchema>;
 
+export const webhookSecretRotationSchema = z.object({
+  previousSecretHash: z.string().min(1),
+  newSecret: z.string().min(1),
+});
+
+export type WebhookSecretRotation = z.infer<typeof webhookSecretRotationSchema>;
+
+export const webhookRotateSecretResultSchema = z.object({
+  secret: z.string().min(1),
+  rotatedAt: z.string().datetime(),
+});
+
+export type WebhookRotateSecretResult = z.infer<typeof webhookRotateSecretResultSchema>;
+
 export const WEBHOOK_SIGNATURE_VERSION = 'v1';
 export const WEBHOOK_REPLAY_WINDOW_MS = 5 * 60 * 1000;
 export const WEBHOOK_DEFAULT_MAX_ATTEMPTS = 5;
+export const WEBHOOK_DELIVERY_TIMEOUT_MS = 30 * 1000;
 export const WEBHOOK_RETRY_DELAYS_MS = [
   60 * 1000,
   5 * 60 * 1000,
   30 * 60 * 1000,
   2 * 60 * 60 * 1000,
-  8 * 60 * 60 * 1000,
+  24 * 60 * 60 * 1000,
 ];
 
 export const WEBHOOK_RATE_LIMITS = {
@@ -162,4 +193,13 @@ export const getRetryDelayMs = (attemptNumber: number): number => {
   const index = Math.min(attemptNumber - 1, WEBHOOK_RETRY_DELAYS_MS.length - 1);
   const delay = WEBHOOK_RETRY_DELAYS_MS[index];
   return delay !== undefined ? delay : WEBHOOK_RETRY_DELAYS_MS[WEBHOOK_RETRY_DELAYS_MS.length - 1]!;
+};
+
+export const isValidHttpsUrl = (url: string): boolean => {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
 };

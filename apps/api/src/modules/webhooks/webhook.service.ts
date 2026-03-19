@@ -1,5 +1,7 @@
 import { randomUUID, createHmac, timingSafeEqual } from 'crypto';
 
+import { Queue } from 'bullmq';
+
 import {
   WebhookSubscriptionStatus,
   type WebhookDeliveryStatus,
@@ -7,6 +9,8 @@ import {
   WEBHOOK_REPLAY_WINDOW_MS,
   WEBHOOK_DEFAULT_MAX_ATTEMPTS,
   WEBHOOK_RETRY_DELAYS_MS,
+  WEBHOOK_DELIVERY_TIMEOUT_MS,
+  isValidHttpsUrl,
   type WebhookSubscription,
   type WebhookDelivery,
   type WebhookEventEnvelope,
@@ -23,6 +27,11 @@ import {
   WebhookSignatureInvalidError,
   WebhookSignatureExpiredError,
 } from './webhook.errors.js';
+import {
+  WEBHOOK_QUEUE_NAMES,
+  WEBHOOK_JOB_OPTIONS,
+  type WebhookDeliveryJobData,
+} from './workers/webhook-queue.js';
 
 import type {
   WebhookSubscriptionDb,
@@ -40,10 +49,36 @@ interface SubscriptionUpdateData {
   disabledAt?: Date | null;
   failureDisabledAt?: Date | null;
   testPendingAt?: Date | null;
+  ipAllowlist?: string[] | null;
 }
 
 export class WebhookService {
   private secretCache = new Map<string, string>();
+  private deliveryQueue: Queue<WebhookDeliveryJobData> | null = null;
+  private static redisUrl: string | null = null;
+
+  static configureRedis(redisUrl: string): void {
+    WebhookService.redisUrl = redisUrl;
+  }
+
+  private getDeliveryQueue(): Queue<WebhookDeliveryJobData> {
+    if (!WebhookService.redisUrl) {
+      throw new Error('Redis URL not configured. Call WebhookService.configureRedis() first.');
+    }
+
+    if (!this.deliveryQueue) {
+      const url = new URL(WebhookService.redisUrl);
+      this.deliveryQueue = new Queue<WebhookDeliveryJobData>(WEBHOOK_QUEUE_NAMES.WEBHOOK_DELIVERY, {
+        defaultJobOptions: WEBHOOK_JOB_OPTIONS,
+        connection: {
+          host: url.hostname,
+          port: parseInt(url.port, 10) || 6379,
+        },
+      });
+    }
+
+    return this.deliveryQueue;
+  }
 
   async createSubscription(
     tenantId: string,
@@ -52,8 +87,13 @@ export class WebhookService {
       targetUrl: string;
       eventTypes: string[];
       filters?: Record<string, unknown>;
+      ipAllowlist?: string[];
     },
   ): Promise<WebhookSubscription> {
+    if (!isValidHttpsUrl(data.targetUrl)) {
+      throw new Error('Webhook target URL must use HTTPS protocol');
+    }
+
     const generatedSecret = this.generateSecret();
     const secretHash = this.hashSecret(generatedSecret);
 
@@ -65,6 +105,7 @@ export class WebhookService {
       status: 'test_pending',
       secretHash,
       filters: data.filters ?? null,
+      ipAllowlist: data.ipAllowlist ?? null,
       testPendingAt: new Date(),
     });
 
@@ -106,12 +147,17 @@ export class WebhookService {
       eventTypes?: string[];
       filters?: Record<string, unknown>;
       status?: WebhookSubscriptionStatus;
+      ipAllowlist?: string[];
     },
   ): Promise<WebhookSubscription> {
     const subscription = await webhookRepo.getSubscriptionById(tenantId, subscriptionId);
 
     if (!subscription) {
       throw new WebhookSubscriptionNotFoundError(subscriptionId);
+    }
+
+    if (data.targetUrl && !isValidHttpsUrl(data.targetUrl)) {
+      throw new Error('Webhook target URL must use HTTPS protocol');
     }
 
     const updateData: SubscriptionUpdateData = {};
@@ -131,6 +177,7 @@ export class WebhookService {
         updateData.testPendingAt = new Date();
       }
     }
+    if (data.ipAllowlist !== undefined) updateData.ipAllowlist = data.ipAllowlist;
 
     const updated = await webhookRepo.updateSubscription(
       tenantId,
@@ -155,6 +202,31 @@ export class WebhookService {
     this.secretCache.delete(subscriptionId);
   }
 
+  async rotateSecret(
+    tenantId: string,
+    subscriptionId: string,
+  ): Promise<{ secret: string; rotatedAt: string }> {
+    const subscription = await webhookRepo.getSubscriptionById(tenantId, subscriptionId);
+
+    if (!subscription) {
+      throw new WebhookSubscriptionNotFoundError(subscriptionId);
+    }
+
+    const newSecret = this.generateSecret();
+    const newSecretHash = this.hashSecret(newSecret);
+
+    await webhookRepo.updateSubscription(tenantId, subscriptionId, {
+      secretHash: newSecretHash,
+    } as Partial<NewWebhookSubscriptionDb>);
+
+    this.secretCache.set(subscriptionId, newSecret);
+
+    return {
+      secret: newSecret,
+      rotatedAt: new Date().toISOString(),
+    };
+  }
+
   async testSubscription(tenantId: string, subscriptionId: string): Promise<WebhookTestResult> {
     const subscription = await webhookRepo.getSubscriptionById(tenantId, subscriptionId);
 
@@ -173,9 +245,10 @@ export class WebhookService {
     const signature = this.generateSignature(testPayload, signingSecret);
 
     const signatureHeaders: Record<string, string> = {
-      'x-dmz-webhook-id': testPayload.eventId,
-      'x-dmz-webhook-timestamp': testPayload.occurredAt,
-      'x-dmz-webhook-signature': `v1=${signature}`,
+      'X-Webhook-Id': testPayload.eventId,
+      'X-Webhook-Timestamp': testPayload.occurredAt,
+      'X-Webhook-Signature': `v1=${signature}`,
+      'X-Tenant-ID': testPayload.tenantId,
     };
 
     const result = await this.deliverWebhook(subscription.targetUrl, testPayload, signatureHeaders);
@@ -264,9 +337,10 @@ export class WebhookService {
     const signature = this.generateSignature(payload, signingSecret);
 
     const signatureHeaders: Record<string, string> = {
-      'x-dmz-webhook-id': eventId,
-      'x-dmz-webhook-timestamp': new Date().toISOString(),
-      'x-dmz-webhook-signature': `v1=${signature}`,
+      'X-Webhook-Id': eventId,
+      'X-Webhook-Timestamp': new Date().toISOString(),
+      'X-Webhook-Signature': `v1=${signature}`,
+      'X-Tenant-ID': tenantId,
     };
 
     await webhookRepo.updateDelivery(tenantId, deliveryId, {
@@ -303,6 +377,19 @@ export class WebhookService {
         attemptNumber: attemptNumber + 1,
         nextAttemptAt,
       } as Partial<NewWebhookDeliveryDb>);
+
+      await this.queueRetry(
+        deliveryId,
+        subscriptionId,
+        tenantId,
+        targetUrl,
+        payload,
+        eventId,
+        _eventType,
+        attemptNumber + 1,
+        maxAttempts,
+        retryDelay,
+      );
     }
 
     if (!result.success && attemptNumber >= maxAttempts) {
@@ -330,11 +417,13 @@ export class WebhookService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-DMZ-Webhook-Id': signatureHeaders['x-dmz-webhook-id'] ?? '',
-          'X-DMZ-Webhook-Timestamp': signatureHeaders['x-dmz-webhook-timestamp'] ?? '',
-          'X-DMZ-Webhook-Signature': signatureHeaders['x-dmz-webhook-signature'] ?? '',
+          'X-Webhook-Id': signatureHeaders['X-Webhook-Id'] ?? '',
+          'X-Webhook-Timestamp': signatureHeaders['X-Webhook-Timestamp'] ?? '',
+          'X-Webhook-Signature': signatureHeaders['X-Webhook-Signature'] ?? '',
+          'X-Tenant-ID': signatureHeaders['X-Tenant-ID'] ?? '',
         },
         body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(WEBHOOK_DELIVERY_TIMEOUT_MS),
       });
 
       const responseBody = await response.text();
@@ -392,17 +481,55 @@ export class WebhookService {
       payload: JSON.stringify(payload),
     });
 
-    await this.processDelivery(
-      delivery.id,
-      subscription.id,
-      subscription.tenantId,
-      subscription.targetUrl,
+    const jobData: WebhookDeliveryJobData = {
+      type: 'deliver-webhook',
+      deliveryId: delivery.id,
+      subscriptionId: subscription.id,
+      tenantId: subscription.tenantId,
+      targetUrl: subscription.targetUrl,
       payload,
       eventId,
       eventType,
-      1,
-      WEBHOOK_DEFAULT_MAX_ATTEMPTS,
-    );
+      attemptNumber: 1,
+      maxAttempts: WEBHOOK_DEFAULT_MAX_ATTEMPTS,
+    };
+
+    const queue = this.getDeliveryQueue();
+    await queue.add(WEBHOOK_QUEUE_NAMES.WEBHOOK_DELIVERY, jobData, {
+      jobId: `webhook-${delivery.id}`,
+    });
+  }
+
+  private async queueRetry(
+    deliveryId: string,
+    subscriptionId: string,
+    tenantId: string,
+    targetUrl: string,
+    payload: Record<string, unknown>,
+    eventId: string,
+    eventType: string,
+    attemptNumber: number,
+    maxAttempts: number,
+    delayMs: number,
+  ): Promise<void> {
+    const jobData: WebhookDeliveryJobData = {
+      type: 'deliver-webhook',
+      deliveryId,
+      subscriptionId,
+      tenantId,
+      targetUrl,
+      payload,
+      eventId,
+      eventType,
+      attemptNumber,
+      maxAttempts,
+    };
+
+    const queue = this.getDeliveryQueue();
+    await queue.add(WEBHOOK_QUEUE_NAMES.WEBHOOK_DELIVERY, jobData, {
+      jobId: `webhook-retry-${deliveryId}-${attemptNumber}`,
+      delay: delayMs,
+    });
   }
 
   private createEventPayload(
@@ -512,6 +639,10 @@ export class WebhookService {
 
   private mapDbToSubscription(db: WebhookSubscriptionDb): WebhookSubscription {
     const eventTypesParsed = JSON.parse(db.eventTypes) as string[];
+    const ipAllowlistParsed: string[] | null =
+      typeof db.ipAllowlist === 'string'
+        ? (JSON.parse(db.ipAllowlist) as string[])
+        : (db.ipAllowlist as string[] | null);
     return {
       id: db.id,
       tenantId: db.tenantId,
@@ -521,6 +652,7 @@ export class WebhookService {
       status: db.status as WebhookSubscriptionStatus,
       secretHash: db.secretHash,
       filters: db.filters as Record<string, unknown> | undefined,
+      ipAllowlist: ipAllowlistParsed ?? undefined,
       createdAt: db.createdAt,
       updatedAt: db.updatedAt,
       disabledAt: db.disabledAt ?? undefined,
