@@ -6,6 +6,7 @@ export type WSMessageType =
   | 'PLAYER_JOIN'
   | 'PLAYER_LEAVE'
   | 'PRESENCE_UPDATE'
+  | 'QUICK_SIGNAL'
   | 'SUBSCRIBE'
   | 'UNSUBSCRIBE'
   | 'ACK'
@@ -31,7 +32,13 @@ export interface WSServerMessage extends WSMessageEnvelope {
   ackFor?: number;
 }
 
-export type ChannelType = 'session' | 'notifications' | 'threats' | 'global' | 'presence';
+export type ChannelType =
+  | 'session'
+  | 'notifications'
+  | 'threats'
+  | 'global'
+  | 'presence'
+  | 'signals';
 
 export interface ChannelSubscription {
   channelType: ChannelType;

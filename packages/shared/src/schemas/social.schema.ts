@@ -77,6 +77,37 @@ export const avatarSchema = z.object({
   isActive: z.boolean(),
 });
 
+export const signalCategorySchema = z.enum(['decision', 'urgency', 'coordination', 'resource']);
+export type SignalCategory = z.infer<typeof signalCategorySchema>;
+
+export const quickSignalTemplateSchema = z.object({
+  templateId: z.string().uuid(),
+  signalKey: z.string().max(50),
+  category: signalCategorySchema,
+  icon: z.string().max(10),
+  label: z.string().max(50),
+  description: z.string().max(200),
+  sortOrder: z.number().int(),
+  isActive: z.boolean(),
+});
+
+export const quickSignalUsageSchema = z.object({
+  usageId: z.string().uuid(),
+  playerId: z.string().uuid(),
+  sessionId: z.string().uuid().nullable(),
+  signalKey: z.string().max(50),
+  targetPlayerId: z.string().uuid().nullable(),
+  sentAt: z.string().datetime(),
+  context: z.record(z.unknown()),
+});
+
+export const sendSignalInputSchema = z.object({
+  signalKey: z.string().min(1).max(50),
+  sessionId: z.string().uuid().optional(),
+  targetPlayerId: z.string().uuid().optional(),
+  context: z.record(z.unknown()).optional(),
+});
+
 export type PlayerProfileBase = z.infer<typeof playerProfileBaseSchema>;
 export type PlayerProfilePublic = z.infer<typeof playerProfilePublicSchema>;
 export type PlayerProfilePrivate = z.infer<typeof playerProfilePrivateSchema>;
@@ -84,3 +115,6 @@ export type UpdatePlayerProfileInput = z.infer<typeof updatePlayerProfileInputSc
 export type UpdatePrivacySettingsInput = z.infer<typeof updatePrivacySettingsInputSchema>;
 export type PrivacySettingsResponse = z.infer<typeof privacySettingsResponseSchema>;
 export type Avatar = z.infer<typeof avatarSchema>;
+export type QuickSignalTemplate = z.infer<typeof quickSignalTemplateSchema>;
+export type QuickSignalUsage = z.infer<typeof quickSignalUsageSchema>;
+export type SendSignalInput = z.infer<typeof sendSignalInputSchema>;

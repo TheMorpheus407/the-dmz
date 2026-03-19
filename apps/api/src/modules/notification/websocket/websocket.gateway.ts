@@ -279,7 +279,7 @@ export class WebSocketGateway {
   }
 
   public isValidChannel(channel: string): boolean {
-    const validTypes = ['session', 'notifications', 'threats', 'global', 'presence'];
+    const validTypes = ['session', 'notifications', 'threats', 'global', 'presence', 'signals'];
     const parsed = this.parseChannel(channel);
 
     if (!parsed) {
