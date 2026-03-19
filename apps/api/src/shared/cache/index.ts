@@ -123,3 +123,17 @@ export {
   type CachedPlayerProfile,
   type PlayerProfileCacheMetrics,
 } from './player-profile-cache.js';
+
+export {
+  buildRelationshipCacheKey,
+  getCachedRelationships,
+  setCachedRelationships,
+  invalidateRelationshipCache,
+  invalidateBothPlayersRelationshipCache,
+  isRelationshipCacheHealthy,
+  getRelationshipCacheMetrics,
+  resetRelationshipCacheMetrics,
+  type CachedRelationship,
+  type CachedRelationshipState,
+  type RelationshipCacheMetrics,
+} from './relationship-cache.js';
