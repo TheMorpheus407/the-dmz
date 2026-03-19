@@ -11,3 +11,5 @@ export * from './achievement-icon.js';
 export * from './endorsement-tags.js';
 export * from './endorsement.js';
 export * from './endorsement-decay.js';
+export * from './reputation-score.js';
+export * from './reputation-history.js';

@@ -323,6 +323,13 @@
       "when": 1775500000000,
       "tag": "0044_endorsements",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1775600000000,
+      "tag": "0045_reputation_system",
+      "breakpoints": true
     }
   ]
 }

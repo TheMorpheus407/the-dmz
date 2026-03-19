@@ -5,3 +5,5 @@ export * from './social-relationship.routes.js';
 export * from './social.plugin.js';
 export * from './endorsement.service.js';
 export * from './endorsement.routes.js';
+export * from './reputation.service.js';
+export * from './reputation.routes.js';
