@@ -111,3 +111,15 @@ export {
   createGameSessionEndedInvalidationEvent,
   type CacheInvalidationEvent,
 } from './cache-invalidation.js';
+
+export {
+  buildPlayerProfileCacheKey,
+  getCachedPlayerProfile,
+  setCachedPlayerProfile,
+  invalidatePlayerProfileCache,
+  isPlayerProfileCacheHealthy,
+  getPlayerProfileCacheMetrics,
+  resetPlayerProfileCacheMetrics,
+  type CachedPlayerProfile,
+  type PlayerProfileCacheMetrics,
+} from './player-profile-cache.js';

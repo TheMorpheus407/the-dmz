@@ -24,6 +24,7 @@ import { webhookPlugin } from './modules/webhooks/index.js';
 import { emailPlugin } from './modules/email/index.js';
 import { contentPlugin } from './modules/content/index.js';
 import { aiPipelinePlugin } from './modules/ai-pipeline/index.js';
+import { socialPlugin } from './modules/social/index.js';
 import { registerNotificationRoutes } from './modules/notification/index.js';
 import { xapiPlugin } from './modules/xapi/index.js';
 import {
@@ -64,6 +65,7 @@ const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }>
   aiPipeline: { plugin: aiPipelinePlugin, routePrefix: '/ai' },
   notification: { plugin: registerNotificationRoutes },
   xapi: { plugin: xapiPlugin, routePrefix: '/api/v1/xapi' },
+  social: { plugin: socialPlugin, routePrefix: '/api/v1' },
 };
 
 const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {

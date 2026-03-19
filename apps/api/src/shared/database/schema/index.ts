@@ -18,3 +18,4 @@ export * from '../../../db/schema/audit/index.js';
 export * from '../../../db/schema/feature-flags/index.js';
 export * from '../../../db/schema/compliance/index.js';
 export * from '../../../db/schema/billing/index.js';
+export * from '../../../db/schema/social/index.js';

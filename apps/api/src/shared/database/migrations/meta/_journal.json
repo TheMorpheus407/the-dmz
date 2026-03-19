@@ -260,6 +260,13 @@
       "when": 1774600000000,
       "tag": "0035_audit_log_enhanced",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1774700000000,
+      "tag": "0036_social_player_profiles",
+      "breakpoints": true
     }
   ]
 }

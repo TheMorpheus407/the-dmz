@@ -1,0 +1,15 @@
+import fp from 'fastify-plugin';
+
+import { playerProfilesRoutes } from './player-profiles.routes.js';
+
+import type { FastifyInstance } from 'fastify';
+import type { AppConfig } from '../../config.js';
+
+async function registerSocialPlugin(fastify: FastifyInstance, config: AppConfig): Promise<void> {
+  fastify.register(playerProfilesRoutes, config);
+}
+
+export const socialPlugin = fp(registerSocialPlugin, {
+  name: 'social',
+  dependencies: ['auth', 'eventBus'],
+});

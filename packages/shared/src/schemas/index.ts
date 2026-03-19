@@ -13,4 +13,5 @@ export * from './mfa.schema.js';
 export * from './onboarding.schema.js';
 export * from './password-recovery.schema.js';
 export * from './preferences.schema.js';
+export * from './social.schema.js';
 export * from './taxonomy.schema.js';
