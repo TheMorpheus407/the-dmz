@@ -604,6 +604,9 @@ const buildRateLimitPluginOptions = (
   };
 
   const rateLimitMaxGenerator = (request: FastifyRequest): number => {
+    if (request.apiKeyAuth?.rateLimitRequestsPerWindow !== undefined) {
+      return request.apiKeyAuth.rateLimitRequestsPerWindow;
+    }
     const effectivePolicy = request.effectiveQuotaPolicy;
     if (effectivePolicy) {
       return Math.min(effectivePolicy.requestsPerMinute, config.RATE_LIMIT_MAX);
@@ -612,6 +615,9 @@ const buildRateLimitPluginOptions = (
   };
 
   const rateLimitTimeWindowGenerator = (request: FastifyRequest): number => {
+    if (request.apiKeyAuth?.rateLimitWindowMs !== undefined) {
+      return request.apiKeyAuth.rateLimitWindowMs;
+    }
     const effectivePolicy = request.effectiveQuotaPolicy;
     if (effectivePolicy) {
       return config.RATE_LIMIT_WINDOW_MS;

@@ -4668,6 +4668,17 @@ export const apiKeyListResponseJsonSchema = {
               },
             ],
           },
+          serviceAccountId: {
+            anyOf: [
+              {
+                type: 'string',
+                format: 'uuid',
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
           tenantId: {
             type: 'string',
             format: 'uuid',
@@ -4759,6 +4770,54 @@ export const apiKeyListResponseJsonSchema = {
               },
             ],
           },
+          ipAllowlist: {
+            anyOf: [
+              {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
+          refererRestrictions: {
+            anyOf: [
+              {
+                type: 'array',
+                items: {
+                  type: 'string',
+                },
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
+          rateLimitRequestsPerWindow: {
+            anyOf: [
+              {
+                type: 'integer',
+                exclusiveMinimum: 0,
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
+          rateLimitWindowMs: {
+            anyOf: [
+              {
+                type: 'integer',
+                exclusiveMinimum: 0,
+              },
+              {
+                type: 'null',
+              },
+            ],
+          },
         },
         required: [
           'id',
@@ -4767,6 +4826,7 @@ export const apiKeyListResponseJsonSchema = {
           'type',
           'ownerType',
           'ownerId',
+          'serviceAccountId',
           'tenantId',
           'scopes',
           'status',
@@ -4778,6 +4838,10 @@ export const apiKeyListResponseJsonSchema = {
           'createdAt',
           'updatedAt',
           'revokedAt',
+          'ipAllowlist',
+          'refererRestrictions',
+          'rateLimitRequestsPerWindow',
+          'rateLimitWindowMs',
         ],
         additionalProperties: false,
       },
@@ -4817,6 +4881,10 @@ export const createApiKeyJsonSchema = {
       type: 'string',
       format: 'uuid',
     },
+    serviceAccountId: {
+      type: 'string',
+      format: 'uuid',
+    },
     scopes: {
       type: 'array',
       items: {
@@ -4852,6 +4920,26 @@ export const createApiKeyJsonSchema = {
     metadata: {
       type: 'object',
       additionalProperties: {},
+    },
+    ipAllowlist: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    refererRestrictions: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+    rateLimitRequestsPerWindow: {
+      type: 'integer',
+      exclusiveMinimum: 0,
+    },
+    rateLimitWindowMs: {
+      type: 'integer',
+      exclusiveMinimum: 0,
     },
   },
   required: ['name', 'scopes'],
@@ -4909,6 +4997,17 @@ export const apiKeyResponseJsonSchema = {
       enum: ['service', 'user'],
     },
     ownerId: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'uuid',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    serviceAccountId: {
       anyOf: [
         {
           type: 'string',
@@ -5010,6 +5109,54 @@ export const apiKeyResponseJsonSchema = {
         },
       ],
     },
+    ipAllowlist: {
+      anyOf: [
+        {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    refererRestrictions: {
+      anyOf: [
+        {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    rateLimitRequestsPerWindow: {
+      anyOf: [
+        {
+          type: 'integer',
+          exclusiveMinimum: 0,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    rateLimitWindowMs: {
+      anyOf: [
+        {
+          type: 'integer',
+          exclusiveMinimum: 0,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
   },
   required: [
     'id',
@@ -5018,6 +5165,7 @@ export const apiKeyResponseJsonSchema = {
     'type',
     'ownerType',
     'ownerId',
+    'serviceAccountId',
     'tenantId',
     'scopes',
     'status',
@@ -5029,6 +5177,10 @@ export const apiKeyResponseJsonSchema = {
     'createdAt',
     'updatedAt',
     'revokedAt',
+    'ipAllowlist',
+    'refererRestrictions',
+    'rateLimitRequestsPerWindow',
+    'rateLimitWindowMs',
   ],
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',
@@ -5059,6 +5211,17 @@ export const apiKeyWithSecretJsonSchema = {
       enum: ['service', 'user'],
     },
     ownerId: {
+      anyOf: [
+        {
+          type: 'string',
+          format: 'uuid',
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    serviceAccountId: {
       anyOf: [
         {
           type: 'string',
@@ -5165,6 +5328,54 @@ export const apiKeyWithSecretJsonSchema = {
       minLength: 32,
       maxLength: 64,
     },
+    ipAllowlist: {
+      anyOf: [
+        {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    refererRestrictions: {
+      anyOf: [
+        {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    rateLimitRequestsPerWindow: {
+      anyOf: [
+        {
+          type: 'integer',
+          exclusiveMinimum: 0,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
+    rateLimitWindowMs: {
+      anyOf: [
+        {
+          type: 'integer',
+          exclusiveMinimum: 0,
+        },
+        {
+          type: 'null',
+        },
+      ],
+    },
   },
   required: [
     'id',
@@ -5173,6 +5384,7 @@ export const apiKeyWithSecretJsonSchema = {
     'type',
     'ownerType',
     'ownerId',
+    'serviceAccountId',
     'tenantId',
     'scopes',
     'status',
@@ -5185,6 +5397,10 @@ export const apiKeyWithSecretJsonSchema = {
     'updatedAt',
     'revokedAt',
     'secret',
+    'ipAllowlist',
+    'refererRestrictions',
+    'rateLimitRequestsPerWindow',
+    'rateLimitWindowMs',
   ],
   additionalProperties: false,
   $schema: 'http://json-schema.org/draft-07/schema#',

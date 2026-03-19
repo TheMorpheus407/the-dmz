@@ -13,6 +13,8 @@ import {
 import { tenants } from '../../../shared/database/schema/tenants.js';
 import { users as usersTable } from '../../../shared/database/schema/users.js';
 
+import { serviceAccounts } from './service-accounts.js';
+
 const authSchema = pgSchema('auth');
 
 export const apiKeys = authSchema.table(
@@ -32,6 +34,9 @@ export const apiKeys = authSchema.table(
     type: varchar('type', { length: 16 }).notNull(),
     ownerType: varchar('owner_type', { length: 16 }).notNull(),
     ownerId: uuid('owner_id').references(() => usersTable.userId, { onDelete: 'set null' }),
+    serviceAccountId: uuid('service_account_id').references(() => serviceAccounts.id, {
+      onDelete: 'set null',
+    }),
     secretHash: varchar('secret_hash', { length: 255 }).notNull(),
     previousSecretHash: varchar('previous_secret_hash', { length: 255 }),
     scopes: jsonb('scopes').notNull(),
@@ -45,6 +50,10 @@ export const apiKeys = authSchema.table(
       mode: 'date',
     }),
     lastUsedAt: timestamp('last_used_at', { withTimezone: true, mode: 'date' }),
+    ipAllowlist: jsonb('ip_allowlist'),
+    refererRestrictions: jsonb('referer_restrictions'),
+    rateLimitRequestsPerWindow: jsonb('rate_limit_requests_per_window'),
+    rateLimitWindowMs: jsonb('rate_limit_window_ms'),
     createdBy: uuid('created_by')
       .notNull()
       .references(() => usersTable.userId, { onDelete: 'restrict' }),
@@ -62,6 +71,7 @@ export const apiKeys = authSchema.table(
     tenantNameIdx: index('auth_api_keys_tenant_name_idx').on(table.tenantId, table.name),
     statusIdx: index('auth_api_keys_status_idx').on(table.status),
     ownerIdIdx: index('auth_api_keys_owner_id_idx').on(table.ownerId),
+    serviceAccountIdIdx: index('auth_api_keys_service_account_id_idx').on(table.serviceAccountId),
     createdByIdx: index('auth_api_keys_created_by_idx').on(table.createdBy),
     revokedAtIdx: index('auth_api_keys_revoked_at_idx').on(table.revokedAt),
     expiresAtIdx: index('auth_api_keys_expires_at_idx').on(table.expiresAt),

@@ -105,6 +105,7 @@ async function createApiKey(
       type: input.type ?? CredentialType.API_KEY,
       ownerType: input.ownerType ?? CredentialOwnerType.SERVICE,
       ownerId: input.ownerId ?? null,
+      serviceAccountId: input.serviceAccountId ?? null,
       secretHash,
       scopes: input.scopes as unknown as string,
       status: CredentialStatus.ACTIVE,
@@ -113,6 +114,10 @@ async function createApiKey(
       rotationGraceEndsAt,
       createdBy,
       metadata: input.metadata ?? null,
+      ipAllowlist: input.ipAllowlist ?? null,
+      refererRestrictions: input.refererRestrictions ?? null,
+      rateLimitRequestsPerWindow: input.rateLimitRequestsPerWindow ?? null,
+      rateLimitWindowMs: input.rateLimitWindowMs ?? null,
     })
     .returning();
 
@@ -238,12 +243,11 @@ async function validateApiKey(
   }
 
   if (key.status === CredentialStatus.REVOKED) {
-    return {
-      valid: false,
+    const baseResult = {
+      valid: false as const,
       keyId: key.keyId,
       tenantId: key.tenantId,
       ownerType: key.ownerType as CredentialOwnerType,
-      ...(key.ownerId !== null && { ownerId: key.ownerId }),
       scopes: key.scopes as readonly ApiKeyScope[],
       status: key.status as CredentialStatus,
       error: {
@@ -251,6 +255,30 @@ async function validateApiKey(
         message: 'API key has been revoked',
       },
     };
+    const additionalProps: Partial<ApiKeyValidationResult> = {};
+    if (key.ownerId !== null) {
+      additionalProps.ownerId = key.ownerId;
+    }
+    if (key.serviceAccountId !== null) {
+      additionalProps.serviceAccountId = key.serviceAccountId;
+    }
+    const parsedIpAllowlist = parseJsonField<readonly string[]>(key.ipAllowlist);
+    if (parsedIpAllowlist !== undefined) {
+      additionalProps.ipAllowlist = parsedIpAllowlist;
+    }
+    const parsedReferer = parseJsonField<readonly string[]>(key.refererRestrictions);
+    if (parsedReferer !== undefined) {
+      additionalProps.refererRestrictions = parsedReferer;
+    }
+    const parsedRateLimitRequests = parseJsonField<number>(key.rateLimitRequestsPerWindow);
+    if (parsedRateLimitRequests !== undefined) {
+      additionalProps.rateLimitRequestsPerWindow = parsedRateLimitRequests;
+    }
+    const parsedRateLimitWindow = parseJsonField<number>(key.rateLimitWindowMs);
+    if (parsedRateLimitWindow !== undefined) {
+      additionalProps.rateLimitWindowMs = parsedRateLimitWindow;
+    }
+    return { ...baseResult, ...additionalProps };
   }
 
   if (key.status === CredentialStatus.EXPIRED || (key.expiresAt && key.expiresAt < new Date())) {
@@ -259,12 +287,11 @@ async function validateApiKey(
       .set({ status: CredentialStatus.EXPIRED, updatedAt: new Date() })
       .where(eq(apiKeys.id, key.id));
 
-    return {
+    const result: ApiKeyValidationResult = {
       valid: false,
       keyId: key.keyId,
       tenantId: key.tenantId,
       ownerType: key.ownerType as CredentialOwnerType,
-      ...(key.ownerId !== null && { ownerId: key.ownerId }),
       scopes: key.scopes as readonly ApiKeyScope[],
       status: CredentialStatus.EXPIRED,
       error: {
@@ -272,6 +299,29 @@ async function validateApiKey(
         message: 'API key has expired',
       },
     };
+    if (key.ownerId !== null) {
+      result.ownerId = key.ownerId;
+    }
+    if (key.serviceAccountId !== null) {
+      result.serviceAccountId = key.serviceAccountId;
+    }
+    const parsedIpAllowlist = parseJsonField<readonly string[]>(key.ipAllowlist);
+    if (parsedIpAllowlist !== undefined) {
+      result.ipAllowlist = parsedIpAllowlist;
+    }
+    const parsedReferer = parseJsonField<readonly string[]>(key.refererRestrictions);
+    if (parsedReferer !== undefined) {
+      result.refererRestrictions = parsedReferer;
+    }
+    const parsedRateLimitRequests = parseJsonField<number>(key.rateLimitRequestsPerWindow);
+    if (parsedRateLimitRequests !== undefined) {
+      result.rateLimitRequestsPerWindow = parsedRateLimitRequests;
+    }
+    const parsedRateLimitWindow = parseJsonField<number>(key.rateLimitWindowMs);
+    if (parsedRateLimitWindow !== undefined) {
+      result.rateLimitWindowMs = parsedRateLimitWindow;
+    }
+    return result;
   }
 
   if (
@@ -284,12 +334,11 @@ async function validateApiKey(
       .set({ status: CredentialStatus.EXPIRED, updatedAt: new Date() })
       .where(eq(apiKeys.id, key.id));
 
-    return {
+    const result: ApiKeyValidationResult = {
       valid: false,
       keyId: key.keyId,
       tenantId: key.tenantId,
       ownerType: key.ownerType as CredentialOwnerType,
-      ...(key.ownerId !== null && { ownerId: key.ownerId }),
       scopes: key.scopes as readonly ApiKeyScope[],
       status: CredentialStatus.EXPIRED,
       error: {
@@ -297,18 +346,63 @@ async function validateApiKey(
         message: 'API key rotation grace period has expired',
       },
     };
+    if (key.ownerId !== null) {
+      result.ownerId = key.ownerId;
+    }
+    if (key.serviceAccountId !== null) {
+      result.serviceAccountId = key.serviceAccountId;
+    }
+    const parsedIpAllowlist = parseJsonField<readonly string[]>(key.ipAllowlist);
+    if (parsedIpAllowlist !== undefined) {
+      result.ipAllowlist = parsedIpAllowlist;
+    }
+    const parsedReferer = parseJsonField<readonly string[]>(key.refererRestrictions);
+    if (parsedReferer !== undefined) {
+      result.refererRestrictions = parsedReferer;
+    }
+    const parsedRateLimitRequests = parseJsonField<number>(key.rateLimitRequestsPerWindow);
+    if (parsedRateLimitRequests !== undefined) {
+      result.rateLimitRequestsPerWindow = parsedRateLimitRequests;
+    }
+    const parsedRateLimitWindow = parseJsonField<number>(key.rateLimitWindowMs);
+    if (parsedRateLimitWindow !== undefined) {
+      result.rateLimitWindowMs = parsedRateLimitWindow;
+    }
+    return result;
   }
 
   if (key.status === CredentialStatus.ROTATING && key.previousSecretHash === secretHash) {
-    return {
+    const result: ApiKeyValidationResult = {
       valid: true,
       keyId: key.keyId,
       tenantId: key.tenantId,
       ownerType: key.ownerType as CredentialOwnerType,
-      ...(key.ownerId !== null && { ownerId: key.ownerId }),
       scopes: key.scopes as readonly ApiKeyScope[],
       status: CredentialStatus.ROTATING,
     };
+    if (key.ownerId !== null) {
+      result.ownerId = key.ownerId;
+    }
+    if (key.serviceAccountId !== null) {
+      result.serviceAccountId = key.serviceAccountId;
+    }
+    const parsedIpAllowlist = parseJsonField<readonly string[]>(key.ipAllowlist);
+    if (parsedIpAllowlist !== undefined) {
+      result.ipAllowlist = parsedIpAllowlist;
+    }
+    const parsedReferer = parseJsonField<readonly string[]>(key.refererRestrictions);
+    if (parsedReferer !== undefined) {
+      result.refererRestrictions = parsedReferer;
+    }
+    const parsedRateLimitRequests = parseJsonField<number>(key.rateLimitRequestsPerWindow);
+    if (parsedRateLimitRequests !== undefined) {
+      result.rateLimitRequestsPerWindow = parsedRateLimitRequests;
+    }
+    const parsedRateLimitWindow = parseJsonField<number>(key.rateLimitWindowMs);
+    if (parsedRateLimitWindow !== undefined) {
+      result.rateLimitWindowMs = parsedRateLimitWindow;
+    }
+    return result;
   }
 
   await db
@@ -316,15 +410,37 @@ async function validateApiKey(
     .set({ lastUsedAt: new Date(), updatedAt: new Date() })
     .where(eq(apiKeys.id, key.id));
 
-  return {
+  const result: ApiKeyValidationResult = {
     valid: true,
     keyId: key.keyId,
     tenantId: key.tenantId,
     ownerType: key.ownerType as CredentialOwnerType,
-    ...(key.ownerId !== null && { ownerId: key.ownerId }),
     scopes: key.scopes as readonly ApiKeyScope[],
     status: key.status as CredentialStatus,
   };
+  if (key.ownerId !== null) {
+    result.ownerId = key.ownerId;
+  }
+  if (key.serviceAccountId !== null) {
+    result.serviceAccountId = key.serviceAccountId;
+  }
+  const parsedIpAllowlist = parseJsonField<readonly string[]>(key.ipAllowlist);
+  if (parsedIpAllowlist !== undefined) {
+    result.ipAllowlist = parsedIpAllowlist;
+  }
+  const parsedReferer = parseJsonField<readonly string[]>(key.refererRestrictions);
+  if (parsedReferer !== undefined) {
+    result.refererRestrictions = parsedReferer;
+  }
+  const parsedRateLimitRequests = parseJsonField<number>(key.rateLimitRequestsPerWindow);
+  if (parsedRateLimitRequests !== undefined) {
+    result.rateLimitRequestsPerWindow = parsedRateLimitRequests;
+  }
+  const parsedRateLimitWindow = parseJsonField<number>(key.rateLimitWindowMs);
+  if (parsedRateLimitWindow !== undefined) {
+    result.rateLimitWindowMs = parsedRateLimitWindow;
+  }
+  return result;
 }
 
 async function rotateApiKey(
@@ -455,6 +571,7 @@ interface DbApiKey {
   type: string;
   ownerType: string;
   ownerId: string | null;
+  serviceAccountId: string | null;
   secretHash: string;
   previousSecretHash: string | null;
   scopes: unknown;
@@ -470,6 +587,24 @@ interface DbApiKey {
   revokedBy: string | null;
   revocationReason: string | null;
   metadata: unknown;
+  ipAllowlist: unknown;
+  refererRestrictions: unknown;
+  rateLimitRequestsPerWindow: unknown;
+  rateLimitWindowMs: unknown;
+}
+
+function parseJsonField<T>(field: unknown): T | undefined {
+  if (field === null || field === undefined) {
+    return undefined;
+  }
+  if (typeof field === 'string') {
+    try {
+      return JSON.parse(field) as T;
+    } catch {
+      return undefined;
+    }
+  }
+  return field as T;
 }
 
 function mapDbToResponse(key: DbApiKey): ApiKeyResponse {
@@ -480,6 +615,7 @@ function mapDbToResponse(key: DbApiKey): ApiKeyResponse {
     type: key.type as CredentialType,
     ownerType: key.ownerType as CredentialOwnerType,
     ownerId: key.ownerId,
+    serviceAccountId: key.serviceAccountId,
     tenantId: key.tenantId,
     scopes:
       typeof key.scopes === 'string'
@@ -494,6 +630,10 @@ function mapDbToResponse(key: DbApiKey): ApiKeyResponse {
     createdAt: key.createdAt,
     updatedAt: key.updatedAt,
     revokedAt: key.revokedAt,
+    ipAllowlist: parseJsonField<readonly string[]>(key.ipAllowlist) ?? null,
+    refererRestrictions: parseJsonField<readonly string[]>(key.refererRestrictions) ?? null,
+    rateLimitRequestsPerWindow: parseJsonField<number>(key.rateLimitRequestsPerWindow) ?? null,
+    rateLimitWindowMs: parseJsonField<number>(key.rateLimitWindowMs) ?? null,
   };
 }
 

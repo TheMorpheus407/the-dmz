@@ -27113,6 +27113,17 @@
                               }
                             ]
                           },
+                          "serviceAccountId": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
                           "tenantId": {
                             "type": "string",
                             "format": "uuid"
@@ -27210,6 +27221,54 @@
                                 "type": "null"
                               }
                             ]
+                          },
+                          "ipAllowlist": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "refererRestrictions": {
+                            "anyOf": [
+                              {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "rateLimitRequestsPerWindow": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "rateLimitWindowMs": {
+                            "anyOf": [
+                              {
+                                "type": "integer",
+                                "exclusiveMinimum": 0
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
                           }
                         },
                         "required": [
@@ -27219,6 +27278,7 @@
                           "type",
                           "ownerType",
                           "ownerId",
+                          "serviceAccountId",
                           "tenantId",
                           "scopes",
                           "status",
@@ -27229,7 +27289,11 @@
                           "createdBy",
                           "createdAt",
                           "updatedAt",
-                          "revokedAt"
+                          "revokedAt",
+                          "ipAllowlist",
+                          "refererRestrictions",
+                          "rateLimitRequestsPerWindow",
+                          "rateLimitWindowMs"
                         ],
                         "additionalProperties": false
                       }
@@ -27277,6 +27341,10 @@
                     "type": "string",
                     "format": "uuid"
                   },
+                  "serviceAccountId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
                   "scopes": {
                     "type": "array",
                     "items": {
@@ -27319,6 +27387,26 @@
                   "metadata": {
                     "type": "object",
                     "additionalProperties": {}
+                  },
+                  "ipAllowlist": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "refererRestrictions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "rateLimitRequestsPerWindow": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "rateLimitWindowMs": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
                   }
                 },
                 "required": ["name", "scopes"],
@@ -27377,6 +27465,17 @@
                       "enum": ["service", "user"]
                     },
                     "ownerId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "serviceAccountId": {
                       "anyOf": [
                         {
                           "type": "string",
@@ -27484,6 +27583,54 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "ipAllowlist": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "refererRestrictions": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rateLimitRequestsPerWindow": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rateLimitWindowMs": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -27493,6 +27640,7 @@
                     "type",
                     "ownerType",
                     "ownerId",
+                    "serviceAccountId",
                     "tenantId",
                     "scopes",
                     "status",
@@ -27503,7 +27651,11 @@
                     "createdBy",
                     "createdAt",
                     "updatedAt",
-                    "revokedAt"
+                    "revokedAt",
+                    "ipAllowlist",
+                    "refererRestrictions",
+                    "rateLimitRequestsPerWindow",
+                    "rateLimitWindowMs"
                   ],
                   "additionalProperties": false
                 }
@@ -27592,6 +27744,17 @@
                       "enum": ["service", "user"]
                     },
                     "ownerId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "serviceAccountId": {
                       "anyOf": [
                         {
                           "type": "string",
@@ -27704,6 +27867,54 @@
                       "type": "string",
                       "minLength": 32,
                       "maxLength": 64
+                    },
+                    "ipAllowlist": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "refererRestrictions": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rateLimitRequestsPerWindow": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rateLimitWindowMs": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -27713,6 +27924,7 @@
                     "type",
                     "ownerType",
                     "ownerId",
+                    "serviceAccountId",
                     "tenantId",
                     "scopes",
                     "status",
@@ -27724,7 +27936,11 @@
                     "createdAt",
                     "updatedAt",
                     "revokedAt",
-                    "secret"
+                    "secret",
+                    "ipAllowlist",
+                    "refererRestrictions",
+                    "rateLimitRequestsPerWindow",
+                    "rateLimitWindowMs"
                   ],
                   "additionalProperties": false
                 }
@@ -27794,6 +28010,17 @@
                       "enum": ["service", "user"]
                     },
                     "ownerId": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "serviceAccountId": {
                       "anyOf": [
                         {
                           "type": "string",
@@ -27901,6 +28128,54 @@
                           "type": "null"
                         }
                       ]
+                    },
+                    "ipAllowlist": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "refererRestrictions": {
+                      "anyOf": [
+                        {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rateLimitRequestsPerWindow": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    },
+                    "rateLimitWindowMs": {
+                      "anyOf": [
+                        {
+                          "type": "integer",
+                          "exclusiveMinimum": 0
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
                     }
                   },
                   "required": [
@@ -27910,6 +28185,7 @@
                     "type",
                     "ownerType",
                     "ownerId",
+                    "serviceAccountId",
                     "tenantId",
                     "scopes",
                     "status",
@@ -27920,7 +28196,11 @@
                     "createdBy",
                     "createdAt",
                     "updatedAt",
-                    "revokedAt"
+                    "revokedAt",
+                    "ipAllowlist",
+                    "refererRestrictions",
+                    "rateLimitRequestsPerWindow",
+                    "rateLimitWindowMs"
                   ],
                   "additionalProperties": false
                 }

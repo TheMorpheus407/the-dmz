@@ -220,6 +220,7 @@ export interface ApiKeyResponse {
   type: CredentialType;
   ownerType: CredentialOwnerType;
   ownerId: string | null;
+  serviceAccountId: string | null;
   tenantId: string;
   scopes: readonly ApiKeyScope[];
   status: CredentialStatus;
@@ -231,6 +232,10 @@ export interface ApiKeyResponse {
   createdAt: Date;
   updatedAt: Date;
   revokedAt: Date | null;
+  ipAllowlist: readonly string[] | null;
+  refererRestrictions: readonly string[] | null;
+  rateLimitRequestsPerWindow: number | null;
+  rateLimitWindowMs: number | null;
 }
 
 export interface ApiKeyWithSecret extends ApiKeyResponse {
@@ -244,6 +249,7 @@ export const apiKeyResponseSchema: z.ZodSchema<ApiKeyResponse> = z.object({
   type: credentialTypeSchema,
   ownerType: credentialOwnerTypeSchema,
   ownerId: z.string().uuid().nullable(),
+  serviceAccountId: z.string().uuid().nullable(),
   tenantId: z.string().uuid(),
   scopes: apiKeyScopesSchema,
   status: credentialStatusSchema,
@@ -255,6 +261,10 @@ export const apiKeyResponseSchema: z.ZodSchema<ApiKeyResponse> = z.object({
   createdAt: z.date(),
   updatedAt: z.date(),
   revokedAt: z.date().nullable(),
+  ipAllowlist: z.array(z.string()).nullable(),
+  refererRestrictions: z.array(z.string()).nullable(),
+  rateLimitRequestsPerWindow: z.number().int().positive().nullable(),
+  rateLimitWindowMs: z.number().int().positive().nullable(),
 });
 
 export const apiKeyWithSecretSchema: z.ZodSchema<ApiKeyWithSecret> = z.object({
@@ -264,6 +274,7 @@ export const apiKeyWithSecretSchema: z.ZodSchema<ApiKeyWithSecret> = z.object({
   type: credentialTypeSchema,
   ownerType: credentialOwnerTypeSchema,
   ownerId: z.string().uuid().nullable(),
+  serviceAccountId: z.string().uuid().nullable(),
   tenantId: z.string().uuid(),
   scopes: apiKeyScopesSchema,
   status: credentialStatusSchema,
@@ -276,6 +287,10 @@ export const apiKeyWithSecretSchema: z.ZodSchema<ApiKeyWithSecret> = z.object({
   updatedAt: z.date(),
   revokedAt: z.date().nullable(),
   secret: z.string().min(API_KEY_MIN_LENGTH).max(API_KEY_MAX_LENGTH),
+  ipAllowlist: z.array(z.string()).nullable(),
+  refererRestrictions: z.array(z.string()).nullable(),
+  rateLimitRequestsPerWindow: z.number().int().positive().nullable(),
+  rateLimitWindowMs: z.number().int().positive().nullable(),
 });
 
 export const apiKeyListResponseSchema = z.object({
@@ -396,8 +411,13 @@ export interface ApiKeyValidationResult {
   tenantId?: string;
   ownerType?: CredentialOwnerType;
   ownerId?: string;
+  serviceAccountId?: string;
   scopes?: readonly ApiKeyScope[];
   status?: CredentialStatus;
+  ipAllowlist?: readonly string[];
+  refererRestrictions?: readonly string[];
+  rateLimitRequestsPerWindow?: number;
+  rateLimitWindowMs?: number;
   error?: {
     code: string;
     message: string;
@@ -420,6 +440,7 @@ export const createApiKeySchema = z.object({
   type: credentialTypeSchema.optional().default(CredentialType.API_KEY),
   ownerType: credentialOwnerTypeSchema.optional().default(CredentialOwnerType.SERVICE),
   ownerId: z.string().uuid().optional(),
+  serviceAccountId: z.string().uuid().optional(),
   scopes: apiKeyScopesSchema.min(1),
   expiresAt: z.string().datetime().optional(),
   rotationGracePeriodDays: z
@@ -429,6 +450,10 @@ export const createApiKeySchema = z.object({
     .max(MAX_ROTATION_GRACE_PERIOD_DAYS)
     .optional(),
   metadata: z.record(z.unknown()).optional(),
+  ipAllowlist: z.array(z.string()).optional(),
+  refererRestrictions: z.array(z.string()).optional(),
+  rateLimitRequestsPerWindow: z.number().int().positive().optional(),
+  rateLimitWindowMs: z.number().int().positive().optional(),
 });
 
 export type CreateApiKeyInput = z.infer<typeof createApiKeySchema>;
