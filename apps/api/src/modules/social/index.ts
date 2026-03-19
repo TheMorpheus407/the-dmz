@@ -3,3 +3,5 @@ export * from './player-profiles.routes.js';
 export * from './social-relationship.service.js';
 export * from './social-relationship.routes.js';
 export * from './social.plugin.js';
+export * from './endorsement.service.js';
+export * from './endorsement.routes.js';

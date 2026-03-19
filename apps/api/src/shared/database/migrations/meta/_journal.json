@@ -316,6 +316,13 @@
       "when": 1775400000000,
       "tag": "0043_achievements",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1775500000000,
+      "tag": "0044_endorsements",
+      "breakpoints": true
     }
   ]
 }
