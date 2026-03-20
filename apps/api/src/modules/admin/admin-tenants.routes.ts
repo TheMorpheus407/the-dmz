@@ -1,5 +1,9 @@
 import { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify';
 
+import { authGuard, requireRole } from '../../shared/middleware/authorization.js';
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { rateLimiter } from '../../shared/middleware/rate-limiter.js';
+
 import {
   createTenant,
   initializeTenant,
@@ -19,9 +23,12 @@ export const registerAdminTenantRoutes = async (fastify: FastifyInstance): Promi
   fastify.post<{ Body: CreateTenantRequest }>(
     '/admin/tenants',
     {
-      config: {
-        rateLimit: false,
-      },
+      preHandler: [
+        authGuard,
+        tenantContext,
+        requireRole('super_admin'),
+        rateLimiter({ max: 10, timeWindow: '1 minute' }),
+      ],
       schema: {
         body: {
           type: 'object',
@@ -116,9 +123,12 @@ export const registerAdminTenantRoutes = async (fastify: FastifyInstance): Promi
   fastify.post<{ Params: { id: string }; Body: InitializeTenantRequest }>(
     '/admin/tenants/:id/initialize',
     {
-      config: {
-        rateLimit: false,
-      },
+      preHandler: [
+        authGuard,
+        tenantContext,
+        requireRole('super_admin'),
+        rateLimiter({ max: 10, timeWindow: '1 minute' }),
+      ],
       schema: {
         params: {
           type: 'object',
@@ -210,9 +220,7 @@ export const registerAdminTenantRoutes = async (fastify: FastifyInstance): Promi
   fastify.get<{ Params: { id: string } }>(
     '/admin/tenants/:id/status',
     {
-      config: {
-        rateLimit: false,
-      },
+      preHandler: [authGuard, tenantContext, requireRole('super_admin')],
       schema: {
         params: {
           type: 'object',
