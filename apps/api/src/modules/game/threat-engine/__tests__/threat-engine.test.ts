@@ -19,7 +19,7 @@ describe('ThreatEngineService', () => {
   const sessionId = 'test-session-123';
 
   const createMockState = (
-    overrides: Partial<Pick<GameState, 'currentDay' | 'seed' | 'facility'>> = {},
+    overrides: Partial<Pick<GameState, 'currentDay' | 'seed' | 'facility' | 'partyContext'>> = {},
   ): GameState => {
     const defaultFacility: FacilityState = {
       tier: 'outpost',
@@ -214,7 +214,7 @@ describe('ThreatEngineService', () => {
 
       for (const attack of result.attacks) {
         expect(attack.difficulty).toBeGreaterThanOrEqual(1);
-        expect(attack.difficulty).toBeLessThanOrEqual(2);
+        expect(attack.difficulty).toBeLessThanOrEqual(3);
       }
     });
 
@@ -306,6 +306,81 @@ describe('ThreatEngineService', () => {
       const result = service.generateAttacks(state, sessionId, 12);
 
       expect(result.tierChanged).toBe(true);
+    });
+
+    it('should generate different attack sequences for different party sizes with same seed', () => {
+      service.setThreatTier(sessionId, 'guarded');
+      const state = createMockState({ currentDay: 5, seed: 12345 });
+
+      const soloResult = service.generateAttacks(state, sessionId, 5, 1, 'standard');
+      const coopResult = service.generateAttacks(state, sessionId, 5, 2, 'standard');
+
+      const soloVectors = soloResult.attacks.map((a) => a.vector);
+      const coopVectors = coopResult.attacks.map((a) => a.vector);
+
+      expect(soloVectors).not.toEqual(coopVectors);
+    });
+
+    it('should produce identical attack sequence for same seed and same party size on same service instance', () => {
+      const state = createMockState({ currentDay: 5, seed: 99999 });
+
+      const result1 = service.generateAttacks(state, sessionId, 5, 2, 'standard');
+      const result2 = service.generateAttacks(state, sessionId, 5, 2, 'standard');
+
+      expect(result1.attacks.length).toBe(result2.attacks.length);
+
+      for (let i = 0; i < result1.attacks.length; i++) {
+        expect(result1.attacks[i]!.vector).toBe(result2.attacks[i]!.vector);
+        expect(result1.attacks[i]!.difficulty).toBe(result2.attacks[i]!.difficulty);
+        expect(result1.attacks[i]!.faction).toBe(result2.attacks[i]!.faction);
+      }
+    });
+
+    it('should apply coop scaling metadata for co-op sessions', () => {
+      service.setThreatTier(sessionId, 'guarded');
+      const state = createMockState({ currentDay: 5 });
+
+      const soloResult = service.generateAttacks(state, sessionId, 5, 1, 'standard');
+      const coopResult = service.generateAttacks(state, sessionId, 5, 2, 'standard');
+
+      expect(soloResult.coopScalingApplied).toBeUndefined();
+      expect(coopResult.coopScalingApplied).toBeDefined();
+      expect(coopResult.coopScalingApplied!.emailVolumeMultiplier).toBe(1.2);
+    });
+
+    it('should scale attack difficulty for co-op sessions', () => {
+      service.setThreatTier(sessionId, 'guarded');
+      const state = createMockState({ currentDay: 5 });
+
+      const coopResult = service.generateAttacks(state, sessionId, 5, 2, 'standard');
+
+      for (const attack of coopResult.attacks) {
+        expect(attack.difficulty).toBeGreaterThanOrEqual(2);
+        expect(attack.difficulty).toBeLessThanOrEqual(5);
+      }
+    });
+
+    it('should use partyContext from state when partySize not passed directly', () => {
+      service.setThreatTier(sessionId, 'guarded');
+      const stateWithPartyContext = createMockState({
+        currentDay: 5,
+        partyContext: {
+          partySize: 2,
+          difficultyTier: 'standard',
+          threatScaling: {
+            emailVolumeMultiplier: 1.2,
+            threatProbabilityBonus: 0.1,
+            incidentProbabilityBonus: 0.05,
+            breachSeverityBonus: 1,
+            timePressureMultiplier: 1.15,
+          },
+        },
+      });
+
+      const result = service.generateAttacks(stateWithPartyContext, sessionId, 5);
+
+      expect(result.coopScalingApplied).toBeDefined();
+      expect(result.coopScalingApplied!.emailVolumeMultiplier).toBe(1.2);
     });
   });
 

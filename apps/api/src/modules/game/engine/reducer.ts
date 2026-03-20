@@ -914,10 +914,15 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
 
         const securityDeltas = aggregateSecurityDeltas(newState);
 
+        const partySize = state.partyContext?.partySize;
+        const difficultyTier = state.partyContext?.difficultyTier;
+
         const threatResult = threatEngine.generateAttacks(
           newState,
           sessionId,
           action.dayNumber,
+          partySize,
+          difficultyTier,
           securityDeltas,
         );
 
@@ -936,6 +941,7 @@ export const reduce = (state: GameState, action: GameActionPayload): ActionResul
             day: action.dayNumber,
             attacks: threatResult.attacks,
             threatTier: threatResult.newThreatTier,
+            coopScalingApplied: threatResult.coopScalingApplied,
           },
         });
 

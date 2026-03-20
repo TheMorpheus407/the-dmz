@@ -14,6 +14,10 @@ import {
   type GameState,
   rng,
   type RNGInstance,
+  getCoopScalingForPartySize,
+  calculateEffectiveScaling,
+  type PartyDifficultyTier,
+  type CoopThreatScaling,
 } from '@the-dmz/shared/game';
 
 export interface ThreatEngineConfig {
@@ -39,6 +43,7 @@ export interface ThreatGenerationResult {
   newThreatTier: ThreatTierLevel;
   tierChanged: boolean;
   narrativeMessage?: string;
+  coopScalingApplied: CoopThreatScaling | undefined;
 }
 
 export interface PlayerProfileUpdate {
@@ -196,15 +201,35 @@ export class ThreatEngineService {
     state: GameState,
     sessionId: string,
     dayNumber: number,
+    partySize?: number,
+    difficultyTier?: PartyDifficultyTier,
     securityDeltas?: AggregatedSecurityDeltas,
   ): ThreatGenerationResult {
     const tier = this.getThreatTier(sessionId);
     const tierConfig = THREAT_TIER_CONFIG[tier];
 
-    const seed = this.deriveThreatSeed(state.seed, dayNumber);
+    const effectivePartySize = partySize ?? state.partyContext?.partySize ?? 1;
+    const effectiveDifficultyTier =
+      difficultyTier ?? state.partyContext?.difficultyTier ?? 'standard';
+
+    const coopScaling = getCoopScalingForPartySize(effectivePartySize);
+    const effectiveScaling = calculateEffectiveScaling(coopScaling, effectiveDifficultyTier);
+
+    const seed = this.deriveThreatSeed(state.seed, dayNumber, effectivePartySize);
     const random = rng.create(seed);
 
-    const numAttacks = random.nextInt(tierConfig.attacksPerDayMin, tierConfig.attacksPerDayMax + 1);
+    let numAttacks: number;
+    if (effectivePartySize <= 1) {
+      numAttacks = random.nextInt(tierConfig.attacksPerDayMin, tierConfig.attacksPerDayMax + 1);
+    } else {
+      const scaledMin = Math.ceil(
+        tierConfig.attacksPerDayMin * effectiveScaling.emailVolumeMultiplier,
+      );
+      const scaledMax = Math.ceil(
+        tierConfig.attacksPerDayMax * effectiveScaling.emailVolumeMultiplier,
+      );
+      numAttacks = random.nextInt(scaledMin, Math.max(scaledMin, scaledMax));
+    }
 
     const attacks: GeneratedAttack[] = [];
     const playerProfile = this.getPlayerProfile(sessionId);
@@ -216,6 +241,7 @@ export class ThreatEngineService {
         ? attacks[attacks.length - 1]!.vector
         : null,
       securityDeltas,
+      effectiveScaling.threatProbabilityBonus,
     );
 
     for (let i = 0; i < numAttacks; i++) {
@@ -252,6 +278,7 @@ export class ThreatEngineService {
       attacks,
       newThreatTier: changed ? newThreatTier : tier,
       tierChanged: changed,
+      coopScalingApplied: effectivePartySize > 1 ? effectiveScaling : undefined,
     };
 
     if (changed) {
@@ -266,6 +293,7 @@ export class ThreatEngineService {
     playerProfile: PlayerBehaviorProfile | undefined,
     lastVector: AttackVector | null,
     securityDeltas?: AggregatedSecurityDeltas,
+    threatProbabilityBonus: number = 0,
   ): Record<AttackVector, number> {
     const weights: Record<AttackVector, number> = {} as Record<AttackVector, number>;
 
@@ -298,47 +326,59 @@ export class ThreatEngineService {
           case 'email_phishing':
             weight *= 1.0 - detectionRate * 0.7;
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'spear_phishing':
             weight *= 1.0 - detectionRate * 0.6;
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'bec':
             weight *= 1.0 - detectionRate * 0.5;
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'supply_chain':
             weight *= 1.0 + detectionRate * 0.5;
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'insider_threat':
             weight *= 1.0 + effectiveSecurityToolCoverage * 0.4;
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'apt_campaign':
             weight *= 1.0 + calculatePlayerCompetence(playerProfile) * 0.6;
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'zero_day':
             weight *= 1.0 + calculatePlayerCompetence(playerProfile) * 0.8;
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'brute_force':
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'ddos':
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'coordinated_attack':
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'whaling':
             weight *= 1.0 - detectionRate * 0.65;
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
           case 'credential_harvesting':
             weight *= 1.0 - detectionRate * 0.55;
             weight *= 1.0 + breachModifier;
+            weight *= 1.0 + threatProbabilityBonus;
             break;
         }
       }
@@ -376,8 +416,8 @@ export class ThreatEngineService {
     return filteredWeights[filteredWeights.length - 1]!.vector;
   }
 
-  private deriveThreatSeed(sessionSeed: number, dayNumber: number): bigint {
-    const combined = `${sessionSeed}-threat-${dayNumber}`;
+  private deriveThreatSeed(sessionSeed: number, dayNumber: number, partySize: number = 1): bigint {
+    const combined = `${sessionSeed}-threat-${dayNumber}-party${partySize}`;
     let hash = 0;
     for (let i = 0; i < combined.length; i++) {
       const char = combined.charCodeAt(i);

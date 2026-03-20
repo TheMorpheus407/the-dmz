@@ -8,6 +8,7 @@ import type {
 import type { EmailInstance, VerificationPacket } from '../game/email-instance.js';
 import type { GeneratedAttack } from '../game/threat-catalog.js';
 import type { BreachState } from '../game/breach.js';
+import type { CoopContext } from '../game/coop-scaling.js';
 
 export type { BreachState } from '../game/breach.js';
 
@@ -39,6 +40,7 @@ export interface GameState {
   whitelist: string[];
   analyticsState: AnalyticsState;
   sequenceNumber: number;
+  partyContext?: CoopContext;
   createdAt: string;
   updatedAt: string;
 }
