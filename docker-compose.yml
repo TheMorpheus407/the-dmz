@@ -19,7 +19,7 @@
 #
 # Monitoring:
 #   Prometheus: http://localhost:9090
-#   Grafana: http://localhost:3000 (admin/admin)
+#   Grafana: http://localhost:3000 (user: admin, password: set via GRAFANA_ADMIN_PASSWORD)
 #   Alertmanager: http://localhost:9093
 #
 # Backup:
@@ -218,8 +218,8 @@ services:
     ports:
       - '3000:3000'
     environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - ./docker/monitoring/grafana/provisioning:/etc/grafana/provisioning
