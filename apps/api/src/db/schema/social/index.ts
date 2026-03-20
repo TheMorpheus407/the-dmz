@@ -17,3 +17,4 @@ export * from './moderation-blocklist.js';
 export * from './moderation-report.js';
 export * from './moderation-action.js';
 export * from './rate-limit-config.js';
+export * from './player-consent.js';
