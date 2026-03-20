@@ -56,6 +56,7 @@ export const LOG_REDACTION_KEYS = [
   'cookie',
   'password',
   'passwordConfirm',
+  'creditcard',
   'token',
   'refreshToken',
   'accessToken',
@@ -70,7 +71,6 @@ export const LOG_REDACTION_KEYS = [
   'clientSecret',
   'client_secret',
   'x_refresh_token',
-  'x-api-key',
   'x-api-key',
   'set-cookie',
 ] as const;

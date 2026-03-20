@@ -1,3 +1,5 @@
+import { LOG_REDACTION_KEYS } from '@the-dmz/shared/contracts';
+
 import { createAuditLog } from './audit.service.js';
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
@@ -143,12 +145,12 @@ function extractResourceId(path: string): string | undefined {
   return match?.[0];
 }
 
-function sanitizeBody(body: unknown): unknown {
+export function sanitizeBody(body: unknown): unknown {
   if (typeof body !== 'object' || body === null) {
     return body;
   }
 
-  const sensitiveFields = ['password', 'secret', 'token', 'key', 'authorization', 'creditCard'];
+  const sensitiveFields: string[] = [...LOG_REDACTION_KEYS, 'key'];
   const sanitized = Array.isArray(body)
     ? Array.from(body as unknown[])
     : { ...(typeof body === 'object' && body !== null ? body : {}) };
