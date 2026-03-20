@@ -150,3 +150,16 @@ export {
   type CachedPresence,
   type PresenceCacheMetrics,
 } from './presence-cache.js';
+
+export {
+  buildPartyCacheKey,
+  getCachedParty,
+  setCachedParty,
+  deleteCachedParty,
+  isPartyCacheHealthy,
+  getPartyCacheMetrics,
+  resetPartyCacheMetrics,
+  type CachedParty,
+  type CachedPartyMember,
+  type PartyCacheMetrics,
+} from './party-cache.js';

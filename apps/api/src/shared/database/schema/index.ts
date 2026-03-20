@@ -20,3 +20,4 @@ export * from '../../../db/schema/feature-flags/index.js';
 export * from '../../../db/schema/compliance/index.js';
 export * from '../../../db/schema/billing/index.js';
 export * from '../../../db/schema/social/index.js';
+export * from '../../../db/schema/multiplayer/index.js';

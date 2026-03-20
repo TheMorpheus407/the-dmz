@@ -134,6 +134,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus', 'auth'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'multiplayer',
+      pluginPath: './modules/multiplayer/index.js',
+      routePrefix: '/api/v1',
+      dependencies: ['eventBus', 'auth'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 

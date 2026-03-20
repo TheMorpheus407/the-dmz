@@ -15,6 +15,7 @@ export const KEY_CATEGORIES = {
   AUTH_POLICY: 'auth-policy',
   GAME_STATE: 'game-state',
   PRESENCE: 'presence',
+  PARTY: 'party',
 } as const;
 
 export type RedisKeyCategory = (typeof KEY_CATEGORIES)[keyof typeof KEY_CATEGORIES];
@@ -37,6 +38,7 @@ export const DEFAULT_TTL_SECONDS: Record<RedisKeyCategory, number> = {
   [KEY_CATEGORIES.AUTH_POLICY]: 300,
   [KEY_CATEGORIES.GAME_STATE]: 1800,
   [KEY_CATEGORIES.PRESENCE]: 90,
+  [KEY_CATEGORIES.PARTY]: 1800,
 };
 
 export interface TenantScopedKeyOptions {
