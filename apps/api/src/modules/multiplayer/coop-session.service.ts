@@ -71,6 +71,7 @@ export interface SubmitProposalInput {
 export interface AuthorityActionInput {
   proposalId: string;
   action: 'confirm' | 'override';
+  rationale?: string | undefined;
   conflictReason?: string | undefined;
 }
 
@@ -735,6 +736,7 @@ export async function authorityOverride(
       authorityAction: 'override',
       conflictFlag: true,
       conflictReason: input.conflictReason ?? null,
+      rationale: input.rationale ?? null,
       resolvedAt: new Date(),
     })
     .where(eq(coopDecisionProposal.proposalId, input.proposalId));

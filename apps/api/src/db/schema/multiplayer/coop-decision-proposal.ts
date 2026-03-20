@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { boolean, index, pgSchema, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { boolean, index, pgSchema, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 import { playerProfiles } from '../social/player-profiles.js';
 
@@ -11,7 +11,14 @@ const coopSession = multiplayerSchema.table('coop_session', {
     .primaryKey(),
 });
 
-export const proposalStatuses = ['proposed', 'confirmed', 'overridden', 'withdrawn'] as const;
+export const proposalStatuses = [
+  'proposed',
+  'confirmed',
+  'overridden',
+  'withdrawn',
+  'expired',
+  'consensus',
+] as const;
 export type ProposalStatus = (typeof proposalStatuses)[number];
 
 export const authorityActions = ['confirm', 'override'] as const;
@@ -44,6 +51,8 @@ export const coopDecisionProposal = multiplayerSchema.table(
     authorityAction: varchar('authority_action', { length: 20 }),
     conflictFlag: boolean('conflict_flag').notNull().default(false),
     conflictReason: varchar('conflict_reason', { length: 40 }),
+    rationale: text('rationale'),
+    expiredAt: timestamp('expired_at', { withTimezone: true, mode: 'date' }),
     proposedAt: timestamp('proposed_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),

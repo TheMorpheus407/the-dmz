@@ -6,7 +6,14 @@ export type CoopRole = (typeof coopRoles)[number];
 export const coopSessionStatuses = ['lobby', 'active', 'paused', 'completed', 'abandoned'] as const;
 export type CoopSessionStatus = (typeof coopSessionStatuses)[number];
 
-export const proposalStatuses = ['proposed', 'confirmed', 'overridden', 'withdrawn'] as const;
+export const proposalStatuses = [
+  'proposed',
+  'confirmed',
+  'overridden',
+  'withdrawn',
+  'expired',
+  'consensus',
+] as const;
 export type ProposalStatus = (typeof proposalStatuses)[number];
 
 export const authorityActions = ['confirm', 'override'] as const;
@@ -60,6 +67,7 @@ export const coopDecisionProposalSchema = z
     authorityAction: z.enum(authorityActions).nullable(),
     conflictFlag: z.boolean().default(false),
     conflictReason: z.enum(conflictReasons).nullable(),
+    rationale: z.string().min(10).max(500).nullable(),
     proposedAt: z.string().datetime(),
     resolvedAt: z.string().datetime().nullable(),
   })
