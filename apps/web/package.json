@@ -50,7 +50,7 @@
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
-    "jsdom": "^28.0.0",
+    "jsdom": ">=28.1.0",
     "storybook": "^8.6.14",
     "svelte": "^5.0.0",
     "svelte-check": "^3.6.0",
