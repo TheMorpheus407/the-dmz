@@ -22,6 +22,9 @@ const coopSession = multiplayerSchema.table('coop_session', {
 export const coopRoles = ['triage_lead', 'verification_lead'] as const;
 export type CoopRole = (typeof coopRoles)[number];
 
+export const rolePreferences = ['triage_lead', 'verification_lead', 'no_preference'] as const;
+export type RolePreference = (typeof rolePreferences)[number];
+
 export const coopRoleAssignment = multiplayerSchema.table(
   'coop_role_assignment',
   {
@@ -36,6 +39,7 @@ export const coopRoleAssignment = multiplayerSchema.table(
       .references(() => playerProfiles.profileId, { onDelete: 'restrict' }),
     role: varchar('role', { length: 20 }).notNull(),
     isAuthority: boolean('is_authority').notNull().default(false),
+    rolePreference: varchar('role_preference', { length: 20 }),
     assignedAt: timestamp('assigned_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .defaultNow(),

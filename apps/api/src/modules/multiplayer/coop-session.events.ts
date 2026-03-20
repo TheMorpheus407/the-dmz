@@ -2,6 +2,7 @@ import { createDomainEvent } from '../../shared/events/event-bus.js';
 
 export const COOP_SESSION_EVENTS = {
   SESSION_CREATED: 'coop.session.created',
+  SESSION_STARTED: 'coop.session.started',
   ROLE_ASSIGNED: 'coop.session.role_assigned',
   AUTHORITY_TRANSFERRED: 'coop.session.authority_transferred',
   PROPOSAL_SUBMITTED: 'coop.session.proposal_submitted',
@@ -82,11 +83,36 @@ export interface CoopSessionEndedPayload {
   status: 'completed' | 'abandoned';
 }
 
+export interface CoopSessionStartedPayload {
+  sessionId: string;
+  partyId: string;
+  scenarioId: string;
+  difficultyTier: string;
+  roleAssignments: Array<{
+    playerId: string;
+    role: string;
+    isAuthority: boolean;
+  }>;
+}
+
 export const createCoopSessionCreatedEvent = (
   input: CoopSessionEventInput<CoopSessionCreatedPayload>,
 ) =>
   createDomainEvent({
     eventType: COOP_SESSION_EVENTS.SESSION_CREATED,
+    correlationId: input.correlationId,
+    tenantId: input.tenantId,
+    userId: input.userId,
+    source: 'coop-session',
+    version: 1,
+    payload: input.payload,
+  });
+
+export const createCoopSessionStartedEvent = (
+  input: CoopSessionEventInput<CoopSessionStartedPayload>,
+) =>
+  createDomainEvent({
+    eventType: COOP_SESSION_EVENTS.SESSION_STARTED,
     correlationId: input.correlationId,
     tenantId: input.tenantId,
     userId: input.userId,

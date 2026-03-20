@@ -46,6 +46,7 @@ import {
 } from './modules/admin/index.js';
 import { registerAuditRoutes, registerAuditHook } from './modules/audit/index.js';
 import { ltiPlugin } from './modules/lti/index.js';
+import { coopScenarioPlugin } from './modules/coop/scenarios/scenarios.plugin.js';
 import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.js';
 import { versionHeadersMiddleware } from './shared/middleware/version-headers.js';
 import { registerVersionRoutes } from './shared/routes/version.routes.js';
@@ -66,6 +67,7 @@ const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }>
   notification: { plugin: registerNotificationRoutes },
   xapi: { plugin: xapiPlugin, routePrefix: '/api/v1/xapi' },
   social: { plugin: socialPlugin, routePrefix: '/api/v1' },
+  coopScenarios: { plugin: coopScenarioPlugin, routePrefix: '/api/v1' },
 };
 
 const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {
@@ -351,6 +353,8 @@ export const buildApp = (
 
         if (entry.name === 'webhooks') {
           await apiRouter.register(plugin as never, { prefix: routePrefix, config });
+        } else if (entry.name === 'coopScenarios') {
+          await apiRouter.register(plugin as never);
         } else {
           await apiRouter.register(plugin as never, { prefix: routePrefix });
         }

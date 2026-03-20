@@ -38573,6 +38573,746 @@
         }
       }
     },
+    "/api/v1/coop/scenarios": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["training", "standard", "hardened", "nightmare"]
+            },
+            "in": "query",
+            "name": "difficulty",
+            "required": false
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "scenarios": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "threatDomain": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "difficultyTiers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "emailRouting": {
+                            "type": "string"
+                          },
+                          "uniqueMechanics": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "mechanicType": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "config": {
+                                  "type": "object",
+                                  "additionalProperties": true
+                                }
+                              },
+                              "required": ["mechanicType", "description", "config"]
+                            }
+                          },
+                          "phaseOverrides": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "phaseId": {
+                                  "type": "string"
+                                },
+                                "durationModifier": {
+                                  "type": "number"
+                                },
+                                "enabled": {
+                                  "type": "boolean"
+                                }
+                              },
+                              "required": ["phaseId", "enabled"]
+                            }
+                          },
+                          "successConditions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "targetValue": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": ["type", "description"]
+                            }
+                          },
+                          "failureConditions": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "type": {
+                                  "type": "string"
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "thresholdValue": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": ["type", "description"]
+                            }
+                          },
+                          "narrativeSetup": {
+                            "type": "string"
+                          },
+                          "narrativeExit": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "name",
+                          "description",
+                          "threatDomain",
+                          "difficultyTiers",
+                          "emailRouting",
+                          "uniqueMechanics",
+                          "phaseOverrides",
+                          "successConditions",
+                          "failureConditions",
+                          "narrativeSetup",
+                          "narrativeExit"
+                        ]
+                      }
+                    }
+                  },
+                  "required": ["success", "scenarios"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "AUTH_PASSWORD_TOO_SHORT",
+                            "AUTH_PASSWORD_TOO_LONG",
+                            "AUTH_PASSWORD_TOO_WEAK",
+                            "AUTH_PASSWORD_COMPROMISED",
+                            "AUTH_PASSWORD_POLICY_VIOLATION"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "violations": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "code": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["code", "message"]
+                              }
+                            }
+                          }
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "AUTH_UNAUTHORIZED",
+                            "AUTH_SESSION_EXPIRED",
+                            "AUTH_INVALID_TOKEN"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["AUTH_FORBIDDEN", "AUTH_INSUFFICIENT_PERMS", "TENANT_INACTIVE"]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["INTERNAL_SERVER_ERROR"]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/coop/scenarios/{scenarioId}": {
+      "get": {
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["training", "standard", "hardened", "nightmare"]
+            },
+            "in": "query",
+            "name": "difficulty",
+            "required": false
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "in": "path",
+            "name": "scenarioId",
+            "required": true
+          }
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "scenario": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "threatDomain": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "difficultyTiers": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "emailRouting": {
+                          "type": "string"
+                        },
+                        "uniqueMechanics": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "mechanicType": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "config": {
+                                "type": "object",
+                                "additionalProperties": true
+                              }
+                            },
+                            "required": ["mechanicType", "description", "config"]
+                          }
+                        },
+                        "phaseOverrides": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "phaseId": {
+                                "type": "string"
+                              },
+                              "durationModifier": {
+                                "type": "number"
+                              },
+                              "enabled": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": ["phaseId", "enabled"]
+                          }
+                        },
+                        "successConditions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "targetValue": {
+                                "type": "number"
+                              }
+                            },
+                            "required": ["type", "description"]
+                          }
+                        },
+                        "failureConditions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "description": {
+                                "type": "string"
+                              },
+                              "thresholdValue": {
+                                "type": "number"
+                              }
+                            },
+                            "required": ["type", "description"]
+                          }
+                        },
+                        "narrativeSetup": {
+                          "type": "string"
+                        },
+                        "narrativeExit": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "description",
+                        "threatDomain",
+                        "difficultyTiers",
+                        "emailRouting",
+                        "uniqueMechanics",
+                        "phaseOverrides",
+                        "successConditions",
+                        "failureConditions",
+                        "narrativeSetup",
+                        "narrativeExit"
+                      ]
+                    },
+                    "scaling": {
+                      "type": "object",
+                      "properties": {
+                        "emailVolumeMultiplier": {
+                          "type": "number"
+                        },
+                        "threatProbabilityBonus": {
+                          "type": "number"
+                        },
+                        "breachSeverityBonus": {
+                          "type": "number"
+                        },
+                        "timePressureMultiplier": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "emailVolumeMultiplier",
+                        "threatProbabilityBonus",
+                        "breachSeverityBonus",
+                        "timePressureMultiplier"
+                      ],
+                      "nullable": true
+                    }
+                  },
+                  "required": ["success", "scenario"]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_FAILED",
+                            "AUTH_PASSWORD_TOO_SHORT",
+                            "AUTH_PASSWORD_TOO_LONG",
+                            "AUTH_PASSWORD_TOO_WEAK",
+                            "AUTH_PASSWORD_COMPROMISED",
+                            "AUTH_PASSWORD_POLICY_VIOLATION"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "violations": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "code": {
+                                    "type": "string"
+                                  },
+                                  "message": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": ["code", "message"]
+                              }
+                            }
+                          }
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "AUTH_UNAUTHORIZED",
+                            "AUTH_SESSION_EXPIRED",
+                            "AUTH_INVALID_TOKEN"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["AUTH_FORBIDDEN", "AUTH_INSUFFICIENT_PERMS", "TENANT_INACTIVE"]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "RESOURCE_NOT_FOUND",
+                            "TENANT_NOT_FOUND",
+                            "GAME_NOT_FOUND"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [false]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["INTERNAL_SERVER_ERROR"]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "object"
+                        },
+                        "requestId": {
+                          "type": "string"
+                        }
+                      },
+                      "required": ["code", "message", "details"]
+                    }
+                  },
+                  "required": ["success", "error"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/ai/prompt-templates": {
       "get": {
         "parameters": [

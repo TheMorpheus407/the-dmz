@@ -52,6 +52,8 @@ export const coopSession = multiplayerSchema.table(
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
     completedAt: timestamp('completed_at', { withTimezone: true, mode: 'date' }),
     roleConfig: jsonb('role_config').$type<Record<string, unknown>>(),
+    scenarioId: varchar('scenario_id', { length: 50 }),
+    difficultyTier: varchar('difficulty_tier', { length: 20 }),
   },
   (table) => ({
     partyIdx: index('coop_session_party_idx').on(table.partyId),

@@ -142,6 +142,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       startupFlags: { required: false, diagnostics: true },
     },
     {
+      name: 'coopScenarios',
+      pluginPath: './modules/coop/scenarios/scenarios.plugin.js',
+      routePrefix: '/api/v1',
+      dependencies: ['eventBus', 'auth'],
+      startupFlags: { required: false, diagnostics: true },
+    },
+    {
       name: 'chat',
       pluginPath: './modules/chat/index.js',
       routePrefix: '/api/v1/chat',

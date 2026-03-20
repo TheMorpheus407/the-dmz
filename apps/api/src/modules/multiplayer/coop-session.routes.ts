@@ -10,6 +10,8 @@ import {
   createCoopSession,
   getCoopSession,
   assignRoles,
+  startCoopSession,
+  submitRolePreference,
   rotateAuthority,
   submitProposal,
   authorityConfirm,
@@ -54,6 +56,18 @@ const createCoopSessionSchema = z.object({
 const assignRolesSchema = z.object({
   player1Id: z.string().uuid(),
   player2Id: z.string().uuid(),
+});
+
+const startCoopSessionSchema = z.object({
+  scenarioId: z.string(),
+  difficultyTier: z.enum(['training', 'standard', 'hardened', 'nightmare']),
+});
+
+const rolePreferenceSchema = z.enum(['triage_lead', 'verification_lead', 'no_preference']);
+
+const submitRolePreferenceSchema = z.object({
+  playerId: z.string().uuid(),
+  preference: rolePreferenceSchema,
 });
 
 const submitProposalSchema = z.object({
@@ -278,6 +292,147 @@ export async function coopSessionRoutes(
           dayNumber: result.session!.dayNumber,
           createdAt: result.session!.createdAt?.toISOString() ?? new Date().toISOString(),
           completedAt: result.session!.completedAt?.toISOString() ?? null,
+          roles: result.session!.roles.map((r) => ({
+            assignmentId: r.assignmentId,
+            playerId: r.playerId,
+            role: r.role,
+            isAuthority: r.isAuthority,
+            assignedAt: r.assignedAt.toISOString(),
+          })),
+        },
+      };
+    },
+  );
+
+  fastify.post<{ Params: { sessionId: string } }>(
+    '/api/v1/coop/:sessionId/start',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: z.object({
+          sessionId: z.string().uuid(),
+        }),
+        body: startCoopSessionSchema,
+        response: {
+          200: coopSessionResultSchema,
+          400: errorResponseSchemas.BadRequest,
+          401: errorResponseSchemas.Unauthorized,
+          403: errorResponseSchemas.Forbidden,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const { sessionId } = request.params;
+      const input = request.body as z.infer<typeof startCoopSessionSchema>;
+      const eventBus = fastify.eventBus;
+
+      const result = await startCoopSession(
+        config,
+        user.tenantId,
+        sessionId,
+        user.userId,
+        {
+          scenarioId: input.scenarioId,
+          difficultyTier: input.difficultyTier,
+        },
+        eventBus,
+      );
+
+      if (!result.success) {
+        throw new AppError({
+          code: ErrorCodes.INVALID_INPUT,
+          message: result.error ?? 'Failed to start co-op session',
+          statusCode: 400,
+        });
+      }
+
+      return {
+        success: true,
+        session: {
+          sessionId: result.session!.sessionId,
+          tenantId: result.session!.tenantId,
+          partyId: result.session!.partyId,
+          seed: result.session!.seed,
+          status: result.session!.status,
+          authorityPlayerId: result.session!.authorityPlayerId,
+          dayNumber: result.session!.dayNumber,
+          createdAt: result.session!.createdAt?.toISOString() ?? new Date().toISOString(),
+          completedAt: result.session!.completedAt?.toISOString() ?? null,
+          scenarioId: result.session!.scenarioId,
+          difficultyTier: result.session!.difficultyTier,
+          roles: result.session!.roles.map((r) => ({
+            assignmentId: r.assignmentId,
+            playerId: r.playerId,
+            role: r.role,
+            isAuthority: r.isAuthority,
+            assignedAt: r.assignedAt.toISOString(),
+          })),
+        },
+      };
+    },
+  );
+
+  fastify.post<{ Params: { sessionId: string } }>(
+    '/api/v1/coop/:sessionId/role-preference',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: z.object({
+          sessionId: z.string().uuid(),
+        }),
+        body: submitRolePreferenceSchema,
+        response: {
+          200: coopSessionResultSchema,
+          400: errorResponseSchemas.BadRequest,
+          401: errorResponseSchemas.Unauthorized,
+          403: errorResponseSchemas.Forbidden,
+          500: errorResponseSchemas.InternalServerError,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const { sessionId } = request.params;
+      const input = request.body as z.infer<typeof submitRolePreferenceSchema>;
+      const eventBus = fastify.eventBus;
+
+      const result = await submitRolePreference(
+        config,
+        user.tenantId,
+        sessionId,
+        {
+          playerId: input.playerId,
+          preference: input.preference,
+        },
+        eventBus,
+      );
+
+      if (!result.success) {
+        throw new AppError({
+          code: ErrorCodes.INVALID_INPUT,
+          message: result.error ?? 'Failed to submit role preference',
+          statusCode: 400,
+        });
+      }
+
+      return {
+        success: true,
+        session: {
+          sessionId: result.session!.sessionId,
+          tenantId: result.session!.tenantId,
+          partyId: result.session!.partyId,
+          seed: result.session!.seed,
+          status: result.session!.status,
+          authorityPlayerId: result.session!.authorityPlayerId,
+          dayNumber: result.session!.dayNumber,
+          createdAt: result.session!.createdAt?.toISOString() ?? new Date().toISOString(),
+          completedAt: result.session!.completedAt?.toISOString() ?? null,
+          scenarioId: result.session!.scenarioId,
+          difficultyTier: result.session!.difficultyTier,
           roles: result.session!.roles.map((r) => ({
             assignmentId: r.assignmentId,
             playerId: r.playerId,

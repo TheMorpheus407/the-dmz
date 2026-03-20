@@ -365,6 +365,20 @@
       "when": 1776000000000,
       "tag": "0050_coop_session_game_session_link",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1776050000000,
+      "tag": "0051_coop_scenarios",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1776100000000,
+      "tag": "0052_coop_session_scenario_and_role_preference",
+      "breakpoints": true
     }
   ]
 }

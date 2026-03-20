@@ -8,6 +8,7 @@ export * from './threat-catalog.js';
 export * from './incident.js';
 export * from './breach.js';
 export * from './coop-scaling.js';
+export * from './coop-scenarios.js';
 
 export {
   SESSION_MACRO_STATES,

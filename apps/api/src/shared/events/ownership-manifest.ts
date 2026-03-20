@@ -438,6 +438,21 @@ export const EVENT_OWNERSHIP_MANIFEST: EventOwnershipManifest = {
       ],
     },
     {
+      eventType: 'coop.session.started',
+      owningModule: 'multiplayer',
+      version: 1,
+      requiredMetadata: [
+        'eventId',
+        'eventType',
+        'timestamp',
+        'correlationId',
+        'tenantId',
+        'userId',
+        'source',
+        'version',
+      ],
+    },
+    {
       eventType: 'coop.session.role_assigned',
       owningModule: 'multiplayer',
       version: 1,

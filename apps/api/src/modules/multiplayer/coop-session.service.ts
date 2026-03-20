@@ -10,6 +10,7 @@ import {
   type CoopSession,
   type CoopSessionStatus,
   type CoopRole,
+  type RolePreference,
 } from '../../db/schema/multiplayer/index.js';
 import { party } from '../../db/schema/multiplayer/index.js';
 import { playerProfiles } from '../../db/schema/social/player-profiles.js';
@@ -25,6 +26,7 @@ import { generateId } from '../../shared/utils/id.js';
 
 import {
   createCoopSessionCreatedEvent,
+  createCoopSessionStartedEvent,
   createCoopRoleAssignedEvent,
   createCoopAuthorityTransferredEvent,
   createCoopProposalSubmittedEvent,
@@ -71,6 +73,16 @@ export interface CreateCoopSessionInput {
 export interface AssignRolesInput {
   player1Id: string;
   player2Id: string;
+}
+
+export interface StartCoopSessionInput {
+  scenarioId: string;
+  difficultyTier: string;
+}
+
+export interface SubmitRolePreferenceInput {
+  playerId: string;
+  preference: RolePreference;
 }
 
 export interface SubmitProposalInput {
@@ -158,6 +170,33 @@ function emitSessionCreated(
       authorityPlayerId: session.authorityPlayerId!,
       seed: session.seed,
       dayNumber: session.dayNumber,
+    },
+  });
+  eventBus.publish(event);
+}
+
+function emitSessionStarted(
+  eventBus: IEventBus,
+  tenantId: string,
+  userId: string,
+  session: CoopSessionWithRoles,
+  scenarioId: string,
+  difficultyTier: string,
+): void {
+  const event = createCoopSessionStartedEvent({
+    correlationId: generateId(),
+    tenantId,
+    userId,
+    payload: {
+      sessionId: session.sessionId,
+      partyId: session.partyId,
+      scenarioId,
+      difficultyTier,
+      roleAssignments: session.roles.map((r) => ({
+        playerId: r.playerId,
+        role: r.role,
+        isAuthority: r.isAuthority,
+      })),
     },
   });
   eventBus.publish(event);
@@ -526,6 +565,117 @@ export async function assignRoles(
   await cacheSession(config, tenantId, sessionWithRoles);
 
   emitRoleAssigned(eventBus, tenantId, input.player1Id, sessionWithRoles);
+
+  return { success: true, session: sessionWithRoles };
+}
+
+export async function startCoopSession(
+  config: AppConfig,
+  tenantId: string,
+  sessionId: string,
+  playerId: string,
+  input: StartCoopSessionInput,
+  eventBus: IEventBus,
+): Promise<CoopSessionResult> {
+  const coopEnabled = await evaluateFlag(config, tenantId, 'multiplayer.coop_enabled');
+  if (!coopEnabled) {
+    return { success: false, error: 'Co-op system is disabled' };
+  }
+
+  const db = getDatabaseClient(config);
+
+  const session = await db.query.coopSession.findFirst({
+    where: and(eq(coopSession.sessionId, sessionId), eq(coopSession.tenantId, tenantId)),
+  });
+
+  if (!session) {
+    return { success: false, error: 'Co-op session not found' };
+  }
+
+  if (session.status !== 'lobby') {
+    return { success: false, error: 'Can only start a session that is in lobby status' };
+  }
+
+  if (session.authorityPlayerId !== playerId) {
+    return { success: false, error: 'Only the session authority can start the session' };
+  }
+
+  await db
+    .update(coopSession)
+    .set({
+      scenarioId: input.scenarioId,
+      difficultyTier: input.difficultyTier,
+      status: 'active',
+    })
+    .where(eq(coopSession.sessionId, sessionId));
+
+  const sessionWithRoles = await getSessionWithRoles(config, tenantId, sessionId);
+  if (!sessionWithRoles) {
+    return { success: false, error: 'Failed to retrieve co-op session' };
+  }
+
+  await cacheSession(config, tenantId, sessionWithRoles);
+
+  emitSessionStarted(
+    eventBus,
+    tenantId,
+    playerId,
+    sessionWithRoles,
+    input.scenarioId,
+    input.difficultyTier,
+  );
+
+  return { success: true, session: sessionWithRoles };
+}
+
+export async function submitRolePreference(
+  config: AppConfig,
+  tenantId: string,
+  sessionId: string,
+  input: SubmitRolePreferenceInput,
+  _eventBus: IEventBus,
+): Promise<CoopSessionResult> {
+  const coopEnabled = await evaluateFlag(config, tenantId, 'multiplayer.coop_enabled');
+  if (!coopEnabled) {
+    return { success: false, error: 'Co-op system is disabled' };
+  }
+
+  const db = getDatabaseClient(config);
+
+  const session = await db.query.coopSession.findFirst({
+    where: and(eq(coopSession.sessionId, sessionId), eq(coopSession.tenantId, tenantId)),
+  });
+
+  if (!session) {
+    return { success: false, error: 'Co-op session not found' };
+  }
+
+  if (session.status !== 'lobby') {
+    return { success: false, error: 'Can only submit role preference in lobby status' };
+  }
+
+  const assignment = await db.query.coopRoleAssignment.findFirst({
+    where: and(
+      eq(coopRoleAssignment.sessionId, sessionId),
+      eq(coopRoleAssignment.playerId, input.playerId),
+    ),
+  });
+
+  if (!assignment) {
+    return { success: false, error: 'Player is not assigned to this session' };
+  }
+
+  await db
+    .update(coopRoleAssignment)
+    .set({ rolePreference: input.preference })
+    .where(eq(coopRoleAssignment.assignmentId, assignment.assignmentId));
+
+  const sessionWithRoles = await getSessionWithRoles(config, tenantId, sessionId);
+  if (!sessionWithRoles) {
+    return { success: false, error: 'Failed to retrieve co-op session' };
+  }
+
+  await cacheSession(config, tenantId, sessionWithRoles);
 
   return { success: true, session: sessionWithRoles };
 }
