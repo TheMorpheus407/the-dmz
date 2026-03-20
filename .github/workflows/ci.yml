@@ -200,9 +200,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: dmz
-          POSTGRES_PASSWORD: dmz_dev
-          POSTGRES_DB: dmz_test
+          POSTGRES_USER: ${{ secrets.CI_POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.CI_POSTGRES_DB_TEST }}
         options: >-
           --health-cmd "pg_isready -U dmz -d dmz_test"
           --health-interval 5s
@@ -235,7 +235,7 @@ jobs:
           CI: true
           HOME: /root
           NODE_ENV: test
-          DATABASE_TEST_URL: postgres://dmz:dmz_dev@postgres:5432/dmz_test
+          DATABASE_TEST_URL: ${{ secrets.CI_DATABASE_TEST_URL }}
           REDIS_URL: redis://redis:6379
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:5173
           PLAYWRIGHT_API_BASE_URL: http://127.0.0.1:3001
@@ -245,7 +245,7 @@ jobs:
           CI: true
           HOME: /root
           NODE_ENV: test
-          DATABASE_TEST_URL: postgres://dmz:dmz_dev@postgres:5432/dmz_test
+          DATABASE_TEST_URL: ${{ secrets.CI_DATABASE_TEST_URL }}
           REDIS_URL: redis://redis:6379
           PLAYWRIGHT_BASE_URL: http://127.0.0.1:5173
           PLAYWRIGHT_API_BASE_URL: http://127.0.0.1:3001
@@ -302,9 +302,9 @@ jobs:
         ports:
           - 5432:5432
         env:
-          POSTGRES_USER: dmz
-          POSTGRES_PASSWORD: dmz_dev
-          POSTGRES_DB: dmz_dev
+          POSTGRES_USER: ${{ secrets.CI_POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.CI_POSTGRES_DB_DEV }}
         options: >-
           --health-cmd "pg_isready -U dmz -d dmz_dev"
           --health-interval 5s
@@ -337,12 +337,12 @@ jobs:
       - name: Run migrations (placeholder)
         env:
           NODE_ENV: test
-          DATABASE_URL: postgres://dmz:dmz_dev@localhost:5432/dmz_dev
+          DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
           REDIS_URL: redis://localhost:6379
         run: pnpm --filter @the-dmz/api db:migrate
       - name: Smoke test database connection (placeholder)
         env:
           NODE_ENV: test
-          DATABASE_URL: postgres://dmz:dmz_dev@localhost:5432/dmz_dev
+          DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
           REDIS_URL: redis://localhost:6379
         run: pnpm --filter @the-dmz/api db:smoke

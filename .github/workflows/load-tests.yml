@@ -59,7 +59,7 @@ jobs:
 
       - name: Start API
         run: |
-          export DATABASE_URL="postgresql://dmz:dmz_dev@localhost:5432/dmz_dev"
+          export DATABASE_URL="${{ secrets.CI_DATABASE_URL }}"
           export REDIS_URL="redis://localhost:6379"
           pnpm --filter @the-dmz/api dev &
           sleep 10
