@@ -1,5 +1,7 @@
 import { eq, and, sql } from 'drizzle-orm';
 
+import { DAY_PHASES, type DayPhase } from '@the-dmz/shared/game';
+
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import {
   coopSession,
@@ -31,6 +33,14 @@ import {
   createCoopDayAdvancedEvent,
   createCoopSessionEndedEvent,
 } from './coop-session.events.js';
+import {
+  PermissionDeniedError,
+  checkPermission,
+  createPermissionDeniedEvent,
+  createDefaultRoleConfig,
+  getSessionRoleConfig,
+  type PermissionMatrixConfig,
+} from './permissions/index.js';
 
 import type { AppConfig } from '../../config.js';
 import type { IEventBus } from '../../shared/events/event-types.js';
@@ -593,6 +603,7 @@ export async function submitProposal(
   playerId: string,
   input: SubmitProposalInput,
   eventBus: IEventBus,
+  currentPhase: DayPhase = DAY_PHASES.PHASE_EMAIL_INTAKE,
 ): Promise<CoopSessionResult> {
   const coopEnabled = await evaluateFlag(config, tenantId, 'multiplayer.coop_enabled');
   if (!coopEnabled) {
@@ -622,6 +633,49 @@ export async function submitProposal(
 
   if (!roleAssignment) {
     return { success: false, error: 'Player is not part of this co-op session' };
+  }
+
+  const roleConfigResult = await getSessionRoleConfig(config, tenantId, sessionId);
+  const matrix: PermissionMatrixConfig = roleConfigResult.config ?? createDefaultRoleConfig();
+
+  const permissionAction = 'email.propose_decision';
+
+  try {
+    checkPermission({
+      action: permissionAction,
+      actorRole: roleAssignment.role as CoopRole,
+      actorId: playerId,
+      authorityPlayerId: session.authorityPlayerId,
+      phase: currentPhase,
+      matrix,
+    });
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      if (eventBus) {
+        const deniedEvent = createPermissionDeniedEvent({
+          actorId: playerId,
+          role: roleAssignment.role,
+          attemptedAction: permissionAction,
+          phase: currentPhase,
+          reason: error.reason,
+          sessionId,
+          tenantId,
+        });
+        eventBus.publish({
+          eventType: 'permission.denied',
+          correlationId: generateId(),
+          tenantId,
+          userId: playerId,
+          source: 'coop-session',
+          version: 1,
+          payload: deniedEvent,
+          eventId: generateId(),
+          timestamp: new Date().toISOString(),
+        });
+      }
+      return { success: false, error: error.message };
+    }
+    throw error;
   }
 
   const [proposal] = await db
@@ -665,6 +719,7 @@ export async function authorityConfirm(
   playerId: string,
   input: AuthorityActionInput,
   eventBus: IEventBus,
+  currentPhase: DayPhase = DAY_PHASES.PHASE_DECISION,
 ): Promise<CoopSessionResult> {
   const coopEnabled = await evaluateFlag(config, tenantId, 'multiplayer.coop_enabled');
   if (!coopEnabled) {
@@ -679,6 +734,60 @@ export async function authorityConfirm(
 
   if (!session) {
     return { success: false, error: 'Co-op session not found' };
+  }
+
+  const roleAssignment = await db.query.coopRoleAssignment.findFirst({
+    where: and(
+      eq(coopRoleAssignment.sessionId, sessionId),
+      eq(coopRoleAssignment.playerId, playerId),
+    ),
+  });
+
+  if (!roleAssignment) {
+    return { success: false, error: 'Player is not part of this co-op session' };
+  }
+
+  const roleConfigResult = await getSessionRoleConfig(config, tenantId, sessionId);
+  const matrix: PermissionMatrixConfig = roleConfigResult.config ?? createDefaultRoleConfig();
+
+  const permissionAction = 'action.confirm';
+
+  try {
+    checkPermission({
+      action: permissionAction,
+      actorRole: roleAssignment.role as CoopRole,
+      actorId: playerId,
+      authorityPlayerId: session.authorityPlayerId,
+      phase: currentPhase,
+      matrix,
+    });
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      if (eventBus) {
+        const deniedEvent = createPermissionDeniedEvent({
+          actorId: playerId,
+          role: roleAssignment.role,
+          attemptedAction: permissionAction,
+          phase: currentPhase,
+          reason: error.reason,
+          sessionId,
+          tenantId,
+        });
+        eventBus.publish({
+          eventType: 'permission.denied',
+          correlationId: generateId(),
+          tenantId,
+          userId: playerId,
+          source: 'coop-session',
+          version: 1,
+          payload: deniedEvent,
+          eventId: generateId(),
+          timestamp: new Date().toISOString(),
+        });
+      }
+      return { success: false, error: error.message };
+    }
+    throw error;
   }
 
   if (session.authorityPlayerId !== playerId) {
@@ -736,6 +845,7 @@ export async function authorityOverride(
   playerId: string,
   input: AuthorityActionInput,
   eventBus: IEventBus,
+  currentPhase: DayPhase = DAY_PHASES.PHASE_DECISION,
 ): Promise<CoopSessionResult> {
   const coopEnabled = await evaluateFlag(config, tenantId, 'multiplayer.coop_enabled');
   if (!coopEnabled) {
@@ -750,6 +860,60 @@ export async function authorityOverride(
 
   if (!session) {
     return { success: false, error: 'Co-op session not found' };
+  }
+
+  const roleAssignment = await db.query.coopRoleAssignment.findFirst({
+    where: and(
+      eq(coopRoleAssignment.sessionId, sessionId),
+      eq(coopRoleAssignment.playerId, playerId),
+    ),
+  });
+
+  if (!roleAssignment) {
+    return { success: false, error: 'Player is not part of this co-op session' };
+  }
+
+  const roleConfigResult = await getSessionRoleConfig(config, tenantId, sessionId);
+  const matrix: PermissionMatrixConfig = roleConfigResult.config ?? createDefaultRoleConfig();
+
+  const permissionAction = 'action.override';
+
+  try {
+    checkPermission({
+      action: permissionAction,
+      actorRole: roleAssignment.role as CoopRole,
+      actorId: playerId,
+      authorityPlayerId: session.authorityPlayerId,
+      phase: currentPhase,
+      matrix,
+    });
+  } catch (error) {
+    if (error instanceof PermissionDeniedError) {
+      if (eventBus) {
+        const deniedEvent = createPermissionDeniedEvent({
+          actorId: playerId,
+          role: roleAssignment.role,
+          attemptedAction: permissionAction,
+          phase: currentPhase,
+          reason: error.reason,
+          sessionId,
+          tenantId,
+        });
+        eventBus.publish({
+          eventType: 'permission.denied',
+          correlationId: generateId(),
+          tenantId,
+          userId: playerId,
+          source: 'coop-session',
+          version: 1,
+          payload: deniedEvent,
+          eventId: generateId(),
+          timestamp: new Date().toISOString(),
+        });
+      }
+      return { success: false, error: error.message };
+    }
+    throw error;
   }
 
   if (session.authorityPlayerId !== playerId) {

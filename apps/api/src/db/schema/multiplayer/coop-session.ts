@@ -1,5 +1,14 @@
 import { sql } from 'drizzle-orm';
-import { bigint, index, integer, pgSchema, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  index,
+  integer,
+  jsonb,
+  pgSchema,
+  timestamp,
+  uuid,
+  varchar,
+} from 'drizzle-orm/pg-core';
 
 import { tenants } from '../../../shared/database/schema/tenants.js';
 import { playerProfiles } from '../social/player-profiles.js';
@@ -42,6 +51,7 @@ export const coopSession = multiplayerSchema.table(
     lastSnapshotAt: timestamp('last_snapshot_at', { withTimezone: true, mode: 'date' }),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
     completedAt: timestamp('completed_at', { withTimezone: true, mode: 'date' }),
+    roleConfig: jsonb('role_config').$type<Record<string, unknown>>(),
   },
   (table) => ({
     partyIdx: index('coop_session_party_idx').on(table.partyId),

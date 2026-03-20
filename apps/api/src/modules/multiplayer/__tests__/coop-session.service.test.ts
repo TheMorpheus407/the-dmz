@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import {
+  DEFAULT_PERMISSION_MATRIX,
+  getRolePermissionsForPhase,
+  isActionPermitted,
+} from '../permissions/permission-matrix.js';
+import { PermissionDeniedError, checkPermission } from '../permissions/permission.enforcer.js';
+
 describe('coop session service - session statuses', () => {
   const coopSessionStatuses = ['lobby', 'active', 'paused', 'completed', 'abandoned'] as const;
 
@@ -426,5 +433,361 @@ describe('coop session service - role permission matrix', () => {
     expect(canPerformAction('triage_lead', 'propose_decision')).toBe(true);
     expect(canPerformAction('verification_lead', 'propose_decision')).toBe(true);
     expect(canPerformAction('authority', 'propose_decision')).toBe(true);
+  });
+});
+
+describe('coop session service - phase-based permission enforcement', () => {
+  const DAY_PHASES = {
+    PHASE_DAY_START: 'PHASE_DAY_START',
+    PHASE_EMAIL_INTAKE: 'PHASE_EMAIL_INTAKE',
+    PHASE_TRIAGE: 'PHASE_TRIAGE',
+    PHASE_VERIFICATION: 'PHASE_VERIFICATION',
+    PHASE_DECISION: 'PHASE_DECISION',
+    PHASE_CONSEQUENCES: 'PHASE_CONSEQUENCES',
+    PHASE_THREAT_PROCESSING: 'PHASE_THREAT_PROCESSING',
+    PHASE_INCIDENT_RESPONSE: 'PHASE_INCIDENT_RESPONSE',
+    PHASE_RANSOM: 'PHASE_RANSOM',
+    PHASE_RECOVERY: 'PHASE_RECOVERY',
+    PHASE_RESOURCE_MANAGEMENT: 'PHASE_RESOURCE_MANAGEMENT',
+    PHASE_UPGRADE: 'PHASE_UPGRADE',
+    PHASE_DAY_END: 'PHASE_DAY_END',
+  } as const;
+
+  describe('submitProposal permission - triage_lead', () => {
+    const triageLeadRole = 'triage_lead';
+    const triageLeadId = 'triage-lead-player';
+    const authorityPlayerId = 'authority-player';
+
+    it('triage_lead CAN submit proposal (email.propose_decision) during PHASE_EMAIL_INTAKE', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        triageLeadRole,
+        DAY_PHASES.PHASE_EMAIL_INTAKE,
+        'email.propose_decision',
+      );
+      expect(result).toBe(true);
+    });
+
+    it('triage_lead CAN submit proposal (email.propose_decision) during PHASE_TRIAGE', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        triageLeadRole,
+        DAY_PHASES.PHASE_TRIAGE,
+        'email.propose_decision',
+      );
+      expect(result).toBe(true);
+    });
+
+    it('triage_lead CANNOT submit proposal during PHASE_VERIFICATION', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        triageLeadRole,
+        DAY_PHASES.PHASE_VERIFICATION,
+        'email.propose_decision',
+      );
+      expect(result).toBe(false);
+    });
+
+    it('triage_lead CANNOT submit proposal during PHASE_DECISION', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        triageLeadRole,
+        DAY_PHASES.PHASE_DECISION,
+        'email.propose_decision',
+      );
+      expect(result).toBe(false);
+    });
+
+    it('triage_lead submitProposal checkPermission succeeds in EMAIL_INTAKE phase', () => {
+      expect(() =>
+        checkPermission({
+          action: 'email.propose_decision',
+          actorRole: triageLeadRole as 'triage_lead',
+          actorId: triageLeadId,
+          authorityPlayerId,
+          phase: DAY_PHASES.PHASE_EMAIL_INTAKE,
+          matrix: DEFAULT_PERMISSION_MATRIX,
+        }),
+      ).not.toThrow();
+    });
+
+    it('triage_lead submitProposal checkPermission fails in VERIFICATION phase', () => {
+      expect(() =>
+        checkPermission({
+          action: 'email.propose_decision',
+          actorRole: triageLeadRole as 'triage_lead',
+          actorId: triageLeadId,
+          authorityPlayerId,
+          phase: DAY_PHASES.PHASE_VERIFICATION,
+          matrix: DEFAULT_PERMISSION_MATRIX,
+        }),
+      ).toThrow(PermissionDeniedError);
+    });
+  });
+
+  describe('submitProposal permission - verification_lead', () => {
+    const verificationLeadRole = 'verification_lead';
+    const verificationLeadId = 'verification-lead-player';
+    const nonAuthorityPlayerId = 'other-player';
+
+    it('verification_lead CANNOT submit proposal (email.propose_decision) during PHASE_EMAIL_INTAKE', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        verificationLeadRole,
+        DAY_PHASES.PHASE_EMAIL_INTAKE,
+        'email.propose_decision',
+      );
+      expect(result).toBe(false);
+    });
+
+    it('verification_lead CANNOT submit proposal during PHASE_TRIAGE', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        verificationLeadRole,
+        DAY_PHASES.PHASE_TRIAGE,
+        'email.propose_decision',
+      );
+      expect(result).toBe(false);
+    });
+
+    it('verification_lead CANNOT submit email proposal during PHASE_VERIFICATION (they have verification.propose_decision instead)', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        verificationLeadRole,
+        DAY_PHASES.PHASE_VERIFICATION,
+        'email.propose_decision',
+      );
+      expect(result).toBe(false);
+    });
+
+    it('verification_lead CAN submit verification.propose_decision during PHASE_VERIFICATION', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        verificationLeadRole,
+        DAY_PHASES.PHASE_VERIFICATION,
+        'verification.propose_decision',
+      );
+      expect(result).toBe(true);
+    });
+
+    it('verification_lead CANNOT submit proposal during PHASE_DECISION', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        verificationLeadRole,
+        DAY_PHASES.PHASE_DECISION,
+        'email.propose_decision',
+      );
+      expect(result).toBe(false);
+    });
+
+    it('verification_lead submitProposal checkPermission fails in EMAIL_INTAKE phase', () => {
+      expect(() =>
+        checkPermission({
+          action: 'email.propose_decision',
+          actorRole: verificationLeadRole as 'verification_lead',
+          actorId: verificationLeadId,
+          authorityPlayerId: nonAuthorityPlayerId,
+          phase: DAY_PHASES.PHASE_EMAIL_INTAKE,
+          matrix: DEFAULT_PERMISSION_MATRIX,
+        }),
+      ).toThrow(PermissionDeniedError);
+    });
+
+    it('verification_lead submitProposal checkPermission fails in VERIFICATION phase (email.propose_decision not available)', () => {
+      expect(() =>
+        checkPermission({
+          action: 'email.propose_decision',
+          actorRole: verificationLeadRole as 'verification_lead',
+          actorId: verificationLeadId,
+          authorityPlayerId: nonAuthorityPlayerId,
+          phase: DAY_PHASES.PHASE_VERIFICATION,
+          matrix: DEFAULT_PERMISSION_MATRIX,
+        }),
+      ).toThrow(PermissionDeniedError);
+    });
+  });
+
+  describe('authorityConfirm and authorityOverride permission - action.confirm and action.override', () => {
+    const triageLeadRole = 'triage_lead';
+    const verificationLeadRole = 'verification_lead';
+    const authorityPlayerId = 'authority-player';
+    const nonAuthorityPlayerId = 'non-authority-player';
+
+    it('action.confirm returns Authority for triage_lead in DECISION phase', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        triageLeadRole,
+        DAY_PHASES.PHASE_DECISION,
+        'action.confirm',
+      );
+      expect(result).toBe('Authority');
+    });
+
+    it('action.confirm returns Authority for verification_lead in DECISION phase', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        verificationLeadRole,
+        DAY_PHASES.PHASE_DECISION,
+        'action.confirm',
+      );
+      expect(result).toBe('Authority');
+    });
+
+    it('action.confirm returns false for triage_lead in EMAIL_INTAKE phase', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        triageLeadRole,
+        DAY_PHASES.PHASE_EMAIL_INTAKE,
+        'action.confirm',
+      );
+      expect(result).toBe(false);
+    });
+
+    it('action.confirm returns false for verification_lead in VERIFICATION phase', () => {
+      const result = isActionPermitted(
+        DEFAULT_PERMISSION_MATRIX,
+        verificationLeadRole,
+        DAY_PHASES.PHASE_VERIFICATION,
+        'action.confirm',
+      );
+      expect(result).toBe(false);
+    });
+
+    it('authority player CAN confirm (has authority and is in DECISION phase)', () => {
+      expect(() =>
+        checkPermission({
+          action: 'action.confirm',
+          actorRole: triageLeadRole as 'triage_lead',
+          actorId: authorityPlayerId,
+          authorityPlayerId,
+          phase: DAY_PHASES.PHASE_DECISION,
+          matrix: DEFAULT_PERMISSION_MATRIX,
+        }),
+      ).not.toThrow();
+    });
+
+    it('non-authority player CANNOT confirm even in DECISION phase', () => {
+      expect(() =>
+        checkPermission({
+          action: 'action.confirm',
+          actorRole: triageLeadRole as 'triage_lead',
+          actorId: nonAuthorityPlayerId,
+          authorityPlayerId,
+          phase: DAY_PHASES.PHASE_DECISION,
+          matrix: DEFAULT_PERMISSION_MATRIX,
+        }),
+      ).toThrow(PermissionDeniedError);
+    });
+
+    it('authority player CAN override (has authority and is in DECISION phase)', () => {
+      expect(() =>
+        checkPermission({
+          action: 'action.override',
+          actorRole: triageLeadRole as 'triage_lead',
+          actorId: authorityPlayerId,
+          authorityPlayerId,
+          phase: DAY_PHASES.PHASE_DECISION,
+          matrix: DEFAULT_PERMISSION_MATRIX,
+        }),
+      ).not.toThrow();
+    });
+
+    it('non-authority player CANNOT override even in DECISION phase', () => {
+      expect(() =>
+        checkPermission({
+          action: 'action.override',
+          actorRole: triageLeadRole as 'triage_lead',
+          actorId: nonAuthorityPlayerId,
+          authorityPlayerId,
+          phase: DAY_PHASES.PHASE_DECISION,
+          matrix: DEFAULT_PERMISSION_MATRIX,
+        }),
+      ).toThrow(PermissionDeniedError);
+    });
+
+    it('non-authority player CANNOT override with AUTHORITY_REQUIRED reason', () => {
+      try {
+        checkPermission({
+          action: 'action.override',
+          actorRole: triageLeadRole as 'triage_lead',
+          actorId: nonAuthorityPlayerId,
+          authorityPlayerId,
+          phase: DAY_PHASES.PHASE_DECISION,
+          matrix: DEFAULT_PERMISSION_MATRIX,
+        });
+      } catch (error) {
+        expect(error).toBeInstanceOf(PermissionDeniedError);
+        expect((error as PermissionDeniedError).reason).toBe('AUTHORITY_REQUIRED');
+      }
+    });
+  });
+
+  describe('phase-specific role permissions matrix verification', () => {
+    it('triage_lead has correct permissions in each phase', () => {
+      const emailIntakePerms = getRolePermissionsForPhase(
+        DEFAULT_PERMISSION_MATRIX,
+        'triage_lead',
+        DAY_PHASES.PHASE_EMAIL_INTAKE,
+      );
+      expect(emailIntakePerms).toContain('view.inbox');
+      expect(emailIntakePerms).toContain('email.mark_indicator');
+      expect(emailIntakePerms).toContain('email.propose_decision');
+      expect(emailIntakePerms).toContain('verification.request');
+
+      const triagePerms = getRolePermissionsForPhase(
+        DEFAULT_PERMISSION_MATRIX,
+        'triage_lead',
+        DAY_PHASES.PHASE_TRIAGE,
+      );
+      expect(triagePerms).toContain('email.propose_decision');
+
+      const verificationPerms = getRolePermissionsForPhase(
+        DEFAULT_PERMISSION_MATRIX,
+        'triage_lead',
+        DAY_PHASES.PHASE_VERIFICATION,
+      );
+      expect(verificationPerms).toHaveLength(0);
+
+      const decisionPerms = getRolePermissionsForPhase(
+        DEFAULT_PERMISSION_MATRIX,
+        'triage_lead',
+        DAY_PHASES.PHASE_DECISION,
+      );
+      expect(decisionPerms).toContain('action.confirm');
+      expect(decisionPerms).toContain('action.override');
+    });
+
+    it('verification_lead has correct permissions in each phase', () => {
+      const emailIntakePerms = getRolePermissionsForPhase(
+        DEFAULT_PERMISSION_MATRIX,
+        'verification_lead',
+        DAY_PHASES.PHASE_EMAIL_INTAKE,
+      );
+      expect(emailIntakePerms).toHaveLength(0);
+
+      const triagePerms = getRolePermissionsForPhase(
+        DEFAULT_PERMISSION_MATRIX,
+        'verification_lead',
+        DAY_PHASES.PHASE_TRIAGE,
+      );
+      expect(triagePerms).toHaveLength(0);
+
+      const verificationPerms = getRolePermissionsForPhase(
+        DEFAULT_PERMISSION_MATRIX,
+        'verification_lead',
+        DAY_PHASES.PHASE_VERIFICATION,
+      );
+      expect(verificationPerms).toContain('view.verification_packet');
+      expect(verificationPerms).toContain('verification.mark_inconsistency');
+      expect(verificationPerms).toContain('verification.propose_decision');
+
+      const decisionPerms = getRolePermissionsForPhase(
+        DEFAULT_PERMISSION_MATRIX,
+        'verification_lead',
+        DAY_PHASES.PHASE_DECISION,
+      );
+      expect(decisionPerms).toContain('action.confirm');
+      expect(decisionPerms).toContain('action.override');
+    });
   });
 });
