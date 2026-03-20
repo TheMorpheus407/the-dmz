@@ -163,3 +163,16 @@ export {
   type CachedPartyMember,
   type PartyCacheMetrics,
 } from './party-cache.js';
+
+export {
+  buildCoopSessionCacheKey,
+  getCachedCoopSession,
+  setCachedCoopSession,
+  deleteCachedCoopSession,
+  isCoopSessionCacheHealthy,
+  getCoopSessionCacheMetrics,
+  resetCoopSessionCacheMetrics,
+  type CachedCoopSession,
+  type CachedCoopRoleAssignment,
+  type CoopSessionCacheMetrics,
+} from './coop-session-cache.js';

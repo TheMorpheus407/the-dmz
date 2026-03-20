@@ -16,6 +16,7 @@ export const KEY_CATEGORIES = {
   GAME_STATE: 'game-state',
   PRESENCE: 'presence',
   PARTY: 'party',
+  COOP_SESSION: 'coop-session',
 } as const;
 
 export type RedisKeyCategory = (typeof KEY_CATEGORIES)[keyof typeof KEY_CATEGORIES];
@@ -39,6 +40,7 @@ export const DEFAULT_TTL_SECONDS: Record<RedisKeyCategory, number> = {
   [KEY_CATEGORIES.GAME_STATE]: 1800,
   [KEY_CATEGORIES.PRESENCE]: 90,
   [KEY_CATEGORIES.PARTY]: 1800,
+  [KEY_CATEGORIES.COOP_SESSION]: 300,
 };
 
 export interface TenantScopedKeyOptions {
