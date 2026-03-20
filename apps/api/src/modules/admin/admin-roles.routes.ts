@@ -1,5 +1,8 @@
 import { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify';
 
+import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
+
 import * as roleAssignmentService from './role-assignment.service.js';
 
 interface AssignRoleBody {
@@ -43,6 +46,7 @@ export const registerAdminRoleRoutes = async (fastify: FastifyInstance): Promise
   fastify.post<{ Body: AssignRoleBody }>(
     '/admin/roles/assign',
     {
+      preHandler: [authGuard, tenantContext, requirePermission('roles', 'write')],
       schema: {
         body: {
           type: 'object',
@@ -112,6 +116,7 @@ export const registerAdminRoleRoutes = async (fastify: FastifyInstance): Promise
   fastify.delete<{ Params: RevokeRoleParams }>(
     '/admin/roles/revoke/:userId/:roleId',
     {
+      preHandler: [authGuard, tenantContext, requirePermission('roles', 'write')],
       schema: {
         params: {
           type: 'object',
@@ -158,6 +163,7 @@ export const registerAdminRoleRoutes = async (fastify: FastifyInstance): Promise
   fastify.put<{ Params: RevokeRoleParams; Body: UpdateRoleBody }>(
     '/admin/roles/update/:userId/:roleId',
     {
+      preHandler: [authGuard, tenantContext, requirePermission('roles', 'write')],
       schema: {
         params: {
           type: 'object',
@@ -229,6 +235,7 @@ export const registerAdminRoleRoutes = async (fastify: FastifyInstance): Promise
   fastify.get<{ Params: UserIdParams }>(
     '/admin/users/:userId/effective-permissions',
     {
+      preHandler: [authGuard, tenantContext, requirePermission('roles', 'read')],
       schema: {
         params: {
           type: 'object',
@@ -271,39 +278,46 @@ export const registerAdminRoleRoutes = async (fastify: FastifyInstance): Promise
     },
   );
 
-  fastify.get('/admin/roles', async (req: FastifyRequest, reply: FastifyReply) => {
-    const tenantContext = req.tenantContext;
+  fastify.get(
+    '/admin/roles',
+    {
+      preHandler: [authGuard, tenantContext, requirePermission('roles', 'read')],
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      const tenantContext = req.tenantContext;
 
-    if (!tenantContext) {
-      return reply.code(401).send({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
-      });
-    }
+      if (!tenantContext) {
+        return reply.code(401).send({
+          success: false,
+          error: { code: 'UNAUTHORIZED', message: 'Authentication required' },
+        });
+      }
 
-    try {
-      const roles = await roleAssignmentService.getTenantRoles(
-        tenantContext.tenantId,
-        req.server.config,
-      );
+      try {
+        const roles = await roleAssignmentService.getTenantRoles(
+          tenantContext.tenantId,
+          req.server.config,
+        );
 
-      return reply.code(200).send({
-        success: true,
-        data: roles,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return reply.code(200).send({
+          success: true,
+          data: roles,
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-      return reply.code(400).send({
-        success: false,
-        error: { code: 'ROLES_LIST_FAILED', message: errorMessage },
-      });
-    }
-  });
+        return reply.code(400).send({
+          success: false,
+          error: { code: 'ROLES_LIST_FAILED', message: errorMessage },
+        });
+      }
+    },
+  );
 
   fastify.get<{ Params: RoleIdParams }>(
     '/admin/roles/:id/permissions',
     {
+      preHandler: [authGuard, tenantContext, requirePermission('roles', 'read')],
       schema: {
         params: {
           type: 'object',
@@ -346,27 +360,34 @@ export const registerAdminRoleRoutes = async (fastify: FastifyInstance): Promise
     },
   );
 
-  fastify.get('/admin/permissions', async (req: FastifyRequest, reply: FastifyReply) => {
-    try {
-      const permissions = await roleAssignmentService.getAllPermissions(req.server.config);
+  fastify.get(
+    '/admin/permissions',
+    {
+      preHandler: [authGuard, tenantContext, requirePermission('permissions', 'read')],
+    },
+    async (req: FastifyRequest, reply: FastifyReply) => {
+      try {
+        const permissions = await roleAssignmentService.getAllPermissions(req.server.config);
 
-      return reply.code(200).send({
-        success: true,
-        data: permissions,
-      });
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        return reply.code(200).send({
+          success: true,
+          data: permissions,
+        });
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-      return reply.code(400).send({
-        success: false,
-        error: { code: 'PERMISSIONS_LIST_FAILED', message: errorMessage },
-      });
-    }
-  });
+        return reply.code(400).send({
+          success: false,
+          error: { code: 'PERMISSIONS_LIST_FAILED', message: errorMessage },
+        });
+      }
+    },
+  );
 
   fastify.post<{ Body: CreateCustomRoleBody }>(
     '/admin/roles/custom',
     {
+      preHandler: [authGuard, tenantContext, requirePermission('roles', 'write')],
       schema: {
         body: {
           type: 'object',
@@ -431,6 +452,7 @@ export const registerAdminRoleRoutes = async (fastify: FastifyInstance): Promise
   fastify.put<{ Params: RoleIdParams; Body: UpdateCustomRoleBody }>(
     '/admin/roles/custom/:id',
     {
+      preHandler: [authGuard, tenantContext, requirePermission('roles', 'write')],
       schema: {
         params: {
           type: 'object',
@@ -506,6 +528,7 @@ export const registerAdminRoleRoutes = async (fastify: FastifyInstance): Promise
   fastify.delete<{ Params: RoleIdParams }>(
     '/admin/roles/custom/:id',
     {
+      preHandler: [authGuard, tenantContext, requirePermission('roles', 'write')],
       schema: {
         params: {
           type: 'object',
