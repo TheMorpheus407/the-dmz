@@ -13,3 +13,7 @@ export * from './endorsement.js';
 export * from './endorsement-decay.js';
 export * from './reputation-score.js';
 export * from './reputation-history.js';
+export * from './moderation-blocklist.js';
+export * from './moderation-report.js';
+export * from './moderation-action.js';
+export * from './rate-limit-config.js';
