@@ -14,6 +14,38 @@ apps/web/build/
 .env.*
 !.env.example
 
+# ===========================================
+# Secret and Credential Files
+# ===========================================
+
+# Private keys and certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Credential storage files
+credentials.json
+*credentials*
+secrets.json
+*secrets*
+service-account.json
+
+# Infrastructure as Code secrets
+terraform.tfvars
+!terraform.tfvars.example
+terraform.tfstate
+!terraform.tfstate.backup
+terraform.tfstate.d/
+
+# Cloud provider credentials
+*.azure*
+*.gcp*
+aws_credentials*
+
 # Testing
 coverage/
 .nyc_output/
