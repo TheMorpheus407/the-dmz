@@ -7,6 +7,11 @@
     "node": ">=22",
     "pnpm": ">=9"
   },
+  "pnpm": {
+    "overrides": {
+      "rollup": ">=4.59.0"
+    }
+  },
   "scripts": {
     "predev": "node scripts/dev-preflight.mjs",
     "dev": "turbo run dev --parallel --filter=@the-dmz/web --filter=@the-dmz/api",
