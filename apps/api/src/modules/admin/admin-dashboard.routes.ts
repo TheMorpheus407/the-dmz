@@ -1,6 +1,6 @@
 import { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify';
 
-import { authGuard } from '../../shared/middleware/authorization.js';
+import { authGuard, requireRole } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 
 import { getDashboardData } from './dashboard.service.js';
@@ -12,7 +12,7 @@ export const registerAdminDashboardRoutes = async (fastify: FastifyInstance): Pr
   fastify.get<{}>(
     '/admin/dashboard',
     {
-      preHandler: [authGuard, tenantContext],
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
       schema: {
         response: {
           200: {
@@ -91,6 +91,19 @@ export const registerAdminDashboardRoutes = async (fastify: FastifyInstance): Pr
             },
           },
           401: {
+            type: 'object',
+            properties: {
+              success: { type: 'boolean' },
+              error: {
+                type: 'object',
+                properties: {
+                  code: { type: 'string' },
+                  message: { type: 'string' },
+                },
+              },
+            },
+          },
+          403: {
             type: 'object',
             properties: {
               success: { type: 'boolean' },
