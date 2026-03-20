@@ -37,9 +37,16 @@ export const OWNERSHIP_MANIFEST: OwnershipManifest = {
     {
       schema: 'auth',
       table: 'user_profiles',
-      allowedModules: ['auth', 'settings'],
+      allowedModules: ['auth', 'settings', 'multiplayer'],
       justification:
-        'User profiles contain user settings and preferences that require user profile access',
+        'Multiplayer module requires player profile access to look up user IDs for co-op session creation',
+    },
+    {
+      schema: 'public',
+      table: 'game_sessions',
+      allowedModules: ['game', 'multiplayer'],
+      justification:
+        'Multiplayer module requires game session access to create entries for co-op event persistence',
     },
     {
       schema: 'auth',

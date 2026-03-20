@@ -15,7 +15,13 @@ export type WSMessageType =
   | 'ACK'
   | 'HEARTBEAT'
   | 'HEARTBEAT_ACK'
-  | 'ERROR';
+  | 'ERROR'
+  | 'ACTION_SUBMIT'
+  | 'ACTION_ACCEPTED'
+  | 'ACTION_REJECTED'
+  | 'STATE_SNAPSHOT'
+  | 'EVENT'
+  | 'RESYNC';
 
 export interface WSMessageEnvelope {
   type: WSMessageType;
@@ -81,3 +87,55 @@ export interface WebSocketAuthResult {
   payload?: JWTAuthPayload;
   error?: string;
 }
+
+export interface CoopActionSubmitMessage {
+  type: 'ACTION_SUBMIT';
+  action: string;
+  payload: Record<string, unknown>;
+  seq: number;
+  requestId: string;
+}
+
+export interface CoopActionAcceptedMessage {
+  type: 'ACTION_ACCEPTED';
+  seq: number;
+  events: Record<string, unknown>[];
+  requestId: string;
+}
+
+export interface CoopActionRejectedMessage {
+  type: 'ACTION_REJECTED';
+  reason: 'STALE_SEQ' | 'GAP_DETECTED';
+  currentSeq: number;
+  requestId: string;
+}
+
+export interface CoopStateSnapshotMessage {
+  type: 'STATE_SNAPSHOT';
+  seq: number;
+  state: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface CoopEventMessage {
+  type: 'EVENT';
+  seq: number;
+  event: Record<string, unknown>;
+  timestamp: string;
+}
+
+export interface CoopResyncMessage {
+  type: 'RESYNC';
+  currentSeq: number;
+  lastSnapshotSeq: number;
+  events: Record<string, unknown>[];
+}
+
+export type CoopWSClientMessage = CoopActionSubmitMessage;
+
+export type CoopWSServerMessage =
+  | CoopActionAcceptedMessage
+  | CoopActionRejectedMessage
+  | CoopStateSnapshotMessage
+  | CoopEventMessage
+  | CoopResyncMessage;

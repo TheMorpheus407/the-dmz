@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, sql } from 'drizzle-orm';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import {
@@ -10,6 +10,8 @@ import {
   type CoopRole,
 } from '../../db/schema/multiplayer/index.js';
 import { party } from '../../db/schema/multiplayer/index.js';
+import { playerProfiles } from '../../db/schema/social/player-profiles.js';
+import { gameSessions } from '../../db/schema/game/game-sessions.js';
 import {
   getCachedCoopSession,
   setCachedCoopSession,
@@ -350,6 +352,50 @@ export async function createCoopSession(
 
   if (!newSession) {
     return { success: false, error: 'Failed to create co-op session' };
+  }
+
+  const leaderProfile = await db.query.playerProfiles.findFirst({
+    where: and(eq(playerProfiles.profileId, leaderId), eq(playerProfiles.tenantId, tenantId)),
+  });
+
+  if (leaderProfile) {
+    const seedBigInt = BigInt(input.seed);
+
+    const [gameSession] = await db
+      .insert(gameSessions)
+      .values({
+        tenantId,
+        userId: leaderProfile.userId,
+        seed: seedBigInt,
+        day: 1,
+        funds: 0,
+        trustScore: 50,
+        intelFragments: 0,
+        playerLevel: 1,
+        playerXP: 0,
+        clientCount: 0,
+        threatLevel: 'low',
+        defenseLevel: 1,
+        serverLevel: 1,
+        networkLevel: 1,
+        isActive: sql`uuid_generate_v7()`,
+      })
+      .returning();
+
+    if (gameSession) {
+      await db
+        .update(coopSession)
+        .set({ gameSessionId: gameSession.id })
+        .where(eq(coopSession.sessionId, newSession.sessionId));
+
+      const updatedSession = await db.query.coopSession.findFirst({
+        where: eq(coopSession.sessionId, newSession.sessionId),
+      });
+
+      if (updatedSession) {
+        Object.assign(newSession, updatedSession);
+      }
+    }
   }
 
   await db

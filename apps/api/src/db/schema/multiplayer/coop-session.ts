@@ -1,8 +1,9 @@
 import { sql } from 'drizzle-orm';
-import { index, integer, pgSchema, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { bigint, index, integer, pgSchema, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 
 import { tenants } from '../../../shared/database/schema/tenants.js';
 import { playerProfiles } from '../social/player-profiles.js';
+import { gameSessions } from '../game/game-sessions.js';
 
 const multiplayerSchema = pgSchema('multiplayer');
 
@@ -32,7 +33,13 @@ export const coopSession = multiplayerSchema.table(
     authorityPlayerId: uuid('authority_player_id').references(() => playerProfiles.profileId, {
       onDelete: 'restrict',
     }),
+    gameSessionId: uuid('game_session_id').references(() => gameSessions.id, {
+      onDelete: 'set null',
+    }),
     dayNumber: integer('day_number').notNull().default(1),
+    sessionSeq: bigint('session_seq', { mode: 'number' }).notNull().default(0),
+    lastSnapshotSeq: bigint('last_snapshot_seq', { mode: 'number' }).notNull().default(0),
+    lastSnapshotAt: timestamp('last_snapshot_at', { withTimezone: true, mode: 'date' }),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
     completedAt: timestamp('completed_at', { withTimezone: true, mode: 'date' }),
   },
@@ -40,6 +47,8 @@ export const coopSession = multiplayerSchema.table(
     partyIdx: index('coop_session_party_idx').on(table.partyId),
     authorityIdx: index('coop_session_authority_idx').on(table.authorityPlayerId),
     tenantStatusIdx: index('coop_session_tenant_status_idx').on(table.tenantId, table.status),
+    seqIdx: index('coop_session_seq_idx').on(table.sessionSeq),
+    tenantSeqIdx: index('coop_session_tenant_seq_idx').on(table.tenantId, table.sessionSeq),
   }),
 );
 

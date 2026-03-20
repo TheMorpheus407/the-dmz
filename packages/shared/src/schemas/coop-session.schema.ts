@@ -90,3 +90,64 @@ export const coopDecisionProposalResponseSchema = z
   .strict();
 
 export type CoopDecisionProposalResponse = z.infer<typeof coopDecisionProposalResponseSchema>;
+
+export const coopActionSubmitSchema = z
+  .object({
+    action: z.string(),
+    payload: z.record(z.unknown()),
+    seq: z.number().int().min(0),
+    requestId: z.string().uuid(),
+  })
+  .strict();
+
+export type CoopActionSubmit = z.infer<typeof coopActionSubmitSchema>;
+
+export const coopActionAcceptedSchema = z
+  .object({
+    seq: z.number().int().min(0),
+    events: z.array(z.record(z.unknown())),
+    requestId: z.string().uuid(),
+  })
+  .strict();
+
+export type CoopActionAccepted = z.infer<typeof coopActionAcceptedSchema>;
+
+export const coopActionRejectedSchema = z
+  .object({
+    reason: z.enum(['STALE_SEQ', 'GAP_DETECTED']),
+    currentSeq: z.number().int().min(0),
+    requestId: z.string().uuid(),
+  })
+  .strict();
+
+export type CoopActionRejected = z.infer<typeof coopActionRejectedSchema>;
+
+export const coopStateSnapshotSchema = z
+  .object({
+    seq: z.number().int().min(0),
+    state: z.record(z.unknown()),
+    timestamp: z.string().datetime(),
+  })
+  .strict();
+
+export type CoopStateSnapshot = z.infer<typeof coopStateSnapshotSchema>;
+
+export const coopEventSchema = z
+  .object({
+    seq: z.number().int().min(0),
+    event: z.record(z.unknown()),
+    timestamp: z.string().datetime(),
+  })
+  .strict();
+
+export type CoopEvent = z.infer<typeof coopEventSchema>;
+
+export const coopResyncSchema = z
+  .object({
+    currentSeq: z.number().int().min(0),
+    lastSnapshotSeq: z.number().int().min(0),
+    events: z.array(z.record(z.unknown())),
+  })
+  .strict();
+
+export type CoopResync = z.infer<typeof coopResyncSchema>;

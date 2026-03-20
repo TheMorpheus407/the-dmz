@@ -351,6 +351,20 @@
       "when": 1775900000000,
       "tag": "0048_coop_session",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1775950000000,
+      "tag": "0049_coop_session_sync",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1776000000000,
+      "tag": "0050_coop_session_game_session_link",
+      "breakpoints": true
     }
   ]
 }
