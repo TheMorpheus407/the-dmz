@@ -141,6 +141,13 @@ export const MODULE_MANIFEST: ModuleManifest = {
       dependencies: ['eventBus', 'auth'],
       startupFlags: { required: false, diagnostics: true },
     },
+    {
+      name: 'chat',
+      pluginPath: './modules/chat/index.js',
+      routePrefix: '/api/v1/chat',
+      dependencies: ['eventBus', 'auth'],
+      startupFlags: { required: false, diagnostics: true },
+    },
   ],
 };
 

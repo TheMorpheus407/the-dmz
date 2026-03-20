@@ -8,6 +8,7 @@ import { analyticsEvents } from '../../../db/schema/analytics/index.js';
 import { auditLogs } from '../../../db/schema/audit/index.js';
 import { users } from '../../../shared/database/schema/users.js';
 import { archivedData, type DataCategory } from '../../../db/schema/retention/index.js';
+import { chatChannel, chatMessage } from '../../../db/schema/social/index.js';
 import { getExpiredSessions, deleteSessionsByIds } from '../../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
 import {
   calculateExpiryDate,
@@ -158,6 +159,7 @@ export class RetentionWorker {
       'analytics',
       'audit_logs',
       'user_data',
+      'chat_messages',
     ];
 
     for (const category of targetCategories) {
@@ -237,6 +239,14 @@ export class RetentionWorker {
         break;
       case 'user_data':
         ({ processed, anonymized } = await this.processUserData(tenantId, expiryDate, batchSize));
+        break;
+      case 'chat_messages':
+        ({ processed, archived, deleted } = await this.processChatMessages(
+          tenantId,
+          expiryDate,
+          policy.effectiveAction,
+          batchSize,
+        ));
         break;
     }
 
@@ -476,6 +486,57 @@ export class RetentionWorker {
     }
 
     return { processed, anonymized };
+  }
+
+  private async processChatMessages(
+    tenantId: string,
+    expiryDate: Date,
+    action: string,
+    batchSize: number,
+  ): Promise<{ processed: number; archived: number; deleted: number }> {
+    const db = getDatabaseClient();
+    let processed = 0;
+    let archived = 0;
+    let deleted = 0;
+
+    while (true) {
+      const expiredMessages = await db
+        .select({ messageId: chatMessage.messageId })
+        .from(chatMessage)
+        .innerJoin(chatChannel, eq(chatMessage.channelId, chatChannel.channelId))
+        .where(and(eq(chatChannel.tenantId, tenantId), lt(chatMessage.createdAt, expiryDate)))
+        .limit(batchSize);
+
+      if (expiredMessages.length === 0) {
+        break;
+      }
+
+      for (const message of expiredMessages) {
+        if (action === 'archive') {
+          const messageData = await db
+            .select()
+            .from(chatMessage)
+            .where(eq(chatMessage.messageId, message.messageId))
+            .limit(1);
+
+          if (messageData.length > 0) {
+            await archiveService.archive({
+              tenantId,
+              dataCategory: 'chat_messages',
+              originalId: message.messageId,
+              data: messageData[0] as unknown as Record<string, unknown>,
+            });
+            archived++;
+          }
+        }
+
+        await db.delete(chatMessage).where(eq(chatMessage.messageId, message.messageId));
+        deleted++;
+        processed++;
+      }
+    }
+
+    return { processed, archived, deleted };
   }
 
   private async cleanupExpiredArchives(job: Job<CleanupExpiredArchivesJobData>): Promise<unknown> {

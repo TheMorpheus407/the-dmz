@@ -201,6 +201,10 @@ export class WebSocketGateway {
     return connection ? { ...connection.connectionInfo } : null;
   }
 
+  public getAllConnections(): IterableIterator<[string, WebSocketConnection]> {
+    return this.connections.entries();
+  }
+
   public updateHeartbeat(connectionId: string): boolean {
     const connection = this.connections.get(connectionId);
     if (!connection) {
@@ -279,7 +283,15 @@ export class WebSocketGateway {
   }
 
   public isValidChannel(channel: string): boolean {
-    const validTypes = ['session', 'notifications', 'threats', 'global', 'presence', 'signals'];
+    const validTypes = [
+      'session',
+      'notifications',
+      'threats',
+      'global',
+      'presence',
+      'signals',
+      'chat',
+    ];
     const parsed = this.parseChannel(channel);
 
     if (!parsed) {

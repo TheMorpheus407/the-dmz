@@ -333,6 +333,7 @@ export class ArchiveService {
       analytics: 0,
       audit_logs: 0,
       user_data: 0,
+      chat_messages: 0,
     };
 
     let oldestArchive: Date | null = null;

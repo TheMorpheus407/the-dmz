@@ -16,6 +16,7 @@ import {
   type CachedParty,
 } from '../../shared/cache/index.js';
 import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { getOrCreatePartyChannel } from '../chat/chat.service.js'; // eslint-disable-line import-x/no-restricted-paths
 
 import { createInviteCode, isInviteCodeValid } from './invite-code.js';
 
@@ -190,6 +191,8 @@ export async function createParty(
   }
 
   await cacheParty(config, tenantId, partyWithMembers);
+
+  await getOrCreatePartyChannel(config, tenantId, newParty.partyId);
 
   return { success: true, party: partyWithMembers };
 }

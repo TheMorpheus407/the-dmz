@@ -7,6 +7,9 @@ export type WSMessageType =
   | 'PLAYER_LEAVE'
   | 'PRESENCE_UPDATE'
   | 'QUICK_SIGNAL'
+  | 'CHAT_MESSAGE'
+  | 'CHAT_TYPING'
+  | 'CHAT_MODERATION_ACTION'
   | 'SUBSCRIBE'
   | 'UNSUBSCRIBE'
   | 'ACK'
@@ -38,7 +41,8 @@ export type ChannelType =
   | 'threats'
   | 'global'
   | 'presence'
-  | 'signals';
+  | 'signals'
+  | 'chat';
 
 export interface ChannelSubscription {
   channelType: ChannelType;

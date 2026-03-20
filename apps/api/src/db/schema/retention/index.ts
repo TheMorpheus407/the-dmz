@@ -20,6 +20,7 @@ export const dataCategories = [
   'analytics',
   'audit_logs',
   'user_data',
+  'chat_messages',
 ] as const;
 export type DataCategory = (typeof dataCategories)[number];
 
@@ -127,6 +128,7 @@ export const DEFAULT_RETENTION_DAYS: Record<DataCategory, number> = {
   analytics: 730,
   audit_logs: 2555,
   user_data: -1,
+  chat_messages: 30,
 };
 
 export const MIN_AUDIT_RETENTION_DAYS = 2555;
@@ -138,6 +140,7 @@ export const FRAMEWORK_RETENTION_DAYS: Record<string, Record<DataCategory, numbe
     analytics: 2190,
     audit_logs: 2190,
     user_data: 2190,
+    chat_messages: 2190,
   },
   SOX: {
     events: 2555,
@@ -145,6 +148,7 @@ export const FRAMEWORK_RETENTION_DAYS: Record<string, Record<DataCategory, numbe
     analytics: 2555,
     audit_logs: 2555,
     user_data: 2555,
+    chat_messages: 2555,
   },
   FedRAMP: {
     events: 1095,
@@ -152,6 +156,7 @@ export const FRAMEWORK_RETENTION_DAYS: Record<string, Record<DataCategory, numbe
     analytics: 1095,
     audit_logs: 1095,
     user_data: 1095,
+    chat_messages: 1095,
   },
   DORA: {
     events: 1825,
@@ -159,6 +164,7 @@ export const FRAMEWORK_RETENTION_DAYS: Record<string, Record<DataCategory, numbe
     analytics: 1825,
     audit_logs: 1825,
     user_data: 1825,
+    chat_messages: 1825,
   },
   GDPR: {
     events: 365,
@@ -166,6 +172,7 @@ export const FRAMEWORK_RETENTION_DAYS: Record<string, Record<DataCategory, numbe
     analytics: 730,
     audit_logs: 2555,
     user_data: -1,
+    chat_messages: 30,
   },
   'PCI-DSS': {
     events: 1095,
@@ -173,5 +180,6 @@ export const FRAMEWORK_RETENTION_DAYS: Record<string, Record<DataCategory, numbe
     analytics: 1095,
     audit_logs: 1460,
     user_data: 365,
+    chat_messages: 1095,
   },
 };

@@ -18,3 +18,5 @@ export * from './moderation-report.js';
 export * from './moderation-action.js';
 export * from './rate-limit-config.js';
 export * from './player-consent.js';
+export * from './chat-channel.js';
+export * from './chat-message.js';

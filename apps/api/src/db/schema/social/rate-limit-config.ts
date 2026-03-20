@@ -10,6 +10,7 @@ export const rateLimitActions = [
   'send_friend_request',
   'create_forum_post',
   'report_submit',
+  'send_chat_message',
 ] as const;
 export type RateLimitAction = (typeof rateLimitActions)[number];
 
@@ -48,4 +49,5 @@ export const DEFAULT_RATE_LIMITS: Record<
   send_friend_request: { windowSeconds: 3600, maxCount: 20 },
   create_forum_post: { windowSeconds: 3600, maxCount: 5 },
   report_submit: { windowSeconds: 3600, maxCount: 10 },
+  send_chat_message: { windowSeconds: 2, maxCount: 1 },
 };
