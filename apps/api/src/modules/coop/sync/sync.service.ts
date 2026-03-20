@@ -1,7 +1,7 @@
 import { eq, and, sql } from 'drizzle-orm';
 
 import { getDatabaseClient } from '../../../shared/database/connection.js';
-import { coopSession } from '../../../db/schema/multiplayer/index.js';
+import { coopSession, coopRoleAssignment } from '../../../db/schema/multiplayer/index.js';
 import { appendEvent } from '../../game/event-store/event-store.repo.js'; // eslint-disable-line import-x/no-restricted-paths
 
 import type { AppConfig } from '../../../config.js';
@@ -98,6 +98,16 @@ export async function validateAndApplyAction(
         throw new Error('STALE_SEQ');
       }
 
+      const roleAssignment = await tx.query.coopRoleAssignment.findFirst({
+        where: and(
+          eq(coopRoleAssignment.sessionId, input.sessionId),
+          eq(coopRoleAssignment.playerId, input.playerId),
+        ),
+      });
+
+      const partyId = session.partyId;
+      const coopRole = roleAssignment?.role ?? null;
+
       const event = await appendEvent(tx, {
         sessionId: gameSessionId,
         userId: input.playerId,
@@ -109,9 +119,13 @@ export async function validateAndApplyAction(
           action: input.action,
           payload: input.payload,
           seq: newSeq,
+          partyId,
+          coopRole,
         } as Record<string, unknown>,
         eventVersion: 1,
         clientTime: new Date(),
+        partyId,
+        coopRole,
       });
 
       persistedEvent = event;
@@ -147,13 +161,24 @@ export async function validateAndApplyAction(
     };
   }
 
+  const returnRoleAssignment = await db.query.coopRoleAssignment.findFirst({
+    where: and(
+      eq(coopRoleAssignment.sessionId, input.sessionId),
+      eq(coopRoleAssignment.playerId, input.playerId),
+    ),
+  });
+
   const events: Record<string, unknown>[] = [
     {
       eventType: 'coop.action.applied',
       sessionId: input.sessionId,
       playerId: input.playerId,
       action: input.action,
-      payload: input.payload,
+      payload: {
+        ...input.payload,
+        partyId: session.partyId,
+        coopRole: returnRoleAssignment?.role ?? null,
+      },
       seq: newSeq,
       timestamp: persistedEvent.serverTime.toISOString(),
       eventId: persistedEvent.eventId,

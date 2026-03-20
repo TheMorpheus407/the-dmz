@@ -28,6 +28,8 @@ export const analyticsEvents = pgTable(
     deviceInfo: jsonb('device_info'),
     geoInfo: jsonb('geo_info'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+    partyId: uuid('party_id'),
+    coopRole: varchar('coop_role', { length: 32 }),
   },
   (table) => ({
     tenantIdx: index('analytics_events_tenant_idx').on(table.tenantId),
@@ -35,6 +37,7 @@ export const analyticsEvents = pgTable(
     userIdx: index('analytics_events_user_idx').on(table.userId),
     createdAtIdx: index('analytics_events_created_at_idx').on(table.createdAt),
     sessionIdx: index('analytics_events_session_idx').on(table.sessionId),
+    partyIdx: index('analytics_events_party_idx').on(table.partyId),
   }),
 );
 

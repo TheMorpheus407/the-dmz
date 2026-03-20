@@ -45,18 +45,16 @@ export const geoInfoSchema = z
 
 export type GeoInfo = z.infer<typeof geoInfoSchema>;
 
-export const analyticsPayloadSchema = z
-  .object({
-    difficulty_tier: z.enum(DIFFICULTY_TIERS).optional(),
-    threat_tier: z.string().optional(),
-    scenario_id: z.string().optional(),
-    content_version: z.string().optional(),
-    competency_tags: z.array(z.enum(COMPETENCY_DOMAINS)).optional(),
-    outcome: z.enum(EVENT_OUTCOMES).optional(),
-    time_to_decision_ms: z.number().int().min(0).optional(),
-    evidence_flags: z.array(z.enum(EVIDENCE_FLAGS)).optional(),
-  })
-  .strict();
+export const analyticsPayloadSchema = z.object({
+  difficulty_tier: z.enum(DIFFICULTY_TIERS).optional(),
+  threat_tier: z.string().optional(),
+  scenario_id: z.string().optional(),
+  content_version: z.string().optional(),
+  competency_tags: z.array(z.enum(COMPETENCY_DOMAINS)).optional(),
+  outcome: z.enum(EVENT_OUTCOMES).optional(),
+  time_to_decision_ms: z.number().int().min(0).optional(),
+  evidence_flags: z.array(z.enum(EVIDENCE_FLAGS)).optional(),
+});
 
 export type AnalyticsPayload = z.infer<typeof analyticsPayloadSchema>;
 
@@ -75,6 +73,8 @@ export const eventEnvelopeSchema = z
     device_info: deviceInfoSchema.optional(),
     geo_info: geoInfoSchema.optional(),
     payload: analyticsPayloadSchema.optional(),
+    party_id: z.string().uuid().optional(),
+    coop_role: z.string().optional(),
   })
   .strict();
 

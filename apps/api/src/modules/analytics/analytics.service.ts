@@ -25,6 +25,8 @@ interface QueuedEventData {
   deviceInfo: Record<string, unknown> | null;
   geoInfo: Record<string, unknown> | null;
   createdAt: Date;
+  partyId: string | null;
+  coopRole: string | null;
 }
 
 interface QueuedEvent {
@@ -176,6 +178,8 @@ export class AnalyticsService {
       source: domainEvent.source,
       environment: 'development',
       payload: domainEvent.payload,
+      party_id: payload ? (getPayloadField(payload, 'partyId') as string | undefined) : undefined,
+      coop_role: payload ? (getPayloadField(payload, 'coopRole') as string | undefined) : undefined,
     };
 
     return validateIncomingEvent(envelope);
@@ -194,6 +198,12 @@ export class AnalyticsService {
     const payloadSessionId = payload
       ? (getPayloadField(payload, 'sessionId') as string | undefined)
       : undefined;
+    const payloadPartyId = payload
+      ? (getPayloadField(payload, 'partyId') as string | undefined)
+      : undefined;
+    const payloadCoopRole = payload
+      ? (getPayloadField(payload, 'coopRole') as string | undefined)
+      : undefined;
 
     const event: QueuedEventData = {
       eventId: analyticsEvent.eventId || generateId(),
@@ -210,6 +220,8 @@ export class AnalyticsService {
       deviceInfo: analyticsEvent.deviceInfo || null,
       geoInfo: analyticsEvent.geoInfo || null,
       createdAt: new Date(),
+      partyId: analyticsEvent.partyId || payloadPartyId || null,
+      coopRole: analyticsEvent.coopRole || payloadCoopRole || null,
     };
 
     this.eventQueue.push({
@@ -291,6 +303,8 @@ export class AnalyticsService {
           deviceInfo: event.deviceInfo,
           geoInfo: event.geoInfo,
           createdAt: event.createdAt,
+          partyId: event.partyId as never,
+          coopRole: event.coopRole as never,
         })
         .onConflictDoNothing()
         .execute();

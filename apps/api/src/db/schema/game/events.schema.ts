@@ -38,6 +38,8 @@ export const gameEvents = pgTable(
       .notNull()
       .defaultNow(),
     clientTime: timestamp('client_time', { withTimezone: true, mode: 'date' }),
+    partyId: uuid('party_id'),
+    coopRole: varchar('coop_role', { length: 32 }),
   },
   (table) => ({
     sessionSequenceIdx: index('game_events_session_sequence_idx').on(
@@ -47,6 +49,7 @@ export const gameEvents = pgTable(
     eventTypeTimeIdx: index('game_events_type_time_idx').on(table.eventType, table.serverTime),
     tenantIdx: index('game_events_tenant_idx').on(table.tenantId),
     userIdx: index('game_events_user_idx').on(table.userId),
+    partyIdx: index('game_events_party_idx').on(table.partyId),
   }),
 );
 

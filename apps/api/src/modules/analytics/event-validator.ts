@@ -15,6 +15,8 @@ export interface ValidatedAnalyticsEvent {
   deviceInfo: Record<string, unknown> | undefined;
   geoInfo: Record<string, unknown> | undefined;
   errors: Array<{ path: string; message: string }>;
+  partyId: string | undefined;
+  coopRole: string | undefined;
 }
 
 const REQUIRED_FIELDS = ['event_id', 'event_name', 'user_id', 'tenant_id', 'timestamp'];
@@ -66,6 +68,8 @@ export function validateIncomingEvent(input: unknown): ValidatedAnalyticsEvent {
       deviceInfo: undefined,
       geoInfo: undefined,
       errors: validation.errors,
+      partyId: undefined,
+      coopRole: undefined,
     };
   }
 
@@ -95,6 +99,8 @@ export function validateIncomingEvent(input: unknown): ValidatedAnalyticsEvent {
         path: field,
         message: `Required field missing: ${field}`,
       })),
+      partyId: undefined,
+      coopRole: undefined,
     };
   }
 
@@ -109,6 +115,19 @@ export function validateIncomingEvent(input: unknown): ValidatedAnalyticsEvent {
       sessionIdValue = String(sessionIdRaw);
     }
   }
+
+  const partyIdRaw = event['party_id'];
+  let partyIdValue: string | undefined;
+  if (partyIdRaw !== undefined && partyIdRaw !== null) {
+    if (typeof partyIdRaw === 'string') {
+      partyIdValue = partyIdRaw;
+    } else if (typeof partyIdRaw === 'number' || typeof partyIdRaw === 'boolean') {
+      partyIdValue = String(partyIdRaw);
+    }
+  }
+
+  const coopRoleValue = event['coop_role'] as string | undefined;
+
   return {
     valid: true,
     eventId: getFieldAsString(event, 'event_id'),
@@ -124,6 +143,8 @@ export function validateIncomingEvent(input: unknown): ValidatedAnalyticsEvent {
     deviceInfo: deviceInfoValue,
     geoInfo: geoInfoValue,
     errors: [],
+    partyId: partyIdValue,
+    coopRole: coopRoleValue,
   };
 }
 

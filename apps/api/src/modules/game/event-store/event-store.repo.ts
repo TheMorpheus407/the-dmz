@@ -37,6 +37,8 @@ export const appendEvent = async (
       eventVersion: event['eventVersion'] ?? 1,
       sequenceNum: nextSequenceNum,
       clientTime: event['clientTime'] ?? null,
+      partyId: event['partyId'] ?? null,
+      coopRole: event['coopRole'] ?? null,
     })
     .returning();
 
