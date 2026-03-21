@@ -265,6 +265,7 @@ export const registerCertificateRoutes = async (fastify: FastifyInstance): Promi
           'Content-Disposition',
           `attachment; filename="certificate-${certificateId}.pdf"`,
         );
+        reply.header('X-Download-Options', 'noopen');
 
         return reply.send(pdfBuffer);
       } catch (error) {

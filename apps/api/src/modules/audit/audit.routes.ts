@@ -311,6 +311,7 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
       reply.raw.writeHead(200, {
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="audit-export-${Date.now()}.${format}"`,
+        'X-Download-Options': 'noopen',
       });
 
       try {

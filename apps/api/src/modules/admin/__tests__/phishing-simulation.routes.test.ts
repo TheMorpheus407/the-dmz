@@ -533,4 +533,54 @@ describe('phishing-simulation routes security', () => {
       expect(response.statusCode).toBe(400);
     });
   });
+
+  describe('GET /api/v1/admin/simulations/:id/results/export', () => {
+    it('returns 401 without authentication', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/simulations/00000000-0000-0000-0000-000000000001/results/export',
+      });
+
+      expect(response.statusCode).toBe(401);
+      const body = response.json();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('AUTH_UNAUTHORIZED');
+    });
+
+    it('returns 403 with trainer role', async () => {
+      const { accessToken, user } = await registerUser(app);
+      await seedTenantAuthModel(testConfig, user.tenantId, [{ userId: user.id, role: 'trainer' }]);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/simulations/00000000-0000-0000-0000-000000000001/results/export',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(403);
+      const body = response.json();
+      expect(body.success).toBe(false);
+      expect(body.error.code).toBe('AUTH_INSUFFICIENT_PERMS');
+    });
+
+    it('sets X-Download-Options header for CSV format', async () => {
+      const { accessToken, user } = await registerUser(app);
+      await seedTenantAuthModel(testConfig, user.tenantId, [
+        { userId: user.id, role: 'tenant_admin' },
+      ]);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/admin/simulations/00000000-0000-0000-0000-000000000001/results/export?format=csv',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-download-options']).toBe('noopen');
+    });
+  });
 });

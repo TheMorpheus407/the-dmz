@@ -459,5 +459,41 @@ describe('audit routes security', () => {
 
       expect(response.statusCode).toBe(200);
     });
+
+    it('sets X-Download-Options header for CSV format', async () => {
+      const { accessToken, user } = await registerUser(app);
+      await seedTenantAuthModel(testConfig, user.tenantId, [
+        { userId: user.id, role: 'tenant_admin' },
+      ]);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/audit/export?format=csv',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-download-options']).toBe('noopen');
+    });
+
+    it('sets X-Download-Options header for JSON format', async () => {
+      const { accessToken, user } = await registerUser(app);
+      await seedTenantAuthModel(testConfig, user.tenantId, [
+        { userId: user.id, role: 'tenant_admin' },
+      ]);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/audit/export?format=json',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-download-options']).toBe('noopen');
+    });
   });
 });

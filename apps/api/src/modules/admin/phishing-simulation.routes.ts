@@ -400,6 +400,7 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
             'Content-Disposition',
             `attachment; filename="simulation-${id}-results.csv"`,
           );
+          reply.header('X-Download-Options', 'noopen');
         } else {
           reply.header('Content-Type', 'application/json');
         }
