@@ -57,7 +57,6 @@
     "@fastify/swagger": "^9.6.1",
     "@fastify/swagger-ui": "^5.2.3",
     "@fastify/websocket": "^11.0.0",
-    "@node-saml/node-saml": "^5.1.0",
     "@simplewebauthn/server": "^13.3.0",
     "@the-dmz/shared": "workspace:*",
     "ajv": "^8.18.0",
