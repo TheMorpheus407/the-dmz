@@ -5,6 +5,7 @@ import { registerMfaRoutes } from './mfa.routes.js';
 import { registerSSORoutes } from './auth.sso.routes.js';
 import { preflightRoutes } from './auth.preflight.routes.js';
 import { apiKeyRoutes } from './api-key.routes.js';
+import { serviceAccountRoutes } from './service-account.routes.js';
 import { registerQuotaOverrideRoutes } from './quota-override.routes.js';
 
 import type { FastifyPluginAsync } from 'fastify';
@@ -28,6 +29,7 @@ const authPluginImpl: FastifyPluginAsync = async (fastify) => {
   await registerSSORoutes(fastify);
   await preflightRoutes(fastify);
   await fastify.register(apiKeyRoutes);
+  await fastify.register(serviceAccountRoutes);
   await registerQuotaOverrideRoutes(fastify);
 };
 

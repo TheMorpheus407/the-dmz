@@ -20,6 +20,8 @@ import { getDatabaseClient } from '../../shared/database/connection.js';
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
 import { preAuthTenantStatusGuard } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { createAppError } from '../../shared/middleware/error-handler.js';
 
 import { apiKeyService } from './api-key.service.js';
@@ -41,7 +43,14 @@ async function apiKeyRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/api-keys',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('api_key', 'manage'),
+      ],
       schema: {
         response: {
           200: apiKeyListResponseJsonSchema,
@@ -90,7 +99,14 @@ async function apiKeyRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/api-keys',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('api_key', 'manage'),
+      ],
       schema: {
         body: createApiKeyJsonSchema,
       },
@@ -146,7 +162,14 @@ async function apiKeyRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/api-keys/:keyId',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('api_key', 'manage'),
+      ],
       schema: {
         params: {
           type: 'object',
@@ -187,7 +210,14 @@ async function apiKeyRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/api-keys/:keyId/rotate',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('api_key', 'manage'),
+      ],
       schema: {
         params: {
           type: 'object',
@@ -254,7 +284,14 @@ async function apiKeyRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/api-keys/:keyId/revoke',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('api_key', 'manage'),
+      ],
       schema: {
         params: {
           type: 'object',
@@ -324,7 +361,14 @@ async function apiKeyRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/api-keys/:keyId',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('api_key', 'manage'),
+      ],
       schema: {
         params: {
           type: 'object',

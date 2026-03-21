@@ -7,6 +7,8 @@ import { getDatabaseClient } from '../../shared/database/connection.js';
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
 import { preAuthTenantStatusGuard } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { createAppError } from '../../shared/middleware/error-handler.js';
 
 import { serviceAccountService } from './service-account.service.js';
@@ -21,7 +23,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -63,7 +72,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -101,7 +117,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts/:serviceId',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -135,7 +158,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts/:serviceId',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -176,7 +206,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts/:serviceId/disable',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -205,7 +242,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts/:serviceId/enable',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -234,7 +278,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts/:serviceId',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -258,7 +309,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts/:serviceId/roles',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -287,7 +345,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts/:serviceId/roles',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -326,7 +391,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts/:serviceId/roles/:roleId',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
@@ -356,7 +428,14 @@ async function serviceAccountRoutes(fastify: FastifyInstance) {
   }>(
     '/auth/service-accounts/:serviceId/api-keys',
     {
-      preHandler: [preAuthTenantResolver(), preAuthTenantStatusGuard, tenantStatusGuard],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        preAuthTenantResolver(),
+        preAuthTenantStatusGuard,
+        tenantStatusGuard,
+        requirePermission('service_account', 'manage'),
+      ],
     },
     async (
       request: FastifyRequest<{
