@@ -3,6 +3,7 @@ import {
   foreignKey,
   index,
   inet,
+  integer,
   pgSchema,
   text,
   timestamp,
@@ -37,6 +38,8 @@ export const sessions = authSchema.table(
       .defaultNow(),
     mfaVerifiedAt: timestamp('mfa_verified_at', { withTimezone: true, mode: 'date' }),
     mfaMethod: varchar('mfa_method', { length: 32 }),
+    mfaFailedAttempts: integer('mfa_failed_attempts').default(0),
+    mfaLockedAt: timestamp('mfa_locked_at', { withTimezone: true, mode: 'date' }),
   },
   (table) => ({
     tokenHashUnique: uniqueIndex('auth_sessions_token_hash_unique').on(table.tokenHash),

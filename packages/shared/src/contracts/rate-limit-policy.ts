@@ -209,6 +209,38 @@ export const m1RateLimitPolicyManifest: M1RateLimitPolicyManifest = {
       rationale: 'WebAuthn credentials listing',
     },
     {
+      route: '/auth/mfa/verify',
+      method: 'POST',
+      category: RateLimitCategory.AUTH,
+      max: 5,
+      windowMs: 300_000,
+      exempt: false,
+      bucketKey: 'user',
+      rationale:
+        'MFA verification endpoint - strict limit to prevent brute-force attacks on TOTP/backup codes',
+    },
+    {
+      route: '/auth/mfa/totp/enroll/verify',
+      method: 'POST',
+      category: RateLimitCategory.AUTH,
+      max: 5,
+      windowMs: 300_000,
+      exempt: false,
+      bucketKey: 'user',
+      rationale: 'TOTP enrollment verification - strict limit to prevent brute-force attacks',
+    },
+    {
+      route: '/auth/mfa/webauthn/verify',
+      method: 'POST',
+      category: RateLimitCategory.AUTH,
+      max: 10,
+      windowMs: 300_000,
+      exempt: false,
+      bucketKey: 'user',
+      rationale:
+        'WebAuthn assertion verification - moderate limit for UX while preventing brute-force',
+    },
+    {
       route: '/game/session',
       method: 'POST',
       category: RateLimitCategory.PROTECTED_WRITE,

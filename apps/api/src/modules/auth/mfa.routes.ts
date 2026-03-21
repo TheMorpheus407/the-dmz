@@ -138,6 +138,12 @@ export const registerMfaRoutes = async (fastify: FastifyInstance): Promise<void>
   fastify.post<{ Body: { credential: unknown; challengeId: string } }>(
     '/auth/mfa/webauthn/verify',
     {
+      config: {
+        rateLimit: {
+          max: 10,
+          timeWindow: '5 minutes',
+        },
+      },
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         body: {
@@ -171,6 +177,7 @@ export const registerMfaRoutes = async (fastify: FastifyInstance): Promise<void>
           400: errorResponseSchemas.BadRequest,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
         security: [{ bearerAuth: [] }],
       },
@@ -323,6 +330,12 @@ export const registerMfaRoutes = async (fastify: FastifyInstance): Promise<void>
   fastify.post(
     '/auth/mfa/totp/enroll/verify',
     {
+      config: {
+        rateLimit: {
+          max: 5,
+          timeWindow: '5 minutes',
+        },
+      },
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         body: totpVerifyRequestSchema,
@@ -331,6 +344,7 @@ export const registerMfaRoutes = async (fastify: FastifyInstance): Promise<void>
           400: errorResponseSchemas.BadRequest,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
         security: [{ bearerAuth: [] }],
       },
@@ -357,6 +371,12 @@ export const registerMfaRoutes = async (fastify: FastifyInstance): Promise<void>
   fastify.post(
     '/auth/mfa/verify',
     {
+      config: {
+        rateLimit: {
+          max: 5,
+          timeWindow: '5 minutes',
+        },
+      },
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         body: mfaVerifyRequestSchema,
@@ -365,6 +385,7 @@ export const registerMfaRoutes = async (fastify: FastifyInstance): Promise<void>
           400: errorResponseSchemas.BadRequest,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
+          429: errorResponseSchemas.RateLimitExceeded,
         },
         security: [{ bearerAuth: [] }],
       },

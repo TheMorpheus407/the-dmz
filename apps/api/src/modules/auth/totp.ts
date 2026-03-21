@@ -168,6 +168,22 @@ export const verifyTotpEnrollment = async (
 ): Promise<{ success: boolean }> => {
   const db = getDatabaseClient(config);
 
+  const session = await db.query.sessions.findFirst({
+    where: eq(sessionsTable.id, user.sessionId),
+  });
+
+  if (session?.mfaLockedAt) {
+    const lockoutDurationMs = (config.MFA_MAX_ATTEMPTS || 10) * 60 * 1000;
+    const lockoutExpiresAt = new Date(session.mfaLockedAt.getTime() + lockoutDurationMs);
+    if (new Date() < lockoutExpiresAt) {
+      throw new AppError({
+        code: ErrorCodes.RATE_LIMIT_EXCEEDED,
+        message: 'MFA temporarily locked due to too many failed attempts. Try again later.',
+        statusCode: 429,
+      });
+    }
+  }
+
   const totp = new OTPAuth.TOTP({
     issuer: config.MFA_ISSUER || DEFAULT_ISSUER,
     algorithm: 'SHA1',
@@ -180,6 +196,27 @@ export const verifyTotpEnrollment = async (
   const delta = totp.validate({ token: data.code, window });
 
   if (delta === null) {
+    const failedAttempts = session?.mfaFailedAttempts ?? 0;
+    const newFailedAttempts = failedAttempts + 1;
+    const maxAttempts = config.MFA_MAX_ATTEMPTS || 10;
+
+    if (newFailedAttempts >= maxAttempts) {
+      await db
+        .update(sessionsTable)
+        .set({
+          mfaFailedAttempts: newFailedAttempts,
+          mfaLockedAt: new Date(),
+        })
+        .where(eq(sessionsTable.id, user.sessionId));
+    } else {
+      await db
+        .update(sessionsTable)
+        .set({
+          mfaFailedAttempts: newFailedAttempts,
+        })
+        .where(eq(sessionsTable.id, user.sessionId));
+    }
+
     throw new AppError({
       code: ErrorCodes.AUTH_MFA_INVALID_CODE,
       message: 'Invalid TOTP code',
@@ -199,6 +236,14 @@ export const verifyTotpEnrollment = async (
     name: data.name || 'Authenticator App',
   });
 
+  await db
+    .update(sessionsTable)
+    .set({
+      mfaFailedAttempts: null,
+      mfaLockedAt: null,
+    })
+    .where(eq(sessionsTable.id, user.sessionId));
+
   return { success: true };
 };
 
@@ -208,6 +253,22 @@ export const verifyTotpCode = async (
   code: string,
 ): Promise<{ success: boolean; mfaVerifiedAt: Date; method: 'totp' }> => {
   const db = getDatabaseClient(config);
+
+  const session = await db.query.sessions.findFirst({
+    where: eq(sessionsTable.id, user.sessionId),
+  });
+
+  if (session?.mfaLockedAt) {
+    const lockoutDurationMs = (config.MFA_MAX_ATTEMPTS || 10) * 60 * 1000;
+    const lockoutExpiresAt = new Date(session.mfaLockedAt.getTime() + lockoutDurationMs);
+    if (new Date() < lockoutExpiresAt) {
+      throw new AppError({
+        code: ErrorCodes.RATE_LIMIT_EXCEEDED,
+        message: 'MFA temporarily locked due to too many failed attempts. Try again later.',
+        statusCode: 429,
+      });
+    }
+  }
 
   const credentials = await db
     .select()
@@ -244,6 +305,27 @@ export const verifyTotpCode = async (
   const delta = totp.validate({ token: code, window });
 
   if (delta === null) {
+    const failedAttempts = session?.mfaFailedAttempts ?? 0;
+    const newFailedAttempts = failedAttempts + 1;
+    const maxAttempts = config.MFA_MAX_ATTEMPTS || 10;
+
+    if (newFailedAttempts >= maxAttempts) {
+      await db
+        .update(sessionsTable)
+        .set({
+          mfaFailedAttempts: newFailedAttempts,
+          mfaLockedAt: new Date(),
+        })
+        .where(eq(sessionsTable.id, user.sessionId));
+    } else {
+      await db
+        .update(sessionsTable)
+        .set({
+          mfaFailedAttempts: newFailedAttempts,
+        })
+        .where(eq(sessionsTable.id, user.sessionId));
+    }
+
     throw new AppError({
       code: ErrorCodes.AUTH_MFA_INVALID_CODE,
       message: 'Invalid TOTP code',
@@ -258,6 +340,8 @@ export const verifyTotpCode = async (
     .set({
       mfaVerifiedAt,
       mfaMethod: 'totp',
+      mfaFailedAttempts: null,
+      mfaLockedAt: null,
     })
     .where(eq(sessionsTable.id, user.sessionId));
 
@@ -278,6 +362,22 @@ export const verifyBackupCode = async (
   code: string,
 ): Promise<{ success: boolean; mfaVerifiedAt: Date; method: 'backup' }> => {
   const db = getDatabaseClient(config);
+
+  const session = await db.query.sessions.findFirst({
+    where: eq(sessionsTable.id, user.sessionId),
+  });
+
+  if (session?.mfaLockedAt) {
+    const lockoutDurationMs = (config.MFA_MAX_ATTEMPTS || 10) * 60 * 1000;
+    const lockoutExpiresAt = new Date(session.mfaLockedAt.getTime() + lockoutDurationMs);
+    if (new Date() < lockoutExpiresAt) {
+      throw new AppError({
+        code: ErrorCodes.RATE_LIMIT_EXCEEDED,
+        message: 'MFA temporarily locked due to too many failed attempts. Try again later.',
+        statusCode: 429,
+      });
+    }
+  }
 
   const validCodes = await db
     .select()
@@ -303,6 +403,27 @@ export const verifyBackupCode = async (
   const matchingCode = validCodes.find((c) => c.codeHash === codeHash);
 
   if (!matchingCode) {
+    const failedAttempts = session?.mfaFailedAttempts ?? 0;
+    const newFailedAttempts = failedAttempts + 1;
+    const maxAttempts = config.MFA_MAX_ATTEMPTS || 10;
+
+    if (newFailedAttempts >= maxAttempts) {
+      await db
+        .update(sessionsTable)
+        .set({
+          mfaFailedAttempts: newFailedAttempts,
+          mfaLockedAt: new Date(),
+        })
+        .where(eq(sessionsTable.id, user.sessionId));
+    } else {
+      await db
+        .update(sessionsTable)
+        .set({
+          mfaFailedAttempts: newFailedAttempts,
+        })
+        .where(eq(sessionsTable.id, user.sessionId));
+    }
+
     throw new AppError({
       code: ErrorCodes.AUTH_MFA_INVALID_CODE,
       message: 'Invalid backup code',
@@ -322,6 +443,8 @@ export const verifyBackupCode = async (
     .set({
       mfaVerifiedAt,
       mfaMethod: 'backup',
+      mfaFailedAttempts: null,
+      mfaLockedAt: null,
     })
     .where(eq(sessionsTable.id, user.sessionId));
 
