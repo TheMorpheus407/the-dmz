@@ -17,6 +17,7 @@ export const KEY_CATEGORIES = {
   PRESENCE: 'presence',
   PARTY: 'party',
   COOP_SESSION: 'coop-session',
+  SSO_STATE: 'sso-state',
 } as const;
 
 export type RedisKeyCategory = (typeof KEY_CATEGORIES)[keyof typeof KEY_CATEGORIES];
@@ -41,6 +42,7 @@ export const DEFAULT_TTL_SECONDS: Record<RedisKeyCategory, number> = {
   [KEY_CATEGORIES.PRESENCE]: 90,
   [KEY_CATEGORIES.PARTY]: 1800,
   [KEY_CATEGORIES.COOP_SESSION]: 300,
+  [KEY_CATEGORIES.SSO_STATE]: 600,
 };
 
 export interface TenantScopedKeyOptions {

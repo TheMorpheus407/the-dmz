@@ -16,6 +16,7 @@ import { userSsoIdentities } from '../../db/schema/auth/user-sso-identities.js';
 import { adminNotifications } from '../../db/schema/auth/admin-notifications.js';
 import { users } from '../../shared/database/schema/users.js';
 import { getDatabaseClient } from '../../shared/database/connection.js';
+import { getRedisClient } from '../../shared/database/redis.js';
 import { loadConfig } from '../../config.js';
 
 const db = getDatabaseClient();
@@ -396,44 +397,47 @@ export interface SSOStateData {
   pkceCodeVerifier?: string;
 }
 
-const oidcStateStore: Map<string, { data: SSOStateData; expiresAt: number }> = new Map();
+const OIDC_STATE_KEY_PREFIX = 'sso:oidc:state:';
+
+const getOIDCStateKey = (state: string): string => `${OIDC_STATE_KEY_PREFIX}${state}`;
 
 export const storeOIDCState = async (
   state: string,
   data: SSOStateData,
   expiresInSeconds: number = 600,
 ): Promise<void> => {
-  oidcStateStore.set(state, {
-    data,
-    expiresAt: Date.now() + expiresInSeconds * 1000,
-  });
+  const redis = getRedisClient();
+  if (!redis) {
+    throw new Error('Redis client is not available');
+  }
+  await redis.connect();
+  await redis.setValue(getOIDCStateKey(state), JSON.stringify(data), expiresInSeconds);
 };
 
 export const getOIDCState = async (state: string): Promise<SSOStateData | null> => {
-  const entry = oidcStateStore.get(state);
-  if (!entry) {
+  const redis = getRedisClient();
+  if (!redis) {
     return null;
   }
-
-  if (Date.now() > entry.expiresAt) {
-    oidcStateStore.delete(state);
+  await redis.connect();
+  const data = await redis.getValue(getOIDCStateKey(state));
+  if (!data) {
     return null;
   }
-
-  return entry.data;
+  try {
+    return JSON.parse(data) as SSOStateData;
+  } catch {
+    return null;
+  }
 };
 
 export const deleteOIDCState = async (state: string): Promise<void> => {
-  oidcStateStore.delete(state);
-};
-
-export const cleanupExpiredOIDCStates = (): void => {
-  const now = Date.now();
-  for (const [key, entry] of oidcStateStore.entries()) {
-    if (now > entry.expiresAt) {
-      oidcStateStore.delete(key);
-    }
+  const redis = getRedisClient();
+  if (!redis) {
+    return;
   }
+  await redis.connect();
+  await redis.deleteKey(getOIDCStateKey(state));
 };
 
 export interface SSOAccountLinkingResult {
