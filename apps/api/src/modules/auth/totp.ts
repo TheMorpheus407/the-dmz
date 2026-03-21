@@ -70,11 +70,10 @@ const decryptSecret = (encryptedData: string, encryptionKey: string): string => 
 
 const generateBackupCode = (): string => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 8; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
+  const bytes = crypto.getRandomValues(new Uint8Array(8));
+  return Array.from(bytes)
+    .map((b) => chars[b % chars.length])
+    .join('');
 };
 
 const hashBackupCode = async (code: string): Promise<string> => {

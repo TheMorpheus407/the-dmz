@@ -55,11 +55,10 @@ describe('TOTP Service Unit Tests', () => {
   describe('Backup Code Generation', () => {
     const generateBackupCode = (): string => {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let code = '';
-      for (let i = 0; i < 8; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
+      const bytes = crypto.getRandomValues(new Uint8Array(8));
+      return Array.from(bytes)
+        .map((b) => chars[b % chars.length])
+        .join('');
     };
 
     it('should generate 8-character backup codes', () => {
