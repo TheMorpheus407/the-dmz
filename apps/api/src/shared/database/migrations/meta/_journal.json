@@ -379,6 +379,13 @@
       "when": 1776100000000,
       "tag": "0052_coop_session_scenario_and_role_preference",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1776150000000,
+      "tag": "0053_oauth_client_grace_period",
+      "breakpoints": true
     }
   ]
 }

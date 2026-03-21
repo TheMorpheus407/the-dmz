@@ -1020,6 +1020,8 @@ export const findOAuthClientByClientIdOnly = async (
   name: string;
   secretHash: string;
   previousSecretHash: string | null;
+  rotationGracePeriodHours: string;
+  rotationGraceEndsAt: Date | null;
   scopes: string;
   expiresAt: Date | null;
   revokedAt: Date | null;
@@ -1091,6 +1093,9 @@ export const issueClientCredentialsToken = async (
 
   const isValid = await argon2.verify(client.secretHash, data.clientSecret);
   if (!isValid) {
+    if (client.rotationGraceEndsAt && client.rotationGraceEndsAt < new Date()) {
+      throw new Error('Invalid client credentials');
+    }
     const previousValid = client.previousSecretHash
       ? await argon2.verify(client.previousSecretHash, data.clientSecret)
       : false;

@@ -699,6 +699,8 @@ export const findOAuthClientByClientIdOnly = async (
   name: string;
   secretHash: string;
   previousSecretHash: string | null;
+  rotationGracePeriodHours: string;
+  rotationGraceEndsAt: Date | null;
   scopes: string;
   expiresAt: Date | null;
   revokedAt: Date | null;
@@ -720,6 +722,8 @@ export const findOAuthClientByClientIdOnly = async (
     name: client.name,
     secretHash: client.secretHash,
     previousSecretHash: client.previousSecretHash,
+    rotationGracePeriodHours: client.rotationGracePeriodHours,
+    rotationGraceEndsAt: client.rotationGraceEndsAt,
     scopes: client.scopes,
     expiresAt: client.expiresAt,
     revokedAt: client.revokedAt,
@@ -739,6 +743,8 @@ export const findOAuthClientByClientId = async (
   name: string;
   secretHash: string;
   previousSecretHash: string | null;
+  rotationGracePeriodHours: string;
+  rotationGraceEndsAt: Date | null;
   scopes: string;
   expiresAt: Date | null;
   revokedAt: Date | null;
@@ -760,6 +766,8 @@ export const findOAuthClientByClientId = async (
     name: client.name,
     secretHash: client.secretHash,
     previousSecretHash: client.previousSecretHash,
+    rotationGracePeriodHours: client.rotationGracePeriodHours,
+    rotationGraceEndsAt: client.rotationGraceEndsAt,
     scopes: client.scopes,
     expiresAt: client.expiresAt,
     revokedAt: client.revokedAt,
@@ -811,11 +819,15 @@ export const rotateOAuthClientSecret = async (
     throw new Error('OAuth client not found');
   }
 
+  const gracePeriodHours = parseInt(client.rotationGracePeriodHours, 10) || 1;
+  const rotationGraceEndsAt = new Date(Date.now() + gracePeriodHours * 60 * 60 * 1000);
+
   await db
     .update(oauthClients)
     .set({
       secretHash: newSecretHash,
       previousSecretHash: client.secretHash,
+      rotationGraceEndsAt,
       updatedAt: new Date(),
     })
     .where(and(eq(oauthClients.clientId, clientId), eq(oauthClients.tenantId, tenantId)));

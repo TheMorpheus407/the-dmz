@@ -245,7 +245,7 @@ describe('OAuth client credentials flow', () => {
         },
       });
 
-      expect([200, 401]).toContain(oldTokenResponse.statusCode);
+      expect(oldTokenResponse.statusCode).toBe(200);
 
       const newTokenResponse = await app.inject({
         method: 'POST',

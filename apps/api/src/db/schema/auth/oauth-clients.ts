@@ -21,6 +21,13 @@ export const oauthClients = authSchema.table(
     name: varchar('name', { length: 255 }).notNull(),
     secretHash: varchar('secret_hash', { length: 255 }).notNull(),
     previousSecretHash: varchar('previous_secret_hash', { length: 255 }),
+    rotationGracePeriodHours: varchar('rotation_grace_period_hours', { length: 3 })
+      .notNull()
+      .default('1'),
+    rotationGraceEndsAt: timestamp('rotation_grace_ends_at', {
+      withTimezone: true,
+      mode: 'date',
+    }),
     scopes: text('scopes').notNull(),
     expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }),
     revokedAt: timestamp('revoked_at', { withTimezone: true, mode: 'date' }),
