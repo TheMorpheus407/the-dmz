@@ -78,3 +78,6 @@ logs/issues/
 # TypeScript
 *.tsbuildinfo
 /logs/
+
+# Prevent dependency confusion artifacts (empty files named like npm packages)
+*@*
