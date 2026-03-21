@@ -1,3 +1,5 @@
+import { randomBytes } from 'crypto';
+
 import { billingRepo } from './billing.repo.js';
 import { subscriptionService } from './subscription.service.js';
 import { PLAN_LIMITS } from './billing.types.js';
@@ -297,10 +299,6 @@ export const stripeService = {
 };
 
 function generateStripeId(): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  for (let i = 0; i < 24; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
+  const bytes = randomBytes(18);
+  return bytes.toString('base64url');
 }
