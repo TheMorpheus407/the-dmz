@@ -103,6 +103,7 @@ export const backendEnvSchema = z
       .string()
       .min(32, 'XAPI_ENCRYPTION_KEY must be at least 32 characters')
       .optional(),
+    STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';
@@ -151,6 +152,17 @@ export const backendEnvSchema = z
       message:
         'JWT_PRIVATE_KEY_ENCRYPTION_KEY must be changed from the default value in production',
       path: ['JWT_PRIVATE_KEY_ENCRYPTION_KEY'],
+    },
+  )
+  .refine(
+    (config) => {
+      if (config.NODE_ENV !== 'production') return true;
+      return config.STRIPE_WEBHOOK_SECRET?.startsWith('whsec_') ?? false;
+    },
+    {
+      message:
+        'STRIPE_WEBHOOK_SECRET must be set to a valid Stripe webhook secret (whsec_...) in production',
+      path: ['STRIPE_WEBHOOK_SECRET'],
     },
   );
 

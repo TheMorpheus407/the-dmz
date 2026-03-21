@@ -1,6 +1,7 @@
 import cors from '@fastify/cors';
 import fastify, { type FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
+import fastifyRawBody from 'fastify-raw-body';
 
 import { loadConfig, type AppConfig } from './config.js';
 import { validateManifest, getRegistrationOrder } from './modules/bootstrap.js';
@@ -168,6 +169,8 @@ export const buildApp = (
   }
 
   app.register(cookie);
+
+  app.register(fastifyRawBody);
 
   registerAuditHook(app).catch((err) => {
     app.log.error(err, 'Failed to register audit hook');

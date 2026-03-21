@@ -1,3 +1,5 @@
+import Stripe from 'stripe';
+
 import { billingRepo } from './billing.repo.js';
 import { stripeService } from './stripe.service.js';
 import { subscriptionService } from './subscription.service.js';
@@ -16,12 +18,50 @@ interface StripeWebhookPayload {
 }
 
 export async function stripeWebhookRoutes(fastify: FastifyInstance): Promise<void> {
+  if (!fastify.config.STRIPE_WEBHOOK_SECRET) {
+    throw new Error(
+      'STRIPE_WEBHOOK_SECRET is not configured. Set the STRIPE_WEBHOOK_SECRET environment variable.',
+    );
+  }
+
+  const stripe = new Stripe(fastify.config.STRIPE_WEBHOOK_SECRET, {
+    apiVersion: '2024-06-20',
+  });
+
   fastify.post(
     '/stripe/webhook',
     async (request: FastifyRequest<{ Body: StripeWebhookPayload }>, reply: FastifyReply) => {
       const config = fastify.config;
-      const eventId = request.body.id;
-      const eventType = request.body.type;
+
+      const signature = request.headers['stripe-signature'];
+      if (!signature || typeof signature !== 'string') {
+        request.log.warn(
+          { event: 'stripe.webhook.missing_signature' },
+          'Missing stripe-signature header',
+        );
+        return reply.status(400).send({ error: 'Missing stripe-signature header' });
+      }
+
+      const rawBody = request.rawBody;
+      if (!rawBody) {
+        request.log.error(
+          { event: 'stripe.webhook.missing_raw_body' },
+          'Raw body not available for signature verification',
+        );
+        return reply.status(500).send({ error: 'Internal server error' });
+      }
+
+      let event: Stripe.Event;
+      try {
+        event = stripe.webhooks.constructEvent(rawBody, signature, config.STRIPE_WEBHOOK_SECRET!);
+      } catch (err) {
+        const error = err as Error;
+        request.log.warn({ err: error.message }, 'Stripe webhook signature verification failed');
+        return reply.status(401).send({ error: 'Invalid signature' });
+      }
+
+      const eventId = event.id;
+      const eventType = event.type;
 
       const existingEvent = await billingRepo.getWebhookEventByEventId(eventId, config);
       if (existingEvent) {
@@ -32,13 +72,17 @@ export async function stripeWebhookRoutes(fastify: FastifyInstance): Promise<voi
         {
           eventId,
           eventType,
-          payload: request.body.data.object,
+          payload: event.data.object as unknown as Record<string, unknown>,
         },
         config,
       );
 
       try {
-        await handleStripeEvent(eventType, request.body.data.object, config);
+        await handleStripeEvent(
+          eventType,
+          event.data.object as unknown as Record<string, unknown>,
+          config,
+        );
         await billingRepo.updateWebhookEvent(eventId, { processingResult: 'success' }, config);
       } catch (error) {
         const err = error as Error;
