@@ -12,6 +12,7 @@ type TraversalContext = {
 const FORBIDDEN_PROTOTYPE_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
 const NOSQL_OPERATOR_KEY_PREFIX = '$';
 const NULL_BYTE_PATTERN = /\0/g;
+const CRLF_PATTERN = /[\r\n]/g;
 const ENCODED_LT_PATTERN = /&(lt|#0*60|#x0*3c);/gi;
 const ENCODED_GT_PATTERN = /&(gt|#0*62|#x0*3e);/gi;
 const ENCODED_ANGLE_PATTERN = /&(lt|gt|#0*60|#0*62|#x0*3c|#x0*3e);/i;
@@ -32,6 +33,10 @@ export class PrototypePollutionError extends Error {
     this.field = field;
   }
 }
+
+export const sanitizeHeaderValue = (value: string): string => {
+  return value.replace(CRLF_PATTERN, '');
+};
 
 const normalizeSkipHtmlField = (field: string): string =>
   field

@@ -1,6 +1,7 @@
 import fp from 'fastify-plugin';
 
 import { getDeprecationPolicy, API_VERSIONING_POLICY } from '../policies/index.js';
+import { sanitizeHeaderValue } from '../utils/sanitizer.js';
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
@@ -36,7 +37,10 @@ async function deprecationPlugin(fastify: FastifyInstance): Promise<void> {
           : deprecationConfig.sunsetDate;
 
       if (policy.requiredHeaders.deprecation) {
-        reply.header('Deprecation', `="${request.url}"; dt="${deprecationDate.toISOString()}"`);
+        reply.header(
+          'Deprecation',
+          `="${sanitizeHeaderValue(request.url)}"; dt="${deprecationDate.toISOString()}"`,
+        );
       }
 
       if (policy.requiredHeaders.sunset) {
@@ -76,7 +80,10 @@ export function createDeprecationHandler(options: DeprecationOptions) {
       typeof options.sunsetDate === 'string' ? new Date(options.sunsetDate) : options.sunsetDate;
 
     if (policy.requiredHeaders.deprecation) {
-      reply.header('Deprecation', `="${request.url}"; dt="${sunsetDate.toISOString()}"`);
+      reply.header(
+        'Deprecation',
+        `="${sanitizeHeaderValue(request.url)}"; dt="${sunsetDate.toISOString()}"`,
+      );
     }
 
     if (policy.requiredHeaders.sunset) {

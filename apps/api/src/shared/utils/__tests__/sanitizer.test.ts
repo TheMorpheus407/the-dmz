@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { PrototypePollutionError, sanitizeValue } from '../sanitizer.js';
+import { PrototypePollutionError, sanitizeHeaderValue, sanitizeValue } from '../sanitizer.js';
 
 describe('sanitizeValue', () => {
   it('sanitizes nested string values recursively', () => {
@@ -129,5 +129,32 @@ describe('sanitizeValue', () => {
     expect(sanitized).not.toBe(input);
     expect(sanitized.nested).not.toBe(input.nested);
     expect(input).toEqual(snapshot);
+  });
+});
+
+describe('sanitizeHeaderValue', () => {
+  it('strips carriage return characters', () => {
+    const input = 'value\rwith\rCR';
+    expect(sanitizeHeaderValue(input)).toBe('valuewithCR');
+  });
+
+  it('strips newline characters', () => {
+    const input = 'value\nwith\nLF';
+    expect(sanitizeHeaderValue(input)).toBe('valuewithLF');
+  });
+
+  it('strips CRLF sequences', () => {
+    const input = 'value\r\nwith\r\nCRLF';
+    expect(sanitizeHeaderValue(input)).toBe('valuewithCRLF');
+  });
+
+  it('returns value unchanged when no CRLF present', () => {
+    const input = 'normal value without CRLF';
+    expect(sanitizeHeaderValue(input)).toBe('normal value without CRLF');
+  });
+
+  it('handles mixed CRLF combinations', () => {
+    const input = 'line1\r\nline2\rline3\nline4';
+    expect(sanitizeHeaderValue(input)).toBe('line1line2line3line4');
   });
 });
