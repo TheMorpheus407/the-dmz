@@ -53,7 +53,6 @@ export const securityHeaderNames = [
   'content-security-policy',
   'x-frame-options',
   'x-content-type-options',
-  'x-xss-protection',
   'referrer-policy',
   'permissions-policy',
   'cross-origin-opener-policy',

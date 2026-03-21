@@ -2114,7 +2114,6 @@ app.register(helmet, {
   },
   xContentTypeOptions: true, // nosniff
   xFrameOptions: { action: 'deny' },
-  xXssProtection: false, // Deprecated; CSP is the modern protection
 });
 ```
 
