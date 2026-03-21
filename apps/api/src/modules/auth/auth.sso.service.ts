@@ -30,7 +30,7 @@ const deriveKey = (encryptionKey: string, salt: Buffer): Buffer => {
 
 const getEncryptionKey = (): string => {
   const config = loadConfig();
-  return config.JWT_PRIVATE_KEY_ENCRYPTION_KEY || 'dev-encryption-key-change-in-prod';
+  return config.JWT_PRIVATE_KEY_ENCRYPTION_KEY;
 };
 
 export const encryptClientSecret = (secret: string): string => {

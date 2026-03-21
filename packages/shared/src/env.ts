@@ -192,6 +192,12 @@ export function validateBackendEnvConsistency(config: BackendEnv): EnvValidation
         `LOG_LEVEL is set to '${config.LOG_LEVEL}' in production. Use 'info' or 'warn' for production.`,
       );
     }
+
+    if (config.JWT_PRIVATE_KEY_ENCRYPTION_KEY.startsWith('dev-')) {
+      errors.push(
+        'JWT_PRIVATE_KEY_ENCRYPTION_KEY has the default dev value in production. Set a secure encryption key (minimum 32 characters).',
+      );
+    }
   }
 
   if (config.NODE_ENV === 'production' && !config.DATABASE_SSL) {

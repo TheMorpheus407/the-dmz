@@ -95,7 +95,7 @@ export interface BackupCodesResult {
 }
 
 const getEncryptionKey = (config: AppConfig): string => {
-  return config.JWT_PRIVATE_KEY_ENCRYPTION_KEY || 'dev-encryption-key-change-in-prod';
+  return config.JWT_PRIVATE_KEY_ENCRYPTION_KEY;
 };
 
 export const createTotpEnrollment = async (
