@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import * as OTPAuth from 'otpauth';
+import argon2 from 'argon2';
 
 describe('TOTP Service Unit Tests', () => {
   describe('TOTP Generation', () => {
@@ -96,6 +97,106 @@ describe('TOTP Service Unit Tests', () => {
       expect(uri).toContain('otpauth://totp/');
       expect(uri).toContain('test%40example.com');
       expect(uri).toContain('issuer=Test%20DMZ');
+    });
+  });
+
+  describe('Backup Code Hashing and Verification', () => {
+    const testCode = 'AB12CD34';
+
+    it('should hash backup codes with argon2id', async () => {
+      const hash = await argon2.hash(testCode, {
+        type: argon2.argon2id,
+        hashLength: 32,
+      });
+
+      expect(hash).toBeDefined();
+      expect(hash).not.toBe(testCode);
+      expect(hash.startsWith('$argon2id$')).toBe(true);
+    });
+
+    it('should verify correct backup code', async () => {
+      const hash = await argon2.hash(testCode, {
+        type: argon2.argon2id,
+        hashLength: 32,
+      });
+
+      const isValid = await argon2.verify(hash, testCode);
+      expect(isValid).toBe(true);
+    });
+
+    it('should reject incorrect backup code', async () => {
+      const hash = await argon2.hash(testCode, {
+        type: argon2.argon2id,
+        hashLength: 32,
+      });
+
+      const isValid = await argon2.verify(hash, 'WRONGCODE');
+      expect(isValid).toBe(false);
+    });
+
+    it('should produce different hashes for same code (salted)', async () => {
+      const hash1 = await argon2.hash(testCode, {
+        type: argon2.argon2id,
+        hashLength: 32,
+      });
+      const hash2 = await argon2.hash(testCode, {
+        type: argon2.argon2id,
+        hashLength: 32,
+      });
+
+      expect(hash1).not.toBe(hash2);
+    });
+
+    it('should verify correct code against multiple stored hashes', async () => {
+      const codes = ['CODE1AAA', 'CODE2BBB', 'CODE3CCC', 'CODE4DDD'];
+      const hashes = await Promise.all(
+        codes.map((code) =>
+          argon2.hash(code, {
+            type: argon2.argon2id,
+            hashLength: 32,
+          }),
+        ),
+      );
+
+      const storedHashes = hashes.map((codeHash) => ({ codeHash }));
+
+      const targetCode = 'CODE3CCC';
+      let matchedIndex = -1;
+      for (const stored of storedHashes) {
+        const isValid = await argon2.verify(stored.codeHash, targetCode);
+        if (isValid) {
+          matchedIndex = storedHashes.indexOf(stored);
+          break;
+        }
+      }
+
+      expect(matchedIndex).toBe(2);
+    });
+
+    it('should not match wrong code against multiple stored hashes', async () => {
+      const codes = ['CODE1AAA', 'CODE2BBB', 'CODE3CCC'];
+      const hashes = await Promise.all(
+        codes.map((code) =>
+          argon2.hash(code, {
+            type: argon2.argon2id,
+            hashLength: 32,
+          }),
+        ),
+      );
+
+      const storedHashes = hashes.map((codeHash) => ({ codeHash }));
+
+      const wrongCode = 'WRONGOOO';
+      let matchedIndex = -1;
+      for (const stored of storedHashes) {
+        const isValid = await argon2.verify(stored.codeHash, wrongCode);
+        if (isValid) {
+          matchedIndex = storedHashes.indexOf(stored);
+          break;
+        }
+      }
+
+      expect(matchedIndex).toBe(-1);
     });
   });
 });

@@ -397,9 +397,18 @@ export const verifyBackupCode = async (
     });
   }
 
-  const codeHash = await hashBackupCode(code);
+  let foundIndex = -1;
+  let isAnyValid = false;
 
-  const matchingCode = validCodes.find((c) => c.codeHash === codeHash);
+  for (let i = 0; i < validCodes.length; i++) {
+    const isValid = await argon2.verify(validCodes[i]!.codeHash, code);
+    if (isValid) {
+      foundIndex = i;
+      isAnyValid = true;
+    }
+  }
+
+  const matchingCode = isAnyValid ? validCodes[foundIndex]! : null;
 
   if (!matchingCode) {
     const failedAttempts = session?.mfaFailedAttempts ?? 0;
