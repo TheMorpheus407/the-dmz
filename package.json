@@ -98,5 +98,8 @@
     "secretlint": "^11.3.1",
     "svelte-eslint-parser": "^1.4.1",
     "turbo": "^2.0.0"
+  },
+  "dependencies": {
+    "dompurify": "^3.3.3"
   }
 }

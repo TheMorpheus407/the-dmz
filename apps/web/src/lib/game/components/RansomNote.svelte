@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import DOMPurify from 'dompurify';
 
   interface RansomNoteData {
     noteId: string;
@@ -29,6 +30,10 @@
     onPayRansom,
     onAttemptRecovery,
   }: Props = $props();
+
+  const sanitizedMessage = $derived(
+    DOMPurify.sanitize(data.message, { USE_PROFILES: { html: true } }),
+  );
 
   function isFieldHighlighted(fieldId: string): boolean {
     return highlightedFieldId === fieldId;
@@ -78,8 +83,9 @@
 
   <div class="ransom-note__content">
     <div class="ransom-note__message">
+      <!-- Sanitized by DOMPurify with USE_PROFILES.html before rendering -->
       <!-- eslint-disable-next-line svelte/no-at-html-tags -->
-      {@html data.message}
+      {@html sanitizedMessage}
     </div>
 
     <div class="ransom-note__demand">
