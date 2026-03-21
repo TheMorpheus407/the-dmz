@@ -1,4 +1,6 @@
-import { describe, expect, it, afterAll } from 'vitest';
+import { randomBytes, scryptSync, createCipheriv } from 'crypto';
+
+import { beforeEach, describe, expect, it, afterAll, vi } from 'vitest';
 import { jwtVerify, SignJWT, importPKCS8 } from 'jose';
 
 import {
@@ -6,8 +8,18 @@ import {
   generateECKeyPair,
   parseRSAPublicKeyToJWK,
   parseECPublicKeyToJWK,
+  signJWT,
+  verifyJWT,
 } from '../jwt-keys.service.js';
-import { closeDatabase } from '../../../shared/database/connection.js';
+import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
+import { JWTIssuerValidationError, JWTAudienceValidationError } from '../auth.errors.js';
+
+import type { AppConfig } from '../../../config.js';
+
+vi.mock('../../../shared/database/connection.js', () => ({
+  getDatabaseClient: vi.fn(),
+  closeDatabase: vi.fn(),
+}));
 
 describe('jwt-keys service', () => {
   describe('generateRSAKeyPair', () => {
@@ -177,6 +189,269 @@ describe('jwt-keys service', () => {
       expect(typeof jwk.x).toBe('string');
       expect(typeof jwk.y).toBe('string');
       expect(typeof jwk.crv).toBe('string');
+    });
+  });
+
+  describe('signJWT and verifyJWT with iss/aud validation', () => {
+    const mockIssuer = 'https://the-dmz.local';
+    const mockAudience = 'the-dmz-api';
+    const mockKid = 'test-key-id-1234';
+
+    const SALT_LENGTH = 32;
+    const IV_LENGTH = 16;
+
+    const encryptPrivateKeyForMock = (privateKeyPem: string, encryptionKey: string): string => {
+      const salt = randomBytes(SALT_LENGTH);
+      const key = scryptSync(encryptionKey, salt, 32);
+      const iv = randomBytes(IV_LENGTH);
+      const cipher = createCipheriv('aes-256-gcm', key, iv);
+      const encrypted = Buffer.concat([cipher.update(privateKeyPem, 'utf8'), cipher.final()]);
+      const authTag = cipher.getAuthTag();
+      const combined = Buffer.concat([salt, iv, authTag, encrypted]);
+      return combined.toString('base64');
+    };
+
+    let createdKey: {
+      id: string;
+      keyType: string;
+      algorithm: string;
+      publicKeyPem: string;
+      privateKeyEncryptedPem: string;
+      status: string;
+      activatedAt: Date;
+      expiresAt: Date | null;
+    } | null = null;
+
+    const createMockConfig = (overrides: Partial<AppConfig> = {}): AppConfig =>
+      ({
+        JWT_ISSUER: mockIssuer,
+        JWT_AUDIENCE: mockAudience,
+        JWT_EXPIRES_IN: '7d',
+        JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'test-encryption-key-at-least-32-chars',
+        ...overrides,
+      }) as AppConfig;
+
+    const createMockDb = (keyPair: { publicKeyPem: string; privateKeyPem: string }) => {
+      const encryptedPem = encryptPrivateKeyForMock(
+        keyPair.privateKeyPem,
+        'test-encryption-key-at-least-32-chars',
+      );
+      createdKey = {
+        id: mockKid,
+        keyType: 'RSA',
+        algorithm: 'RS256',
+        publicKeyPem: keyPair.publicKeyPem,
+        privateKeyEncryptedPem: encryptedPem,
+        status: 'ACTIVE',
+        activatedAt: new Date(),
+        expiresAt: null,
+      };
+      const mockDb = {
+        select: vi.fn(() => ({
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn(() => {
+                if (createdKey && createdKey.status === 'ACTIVE') {
+                  return Promise.resolve([createdKey]);
+                }
+                return Promise.resolve([]);
+              }),
+            })),
+          })),
+        })),
+        insert: vi.fn(() => ({
+          values: vi.fn(() => ({
+            returning: vi.fn(() => {
+              createdKey = {
+                id: mockKid,
+                keyType: 'RSA',
+                algorithm: 'RS256',
+                publicKeyPem: keyPair.publicKeyPem,
+                privateKeyEncryptedPem: encryptedPem,
+                status: 'ACTIVE',
+                activatedAt: new Date(),
+                expiresAt: null,
+              };
+              return Promise.resolve([createdKey]);
+            }),
+          })),
+        })),
+        update: vi.fn(() => ({
+          set: vi.fn(() => ({
+            where: vi.fn(() => ({
+              returning: vi.fn(() => Promise.resolve([])),
+            })),
+          })),
+        })),
+      };
+      return mockDb;
+    };
+
+    beforeEach(async () => {
+      const keyPair = await generateRSAKeyPair();
+      const encryptedPem = encryptPrivateKeyForMock(
+        keyPair.privateKeyPem,
+        'test-encryption-key-at-least-32-chars',
+      );
+      createdKey = {
+        id: mockKid,
+        keyType: 'RSA',
+        algorithm: 'RS256',
+        publicKeyPem: keyPair.publicKeyPem,
+        privateKeyEncryptedPem: encryptedPem,
+        status: 'ACTIVE',
+        activatedAt: new Date(),
+        expiresAt: null,
+      };
+      const mockDb = createMockDb(keyPair);
+      vi.mocked(getDatabaseClient).mockReset();
+      vi.mocked(getDatabaseClient).mockReturnValue(
+        mockDb as unknown as ReturnType<typeof getDatabaseClient>,
+      );
+    });
+
+    it('signJWT should include iss and aud claims in the signed token', async () => {
+      const config = createMockConfig();
+      const token = await signJWT(config, { sub: 'test-user' });
+
+      const { payload } = await verifyJWT(config, token);
+
+      expect(payload['iss']).toBe(mockIssuer);
+      expect(payload['aud']).toBe(mockAudience);
+    });
+
+    it('verifyJWT should accept token with correct issuer and audience', async () => {
+      const config = createMockConfig();
+      const token = await signJWT(config, { sub: 'test-user' });
+
+      const result = await verifyJWT(config, token);
+
+      expect(result.payload).toBeDefined();
+      expect(result.payload['sub']).toBe('test-user');
+    });
+
+    it('verifyJWT should throw JWTIssuerValidationError for issuer mismatch', async () => {
+      const keyPair = await generateRSAKeyPair();
+      const privateKey = await importPKCS8(keyPair.privateKeyPem, 'RS256');
+
+      const wrongIssuer = 'https://wrong-issuer.example.com';
+      const token = await new SignJWT({ sub: 'test-user' })
+        .setProtectedHeader({ alg: 'RS256', typ: 'JWT', kid: mockKid })
+        .setIssuedAt()
+        .setExpirationTime('7d')
+        .setIssuer(wrongIssuer)
+        .setAudience(mockAudience)
+        .sign(privateKey);
+
+      const mockDb = {
+        select: vi.fn(() => ({
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn(() =>
+                Promise.resolve([
+                  {
+                    id: mockKid,
+                    keyType: 'RSA',
+                    algorithm: 'RS256',
+                    publicKeyPem: keyPair.publicKeyPem,
+                    status: 'ACTIVE',
+                    expiresAt: null,
+                  },
+                ]),
+              ),
+            })),
+          })),
+        })),
+      };
+      vi.mocked(getDatabaseClient).mockReturnValue(
+        mockDb as unknown as ReturnType<typeof getDatabaseClient>,
+      );
+
+      const config = createMockConfig();
+
+      await expect(verifyJWT(config, token)).rejects.toThrow(JWTIssuerValidationError);
+    });
+
+    it('verifyJWT should throw JWTAudienceValidationError for audience mismatch', async () => {
+      const keyPair = await generateRSAKeyPair();
+      const privateKey = await importPKCS8(keyPair.privateKeyPem, 'RS256');
+
+      const wrongAudience = 'wrong-audience';
+      const token = await new SignJWT({ sub: 'test-user' })
+        .setProtectedHeader({ alg: 'RS256', typ: 'JWT', kid: mockKid })
+        .setIssuedAt()
+        .setExpirationTime('7d')
+        .setIssuer(mockIssuer)
+        .setAudience(wrongAudience)
+        .sign(privateKey);
+
+      const mockDb = {
+        select: vi.fn(() => ({
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn(() =>
+                Promise.resolve([
+                  {
+                    id: mockKid,
+                    keyType: 'RSA',
+                    algorithm: 'RS256',
+                    publicKeyPem: keyPair.publicKeyPem,
+                    status: 'ACTIVE',
+                    expiresAt: null,
+                  },
+                ]),
+              ),
+            })),
+          })),
+        })),
+      };
+      vi.mocked(getDatabaseClient).mockReturnValue(
+        mockDb as unknown as ReturnType<typeof getDatabaseClient>,
+      );
+
+      const config = createMockConfig();
+
+      await expect(verifyJWT(config, token)).rejects.toThrow(JWTAudienceValidationError);
+    });
+
+    it('verifyJWT should throw JWTAudienceValidationError when audience is missing', async () => {
+      const keyPair = await generateRSAKeyPair();
+      const privateKey = await importPKCS8(keyPair.privateKeyPem, 'RS256');
+
+      const token = await new SignJWT({ sub: 'test-user' })
+        .setProtectedHeader({ alg: 'RS256', typ: 'JWT', kid: mockKid })
+        .setIssuedAt()
+        .setExpirationTime('7d')
+        .setIssuer(mockIssuer)
+        .sign(privateKey);
+
+      const mockDb = {
+        select: vi.fn(() => ({
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              limit: vi.fn(() =>
+                Promise.resolve([
+                  {
+                    id: mockKid,
+                    keyType: 'RSA',
+                    algorithm: 'RS256',
+                    publicKeyPem: keyPair.publicKeyPem,
+                    status: 'ACTIVE',
+                    expiresAt: null,
+                  },
+                ]),
+              ),
+            })),
+          })),
+        })),
+      };
+      vi.mocked(getDatabaseClient).mockReturnValue(
+        mockDb as unknown as ReturnType<typeof getDatabaseClient>,
+      );
+
+      const config = createMockConfig();
+
+      await expect(verifyJWT(config, token)).rejects.toThrow(JWTAudienceValidationError);
     });
   });
 });

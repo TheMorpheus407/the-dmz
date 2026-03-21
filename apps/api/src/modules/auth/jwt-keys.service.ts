@@ -24,6 +24,8 @@ import {
   KeyRevokedError,
   KeyExpiredError,
   MissingKeyIdError,
+  JWTIssuerValidationError,
+  JWTAudienceValidationError,
 } from './auth.errors.js';
 
 import type { AppConfig } from '../../config.js';
@@ -389,6 +391,8 @@ export const signJWT = async (
       })
       .setIssuedAt()
       .setExpirationTime(config.JWT_EXPIRES_IN)
+      .setIssuer(config.JWT_ISSUER)
+      .setAudience(config.JWT_AUDIENCE)
       .sign(privateKey);
 
     return token;
@@ -425,12 +429,42 @@ export const verifyJWT = async (
   payload: Record<string, unknown>;
   header: { kid: string; alg: string };
 }> => {
-  const { payload, protectedHeader } = await jwtVerify(token, getKeyForVerificationFunc(config));
+  try {
+    const { payload, protectedHeader } = await jwtVerify(token, getKeyForVerificationFunc(config), {
+      issuer: config.JWT_ISSUER,
+      audience: config.JWT_AUDIENCE,
+    });
 
-  return {
-    payload: payload as Record<string, unknown>,
-    header: protectedHeader as { kid: string; alg: string },
-  };
+    return {
+      payload: payload as Record<string, unknown>,
+      header: protectedHeader as { kid: string; alg: string },
+    };
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      'code' in error &&
+      (error as { code: string }).code === 'ERR_JWT_CLAIM_VALIDATION_FAILED'
+    ) {
+      const claimError = error as {
+        code: string;
+        claim?: string;
+        payload?: Record<string, unknown>;
+      };
+      if (claimError.claim === 'iss') {
+        throw new JWTIssuerValidationError(
+          config.JWT_ISSUER,
+          claimError.payload?.['iss'] as string | undefined,
+        );
+      }
+      if (claimError.claim === 'aud') {
+        throw new JWTAudienceValidationError(
+          config.JWT_AUDIENCE,
+          claimError.payload?.['aud'] as string | string[] | undefined,
+        );
+      }
+    }
+    throw error;
+  }
 };
 
 const getKeyForVerificationFunc = (config: AppConfig): JWTVerifyGetKey => {

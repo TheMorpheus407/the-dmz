@@ -62,6 +62,8 @@ export const backendEnvSchema = z
     LOG_LEVEL: z.enum(logLevelValues).default('info'),
     JWT_SECRET: z.string().min(1).default('dev-secret-change-in-production'),
     JWT_EXPIRES_IN: z.string().min(1).default('7d'),
+    JWT_ISSUER: z.string().min(1).default('https://the-dmz.local'),
+    JWT_AUDIENCE: z.string().min(1).default('the-dmz-api'),
     TOKEN_HASH_SALT: z.string().min(1).default('token-hash-salt-change-in-production'),
     ENABLE_SWAGGER: booleanFromString.optional(),
     CORS_ORIGINS: z.string().min(1).default('http://localhost:5173'),

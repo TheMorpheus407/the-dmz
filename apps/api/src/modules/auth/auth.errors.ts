@@ -130,6 +130,36 @@ export class MissingKeyIdError extends AuthError {
   }
 }
 
+export class JWTIssuerValidationError extends AuthError {
+  constructor(expectedIssuer: string, actualIssuer: string | undefined) {
+    super({
+      code: JWT_ERROR_CODES.AUTH_JWT_INVALID_TOKEN,
+      message: 'Token issuer validation failed',
+      statusCode: 401,
+      details: {
+        reason: 'issuer_mismatch',
+        expectedIssuer,
+        actualIssuer: actualIssuer ?? 'missing',
+      },
+    });
+  }
+}
+
+export class JWTAudienceValidationError extends AuthError {
+  constructor(expectedAudience: string, actualAudience: string | string[] | undefined) {
+    super({
+      code: JWT_ERROR_CODES.AUTH_JWT_INVALID_TOKEN,
+      message: 'Token audience validation failed',
+      statusCode: 401,
+      details: {
+        reason: 'audience_mismatch',
+        expectedAudience,
+        actualAudience: actualAudience ?? 'missing',
+      },
+    });
+  }
+}
+
 export class InvalidCredentialsError extends AuthError {
   constructor() {
     super({
