@@ -36,7 +36,6 @@ type SecurityHeadersConfig = {
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' };
     xContentTypeOptions: true;
     xFrameOptions: { action: 'deny' };
-    xXssProtection: true;
     crossOriginOpenerPolicy: { policy: 'same-origin' };
     crossOriginEmbedderPolicy: { policy: 'require-corp' | 'credentialless' };
     crossOriginResourcePolicy: { policy: 'same-origin' };
@@ -186,7 +185,6 @@ export const buildSecurityHeadersConfig = (config: AppConfig): SecurityHeadersCo
     referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
     xContentTypeOptions: true,
     xFrameOptions: { action: 'deny' },
-    xXssProtection: true,
     crossOriginOpenerPolicy: { policy: 'same-origin' },
     crossOriginEmbedderPolicy: { policy: config.COEP_POLICY },
     crossOriginResourcePolicy: { policy: 'same-origin' },

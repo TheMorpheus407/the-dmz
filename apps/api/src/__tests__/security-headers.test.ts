@@ -71,7 +71,6 @@ describe('security headers', () => {
       expect(response.statusCode).toBe(200);
       expect(getHeader(response.headers, 'x-content-type-options')).toBe('nosniff');
       expect(getHeader(response.headers, 'x-frame-options')).toBe('DENY');
-      expect(getHeader(response.headers, 'x-xss-protection')).toBe('0');
       expect(getHeader(response.headers, 'referrer-policy')).toBe(
         'strict-origin-when-cross-origin',
       );
