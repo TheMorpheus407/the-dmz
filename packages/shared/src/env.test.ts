@@ -12,12 +12,16 @@ const validBackendEnv = {
   PORT: '3001',
   API_HOST: '0.0.0.0',
   DATABASE_URL: 'postgres://localhost:5432/the_dmz',
+  DATABASE_POOL_MIN: '2',
+  DATABASE_POOL_MAX: '10',
+  DATABASE_SSL: 'false',
   REDIS_URL: 'redis://localhost:6379',
   LOG_LEVEL: 'info',
-  JWT_SECRET: 'dev-secret-change-in-production',
+  JWT_SECRET: 'test-jwt-secret',
   JWT_EXPIRES_IN: '7d',
   CORS_ORIGINS: 'http://localhost:5173',
   JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'dev-' + 'encryption-key-change-in-prod',
+  TOKEN_HASH_SALT: 'test-token-salt',
 } as Record<string, string | undefined>;
 
 describe('parseBackendEnv', () => {
@@ -34,7 +38,7 @@ describe('parseBackendEnv', () => {
     expect(config.DATABASE_URL).toBe('postgres://localhost:5432/the_dmz');
     expect(config.REDIS_URL).toBe('redis://localhost:6379');
     expect(config.LOG_LEVEL).toBe('info');
-    expect(config.JWT_SECRET).toBe('dev-secret-change-in-production');
+    expect(config.JWT_SECRET).toBe('test-jwt-secret');
     expect(config.JWT_EXPIRES_IN).toBe('7d');
     expect(config.ENABLE_SWAGGER).toBe(true);
     expect(config.CORS_ORIGINS).toBe('http://localhost:5173');
@@ -44,26 +48,8 @@ describe('parseBackendEnv', () => {
     expect(config.COEP_POLICY).toBe('require-corp');
   });
 
-  it('applies development defaults when env is empty', () => {
-    const config = parseBackendEnv({});
-
-    expect(config.NODE_ENV).toBe('development');
-    expect(config.PORT).toBe(3001);
-    expect(config.API_HOST).toBe('0.0.0.0');
-    expect(config.API_VERSION).toBe('0.0.0');
-    expect(config.MAX_BODY_SIZE).toBe(1_048_576);
-    expect(config.RATE_LIMIT_MAX).toBe(100);
-    expect(config.RATE_LIMIT_WINDOW_MS).toBe(60_000);
-    expect(config.LOG_LEVEL).toBe('info');
-    expect(config.JWT_EXPIRES_IN).toBe('7d');
-    expect(config.ENABLE_SWAGGER).toBe(true);
-    expect(config.DATABASE_POOL_MIN).toBe(2);
-    expect(config.DATABASE_POOL_MAX).toBe(10);
-    expect(config.DATABASE_SSL).toBe(false);
-    expect(config.CSP_FRAME_ANCESTORS).toBe('none');
-    expect(config.CSP_CONNECT_SRC).toBe('');
-    expect(config.CSP_IMG_SRC).toBe('');
-    expect(config.COEP_POLICY).toBe('require-corp');
+  it('requires JWT_SECRET, TOKEN_HASH_SALT, and JWT_PRIVATE_KEY_ENCRYPTION_KEY to be set', () => {
+    expect(() => parseBackendEnv({})).toThrow(/Invalid backend environment configuration/);
   });
 
   it('applies production defaults for pool settings', () => {
@@ -425,7 +411,8 @@ describe('validateBackendEnvConsistency', () => {
     PORT: '3001',
     DATABASE_URL: 'postgres://localhost:5432/the_dmz',
     REDIS_URL: 'redis://localhost:6379',
-    JWT_SECRET: 'dev-secret-change-in-production',
+    JWT_SECRET: 'test-jwt-secret',
+    TOKEN_HASH_SALT: 'test-token-salt',
     CORS_ORIGINS: 'http://localhost:5173',
     JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'dev-' + 'encryption-key-change-in-prod',
   } as Record<string, string | undefined>;

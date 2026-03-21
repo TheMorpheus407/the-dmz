@@ -60,11 +60,11 @@ export const backendEnvSchema = z
     DATABASE_SSL: booleanFromString.optional(),
     REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
     LOG_LEVEL: z.enum(logLevelValues).default('info'),
-    JWT_SECRET: z.string().min(1).default('dev-secret-change-in-production'),
+    JWT_SECRET: z.string().min(1),
     JWT_EXPIRES_IN: z.string().min(1).default('7d'),
     JWT_ISSUER: z.string().min(1).default('https://the-dmz.local'),
     JWT_AUDIENCE: z.string().min(1).default('the-dmz-api'),
-    TOKEN_HASH_SALT: z.string().min(1).default('token-hash-salt-change-in-production'),
+    TOKEN_HASH_SALT: z.string().min(1),
     ENABLE_SWAGGER: booleanFromString.optional(),
     CORS_ORIGINS: z.string().min(1).default('http://localhost:5173'),
     CSP_FRAME_ANCESTORS: z.string().min(1).default('none'),
@@ -86,8 +86,7 @@ export const backendEnvSchema = z
     ABAC_SLOW_EVALUATION_THRESHOLD_MS: z.coerce.number().int().positive().default(10),
     JWT_PRIVATE_KEY_ENCRYPTION_KEY: z
       .string()
-      .min(32, 'JWT_PRIVATE_KEY_ENCRYPTION_KEY must be at least 32 characters')
-      .default('dev-encryption-key-change-in-prod'),
+      .min(32, 'JWT_PRIVATE_KEY_ENCRYPTION_KEY must be at least 32 characters'),
     ANTHROPIC_API_KEY: z.string().optional(),
     ANTHROPIC_API_URL: z.string().optional().default('https://api.anthropic.com'),
     AI_GENERATION_MODEL: z.string().min(1).default('sonnet'),

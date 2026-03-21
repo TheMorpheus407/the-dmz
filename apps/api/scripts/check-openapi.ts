@@ -2,14 +2,20 @@ import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { loadConfig } from '../src/config.js';
-import { buildApp } from '../src/app.js';
-import { API_VERSIONING_POLICY } from '../src/shared/policies/index.js';
-
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const OPENAPI_OUTPUT_DIR = join(__dirname, '..', 'openapi');
 const OPENAPI_OUTPUT_FILE = join(OPENAPI_OUTPUT_DIR, 'openapi.v1.json');
+
+const ENCRYPTION_KEY = 'openapi-encryption-key-minimum-32ch';
+
+process.env['JWT_SECRET'] = process.env['JWT_SECRET'] ?? 'openapi-generation-secret';
+process.env['TOKEN_HASH_SALT'] = process.env['TOKEN_HASH_SALT'] ?? 'openapi-salt';
+process.env['JWT_PRIVATE_KEY_ENCRYPTION_KEY'] =
+  process.env['JWT_PRIVATE_KEY_ENCRYPTION_KEY'] ?? ENCRYPTION_KEY;
+process.env['DATABASE_URL'] =
+  process.env['DATABASE_URL'] ?? 'postgresql://dmz:dmz_dev@localhost:5432/dmz_dev';
+process.env['REDIS_URL'] = process.env['REDIS_URL'] ?? 'redis://localhost:6379';
 
 interface OpenAPISpec {
   openapi: string;
@@ -112,8 +118,7 @@ function checkErrorResponses(spec: OpenAPISpec): string[] {
             if (errorCodeProp?.enum) {
               for (const code of REQUIRED_ERROR_CODES) {
                 if (!errorCodeProp.enum.includes(code)) {
-                  // Only report if this is an error response that should have this code
-                  // We'll be lenient here since not all endpoints need all error codes
+                  continue;
                 }
               }
             }
@@ -127,16 +132,21 @@ function checkErrorResponses(spec: OpenAPISpec): string[] {
 }
 
 async function checkOpenApi(): Promise<void> {
+  const { loadConfig } = await import('../src/config.js');
+  const { buildApp } = await import('../src/app.js');
+  const { API_VERSIONING_POLICY } = await import('../src/shared/policies/index.js');
+
   console.log('Generating OpenAPI spec...');
 
   const config = loadConfig({
     NODE_ENV: 'development',
-    DATABASE_URL: process.env['DATABASE_URL'] ?? 'postgresql://dmz:dmz_dev@localhost:5432/dmz_dev',
-    REDIS_URL: process.env['REDIS_URL'] ?? 'redis://localhost:6379',
+    DATABASE_URL: process.env['DATABASE_URL']!,
+    REDIS_URL: process.env['REDIS_URL']!,
     LOG_LEVEL: 'silent',
-    JWT_SECRET: process.env['JWT_SECRET'] ?? 'openapi-generation-secret',
+    JWT_SECRET: process.env['JWT_SECRET']!,
     CORS_ORIGINS: process.env['CORS_ORIGINS'] ?? 'http://localhost:5173',
-    TOKEN_HASH_SALT: process.env['TOKEN_HASH_SALT'] ?? 'openapi-salt',
+    TOKEN_HASH_SALT: process.env['TOKEN_HASH_SALT']!,
+    JWT_PRIVATE_KEY_ENCRYPTION_KEY: process.env['JWT_PRIVATE_KEY_ENCRYPTION_KEY']!,
     ENABLE_SWAGGER: 'false',
     API_VERSION: '1.0.0',
     TENANT_RESOLVER_ENABLED: 'false',
