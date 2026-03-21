@@ -1,5 +1,7 @@
 import fp from 'fastify-plugin';
 
+import { sanitizeHeaderValue } from '../utils/sanitizer.js';
+
 import type { FastifyInstance } from 'fastify';
 
 interface RequestLogFields {
@@ -39,7 +41,7 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
 
     const clientRequestId = request.headers[REQUEST_ID_HEADER] as string | undefined;
     if (clientRequestId) {
-      request.id = clientRequestId;
+      request.id = sanitizeHeaderValue(clientRequestId);
     }
 
     reply.header(REQUEST_ID_HEADER, request.id);

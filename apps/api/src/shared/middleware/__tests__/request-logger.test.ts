@@ -406,5 +406,33 @@ describe('request logger middleware', () => {
       expect(response.statusCode).toBe(404);
       expect(response.headers['x-request-id']).toBe(customRequestId);
     });
+
+    it('sanitizes CRLF sequences in x-request-id header to prevent header injection', async () => {
+      const maliciousRequestId = 'valid-id\r\nInjected-Header: malicious';
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+        headers: {
+          'x-request-id': maliciousRequestId,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-request-id']).toBe('valid-idInjected-Header: malicious');
+    });
+
+    it('sanitizes URL-encoded CRLF sequences in x-request-id header', async () => {
+      const encodedRequestId = 'valid-id%0D%0AInjected-Header: value';
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+        headers: {
+          'x-request-id': encodedRequestId,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-request-id']).toBe('valid-id%0D%0AInjected-Header: value');
+    });
   });
 });
