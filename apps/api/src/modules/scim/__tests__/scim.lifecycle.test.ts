@@ -494,5 +494,85 @@ describe('SCIM lifecycle API', () => {
 
       expect([200, 500]).toContain(listResponse.statusCode);
     });
+
+    it('rejects quote injection in filter: userName eq "test" extra"', async () => {
+      const listResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/scim/v2/Users?filter=userName eq "test" extra"',
+        headers: {
+          authorization: `Bearer ${scimToken}`,
+        },
+      });
+
+      expect(listResponse.statusCode).toBe(400);
+      const body = listResponse.json();
+      expect(body.scimType).toBe('SCIM_INVALID_FILTER');
+    });
+
+    it('rejects quote injection in filter: userName sw "test" junk"', async () => {
+      const listResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/scim/v2/Users?filter=userName sw "test" junk"',
+        headers: {
+          authorization: `Bearer ${scimToken}`,
+        },
+      });
+
+      expect(listResponse.statusCode).toBe(400);
+      const body = listResponse.json();
+      expect(body.scimType).toBe('SCIM_INVALID_FILTER');
+    });
+
+    it('rejects quote injection in filter: email eq "test" extra"', async () => {
+      const listResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/scim/v2/Users?filter=email eq "test@domain.com" extra"',
+        headers: {
+          authorization: `Bearer ${scimToken}`,
+        },
+      });
+
+      expect(listResponse.statusCode).toBe(400);
+      const body = listResponse.json();
+      expect(body.scimType).toBe('SCIM_INVALID_FILTER');
+    });
+
+    it('rejects quote injection in filter: displayName eq "Admin" junk"', async () => {
+      const listResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/scim/v2/Groups?filter=displayName eq "Admin" junk"',
+        headers: {
+          authorization: `Bearer ${scimToken}`,
+        },
+      });
+
+      expect(listResponse.statusCode).toBe(400);
+      const body = listResponse.json();
+      expect(body.scimType).toBe('SCIM_INVALID_FILTER');
+    });
+
+    it('accepts valid filter with quotes in value', async () => {
+      const listResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/scim/v2/Users?filter=userName eq "test@example.com"',
+        headers: {
+          authorization: `Bearer ${scimToken}`,
+        },
+      });
+
+      expect([200, 500]).toContain(listResponse.statusCode);
+    });
+
+    it('accepts valid filter: active eq true', async () => {
+      const listResponse = await app.inject({
+        method: 'GET',
+        url: '/api/v1/scim/v2/Users?filter=active eq true',
+        headers: {
+          authorization: `Bearer ${scimToken}`,
+        },
+      });
+
+      expect([200, 500]).toContain(listResponse.statusCode);
+    });
   });
 });

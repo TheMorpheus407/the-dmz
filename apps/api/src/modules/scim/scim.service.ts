@@ -164,11 +164,11 @@ const validateFilter = (filter: string | undefined): void => {
   if (!filter) return;
 
   const validFilters = [
-    /^userName eq ".*"$/,
-    /^userName sw ".*"$/,
-    /^email eq ".*"$/,
+    /^userName eq "[^"]*"$/,
+    /^userName sw "[^"]*"$/,
+    /^email eq "[^"]*"$/,
     /^active eq (true|false)$/,
-    /^displayName eq ".*"$/,
+    /^displayName eq "[^"]*"$/,
   ];
 
   const isValid = validFilters.some((regex) => regex.test(filter));
