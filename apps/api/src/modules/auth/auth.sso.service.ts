@@ -1456,7 +1456,7 @@ export const validateSAMLResponse = async (
     }
 
     const destination = response['@_Destination'];
-    if (destination && !destination.startsWith(expectedDestination)) {
+    if (destination && destination !== expectedDestination) {
       return {
         valid: false,
         failureReason: 'configuration_error',
