@@ -14,7 +14,8 @@
       "minimatch@>=5.0.0 <5.1.8": ">=5.1.8",
       "minimatch@>=9.0.0 <9.0.7": ">=9.0.7",
       "minimatch@>=10.0.0 <10.2.1": ">=10.2.1",
-      "undici": ">=7.24.0"
+      "undici": ">=7.24.0",
+      "serialize-javascript": ">=7.0.3"
     }
   },
   "scripts": {
