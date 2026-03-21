@@ -1,3 +1,11 @@
+import {
+  themePreferencesSchema,
+  accessibilityPreferencesSchema,
+  gameplayPreferencesSchema,
+  audioPreferencesSchema,
+  accountPreferencesSchema,
+} from '@the-dmz/shared';
+
 import { authGuard } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
@@ -121,12 +129,102 @@ export async function settingsRoutes(fastify: FastifyInstance, config: AppConfig
         },
       },
     },
-    async (request, _reply) => {
+    async (request, reply) => {
       const user = request.user as AuthenticatedUser;
       const { category } = request.params;
       const body = request.body as Record<string, unknown>;
 
-      const settings = await updateUserSettings(config, user.userId, user.tenantId, category, body);
+      let validatedBody: Record<string, unknown>;
+
+      switch (category) {
+        case 'display': {
+          const result = themePreferencesSchema.safeParse(body);
+          if (!result.success) {
+            return reply.code(400).send({
+              success: false,
+              error: {
+                code: 'VALIDATION_FAILED',
+                message: 'Invalid display settings',
+                details: { violations: result.error.errors },
+              },
+            });
+          }
+          validatedBody = result.data;
+          break;
+        }
+        case 'accessibility': {
+          const result = accessibilityPreferencesSchema.safeParse(body);
+          if (!result.success) {
+            return reply.code(400).send({
+              success: false,
+              error: {
+                code: 'VALIDATION_FAILED',
+                message: 'Invalid accessibility settings',
+                details: { violations: result.error.errors },
+              },
+            });
+          }
+          validatedBody = result.data;
+          break;
+        }
+        case 'gameplay': {
+          const result = gameplayPreferencesSchema.safeParse(body);
+          if (!result.success) {
+            return reply.code(400).send({
+              success: false,
+              error: {
+                code: 'VALIDATION_FAILED',
+                message: 'Invalid gameplay settings',
+                details: { violations: result.error.errors },
+              },
+            });
+          }
+          validatedBody = result.data;
+          break;
+        }
+        case 'audio': {
+          const result = audioPreferencesSchema.safeParse(body);
+          if (!result.success) {
+            return reply.code(400).send({
+              success: false,
+              error: {
+                code: 'VALIDATION_FAILED',
+                message: 'Invalid audio settings',
+                details: { violations: result.error.errors },
+              },
+            });
+          }
+          validatedBody = result.data;
+          break;
+        }
+        case 'account': {
+          const result = accountPreferencesSchema.safeParse(body);
+          if (!result.success) {
+            return reply.code(400).send({
+              success: false,
+              error: {
+                code: 'VALIDATION_FAILED',
+                message: 'Invalid account settings',
+                details: { violations: result.error.errors },
+              },
+            });
+          }
+          validatedBody = result.data;
+          break;
+        }
+        default: {
+          const _exhaustiveCheck: never = category as never;
+          throw new Error(`Unhandled category: ${_exhaustiveCheck as string}`);
+        }
+      }
+
+      const settings = await updateUserSettings(
+        config,
+        user.userId,
+        user.tenantId,
+        category,
+        validatedBody,
+      );
 
       return {
         success: true,
