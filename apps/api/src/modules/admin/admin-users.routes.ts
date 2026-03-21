@@ -2,6 +2,7 @@ import { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fa
 
 import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { validateCsrf } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
 
 import * as userService from './user.service.js';
 
@@ -163,7 +164,7 @@ export const registerAdminUserRoutes = async (fastify: FastifyInstance): Promise
   fastify.post<{ Body: CreateUserBody }>(
     '/admin/users',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('users', 'write')],
+      preHandler: [authGuard, tenantContext, validateCsrf, requirePermission('users', 'write')],
       schema: {
         body: {
           type: 'object',
@@ -217,7 +218,7 @@ export const registerAdminUserRoutes = async (fastify: FastifyInstance): Promise
   fastify.patch<{ Params: UserIdParams; Body: UpdateUserBody }>(
     '/admin/users/:id',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('users', 'write')],
+      preHandler: [authGuard, tenantContext, validateCsrf, requirePermission('users', 'write')],
       schema: {
         params: {
           type: 'object',
@@ -291,7 +292,7 @@ export const registerAdminUserRoutes = async (fastify: FastifyInstance): Promise
   fastify.delete<{ Params: UserIdParams }>(
     '/admin/users/:id',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('users', 'write')],
+      preHandler: [authGuard, tenantContext, validateCsrf, requirePermission('users', 'write')],
       schema: {
         params: {
           type: 'object',
@@ -352,7 +353,7 @@ export const registerAdminUserRoutes = async (fastify: FastifyInstance): Promise
   fastify.post<{ Params: UserIdParams; Body: AssignRoleBody }>(
     '/admin/users/:id/roles',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('roles', 'write')],
+      preHandler: [authGuard, tenantContext, validateCsrf, requirePermission('roles', 'write')],
       schema: {
         params: {
           type: 'object',
@@ -412,7 +413,7 @@ export const registerAdminUserRoutes = async (fastify: FastifyInstance): Promise
   fastify.delete<{ Params: { id: string; roleId: string } }>(
     '/admin/users/:id/roles/:roleId',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('roles', 'write')],
+      preHandler: [authGuard, tenantContext, validateCsrf, requirePermission('roles', 'write')],
       schema: {
         params: {
           type: 'object',

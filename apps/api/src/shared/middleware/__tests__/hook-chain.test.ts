@@ -64,12 +64,13 @@ describe('Hook Chain Manifest', () => {
       expect(hooks).toHaveLength(0);
     });
 
-    it('should return auth, tenantContext, tenantStatusGuard for protected routes', () => {
+    it('should return auth, tenantContext, tenantStatusGuard, validateCsrf for protected routes', () => {
       const hooks = getRequiredHooksForCategory('protected');
-      expect(hooks).toHaveLength(3);
+      expect(hooks).toHaveLength(4);
       expect(hooks.map((h) => h.hook)).toContain('authGuard');
       expect(hooks.map((h) => h.hook)).toContain('tenantContext');
       expect(hooks.map((h) => h.hook)).toContain('tenantStatusGuard');
+      expect(hooks.map((h) => h.hook)).toContain('validateCsrf');
     });
 
     it('should return correct positions for protected routes', () => {
@@ -77,23 +78,26 @@ describe('Hook Chain Manifest', () => {
       const authGuard = hooks.find((h) => h.hook === 'authGuard');
       const tenantContext = hooks.find((h) => h.hook === 'tenantContext');
       const tenantStatusGuard = hooks.find((h) => h.hook === 'tenantStatusGuard');
+      const validateCsrf = hooks.find((h) => h.hook === 'validateCsrf');
 
       expect(authGuard?.position).toBe(1);
       expect(tenantContext?.position).toBe(2);
       expect(tenantStatusGuard?.position).toBe(3);
+      expect(validateCsrf?.position).toBe(4);
     });
 
     it('should return required hooks for admin routes', () => {
       const hooks = getRequiredHooksForCategory('admin');
-      expect(hooks).toHaveLength(3);
+      expect(hooks).toHaveLength(4);
       expect(hooks.map((h) => h.hook)).toContain('authGuard');
       expect(hooks.map((h) => h.hook)).toContain('tenantContext');
       expect(hooks.map((h) => h.hook)).toContain('tenantStatusGuard');
+      expect(hooks.map((h) => h.hook)).toContain('validateCsrf');
     });
 
     it('should return required hooks for game routes', () => {
       const hooks = getRequiredHooksForCategory('game');
-      expect(hooks).toHaveLength(3);
+      expect(hooks).toHaveLength(4);
     });
   });
 
@@ -139,11 +143,12 @@ describe('Hook Chain Manifest', () => {
       expect(getHookPosition('authGuard')).toBe(1);
       expect(getHookPosition('tenantContext')).toBe(2);
       expect(getHookPosition('tenantStatusGuard')).toBe(3);
+      expect(getHookPosition('validateCsrf')).toBe(4);
     });
 
     it('should return undefined for hooks not in required list', () => {
       expect(getHookPosition('requirePermission')).toBeUndefined();
-      expect(getHookPosition('validateCsrf')).toBeUndefined();
+      expect(getHookPosition('rateLimiter')).toBeUndefined();
     });
   });
 

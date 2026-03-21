@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { authGuard } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
+import { validateCsrf } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
 
@@ -72,7 +73,7 @@ export async function socialRelationshipRoutes(
   fastify.post(
     '/api/v1/social/friends/request',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf],
       schema: {
         security: [{ bearerAuth: [] }],
         body: friendRequestSchema,
@@ -120,7 +121,7 @@ export async function socialRelationshipRoutes(
   fastify.post(
     '/api/v1/social/friends/accept',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf],
       schema: {
         security: [{ bearerAuth: [] }],
         body: friendRequestActionSchema,
@@ -165,7 +166,7 @@ export async function socialRelationshipRoutes(
   fastify.post(
     '/api/v1/social/friends/reject',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf],
       schema: {
         security: [{ bearerAuth: [] }],
         body: friendRequestActionSchema,
@@ -210,7 +211,7 @@ export async function socialRelationshipRoutes(
   fastify.delete<{ Params: { playerId: string } }>(
     '/api/v1/social/friends/:playerId',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf],
       schema: {
         security: [{ bearerAuth: [] }],
         params: z.object({
@@ -313,7 +314,7 @@ export async function socialRelationshipRoutes(
   fastify.post<{ Params: { playerId: string } }>(
     '/api/v1/social/block/:playerId',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf],
       schema: {
         security: [{ bearerAuth: [] }],
         params: z.object({
@@ -360,7 +361,7 @@ export async function socialRelationshipRoutes(
   fastify.delete<{ Params: { playerId: string } }>(
     '/api/v1/social/block/:playerId',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf],
       schema: {
         security: [{ bearerAuth: [] }],
         params: z.object({
@@ -430,7 +431,7 @@ export async function socialRelationshipRoutes(
   fastify.post<{ Params: { playerId: string } }>(
     '/api/v1/social/mute/:playerId',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf],
       schema: {
         security: [{ bearerAuth: [] }],
         params: z.object({
@@ -477,7 +478,7 @@ export async function socialRelationshipRoutes(
   fastify.delete<{ Params: { playerId: string } }>(
     '/api/v1/social/mute/:playerId',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf],
       schema: {
         security: [{ bearerAuth: [] }],
         params: z.object({

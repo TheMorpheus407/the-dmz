@@ -78,6 +78,11 @@ const HOOK_CHAIN_CONTRACT: HookChainContract = {
       position: 3,
       requiredFor: ['protected', 'game', 'admin'],
     },
+    {
+      hook: 'validateCsrf',
+      position: 4,
+      requiredFor: ['protected', 'game', 'admin'],
+    },
   ],
   allowedHooks: [
     'authGuard',
@@ -215,7 +220,13 @@ export function getCategoryForRoute(routePath: string): RouteCategory {
 }
 
 export interface HookChainViolation {
-  type: 'missing_hook' | 'wrong_order' | 'duplicate_hook' | 'unapproved_hook' | 'invalid_source';
+  type:
+    | 'missing_hook'
+    | 'wrong_order'
+    | 'duplicate_hook'
+    | 'unapproved_hook'
+    | 'invalid_source'
+    | 'missing_csrf';
   route: string;
   file: string;
   expected?: string;
