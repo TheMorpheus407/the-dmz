@@ -1,7 +1,7 @@
 import fp from 'fastify-plugin';
 
 import { getDeprecationPolicy, API_VERSIONING_POLICY } from '../policies/index.js';
-import { sanitizeHeaderValue } from '../utils/sanitizer.js';
+import { sanitizeForLogging, sanitizeHeaderValue } from '../utils/sanitizer.js';
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
@@ -57,12 +57,14 @@ async function deprecationPlugin(fastify: FastifyInstance): Promise<void> {
 
       fastify.log.warn({
         msg: 'Deprecated endpoint accessed',
-        endpoint: request.url,
+        endpoint: sanitizeForLogging(request.url),
         method: request.method,
         sunsetDate: deprecationDate.toISOString(),
         successorPath: deprecationConfig.successorPath,
-        clientIp: request.headers['x-forwarded-for'] || request.ip,
-        userAgent: request.headers['user-agent'],
+        clientIp: sanitizeForLogging(
+          (request.headers['x-forwarded-for'] as string) || request.ip || '',
+        ),
+        userAgent: sanitizeForLogging((request.headers['user-agent'] as string) || ''),
       });
     }
   });
@@ -102,12 +104,14 @@ export function createDeprecationHandler(options: DeprecationOptions) {
     if (logger) {
       logger.warn({
         msg: 'Deprecated endpoint accessed via handler',
-        endpoint: request.url,
+        endpoint: sanitizeForLogging(request.url),
         method: request.method,
         sunsetDate: sunsetDate.toISOString(),
         successorPath: options.successorPath,
-        clientIp: request.headers['x-forwarded-for'] || request.ip,
-        userAgent: request.headers['user-agent'],
+        clientIp: sanitizeForLogging(
+          (request.headers['x-forwarded-for'] as string) || request.ip || '',
+        ),
+        userAgent: sanitizeForLogging((request.headers['user-agent'] as string) || ''),
       });
     }
   };

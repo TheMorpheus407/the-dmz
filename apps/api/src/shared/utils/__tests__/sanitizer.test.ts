@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { PrototypePollutionError, sanitizeHeaderValue, sanitizeValue } from '../sanitizer.js';
+import {
+  PrototypePollutionError,
+  sanitizeForLogging,
+  sanitizeHeaderValue,
+  sanitizeValue,
+} from '../sanitizer.js';
 
 describe('sanitizeValue', () => {
   it('sanitizes nested string values recursively', () => {
@@ -156,5 +161,49 @@ describe('sanitizeHeaderValue', () => {
   it('handles mixed CRLF combinations', () => {
     const input = 'line1\r\nline2\rline3\nline4';
     expect(sanitizeHeaderValue(input)).toBe('line1line2line3line4');
+  });
+});
+
+describe('sanitizeForLogging', () => {
+  it('replaces carriage return characters with spaces', () => {
+    const input = 'value\rwith\rCR';
+    expect(sanitizeForLogging(input)).toBe('value with CR');
+  });
+
+  it('replaces newline characters with spaces', () => {
+    const input = 'value\nwith\nLF';
+    expect(sanitizeForLogging(input)).toBe('value with LF');
+  });
+
+  it('replaces CRLF sequences with spaces', () => {
+    const input = 'value\r\nwith\r\nCRLF';
+    expect(sanitizeForLogging(input)).toBe('value with CRLF');
+  });
+
+  it('returns value unchanged when no CRLF present', () => {
+    const input = 'normal value without CRLF';
+    expect(sanitizeForLogging(input)).toBe('normal value without CRLF');
+  });
+
+  it('handles mixed CRLF combinations', () => {
+    const input = 'line1\r\nline2\rline3\nline4';
+    expect(sanitizeForLogging(input)).toBe('line1 line2 line3 line4');
+  });
+
+  it('preserves whitespace inside values when replacing CRLF', () => {
+    const input = 'hello\r\nworld';
+    expect(sanitizeForLogging(input)).toBe('hello world');
+  });
+
+  it('handles empty strings', () => {
+    expect(sanitizeForLogging('')).toBe('');
+  });
+
+  it('handles strings with only CRLF', () => {
+    expect(sanitizeForLogging('\r\n\r\n')).toBe('  ');
+  });
+
+  it('handles strings with only whitespace and CRLF', () => {
+    expect(sanitizeForLogging('  \r\n  \n\r  ')).toBe('         ');
   });
 });

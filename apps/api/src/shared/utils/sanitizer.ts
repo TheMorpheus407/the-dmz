@@ -38,6 +38,10 @@ export const sanitizeHeaderValue = (value: string): string => {
   return value.replace(CRLF_PATTERN, '');
 };
 
+export const sanitizeForLogging = (value: string): string => {
+  return value.replace(/\r\n/g, ' ').replace(/\r/g, ' ').replace(/\n/g, ' ');
+};
+
 const normalizeSkipHtmlField = (field: string): string =>
   field
     .split('.')

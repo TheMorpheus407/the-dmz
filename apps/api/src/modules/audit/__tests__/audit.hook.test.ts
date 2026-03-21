@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { sanitizeBody } from '../audit.hook.js';
+import { sanitizeForLogging } from '../../../shared/utils/sanitizer.js';
 
 describe('sanitizeBody', () => {
   it('should return non-object body unchanged', () => {
@@ -216,7 +217,7 @@ describe('sanitizeBody', () => {
   it('should not mutate original body', () => {
     const body = { username: 'test', password: 'red1' };
     sanitizeBody(body);
-    expect(body['password']).toBe('secret');
+    expect(body['password']).toBe('red1');
   });
 
   it('should handle array within nested object', () => {
@@ -235,5 +236,100 @@ describe('sanitizeBody', () => {
     expect(users[0]?.['token']).toBe('[REDACTED]');
     expect(users[1]?.['name']).toBe('user2');
     expect(users[1]?.['token']).toBe('[REDACTED]');
+  });
+});
+
+describe('audit hook CRLF injection prevention - sanitization verification', () => {
+  const buildAuditLogInput = (options: {
+    ipAddress?: string;
+    userAgent?: string;
+    xForwardedFor?: string;
+    userAgentHeader?: string;
+  }) => {
+    const ipAddress =
+      options.ipAddress ?? options.xForwardedFor?.split(',')[0]?.trim() ?? '127.0.0.1';
+    const userAgent = options.userAgent ?? options.userAgentHeader ?? 'Test Agent';
+
+    const logInput = {
+      tenantId: 'test-tenant',
+      userId: 'test-user',
+      action: 'test.action',
+      resourceType: 'test',
+      ipAddress: sanitizeForLogging(ipAddress),
+      userAgent: sanitizeForLogging(userAgent),
+      metadata: {},
+    };
+
+    return logInput;
+  };
+
+  it('sanitizes CRLF in x-forwarded-for header in audit log input', () => {
+    const maliciousIp = '192.168.1.1\r\n[2026-03-21 WARN] Fake auth success for admin';
+    const logInput = buildAuditLogInput({ xForwardedFor: maliciousIp });
+
+    expect(logInput.ipAddress).toBe('192.168.1.1 [2026-03-21 WARN] Fake auth success for admin');
+    expect(JSON.stringify(logInput.ipAddress)).not.toContain('\n');
+    expect(JSON.stringify(logInput.ipAddress)).not.toContain('\r');
+  });
+
+  it('sanitizes CRLF in user-agent header in audit log input', () => {
+    const maliciousUserAgent = 'Mozilla/5.0\r\n[2026-03-21 ERROR] Database connection failed';
+    const logInput = buildAuditLogInput({ userAgentHeader: maliciousUserAgent });
+
+    expect(logInput.userAgent).toBe('Mozilla/5.0 [2026-03-21 ERROR] Database connection failed');
+    expect(JSON.stringify(logInput.userAgent)).not.toContain('\n');
+    expect(JSON.stringify(logInput.userAgent)).not.toContain('\r');
+  });
+
+  it('sanitizes LF in x-forwarded-for header in audit log input', () => {
+    const maliciousIp = '10.0.0.1\n[2026-03-21 WARN] Injected log line';
+    const logInput = buildAuditLogInput({ xForwardedFor: maliciousIp });
+
+    expect(logInput.ipAddress).toBe('10.0.0.1 [2026-03-21 WARN] Injected log line');
+    expect(String(logInput.ipAddress)).not.toContain('\n');
+  });
+
+  it('sanitizes CR in user-agent header in audit log input', () => {
+    const maliciousUserAgent = 'Mozilla/5.0\rInjected-Line';
+    const logInput = buildAuditLogInput({ userAgentHeader: maliciousUserAgent });
+
+    expect(logInput.userAgent).toBe('Mozilla/5.0 Injected-Line');
+    expect(String(logInput.userAgent)).not.toContain('\r');
+  });
+
+  it('sanitizes mixed CRLF sequences in audit log input', () => {
+    const maliciousIp = '1.2.3.4\r\nInjected\rLine\nAnother\rInjected';
+    const logInput = buildAuditLogInput({ xForwardedFor: maliciousIp });
+
+    expect(logInput.ipAddress).toBe('1.2.3.4 Injected Line Another Injected');
+    expect(JSON.stringify(logInput.ipAddress)).not.toContain('\n');
+    expect(JSON.stringify(logInput.ipAddress)).not.toContain('\r');
+  });
+
+  it('preserves legitimate IP addresses without newlines', () => {
+    const normalIp = '192.168.1.100';
+    const logInput = buildAuditLogInput({ ipAddress: normalIp });
+
+    expect(logInput.ipAddress).toBe('192.168.1.100');
+    expect(logInput.ipAddress).not.toContain('\n');
+    expect(logInput.ipAddress).not.toContain('\r');
+  });
+
+  it('preserves legitimate user agents without newlines', () => {
+    const normalUserAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
+    const logInput = buildAuditLogInput({ userAgent: normalUserAgent });
+
+    expect(logInput.userAgent).toBe(normalUserAgent);
+    expect(logInput.userAgent).not.toContain('\n');
+    expect(logInput.userAgent).not.toContain('\r');
+  });
+
+  it('handles x-forwarded-for with multiple IPs', () => {
+    const forwardedFor = '192.168.1.1, 10.0.0.1\r\nInjected';
+    const logInput = buildAuditLogInput({ xForwardedFor: forwardedFor });
+
+    expect(logInput.ipAddress).toBe('192.168.1.1');
+    expect(JSON.stringify(logInput.ipAddress)).not.toContain('\n');
+    expect(JSON.stringify(logInput.ipAddress)).not.toContain('\r');
   });
 });

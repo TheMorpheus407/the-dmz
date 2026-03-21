@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 
-import { sanitizeHeaderValue } from '../utils/sanitizer.js';
+import { sanitizeForLogging, sanitizeHeaderValue } from '../utils/sanitizer.js';
 
 import type { FastifyInstance } from 'fastify';
 
@@ -46,22 +46,22 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
 
     reply.header(REQUEST_ID_HEADER, request.id);
 
-    const fields: RequestLogFields = {
+    const onRequestFields: RequestLogFields = {
       requestId: request.id,
       method: request.method,
-      url: request.url,
-      ip: getIp(request),
-      userAgent: getUserAgent(request),
+      url: sanitizeForLogging(request.url),
+      ip: sanitizeForLogging(getIp(request) || ''),
+      userAgent: sanitizeForLogging(getUserAgent(request) || ''),
     };
 
     if (request.tenantContext) {
-      fields.tenantId = request.tenantContext.tenantId;
-      fields.userId = request.tenantContext.userId;
+      onRequestFields.tenantId = request.tenantContext.tenantId;
+      onRequestFields.userId = request.tenantContext.userId;
     }
 
     request.log.info(
       {
-        ...fields,
+        ...onRequestFields,
         service: { name: serviceName, version: serviceVersion, environment: serviceEnv },
         event: 'request_received',
       },
@@ -73,19 +73,19 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
     const end = process.hrtime.bigint();
     const durationMs = request.startTime ? Number(end - request.startTime) / 1_000_000 : undefined;
 
-    const fields: RequestLogFields = {
+    const onResponseFields: RequestLogFields = {
       requestId: request.id,
       method: request.method,
-      url: request.url,
+      url: sanitizeForLogging(request.url),
       statusCode: reply.statusCode,
-      ip: getIp(request),
-      userAgent: getUserAgent(request),
+      ip: sanitizeForLogging(getIp(request) || ''),
+      userAgent: sanitizeForLogging(getUserAgent(request) || ''),
       ...(durationMs !== undefined && { durationMs }),
     };
 
     if (request.tenantContext) {
-      fields.tenantId = request.tenantContext.tenantId;
-      fields.userId = request.tenantContext.userId;
+      onResponseFields.tenantId = request.tenantContext.tenantId;
+      onResponseFields.userId = request.tenantContext.userId;
     }
 
     const level = reply.statusCode >= 500 ? 'error' : reply.statusCode >= 400 ? 'warn' : 'info';
@@ -93,7 +93,7 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
 
     request.log[level](
       {
-        ...fields,
+        ...onResponseFields,
         service: { name: serviceName, version: serviceVersion, environment: serviceEnv },
         event: 'request_completed',
       },

@@ -1,5 +1,7 @@
 import { LOG_REDACTION_KEYS } from '@the-dmz/shared/contracts';
 
+import { sanitizeForLogging } from '../../shared/utils/sanitizer.js';
+
 import { createAuditLog } from './audit.service.js';
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
@@ -83,7 +85,7 @@ export function createAuditLogHook(options: AuditHookOptions = {}) {
             logInput.resourceId = resourceId;
           }
           if (ipAddress) {
-            logInput.ipAddress = ipAddress;
+            logInput.ipAddress = sanitizeForLogging(ipAddress);
           }
 
           const correlationIdHeader = request.headers['x-correlation-id'];
@@ -93,7 +95,7 @@ export function createAuditLogHook(options: AuditHookOptions = {}) {
 
           const userAgentHeader = request.headers['user-agent'];
           if (typeof userAgentHeader === 'string') {
-            logInput.userAgent = userAgentHeader;
+            logInput.userAgent = sanitizeForLogging(userAgentHeader);
           }
 
           await createAuditLog(logInput);

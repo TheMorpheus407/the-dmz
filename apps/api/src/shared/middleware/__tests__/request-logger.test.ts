@@ -435,4 +435,137 @@ describe('request logger middleware', () => {
       expect(response.headers['x-request-id']).toBe('valid-id%0D%0AInjected-Header: value');
     });
   });
+
+  describe('CRLF injection prevention in log fields', () => {
+    let app: ReturnType<typeof buildApp>;
+    let capturedLogs: Array<{ level: string; args: unknown[] }> = [];
+
+    beforeAll(async () => {
+      capturedLogs = [];
+      app = buildApp(createTestConfig({ LOG_LEVEL: 'info' }));
+
+      vi.spyOn(app.log, 'child').mockImplementation((_bindings) => {
+        const logger = {
+          info: vi.fn((...args: unknown[]) => {
+            capturedLogs.push({ level: 'info', args });
+          }),
+          warn: vi.fn((...args: unknown[]) => {
+            capturedLogs.push({ level: 'warn', args });
+          }),
+          error: vi.fn((...args: unknown[]) => {
+            capturedLogs.push({ level: 'error', args });
+          }),
+          debug: vi.fn(),
+          trace: vi.fn(),
+          fatal: vi.fn(),
+          child: vi.fn(),
+        };
+        return logger as unknown as typeof app.log;
+      });
+
+      await app.ready();
+    });
+
+    afterAll(async () => {
+      await app.close();
+    });
+
+    it('sanitizes CRLF in x-forwarded-for header in request logs', async () => {
+      capturedLogs.length = 0;
+
+      const maliciousIp = '192.168.1.1\r\n[2026-03-21 WARN] Fake auth success for admin';
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+        headers: {
+          'x-forwarded-for': maliciousIp,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      const requestLogCall = capturedLogs.find(
+        (log) => log.level === 'info' && log.args[1] === 'request received',
+      );
+      expect(requestLogCall).toBeDefined();
+
+      const logPayload = requestLogCall?.args[0] as Record<string, unknown>;
+      expect(logPayload['ip']).toBeDefined();
+      expect(String(logPayload['ip'])).not.toContain('\n');
+      expect(String(logPayload['ip'])).not.toContain('\r');
+    });
+
+    it('sanitizes CRLF in user-agent header in request logs', async () => {
+      capturedLogs.length = 0;
+
+      const maliciousUserAgent = 'Mozilla/5.0\r\n[2026-03-21 ERROR] Database connection failed';
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+        headers: {
+          'user-agent': maliciousUserAgent,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      const requestLogCall = capturedLogs.find(
+        (log) => log.level === 'info' && log.args[1] === 'request received',
+      );
+      expect(requestLogCall).toBeDefined();
+
+      const logPayload = requestLogCall?.args[0] as Record<string, unknown>;
+      expect(logPayload['userAgent']).toBe(
+        'Mozilla/5.0 [2026-03-21 ERROR] Database connection failed',
+      );
+      expect(JSON.stringify(logPayload)).not.toContain('\n');
+      expect(JSON.stringify(logPayload)).not.toContain('\r');
+    });
+
+    it('sanitizes CRLF in URL in request logs', async () => {
+      capturedLogs.length = 0;
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      const requestLogCall = capturedLogs.find(
+        (log) => log.level === 'info' && log.args[1] === 'request received',
+      );
+      expect(requestLogCall).toBeDefined();
+
+      const logPayload = requestLogCall?.args[0] as Record<string, unknown>;
+      expect(logPayload['url']).toBeDefined();
+      expect(String(logPayload['url'])).not.toContain('\n');
+      expect(String(logPayload['url'])).not.toContain('\r');
+    });
+
+    it('sanitizes CRLF in x-forwarded-for header in response logs', async () => {
+      capturedLogs.length = 0;
+
+      const maliciousIp = '10.0.0.1\r\nInjected-Log-Line';
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+        headers: {
+          'x-forwarded-for': maliciousIp,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      const responseLogCall = capturedLogs.find(
+        (log) => log.level === 'info' && log.args[1] === 'request completed',
+      );
+      expect(responseLogCall).toBeDefined();
+
+      const logPayload = responseLogCall?.args[0] as Record<string, unknown>;
+      expect(logPayload['ip']).toBeDefined();
+      expect(String(logPayload['ip'])).not.toContain('\n');
+      expect(String(logPayload['ip'])).not.toContain('\r');
+    });
+  });
 });
