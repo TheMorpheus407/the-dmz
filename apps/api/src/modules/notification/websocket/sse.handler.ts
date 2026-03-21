@@ -1,9 +1,7 @@
-// eslint-disable-next-line import-x/no-restricted-paths
-import { verifyJWT } from '../../auth/jwt-keys.service.js';
 import { generateId } from '../../../shared/utils/id.js';
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import type { WebSocketAuthResult, WSServerMessage } from './websocket.types.js';
+import type { WSServerMessage } from './websocket.types.js';
 import type { WebSocketGateway } from './websocket.gateway.js';
 
 interface SSEResponse {
@@ -21,16 +19,10 @@ export async function handleSSEConnection(
   reply: FastifyReply,
   gateway: WebSocketGateway,
 ): Promise<void> {
-  const authResult = await authenticateSSE(request);
-
-  if (!authResult.valid || !authResult.payload) {
-    reply.code(401).send({ error: authResult.error ?? 'Authentication failed' });
-    return;
-  }
+  const userId = request.user!.userId;
+  const tenantId = request.user!.tenantId;
 
   const connectionId = generateId();
-  const userId = authResult.payload.userId;
-  const tenantId = authResult.payload.tenantId;
 
   const sseResponse: SSEResponse = {
     connectionId,
@@ -112,13 +104,6 @@ export async function handleSSESubscribe(
   reply: FastifyReply,
   gateway: WebSocketGateway,
 ): Promise<void> {
-  const authResult = await authenticateSSE(request);
-
-  if (!authResult.valid || !authResult.payload) {
-    reply.code(401).send({ error: authResult.error ?? 'Authentication failed' });
-    return;
-  }
-
   const body = request.body as { connectionId?: string; channels?: string[] };
   const { connectionId, channels } = body;
 
@@ -146,13 +131,6 @@ export async function handleSSEUnsubscribe(
   reply: FastifyReply,
   gateway: WebSocketGateway,
 ): Promise<void> {
-  const authResult = await authenticateSSE(request);
-
-  if (!authResult.valid || !authResult.payload) {
-    reply.code(401).send({ error: authResult.error ?? 'Authentication failed' });
-    return;
-  }
-
   const body = request.body as { connectionId?: string; channels?: string[] };
   const { connectionId, channels } = body;
 
@@ -193,44 +171,6 @@ function sendSSE(reply: FastifyReply, event: string): void {
     reply.code(200);
   }
   reply.raw.write(event);
-}
-
-async function authenticateSSE(request: FastifyRequest): Promise<WebSocketAuthResult> {
-  const query = request.query as Record<string, string>;
-  const authHeader = request.headers.authorization;
-  const token = query['token'] ?? authHeader?.replace('Bearer ', '');
-
-  if (!token) {
-    return { valid: false, error: 'No authentication token provided' };
-  }
-
-  try {
-    const config = request.server.config;
-    const { payload } = await verifyJWT(config, token);
-
-    const userId = payload['sub'] as string;
-    const tenantId = payload['tenantId'] as string;
-
-    if (!userId || !tenantId) {
-      return { valid: false, error: 'Invalid token payload' };
-    }
-
-    const sessionId = payload['sessionId'] as string | undefined;
-
-    return {
-      valid: true,
-      payload: {
-        userId,
-        tenantId,
-        ...(sessionId !== undefined && { sessionId }),
-      },
-    };
-  } catch (error) {
-    return {
-      valid: false,
-      error: error instanceof Error ? error.message : 'Token verification failed',
-    };
-  }
 }
 
 export function sendToSSEClient(
