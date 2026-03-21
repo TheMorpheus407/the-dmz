@@ -388,6 +388,22 @@ export const verifyWebauthnAssertion = async (
 
   const db = getDatabaseClient(config);
 
+  const session = await db.query.sessions.findFirst({
+    where: eq(sessionsTable.id, user.sessionId),
+  });
+
+  if (session?.mfaLockedAt) {
+    const lockoutDurationMs = (config.MFA_MAX_ATTEMPTS || 10) * 60 * 1000;
+    const lockoutExpiresAt = new Date(session.mfaLockedAt.getTime() + lockoutDurationMs);
+    if (new Date() < lockoutExpiresAt) {
+      throw new AppError({
+        code: ErrorCodes.RATE_LIMIT_EXCEEDED,
+        message: 'MFA temporarily locked due to too many failed attempts. Try again later.',
+        statusCode: 429,
+      });
+    }
+  }
+
   const credentialResult = await db
     .select()
     .from(webauthnCredentialsTable)
@@ -403,6 +419,27 @@ export const verifyWebauthnAssertion = async (
   const credential = credentialResult[0];
 
   if (!credential) {
+    const failedAttempts = session?.mfaFailedAttempts ?? 0;
+    const newFailedAttempts = failedAttempts + 1;
+    const maxAttempts = config.MFA_MAX_ATTEMPTS || 10;
+
+    if (newFailedAttempts >= maxAttempts) {
+      await db
+        .update(sessionsTable)
+        .set({
+          mfaFailedAttempts: newFailedAttempts,
+          mfaLockedAt: new Date(),
+        })
+        .where(eq(sessionsTable.id, user.sessionId));
+    } else {
+      await db
+        .update(sessionsTable)
+        .set({
+          mfaFailedAttempts: newFailedAttempts,
+        })
+        .where(eq(sessionsTable.id, user.sessionId));
+    }
+
     throw new AppError({
       code: ErrorCodes.AUTH_WEBAUTHN_CREDENTIAL_NOT_FOUND,
       message: 'Credential not found',
@@ -415,6 +452,8 @@ export const verifyWebauthnAssertion = async (
     .set({
       mfaVerifiedAt: new Date(),
       mfaMethod: 'webauthn',
+      mfaFailedAttempts: null,
+      mfaLockedAt: null,
     })
     .where(eq(sessionsTable.id, user.sessionId));
 
