@@ -141,7 +141,7 @@ const buildStrictCspDirectives = (config: AppConfig): Record<string, Iterable<st
   defaultSrc: ["'self'"],
   baseUri: ["'self'"],
   scriptSrc: ["'self'"],
-  styleSrc: ["'self'", "'unsafe-inline'"],
+  styleSrc: ["'self'"],
   connectSrc: buildStrictConnectSources(config),
   imgSrc: buildImageSources(config, false),
   fontSrc: ["'self'"],

@@ -104,7 +104,7 @@ describe('security headers', () => {
 
       expect(defaultSrc).toBe("default-src 'self'");
       expect(scriptSrc).toBe("script-src 'self'");
-      expect(styleSrc).toContain("'unsafe-inline'");
+      expect(styleSrc).not.toContain("'unsafe-inline'");
       expect(connectSrc).toContain('https://app.example.com');
       expect(connectSrc).toContain('wss://app.example.com');
       expect(frameAncestors).toBe("frame-ancestors 'none'");

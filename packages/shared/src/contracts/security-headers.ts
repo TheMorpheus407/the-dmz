@@ -256,7 +256,7 @@ export const buildSecurityHeadersPolicy = (
     'default-src': ["'self'"],
     'base-uri': ["'self'"],
     'script-src': ["'self'"],
-    'style-src': ["'self'", "'unsafe-inline'"],
+    'style-src': ["'self'"],
     'connect-src': buildConnectSources(),
     'img-src': buildImageSources(),
     'font-src': ["'self'"],
