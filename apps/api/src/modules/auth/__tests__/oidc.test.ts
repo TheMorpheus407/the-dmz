@@ -169,8 +169,8 @@ describe('OIDC Service - Authorization URL', () => {
   };
 
   describe('buildOIDCAuthorizationUrl', () => {
-    it('should build authorization URL with required params', () => {
-      const url = buildOIDCAuthorizationUrl(
+    it('should build authorization URL with required params', async () => {
+      const url = await buildOIDCAuthorizationUrl(
         mockProviderConfig,
         'test-client-id',
         'https://app.example.com/callback',
@@ -187,8 +187,8 @@ describe('OIDC Service - Authorization URL', () => {
       expect(url).toContain('nonce=test-nonce');
     });
 
-    it('should encode special characters in redirect URI', () => {
-      const url = buildOIDCAuthorizationUrl(
+    it('should encode special characters in redirect URI', async () => {
+      const url = await buildOIDCAuthorizationUrl(
         mockProviderConfig,
         'test-client-id',
         'https://app.example.com/callback?foo=bar',
@@ -197,6 +197,52 @@ describe('OIDC Service - Authorization URL', () => {
       );
 
       expect(url).toContain('redirect_uri=');
+    });
+
+    it('should include PKCE code_challenge and code_challenge_method when pkceCodeVerifier is provided', async () => {
+      const pkceCodeVerifier = generatePKCECodeVerifier();
+      const url = await buildOIDCAuthorizationUrl(
+        mockProviderConfig,
+        'test-client-id',
+        'https://app.example.com/callback',
+        'test-state',
+        'test-nonce',
+        pkceCodeVerifier,
+      );
+
+      const urlObj = new URL(url);
+      expect(urlObj.searchParams.get('code_challenge')).toBeDefined();
+      expect(urlObj.searchParams.get('code_challenge_method')).toBe('S256');
+    });
+
+    it('should not include PKCE params when pkceCodeVerifier is not provided', async () => {
+      const url = await buildOIDCAuthorizationUrl(
+        mockProviderConfig,
+        'test-client-id',
+        'https://app.example.com/callback',
+        'test-state',
+        'test-nonce',
+      );
+
+      const urlObj = new URL(url);
+      expect(urlObj.searchParams.has('code_challenge')).toBe(false);
+      expect(urlObj.searchParams.has('code_challenge_method')).toBe(false);
+    });
+
+    it('should compute correct code_challenge from pkceCodeVerifier', async () => {
+      const pkceCodeVerifier = 'test-verifier-12345';
+      const url = await buildOIDCAuthorizationUrl(
+        mockProviderConfig,
+        'test-client-id',
+        'https://app.example.com/callback',
+        'test-state',
+        'test-nonce',
+        pkceCodeVerifier,
+      );
+
+      const expectedChallenge = await generatePKCECodeChallenge(pkceCodeVerifier);
+      const urlObj = new URL(url);
+      expect(urlObj.searchParams.get('code_challenge')).toBe(expectedChallenge);
     });
   });
 });

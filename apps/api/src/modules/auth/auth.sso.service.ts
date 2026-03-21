@@ -1208,14 +1208,14 @@ export const resolveSSOAccountLinking = async (
   };
 };
 
-export const buildOIDCAuthorizationUrl = (
+export const buildOIDCAuthorizationUrl = async (
   providerConfig: SSOProviderConfig,
   clientId: string,
   redirectUri: string,
   state: string,
   nonce: string,
-  _pkceCodeVerifier?: string,
-): string => {
+  pkceCodeVerifier?: string,
+): Promise<string> => {
   if (providerConfig.type !== 'oidc') {
     throw new SSOError({
       message: 'Invalid provider type',
@@ -1233,6 +1233,12 @@ export const buildOIDCAuthorizationUrl = (
     nonce,
     ...(providerConfig.responseMode && { response_mode: providerConfig.responseMode }),
   });
+
+  if (pkceCodeVerifier) {
+    const codeChallenge = await generatePKCECodeChallenge(pkceCodeVerifier);
+    params.set('code_challenge', codeChallenge);
+    params.set('code_challenge_method', 'S256');
+  }
 
   return `${providerConfig.authorizationEndpoint}?${params.toString()}`;
 };
