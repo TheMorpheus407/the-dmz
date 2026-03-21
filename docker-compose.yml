@@ -10,12 +10,12 @@
 #   grafana   — Dashboards on localhost:3000
 #   alertmanager — Alert handling on localhost:9093
 #
-# Connection strings:
-#   PostgreSQL: postgresql://dmz:dmz_dev@localhost:5432/dmz_dev
+# Connection strings (set POSTGRES_PASSWORD env var before starting):
+#   PostgreSQL: postgresql://dmz:<POSTGRES_PASSWORD>@localhost:5432/dmz_dev
 #   Redis:      redis://localhost:6379
 #
 # Database tools (pgAdmin, TablePlus, DBeaver, Adminer):
-#   Host: localhost | Port: 5432 | User: dmz | Password: dmz_dev | Database: dmz_dev
+#   Host: localhost | Port: 5432 | User: dmz | Password: (set via POSTGRES_PASSWORD) | Database: dmz_dev
 #
 # Monitoring:
 #   Prometheus: http://localhost:9090
@@ -55,7 +55,7 @@ services:
       - '5432:5432'
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-dmz}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dmz_dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
       POSTGRES_DB: ${POSTGRES_DB:-dmz_dev}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -107,7 +107,7 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD:-dmz_dev}@postgres:5432/${POSTGRES_DB:-dmz_dev}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-dmz_dev}
     command: ['sh', '-c', 'corepack enable && pnpm --filter api db:migrate']
     profiles: ['migrate']
 
@@ -125,7 +125,7 @@ services:
       POSTGRES_PORT: ${POSTGRES_PORT:-5432}
       POSTGRES_DB: ${POSTGRES_DB:-dmz_dev}
       POSTGRES_USER: ${POSTGRES_USER:-dmz}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dmz_dev}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       DATABASE_HOST: ${POSTGRES_HOST:-postgres}
       DATABASE_PORT: ${POSTGRES_PORT:-5432}
       DATABASE_NAME: ${POSTGRES_DB:-dmz_dev}
@@ -158,7 +158,7 @@ services:
   #       migrate:
   #         condition: service_completed_successfully
   #     environment:
-  #       DATABASE_URL: postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD:-dmz_dev}@postgres:5432/${POSTGRES_DB:-dmz_dev}
+  #       DATABASE_URL: postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-dmz_dev}
   #       REDIS_URL: redis://redis:6379
   #     ports:
   #       - '3001:3001'
@@ -243,7 +243,7 @@ services:
     ports:
       - '9187:9187'
     environment:
-      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD:-dmz_dev}@postgres:5432/${POSTGRES_DB:-dmz_dev}?sslmode=disable
+      - DATA_SOURCE_NAME=postgresql://${POSTGRES_USER:-dmz}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-dmz_dev}?sslmode=disable
     depends_on:
       - postgres
 
