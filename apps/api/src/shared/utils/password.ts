@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
 const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const NUMBERS = '0123456789';
@@ -6,7 +8,9 @@ const SPECIAL = '!@#$%^&*';
 const ALL_CHARS = LOWERCASE + UPPERCASE + NUMBERS + SPECIAL;
 
 const getRandomIndex = (max: number): number => {
-  return Math.floor(Math.random() * max);
+  const bytes = randomBytes(4);
+  const uint32 = bytes.readUInt32BE(0);
+  return uint32 % max;
 };
 
 const getRandomChar = (chars: string): string => {
