@@ -1,7 +1,26 @@
-import { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify';
+import { type FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
+import { authGuard, requireRole } from '../../shared/middleware/authorization.js';
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
+import { validateCsrf } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+
 import * as auditService from './audit.service.js';
+
+const preHandlerRead = [
+  authGuard,
+  tenantContext,
+  tenantStatusGuard,
+  requireRole('tenant_admin', 'super_admin'),
+];
+const preHandlerWrite = [
+  authGuard,
+  tenantContext,
+  tenantStatusGuard,
+  validateCsrf,
+  requireRole('tenant_admin', 'super_admin'),
+];
 
 const AuditLogQuerySchema = z.object({
   startDate: z.string().datetime().optional(),
@@ -38,9 +57,10 @@ type ExportQueryParams = z.infer<typeof ExportQuerySchema>;
 type LegalHoldBody = z.infer<typeof LegalHoldSchema>;
 
 export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<void> => {
-  fastify.get(
+  fastify.get<{ Querystring: AuditLogQueryParams }>(
     '/audit/logs',
     {
+      preHandler: preHandlerRead,
       schema: {
         querystring: {
           type: 'object',
@@ -57,15 +77,8 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
         },
       },
     },
-    async (request: FastifyRequest<{ Querystring: AuditLogQueryParams }>, reply: FastifyReply) => {
-      const tenantContext = request.tenantContext;
-
-      if (!tenantContext) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
+    async (request, reply) => {
+      const tenantContext = request.tenantContext!;
 
       const parsedQuery = AuditLogQuerySchema.safeParse(request.query);
 
@@ -101,43 +114,38 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
     },
   );
 
-  fastify.get('/audit/logs/actions', async (request: FastifyRequest, reply: FastifyReply) => {
-    const tenantContext = request.tenantContext;
+  fastify.get(
+    '/audit/logs/actions',
+    {
+      preHandler: preHandlerRead,
+    },
+    async (request, reply) => {
+      const tenantContext = request.tenantContext!;
 
-    if (!tenantContext) {
-      return reply.code(401).send({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-      });
-    }
+      try {
+        const actions = await auditService.getAuditActions(tenantContext.tenantId);
 
-    try {
-      const actions = await auditService.getAuditActions(tenantContext.tenantId);
-
-      return reply.send({
-        success: true,
-        data: { actions },
-      });
-    } catch (error) {
-      request.log.error(error, 'Failed to get audit actions');
-      return reply.code(500).send({
-        success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'Failed to get audit actions' },
-      });
-    }
-  });
+        return reply.send({
+          success: true,
+          data: { actions },
+        });
+      } catch (error) {
+        request.log.error(error, 'Failed to get audit actions');
+        return reply.code(500).send({
+          success: false,
+          error: { code: 'INTERNAL_ERROR', message: 'Failed to get audit actions' },
+        });
+      }
+    },
+  );
 
   fastify.get(
     '/audit/logs/resource-types',
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContext = request.tenantContext;
-
-      if (!tenantContext) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
+    {
+      preHandler: preHandlerRead,
+    },
+    async (request, reply) => {
+      const tenantContext = request.tenantContext!;
 
       try {
         const resourceTypes = await auditService.getResourceTypes(tenantContext.tenantId);
@@ -156,9 +164,10 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
     },
   );
 
-  fastify.get(
+  fastify.get<{ Querystring: { startDate?: string; endDate?: string } }>(
     '/audit/verify',
     {
+      preHandler: preHandlerRead,
       schema: {
         querystring: {
           type: 'object',
@@ -169,18 +178,8 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
         },
       },
     },
-    async (
-      request: FastifyRequest<{ Querystring: { startDate?: string; endDate?: string } }>,
-      reply: FastifyReply,
-    ) => {
-      const tenantContext = request.tenantContext;
-
-      if (!tenantContext) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
+    async (request, reply) => {
+      const tenantContext = request.tenantContext!;
 
       try {
         const result = await auditService.verifyAuditChain(
@@ -203,35 +202,35 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
     },
   );
 
-  fastify.get('/audit/retention', async (request: FastifyRequest, reply: FastifyReply) => {
-    const tenantContext = request.tenantContext;
-
-    if (!tenantContext) {
-      return reply.code(401).send({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-      });
-    }
-
-    try {
-      const config = await auditService.getRetentionConfig(tenantContext.tenantId);
-
-      return reply.send({
-        success: true,
-        data: config,
-      });
-    } catch (error) {
-      request.log.error(error, 'Failed to get retention config');
-      return reply.code(500).send({
-        success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'Failed to get retention config' },
-      });
-    }
-  });
-
-  fastify.put(
+  fastify.get(
     '/audit/retention',
     {
+      preHandler: preHandlerRead,
+    },
+    async (request, reply) => {
+      const tenantContext = request.tenantContext!;
+
+      try {
+        const config = await auditService.getRetentionConfig(tenantContext.tenantId);
+
+        return reply.send({
+          success: true,
+          data: config,
+        });
+      } catch (error) {
+        request.log.error(error, 'Failed to get retention config');
+        return reply.code(500).send({
+          success: false,
+          error: { code: 'INTERNAL_ERROR', message: 'Failed to get retention config' },
+        });
+      }
+    },
+  );
+
+  fastify.put<{ Body: RetentionConfigBody }>(
+    '/audit/retention',
+    {
+      preHandler: preHandlerWrite,
       schema: {
         body: {
           type: 'object',
@@ -243,15 +242,8 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
         },
       },
     },
-    async (request: FastifyRequest<{ Body: RetentionConfigBody }>, reply: FastifyReply) => {
-      const tenantContext = request.tenantContext;
-
-      if (!tenantContext) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
+    async (request, reply) => {
+      const tenantContext = request.tenantContext!;
 
       const parsedBody = RetentionConfigSchema.safeParse(request.body);
 
@@ -283,9 +275,10 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
     },
   );
 
-  fastify.get(
+  fastify.get<{ Querystring: ExportQueryParams }>(
     '/audit/export',
     {
+      preHandler: preHandlerRead,
       schema: {
         querystring: {
           type: 'object',
@@ -300,15 +293,8 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
         },
       },
     },
-    async (request: FastifyRequest<{ Querystring: ExportQueryParams }>, reply: FastifyReply) => {
-      const tenantContext = request.tenantContext;
-
-      if (!tenantContext) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
+    async (request, reply) => {
+      const tenantContext = request.tenantContext!;
 
       const parsedQuery = ExportQuerySchema.safeParse(request.query);
 
@@ -349,70 +335,67 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
     },
   );
 
-  fastify.get('/audit/stream', async (request: FastifyRequest, reply: FastifyReply) => {
-    const tenantContext = request.tenantContext;
-
-    if (!tenantContext) {
-      return reply.code(401).send({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
+  fastify.get(
+    '/audit/stream',
+    {
+      preHandler: preHandlerRead,
+    },
+    async (request, reply) => {
+      reply.raw.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
       });
-    }
 
-    reply.raw.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      Connection: 'keep-alive',
-    });
+      reply.raw.write('event: connected\ndata: {"status":"connected"}\n\n');
 
-    reply.raw.write('event: connected\ndata: {"status":"connected"}\n\n');
+      const heartbeatInterval = setInterval(() => {
+        reply.raw.write(
+          'event: heartbeat\ndata: {"timestamp":"' + new Date().toISOString() + '"}\n\n',
+        );
+      }, 30000);
 
-    const heartbeatInterval = setInterval(() => {
-      reply.raw.write(
-        'event: heartbeat\ndata: {"timestamp":"' + new Date().toISOString() + '"}\n\n',
-      );
-    }, 30000);
-
-    request.raw.on('close', () => {
-      clearInterval(heartbeatInterval);
-    });
-
-    reply.raw.on('close', () => {
-      clearInterval(heartbeatInterval);
-    });
-
-    return reply;
-  });
-
-  fastify.get('/audit/legal-hold', async (request: FastifyRequest, reply: FastifyReply) => {
-    const tenantContext = request.tenantContext;
-
-    if (!tenantContext) {
-      return reply.code(401).send({
-        success: false,
-        error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
+      request.raw.on('close', () => {
+        clearInterval(heartbeatInterval);
       });
-    }
 
-    try {
-      const legalHold = await auditService.getLegalHoldStatus(tenantContext.tenantId);
-
-      return reply.send({
-        success: true,
-        data: { legalHold },
+      reply.raw.on('close', () => {
+        clearInterval(heartbeatInterval);
       });
-    } catch (error) {
-      request.log.error(error, 'Failed to get legal hold status');
-      return reply.code(500).send({
-        success: false,
-        error: { code: 'INTERNAL_ERROR', message: 'Failed to get legal hold status' },
-      });
-    }
-  });
 
-  fastify.put(
+      return reply;
+    },
+  );
+
+  fastify.get(
     '/audit/legal-hold',
     {
+      preHandler: preHandlerRead,
+    },
+    async (request, reply) => {
+      const tenantContext = request.tenantContext!;
+
+      try {
+        const legalHold = await auditService.getLegalHoldStatus(tenantContext.tenantId);
+
+        return reply.send({
+          success: true,
+          data: { legalHold },
+        });
+      } catch (error) {
+        request.log.error(error, 'Failed to get legal hold status');
+        return reply.code(500).send({
+          success: false,
+          error: { code: 'INTERNAL_ERROR', message: 'Failed to get legal hold status' },
+        });
+      }
+    },
+  );
+
+  fastify.put<{ Body: LegalHoldBody }>(
+    '/audit/legal-hold',
+    {
+      preHandler: preHandlerWrite,
       schema: {
         body: {
           type: 'object',
@@ -423,15 +406,8 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
         },
       },
     },
-    async (request: FastifyRequest<{ Body: LegalHoldBody }>, reply: FastifyReply) => {
-      const tenantContext = request.tenantContext;
-
-      if (!tenantContext) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
+    async (request, reply) => {
+      const tenantContext = request.tenantContext!;
 
       const parsedBody = LegalHoldSchema.safeParse(request.body);
 
