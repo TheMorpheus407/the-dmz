@@ -40,6 +40,7 @@ const BASE_PERMISSIONS = [
   { resource: 'settings', action: 'write', description: 'Modify tenant settings' },
   { resource: 'campaigns', action: 'read', description: 'View training campaigns' },
   { resource: 'campaigns', action: 'write', description: 'Create and manage campaigns' },
+  { resource: 'cache', action: 'invalidate', description: 'Invalidate cache entries' },
 ] as const;
 
 const DEFAULT_ROLES = [

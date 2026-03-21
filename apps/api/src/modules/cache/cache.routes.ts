@@ -18,6 +18,9 @@ import {
   invalidateTenantGameState,
 } from '../../shared/cache/game-state-cache.js';
 import { isABACCacheHealthy, invalidateABACCache } from '../../shared/cache/abac-cache.js';
+import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { createAuditLog } from '../audit/audit.service.js'; // eslint-disable-line import-x/no-restricted-paths
 
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../../config.js';
@@ -123,6 +126,7 @@ export const registerCacheRoutes = async (fastify: FastifyInstance): Promise<voi
   fastify.post<{ Body: CacheInvalidationRequest }>(
     '/cache/invalidate',
     {
+      preHandler: [authGuard, tenantContext, requirePermission('cache', 'invalidate')],
       config: {
         rateLimit: false,
       },
@@ -133,6 +137,14 @@ export const registerCacheRoutes = async (fastify: FastifyInstance): Promise<voi
       if (!tenantId) {
         reply.code(400);
         return { error: 'tenantId is required' };
+      }
+
+      const requestTenantId = request.tenantContext!.tenantId;
+      const isSuperAdmin = request.tenantContext!.isSuperAdmin;
+
+      if (!isSuperAdmin && requestTenantId !== tenantId) {
+        reply.code(403);
+        return { error: 'Cannot invalidate cache for another tenant' };
       }
 
       const config = fastify.config as unknown as AppConfig;
@@ -182,6 +194,21 @@ export const registerCacheRoutes = async (fastify: FastifyInstance): Promise<voi
             reply.code(400);
             return { error: `Invalid invalidation type: ${type as string}` };
         }
+
+        await createAuditLog({
+          tenantId: requestTenantId,
+          userId: request.user?.userId ?? request.tenantContext?.tenantId ?? 'unknown',
+          action: 'cache.invalidate',
+          resourceType: 'cache',
+          resourceId: tenantId,
+          metadata: {
+            cacheType: type,
+            targetTenantId: tenantId,
+            userId: userId,
+            contentType: contentType,
+            contentId: contentId,
+          },
+        });
 
         return { success: true, type, tenantId };
       } catch (error) {
