@@ -1,6 +1,9 @@
 import { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fastify';
 import { z } from 'zod';
 
+import { authGuard, requireRole } from '../../shared/middleware/authorization.js';
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
+
 import * as phishingService from './phishing-simulation.service.js';
 
 import type { AuthenticatedUser } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
@@ -81,20 +84,13 @@ const templateListQuerySchema = z.object({
 });
 
 export async function registerPhishingSimulationRoutes(fastify: FastifyInstance) {
-  fastify.route({
-    method: 'POST',
-    url: '/api/v1/admin/simulations',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.post(
+    '/api/v1/admin/simulations',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
 
       let input;
       try {
@@ -140,22 +136,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: simulation,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.get(
+    '/api/v1/admin/simulations',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const query = simulationListQuerySchema.parse(request.query);
 
       const result = await phishingService.listPhishingSimulations(tenantId, {
@@ -173,22 +162,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         total: result.total,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/:id',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.get(
+    '/api/v1/admin/simulations/:id',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
 
       const simulation = await phishingService.getPhishingSimulationById(tenantId, id);
@@ -205,22 +187,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: simulation,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'PUT',
-    url: '/api/v1/admin/simulations/:id',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.put(
+    '/api/v1/admin/simulations/:id',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
       const input = simulationUpdateSchema.parse(request.body);
 
@@ -258,44 +233,30 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: simulation,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'DELETE',
-    url: '/api/v1/admin/simulations/:id',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.delete(
+    '/api/v1/admin/simulations/:id',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
 
       await phishingService.deletePhishingSimulation(tenantId, id);
 
       return reply.code(204).send();
     },
-  });
+  );
 
-  fastify.route({
-    method: 'POST',
-    url: '/api/v1/admin/simulations/:id/launch',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.post(
+    '/api/v1/admin/simulations/:id/launch',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
 
       try {
@@ -312,22 +273,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         });
       }
     },
-  });
+  );
 
-  fastify.route({
-    method: 'POST',
-    url: '/api/v1/admin/simulations/:id/pause',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.post(
+    '/api/v1/admin/simulations/:id/pause',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
 
       try {
@@ -344,22 +298,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         });
       }
     },
-  });
+  );
 
-  fastify.route({
-    method: 'POST',
-    url: '/api/v1/admin/simulations/:id/resume',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.post(
+    '/api/v1/admin/simulations/:id/resume',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
 
       try {
@@ -376,22 +323,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         });
       }
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/:id/results',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.get(
+    '/api/v1/admin/simulations/:id/results',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
 
       try {
@@ -408,22 +348,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         });
       }
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/:id/results/summary',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.get(
+    '/api/v1/admin/simulations/:id/results/summary',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
 
       try {
@@ -446,22 +379,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         });
       }
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/:id/results/export',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.get(
+    '/api/v1/admin/simulations/:id/results/export',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
       const { format } = request.query as { format?: 'csv' | 'json' };
 
@@ -487,22 +413,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         });
       }
     },
-  });
+  );
 
-  fastify.route({
-    method: 'PUT',
-    url: '/api/v1/admin/simulations/:id/audience',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.put(
+    '/api/v1/admin/simulations/:id/audience',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
       const input = audienceInputSchema.parse(request.body);
 
@@ -512,12 +431,14 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: audience,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/:id/audience',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get(
+    '/api/v1/admin/simulations/:id/audience',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
       const { id } = request.params as { id: string };
 
       const audience = await phishingService.getSimulationAudience(id);
@@ -534,22 +455,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: audience,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/:id/eligible-users',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.get(
+    '/api/v1/admin/simulations/:id/eligible-users',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { id } = request.params as { id: string };
 
       const userIds = await phishingService.getEligibleUsersForSimulation(tenantId, id);
@@ -558,22 +472,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: { userIds },
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'POST',
-    url: '/api/v1/admin/simulations/templates',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.post(
+    '/api/v1/admin/simulations/templates',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const input = templateInputSchema.parse(request.body);
 
       const template = await phishingService.createPhishingTemplate(tenantId, input);
@@ -582,22 +489,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: template,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/templates',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.get(
+    '/api/v1/admin/simulations/templates',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const query = templateListQuerySchema.parse(request.query);
 
       const result = await phishingService.listPhishingTemplates(tenantId, {
@@ -614,12 +514,14 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         total: result.total,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/templates/:templateId',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.get(
+    '/api/v1/admin/simulations/templates/:templateId',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
       const { templateId } = request.params as { templateId: string };
 
       const template = await phishingService.getPhishingTemplateById(templateId);
@@ -636,22 +538,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: template,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'PUT',
-    url: '/api/v1/admin/simulations/templates/:templateId',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.put(
+    '/api/v1/admin/simulations/templates/:templateId',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { templateId } = request.params as { templateId: string };
       const input = templateInputSchema.partial().parse(request.body);
 
@@ -679,22 +574,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         });
       }
     },
-  });
+  );
 
-  fastify.route({
-    method: 'DELETE',
-    url: '/api/v1/admin/simulations/templates/:templateId',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.delete(
+    '/api/v1/admin/simulations/templates/:templateId',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { templateId } = request.params as { templateId: string };
 
       try {
@@ -708,22 +596,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         });
       }
     },
-  });
+  );
 
-  fastify.route({
-    method: 'POST',
-    url: '/api/v1/admin/simulations/teachable-moments',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.post(
+    '/api/v1/admin/simulations/teachable-moments',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const input = teachableMomentInputSchema.parse(request.body);
 
       const moment = await phishingService.createTeachableMoment(tenantId, input);
@@ -732,22 +613,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: moment,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/teachable-moments',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.get(
+    '/api/v1/admin/simulations/teachable-moments',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const query = request.query as { indicatorType?: string; isActive?: boolean };
 
       const moments = await phishingService.listTeachableMoments(tenantId, {
@@ -760,22 +634,15 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: moments,
       });
     },
-  });
+  );
 
-  fastify.route({
-    method: 'GET',
-    url: '/api/v1/admin/simulations/teachable-moments/:momentId',
-    handler: async (request: FastifyRequest, reply: FastifyReply) => {
-      const tenantContextData = request.tenantContext;
-
-      if (!tenantContextData) {
-        return reply.code(401).send({
-          success: false,
-          error: { code: 'UNAUTHORIZED', message: 'Tenant context required' },
-        });
-      }
-
-      const { tenantId } = tenantContextData;
+  fastify.get(
+    '/api/v1/admin/simulations/teachable-moments/:momentId',
+    {
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const { tenantId } = request.tenantContext!;
       const { momentId } = request.params as { momentId: string };
 
       const moment = await phishingService.getTeachableMomentById(tenantId, momentId);
@@ -792,5 +659,5 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
         data: moment,
       });
     },
-  });
+  );
 }
