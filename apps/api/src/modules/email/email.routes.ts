@@ -83,7 +83,7 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: EMAIL_ERROR_CODES.CONFIG_INVALID,
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -117,7 +117,7 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -159,7 +159,7 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -221,7 +221,7 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -260,7 +260,7 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -299,7 +299,7 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -358,7 +358,7 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -420,7 +420,7 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }

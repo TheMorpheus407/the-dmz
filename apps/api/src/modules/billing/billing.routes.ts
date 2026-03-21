@@ -71,7 +71,7 @@ export async function billingRoutes(fastify: FastifyInstance): Promise<void> {
       request.log.error({ err }, 'Failed to get subscription');
       return reply.status(500).send({
         code: 'INTERNAL_ERROR',
-        message: err.message,
+        message: 'An internal error occurred',
       });
     }
   });
@@ -91,7 +91,7 @@ export async function billingRoutes(fastify: FastifyInstance): Promise<void> {
       request.log.error({ err }, 'Failed to list plans');
       return reply.status(500).send({
         code: 'INTERNAL_ERROR',
-        message: err.message,
+        message: 'An internal error occurred',
       });
     }
   });
@@ -107,7 +107,7 @@ export async function billingRoutes(fastify: FastifyInstance): Promise<void> {
       request.log.error({ err }, 'Failed to get seat info');
       return reply.status(500).send({
         code: 'INTERNAL_ERROR',
-        message: err.message,
+        message: 'An internal error occurred',
       });
     }
   });
@@ -126,7 +126,7 @@ export async function billingRoutes(fastify: FastifyInstance): Promise<void> {
         request.log.error({ err }, 'Failed to get seat history');
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
         });
       }
     },
@@ -147,7 +147,7 @@ export async function billingRoutes(fastify: FastifyInstance): Promise<void> {
       request.log.error({ err }, 'Failed to get entitlements');
       return reply.status(500).send({
         code: 'INTERNAL_ERROR',
-        message: err.message,
+        message: 'An internal error occurred',
       });
     }
   });
@@ -175,7 +175,7 @@ export async function billingRoutes(fastify: FastifyInstance): Promise<void> {
         request.log.error({ err }, 'Failed to get feature entitlements');
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
         });
       }
     },
@@ -195,7 +195,7 @@ export async function billingRoutes(fastify: FastifyInstance): Promise<void> {
         request.log.error({ err }, 'Failed to list invoices');
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
         });
       }
     },
@@ -220,7 +220,7 @@ export async function billingRoutes(fastify: FastifyInstance): Promise<void> {
       request.log.error({ err }, 'Failed to get Stripe customer');
       return reply.status(500).send({
         code: 'INTERNAL_ERROR',
-        message: err.message,
+        message: 'An internal error occurred',
       });
     }
   });

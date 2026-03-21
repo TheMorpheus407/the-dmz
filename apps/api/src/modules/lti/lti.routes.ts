@@ -135,9 +135,10 @@ export async function registerLtiRoutes(
     try {
       verifiedJwt = await verifyLtiJwt(config, platform, tokens.id_token);
     } catch (err) {
+      request.log.error({ err }, 'JWT verification failed');
       throw new AppError({
         code: ErrorCodes.AUTH_UNAUTHORIZED,
-        message: `JWT verification failed: ${err instanceof Error ? err.message : 'Unknown error'}`,
+        message: 'JWT verification failed',
         statusCode: 401,
       });
     }

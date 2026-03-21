@@ -46,7 +46,6 @@ export async function stripeWebhookRoutes(fastify: FastifyInstance): Promise<voi
           eventId,
           {
             processingResult: 'error',
-            errorMessage: err.message,
           },
           config,
         );

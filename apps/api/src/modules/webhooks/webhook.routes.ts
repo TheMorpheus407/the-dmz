@@ -131,7 +131,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -167,7 +167,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -206,7 +206,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -288,7 +288,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -324,7 +324,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -371,7 +371,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -407,7 +407,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -454,7 +454,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
@@ -479,7 +479,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
         return reply.status(500).send({
           code: 'INTERNAL_ERROR',
-          message: err.message,
+          message: 'An internal error occurred',
           requestId: request.id,
         });
       }
