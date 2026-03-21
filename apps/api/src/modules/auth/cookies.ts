@@ -20,7 +20,7 @@ export const setRefreshCookie = ({ refreshToken, reply }: SetRefreshCookieOption
   void reply.setCookie(REFRESH_COOKIE_NAME, refreshToken, {
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: 'strict',
     path: '/api/v1/auth',
     expires,
     maxAge: REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60,

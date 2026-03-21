@@ -71,7 +71,7 @@ describe('auth routes', () => {
       const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
       expect(refreshTokenCookie).toBeDefined();
       expect(refreshTokenCookie?.httpOnly).toBe(true);
-      expect(refreshTokenCookie?.sameSite).toBe('Lax');
+      expect(refreshTokenCookie?.sameSite).toBe('Strict');
     });
 
     it('returns 409 for duplicate email', async () => {
@@ -160,7 +160,7 @@ describe('auth routes', () => {
       const refreshTokenCookie = cookies.find((c) => c.name === getRefreshCookieName());
       expect(refreshTokenCookie).toBeDefined();
       expect(refreshTokenCookie?.httpOnly).toBe(true);
-      expect(refreshTokenCookie?.sameSite).toBe('Lax');
+      expect(refreshTokenCookie?.sameSite).toBe('Strict');
     });
 
     it('returns 401 for invalid credentials', async () => {
