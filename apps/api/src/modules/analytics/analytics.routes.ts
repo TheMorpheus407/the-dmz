@@ -118,9 +118,12 @@ const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/health',
     {
+      preHandler: analyticsReadRoutePreHandlers,
       schema: {
         response: {
           200: healthResponseSchema,
+          401: errorResponseSchemas.Unauthorized,
+          403: errorResponseSchemas.Forbidden,
         },
       },
     },
@@ -133,9 +136,12 @@ const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get(
     '/metrics',
     {
+      preHandler: analyticsReadRoutePreHandlers,
       schema: {
         response: {
           200: metricsResponseSchema,
+          401: errorResponseSchemas.Unauthorized,
+          403: errorResponseSchemas.Forbidden,
         },
       },
     },
