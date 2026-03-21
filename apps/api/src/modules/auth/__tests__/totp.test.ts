@@ -198,5 +198,50 @@ describe('TOTP Service Unit Tests', () => {
 
       expect(matchedIndex).toBe(-1);
     });
+
+    it('should verify in parallel when checking multiple codes', async () => {
+      const codes = ['PARA1AAA', 'PARA2BBB', 'PARA3CCC', 'PARA4DDD', 'PARA5EEE'];
+      const hashes = await Promise.all(
+        codes.map((code) =>
+          argon2.hash(code, {
+            type: argon2.argon2id,
+            hashLength: 32,
+          }),
+        ),
+      );
+
+      const storedHashes = hashes.map((codeHash) => ({ codeHash }));
+
+      const targetCode = 'PARA3CCC';
+      const startTime = Date.now();
+
+      const results = await Promise.all(
+        storedHashes.map((stored) => argon2.verify(stored.codeHash, targetCode)),
+      );
+      const foundIndex = results.indexOf(true);
+
+      const elapsed = Date.now() - startTime;
+
+      expect(foundIndex).toBe(2);
+      expect(elapsed).toBeLessThan(500);
+    });
+
+    it('should find correct code regardless of position with parallel verification', async () => {
+      const codes = ['FIRST1AA', 'SECOND2B', 'THIRD3CC', 'FOURTH4D', 'FIFTH5EE'];
+      const hashes = await Promise.all(
+        codes.map((code) =>
+          argon2.hash(code, {
+            type: argon2.argon2id,
+            hashLength: 32,
+          }),
+        ),
+      );
+
+      for (let i = 0; i < codes.length; i++) {
+        const results = await Promise.all(hashes.map((hash) => argon2.verify(hash, codes[i]!)));
+        const foundIndex = results.indexOf(true);
+        expect(foundIndex).toBe(i);
+      }
+    });
   });
 });

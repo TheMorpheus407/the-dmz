@@ -397,18 +397,11 @@ export const verifyBackupCode = async (
     });
   }
 
-  let foundIndex = -1;
-  let isAnyValid = false;
-
-  for (let i = 0; i < validCodes.length; i++) {
-    const isValid = await argon2.verify(validCodes[i]!.codeHash, code);
-    if (isValid) {
-      foundIndex = i;
-      isAnyValid = true;
-    }
-  }
-
-  const matchingCode = isAnyValid ? validCodes[foundIndex]! : null;
+  const verificationResults = await Promise.all(
+    validCodes.map((storedCode) => argon2.verify(storedCode.codeHash, code)),
+  );
+  const foundIndex = verificationResults.indexOf(true);
+  const matchingCode = foundIndex !== -1 ? validCodes[foundIndex]! : null;
 
   if (!matchingCode) {
     const failedAttempts = session?.mfaFailedAttempts ?? 0;
