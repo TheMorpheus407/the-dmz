@@ -87,7 +87,7 @@ services:
       start_period: 5s
 
   adminer:
-    image: adminer:latest
+    image: adminer:4.8.1@sha256:34d37131366c5aa84e1693dbed48593ed6f95fb450b576c1a7a59d3a9c9e8802
     profiles: ['tools']
     ports:
       - '8080:8080'

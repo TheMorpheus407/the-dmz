@@ -82,7 +82,7 @@ the-dmz/
 |------------|----------------------|-------|-------------------------------------------------|------------------------------|
 | postgres   | postgres:16-alpine   | 5432  | `pg_isready -U dmz -d dmz_dev`                 | Databases: dmz_dev, dmz_test |
 | redis      | redis:7-alpine       | 6379  | `redis-cli ping`                                | No persistence (`--save ""`) |
-| adminer    | adminer:latest       | 8080  | --                                              | Profile: `tools`             |
+| adminer    | adminer:4.8.1        | 8080  | --                                              | Profile: `tools`             |
 
 Credentials via `.env.example`: `POSTGRES_USER=dmz`, `POSTGRES_PASSWORD=dmz_dev`, `DATABASE_URL=postgresql://dmz:dmz_dev@localhost:5432/dmz_dev`.
 
