@@ -1,10 +1,22 @@
 import { z } from 'zod';
 
+import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
+import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
+
 import { PhishingMetricsService } from './phishing-metrics.service.js';
 import { DecisionQualityService } from './decision-quality.service.js';
 import { metricsCache } from './metrics-cache.js';
 
 import type { FastifyPluginAsync } from 'fastify';
+import type { AuthenticatedUser } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+
+const protectedRoutePreHandlers = [authGuard, tenantContext, tenantStatusGuard];
+const analyticsReadRoutePreHandlers = [
+  ...protectedRoutePreHandlers,
+  requirePermission('analytics', 'read'),
+];
 
 const metricsResponseSchema = z.object({
   eventsIngested: z.number(),
@@ -28,7 +40,6 @@ const dateRangeSchema = z
   .optional();
 
 const phishingMetricsRequestSchema = z.object({
-  tenantId: z.string().uuid(),
   userId: z.string().uuid().optional(),
   dateRange: dateRangeSchema,
 });
@@ -48,7 +59,6 @@ const phishingMetricsResponseSchema = z.object({
 });
 
 const scoringRequestSchema = z.object({
-  tenantId: z.string().uuid(),
   userId: z.string().uuid().optional(),
   dateRange: dateRangeSchema,
 });
@@ -74,7 +84,6 @@ const scoringResponseSchema = z.object({
 const scoringListResponseSchema = z.array(scoringResponseSchema);
 
 const trendsRequestSchema = z.object({
-  tenantId: z.string().uuid(),
   weeks: z.number().min(1).max(12).optional(),
   months: z.number().min(1).max(12).optional(),
 });
@@ -142,17 +151,37 @@ const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/phishing',
     {
+      preHandler: analyticsReadRoutePreHandlers,
       schema: {
         body: phishingMetricsRequestSchema,
+        querystring: z.object({
+          targetTenantId: z.string().uuid().optional(),
+        }),
         response: {
           200: phishingMetricsResponseSchema,
+          401: errorResponseSchemas.Unauthorized,
+          403: errorResponseSchemas.Forbidden,
         },
       },
     },
     async (request, reply) => {
-      const { tenantId, userId, dateRange } = request.body as z.infer<
-        typeof phishingMetricsRequestSchema
-      >;
+      const user = request.user as AuthenticatedUser;
+      const { targetTenantId } = request.query as { targetTenantId?: string };
+      const tenantId =
+        user.role === 'super_admin' && targetTenantId ? targetTenantId : user.tenantId;
+
+      if (user.role !== 'super_admin' && targetTenantId) {
+        return reply.status(403).send({
+          success: false,
+          error: {
+            code: 'AUTH_FORBIDDEN',
+            message: 'Target tenant override not permitted',
+            details: {},
+          },
+        });
+      }
+
+      const { userId, dateRange } = request.body as z.infer<typeof phishingMetricsRequestSchema>;
 
       const startDate = dateRange?.startDate ? new Date(dateRange.startDate) : undefined;
       const endDate = dateRange?.endDate ? new Date(dateRange.endDate) : undefined;
@@ -179,16 +208,38 @@ const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/scoring',
     {
+      preHandler: analyticsReadRoutePreHandlers,
       schema: {
         body: scoringRequestSchema,
+        querystring: z.object({
+          targetTenantId: z.string().uuid().optional(),
+        }),
         response: {
           200: z.union([scoringResponseSchema, scoringListResponseSchema]),
+          401: errorResponseSchemas.Unauthorized,
+          403: errorResponseSchemas.Forbidden,
           404: z.object({ error: z.string() }),
         },
       },
     },
     async (request, reply) => {
-      const { tenantId, userId, dateRange } = request.body as z.infer<typeof scoringRequestSchema>;
+      const user = request.user as AuthenticatedUser;
+      const { targetTenantId } = request.query as { targetTenantId?: string };
+      const tenantId =
+        user.role === 'super_admin' && targetTenantId ? targetTenantId : user.tenantId;
+
+      if (user.role !== 'super_admin' && targetTenantId) {
+        return reply.status(403).send({
+          success: false,
+          error: {
+            code: 'AUTH_FORBIDDEN',
+            message: 'Target tenant override not permitted',
+            details: {},
+          },
+        });
+      }
+
+      const { userId, dateRange } = request.body as z.infer<typeof scoringRequestSchema>;
 
       const startDate = dateRange?.startDate ? new Date(dateRange.startDate) : undefined;
       const endDate = dateRange?.endDate ? new Date(dateRange.endDate) : undefined;
@@ -227,15 +278,37 @@ const analyticsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post(
     '/trends',
     {
+      preHandler: analyticsReadRoutePreHandlers,
       schema: {
         body: trendsRequestSchema,
+        querystring: z.object({
+          targetTenantId: z.string().uuid().optional(),
+        }),
         response: {
           200: trendsResponseSchema,
+          401: errorResponseSchemas.Unauthorized,
+          403: errorResponseSchemas.Forbidden,
         },
       },
     },
     async (request, reply) => {
-      const { tenantId, weeks, months } = request.body as z.infer<typeof trendsRequestSchema>;
+      const user = request.user as AuthenticatedUser;
+      const { targetTenantId } = request.query as { targetTenantId?: string };
+      const tenantId =
+        user.role === 'super_admin' && targetTenantId ? targetTenantId : user.tenantId;
+
+      if (user.role !== 'super_admin' && targetTenantId) {
+        return reply.status(403).send({
+          success: false,
+          error: {
+            code: 'AUTH_FORBIDDEN',
+            message: 'Target tenant override not permitted',
+            details: {},
+          },
+        });
+      }
+
+      const { weeks, months } = request.body as z.infer<typeof trendsRequestSchema>;
 
       const cacheKey = `trends:${tenantId}:${weeks ?? 4}:${months ?? 3}`;
 
