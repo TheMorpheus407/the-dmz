@@ -49,6 +49,22 @@ describe('auth abuse policy contract', () => {
       expect(registerEndpoint).toBeDefined();
       expect(registerEndpoint?.category).toBe('register');
     });
+
+    it('covers password_reset endpoint', () => {
+      const passwordResetEndpoint = m1AuthAbusePolicyManifest.coveredEndpoints.find(
+        (e) => e.path === '/auth/password/reset' && e.method === 'POST',
+      );
+      expect(passwordResetEndpoint).toBeDefined();
+      expect(passwordResetEndpoint?.category).toBe('password_reset');
+    });
+
+    it('covers password_change endpoint', () => {
+      const passwordChangeEndpoint = m1AuthAbusePolicyManifest.coveredEndpoints.find(
+        (e) => e.path === '/auth/password/change' && e.method === 'POST',
+      );
+      expect(passwordChangeEndpoint).toBeDefined();
+      expect(passwordChangeEndpoint?.category).toBe('password_change');
+    });
   });
 
   describe('progressive thresholds', () => {

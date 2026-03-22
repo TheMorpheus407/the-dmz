@@ -4,6 +4,8 @@ export const AuthAbuseCategory = {
   LOGIN: 'login',
   REFRESH: 'refresh',
   REGISTER: 'register',
+  PASSWORD_RESET: 'password_reset',
+  PASSWORD_CHANGE: 'password_change',
 } as const;
 
 export type AuthAbuseCategory = (typeof AuthAbuseCategory)[keyof typeof AuthAbuseCategory];
@@ -12,6 +14,8 @@ export const authAbuseCategorySchema = z.enum([
   AuthAbuseCategory.LOGIN,
   AuthAbuseCategory.REFRESH,
   AuthAbuseCategory.REGISTER,
+  AuthAbuseCategory.PASSWORD_RESET,
+  AuthAbuseCategory.PASSWORD_CHANGE,
 ]);
 
 export const AuthAbuseLevel = {
@@ -130,6 +134,16 @@ export const m1AuthAbusePolicyManifest: M1AuthAbusePolicyManifest = {
       path: '/auth/register',
       method: 'POST',
       category: AuthAbuseCategory.REGISTER,
+    },
+    {
+      path: '/auth/password/reset',
+      method: 'POST',
+      category: AuthAbuseCategory.PASSWORD_RESET,
+    },
+    {
+      path: '/auth/password/change',
+      method: 'POST',
+      category: AuthAbuseCategory.PASSWORD_CHANGE,
     },
   ],
   thresholds: M1_AUTH_ABUSE_THRESHOLDS,

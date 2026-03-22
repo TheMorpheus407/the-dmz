@@ -1,4 +1,5 @@
 import { m1AuthAbusePolicyManifest, AuthAbuseLevel } from '@the-dmz/shared/contracts';
+import type { AuthAbuseCategory } from '@the-dmz/shared/contracts';
 
 import { getRedisClient, type RedisRateLimitClient } from '../database/redis.js';
 import { tenantScopedKey, validateTenantId, KEY_CATEGORIES, getTTL } from '../cache/index.js';
@@ -16,7 +17,7 @@ export interface AbuseCounterOptions {
   tenantId?: string;
   email?: string;
   ip?: string;
-  category: 'login' | 'refresh' | 'register' | 'password_reset' | 'password_change';
+  category: (typeof AuthAbuseCategory)[keyof typeof AuthAbuseCategory];
 }
 
 const ABUSE_LEVEL_TO_THRESHOLD_INDEX: Record<AuthAbuseLevel, number> = {
