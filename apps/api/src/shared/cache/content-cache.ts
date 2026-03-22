@@ -5,7 +5,7 @@ import { tenantScopedKey, validateTenantKey } from './redis-keys.js';
 
 import type { AppConfig } from '../../config.js';
 
-export type ContentType = 'email-template' | 'scenario' | 'document-template';
+export type CacheContentType = 'email-template' | 'scenario' | 'document-template';
 
 export interface CachedContent<T> {
   data: T;
@@ -45,7 +45,7 @@ const CONTENT_VERSION = 1;
 
 export const buildContentCacheKey = (
   tenantId: string,
-  contentType: ContentType,
+  contentType: CacheContentType,
   contentId: string,
 ): string => {
   return tenantScopedKey(
@@ -61,7 +61,7 @@ export const buildContentCacheKey = (
 export const getCachedContent = async <T>(
   config: AppConfig,
   tenantId: string,
-  contentType: ContentType,
+  contentType: CacheContentType,
   contentId: string,
   redisClient?: RedisRateLimitClient,
 ): Promise<CachedContent<T> | null> => {
@@ -103,7 +103,7 @@ export const getCachedContent = async <T>(
 export const setCachedContent = async <T>(
   config: AppConfig,
   tenantId: string,
-  contentType: ContentType,
+  contentType: CacheContentType,
   contentId: string,
   data: T,
   ttlSeconds?: number,
@@ -140,7 +140,7 @@ export const setCachedContent = async <T>(
 export const invalidateContentCache = async (
   config: AppConfig,
   tenantId: string,
-  contentType?: ContentType,
+  contentType?: CacheContentType,
   contentId?: string,
   redisClient?: RedisRateLimitClient,
 ): Promise<void> => {
@@ -205,7 +205,7 @@ export const isContentCacheHealthy = async (config: AppConfig): Promise<boolean>
   }
 };
 
-export const getContentCacheTTL = (contentType: ContentType): number => {
+export const getContentCacheTTL = (contentType: CacheContentType): number => {
   switch (contentType) {
     case 'email-template':
     case 'scenario':

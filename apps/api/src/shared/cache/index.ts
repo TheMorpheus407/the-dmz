@@ -49,7 +49,7 @@ export {
   getContentCacheMetrics,
   resetContentCacheMetrics,
   getContentCacheTTL,
-  type ContentType,
+  type CacheContentType,
   type CachedContent,
   type ContentCacheMetrics,
 } from './content-cache.js';

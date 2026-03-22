@@ -1,4 +1,4 @@
-import { invalidateContentCache, type ContentType } from './content-cache.js';
+import { invalidateContentCache, type CacheContentType } from './content-cache.js';
 import {
   invalidateTenantPolicyCache,
   invalidateUserPermissionsCache,
@@ -21,7 +21,7 @@ export interface CacheInvalidationEvent {
     | 'game_session_ended';
   tenantId: string;
   userId?: string;
-  contentType?: ContentType;
+  contentType?: CacheContentType;
   contentId?: string;
 }
 
@@ -87,7 +87,7 @@ export const handleCacheInvalidationEvent = async (
 
 export const createContentInvalidationEvent = (
   tenantId: string,
-  contentType: ContentType,
+  contentType: CacheContentType,
   contentId: string,
   action: 'updated' | 'deleted',
 ): CacheInvalidationEvent => ({

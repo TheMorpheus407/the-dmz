@@ -27,7 +27,7 @@ import {
   type CampaignStatus,
   type CampaignType,
   type RecurrencePattern,
-  type ContentType,
+  type CampaignContentType,
   type EnrollmentStatus,
   type CampaignContentInput,
   type CampaignEscalationInput,
@@ -140,7 +140,7 @@ interface CampaignAudienceBody {
 }
 
 interface CampaignContentBody {
-  contentType: ContentType;
+  contentType: CampaignContentType;
   contentItemId: string;
   orderIndex?: number;
   dueDays?: number;

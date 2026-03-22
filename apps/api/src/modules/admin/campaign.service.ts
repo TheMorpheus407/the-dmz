@@ -18,7 +18,7 @@ import { users } from '../../shared/database/schema/users.js';
 export type CampaignStatus = 'draft' | 'active' | 'paused' | 'completed';
 export type CampaignType = 'onboarding' | 'quarterly' | 'annual' | 'event-driven';
 export type RecurrencePattern = 'one-time' | 'weekly' | 'monthly' | 'quarterly' | 'annual';
-export type ContentType = 'module' | 'assessment' | 'phishing_simulation';
+export type CampaignContentType = 'module' | 'assessment' | 'phishing_simulation';
 export type EnrollmentStatus = 'not_started' | 'in_progress' | 'completed';
 
 export interface Campaign {
@@ -52,7 +52,7 @@ export interface CampaignAudience {
 export interface CampaignContent {
   contentId: string;
   campaignId: string;
-  contentType: ContentType;
+  contentType: CampaignContentType;
   contentItemId: string;
   orderIndex: number;
   dueDays: number;
@@ -128,7 +128,7 @@ export interface CampaignAudienceInput {
 }
 
 export interface CampaignContentInput {
-  contentType: ContentType;
+  contentType: CampaignContentType;
   contentItemId: string;
   orderIndex?: number | undefined;
   dueDays?: number | undefined;
@@ -381,7 +381,7 @@ export const getCampaignById = async (
     content: contentResult.map((c) => ({
       contentId: c.contentId,
       campaignId: c.campaignId,
-      contentType: c.contentType as ContentType,
+      contentType: c.contentType as CampaignContentType,
       contentItemId: c.contentItemId,
       orderIndex: c.orderIndex,
       dueDays: c.dueDays ?? 7,
@@ -588,7 +588,7 @@ export const addCampaignContent = async (
     return {
       contentId: content.contentId,
       campaignId: content.campaignId,
-      contentType: content.contentType as ContentType,
+      contentType: content.contentType as CampaignContentType,
       contentItemId: content.contentItemId,
       orderIndex: content.orderIndex ?? 0,
       dueDays: content.dueDays ?? 7,
@@ -626,7 +626,7 @@ export const addCampaignContent = async (
   return {
     contentId: content.contentId,
     campaignId: content.campaignId,
-    contentType: content.contentType as ContentType,
+    contentType: content.contentType as CampaignContentType,
     contentItemId: content.contentItemId,
     orderIndex: content.orderIndex ?? 0,
     dueDays: content.dueDays ?? 7,

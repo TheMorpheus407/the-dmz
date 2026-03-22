@@ -74,7 +74,7 @@ export {
   type CampaignStatus,
   type CampaignType,
   type RecurrencePattern,
-  type ContentType,
+  type CampaignContentType,
   type EnrollmentStatus,
   type CampaignInput,
   type CampaignUpdateInput,

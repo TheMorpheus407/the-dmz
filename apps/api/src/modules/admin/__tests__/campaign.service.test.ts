@@ -12,7 +12,7 @@ import type {
   CampaignStatus,
   CampaignType,
   RecurrencePattern,
-  ContentType,
+  CampaignContentType,
   EnrollmentStatus,
 } from '../campaign.service.js';
 
@@ -49,8 +49,8 @@ describe('campaign-service-types', () => {
       expect(patterns).toContain('annual');
     });
 
-    it('should export ContentType with correct values', () => {
-      const contentTypes: ContentType[] = ['module', 'assessment', 'phishing_simulation'];
+    it('should export CampaignContentType with correct values', () => {
+      const contentTypes: CampaignContentType[] = ['module', 'assessment', 'phishing_simulation'];
       expect(contentTypes).toContain('module');
       expect(contentTypes).toContain('assessment');
       expect(contentTypes).toContain('phishing_simulation');
