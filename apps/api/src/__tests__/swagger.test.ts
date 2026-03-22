@@ -200,26 +200,40 @@ describe('swagger docs', () => {
       );
     });
 
-    it('keeps raw OpenAPI JSON for tooling', async () => {
+    it('denies unauthenticated access to raw OpenAPI JSON', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/docs/json',
       });
 
-      expect(response.statusCode).toBe(200);
-      const payload = response.json() as { info: { version: string } };
-      expect(payload.info.version).toBe('2.0.0');
+      expect(response.statusCode).toBe(401);
+      expect(response.json()).toEqual(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'AUTH_UNAUTHORIZED',
+            message: 'Missing or invalid authorization header',
+          }),
+        }),
+      );
     });
 
-    it('keeps raw OpenAPI YAML for tooling', async () => {
+    it('denies unauthenticated access to raw OpenAPI YAML', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/docs/yaml',
       });
 
-      expect(response.statusCode).toBe(200);
-      expect(response.body).toContain('openapi: 3.1.0');
-      expect(response.body).toContain('version: 2.0.0');
+      expect(response.statusCode).toBe(401);
+      expect(response.json()).toEqual(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'AUTH_UNAUTHORIZED',
+            message: 'Missing or invalid authorization header',
+          }),
+        }),
+      );
     });
   });
 });

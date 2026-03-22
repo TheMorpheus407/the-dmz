@@ -2,6 +2,10 @@ import fastifySwagger from '@fastify/swagger';
 import fastifySwaggerUi from '@fastify/swagger-ui';
 import fp from 'fastify-plugin';
 
+import { authGuard } from '../shared/middleware/authorization.js';
+import { tenantContext } from '../shared/middleware/tenant-context.js';
+import { tenantStatusGuard } from '../shared/middleware/tenant-status-guard.js';
+
 import type { FastifyPluginAsync } from 'fastify';
 
 const swaggerPluginImpl: FastifyPluginAsync = async (fastify) => {
@@ -71,15 +75,27 @@ const swaggerPluginImpl: FastifyPluginAsync = async (fastify) => {
   }
 
   // Keep raw specs available for tooling when Swagger UI is disabled.
-  fastify.get('/docs/json', async (_request, reply) => {
-    reply.type('application/json; charset=utf-8');
-    return fastify.swagger();
-  });
+  fastify.get(
+    '/docs/json',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+    },
+    async (_request, reply) => {
+      reply.type('application/json; charset=utf-8');
+      return fastify.swagger();
+    },
+  );
 
-  fastify.get('/docs/yaml', async (_request, reply) => {
-    reply.type('application/yaml; charset=utf-8');
-    return fastify.swagger({ yaml: true });
-  });
+  fastify.get(
+    '/docs/yaml',
+    {
+      preHandler: [authGuard, tenantContext, tenantStatusGuard],
+    },
+    async (_request, reply) => {
+      reply.type('application/yaml; charset=utf-8');
+      return fastify.swagger({ yaml: true });
+    },
+  );
 };
 
 export const swaggerPlugin = fp(swaggerPluginImpl, {
