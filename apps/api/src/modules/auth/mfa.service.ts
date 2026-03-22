@@ -15,8 +15,6 @@ import type { AuthenticatedUser } from './auth.types.js';
 
 const CHALLENGE_EXPIRY_MS = 5 * 60 * 1000;
 const CHALLENGE_TTL_SECONDS = Math.ceil(CHALLENGE_EXPIRY_MS / 1000);
-const CHALLENGE_KEY_PREFIX = 'mfa:webauthn:challenge:';
-
 interface WebauthnChallenge {
   id: string;
   userId: string;
@@ -29,7 +27,8 @@ interface WebauthnChallenge {
   used: boolean;
 }
 
-const getChallengeKey = (challengeId: string): string => `${CHALLENGE_KEY_PREFIX}${challengeId}`;
+const getChallengeKey = (tenantId: string, challengeId: string): string =>
+  `mfa:webauthn:challenge:${tenantId}:${challengeId}`;
 
 const serializeChallenge = (challenge: WebauthnChallenge): string =>
   JSON.stringify({
@@ -83,11 +82,12 @@ const deserializeChallenge = (data: string): WebauthnChallenge | null => {
 
 const storeChallenge = async (
   redis: RedisRateLimitClient,
+  tenantId: string,
   challengeId: string,
   challenge: WebauthnChallenge,
 ): Promise<void> => {
   await redis.setValue(
-    getChallengeKey(challengeId),
+    getChallengeKey(tenantId, challengeId),
     serializeChallenge(challenge),
     CHALLENGE_TTL_SECONDS,
   );
@@ -95,17 +95,22 @@ const storeChallenge = async (
 
 const getChallenge = async (
   redis: RedisRateLimitClient,
+  tenantId: string,
   challengeId: string,
 ): Promise<WebauthnChallenge | null> => {
-  const data = await redis.getValue(getChallengeKey(challengeId));
+  const data = await redis.getValue(getChallengeKey(tenantId, challengeId));
   if (!data) {
     return null;
   }
   return deserializeChallenge(data);
 };
 
-const deleteChallenge = async (redis: RedisRateLimitClient, challengeId: string): Promise<void> => {
-  await redis.deleteKey(getChallengeKey(challengeId));
+const deleteChallenge = async (
+  redis: RedisRateLimitClient,
+  tenantId: string,
+  challengeId: string,
+): Promise<void> => {
+  await redis.deleteKey(getChallengeKey(tenantId, challengeId));
 };
 
 export const createWebauthnChallenge = async (
@@ -175,7 +180,7 @@ export const createWebauthnChallenge = async (
   const redis = getRedisClient(config);
   if (redis) {
     await redis.connect();
-    await storeChallenge(redis, challengeId, webauthnChallenge);
+    await storeChallenge(redis, user.tenantId, challengeId, webauthnChallenge);
   } else {
     throw new AppError({
       code: ErrorCodes.INTERNAL_ERROR,
@@ -247,7 +252,7 @@ export const registerWebauthnCredential = async (
   }
 
   await redis.connect();
-  const challenge = await getChallenge(redis, challengeId);
+  const challenge = await getChallenge(redis, user.tenantId, challengeId);
 
   if (!challenge) {
     throw new AppError({
@@ -290,8 +295,8 @@ export const registerWebauthnCredential = async (
   }
 
   challenge.used = true;
-  await storeChallenge(redis, challengeId, challenge);
-  await deleteChallenge(redis, challengeId);
+  await storeChallenge(redis, user.tenantId, challengeId, challenge);
+  await deleteChallenge(redis, user.tenantId, challengeId);
 
   const db = getDatabaseClient(config);
 
@@ -341,7 +346,7 @@ export const verifyWebauthnAssertion = async (
   }
 
   await redis.connect();
-  const challenge = await getChallenge(redis, challengeId);
+  const challenge = await getChallenge(redis, user.tenantId, challengeId);
 
   if (!challenge) {
     throw new AppError({
@@ -384,7 +389,7 @@ export const verifyWebauthnAssertion = async (
   }
 
   challenge.used = true;
-  await deleteChallenge(redis, challengeId);
+  await deleteChallenge(redis, user.tenantId, challengeId);
 
   const db = getDatabaseClient(config);
 
