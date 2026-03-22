@@ -309,26 +309,6 @@
     },
     "/admin/rate-limit/status": {
       "get": {
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "in": "query",
-            "name": "tenantId",
-            "required": false
-          },
-          {
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "in": "query",
-            "name": "userId",
-            "required": false
-          }
-        ],
         "responses": {
           "200": {
             "description": "Default Response",

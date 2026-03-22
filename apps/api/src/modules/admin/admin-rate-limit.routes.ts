@@ -1,27 +1,15 @@
 import { getRateLimitStatus } from '../../shared/middleware/rate-limiter.js';
+import { authGuard, requireRole } from '../../shared/middleware/authorization.js';
+import { tenantContext } from '../../shared/middleware/tenant-context.js';
 
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-
-interface RateLimitQuery {
-  tenantId?: string;
-  userId?: string;
-}
+import type { FastifyInstance, FastifyReply } from 'fastify';
 
 export const registerAdminRateLimitRoutes = async (fastify: FastifyInstance): Promise<void> => {
-  fastify.get<{ Querystring: RateLimitQuery }>(
+  fastify.get(
     '/admin/rate-limit/status',
     {
-      config: {
-        rateLimit: false,
-      },
+      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
       schema: {
-        querystring: {
-          type: 'object',
-          properties: {
-            tenantId: { type: 'string', format: 'uuid' },
-            userId: { type: 'string', format: 'uuid' },
-          },
-        },
         response: {
           200: {
             type: 'object',
@@ -40,7 +28,7 @@ export const registerAdminRateLimitRoutes = async (fastify: FastifyInstance): Pr
         },
       },
     },
-    async (_request: FastifyRequest<{ Querystring: RateLimitQuery }>, _reply: FastifyReply) => {
+    async (_request, _reply: FastifyReply) => {
       const status = getRateLimitStatus();
 
       if (!status) {
