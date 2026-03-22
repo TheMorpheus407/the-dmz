@@ -53,6 +53,7 @@ export const registerCacheRoutes = async (fastify: FastifyInstance): Promise<voi
   fastify.get(
     '/metrics/cache',
     {
+      preHandler: [authGuard],
       config: {
         rateLimit: false,
       },
@@ -72,6 +73,7 @@ export const registerCacheRoutes = async (fastify: FastifyInstance): Promise<voi
   fastify.get(
     '/metrics/cache/prometheus',
     {
+      preHandler: [authGuard],
       config: {
         rateLimit: false,
       },

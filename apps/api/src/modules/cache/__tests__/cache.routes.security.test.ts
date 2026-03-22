@@ -387,16 +387,56 @@ describe('cache routes security', () => {
   });
 
   describe('GET /cache/metrics', () => {
-    it('returns 200 without authentication (public endpoint)', async () => {
+    it('returns 401 without authentication', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/metrics/cache',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('returns 200 with valid authentication', async () => {
+      const { accessToken } = await registerUser(app);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/metrics/cache',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
       });
 
       expect(response.statusCode).toBe(200);
       const body = response.json();
       expect(body).toHaveProperty('metrics');
       expect(body).toHaveProperty('summary');
+    });
+  });
+
+  describe('GET /cache/metrics/prometheus', () => {
+    it('returns 401 without authentication', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/metrics/cache/prometheus',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('returns 200 with valid authentication', async () => {
+      const { accessToken } = await registerUser(app);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/metrics/cache/prometheus',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toContain('text/plain');
     });
   });
 });
