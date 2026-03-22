@@ -16,6 +16,10 @@ interface RequestLogFields {
   userId?: string;
 }
 
+const stripQueryParams = (url: string): string => {
+  return url.split('?')[0] ?? '/';
+};
+
 const getIp = (request: {
   ip: string | undefined;
   headers: Record<string, string | string[] | undefined>;
@@ -49,7 +53,7 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
     const onRequestFields: RequestLogFields = {
       requestId: request.id,
       method: request.method,
-      url: sanitizeForLogging(request.url),
+      url: sanitizeForLogging(stripQueryParams(request.url)),
       ip: sanitizeForLogging(getIp(request) || ''),
       userAgent: sanitizeForLogging(getUserAgent(request) || ''),
     };
@@ -76,7 +80,7 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
     const onResponseFields: RequestLogFields = {
       requestId: request.id,
       method: request.method,
-      url: sanitizeForLogging(request.url),
+      url: sanitizeForLogging(stripQueryParams(request.url)),
       statusCode: reply.statusCode,
       ip: sanitizeForLogging(getIp(request) || ''),
       userAgent: sanitizeForLogging(getUserAgent(request) || ''),

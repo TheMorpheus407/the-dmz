@@ -156,6 +156,49 @@ describe('request logger middleware', () => {
       const logPayload = requestLogCall?.args[0] as Record<string, unknown>;
       expect(logPayload['requestId']).toBe(customRequestId);
     });
+
+    it('strips query parameters from URL in logs', async () => {
+      capturedLogs.length = 0;
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health?token=super-secret&api_key=key-12345&email=user@example.com',
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      const requestLogCall = capturedLogs.find(
+        (log) => log.level === 'info' && log.args[1] === 'request received',
+      );
+      expect(requestLogCall).toBeDefined();
+
+      const logPayload = requestLogCall?.args[0] as Record<string, unknown>;
+      expect(logPayload['url']).toBe('/health');
+      expect(JSON.stringify(logPayload)).not.toContain('super-secret');
+      expect(JSON.stringify(logPayload)).not.toContain('key-12345');
+      expect(JSON.stringify(logPayload)).not.toContain('user@example.com');
+    });
+
+    it('strips query parameters from URL in response logs', async () => {
+      capturedLogs.length = 0;
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health?session=abc123&refresh=xyz789',
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      const responseLogCall = capturedLogs.find(
+        (log) => log.level === 'info' && log.args[1] === 'request completed',
+      );
+      expect(responseLogCall).toBeDefined();
+
+      const logPayload = responseLogCall?.args[0] as Record<string, unknown>;
+      expect(logPayload['url']).toBe('/health');
+      expect(JSON.stringify(logPayload)).not.toContain('abc123');
+      expect(JSON.stringify(logPayload)).not.toContain('xyz789');
+    });
   });
 
   describe('public routes', () => {
