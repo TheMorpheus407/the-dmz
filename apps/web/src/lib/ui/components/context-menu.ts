@@ -91,19 +91,19 @@ export function getMenuPosition(
   const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1000;
   const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
 
-  let x = mouseX;
-  let y = mouseY;
+  let adjustedX = mouseX;
+  let adjustedY = mouseY;
 
-  if (x + menuWidth + padding > viewportWidth) {
-    x = viewportWidth - menuWidth - padding;
+  if (adjustedX + menuWidth + padding > viewportWidth) {
+    adjustedX = viewportWidth - menuWidth - padding;
   }
 
-  if (y + menuHeight + padding > viewportHeight) {
-    y = viewportHeight - menuHeight - padding;
+  if (adjustedY + menuHeight + padding > viewportHeight) {
+    adjustedY = viewportHeight - menuHeight - padding;
   }
 
-  x = Math.max(padding, x);
-  y = Math.max(padding, y);
+  adjustedX = Math.max(padding, adjustedX);
+  adjustedY = Math.max(padding, adjustedY);
 
-  return { x, y };
+  return { x: adjustedX, y: adjustedY };
 }

@@ -50,18 +50,18 @@ export function getEmailCategory(status: EmailStateStatus): EmailCategory {
 }
 
 export function getUrgencyFromAccessRequest(urgency: string): UrgencyLevel {
-  const u = urgency.toLowerCase();
-  if (u === 'critical') return 'critical';
-  if (u === 'high') return 'high';
-  if (u === 'medium') return 'medium';
+  const lowerCasedUrgency = urgency.toLowerCase();
+  if (lowerCasedUrgency === 'critical') return 'critical';
+  if (lowerCasedUrgency === 'high') return 'high';
+  if (lowerCasedUrgency === 'medium') return 'medium';
   return 'low';
 }
 
 export function getUrgencyFromThreatTier(threatTier: string): UrgencyLevel {
-  const t = threatTier.toUpperCase();
-  if (t === 'SEVERE' || t === 'HIGH') return 'critical';
-  if (t === 'ELEVATED') return 'high';
-  if (t === 'GUARDED') return 'medium';
+  const upperCasedTier = threatTier.toUpperCase();
+  if (upperCasedTier === 'SEVERE' || upperCasedTier === 'HIGH') return 'critical';
+  if (upperCasedTier === 'ELEVATED') return 'high';
+  if (upperCasedTier === 'GUARDED') return 'medium';
   return 'low';
 }
 
@@ -113,7 +113,7 @@ export function sortEmails(
   const sorted = [...items];
 
   sorted.sort((a, b) => {
-    let cmp = 0;
+    let comparisonResult = 0;
 
     switch (sortBy) {
       case 'urgency': {
@@ -123,22 +123,23 @@ export function sortEmails(
           medium: 2,
           low: 1,
         };
-        cmp = urgencyRank[b.urgency] - urgencyRank[a.urgency];
-        if (cmp === 0) cmp = b.age - a.age;
+        comparisonResult = urgencyRank[b.urgency] - urgencyRank[a.urgency];
+        if (comparisonResult === 0) comparisonResult = b.age - a.age;
         break;
       }
       case 'time':
-        cmp = new Date(b.email.createdAt).getTime() - new Date(a.email.createdAt).getTime();
+        comparisonResult =
+          new Date(b.email.createdAt).getTime() - new Date(a.email.createdAt).getTime();
         break;
       case 'sender':
-        cmp = a.email.sender.displayName.localeCompare(b.email.sender.displayName);
+        comparisonResult = a.email.sender.displayName.localeCompare(b.email.sender.displayName);
         break;
       case 'faction':
-        cmp = a.email.faction.localeCompare(b.email.faction);
+        comparisonResult = a.email.faction.localeCompare(b.email.faction);
         break;
     }
 
-    return cmp;
+    return comparisonResult;
   });
 
   if (ascending) sorted.reverse();

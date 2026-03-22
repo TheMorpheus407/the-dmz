@@ -125,19 +125,19 @@
     if (!state) return;
 
     const completedSteps = state.completedSteps || [];
-    const s = [...steps];
-    s[0] = { ...s[0]!, completed: completedSteps.includes('org_profile') };
-    s[1] = { ...s[1]!, completed: completedSteps.includes('idp_config') };
-    s[2] = { ...s[2]!, completed: completedSteps.includes('scim_token') };
-    s[3] = { ...s[3]!, completed: completedSteps.includes('compliance') };
+    const stepsCopy = [...steps];
+    stepsCopy[0] = { ...stepsCopy[0]!, completed: completedSteps.includes('org_profile') };
+    stepsCopy[1] = { ...stepsCopy[1]!, completed: completedSteps.includes('idp_config') };
+    stepsCopy[2] = { ...stepsCopy[2]!, completed: completedSteps.includes('scim_token') };
+    stepsCopy[3] = { ...stepsCopy[3]!, completed: completedSteps.includes('compliance') };
 
-    s[1] = { ...s[1], disabled: !completedSteps.includes('org_profile') };
-    s[2] = { ...s[2], disabled: !completedSteps.includes('idp_config') };
-    s[3] = { ...s[3], disabled: !completedSteps.includes('scim_token') };
-    s[4] = { ...s[4]!, disabled: !completedSteps.includes('compliance') };
+    stepsCopy[1] = { ...stepsCopy[1], disabled: !completedSteps.includes('org_profile') };
+    stepsCopy[2] = { ...stepsCopy[2], disabled: !completedSteps.includes('idp_config') };
+    stepsCopy[3] = { ...stepsCopy[3], disabled: !completedSteps.includes('scim_token') };
+    stepsCopy[4] = { ...stepsCopy[4]!, disabled: !completedSteps.includes('compliance') };
 
     steps.length = 0;
-    steps.push(...s);
+    steps.push(...stepsCopy);
 
     if (state.currentStep === 'org_profile') currentStepId = 'org_profile';
     else if (state.currentStep === 'idp_config') currentStepId = 'idp_config';
