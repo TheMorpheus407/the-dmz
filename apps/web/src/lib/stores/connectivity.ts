@@ -1,5 +1,7 @@
 import { writable, get } from 'svelte/store';
 
+import { logger } from '$lib/logger';
+
 import { browser } from '$app/environment';
 
 export interface ConnectivityState {
@@ -72,7 +74,7 @@ async function executeSyncWithRetry(): Promise<void> {
       syncError: null,
     }));
   } catch (error) {
-    console.error('Sync failed:', error);
+    logger.error('Sync failed', { error });
 
     currentRetryCount++;
 
@@ -87,7 +89,7 @@ async function executeSyncWithRetry(): Promise<void> {
       currentRetryCount = 0;
     } else {
       const delay = getBackoffDelay(currentRetryCount - 1);
-      console.log(
+      logger.debug(
         `Sync failed, retrying in ${delay}ms (attempt ${currentRetryCount}/${MAX_RETRY_ATTEMPTS})`,
       );
 

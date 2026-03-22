@@ -1,5 +1,6 @@
 import { getDB } from '$lib/storage/idb';
 import { generateId } from '$lib/utils/id';
+import { logger } from '$lib/logger';
 
 import { browser } from '$app/environment';
 
@@ -56,7 +57,7 @@ async function loadTouchState(): Promise<void> {
     touchState.lastSyncAt =
       touchEvents.length > 0 ? Math.max(...touchEvents.map((e) => e.timestamp)) : null;
   } catch (error) {
-    console.error('Failed to load touch state:', error);
+    logger.error('Failed to load touch state', { error });
   }
 }
 
@@ -90,7 +91,7 @@ export async function syncTouchState(): Promise<number> {
 
     return unsynced.length;
   } catch (error) {
-    console.error('Failed to sync touch state:', error);
+    logger.error('Failed to sync touch state', { error });
     return 0;
   }
 }

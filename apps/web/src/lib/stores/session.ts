@@ -11,6 +11,7 @@ import {
 import { apiClient } from '$lib/api/client';
 import type { CategorizedApiError } from '$lib/api/types';
 import type { LoginInput, RegisterInput } from '@the-dmz/shared/schemas';
+import { logger } from '$lib/logger';
 
 import { themeStore } from './theme';
 
@@ -112,7 +113,7 @@ async function syncPreferencesToServer(preferences: {
   const result = await updatePreferences(updateInput);
 
   if (result.error) {
-    console.error('Failed to sync preferences:', result.error);
+    logger.error('Failed to sync preferences', { error: result.error });
   }
 }
 

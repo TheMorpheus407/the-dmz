@@ -1,4 +1,5 @@
 import { generateId } from '$lib/utils/id';
+import { logger } from '$lib/logger';
 
 import { getDB } from './idb';
 
@@ -25,7 +26,7 @@ function computeChecksum(data: unknown): string {
 
 export function validateSnapshot(snapshot: SessionSnapshot): boolean {
   if (snapshot.schemaVersion !== SCHEMA_VERSION) {
-    console.warn(
+    logger.warn(
       `[Session] Invalid snapshot: schema version mismatch (expected ${SCHEMA_VERSION}, got ${snapshot.schemaVersion})`,
     );
     return false;
@@ -33,7 +34,7 @@ export function validateSnapshot(snapshot: SessionSnapshot): boolean {
 
   const computedChecksum = computeChecksum(snapshot.state);
   if (computedChecksum !== snapshot.checksum) {
-    console.warn(
+    logger.warn(
       `[Session] Invalid snapshot: checksum mismatch (expected ${snapshot.checksum}, got ${computedChecksum})`,
     );
     return false;
@@ -82,7 +83,7 @@ export async function getLatestSessionSnapshot(): Promise<SessionSnapshot | null
       currentSnapshot = snapshot;
       return snapshot;
     }
-    console.warn(`[Session] Invalid snapshot ${snapshot.id}, skipping`);
+    logger.warn(`[Session] Invalid snapshot ${snapshot.id}, skipping`);
   }
 
   return null;
@@ -147,7 +148,7 @@ export async function clearStaleSnapshots(
     currentSnapshot = null;
   }
 
-  console.log(`[Session] Cleared ${staleSnapshots.length} stale snapshots (>7 days old)`);
+  logger.debug(`[Session] Cleared ${staleSnapshots.length} stale snapshots (>7 days old)`);
   return staleSnapshots.length;
 }
 
@@ -164,7 +165,7 @@ export function startSessionSnapshotTimer(saveFn: () => unknown): void {
           await saveSessionSnapshot(state);
         }
       } catch (error) {
-        console.error('Failed to save session snapshot:', error);
+        logger.error('Failed to save session snapshot', { error });
       }
     })();
   }, SESSION_SNAPSHOT_INTERVAL_MS);

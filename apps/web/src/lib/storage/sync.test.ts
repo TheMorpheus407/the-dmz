@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('$app/environment', () => ({
   browser: true,
+  dev: true,
 }));
 
 vi.mock('$lib/utils/id', () => ({

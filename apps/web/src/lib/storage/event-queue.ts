@@ -1,4 +1,5 @@
 import { generateId } from '$lib/utils/id';
+import { logger } from '$lib/logger';
 
 import { getDB } from './idb';
 
@@ -26,7 +27,7 @@ async function enforceQueueLimit(): Promise<void> {
       .sort((a, b) => a.clientSequenceId - b.clientSequenceId)
       .slice(0, unsyncedEvents.length - MAX_QUEUE_SIZE + 1);
 
-    console.warn(`[EventQueue] Queue overflow: dropping ${eventsToRemove.length} oldest events`);
+    logger.warn(`[EventQueue] Queue overflow: dropping ${eventsToRemove.length} oldest events`);
 
     for (const event of eventsToRemove) {
       await tx.store.delete(event.id);

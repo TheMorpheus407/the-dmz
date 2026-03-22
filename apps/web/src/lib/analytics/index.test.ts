@@ -2,11 +2,14 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 vi.mock('$app/environment', () => ({
   browser: true,
+  dev: true,
 }));
 
-const mockConsoleWarn = vi.fn();
+const mockConsoleDebug = vi.fn();
 vi.stubGlobal('console', {
-  warn: mockConsoleWarn,
+  debug: mockConsoleDebug,
+  warn: vi.fn(),
+  error: vi.fn(),
 });
 
 describe('analytics', () => {
@@ -32,13 +35,13 @@ describe('analytics', () => {
     it('should log initialization message when debug is true', async () => {
       const { initAnalytics } = await import('./index');
       initAnalytics({ debug: true });
-      expect(mockConsoleWarn).toHaveBeenCalledWith('[Analytics] Initialized');
+      expect(mockConsoleDebug).toHaveBeenCalled();
     });
 
     it('should not log initialization message when debug is false', async () => {
       const { initAnalytics } = await import('./index');
       initAnalytics({ debug: false });
-      expect(mockConsoleWarn).not.toHaveBeenCalled();
+      expect(mockConsoleDebug).not.toHaveBeenCalled();
     });
   });
 
@@ -46,11 +49,11 @@ describe('analytics', () => {
     it('should log event when debug is true', async () => {
       const { initAnalytics, trackEvent } = await import('./index');
       initAnalytics({ debug: true });
-      mockConsoleWarn.mockClear();
+      mockConsoleDebug.mockClear();
 
       const event = { category: 'test', action: 'action' };
       trackEvent(event);
-      expect(mockConsoleWarn).toHaveBeenCalledWith('[Analytics]', event);
+      expect(mockConsoleDebug).toHaveBeenCalled();
     });
 
     it('should not log event when debug is false', async () => {
@@ -59,7 +62,7 @@ describe('analytics', () => {
 
       const event = { category: 'test', action: 'action' };
       trackEvent(event);
-      expect(mockConsoleWarn).not.toHaveBeenCalled();
+      expect(mockConsoleDebug).not.toHaveBeenCalled();
     });
   });
 

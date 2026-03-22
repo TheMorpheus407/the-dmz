@@ -1,3 +1,5 @@
+import { logger } from '$lib/logger';
+
 import { browser } from '$app/environment';
 
 export type CoopWebSocketMessage = {
@@ -49,7 +51,7 @@ export class CoopWebSocketClient {
       this.ws = new WebSocket(wsUrl);
       this.setupEventHandlers();
     } catch (error) {
-      console.error('[CoopWebSocket] Failed to create WebSocket:', error);
+      logger.error('[CoopWebSocket] Failed to create WebSocket:', { error });
       this.handleReconnect();
     }
   }
@@ -64,7 +66,7 @@ export class CoopWebSocketClient {
     if (!this.ws) return;
 
     this.ws.onopen = () => {
-      console.warn('[CoopWebSocket] Connected');
+      logger.debug('[CoopWebSocket] Connected');
       this.reconnectAttempts = 0;
       this.startHeartbeat();
       this.subscribeToSession();
@@ -76,17 +78,17 @@ export class CoopWebSocketClient {
         const message = JSON.parse(event.data as string) as CoopWebSocketMessage;
         this.handleMessage(message);
       } catch (error) {
-        console.error('[CoopWebSocket] Failed to parse message:', error);
+        logger.error('[CoopWebSocket] Failed to parse message:', { error });
       }
     };
 
     this.ws.onerror = (error) => {
-      console.error('[CoopWebSocket] Error:', error);
+      logger.error('[CoopWebSocket] Error:', { error });
       this.options.onError?.(error);
     };
 
     this.ws.onclose = () => {
-      console.warn('[CoopWebSocket] Disconnected');
+      logger.debug('[CoopWebSocket] Disconnected');
       this.stopHeartbeat();
       this.options.onDisconnect?.();
 
@@ -120,7 +122,7 @@ export class CoopWebSocketClient {
     sequence?: number;
   }): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.warn('[CoopWebSocket] Cannot send message, WebSocket not connected');
+      logger.warn('[CoopWebSocket] Cannot send message, WebSocket not connected');
       return;
     }
 
@@ -132,7 +134,7 @@ export class CoopWebSocketClient {
     try {
       this.ws.send(JSON.stringify(outgoingMessage));
     } catch (error) {
-      console.error('[CoopWebSocket] Failed to send message:', error);
+      logger.error('[CoopWebSocket] Failed to send message:', { error });
     }
   }
 
@@ -212,14 +214,14 @@ export class CoopWebSocketClient {
 
   private handleReconnect(): void {
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.error('[CoopWebSocket] Max reconnection attempts reached');
+      logger.error('[CoopWebSocket] Max reconnection attempts reached');
       return;
     }
 
     this.reconnectAttempts++;
     const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
 
-    console.warn(
+    logger.warn(
       `[CoopWebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
     );
 

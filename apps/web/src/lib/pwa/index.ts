@@ -1,5 +1,6 @@
 import { getUnsyncedEvents, clearOldEvents } from '$lib/storage/event-queue';
 import { updatePendingEvents } from '$lib/stores/connectivity';
+import { logger } from '$lib/logger';
 
 import { browser } from '$app/environment';
 
@@ -65,10 +66,10 @@ async function registerServiceWorker(): Promise<void> {
     });
 
     if (registration.active) {
-      console.log('Service worker is active');
+      logger.debug('Service worker is active');
     }
   } catch (error) {
-    console.error('Service worker registration failed:', error);
+    logger.error('Service worker registration failed', { error });
   }
 }
 
@@ -122,9 +123,9 @@ export async function clearOldData(): Promise<void> {
 
   try {
     const deletedCount = await clearOldEvents();
-    console.log(`Cleared ${deletedCount} old events`);
+    logger.debug(`Cleared ${deletedCount} old events`);
   } catch (error) {
-    console.error('Failed to clear old data:', error);
+    logger.error('Failed to clear old data', { error });
   }
 }
 

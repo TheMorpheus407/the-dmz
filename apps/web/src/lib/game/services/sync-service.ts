@@ -7,6 +7,7 @@ import {
 } from '$lib/storage/event-queue';
 import { getLatestSessionSnapshot, saveSessionSnapshot } from '$lib/storage/session';
 import { connectivityStore, updatePendingEvents } from '$lib/stores/connectivity';
+import { logger } from '$lib/logger';
 
 export interface SyncResult {
   success: boolean;
@@ -62,7 +63,7 @@ async function sendBeaconSync(events: QueuedEvent[]): Promise<void> {
     const blob = new Blob([payload], { type: 'application/json' });
     navigator.sendBeacon('/api/v1/game/sync', blob);
   } catch (error) {
-    console.warn('[SyncService] Beacon sync failed:', error);
+    logger.warn('[SyncService] Beacon sync failed', { error });
   }
 }
 
@@ -94,7 +95,7 @@ export async function syncEvents(): Promise<SyncResult> {
 
   if (result.error) {
     const errorMessage = result.error.message || 'Unknown sync error';
-    console.error('[SyncService] Sync failed:', errorMessage);
+    logger.error('[SyncService] Sync failed', { error: errorMessage });
 
     if (result.error.category === 'network') {
       void sendBeaconSync(unsyncedEvents);
@@ -119,7 +120,7 @@ export async function syncEvents(): Promise<SyncResult> {
   }
 
   if (response.conflicts && response.conflicts.length > 0) {
-    console.log(`[SyncService] ${response.conflicts.length} conflicts detected`);
+    logger.debug(`[SyncService] ${response.conflicts.length} conflicts detected`);
     logConflictAnalytics(response.conflicts);
 
     await handleConflictResolution(response.serverSnapshot, unsyncedEvents);
@@ -149,11 +150,11 @@ async function handleConflictResolution(
   localEvents: QueuedEvent[],
 ): Promise<void> {
   if (!serverSnapshot) {
-    console.warn('[SyncService] No server snapshot available for conflict resolution');
+    logger.warn('[SyncService] No server snapshot available for conflict resolution');
     return;
   }
 
-  console.log('[SyncService] Applying server-authoritative state');
+  logger.debug('[SyncService] Applying server-authoritative state');
 
   await saveSessionSnapshot(serverSnapshot.state);
 
@@ -163,7 +164,7 @@ async function handleConflictResolution(
     .filter((e) => e.timestamp > serverTimestamp)
     .sort((a, b) => a.clientSequenceId - b.clientSequenceId);
 
-  console.log(
+  logger.debug(
     `[SyncService] Replaying ${sortedLocalEvents.length} local events after server state`,
   );
 }
@@ -171,7 +172,7 @@ async function handleConflictResolution(
 function logConflictAnalytics(
   conflicts: Array<{ eventId: string; serverTimestamp: number }>,
 ): void {
-  console.info('[SyncService:Analytics]', {
+  logger.debug('[SyncService:Analytics]', {
     type: 'conflict',
     conflictCount: conflicts.length,
     timestamp: Date.now(),
@@ -228,7 +229,7 @@ export async function fetchServerSnapshot(): Promise<ServerSnapshot | null> {
   const result = await apiClient.get<{ data: ServerSnapshot }>('/game/snapshot');
 
   if (result.error || !result.data) {
-    console.error('[SyncService] Failed to fetch server snapshot:', result.error);
+    logger.error('[SyncService] Failed to fetch server snapshot', { error: result.error });
     return null;
   }
 

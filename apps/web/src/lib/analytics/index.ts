@@ -1,3 +1,5 @@
+import { logger } from '$lib/logger';
+
 import { browser } from '$app/environment';
 
 export interface AnalyticsEvent {
@@ -37,7 +39,7 @@ export function initAnalytics(userConfig?: Partial<AnalyticsConfig>): void {
   }
 
   if (config.debug) {
-    console.warn('[Analytics] Initialized');
+    logger.debug('[Analytics] Initialized');
   }
 }
 
@@ -54,7 +56,7 @@ export function trackEvent(event: AnalyticsEvent): void {
   }
 
   if (config.debug) {
-    console.warn('[Analytics]', event);
+    logger.debug('[Analytics]', event as unknown as Record<string, unknown>);
   }
 }
 

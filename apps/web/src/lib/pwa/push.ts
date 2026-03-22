@@ -1,5 +1,6 @@
 import { generateId } from '$lib/utils/id';
 import { getDB } from '$lib/storage/idb';
+import { logger } from '$lib/logger';
 
 import { browser } from '$app/environment';
 
@@ -45,13 +46,13 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
   try {
     const permission = await requestPushPermission();
     if (permission !== 'granted') {
-      console.warn('Push notification permission denied');
+      logger.warn('Push notification permission denied');
       return null;
     }
 
     const vapidKey = getVapidPublicKey();
     if (!vapidKey) {
-      console.warn('VAPID public key not configured');
+      logger.warn('VAPID public key not configured');
       return null;
     }
 
@@ -64,7 +65,7 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
     await saveSubscription(subscription);
     return subscription;
   } catch (error) {
-    console.error('Failed to subscribe to push:', error);
+    logger.error('Failed to subscribe to push', { error });
     return null;
   }
 }
@@ -79,7 +80,7 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     subscription = null;
     return true;
   } catch (error) {
-    console.error('Failed to unsubscribe from push:', error);
+    logger.error('Failed to unsubscribe from push', { error });
     return false;
   }
 }
@@ -94,7 +95,7 @@ export async function getCurrentSubscription(): Promise<PushSubscription | null>
     subscription = await registration.pushManager.getSubscription();
     return subscription;
   } catch (error) {
-    console.error('Failed to get push subscription:', error);
+    logger.error('Failed to get push subscription', { error });
     return null;
   }
 }
