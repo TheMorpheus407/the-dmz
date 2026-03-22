@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
 
@@ -22,7 +24,77 @@ import {
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 
-const deepLinkRequestSchema = {
+const DANGEROUS_URL_SCHEMES = ['javascript', 'data', 'vbscript', 'mailto', 'file', 'ftp'] as const;
+
+const isSafeUrl = (url: string): boolean => {
+  const lowered = url.toLowerCase();
+  if (DANGEROUS_URL_SCHEMES.some((scheme) => lowered.startsWith(`${scheme}:`))) {
+    return false;
+  }
+  try {
+    const parsed = new URL(url);
+    if (
+      parsed.hostname === 'localhost' ||
+      parsed.hostname === '127.0.0.1' ||
+      parsed.hostname === '::1'
+    ) {
+      return false;
+    }
+    if (/^169\.254\./.test(parsed.hostname)) {
+      return false;
+    }
+    if (parsed.hostname === '0.0.0.0') {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+  return true;
+};
+
+const deepLinkContentItemSchema = z.object({
+  type: z.enum(['link', 'file', 'html', 'ltiResourceLink']),
+  url: z.string().url().refine(isSafeUrl, {
+    message: 'URL must use safe scheme (https recommended) and not target internal resources',
+  }),
+  title: z.string().max(255).optional(),
+  text: z.string().optional(),
+  lineItem: z
+    .object({
+      scoreMaximum: z.number().positive(),
+    })
+    .optional(),
+  icon: z
+    .object({
+      url: z.string().url(),
+      width: z.number().optional(),
+      height: z.number().optional(),
+    })
+    .optional(),
+  thumbnail: z
+    .object({
+      url: z.string().url(),
+      width: z.number().optional(),
+      height: z.number().optional(),
+    })
+    .optional(),
+});
+
+const deepLinkSettingsSchema = z.object({
+  deployment_id: z.string().optional(),
+  data: z.string().min(1).max(2048),
+  accept_types: z.array(z.enum(['link', 'file', 'html', 'ltiResourceLink'])).optional(),
+  accept_presentation_document_targets: z.array(z.enum(['iframe', 'window', 'embed'])).optional(),
+  accept_multiple: z.boolean().optional(),
+  auto_create: z.boolean().optional(),
+});
+
+const deepLinkRequestSchema = z.object({
+  'https://purl.imsglobal.org/spec/lti-dl/claim/deep_link_settings': deepLinkSettingsSchema,
+  content_items: z.array(deepLinkContentItemSchema).optional(),
+});
+
+const deepLinkQuerystringSchema = {
   type: 'object',
   properties: {
     iss: { type: 'string' },
@@ -218,7 +290,7 @@ export async function registerLtiRoutes(
     '/lti/deep-link',
     {
       schema: {
-        querystring: deepLinkRequestSchema,
+        querystring: deepLinkQuerystringSchema,
         response: {
           200: {
             type: 'object',
@@ -271,23 +343,14 @@ export async function registerLtiRoutes(
     },
     async (request, _reply) => {
       const config = getConfig(request);
-      const body = request.body;
+      const parsed = deepLinkRequestSchema.parse(request.body);
 
-      const deepLinkSetting = body[
-        'https://purl.imsglobal.org/spec/lti-dl/claim/deep_link_settings'
-      ] as { deployment_id?: string; data?: string } | undefined;
+      const deepLinkSettings =
+        parsed['https://purl.imsglobal.org/spec/lti-dl/claim/deep_link_settings'];
+      const data = deepLinkSettings.data;
+      const deploymentId = deepLinkSettings.deployment_id ?? '';
 
-      const data = deepLinkSetting?.data;
-      const deploymentId = deepLinkSetting?.deployment_id ?? '';
-
-      const contentItems = body['content_items'] as
-        | Array<{
-            type: string;
-            url?: string;
-            title?: string;
-            lineItem?: { scoreMaximum: number };
-          }>
-        | undefined;
+      const contentItems = parsed.content_items;
 
       if (!contentItems || contentItems.length === 0) {
         return {
