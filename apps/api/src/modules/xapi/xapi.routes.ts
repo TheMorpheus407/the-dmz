@@ -1,3 +1,10 @@
+import {
+  xapiStatementInputSchema,
+  xapiArchiveInputSchema,
+  lrsConfigInputSchema,
+  lrsConfigUpdateSchema,
+} from '@the-dmz/shared';
+
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { authGuard } from '../../shared/middleware/authorization.js';
 
@@ -42,35 +49,24 @@ export async function registerXapiRoutes(app: FastifyInstance, config: AppConfig
         return reply.status(401).send({ message: 'Authentication required' });
       }
 
-      const body = request.body as {
-        actor?: { mbox?: string; name?: string };
-        verb?: { id?: string; display?: Record<string, string> };
-        object?: {
-          id?: string;
-          definition?: {
-            name?: Record<string, string>;
-            description?: Record<string, string>;
-            type?: string;
-          };
-        };
-        result?: {
-          score?: { raw?: number };
-          success?: boolean;
-          completion?: boolean;
-          duration?: string;
-        };
-        context?: { extensions?: Record<string, unknown> };
-        version?: string;
-        timestamp?: string;
-      };
+      const parseResult = xapiStatementInputSchema.safeParse(request.body);
 
-      if (!body.actor || !body.verb || !body.object) {
-        return reply.status(400).send({ message: 'Missing required fields' });
+      if (!parseResult.success) {
+        return reply.code(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: parseResult.error.errors,
+          },
+        });
       }
 
+      const body = parseResult.data;
+
       const actor = buildActorFromUser(
-        body.actor.mbox?.replace('mailto:', '') ?? `user-${user.userId}@the-dmz.example.com`,
-        body.actor.name ?? `User ${user.userId}`,
+        body.actor?.mbox?.replace('mailto:', '') ?? `user-${user.userId}@the-dmz.example.com`,
+        body.actor?.name ?? `User ${user.userId}`,
       );
 
       const activity: XapiActivity = {
@@ -107,7 +103,7 @@ export async function registerXapiRoutes(app: FastifyInstance, config: AppConfig
         context = { extensions: body.context.extensions };
       }
 
-      const version: XapiVersion = (body.version as XapiVersion) ?? '1.0.3';
+      const version: XapiVersion = body.version ?? '1.0.3';
       const timestamp = body.timestamp ? new Date(body.timestamp) : undefined;
 
       const statementOptions: {
@@ -238,18 +234,28 @@ export async function registerXapiRoutes(app: FastifyInstance, config: AppConfig
     {
       preHandler: [authGuard, tenantContext],
     },
-    async (request) => {
+    async (request, reply) => {
       const tenantId = request.tenantContext?.tenantId;
       if (!tenantId) {
         return { archived: 0 };
       }
 
-      const body = request.body as { beforeDate?: string };
-      if (!body.beforeDate) {
-        return { archived: 0 };
+      const parseResult = xapiArchiveInputSchema.safeParse(request.body);
+
+      if (!parseResult.success) {
+        return reply.code(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: parseResult.error.errors,
+          },
+        });
       }
 
-      const archived = await archiveXapiStatements(config, tenantId, new Date(body.beforeDate));
+      const { beforeDate } = parseResult.data;
+
+      const archived = await archiveXapiStatements(config, tenantId, new Date(beforeDate));
 
       return { archived };
     },
@@ -299,48 +305,20 @@ export async function registerXapiRoutes(app: FastifyInstance, config: AppConfig
         return reply.status(400).send({ message: 'Tenant context is required' });
       }
 
-      const body = request.body as {
-        name?: string;
-        endpoint?: string;
-        authKeyId?: string;
-        authSecret?: string;
-        version?: string;
-        enabled?: boolean;
-        batchingEnabled?: boolean;
-        batchSize?: number;
-        retryMaxAttempts?: number;
-        retryBaseDelayMs?: number;
-      };
+      const parseResult = lrsConfigInputSchema.safeParse(request.body);
 
-      if (!body.name || !body.endpoint || !body.authKeyId || !body.authSecret) {
-        return reply.status(400).send({ message: 'Missing required fields' });
+      if (!parseResult.success) {
+        return reply.code(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: parseResult.error.errors,
+          },
+        });
       }
 
-      const lrsConfigData: {
-        name: string;
-        endpoint: string;
-        authKeyId: string;
-        authSecret: string;
-        version?: XapiVersion;
-        enabled?: boolean;
-        batchingEnabled?: boolean;
-        batchSize?: number;
-        retryMaxAttempts?: number;
-        retryBaseDelayMs?: number;
-      } = {
-        name: body.name,
-        endpoint: body.endpoint,
-        authKeyId: body.authKeyId,
-        authSecret: body.authSecret,
-      };
-      if (body.version) lrsConfigData.version = body.version as XapiVersion;
-      if (body.enabled !== undefined) lrsConfigData.enabled = body.enabled;
-      if (body.batchingEnabled !== undefined) lrsConfigData.batchingEnabled = body.batchingEnabled;
-      if (body.batchSize !== undefined) lrsConfigData.batchSize = body.batchSize;
-      if (body.retryMaxAttempts !== undefined)
-        lrsConfigData.retryMaxAttempts = body.retryMaxAttempts;
-      if (body.retryBaseDelayMs !== undefined)
-        lrsConfigData.retryBaseDelayMs = body.retryBaseDelayMs;
+      const lrsConfigData = parseResult.data;
 
       const lrsConfig = await createLrsConfig(config, tenantId, lrsConfigData);
 
@@ -412,20 +390,24 @@ export async function registerXapiRoutes(app: FastifyInstance, config: AppConfig
       }
 
       const { configId } = request.params as { configId: string };
-      const body = request.body as {
-        name?: string;
-        endpoint?: string;
-        authKeyId?: string;
-        authSecret?: string;
-        version?: string;
-        enabled?: boolean;
-        batchingEnabled?: boolean;
-        batchSize?: number;
-        retryMaxAttempts?: number;
-        retryBaseDelayMs?: number;
-      };
 
-      const updatedConfig = await updateLrsConfig(config, configId, tenantId, body);
+      const parseResult = lrsConfigUpdateSchema.safeParse(request.body);
+
+      if (!parseResult.success) {
+        return reply.code(400).send({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: parseResult.error.errors,
+          },
+        });
+      }
+
+      const updates = Object.fromEntries(
+        Object.entries(parseResult.data).filter(([, v]) => v !== undefined),
+      );
+      const updatedConfig = await updateLrsConfig(config, configId, tenantId, updates);
 
       if (!updatedConfig) {
         return reply.status(404).send({ message: 'LRS configuration not found' });

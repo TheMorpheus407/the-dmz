@@ -16,3 +16,4 @@ export * from './password-recovery.schema.js';
 export * from './preferences.schema.js';
 export * from './social.schema.js';
 export * from './taxonomy.schema.js';
+export * from './xapi.schema.js';
