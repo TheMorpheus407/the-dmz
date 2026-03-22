@@ -56,7 +56,7 @@ export interface EndorsementSummary {
 }
 
 export interface PaginatedResult<T> {
-  data: T[];
+  items: T[];
   total: number;
   page: number;
   pageSize: number;
@@ -308,17 +308,17 @@ export async function getReceivedEndorsements(
 
   const total = countResult[0]?.count ?? 0;
 
-  const data: EndorsementWithTag[] = endorsementsResult.map((row) => ({
+  const items: EndorsementWithTag[] = endorsementsResult.map((row) => ({
     ...row.endorsement,
     tag: row.tag,
   }));
 
   return {
-    data,
+    items,
     total,
     page,
     pageSize,
-    hasMore: offset + data.length < total,
+    hasMore: offset + items.length < total,
   };
 }
 
@@ -351,17 +351,17 @@ export async function getGivenEndorsements(
 
   const total = countResult[0]?.count ?? 0;
 
-  const data: EndorsementWithTag[] = endorsementsResult.map((row) => ({
+  const items: EndorsementWithTag[] = endorsementsResult.map((row) => ({
     ...row.endorsement,
     tag: row.tag,
   }));
 
   return {
-    data,
+    items,
     total,
     page,
     pageSize,
-    hasMore: offset + data.length < total,
+    hasMore: offset + items.length < total,
   };
 }
 

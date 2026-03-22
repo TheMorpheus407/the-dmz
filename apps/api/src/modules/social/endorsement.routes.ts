@@ -191,7 +191,7 @@ export async function endorsementRoutes(
       const result = await getReceivedEndorsements(config, user.tenantId, playerId, page, pageSize);
 
       return {
-        data: result.data.map((e) => ({
+        data: result.items.map((e) => ({
           id: e.id,
           sessionId: e.sessionId,
           endorserPlayerId: e.endorserPlayerId,
@@ -248,7 +248,7 @@ export async function endorsementRoutes(
       const result = await getGivenEndorsements(config, user.tenantId, playerId, page, pageSize);
 
       return {
-        data: result.data.map((e) => ({
+        data: result.items.map((e) => ({
           id: e.id,
           sessionId: e.sessionId,
           endorserPlayerId: e.endorserPlayerId,

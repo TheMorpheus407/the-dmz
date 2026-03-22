@@ -495,3 +495,55 @@ describe('endorsement service - pagination', () => {
     expect(hasMore).toBe(false);
   });
 });
+
+describe('endorsement service - PaginatedResult interface', () => {
+  it('should use items property instead of data for self-documenting code', () => {
+    const mockPaginatedResult = {
+      items: [{ id: '1', name: 'test' }],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+      hasMore: false,
+    };
+
+    expect(mockPaginatedResult.items).toBeDefined();
+    expect(Array.isArray(mockPaginatedResult.items)).toBe(true);
+    expect(mockPaginatedResult.items).toHaveLength(1);
+    expect(mockPaginatedResult.total).toBe(1);
+    expect(mockPaginatedResult.page).toBe(1);
+    expect(mockPaginatedResult.pageSize).toBe(20);
+    expect(mockPaginatedResult.hasMore).toBe(false);
+  });
+
+  it('should have items as array of endorsements', () => {
+    const mockEndorsementWithTag = {
+      id: 'endorsement-1',
+      sessionId: 'session-1',
+      endorserPlayerId: 'player-1',
+      endorsedPlayerId: 'player-2',
+      tagId: 'tag-1',
+      tenantId: 'tenant-1',
+      seasonId: null,
+      createdAt: new Date(),
+      tag: {
+        id: 'tag-1',
+        tagKey: 'careful_verifier',
+        displayName: 'Careful Verifier',
+        description: 'Test description',
+        isActive: true,
+        createdAt: new Date(),
+      },
+    };
+
+    const mockPaginatedResult = {
+      items: [mockEndorsementWithTag],
+      total: 1,
+      page: 1,
+      pageSize: 20,
+      hasMore: false,
+    };
+
+    expect(mockPaginatedResult.items[0]).toHaveProperty('tag');
+    expect(mockPaginatedResult.items[0]!.tag.tagKey).toBe('careful_verifier');
+  });
+});

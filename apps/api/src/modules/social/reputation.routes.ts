@@ -149,7 +149,7 @@ export async function reputationRoutes(fastify: FastifyInstance, config: AppConf
       );
 
       return {
-        data: result.data.map((entry: ReputationHistoryEntry) => ({
+        data: result.items.map((entry: ReputationHistoryEntry) => ({
           id: entry.id,
           delta: entry.delta,
           reason: entry.reason,
@@ -255,7 +255,7 @@ export async function reputationRoutes(fastify: FastifyInstance, config: AppConf
       );
 
       return {
-        data: result.data.map((entry: ReputationBreakdown & { rank: number }) => ({
+        data: result.items.map((entry: ReputationBreakdown & { rank: number }) => ({
           playerId: entry.playerId,
           tier: entry.tier,
           totalScore: entry.totalScore,

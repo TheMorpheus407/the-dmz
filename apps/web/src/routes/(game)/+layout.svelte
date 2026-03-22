@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
+  import { logger } from '$lib/logger';
   import { themeStore, STORAGE_KEY } from '$lib/stores/theme';
   import { settingsStore, effectiveVirtualization } from '$lib/stores/settings';
   import Drawer from '$lib/ui/components/Drawer.svelte';
@@ -155,7 +156,7 @@
       await lazyImport(() => import('$lib/effects/crt-effects'));
       crtEffectsLoaded = true;
     } catch (e) {
-      console.warn('Failed to load CRT effects:', e);
+      logger.warn('Failed to load CRT effects', { error: e });
     }
   }
 
@@ -168,7 +169,7 @@
       analytics.initAnalytics({ debug: import.meta.env.DEV });
       analyticsLoaded = true;
     } catch (e) {
-      console.warn('Failed to load analytics:', e);
+      logger.warn('Failed to load analytics', { error: e });
     }
   }
 

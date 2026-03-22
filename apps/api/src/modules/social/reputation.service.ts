@@ -207,7 +207,7 @@ export async function getReputationHistory(
 
   const total = countResult[0]?.count ?? 0;
 
-  const data: ReputationHistoryEntry[] = historyResult.map((entry) => ({
+  const items: ReputationHistoryEntry[] = historyResult.map((entry) => ({
     id: entry.id,
     delta: entry.delta,
     reason: entry.reason as ReputationHistoryReason,
@@ -217,11 +217,11 @@ export async function getReputationHistory(
   }));
 
   return {
-    data,
+    items,
     total,
     page,
     pageSize,
-    hasMore: offset + data.length < total,
+    hasMore: offset + items.length < total,
   };
 }
 
@@ -265,7 +265,7 @@ export async function getReputationLeaderboard(
   const total = countResult[0]?.count ?? 0;
 
   const startRank = offset + 1;
-  const data = scoresResult.map((score, index) => ({
+  const items = scoresResult.map((score, index) => ({
     playerId: score.playerId,
     totalScore: score.totalScore,
     tier: getReputationTier(score.totalScore),
@@ -282,11 +282,11 @@ export async function getReputationLeaderboard(
   }));
 
   return {
-    data,
+    items,
     total,
     page,
     pageSize,
-    hasMore: offset + data.length < total,
+    hasMore: offset + items.length < total,
   };
 }
 
