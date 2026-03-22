@@ -33,8 +33,8 @@ export interface ScenarioState {
 }
 
 export interface ScenarioEvaluationResult {
-  isSuccess: boolean;
-  isFailure: boolean;
+  hasSucceeded: boolean;
+  hasFailed: boolean;
   conditionsMet: string[];
   conditionsFailed: string[];
 }
@@ -88,8 +88,8 @@ export function evaluateScenarioSuccessConditions(
   }
 
   return {
-    isSuccess: conditionsFailed.length === 0 && conditionsMet.length > 0,
-    isFailure: conditionsFailed.length > 0,
+    hasSucceeded: conditionsFailed.length === 0 && conditionsMet.length > 0,
+    hasFailed: conditionsFailed.length > 0,
     conditionsMet,
     conditionsFailed,
   };
@@ -248,7 +248,7 @@ export function advanceScenarioState(
 
 export function isScenarioComplete(scenarioId: CoopScenarioId, state: ScenarioState): boolean {
   const result = evaluateScenarioSuccessConditions(scenarioId, state);
-  return result.isSuccess || result.isFailure;
+  return result.hasSucceeded || result.hasFailed;
 }
 
 export function getScenarioThreatDomains(scenarioId: CoopScenarioId): ScenarioThreatDomain[] {

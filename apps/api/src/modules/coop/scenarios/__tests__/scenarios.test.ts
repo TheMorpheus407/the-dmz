@@ -313,44 +313,44 @@ describe('scenario engine - evaluateScenarioSuccessConditions', () => {
     const result = evaluateScenarioSuccessConditions('cascade_failure', {
       compromisedVendors: 0,
     });
-    expect(result.isSuccess).toBe(true);
-    expect(result.isFailure).toBe(false);
+    expect(result.hasSucceeded).toBe(true);
+    expect(result.hasFailed).toBe(false);
   });
 
   it('evaluates cascade_failure failure correctly', () => {
     const result = evaluateScenarioSuccessConditions('cascade_failure', {
       compromisedVendors: 2,
     });
-    expect(result.isSuccess).toBe(false);
-    expect(result.isFailure).toBe(true);
+    expect(result.hasSucceeded).toBe(false);
+    expect(result.hasFailed).toBe(true);
   });
 
   it('evaluates the_insider success correctly', () => {
     const result = evaluateScenarioSuccessConditions('the_insider', {
       insiderIdentified: true,
     });
-    expect(result.isSuccess).toBe(true);
+    expect(result.hasSucceeded).toBe(true);
   });
 
   it('evaluates data_exodus success correctly', () => {
     const result = evaluateScenarioSuccessConditions('data_exodus', {
       exfiltratedDataMB: 0,
     });
-    expect(result.isSuccess).toBe(true);
+    expect(result.hasSucceeded).toBe(true);
   });
 
   it('evaluates bandwidth_siege success correctly', () => {
     const result = evaluateScenarioSuccessConditions('bandwidth_siege', {
       bandwidthPercent: 100,
     });
-    expect(result.isSuccess).toBe(true);
+    expect(result.hasSucceeded).toBe(true);
   });
 
   it('evaluates bandwidth_siege failure correctly', () => {
     const result = evaluateScenarioSuccessConditions('bandwidth_siege', {
       bandwidthPercent: 20,
     });
-    expect(result.isFailure).toBe(true);
+    expect(result.hasFailed).toBe(true);
   });
 });
 
