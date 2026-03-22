@@ -166,7 +166,13 @@ export const WEBHOOK_RETRY_DELAYS_MS = [
 export const WEBHOOK_RATE_LIMITS = {
   CREATE: { limit: 20, windowMs: 60 * 1000 },
   LIST: { limit: 60, windowMs: 60 * 1000 },
+  GET: { limit: 60, windowMs: 60 * 1000 },
+  UPDATE: { limit: 30, windowMs: 60 * 1000 },
+  DELETE: { limit: 30, windowMs: 60 * 1000 },
   TEST: { limit: 10, windowMs: 60 * 1000 },
+  ROTATE_SECRET: { limit: 10, windowMs: 60 * 1000 },
+  DELIVERY_LIST: { limit: 60, windowMs: 60 * 1000 },
+  DELIVERY_GET: { limit: 60, windowMs: 60 * 1000 },
 } as const;
 
 export const WEBHOOK_CIRCUIT_BREAKER = {

@@ -140,6 +140,16 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
   fastify.get(
     '/subscriptions',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: WEBHOOK_RATE_LIMITS.LIST.limit,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (
       request: FastifyRequest<{
         Querystring: { status?: string; limit?: number; cursor?: string };
@@ -178,6 +188,16 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
     Params: { subscriptionId: string };
   }>(
     '/subscriptions/:subscriptionId',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: WEBHOOK_RATE_LIMITS.GET.limit,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (
       request: FastifyRequest<{ Params: { subscriptionId: string } }>,
       reply: FastifyReply,
@@ -226,6 +246,14 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
   }>(
     '/subscriptions/:subscriptionId',
     {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: WEBHOOK_RATE_LIMITS.UPDATE.limit,
+              timeWindow: '1 minute',
+            },
+      },
       schema: {
         body: updateWebhookSubscriptionJsonSchema,
       },
@@ -299,6 +327,16 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
     Params: { subscriptionId: string };
   }>(
     '/subscriptions/:subscriptionId',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: WEBHOOK_RATE_LIMITS.DELETE.limit,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (
       request: FastifyRequest<{ Params: { subscriptionId: string } }>,
       reply: FastifyReply,
@@ -392,6 +430,16 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
     Params: { subscriptionId: string };
   }>(
     '/subscriptions/:subscriptionId/rotate-secret',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: WEBHOOK_RATE_LIMITS.ROTATE_SECRET.limit,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (
       request: FastifyRequest<{ Params: { subscriptionId: string } }>,
       reply: FastifyReply,
@@ -426,6 +474,16 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
 
   fastify.get(
     '/deliveries',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: WEBHOOK_RATE_LIMITS.DELIVERY_LIST.limit,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (
       request: FastifyRequest<{
         Querystring: {
@@ -475,6 +533,16 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
     Params: { deliveryId: string };
   }>(
     '/deliveries/:deliveryId',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: WEBHOOK_RATE_LIMITS.DELIVERY_GET.limit,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (request: FastifyRequest<{ Params: { deliveryId: string } }>, reply: FastifyReply) => {
       const tenantContext = request.tenant as TenantContext;
       const { deliveryId } = request.params;

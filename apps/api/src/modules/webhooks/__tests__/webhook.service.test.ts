@@ -463,6 +463,12 @@ describe('WebhookPolicy Contract Tests', () => {
   it('should have correct rate limits', () => {
     expect(WEBHOOK_RATE_LIMITS.CREATE.limit).toBe(20);
     expect(WEBHOOK_RATE_LIMITS.LIST.limit).toBe(60);
+    expect(WEBHOOK_RATE_LIMITS.GET.limit).toBe(60);
+    expect(WEBHOOK_RATE_LIMITS.UPDATE.limit).toBe(30);
+    expect(WEBHOOK_RATE_LIMITS.DELETE.limit).toBe(30);
     expect(WEBHOOK_RATE_LIMITS.TEST.limit).toBe(10);
+    expect(WEBHOOK_RATE_LIMITS.ROTATE_SECRET.limit).toBe(10);
+    expect(WEBHOOK_RATE_LIMITS.DELIVERY_LIST.limit).toBe(60);
+    expect(WEBHOOK_RATE_LIMITS.DELIVERY_GET.limit).toBe(60);
   });
 });
