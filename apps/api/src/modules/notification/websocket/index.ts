@@ -1,10 +1,6 @@
 export { wsGateway, WebSocketGateway, buildChannelName } from './websocket.gateway.js';
 
-export {
-  handleWebSocketConnection,
-  authenticateWebSocket,
-  buildChannelName as buildWSChannelName,
-} from './websocket.handler.js';
+export { handleWebSocketConnection, authenticateWebSocket } from './websocket.handler.js';
 
 export {
   handleSSEConnection,

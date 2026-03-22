@@ -243,7 +243,3 @@ export async function authenticateWebSocket(request: FastifyRequest): Promise<We
     };
   }
 }
-
-export function buildChannelName(type: string, id: string): string {
-  return `${type}:${id}`;
-}
