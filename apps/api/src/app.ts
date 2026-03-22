@@ -15,6 +15,7 @@ import { requestLogger } from './shared/middleware/request-logger.js';
 import { sanitizeInputHook } from './shared/middleware/sanitize-input.js';
 import { registerSecurityHeaders } from './shared/middleware/security-headers.js';
 import { generateId } from './shared/utils/id.js';
+import { resolveRequestId } from './shared/utils/request-id.js';
 import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js';
 import { ssrfProtectionPlugin } from './shared/plugins/ssrf-protection.plugin.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
@@ -86,18 +87,6 @@ const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<str
     }
   }
   return origins;
-};
-
-const resolveRequestId = (value: string | string[] | undefined): string | undefined => {
-  if (typeof value === 'string') {
-    return value;
-  }
-
-  if (Array.isArray(value) && value.length > 0) {
-    return value[0];
-  }
-
-  return undefined;
 };
 
 const createHiddenServer = (
