@@ -12,6 +12,7 @@ import {
   transitionMacroState,
 } from './reducer.js';
 import {
+  GAME_ENGINE_EVENTS,
   createSessionStartedEvent,
   createSessionPausedEvent,
   createSessionResumedEvent,
@@ -29,6 +30,40 @@ import {
 import { isActionAllowedInPhase, canTransitionMacroState } from './state-machine.js';
 
 import type { IEventBus, DomainEvent } from '../../../shared/events/event-types.js';
+
+type GameEngineEventCreator = (params: {
+  source: string;
+  correlationId: string;
+  tenantId: string;
+  userId: string;
+  version: number;
+  payload: unknown;
+}) => unknown;
+
+const EVENT_CREATOR_MAP: Record<string, GameEngineEventCreator> = {
+  [GAME_ENGINE_EVENTS.SESSION_STARTED]: (p) =>
+    createSessionStartedEvent(p as Parameters<typeof createSessionStartedEvent>[0]),
+  [GAME_ENGINE_EVENTS.SESSION_PAUSED]: (p) =>
+    createSessionPausedEvent(p as Parameters<typeof createSessionPausedEvent>[0]),
+  [GAME_ENGINE_EVENTS.SESSION_RESUMED]: (p) =>
+    createSessionResumedEvent(p as Parameters<typeof createSessionResumedEvent>[0]),
+  [GAME_ENGINE_EVENTS.SESSION_ABANDONED]: (p) =>
+    createSessionAbandonedEvent(p as Parameters<typeof createSessionAbandonedEvent>[0]),
+  [GAME_ENGINE_EVENTS.DAY_STARTED]: (p) =>
+    createDayStartedEvent(p as Parameters<typeof createDayStartedEvent>[0]),
+  [GAME_ENGINE_EVENTS.DAY_ENDED]: (p) =>
+    createDayEndedEvent(p as Parameters<typeof createDayEndedEvent>[0]),
+  [GAME_ENGINE_EVENTS.EMAIL_OPENED]: (p) =>
+    createEmailOpenedEvent(p as Parameters<typeof createEmailOpenedEvent>[0]),
+  [GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED]: (p) =>
+    createEmailDecisionSubmittedEvent(p as Parameters<typeof createEmailDecisionSubmittedEvent>[0]),
+  [GAME_ENGINE_EVENTS.INCIDENT_CREATED]: (p) =>
+    createIncidentCreatedEvent(p as Parameters<typeof createIncidentCreatedEvent>[0]),
+  [GAME_ENGINE_EVENTS.INCIDENT_RESOLVED]: (p) =>
+    createIncidentResolvedEvent(p as Parameters<typeof createIncidentResolvedEvent>[0]),
+  [GAME_ENGINE_EVENTS.BREACH_OCCURRED]: (p) =>
+    createBreachOccurredEvent(p as Parameters<typeof createBreachOccurredEvent>[0]),
+};
 
 export interface ProcessActionParams {
   sessionId: string;
@@ -311,109 +346,18 @@ export class GameEngineService {
   ): unknown[] {
     return events
       .map((event) => {
-        switch (event.eventType) {
-          case 'game.session.started':
-            return createSessionStartedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.session.paused':
-            return createSessionPausedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.session.resumed':
-            return createSessionResumedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.session.abandoned':
-            return createSessionAbandonedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.day.started':
-            return createDayStartedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.day.ended':
-            return createDayEndedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.email.opened':
-            return createEmailOpenedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.email.decision_submitted':
-            return createEmailDecisionSubmittedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.incident.created':
-            return createIncidentCreatedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.incident.resolved':
-            return createIncidentResolvedEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          case 'game.breach.occurred':
-            return createBreachOccurredEvent({
-              source: 'game-engine',
-              correlationId: crypto.randomUUID(),
-              tenantId,
-              userId,
-              version: 1,
-              payload: event.payload as never,
-            });
-          default:
-            return null;
+        const creator = EVENT_CREATOR_MAP[event.eventType];
+        if (!creator) {
+          return null;
         }
+        return creator({
+          source: 'game-engine',
+          correlationId: crypto.randomUUID(),
+          tenantId,
+          userId,
+          version: 1,
+          payload: event.payload,
+        });
       })
       .filter(Boolean);
   }
