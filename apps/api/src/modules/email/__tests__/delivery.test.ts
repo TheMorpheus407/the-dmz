@@ -89,6 +89,21 @@ describe('deliveryService', () => {
       expect(updated?.status).toBe(DeliveryStatus.COMPLAINED);
       expect(updated?.complaintType).toBe(ComplaintType.SPAM);
     });
+
+    it('should update status to complained with phishing type', async () => {
+      const record = await deliveryService.createRecord({
+        tenantId: 'tenant-1',
+        integrationId: 'int-1',
+        messageId: 'msg-initial',
+        recipientEmail: 'test@example.com',
+      });
+
+      const updated = await deliveryService.recordComplaint(record.id, ComplaintType.PHISHING);
+
+      expect(updated?.status).toBe(DeliveryStatus.COMPLAINED);
+      expect(updated?.complaintType).toBe(ComplaintType.PHISHING);
+      expect(ComplaintType.PHISHING).toBe('phishing');
+    });
   });
 
   describe('recordOpened', () => {

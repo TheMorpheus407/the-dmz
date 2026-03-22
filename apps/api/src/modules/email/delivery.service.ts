@@ -19,7 +19,7 @@ export enum BounceType {
 export enum ComplaintType {
   SPAM = 'spam',
   ABUSE = 'abuse',
-  phishing = 'phishing',
+  PHISHING = 'phishing',
 }
 
 export interface EmailDeliveryRecord {
