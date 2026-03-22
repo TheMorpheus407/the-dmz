@@ -3,6 +3,7 @@ import {
   DAY_PHASES,
   type GameState,
   type EmailState,
+  type EmailInstance,
   type UpgradeType,
   type BreachTriggerType,
   type UpgradeDefinition,
@@ -32,7 +33,10 @@ import {
   type FlagDiscrepancyPayload,
 } from '@the-dmz/shared';
 
-import { resolveDecision } from '../email-instance/decision-resolution.service.js';
+import {
+  resolveDecision,
+  type DecisionEvaluationResult,
+} from '../email-instance/decision-resolution.service.js';
 import { assembleVerificationPacket } from '../email-instance/verification-packet.service.js';
 import { ThreatEngineService } from '../threat-engine/index.js';
 import { breachService } from '../breach/index.js';
@@ -676,6 +680,246 @@ export function handleRequestVerification(
   });
 }
 
+interface TrustChangeContext {
+  previousTrustScore: number;
+  evaluation: { trustImpact: number; isCorrect: boolean };
+  emailId: string;
+  decision: string;
+}
+
+function pushTrustChangeEvent(
+  events: DomainEvent[],
+  state: GameState,
+  ctx: TrustChangeContext,
+): void {
+  if (ctx.evaluation.trustImpact === 0) {
+    return;
+  }
+  events.push({
+    eventId: crypto.randomUUID(),
+    eventType: 'game.economy.trust_changed',
+    timestamp: state.updatedAt,
+    payload: {
+      sessionId: state.sessionId,
+      amount: ctx.evaluation.trustImpact,
+      balanceBefore: ctx.previousTrustScore,
+      balanceAfter: state.trustScore,
+      reason: ctx.evaluation.isCorrect ? 'decision_correct' : 'decision_incorrect',
+      context: { emailId: ctx.emailId, decision: ctx.decision },
+    },
+  });
+}
+
+interface FundsChangeContext {
+  previousFunds: number;
+  evaluation: { fundsImpact: number; isCorrect: boolean };
+  emailId: string;
+  decision: string;
+}
+
+function pushFundsChangeEvent(
+  events: DomainEvent[],
+  state: GameState,
+  ctx: FundsChangeContext,
+): void {
+  if (ctx.evaluation.fundsImpact === 0) {
+    return;
+  }
+  events.push({
+    eventId: crypto.randomUUID(),
+    eventType: 'game.economy.credits_changed',
+    timestamp: state.updatedAt,
+    payload: {
+      sessionId: state.sessionId,
+      amount: ctx.evaluation.fundsImpact,
+      balanceBefore: ctx.previousFunds,
+      balanceAfter: state.funds,
+      reason: ctx.evaluation.isCorrect ? 'client_approval' : 'client_denial',
+      context: { emailId: ctx.emailId, decision: ctx.decision },
+    },
+  });
+}
+
+function processLevelUp(
+  state: GameState,
+  previousXP: number,
+  xpAwarded: number,
+  events: DomainEvent[],
+): void {
+  if (xpAwarded <= 0) {
+    return;
+  }
+  state.playerXP += xpAwarded;
+  const previousLevel = getLevelFromXP(previousXP);
+  const newLevel = getLevelFromXP(state.playerXP);
+
+  if (newLevel <= previousLevel) {
+    return;
+  }
+  state.playerLevel = newLevel;
+  events.push({
+    eventId: crypto.randomUUID(),
+    eventType: 'game.economy.level_up',
+    timestamp: state.updatedAt,
+    payload: {
+      sessionId: state.sessionId,
+      previousLevel,
+      newLevel,
+      xpRequired: calculateXPForLevel(newLevel),
+      xpAwarded: state.playerXP - previousXP,
+    },
+  });
+}
+
+function incrementDecisionAnalytics(
+  state: GameState,
+  decision: SubmitDecisionPayload['decision'],
+): void {
+  state.analyticsState.totalDecisions++;
+  if (decision === 'approve') {
+    state.analyticsState.approvals++;
+  } else if (decision === 'deny') {
+    state.analyticsState.denials++;
+  } else if (decision === 'flag') {
+    state.analyticsState.flags++;
+  }
+}
+
+interface EmailSubmittedCtx {
+  events: DomainEvent[];
+  state: GameState;
+  emailId: string;
+  decision: SubmitDecisionPayload['decision'];
+  timeSpentMs: number;
+  evaluationError?: boolean;
+}
+
+function pushEmailDecisionSubmittedEvent(ctx: EmailSubmittedCtx): void {
+  ctx.events.push({
+    eventId: crypto.randomUUID(),
+    eventType: 'game.email.decision_submitted',
+    timestamp: ctx.state.updatedAt,
+    payload: {
+      emailId: ctx.emailId,
+      decision: ctx.decision,
+      timeSpentMs: ctx.timeSpentMs,
+      ...(ctx.evaluationError && { evaluationError: true }),
+    },
+  });
+}
+
+function applyFactionImpact(
+  state: GameState,
+  emailInstance: { faction?: string },
+  factionImpact: number,
+): void {
+  if (emailInstance.faction && factionImpact !== 0) {
+    const currentFactionRelation = state.factionRelations[emailInstance.faction] ?? 50;
+    state.factionRelations[emailInstance.faction] = Math.max(
+      0,
+      Math.min(100, currentFactionRelation + factionImpact),
+    );
+  }
+}
+
+interface DecisionEvaluatedCtx {
+  events: DomainEvent[];
+  state: GameState;
+  emailId: string;
+  decision: SubmitDecisionPayload['decision'];
+  evaluation: DecisionEvaluationResult;
+}
+
+function pushDecisionEvaluatedEvent(ctx: DecisionEvaluatedCtx): void {
+  ctx.events.push({
+    eventId: crypto.randomUUID(),
+    eventType: 'game.email.decision_evaluated',
+    timestamp: ctx.state.updatedAt,
+    payload: {
+      emailId: ctx.emailId,
+      decision: ctx.decision,
+      isCorrect: ctx.evaluation.isCorrect,
+      trustImpact: ctx.evaluation.trustImpact,
+      fundsImpact: ctx.evaluation.fundsImpact,
+      factionImpact: ctx.evaluation.factionImpact,
+      threatImpact: ctx.evaluation.threatImpact,
+      explanation: ctx.evaluation.explanation,
+      indicatorsFound: ctx.evaluation.indicatorsFound,
+      indicatorsMissed: ctx.evaluation.indicatorsMissed,
+    },
+  });
+}
+
+interface ResolveDecisionCtx {
+  state: GameState;
+  emailToDecide: EmailState;
+  emailInstance: EmailInstance;
+  action: SubmitDecisionPayload;
+  events: DomainEvent[];
+}
+
+function resolveAndApplyDecision(ctx: ResolveDecisionCtx): void {
+  const { state, emailToDecide, emailInstance, action, events } = ctx;
+  const previousTrustScore = state.trustScore;
+  const previousFunds = state.funds;
+  const previousXP = state.playerXP;
+
+  let evaluation;
+  try {
+    evaluation = resolveDecision({
+      email: emailInstance,
+      decision: action.decision,
+      markedIndicators: emailToDecide.indicators,
+      timeSpentMs: action.timeSpentMs,
+      currentPhase: state.currentPhase,
+    });
+  } catch {
+    pushEmailDecisionSubmittedEvent({
+      events,
+      state,
+      emailId: action.emailId,
+      decision: action.decision,
+      timeSpentMs: action.timeSpentMs,
+      evaluationError: true,
+    });
+    incrementDecisionAnalytics(state, action.decision);
+    return;
+  }
+
+  state.trustScore = clampTrustScore(
+    Math.max(0, Math.min(500, state.trustScore + evaluation.trustImpact)),
+  );
+  state.funds = Math.max(0, state.funds + evaluation.fundsImpact);
+
+  const xpAwarded = awardXPForDecision(evaluation.isCorrect, emailInstance.difficulty ?? 3);
+  processLevelUp(state, previousXP, xpAwarded, events);
+
+  applyFactionImpact(state, emailInstance, evaluation.factionImpact);
+
+  pushTrustChangeEvent(events, state, {
+    previousTrustScore,
+    evaluation,
+    emailId: action.emailId,
+    decision: action.decision,
+  });
+  pushFundsChangeEvent(events, state, {
+    previousFunds,
+    evaluation,
+    emailId: action.emailId,
+    decision: action.decision,
+  });
+
+  pushDecisionEvaluatedEvent({
+    events,
+    state,
+    emailId: action.emailId,
+    decision: action.decision,
+    evaluation,
+  });
+
+  incrementDecisionAnalytics(state, action.decision);
+}
+
 export function handleSubmitDecision(
   state: GameState,
   action: SubmitDecisionPayload,
@@ -685,151 +929,40 @@ export function handleSubmitDecision(
     throw new Error('SUBMIT_DECISION not allowed in current phase');
   }
   const emailToDecide = state.inbox.find((e) => e.emailId === action.emailId);
-  if (emailToDecide) {
-    const statusMap: Record<string, EmailState['status']> = {
-      approve: 'approved',
-      deny: 'denied',
-      flag: 'flagged',
-      request_verification: 'request_verification',
-      defer: 'deferred',
-    };
-    emailToDecide.status = statusMap[action.decision] ?? 'pending';
-    emailToDecide.timeSpentMs = action.timeSpentMs;
-
-    const emailInstance = state.emailInstances[action.emailId];
-    if (emailInstance) {
-      try {
-        const evaluation = resolveDecision({
-          email: emailInstance,
-          decision: action.decision,
-          markedIndicators: emailToDecide.indicators,
-          timeSpentMs: action.timeSpentMs,
-          currentPhase: state.currentPhase,
-        });
-
-        const previousTrustScore = state.trustScore;
-        const previousFunds = state.funds;
-        const previousXP = state.playerXP;
-
-        state.trustScore = clampTrustScore(
-          Math.max(0, Math.min(500, state.trustScore + evaluation.trustImpact)),
-        );
-        state.funds = Math.max(0, state.funds + evaluation.fundsImpact);
-
-        const xpAwarded = awardXPForDecision(evaluation.isCorrect, emailInstance.difficulty ?? 3);
-        if (xpAwarded > 0) {
-          state.playerXP += xpAwarded;
-          const previousLevel = getLevelFromXP(previousXP);
-          const newLevel = getLevelFromXP(state.playerXP);
-
-          if (newLevel > previousLevel) {
-            state.playerLevel = newLevel;
-            events.push({
-              eventId: crypto.randomUUID(),
-              eventType: 'game.economy.level_up',
-              timestamp: state.updatedAt,
-              payload: {
-                sessionId: state.sessionId,
-                previousLevel,
-                newLevel,
-                xpRequired: calculateXPForLevel(newLevel),
-                xpAwarded: state.playerXP - previousXP,
-              },
-            });
-          }
-        }
-
-        if (emailInstance.faction && evaluation.factionImpact !== 0) {
-          const currentFactionRelation = state.factionRelations[emailInstance.faction] ?? 50;
-          state.factionRelations[emailInstance.faction] = Math.max(
-            0,
-            Math.min(100, currentFactionRelation + evaluation.factionImpact),
-          );
-        }
-
-        if (evaluation.trustImpact !== 0) {
-          events.push({
-            eventId: crypto.randomUUID(),
-            eventType: 'game.economy.trust_changed',
-            timestamp: state.updatedAt,
-            payload: {
-              sessionId: state.sessionId,
-              amount: evaluation.trustImpact,
-              balanceBefore: previousTrustScore,
-              balanceAfter: state.trustScore,
-              reason: evaluation.isCorrect ? 'decision_correct' : 'decision_incorrect',
-              context: { emailId: action.emailId, decision: action.decision },
-            },
-          });
-        }
-
-        if (evaluation.fundsImpact !== 0) {
-          events.push({
-            eventId: crypto.randomUUID(),
-            eventType: 'game.economy.credits_changed',
-            timestamp: state.updatedAt,
-            payload: {
-              sessionId: state.sessionId,
-              amount: evaluation.fundsImpact,
-              balanceBefore: previousFunds,
-              balanceAfter: state.funds,
-              reason: evaluation.isCorrect ? 'client_approval' : 'client_denial',
-              context: { emailId: action.emailId, decision: action.decision },
-            },
-          });
-        }
-
-        events.push({
-          eventId: crypto.randomUUID(),
-          eventType: 'game.email.decision_evaluated',
-          timestamp: state.updatedAt,
-          payload: {
-            emailId: action.emailId,
-            decision: action.decision,
-            isCorrect: evaluation.isCorrect,
-            trustImpact: evaluation.trustImpact,
-            fundsImpact: evaluation.fundsImpact,
-            factionImpact: evaluation.factionImpact,
-            threatImpact: evaluation.threatImpact,
-            explanation: evaluation.explanation,
-            indicatorsFound: evaluation.indicatorsFound,
-            indicatorsMissed: evaluation.indicatorsMissed,
-          },
-        });
-      } catch {
-        events.push({
-          eventId: crypto.randomUUID(),
-          eventType: 'game.email.decision_submitted',
-          timestamp: state.updatedAt,
-          payload: {
-            emailId: action.emailId,
-            decision: action.decision,
-            timeSpentMs: action.timeSpentMs,
-            evaluationError: true,
-          },
-        });
-      }
-    } else {
-      events.push({
-        eventId: crypto.randomUUID(),
-        eventType: 'game.email.decision_submitted',
-        timestamp: state.updatedAt,
-        payload: {
-          emailId: action.emailId,
-          decision: action.decision,
-          timeSpentMs: action.timeSpentMs,
-        },
-      });
-    }
+  if (!emailToDecide) {
+    return;
   }
-  state.analyticsState.totalDecisions++;
-  if (action.decision === 'approve') {
-    state.analyticsState.approvals++;
-  } else if (action.decision === 'deny') {
-    state.analyticsState.denials++;
-  } else if (action.decision === 'flag') {
-    state.analyticsState.flags++;
+
+  const statusMap: Record<string, EmailState['status']> = {
+    approve: 'approved',
+    deny: 'denied',
+    flag: 'flagged',
+    request_verification: 'request_verification',
+    defer: 'deferred',
+  };
+  emailToDecide.status = statusMap[action.decision] ?? 'pending';
+  emailToDecide.timeSpentMs = action.timeSpentMs;
+
+  const emailInstance = state.emailInstances[action.emailId];
+  if (!emailInstance) {
+    pushEmailDecisionSubmittedEvent({
+      events,
+      state,
+      emailId: action.emailId,
+      decision: action.decision,
+      timeSpentMs: action.timeSpentMs,
+    });
+    incrementDecisionAnalytics(state, action.decision);
+    return;
   }
+
+  resolveAndApplyDecision({
+    state,
+    emailToDecide,
+    emailInstance,
+    action,
+    events,
+  });
 }
 
 export function handleProcessThreats(
@@ -1158,16 +1291,10 @@ export function handleAdjustResource(
   });
 }
 
-export function handleOnboardClient(
-  state: GameState,
+function validateClientCapacity(
+  facility: GameState['facility'],
   action: OnboardClientPayload,
-  events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
-    throw new Error('ONBOARD_CLIENT not allowed in current phase');
-  }
-  const facility = state.facility;
-
   const newRackUsage = facility.usage.rackUsedU + action.rackUnitsU;
   const newPowerUsage = facility.usage.powerUsedKw + action.powerKw;
   const newCoolingUsage = facility.usage.coolingUsedTons + action.coolingTons;
@@ -1190,7 +1317,13 @@ export function handleOnboardClient(
       `Capacity exceeded: ${bottleneck.resource} at ${Math.floor(bottleneck.percent * 100)}%`,
     );
   }
+}
 
+function createAndAddClient(
+  facility: GameState['facility'],
+  state: GameState,
+  action: OnboardClientPayload,
+): void {
   const newClient = {
     clientId: action.clientId,
     clientName: action.clientName,
@@ -1213,6 +1346,13 @@ export function handleOnboardClient(
   facility.attackSurfaceScore += Math.floor(
     (action.rackUnitsU + action.powerKw + action.coolingTons + action.bandwidthMbps) / 10,
   );
+}
+
+function pushClientOnboardedEvent(
+  events: DomainEvent[],
+  state: GameState,
+  action: OnboardClientPayload,
+): void {
   events.push({
     eventId: crypto.randomUUID(),
     eventType: 'facility.client.onboarded',
@@ -1230,6 +1370,21 @@ export function handleOnboardClient(
       dailyRate: action.dailyRate,
     },
   });
+}
+
+export function handleOnboardClient(
+  state: GameState,
+  action: OnboardClientPayload,
+  events: DomainEvent[],
+): void {
+  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+    throw new Error('ONBOARD_CLIENT not allowed in current phase');
+  }
+  const facility = state.facility;
+
+  validateClientCapacity(facility, action);
+  createAndAddClient(facility, state, action);
+  pushClientOnboardedEvent(events, state, action);
 }
 
 export function handleEvictClient(
@@ -1272,16 +1427,10 @@ export function handleEvictClient(
   });
 }
 
-export function handleProcessFacilityTick(
-  state: GameState,
-  action: ProcessFacilityTickPayload,
-  events: DomainEvent[],
-): void {
-  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
-    throw new Error('PROCESS_FACILITY_TICK not allowed in current phase');
-  }
-  state.currentDay = action.dayNumber;
-  const facility = state.facility;
+function calculateRevenueAndConsumption(facility: GameState['facility']): {
+  totalRevenue: number;
+  totalConsumption: number;
+} {
   let totalRevenue = 0;
   let totalConsumption = 1.0;
   for (const client of facility.clients) {
@@ -1291,34 +1440,36 @@ export function handleProcessFacilityTick(
       client.burstProfile === 'spiky' ? 1.5 : client.burstProfile === 'moderate' ? 1.2 : 1.0;
     totalConsumption *= burstMultiplier;
   }
-  state.funds += totalRevenue;
-  if (totalRevenue > 0) {
-    events.push({
-      eventId: crypto.randomUUID(),
-      eventType: 'game.economy.credits_changed',
-      timestamp: state.updatedAt,
-      payload: {
-        sessionId: state.sessionId,
-        amount: totalRevenue,
-        balanceBefore: state.funds - totalRevenue,
-        balanceAfter: state.funds,
-        reason: 'client_approval',
-        context: { day: action.dayNumber, clientCount: facility.clients.length },
-      },
-    });
-  }
+  return { totalRevenue, totalConsumption };
+}
+
+function applyConsumptionToFacility(
+  facility: GameState['facility'],
+  totalConsumption: number,
+): void {
   facility.usage.rackUsedU = Math.floor(facility.usage.rackUsedU * totalConsumption);
   facility.usage.powerUsedKw = Math.floor(facility.usage.powerUsedKw * totalConsumption);
   facility.usage.coolingUsedTons = Math.floor(facility.usage.coolingUsedTons * totalConsumption);
   facility.usage.bandwidthUsedMbps = Math.floor(
     facility.usage.bandwidthUsedMbps * totalConsumption,
   );
-  const utilizationPercent = Math.max(
+}
+
+function calculateUtilizationPercent(facility: GameState['facility']): number {
+  return Math.max(
     facility.usage.rackUsedU / facility.capacities.rackCapacityU,
     facility.usage.powerUsedKw / facility.capacities.powerCapacityKw,
     facility.usage.coolingUsedTons / facility.capacities.coolingCapacityTons,
     facility.usage.bandwidthUsedMbps / facility.capacities.bandwidthCapacityMbps,
   );
+}
+
+function processUtilizationEffects(
+  facility: GameState['facility'],
+  utilizationPercent: number,
+  events: DomainEvent[],
+  state: GameState,
+): void {
   if (utilizationPercent > 0.9) {
     facility.maintenanceDebt += Math.floor((utilizationPercent - 0.9) * 100);
     facility.facilityHealth = Math.max(0, facility.facilityHealth - 2);
@@ -1336,6 +1487,14 @@ export function handleProcessFacilityTick(
     facility.maintenanceDebt += 1;
     facility.facilityHealth = Math.max(0, facility.facilityHealth - 1);
   }
+}
+
+function calculateAndDeductOperatingCosts(
+  state: GameState,
+  facility: GameState['facility'],
+  dayNumber: number,
+  events: DomainEvent[],
+): number {
   facility.operatingCostPerDay = Math.floor(
     50 *
       (1 +
@@ -1356,10 +1515,65 @@ export function handleProcessFacilityTick(
         balanceBefore: state.funds + totalOpEx,
         balanceAfter: state.funds,
         reason: 'operational_cost',
-        context: { day: action.dayNumber },
+        context: { day: dayNumber },
       },
     });
   }
+  return totalOpEx;
+}
+
+interface RevenueEventCtx {
+  events: DomainEvent[];
+  state: GameState;
+  dayNumber: number;
+  totalRevenue: number;
+  clientCount: number;
+}
+
+function pushRevenueEvent(ctx: RevenueEventCtx): void {
+  if (ctx.totalRevenue > 0) {
+    ctx.events.push({
+      eventId: crypto.randomUUID(),
+      eventType: 'game.economy.credits_changed',
+      timestamp: ctx.state.updatedAt,
+      payload: {
+        sessionId: ctx.state.sessionId,
+        amount: ctx.totalRevenue,
+        balanceBefore: ctx.state.funds - ctx.totalRevenue,
+        balanceAfter: ctx.state.funds,
+        reason: 'client_approval',
+        context: { day: ctx.dayNumber, clientCount: ctx.clientCount },
+      },
+    });
+  }
+}
+
+export function handleProcessFacilityTick(
+  state: GameState,
+  action: ProcessFacilityTickPayload,
+  events: DomainEvent[],
+): void {
+  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+    throw new Error('PROCESS_FACILITY_TICK not allowed in current phase');
+  }
+  state.currentDay = action.dayNumber;
+  const facility = state.facility;
+
+  const { totalRevenue, totalConsumption } = calculateRevenueAndConsumption(facility);
+  state.funds += totalRevenue;
+  pushRevenueEvent({
+    events,
+    state,
+    dayNumber: action.dayNumber,
+    totalRevenue,
+    clientCount: facility.clients.length,
+  });
+
+  applyConsumptionToFacility(facility, totalConsumption);
+  const utilizationPercent = calculateUtilizationPercent(facility);
+  processUtilizationEffects(facility, utilizationPercent, events, state);
+
+  const totalOpEx = calculateAndDeductOperatingCosts(state, facility, action.dayNumber, events);
 
   processInstallations(state, events);
 
@@ -1437,18 +1651,13 @@ export function handleUpgradeFacilityTier(
   });
 }
 
-export function handlePurchaseFacilityUpgrade(
+function validateUpgradePurchase(
   state: GameState,
-  action: PurchaseFacilityUpgradePayload,
-  events: DomainEvent[],
+  upgradeDef: UpgradeDefinition,
+  upgradeType: UpgradeType,
 ): void {
   if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
     throw new Error('PURCHASE_FACILITY_UPGRADE not allowed in current phase');
-  }
-
-  const upgradeDef = UPGRADE_CATALOG[action.upgradeType];
-  if (!upgradeDef) {
-    throw new Error(`Unknown upgrade type: ${action.upgradeType}`);
   }
 
   const tierOrder = ['outpost', 'station', 'vault', 'fortress', 'citadel'];
@@ -1472,11 +1681,127 @@ export function handlePurchaseFacilityUpgrade(
   }
 
   const alreadyInstalled = state.facility.upgrades.some(
-    (u) => u.upgradeType === action.upgradeType && u.isCompleted,
+    (u) => u.upgradeType === upgradeType && u.isCompleted,
   );
   if (alreadyInstalled) {
     throw new Error('Upgrade already installed');
   }
+}
+
+function installUpgrade(
+  state: GameState,
+  upgradeDef: UpgradeDefinition,
+  upgradeType: UpgradeType,
+): void {
+  const existingInProgress = state.facility.upgrades.find(
+    (u) => u.upgradeType === upgradeType && !u.isCompleted,
+  );
+
+  if (existingInProgress) {
+    existingInProgress.status = 'installing';
+    existingInProgress.completesDay = state.currentDay + upgradeDef.installationDays;
+    existingInProgress.tierLevel += 1;
+    return;
+  }
+
+  const isZeroDayInstall = upgradeDef.installationDays === 0;
+  const newUpgrade: (typeof state.facility.upgrades)[number] = {
+    upgradeId: crypto.randomUUID(),
+    upgradeType: upgradeType,
+    category: upgradeDef.category,
+    tierLevel: 1,
+    status: isZeroDayInstall ? 'completed' : 'installing',
+    purchasedDay: state.currentDay,
+    completesDay: isZeroDayInstall
+      ? state.currentDay
+      : state.currentDay + upgradeDef.installationDays,
+    isCompleted: isZeroDayInstall,
+    ...(isZeroDayInstall && { completionDay: state.currentDay }),
+    resourceDelta: upgradeDef.resourceDelta,
+    ...(upgradeDef.securityDelta && { securityDelta: upgradeDef.securityDelta }),
+    ...(upgradeDef.maintenanceDelta !== undefined && {
+      maintenanceDelta: upgradeDef.maintenanceDelta,
+    }),
+    opExPerDay: upgradeDef.opExPerDay,
+    threatSurfaceDelta: upgradeDef.threatSurfaceDelta,
+    ...(upgradeDef.installationOverhead && {
+      installationOverhead: upgradeDef.installationOverhead,
+    }),
+  };
+  state.facility.upgrades.push(newUpgrade);
+}
+
+function recalculateSecurityOpEx(facility: GameState['facility']): number {
+  return facility.upgrades.reduce((sum, u) => sum + (u.isCompleted ? u.opExPerDay : 0), 0);
+}
+
+function recalculateAttackSurface(
+  facility: GameState['facility'],
+  newUpgradeType: UpgradeType,
+  threatSurfaceDelta: number,
+): number {
+  return Math.max(
+    0,
+    facility.attackSurfaceScore +
+      facility.upgrades.reduce((sum, u) => {
+        if (u.isCompleted || u.upgradeType === newUpgradeType) {
+          return sum + threatSurfaceDelta;
+        }
+        return sum;
+      }, 0),
+  );
+}
+
+function pushUpgradePurchasedEvent(
+  events: DomainEvent[],
+  state: GameState,
+  action: PurchaseFacilityUpgradePayload,
+  upgradeDef: UpgradeDefinition,
+): void {
+  events.push({
+    eventId: crypto.randomUUID(),
+    eventType: 'facility.upgrade.purchased',
+    timestamp: state.updatedAt,
+    payload: {
+      upgradeType: action.upgradeType,
+      category: upgradeDef.category,
+      cost: upgradeDef.baseCost,
+      installationDays: upgradeDef.installationDays,
+      completesDay: state.currentDay + upgradeDef.installationDays,
+    },
+  });
+}
+
+function handleZeroDayInstallation(
+  state: GameState,
+  action: PurchaseFacilityUpgradePayload,
+  upgradeDef: UpgradeDefinition,
+  events: DomainEvent[],
+): void {
+  applyUpgradeEffects(state, action.upgradeType);
+  events.push({
+    eventId: crypto.randomUUID(),
+    eventType: 'facility.upgrade.completed',
+    timestamp: state.updatedAt,
+    payload: {
+      upgradeType: action.upgradeType,
+      category: upgradeDef.category,
+      cost: upgradeDef.baseCost,
+    },
+  });
+}
+
+export function handlePurchaseFacilityUpgrade(
+  state: GameState,
+  action: PurchaseFacilityUpgradePayload,
+  events: DomainEvent[],
+): void {
+  const upgradeDef = UPGRADE_CATALOG[action.upgradeType];
+  if (!upgradeDef) {
+    throw new Error(`Unknown upgrade type: ${action.upgradeType}`);
+  }
+
+  validateUpgradePurchase(state, upgradeDef, action.upgradeType);
 
   state.funds -= upgradeDef.baseCost;
 
@@ -1494,82 +1819,19 @@ export function handlePurchaseFacilityUpgrade(
     },
   });
 
-  const existingInProgress = state.facility.upgrades.find(
-    (u) => u.upgradeType === action.upgradeType && !u.isCompleted,
+  installUpgrade(state, upgradeDef, action.upgradeType);
+
+  state.facility.securityToolOpExPerDay = recalculateSecurityOpEx(state.facility);
+  state.facility.attackSurfaceScore = recalculateAttackSurface(
+    state.facility,
+    action.upgradeType,
+    upgradeDef.threatSurfaceDelta,
   );
 
-  if (existingInProgress) {
-    existingInProgress.status = 'installing';
-    existingInProgress.completesDay = state.currentDay + upgradeDef.installationDays;
-    existingInProgress.tierLevel += 1;
-  } else {
-    const isZeroDayInstall = upgradeDef.installationDays === 0;
-    const newUpgrade: (typeof state.facility.upgrades)[number] = {
-      upgradeId: crypto.randomUUID(),
-      upgradeType: action.upgradeType,
-      category: upgradeDef.category,
-      tierLevel: 1,
-      status: isZeroDayInstall ? 'completed' : 'installing',
-      purchasedDay: state.currentDay,
-      completesDay: isZeroDayInstall
-        ? state.currentDay
-        : state.currentDay + upgradeDef.installationDays,
-      isCompleted: isZeroDayInstall,
-      ...(isZeroDayInstall && { completionDay: state.currentDay }),
-      resourceDelta: upgradeDef.resourceDelta,
-      ...(upgradeDef.securityDelta && { securityDelta: upgradeDef.securityDelta }),
-      ...(upgradeDef.maintenanceDelta !== undefined && {
-        maintenanceDelta: upgradeDef.maintenanceDelta,
-      }),
-      opExPerDay: upgradeDef.opExPerDay,
-      threatSurfaceDelta: upgradeDef.threatSurfaceDelta,
-      ...(upgradeDef.installationOverhead && {
-        installationOverhead: upgradeDef.installationOverhead,
-      }),
-    };
-    state.facility.upgrades.push(newUpgrade);
-  }
-
-  state.facility.securityToolOpExPerDay = state.facility.upgrades.reduce(
-    (sum, u) => sum + (u.isCompleted ? u.opExPerDay : 0),
-    0,
-  );
-  state.facility.attackSurfaceScore = Math.max(
-    0,
-    state.facility.attackSurfaceScore +
-      state.facility.upgrades.reduce((sum, u) => {
-        if (u.isCompleted || u.upgradeType === action.upgradeType) {
-          return sum + upgradeDef.threatSurfaceDelta;
-        }
-        return sum;
-      }, 0),
-  );
-
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'facility.upgrade.purchased',
-    timestamp: state.updatedAt,
-    payload: {
-      upgradeType: action.upgradeType,
-      category: upgradeDef.category,
-      cost: upgradeDef.baseCost,
-      installationDays: upgradeDef.installationDays,
-      completesDay: state.currentDay + upgradeDef.installationDays,
-    },
-  });
+  pushUpgradePurchasedEvent(events, state, action, upgradeDef);
 
   if (upgradeDef.installationDays === 0) {
-    applyUpgradeEffects(state, action.upgradeType);
-    events.push({
-      eventId: crypto.randomUUID(),
-      eventType: 'facility.upgrade.completed',
-      timestamp: state.updatedAt,
-      payload: {
-        upgradeType: action.upgradeType,
-        category: upgradeDef.category,
-        cost: upgradeDef.baseCost,
-      },
-    });
+    handleZeroDayInstallation(state, action, upgradeDef, events);
   }
 }
 
