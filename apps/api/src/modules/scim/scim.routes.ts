@@ -28,6 +28,84 @@ const passthroughObjectSchema = {
   additionalProperties: true,
 } as const;
 
+const scimPatchOpSchema = {
+  type: 'object',
+  properties: {
+    schemas: {
+      type: 'array',
+      items: { type: 'string' },
+    },
+    operations: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          op: { type: 'string', enum: ['add', 'replace', 'remove'] },
+          path: { type: 'string' },
+          value: {},
+        },
+        required: ['op'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['schemas', 'operations'],
+  additionalProperties: false,
+} as const;
+
+const scimUserPutSchema = {
+  type: 'object',
+  properties: {
+    schemas: { type: 'array', items: { type: 'string' } },
+    userName: { type: 'string' },
+    displayName: { type: 'string' },
+    active: { type: 'boolean' },
+    name: {
+      type: 'object',
+      properties: {
+        givenName: { type: 'string' },
+        familyName: { type: 'string' },
+      },
+      additionalProperties: false,
+    },
+    emails: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          value: { type: 'string' },
+          type: { type: 'string' },
+          primary: { type: 'boolean' },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['userName'],
+  additionalProperties: false,
+} as const;
+
+const scimGroupPutSchema = {
+  type: 'object',
+  properties: {
+    schemas: { type: 'array', items: { type: 'string' } },
+    displayName: { type: 'string' },
+    members: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          value: { type: 'string' },
+          display: { type: 'string' },
+        },
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['displayName'],
+  additionalProperties: false,
+} as const;
+
 export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const config = fastify.config;
   const isTest = config.NODE_ENV === 'test';
@@ -389,7 +467,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           },
           required: ['id'],
         },
-        body: { type: 'object' },
+        body: scimUserPutSchema,
         response: {
           200: passthroughObjectSchema,
           401: errorResponseSchema,
@@ -401,13 +479,14 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
     async (request) => {
       const client = request.oauthClient!;
       const { id } = request.params as { id: string };
-      const userData = request.body as Partial<{
-        schemas: string[];
+      const userData = request.body as {
+        schemas?: string[];
         userName: string;
-        displayName: string;
-        active: boolean;
-        name: { givenName?: string; familyName?: string };
-      }>;
+        displayName?: string;
+        active?: boolean;
+        name?: { givenName?: string; familyName?: string };
+        emails?: Array<{ value: string; type?: string; primary?: boolean }>;
+      };
 
       return scimService.updateScimUser(config, client.tenantId, id, userData);
     },
@@ -434,7 +513,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           },
           required: ['id'],
         },
-        body: { type: 'object' },
+        body: scimPatchOpSchema,
         response: {
           200: passthroughObjectSchema,
           401: errorResponseSchema,
@@ -671,7 +750,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           },
           required: ['id'],
         },
-        body: { type: 'object' },
+        body: scimGroupPutSchema,
         response: {
           200: passthroughObjectSchema,
           401: errorResponseSchema,
@@ -683,11 +762,11 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
     async (request) => {
       const client = request.oauthClient!;
       const { id } = request.params as { id: string };
-      const groupData = request.body as Partial<{
-        schemas: string[];
+      const groupData = request.body as {
+        schemas?: string[];
         displayName: string;
-        members: Array<{ value: string; display?: string }>;
-      }>;
+        members?: Array<{ value: string; display?: string }>;
+      };
 
       return scimService.updateScimGroup(config, client.tenantId, id, groupData);
     },
@@ -714,7 +793,7 @@ export const registerScimRoutes = async (fastify: FastifyInstance): Promise<void
           },
           required: ['id'],
         },
-        body: { type: 'object' },
+        body: scimPatchOpSchema,
         response: {
           200: passthroughObjectSchema,
           401: errorResponseSchema,

@@ -31557,7 +31557,56 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object"
+                "type": "object",
+                "properties": {
+                  "schemas": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "userName": {
+                    "type": "string"
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "name": {
+                    "type": "object",
+                    "properties": {
+                      "givenName": {
+                        "type": "string"
+                      },
+                      "familyName": {
+                        "type": "string"
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "emails": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "primary": {
+                          "type": "boolean"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["userName"],
+                "additionalProperties": false
               }
             }
           }
@@ -31676,7 +31725,35 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object"
+                "type": "object",
+                "properties": {
+                  "schemas": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "operations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "op": {
+                          "type": "string",
+                          "enum": ["add", "replace", "remove"]
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "value": {}
+                      },
+                      "required": ["op"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["schemas", "operations"],
+                "additionalProperties": false
               }
             }
           }
@@ -32203,7 +32280,35 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object"
+                "type": "object",
+                "properties": {
+                  "schemas": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "displayName": {
+                    "type": "string"
+                  },
+                  "members": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "value": {
+                          "type": "string"
+                        },
+                        "display": {
+                          "type": "string"
+                        }
+                      },
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["displayName"],
+                "additionalProperties": false
               }
             }
           }
@@ -32322,7 +32427,35 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object"
+                "type": "object",
+                "properties": {
+                  "schemas": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "operations": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "op": {
+                          "type": "string",
+                          "enum": ["add", "replace", "remove"]
+                        },
+                        "path": {
+                          "type": "string"
+                        },
+                        "value": {}
+                      },
+                      "required": ["op"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["schemas", "operations"],
+                "additionalProperties": false
               }
             }
           }
