@@ -67,91 +67,91 @@ export interface EntitlementResult {
 }
 
 export interface PlanFeatures {
-  training_campaigns: boolean;
-  phishing_simulation: boolean;
-  basic_reporting: boolean;
-  advanced_reporting: boolean;
-  scorm_export: boolean;
-  lti_integration: boolean;
-  advanced_analytics: boolean;
-  sso_integration: boolean;
-  scim_provisioning: boolean;
-  custom_branding: boolean;
-  api_access: boolean;
-  dedicated_support: boolean;
-  custom_integrations: boolean;
-  fedramp_compliance: boolean;
-  data_residency: boolean;
+  trainingCampaigns: boolean;
+  phishingSimulation: boolean;
+  basicReporting: boolean;
+  advancedReporting: boolean;
+  scormExport: boolean;
+  ltiIntegration: boolean;
+  advancedAnalytics: boolean;
+  ssoIntegration: boolean;
+  scimProvisioning: boolean;
+  customBranding: boolean;
+  apiAccess: boolean;
+  dedicatedSupport: boolean;
+  customIntegrations: boolean;
+  fedrampCompliance: boolean;
+  dataResidency: boolean;
 }
 
 export const PLAN_FEATURES: Record<string, PlanFeatures> = {
   starter: {
-    training_campaigns: true,
-    phishing_simulation: true,
-    basic_reporting: true,
-    advanced_reporting: false,
-    scorm_export: true,
-    lti_integration: false,
-    advanced_analytics: false,
-    sso_integration: false,
-    scim_provisioning: false,
-    custom_branding: false,
-    api_access: false,
-    dedicated_support: false,
-    custom_integrations: false,
-    fedramp_compliance: false,
-    data_residency: false,
+    trainingCampaigns: true,
+    phishingSimulation: true,
+    basicReporting: true,
+    advancedReporting: false,
+    scormExport: true,
+    ltiIntegration: false,
+    advancedAnalytics: false,
+    ssoIntegration: false,
+    scimProvisioning: false,
+    customBranding: false,
+    apiAccess: false,
+    dedicatedSupport: false,
+    customIntegrations: false,
+    fedrampCompliance: false,
+    dataResidency: false,
   },
   professional: {
-    training_campaigns: true,
-    phishing_simulation: true,
-    basic_reporting: true,
-    advanced_reporting: true,
-    scorm_export: true,
-    lti_integration: true,
-    advanced_analytics: true,
-    sso_integration: true,
-    scim_provisioning: true,
-    custom_branding: true,
-    api_access: false,
-    dedicated_support: false,
-    custom_integrations: false,
-    fedramp_compliance: false,
-    data_residency: false,
+    trainingCampaigns: true,
+    phishingSimulation: true,
+    basicReporting: true,
+    advancedReporting: true,
+    scormExport: true,
+    ltiIntegration: true,
+    advancedAnalytics: true,
+    ssoIntegration: true,
+    scimProvisioning: true,
+    customBranding: true,
+    apiAccess: false,
+    dedicatedSupport: false,
+    customIntegrations: false,
+    fedrampCompliance: false,
+    dataResidency: false,
   },
   enterprise: {
-    training_campaigns: true,
-    phishing_simulation: true,
-    basic_reporting: true,
-    advanced_reporting: true,
-    scorm_export: true,
-    lti_integration: true,
-    advanced_analytics: true,
-    sso_integration: true,
-    scim_provisioning: true,
-    custom_branding: true,
-    api_access: true,
-    dedicated_support: true,
-    custom_integrations: true,
-    fedramp_compliance: false,
-    data_residency: false,
+    trainingCampaigns: true,
+    phishingSimulation: true,
+    basicReporting: true,
+    advancedReporting: true,
+    scormExport: true,
+    ltiIntegration: true,
+    advancedAnalytics: true,
+    ssoIntegration: true,
+    scimProvisioning: true,
+    customBranding: true,
+    apiAccess: true,
+    dedicatedSupport: true,
+    customIntegrations: true,
+    fedrampCompliance: false,
+    dataResidency: false,
   },
   government: {
-    training_campaigns: true,
-    phishing_simulation: true,
-    basic_reporting: true,
-    advanced_reporting: true,
-    scorm_export: true,
-    lti_integration: true,
-    advanced_analytics: true,
-    sso_integration: true,
-    scim_provisioning: true,
-    custom_branding: true,
-    api_access: true,
-    dedicated_support: true,
-    custom_integrations: true,
-    fedramp_compliance: true,
-    data_residency: true,
+    trainingCampaigns: true,
+    phishingSimulation: true,
+    basicReporting: true,
+    advancedReporting: true,
+    scormExport: true,
+    ltiIntegration: true,
+    advancedAnalytics: true,
+    ssoIntegration: true,
+    scimProvisioning: true,
+    customBranding: true,
+    apiAccess: true,
+    dedicatedSupport: true,
+    customIntegrations: true,
+    fedrampCompliance: true,
+    dataResidency: true,
   },
 };
 

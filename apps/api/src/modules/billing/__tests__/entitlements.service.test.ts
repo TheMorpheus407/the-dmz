@@ -40,7 +40,7 @@ describe('entitlementsService', () => {
 
       vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
 
-      const result = await entitlementsService.checkFeature('tenant-123', 'training_campaigns');
+      const result = await entitlementsService.checkFeature('tenant-123', 'trainingCampaigns');
 
       expect(result.allowed).toBe(true);
     });
@@ -57,7 +57,7 @@ describe('entitlementsService', () => {
 
       vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
 
-      const result = await entitlementsService.checkFeature('tenant-123', 'advanced_analytics');
+      const result = await entitlementsService.checkFeature('tenant-123', 'advancedAnalytics');
 
       expect(result.allowed).toBe(false);
     });
@@ -65,7 +65,7 @@ describe('entitlementsService', () => {
     it('should return not allowed when no subscription exists', async () => {
       vi.mocked(subscriptionService.getSubscription).mockResolvedValue(null);
 
-      const result = await entitlementsService.checkFeature('tenant-123', 'training_campaigns');
+      const result = await entitlementsService.checkFeature('tenant-123', 'trainingCampaigns');
 
       expect(result.allowed).toBe(false);
       expect(result.reason).toBe('No subscription found');
@@ -285,8 +285,8 @@ describe('entitlementsService', () => {
 
       expect(result.isActive).toBe(true);
       expect(result.planId).toBe('enterprise');
-      expect(result.features['training_campaigns']).toBe(true);
-      expect(result.features['api_access']).toBe(true);
+      expect(result.features['trainingCampaigns']).toBe(true);
+      expect(result.features['apiAccess']).toBe(true);
       expect(result.limits.seatLimit).toBe(-1);
     });
 
@@ -331,10 +331,7 @@ describe('entitlementsService', () => {
 
       vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
 
-      const result = await entitlementsService.isFeatureEnabled(
-        'tenant-123',
-        'phishing_simulation',
-      );
+      const result = await entitlementsService.isFeatureEnabled('tenant-123', 'phishingSimulation');
 
       expect(result).toBe(true);
     });
@@ -351,7 +348,7 @@ describe('entitlementsService', () => {
 
       vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
 
-      const result = await entitlementsService.isFeatureEnabled('tenant-123', 'api_access');
+      const result = await entitlementsService.isFeatureEnabled('tenant-123', 'apiAccess');
 
       expect(result).toBe(false);
     });
@@ -372,9 +369,9 @@ describe('entitlementsService', () => {
 
       const result = await entitlementsService.getPlanFeatures('tenant-123');
 
-      expect(result['training_campaigns']).toBe(true);
-      expect(result['api_access']).toBe(true);
-      expect(result['fedramp_compliance']).toBe(false);
+      expect(result['trainingCampaigns']).toBe(true);
+      expect(result['apiAccess']).toBe(true);
+      expect(result['fedrampCompliance']).toBe(false);
     });
 
     it('should return government features for government plan', async () => {
@@ -391,8 +388,8 @@ describe('entitlementsService', () => {
 
       const result = await entitlementsService.getPlanFeatures('tenant-123');
 
-      expect(result['fedramp_compliance']).toBe(true);
-      expect(result['data_residency']).toBe(true);
+      expect(result['fedrampCompliance']).toBe(true);
+      expect(result['dataResidency']).toBe(true);
     });
   });
 });

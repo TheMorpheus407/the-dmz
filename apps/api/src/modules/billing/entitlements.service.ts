@@ -131,7 +131,7 @@ export const entitlementsService = {
   },
 
   async checkApiAccess(tenantId: string, config?: AppConfig): Promise<EntitlementResult> {
-    return this.checkEntitlement(tenantId, 'api', 'api_access', undefined, config);
+    return this.checkEntitlement(tenantId, 'api', 'apiAccess', undefined, config);
   },
 
   async checkSeatAllocation(tenantId: string, config?: AppConfig): Promise<EntitlementResult> {
