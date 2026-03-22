@@ -85,6 +85,16 @@ describe('security headers', () => {
       );
     });
 
+    it('suppresses Server header to prevent technology fingerprinting', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/health',
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['server']).toBeUndefined();
+    });
+
     it('uses strict CSP directives in production', async () => {
       const response = await app.inject({
         method: 'GET',

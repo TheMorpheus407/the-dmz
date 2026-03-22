@@ -1,3 +1,5 @@
+import http from 'node:http';
+
 import cors from '@fastify/cors';
 import fastify, { type FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
@@ -98,6 +100,15 @@ const resolveRequestId = (value: string | string[] | undefined): string | undefi
   return undefined;
 };
 
+const createHiddenServer = (
+  handler: (req: http.IncomingMessage, res: http.ServerResponse) => void,
+  _opts: Record<string, unknown>,
+) => {
+  const server = http.createServer(handler);
+  (server as unknown as { hide: boolean }).hide = true;
+  return server;
+};
+
 export const buildApp = (
   config: AppConfig = loadConfig(),
   options?: { skipHealthCheck?: boolean },
@@ -107,6 +118,7 @@ export const buildApp = (
   const skipHealthCheck = options?.skipHealthCheck;
 
   const app = fastify({
+    serverFactory: createHiddenServer,
     disableRequestLogging: true,
     logger: {
       level: config.LOG_LEVEL,
