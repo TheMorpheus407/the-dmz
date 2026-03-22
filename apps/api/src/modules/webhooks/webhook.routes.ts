@@ -1,4 +1,4 @@
-import { type WebhookSubscriptionStatus } from '@the-dmz/shared/contracts';
+import { type WebhookSubscriptionStatus, WEBHOOK_RATE_LIMITS } from '@the-dmz/shared/contracts';
 
 import { webhookService } from './webhook.service.js';
 import {
@@ -335,6 +335,16 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
     Params: { subscriptionId: string };
   }>(
     '/subscriptions/:subscriptionId/test',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: WEBHOOK_RATE_LIMITS.TEST.limit,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (
       request: FastifyRequest<{ Params: { subscriptionId: string } }>,
       reply: FastifyReply,
