@@ -310,8 +310,8 @@ async function handleSend(
 }
 
 function getConnectionIdFromSocket(connection: WebSocket): string | undefined {
-  for (const [connId, conn] of wsGateway.getAllConnections()) {
-    if (conn.socket === connection) {
+  for (const [connId, connectionItem] of wsGateway.getAllConnections()) {
+    if (connectionItem.socket === connection) {
       return connId;
     }
   }

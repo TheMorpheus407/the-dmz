@@ -166,7 +166,7 @@ export const buildApp = (
       },
     },
     requestIdHeader: 'x-request-id',
-    genReqId: (req) => resolveRequestId(req.headers['x-request-id']) ?? generateId(),
+    genReqId: (request) => resolveRequestId(request.headers['x-request-id']) ?? generateId(),
     bodyLimit: config.MAX_BODY_SIZE,
     onProtoPoisoning: 'ignore',
     onConstructorPoisoning: 'ignore',
