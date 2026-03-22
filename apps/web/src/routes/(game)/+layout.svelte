@@ -165,7 +165,7 @@
       const analytics = await lazyImport<{ initAnalytics: (config: { debug: boolean }) => void }>(
         () => import('$lib/analytics/index'),
       );
-      analytics.initAnalytics({ debug: true });
+      analytics.initAnalytics({ debug: import.meta.env.DEV });
       analyticsLoaded = true;
     } catch (e) {
       console.warn('Failed to load analytics:', e);
