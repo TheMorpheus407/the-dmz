@@ -34,6 +34,9 @@ declare module 'fastify' {
 const EMAIL_SCOPE = 'email.manage';
 
 export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
+  const config = fastify.config;
+  const isTest = config.NODE_ENV === 'test';
+
   fastify.addHook(
     'preHandler',
     async (request: FastifyRequest, _reply: FastifyReply): Promise<void> => {
@@ -63,6 +66,14 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.post<{ Body: CreateEmailIntegrationInput }>(
     '/integrations',
     {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 10,
+              timeWindow: '1 minute',
+            },
+      },
       schema: {
         body: createEmailIntegrationJsonSchema,
       },
@@ -92,6 +103,16 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
   fastify.get(
     '/integrations',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 30,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (
       request: FastifyRequest<{ Querystring: { limit?: number; cursor?: string } }>,
       reply: FastifyReply,
@@ -126,6 +147,16 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
   fastify.get<{ Params: { integrationId: string } }>(
     '/integrations/:integrationId',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 30,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (request: FastifyRequest<{ Params: { integrationId: string } }>, reply: FastifyReply) => {
       const tenantContext = request.tenant as TenantContext;
       const { integrationId } = request.params;
@@ -169,6 +200,14 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
   fastify.patch<{ Params: { integrationId: string }; Body: UpdateEmailIntegrationInput }>(
     '/integrations/:integrationId',
     {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 10,
+              timeWindow: '1 minute',
+            },
+      },
       schema: {
         body: updateEmailIntegrationJsonSchema,
       },
@@ -230,6 +269,16 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
   fastify.delete<{ Params: { integrationId: string } }>(
     '/integrations/:integrationId',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 10,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (request: FastifyRequest<{ Params: { integrationId: string } }>, reply: FastifyReply) => {
       const tenantContext = request.tenant as TenantContext;
       const { integrationId } = request.params;
@@ -269,6 +318,16 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
   fastify.get<{ Params: { integrationId: string } }>(
     '/integrations/:integrationId/ready',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 10,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (request: FastifyRequest<{ Params: { integrationId: string } }>, reply: FastifyReply) => {
       const tenantContext = request.tenant as TenantContext;
       const { integrationId } = request.params;
@@ -308,6 +367,16 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
 
   fastify.post<{ Params: { integrationId: string } }>(
     '/integrations/:integrationId/ready',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 5,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (request: FastifyRequest<{ Params: { integrationId: string } }>, reply: FastifyReply) => {
       const tenantContext = request.tenant as TenantContext;
       const { integrationId } = request.params;
@@ -370,6 +439,16 @@ export async function emailRoutes(fastify: FastifyInstance): Promise<void> {
     Body: { runSpfCheck?: boolean; runDkimCheck?: boolean; runDmarcCheck?: boolean };
   }>(
     '/integrations/:integrationId/validate',
+    {
+      config: {
+        rateLimit: isTest
+          ? false
+          : {
+              max: 5,
+              timeWindow: '1 minute',
+            },
+      },
+    },
     async (
       request: FastifyRequest<{
         Params: { integrationId: string };
