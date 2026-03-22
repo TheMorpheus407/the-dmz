@@ -91,6 +91,19 @@ describe('sanitizeBody', () => {
     expect(result['apiKey']).toBe('[REDACTED]');
   });
 
+  it('should redact backupCode and backup_code fields', () => {
+    const body = { backupCode: 'ABCD-1234', backup_code: 'EFGH-5678' };
+    const result = sanitizeBody(body) as Record<string, unknown>;
+    expect(result['backupCode']).toBe('[REDACTED]');
+    expect(result['backup_code']).toBe('[REDACTED]');
+  });
+
+  it('should redact pin field', () => {
+    const body = { pin: '1234' };
+    const result = sanitizeBody(body) as Record<string, unknown>;
+    expect(result['pin']).toBe('[REDACTED]');
+  });
+
   it('should redact creditCard field', () => {
     const body = { creditCard: '4111111111111111' };
     const result = sanitizeBody(body) as Record<string, unknown>;
