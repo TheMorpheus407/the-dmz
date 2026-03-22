@@ -122,9 +122,6 @@ export function mapApiError(
     retryable: (metadataRetryable ?? categoryRetryable) || httpStatus === 503,
   };
 
-  if (error.details) {
-    result.details = error.details;
-  }
   if (error.requestId || requestId) {
     result.requestId = (error.requestId ?? requestId) as string;
   }

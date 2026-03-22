@@ -276,16 +276,6 @@ export function getErrorCopy(error: CategorizedApiError, surface: RouteSurface):
   const surfaceCopy = SURFACE_COPY_MAP[surface];
   const categoryCopy = surfaceCopy[error.category];
 
-  if (error.details?.['field'] && (surface === 'game' || surface === 'admin')) {
-    const fieldValue = error.details['field'];
-    return {
-      ...categoryCopy,
-      message: `${categoryCopy.message} [Field: ${
-        typeof fieldValue === 'string' ? fieldValue : JSON.stringify(fieldValue)
-      }]`,
-    };
-  }
-
   if (error.requestId && surface === 'admin') {
     return {
       ...categoryCopy,

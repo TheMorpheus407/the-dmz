@@ -59,6 +59,59 @@ describe('error-copy', () => {
       const copy = getErrorCopy(errorWithRequestId, 'game');
       expect(copy.message).not.toContain('req-123');
     });
+
+    it('does not append internal field value to error message for game surface', () => {
+      const errorWithField: CategorizedApiError = {
+        ...baseError,
+        category: 'validation',
+        details: { field: 'internal_field_name' },
+      };
+      const copy = getErrorCopy(errorWithField, 'game');
+      expect(copy.message).not.toContain('internal_field_name');
+      expect(copy.message).not.toContain('[Field:');
+    });
+
+    it('does not append internal field value to error message for admin surface', () => {
+      const errorWithField: CategorizedApiError = {
+        ...baseError,
+        category: 'validation',
+        details: { field: 'secret_internal_field' },
+      };
+      const copy = getErrorCopy(errorWithField, 'admin');
+      expect(copy.message).not.toContain('secret_internal_field');
+      expect(copy.message).not.toContain('[Field:');
+    });
+
+    it('does not append object field values to error message', () => {
+      const errorWithObjectField: CategorizedApiError = {
+        ...baseError,
+        category: 'validation',
+        details: { field: { nested: 'value', secret: true } },
+      };
+      const copy = getErrorCopy(errorWithObjectField, 'game');
+      expect(copy.message).not.toContain('nested');
+      expect(copy.message).not.toContain('secret');
+    });
+
+    it('does not append field values for auth surface', () => {
+      const errorWithField: CategorizedApiError = {
+        ...baseError,
+        category: 'validation',
+        details: { field: 'user_email' },
+      };
+      const copy = getErrorCopy(errorWithField, 'auth');
+      expect(copy.message).not.toContain('user_email');
+    });
+
+    it('does not append field values for public surface', () => {
+      const errorWithField: CategorizedApiError = {
+        ...baseError,
+        category: 'validation',
+        details: { field: 'internalName' },
+      };
+      const copy = getErrorCopy(errorWithField, 'public');
+      expect(copy.message).not.toContain('internalName');
+    });
   });
 
   describe('getSurfaceFromPath', () => {

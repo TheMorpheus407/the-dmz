@@ -166,6 +166,39 @@ describe('mapApiError', () => {
 
     expect(result.requestId).toBe('req-abc');
   });
+
+  it('does not preserve internal field details for security', () => {
+    const error = {
+      code: 'VALIDATION_FAILED',
+      message: 'Invalid input',
+      details: { field: 'internal_field_name', reason: 'invalid' },
+    };
+    const result = mapApiError(error, 400);
+
+    expect(result.details).toBeUndefined();
+  });
+
+  it('does not preserve raw details object', () => {
+    const error = {
+      code: 'VALIDATION_FAILED',
+      message: 'Invalid',
+      details: { field: 'email', code: 'INVALID_FORMAT', value: 'not-an-email' },
+    };
+    const result = mapApiError(error, 400);
+
+    expect(result.details).toBeUndefined();
+  });
+
+  it('strips details even when details contains only safe-looking data', () => {
+    const error = {
+      code: 'VALIDATION_FAILED',
+      message: 'Invalid',
+      details: { retryAfterSeconds: 60 },
+    };
+    const result = mapApiError(error, 400);
+
+    expect(result.details).toBeUndefined();
+  });
 });
 
 describe('mapNetworkError', () => {
