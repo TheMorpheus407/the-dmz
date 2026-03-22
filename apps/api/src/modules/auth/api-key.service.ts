@@ -217,7 +217,6 @@ async function validateApiKey(
     };
   }
 
-  const secretHash = await hashSecret(secret);
   const currentKeyHash = key.secretHash;
   const previousKeyHash = key.previousSecretHash;
 
@@ -371,7 +370,7 @@ async function validateApiKey(
     return result;
   }
 
-  if (key.status === CredentialStatus.ROTATING && key.previousSecretHash === secretHash) {
+  if (key.status === CredentialStatus.ROTATING && previousValid) {
     const result: ApiKeyValidationResult = {
       valid: true,
       keyId: key.keyId,
