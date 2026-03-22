@@ -431,6 +431,29 @@ describe('audit routes security', () => {
 
       expect(response.statusCode).toBe(200);
     });
+
+    it('sets security headers for SSE stream', async () => {
+      const { accessToken, user } = await registerUser(app);
+      await seedTenantAuthModel(testConfig, user.tenantId, [
+        { userId: user.id, role: 'tenant_admin' },
+      ]);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/audit/stream',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-content-type-options']).toBe('nosniff');
+      expect(response.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+      expect(response.headers['x-frame-options']).toBe('DENY');
+      expect(response.headers['cross-origin-resource-policy']).toBe('same-origin');
+      expect(response.headers['cross-origin-embedder-policy']).toBe('require-corp');
+      expect(response.headers['cross-origin-opener-policy']).toBe('same-origin');
+    });
   });
 
   describe('GET /audit/export', () => {
@@ -494,6 +517,29 @@ describe('audit routes security', () => {
 
       expect(response.statusCode).toBe(200);
       expect(response.headers['x-download-options']).toBe('noopen');
+    });
+
+    it('sets security headers for export', async () => {
+      const { accessToken, user } = await registerUser(app);
+      await seedTenantAuthModel(testConfig, user.tenantId, [
+        { userId: user.id, role: 'tenant_admin' },
+      ]);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/audit/export?format=csv',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-content-type-options']).toBe('nosniff');
+      expect(response.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+      expect(response.headers['x-frame-options']).toBe('DENY');
+      expect(response.headers['cross-origin-resource-policy']).toBe('same-origin');
+      expect(response.headers['cross-origin-embedder-policy']).toBe('require-corp');
+      expect(response.headers['cross-origin-opener-policy']).toBe('same-origin');
     });
   });
 });

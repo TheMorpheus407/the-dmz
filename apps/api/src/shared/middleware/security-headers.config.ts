@@ -87,6 +87,17 @@ const toWebSocketOrigin = (origin: string): string | undefined => {
   return undefined;
 };
 
+export const SSE_SECURITY_HEADERS = {
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-Frame-Options': 'DENY',
+  'Cross-Origin-Resource-Policy': 'same-origin',
+  'Cross-Origin-Embedder-Policy': 'require-corp',
+  'Cross-Origin-Opener-Policy': 'same-origin',
+} as const;
+
+export type SSESecurityHeaders = typeof SSE_SECURITY_HEADERS;
+
 const buildFrameAncestors = (config: AppConfig): string[] => {
   const frameAncestors = dedupeSources(splitCommaSeparatedValues(config.CSP_FRAME_ANCESTORS));
 

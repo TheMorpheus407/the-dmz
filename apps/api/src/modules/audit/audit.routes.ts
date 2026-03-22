@@ -5,6 +5,7 @@ import { authGuard, requireRole } from '../../shared/middleware/authorization.js
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { validateCsrf } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+import { SSE_SECURITY_HEADERS } from '../../shared/middleware/security-headers.config.js';
 
 import * as auditService from './audit.service.js';
 
@@ -312,6 +313,7 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
         'Content-Type': contentType,
         'Content-Disposition': `attachment; filename="audit-export-${Date.now()}.${format}"`,
         'X-Download-Options': 'noopen',
+        ...SSE_SECURITY_HEADERS,
       });
 
       try {
@@ -346,6 +348,7 @@ export const registerAuditRoutes = async (fastify: FastifyInstance): Promise<voi
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
+        ...SSE_SECURITY_HEADERS,
       });
 
       reply.raw.write('event: connected\ndata: {"status":"connected"}\n\n');

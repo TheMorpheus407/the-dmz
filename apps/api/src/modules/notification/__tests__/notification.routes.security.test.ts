@@ -289,6 +289,34 @@ describe('notification routes security', () => {
 
       expect(response.statusCode).toBe(200);
     });
+
+    it('sets security headers for SSE stream', async () => {
+      if (!app) {
+        throw new Error('App was not initialized');
+      }
+      if (!testConfig) {
+        throw new Error('Test config was not initialized');
+      }
+
+      const { accessToken, user } = await registerUser(app);
+      await seedTenantAuthModel(testConfig, user.tenantId, [{ userId: user.id, role: 'player' }]);
+
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/notification/events',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['x-content-type-options']).toBe('nosniff');
+      expect(response.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+      expect(response.headers['x-frame-options']).toBe('DENY');
+      expect(response.headers['cross-origin-resource-policy']).toBe('same-origin');
+      expect(response.headers['cross-origin-embedder-policy']).toBe('require-corp');
+      expect(response.headers['cross-origin-opener-policy']).toBe('same-origin');
+    });
   });
 
   describe('POST /api/v1/notification/events/subscribe', () => {

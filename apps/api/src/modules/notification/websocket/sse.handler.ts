@@ -1,4 +1,5 @@
 import { generateId } from '../../../shared/utils/id.js';
+import { SSE_SECURITY_HEADERS } from '../../../shared/middleware/security-headers.config.js';
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { WSServerMessage } from './websocket.types.js';
@@ -37,6 +38,7 @@ export async function handleSSEConnection(
     'Cache-Control': 'no-cache',
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no',
+    ...SSE_SECURITY_HEADERS,
   };
 
   for (const [key, value] of Object.entries(headers)) {
