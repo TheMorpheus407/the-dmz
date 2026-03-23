@@ -1,4 +1,4 @@
--- Migration: 0015_admin_permission_backfill.sql
+-- Migration: 0016_admin_permission_backfill.sql
 -- Adds the admin read/write permissions introduced for admin-only content
 -- surfaces and grants them to each tenant's existing admin role so upgraded
 -- tenants keep access without rerunning seed scripts.

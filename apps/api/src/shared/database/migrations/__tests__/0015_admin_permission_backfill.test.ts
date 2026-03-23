@@ -7,7 +7,7 @@ import postgres from 'postgres';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 const migrationsDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const migrationPath = resolve(migrationsDir, '0015_admin_permission_backfill.sql');
+const migrationPath = resolve(migrationsDir, '0016_admin_permission_backfill.sql');
 const migrationSql = readFileSync(migrationPath, 'utf8');
 const adminDatabaseUrl = 'postgresql://dmz:dmz_dev@localhost:5432/postgres';
 
@@ -109,7 +109,7 @@ describe('0015_admin_permission_backfill migration', () => {
 
     expect(userRoleAssignments).toEqual([{ name: 'admin' }]);
 
-    await runMigrationFile(databasePool, '0015_admin_permission_backfill.sql');
+    await runMigrationFile(databasePool, '0016_admin_permission_backfill.sql');
 
     const adminPermissions = await databasePool<Array<{ resource: string; action: string }>>`
       SELECT resource, action
