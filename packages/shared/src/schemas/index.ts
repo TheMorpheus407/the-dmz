@@ -1,6 +1,7 @@
 export * from './analytics.schema.js';
 export * from './api-envelope.schema.js';
 export * from './auth.schema.js';
+export * from './billing.schema.js';
 export * from './common.schema.js';
 export * from './content.schema.js';
 export * from './coop-session.schema.js';

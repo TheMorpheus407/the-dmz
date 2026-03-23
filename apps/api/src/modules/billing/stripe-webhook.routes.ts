@@ -1,5 +1,13 @@
 import Stripe from 'stripe';
 
+import {
+  stripeWebhookPayloadSchema,
+  stripeWebhookDataObjectSchema,
+  stripeWebhookResponseSchema,
+  stripeWebhookErrorResponseSchema,
+  type StripeWebhookDataObject,
+} from '@the-dmz/shared/schemas';
+
 import { billingRepo } from './billing.repo.js';
 import { stripeService } from './stripe.service.js';
 import { subscriptionService } from './subscription.service.js';
@@ -8,13 +16,26 @@ import { PLAN_LIMITS } from './billing.types.js';
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { AppConfig } from '../../config.js';
 
-interface StripeWebhookPayload {
-  id: string;
-  type: string;
-  data: {
-    object: Record<string, unknown>;
-  };
-  created: number;
+function getPlanLimits(planId: string) {
+  return PLAN_LIMITS[planId] ?? { seatLimit: -1, storageGb: -1, apiRateLimit: -1 };
+}
+
+async function constructStripeEvent(
+  request: FastifyRequest,
+  stripe: Stripe,
+  webhookSecret: string,
+): Promise<Stripe.Event> {
+  const signature = request.headers['stripe-signature'];
+  if (!signature || typeof signature !== 'string') {
+    throw new Error('Missing stripe-signature header');
+  }
+
+  const rawBody = request.rawBody;
+  if (!rawBody) {
+    throw new Error('Raw body not available for signature verification');
+  }
+
+  return stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
 }
 
 export async function stripeWebhookRoutes(fastify: FastifyInstance): Promise<void> {
@@ -30,80 +51,76 @@ export async function stripeWebhookRoutes(fastify: FastifyInstance): Promise<voi
 
   fastify.post(
     '/stripe/webhook',
-    async (request: FastifyRequest<{ Body: StripeWebhookPayload }>, reply: FastifyReply) => {
+    {
+      schema: {
+        body: stripeWebhookPayloadSchema,
+        response: {
+          200: stripeWebhookResponseSchema,
+          400: stripeWebhookErrorResponseSchema,
+          401: stripeWebhookErrorResponseSchema,
+          500: stripeWebhookErrorResponseSchema,
+        },
+      },
+    },
+    async (request: FastifyRequest, reply: FastifyReply) => {
       const config = fastify.config;
-
-      const signature = request.headers['stripe-signature'];
-      if (!signature || typeof signature !== 'string') {
-        request.log.warn(
-          { event: 'stripe.webhook.missing_signature' },
-          'Missing stripe-signature header',
-        );
-        return reply.status(400).send({ error: 'Missing stripe-signature header' });
-      }
-
-      const rawBody = request.rawBody;
-      if (!rawBody) {
-        request.log.error(
-          { event: 'stripe.webhook.missing_raw_body' },
-          'Raw body not available for signature verification',
-        );
-        return reply.status(500).send({ error: 'Internal server error' });
-      }
 
       let event: Stripe.Event;
       try {
-        event = stripe.webhooks.constructEvent(rawBody, signature, config.STRIPE_WEBHOOK_SECRET!);
+        event = await constructStripeEvent(request, stripe, config.STRIPE_WEBHOOK_SECRET!);
       } catch (err) {
         const error = err as Error;
         request.log.warn({ err: error.message }, 'Stripe webhook signature verification failed');
-        return reply.status(401).send({ error: 'Invalid signature' });
+        return reply.status(401).send({ error: error.message });
       }
 
-      const eventId = event.id;
-      const eventType = event.type;
+      const parsedData = stripeWebhookDataObjectSchema.safeParse(event.data.object);
+      if (!parsedData.success) {
+        request.log.warn(
+          { eventId: event.id, eventType: event.type },
+          'Invalid webhook payload structure',
+        );
+        throw new Error('Invalid webhook payload structure');
+      }
 
-      const existingEvent = await billingRepo.getWebhookEventByEventId(eventId, config);
+      const existingEvent = await billingRepo.getWebhookEventByEventId(event.id, config);
       if (existingEvent) {
         return reply.status(200).send({ received: true, duplicate: true });
       }
 
-      await billingRepo.recordWebhookEvent(
-        {
-          eventId,
-          eventType,
-          payload: event.data.object as unknown as Record<string, unknown>,
-        },
-        config,
-      );
-
-      try {
-        await handleStripeEvent(
-          eventType,
-          event.data.object as unknown as Record<string, unknown>,
-          config,
-        );
-        await billingRepo.updateWebhookEvent(eventId, { processingResult: 'success' }, config);
-      } catch (error) {
-        const err = error as Error;
-        await billingRepo.updateWebhookEvent(
-          eventId,
-          {
-            processingResult: 'error',
-          },
-          config,
-        );
-        request.log.error({ err, eventType }, 'Failed to process Stripe webhook');
-      }
+      await recordAndProcessEvent(event, parsedData.data, config, request);
 
       return reply.status(200).send({ received: true });
     },
   );
 }
 
+async function recordAndProcessEvent(
+  event: Stripe.Event,
+  data: StripeWebhookDataObject,
+  config: AppConfig,
+  request: FastifyRequest,
+): Promise<void> {
+  const { id: eventId, type: eventType } = event;
+
+  await billingRepo.recordWebhookEvent(
+    { eventId, eventType, payload: event.data.object as unknown as Record<string, unknown> },
+    config,
+  );
+
+  try {
+    await handleStripeEvent(eventType, data, config);
+    await billingRepo.updateWebhookEvent(eventId, { processingResult: 'success' }, config);
+  } catch (error) {
+    const err = error as Error;
+    await billingRepo.updateWebhookEvent(eventId, { processingResult: 'error' }, config);
+    request.log.error({ err, eventType }, 'Failed to process Stripe webhook');
+  }
+}
+
 async function handleStripeEvent(
   eventType: string,
-  data: Record<string, unknown>,
+  data: StripeWebhookDataObject,
   config: AppConfig,
 ): Promise<void> {
   switch (eventType) {
@@ -137,18 +154,16 @@ async function handleStripeEvent(
 }
 
 async function handleSubscriptionCreated(
-  data: Record<string, unknown>,
+  data: StripeWebhookDataObject,
   config: AppConfig,
 ): Promise<void> {
-  const stripeCustomerId = data['customer'] as string;
-  const stripeSubscriptionId = data['id'] as string;
-  const planId =
-    (data['items'] as { data: Array<{ price: { product: string } }> })?.data?.[0]?.price?.product ??
-    'starter';
-  const status = mapStripeSubscriptionStatus(data['status'] as string);
-  const currentPeriodStart = new Date((data['current_period_start'] as number) * 1000);
-  const currentPeriodEnd = new Date((data['current_period_end'] as number) * 1000);
-  const trialEnd = data['trial_end'] ? new Date((data['trial_end'] as number) * 1000) : undefined;
+  const stripeCustomerId = data.customer ?? '';
+  const stripeSubscriptionId = data.id ?? '';
+  const planId = data.items?.data?.[0]?.price?.product ?? 'starter';
+  const status = mapStripeSubscriptionStatus(data.status ?? '');
+  const currentPeriodStart = new Date((data.current_period_start ?? 0) * 1000);
+  const currentPeriodEnd = new Date((data.current_period_end ?? 0) * 1000);
+  const trialEnd = data.trial_end ? new Date(data.trial_end * 1000) : undefined;
 
   const customer = await billingRepo.getStripeCustomerByStripeId(stripeCustomerId, config);
   if (!customer) {
@@ -157,44 +172,34 @@ async function handleSubscriptionCreated(
 
   await billingRepo.updateStripeCustomer(stripeCustomerId, { stripeSubscriptionId }, config);
 
-  const planLimits = PLAN_LIMITS[planId] ?? { seatLimit: -1, storageGb: -1, apiRateLimit: -1 };
+  const planLimits = getPlanLimits(planId);
+  const trialDays = trialEnd
+    ? Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : 0;
 
   await subscriptionService.createSubscription(
-    {
-      tenantId: customer.tenantId,
-      planId,
-      seatLimit: planLimits.seatLimit,
-      trialDays: trialEnd
-        ? Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-        : 0,
-    },
+    { tenantId: customer.tenantId, planId, seatLimit: planLimits.seatLimit, trialDays },
     config,
   );
 
   await subscriptionService.updateSubscription(
     customer.tenantId,
-    {
-      status,
-      currentPeriodStart,
-      currentPeriodEnd,
-      trialEndsAt: trialEnd ?? null,
-    },
+    { status, currentPeriodStart, currentPeriodEnd, trialEndsAt: trialEnd ?? null },
     config,
   );
 }
 
 async function handleSubscriptionUpdated(
-  data: Record<string, unknown>,
+  data: StripeWebhookDataObject,
   config: AppConfig,
 ): Promise<void> {
-  const stripeCustomerId = data['customer'] as string;
-  const planId = (data['items'] as { data: Array<{ price: { product: string } }> })?.data?.[0]
-    ?.price?.product;
-  const status = mapStripeSubscriptionStatus(data['status'] as string);
-  const currentPeriodStart = new Date((data['current_period_start'] as number) * 1000);
-  const currentPeriodEnd = new Date((data['current_period_end'] as number) * 1000);
-  const trialEnd = data['trial_end'] ? new Date((data['trial_end'] as number) * 1000) : undefined;
-  const cancelAtPeriodEnd = data['cancel_at_period_end'] as boolean;
+  const stripeCustomerId = data.customer ?? '';
+  const planId = data.items?.data?.[0]?.price?.product;
+  const status = mapStripeSubscriptionStatus(data.status ?? '');
+  const currentPeriodStart = new Date((data.current_period_start ?? 0) * 1000);
+  const currentPeriodEnd = new Date((data.current_period_end ?? 0) * 1000);
+  const trialEnd = data.trial_end ? new Date(data.trial_end * 1000) : undefined;
+  const cancelAtPeriodEnd = data.cancel_at_period_end ?? false;
 
   const customer = await billingRepo.getStripeCustomerByStripeId(stripeCustomerId, config);
   if (!customer) {
@@ -216,10 +221,10 @@ async function handleSubscriptionUpdated(
 }
 
 async function handleSubscriptionDeleted(
-  data: Record<string, unknown>,
+  data: StripeWebhookDataObject,
   config: AppConfig,
 ): Promise<void> {
-  const stripeCustomerId = data['customer'] as string;
+  const stripeCustomerId = data.customer ?? '';
 
   const customer = await billingRepo.getStripeCustomerByStripeId(stripeCustomerId, config);
   if (!customer) {
@@ -230,16 +235,16 @@ async function handleSubscriptionDeleted(
 }
 
 async function handleInvoicePaymentSucceeded(
-  data: Record<string, unknown>,
+  data: StripeWebhookDataObject,
   config: AppConfig,
 ): Promise<void> {
-  const stripeInvoiceId = data['id'] as string;
-  const stripeCustomerId = data['customer'] as string;
-  const amountPaid = data['amount_paid'] as number;
-  const currency = data['currency'] as string;
-  const billingReason = data['billing_reason'] as string | undefined;
-  const paidAt = data['status'] === 'paid' ? new Date() : undefined;
-  const stripePaymentIntentId = data['payment_intent'] as string | undefined;
+  const stripeInvoiceId = data.id ?? '';
+  const stripeCustomerId = data.customer ?? '';
+  const amountPaid = data.amount_paid ?? 0;
+  const currency = data.currency ?? '';
+  const billingReason = data.billing_reason;
+  const paidAt = data.status === 'paid' ? new Date() : undefined;
+  const stripePaymentIntentId = data.payment_intent;
 
   const customer = await billingRepo.getStripeCustomerByStripeId(stripeCustomerId, config);
   if (!customer) {
@@ -265,15 +270,15 @@ async function handleInvoicePaymentSucceeded(
 }
 
 async function handleInvoicePaymentFailed(
-  data: Record<string, unknown>,
+  data: StripeWebhookDataObject,
   config: AppConfig,
 ): Promise<void> {
-  const stripeInvoiceId = data['id'] as string;
-  const stripeCustomerId = data['customer'] as string;
-  const amountDue = data['amount_due'] as number;
-  const currency = data['currency'] as string;
-  const billingReason = data['billing_reason'] as string | undefined;
-  const dueDate = data['due_date'] ? new Date((data['due_date'] as number) * 1000) : undefined;
+  const stripeInvoiceId = data.id ?? '';
+  const stripeCustomerId = data.customer ?? '';
+  const amountDue = data.amount_due ?? 0;
+  const currency = data.currency ?? '';
+  const billingReason = data.billing_reason;
+  const dueDate = data.due_date ? new Date(data.due_date * 1000) : undefined;
 
   const customer = await billingRepo.getStripeCustomerByStripeId(stripeCustomerId, config);
   if (!customer) {
@@ -297,8 +302,8 @@ async function handleInvoicePaymentFailed(
   await subscriptionService.markPastDue(customer.tenantId, config);
 }
 
-async function handleTrialWillEnd(data: Record<string, unknown>, config: AppConfig): Promise<void> {
-  const stripeCustomerId = data['customer'] as string;
+async function handleTrialWillEnd(data: StripeWebhookDataObject, config: AppConfig): Promise<void> {
+  const stripeCustomerId = data.customer ?? '';
 
   const customer = await billingRepo.getStripeCustomerByStripeId(stripeCustomerId, config);
   if (!customer) {
