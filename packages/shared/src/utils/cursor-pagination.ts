@@ -57,13 +57,18 @@ export function parseCursorPaginationParams(
   return { input: result.data };
 }
 
+export interface BuildCursorPaginationMetaOptions {
+  hasMore: boolean;
+  currentOffset: number;
+  limit: number;
+  total?: number;
+  sortValues?: unknown[];
+}
+
 export function buildCursorPaginationMeta(
-  hasMore: boolean,
-  currentOffset: number,
-  limit: number,
-  total?: number,
-  sortValues?: unknown[],
+  options: BuildCursorPaginationMetaOptions,
 ): CursorPaginationMeta {
+  const { hasMore, currentOffset, limit, total, sortValues } = options;
   const meta: CursorPaginationMeta = {
     hasMore,
     nextCursor: hasMore

@@ -595,41 +595,49 @@ export const validateN8nInput = (
   return { valid: false, errors: undefined };
 };
 
+export interface BuildN8nErrorResponseOptions {
+  code: N8nErrorCode;
+  message: string;
+  operationType: N8nOperationType;
+  operationKey: string;
+  tenantId: string;
+  templateId?: string;
+}
+
 export const buildN8nErrorResponse = (
-  code: N8nErrorCode,
-  message: string,
-  operationType: N8nOperationType,
-  operationKey: string,
-  tenantId: string,
-  templateId?: string,
+  options: BuildN8nErrorResponseOptions,
 ): N8nOperationOutput => ({
   success: false,
-  error: { code, message },
+  error: { code: options.code, message: options.message },
   metadata: {
-    tenantId,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    templateId,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    templateId: options.templateId,
   },
 });
 
+export interface BuildN8nSuccessResponseOptions {
+  data: Record<string, unknown>;
+  operationType: N8nOperationType;
+  operationKey: string;
+  tenantId: string;
+  idempotencyKey?: string;
+  templateId?: string;
+}
+
 export const buildN8nSuccessResponse = (
-  data: Record<string, unknown>,
-  operationType: N8nOperationType,
-  operationKey: string,
-  tenantId: string,
-  idempotencyKey?: string,
-  templateId?: string,
+  options: BuildN8nSuccessResponseOptions,
 ): N8nOperationOutput => ({
   success: true,
-  data,
+  data: options.data,
   metadata: {
-    idempotencyKey,
-    tenantId,
+    idempotencyKey: options.idempotencyKey,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    templateId,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    templateId: options.templateId,
   },
 });

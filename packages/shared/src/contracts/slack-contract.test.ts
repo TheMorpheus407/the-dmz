@@ -53,7 +53,7 @@ import {
   verifySlackSignature,
 } from './slack-contract';
 
-describe('slack-contract', () => {
+describe('slack-contract - enums and constants', () => {
   describe('SlackDeliveryMode', () => {
     it('should have correct SLACK_APP value', () => {
       expect(SlackDeliveryMode.SLACK_APP).toBe('slack-app');
@@ -341,7 +341,9 @@ describe('slack-contract', () => {
       expect(SlackBlockKitActionType.CUSTOM).toBe('custom');
     });
   });
+});
 
+describe('slack-contract - manifests and helpers', () => {
   describe('m1SlackNotificationContractManifest', () => {
     it('should have contract for user_created notification', () => {
       const contract = m1SlackNotificationContractManifest.user_created;
@@ -622,13 +624,13 @@ describe('slack-contract', () => {
   describe('buildSlackErrorResponse', () => {
     it('should build valid error response', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildSlackErrorResponse(
-        SLACK_ERROR_CODES.INVALID_INPUT,
-        'Invalid input provided',
-        SlackOperationType.NOTIFICATION,
-        SlackDeliveryMode.SLACK_APP,
+      const response = buildSlackErrorResponse({
+        code: SLACK_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid input provided',
+        operationType: SlackOperationType.NOTIFICATION,
+        deliveryMode: SlackDeliveryMode.SLACK_APP,
         tenantId,
-      );
+      });
 
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe('SLACK_INVALID_INPUT');
@@ -643,13 +645,13 @@ describe('slack-contract', () => {
     it('should build valid success response', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
       const data = { messageId: 'msg-123', ts: '1234567890.123456' };
-      const response = buildSlackSuccessResponse(
+      const response = buildSlackSuccessResponse({
         data,
-        SlackOperationType.NOTIFICATION,
-        SlackDeliveryMode.SLACK_APP,
+        operationType: SlackOperationType.NOTIFICATION,
+        deliveryMode: SlackDeliveryMode.SLACK_APP,
         tenantId,
-        'notif-123',
-      );
+        idempotencyKey: 'notif-123',
+      });
 
       expect(response.success).toBe(true);
       expect(response.data).toEqual(data);
@@ -662,12 +664,12 @@ describe('slack-contract', () => {
     it('should work without idempotency key', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
       const data = { messageId: 'msg-123', ts: '1234567890.123456' };
-      const response = buildSlackSuccessResponse(
+      const response = buildSlackSuccessResponse({
         data,
-        SlackOperationType.NOTIFICATION,
-        SlackDeliveryMode.INCOMING_WEBHOOK,
+        operationType: SlackOperationType.NOTIFICATION,
+        deliveryMode: SlackDeliveryMode.INCOMING_WEBHOOK,
         tenantId,
-      );
+      });
 
       expect(response.success).toBe(true);
       expect(response.metadata?.idempotencyKey).toBeUndefined();
@@ -735,7 +737,9 @@ describe('slack-contract', () => {
       expect(isTerminalSlackError(SLACK_ERROR_CODES.RATE_LIMIT_EXCEEDED)).toBe(false);
     });
   });
+});
 
+describe('slack-contract - Zod schemas', () => {
   describe('slackDeliveryModeSchema', () => {
     it('should validate slack-app', () => {
       const result = slackDeliveryModeSchema.safeParse('slack-app');
@@ -1162,7 +1166,9 @@ describe('slack-contract', () => {
       expect(result.success).toBe(true);
     });
   });
+});
 
+describe('slack-contract - integration behavior', () => {
   describe('Schema validation for all notification contracts', () => {
     it('should validate all notification contracts against schema', () => {
       Object.values(m1SlackNotificationContractManifest).forEach((contract) => {
@@ -1200,25 +1206,25 @@ describe('slack-contract', () => {
 
     it('should include tenantId in error responses', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildSlackErrorResponse(
-        SLACK_ERROR_CODES.TENANT_MISMATCH,
-        'Tenant mismatch',
-        SlackOperationType.NOTIFICATION,
-        SlackDeliveryMode.SLACK_APP,
+      const response = buildSlackErrorResponse({
+        code: SLACK_ERROR_CODES.TENANT_MISMATCH,
+        message: 'Tenant mismatch',
+        operationType: SlackOperationType.NOTIFICATION,
+        deliveryMode: SlackDeliveryMode.SLACK_APP,
         tenantId,
-      );
+      });
 
       expect(response.metadata?.tenantId).toBe(tenantId);
     });
 
     it('should include tenantId in success responses', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildSlackSuccessResponse(
-        { messageId: 'msg-123' },
-        SlackOperationType.NOTIFICATION,
-        SlackDeliveryMode.SLACK_APP,
+      const response = buildSlackSuccessResponse({
+        data: { messageId: 'msg-123' },
+        operationType: SlackOperationType.NOTIFICATION,
+        deliveryMode: SlackDeliveryMode.SLACK_APP,
         tenantId,
-      );
+      });
 
       expect(response.metadata?.tenantId).toBe(tenantId);
     });

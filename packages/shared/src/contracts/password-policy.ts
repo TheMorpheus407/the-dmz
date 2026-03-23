@@ -198,58 +198,75 @@ export const getCharacterClassesInPassword = (password: string): Set<PasswordCha
   return classes;
 };
 
+/**
+ * Maps each character class requirement to its policy flag key, regex pattern, and violation code.
+ * Used by evaluatePasswordPolicy to avoid repetitive if/else chains.
+ */
+const CHARACTER_CLASS_RULES: ReadonlyArray<{
+  policyKey: keyof Pick<
+    PasswordPolicyRequirements,
+    'requireUppercase' | 'requireLowercase' | 'requireNumber' | 'requireSpecial'
+  >;
+  pattern: RegExp;
+  violation: PasswordRequirement;
+}> = [
+  {
+    policyKey: 'requireUppercase',
+    pattern: /[A-Z]/,
+    violation: PasswordRequirement.REQUIRE_UPPERCASE,
+  },
+  {
+    policyKey: 'requireLowercase',
+    pattern: /[a-z]/,
+    violation: PasswordRequirement.REQUIRE_LOWERCASE,
+  },
+  {
+    policyKey: 'requireNumber',
+    pattern: /[0-9]/,
+    violation: PasswordRequirement.REQUIRE_NUMBER,
+  },
+  {
+    policyKey: 'requireSpecial',
+    pattern: /[!@#$%^&*()_+\-={};'":\\|,.<>/?]/,
+    violation: PasswordRequirement.REQUIRE_SPECIAL,
+  },
+];
+
+const collectLengthViolations = (
+  password: string,
+  policy: PasswordPolicyRequirements,
+): PasswordRequirement[] => {
+  const violations: PasswordRequirement[] = [];
+  if (password.length < policy.minLength) {
+    violations.push(PasswordRequirement.MIN_LENGTH);
+  }
+  if (password.length > policy.maxLength) {
+    violations.push(PasswordRequirement.MAX_LENGTH);
+  }
+  return violations;
+};
+
+const collectCharacterClassViolations = (
+  password: string,
+  policy: PasswordPolicyRequirements,
+): PasswordRequirement[] => {
+  const violations: PasswordRequirement[] = [];
+  for (const rule of CHARACTER_CLASS_RULES) {
+    if (policy[rule.policyKey] && !rule.pattern.test(password)) {
+      violations.push(rule.violation);
+    }
+  }
+  return violations;
+};
+
 export const evaluatePasswordPolicy = (
   password: string,
   policy: PasswordPolicyRequirements,
 ): PasswordValidationResult => {
-  const violations: PasswordRequirement[] = [];
-
-  if (password.length < policy.minLength) {
-    violations.push(PasswordRequirement.MIN_LENGTH);
-  }
-
-  if (password.length > policy.maxLength) {
-    violations.push(PasswordRequirement.MAX_LENGTH);
-  }
-
-  if (policy.requireUppercase && !/[A-Z]/.test(password)) {
-    violations.push(PasswordRequirement.REQUIRE_UPPERCASE);
-  }
-
-  if (policy.requireLowercase && !/[a-z]/.test(password)) {
-    violations.push(PasswordRequirement.REQUIRE_LOWERCASE);
-  }
-
-  if (policy.requireNumber && !/[0-9]/.test(password)) {
-    violations.push(PasswordRequirement.REQUIRE_NUMBER);
-  }
-
-  if (policy.requireSpecial && !/[!@#$%^&*()_+\-={};'":\\|,.<>/?]/.test(password)) {
-    violations.push(PasswordRequirement.REQUIRE_SPECIAL);
-  }
-
+  const lengthViolations = collectLengthViolations(password, policy);
+  const classViolations = collectCharacterClassViolations(password, policy);
+  const violations = [...lengthViolations, ...classViolations];
   const classesMet = getCharacterClassesInPassword(password).size;
-
-  if (classesMet < policy.characterClassesRequired) {
-    const missingClasses: PasswordRequirement[] = [];
-    if (policy.requireUppercase && !/[A-Z]/.test(password)) {
-      missingClasses.push(PasswordRequirement.REQUIRE_UPPERCASE);
-    }
-    if (policy.requireLowercase && !/[a-z]/.test(password)) {
-      missingClasses.push(PasswordRequirement.REQUIRE_LOWERCASE);
-    }
-    if (policy.requireNumber && !/[0-9]/.test(password)) {
-      missingClasses.push(PasswordRequirement.REQUIRE_NUMBER);
-    }
-    if (policy.requireSpecial && !/[!@#$%^&*()_+\-={};'":\\|,.<>/?]/.test(password)) {
-      missingClasses.push(PasswordRequirement.REQUIRE_SPECIAL);
-    }
-    for (const missing of missingClasses) {
-      if (!violations.includes(missing)) {
-        violations.push(missing);
-      }
-    }
-  }
 
   return {
     valid: violations.length === 0,
@@ -258,32 +275,36 @@ export const evaluatePasswordPolicy = (
   };
 };
 
+/** Clamps a value between min and max bounds. */
+const clampToGuardrail = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(value, max));
+
+/** Merges tenant overrides with manifest defaults, returning a complete requirements object. */
+const mergeWithDefaults = (
+  overrides: Partial<PasswordPolicyRequirements> | undefined,
+  defaults: PasswordPolicyRequirements,
+): PasswordPolicyRequirements => ({
+  minLength: overrides?.minLength ?? defaults.minLength,
+  maxLength: overrides?.maxLength ?? defaults.maxLength,
+  requireUppercase: overrides?.requireUppercase ?? defaults.requireUppercase,
+  requireLowercase: overrides?.requireLowercase ?? defaults.requireLowercase,
+  requireNumber: overrides?.requireNumber ?? defaults.requireNumber,
+  requireSpecial: overrides?.requireSpecial ?? defaults.requireSpecial,
+  characterClassesRequired:
+    overrides?.characterClassesRequired ?? defaults.characterClassesRequired,
+});
+
 export const getTenantPolicy = (
   tenantOverrides: Partial<PasswordPolicyRequirements> | undefined,
   manifest: M1PasswordPolicyManifest = m1PasswordPolicyManifest,
 ): PasswordPolicyRequirements => {
-  const defaults = manifest.defaults;
-  const guardrails = manifest.guardrails;
-
-  const minLength = Math.max(
-    guardrails.minLengthMin,
-    Math.min(tenantOverrides?.minLength ?? defaults.minLength, guardrails.minLengthMax),
-  );
-
-  const maxLength = Math.max(
-    guardrails.maxLengthMin,
-    Math.min(tenantOverrides?.maxLength ?? defaults.maxLength, guardrails.maxLengthMax),
-  );
+  const merged = mergeWithDefaults(tenantOverrides, manifest.defaults);
+  const { guardrails } = manifest;
 
   return {
-    minLength,
-    maxLength,
-    requireUppercase: tenantOverrides?.requireUppercase ?? defaults.requireUppercase,
-    requireLowercase: tenantOverrides?.requireLowercase ?? defaults.requireLowercase,
-    requireNumber: tenantOverrides?.requireNumber ?? defaults.requireNumber,
-    requireSpecial: tenantOverrides?.requireSpecial ?? defaults.requireSpecial,
-    characterClassesRequired:
-      tenantOverrides?.characterClassesRequired ?? defaults.characterClassesRequired,
+    ...merged,
+    minLength: clampToGuardrail(merged.minLength, guardrails.minLengthMin, guardrails.minLengthMax),
+    maxLength: clampToGuardrail(merged.maxLength, guardrails.maxLengthMin, guardrails.maxLengthMax),
   };
 };
 

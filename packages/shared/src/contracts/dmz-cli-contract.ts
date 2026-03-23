@@ -834,41 +834,49 @@ export const validateDmzCliInput = (
   return { valid: false, errors: undefined };
 };
 
+export interface BuildDmzCliErrorResponseParams {
+  code: DmzCliErrorCode;
+  message: string;
+  commandType: DmzCliCommandType;
+  command: string;
+  tenantId: string;
+  executionTimeMs?: number;
+}
+
 export const buildDmzCliErrorResponse = (
-  code: DmzCliErrorCode,
-  message: string,
-  commandType: DmzCliCommandType,
-  command: string,
-  tenantId: string,
-  executionTimeMs?: number,
+  params: BuildDmzCliErrorResponseParams,
 ): DmzCliCommandOutput => ({
   success: false,
-  error: { code, message },
+  error: { code: params.code, message: params.message },
   metadata: {
-    tenantId,
+    tenantId: params.tenantId,
     timestamp: new Date().toISOString(),
-    commandType,
-    command,
-    executionTimeMs,
+    commandType: params.commandType,
+    command: params.command,
+    executionTimeMs: params.executionTimeMs,
   },
 });
 
+export interface BuildDmzCliSuccessResponseParams {
+  data: Record<string, unknown>;
+  commandType: DmzCliCommandType;
+  command: string;
+  tenantId: string;
+  idempotencyKey?: string;
+  executionTimeMs?: number;
+}
+
 export const buildDmzCliSuccessResponse = (
-  data: Record<string, unknown>,
-  commandType: DmzCliCommandType,
-  command: string,
-  tenantId: string,
-  idempotencyKey?: string,
-  executionTimeMs?: number,
+  params: BuildDmzCliSuccessResponseParams,
 ): DmzCliCommandOutput => ({
   success: true,
-  data,
+  data: params.data,
   metadata: {
-    idempotencyKey,
-    tenantId,
+    idempotencyKey: params.idempotencyKey,
+    tenantId: params.tenantId,
     timestamp: new Date().toISOString(),
-    commandType,
-    command,
-    executionTimeMs,
+    commandType: params.commandType,
+    command: params.command,
+    executionTimeMs: params.executionTimeMs,
   },
 });

@@ -843,38 +843,44 @@ export const validateSlashCommandRequest = (
   return { valid: result.success, errors: result.error };
 };
 
-export const buildSlackErrorResponse = (
-  code: SlackErrorCode,
-  message: string,
-  operationType: SlackOperationType,
-  deliveryMode: SlackDeliveryMode,
-  tenantId: string,
-): SlackOperationOutput => ({
+export interface BuildSlackErrorParams {
+  code: SlackErrorCode;
+  message: string;
+  operationType: SlackOperationType;
+  deliveryMode: SlackDeliveryMode;
+  tenantId: string;
+}
+
+export const buildSlackErrorResponse = (params: BuildSlackErrorParams): SlackOperationOutput => ({
   success: false,
-  error: { code, message },
+  error: { code: params.code, message: params.message },
   metadata: {
-    tenantId,
+    tenantId: params.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    deliveryMode,
+    operationType: params.operationType,
+    deliveryMode: params.deliveryMode,
   },
 });
 
+export interface BuildSlackSuccessParams {
+  data: Record<string, unknown>;
+  operationType: SlackOperationType;
+  deliveryMode: SlackDeliveryMode;
+  tenantId: string;
+  idempotencyKey?: string;
+}
+
 export const buildSlackSuccessResponse = (
-  data: Record<string, unknown>,
-  operationType: SlackOperationType,
-  deliveryMode: SlackDeliveryMode,
-  tenantId: string,
-  idempotencyKey?: string,
+  params: BuildSlackSuccessParams,
 ): SlackOperationOutput => ({
   success: true,
-  data,
+  data: params.data,
   metadata: {
-    idempotencyKey,
-    tenantId,
+    idempotencyKey: params.idempotencyKey,
+    tenantId: params.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    deliveryMode,
+    operationType: params.operationType,
+    deliveryMode: params.deliveryMode,
   },
 });
 

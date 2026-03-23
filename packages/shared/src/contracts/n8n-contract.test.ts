@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
 
 import {
   N8nOperationType,
@@ -20,9 +19,6 @@ import {
   validateN8nInput,
   buildN8nErrorResponse,
   buildN8nSuccessResponse,
-  n8nActionInputSchemas,
-  n8nActionOutputSchemas,
-  n8nOperationTypeSchema,
   n8nIntegrationMetadataSchema,
   n8nOperationOutputSchema,
   n8nTriggerPayloadSchema,
@@ -259,13 +255,13 @@ describe('n8n-contract', () => {
 
   describe('buildN8nErrorResponse', () => {
     it('should build error response correctly', () => {
-      const response = buildN8nErrorResponse(
-        N8N_ERROR_CODES.INVALID_INPUT,
-        'Invalid input',
-        N8nOperationType.TEMPLATE_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-      );
+      const response = buildN8nErrorResponse({
+        code: N8N_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid input',
+        operationType: N8nOperationType.TEMPLATE_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+      });
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe('N8N_INVALID_INPUT');
       expect(response.metadata?.tenantId).toBe('660e8400-e29b-41d4-a716-446655440001');
@@ -274,104 +270,108 @@ describe('n8n-contract', () => {
 
   describe('buildN8nSuccessResponse', () => {
     it('should build success response correctly', () => {
-      const response = buildN8nSuccessResponse(
-        { id: '123' },
-        N8nOperationType.TEMPLATE_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-        'test-key',
-      );
+      const response = buildN8nSuccessResponse({
+        data: { id: '123' },
+        operationType: N8nOperationType.TEMPLATE_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+        idempotencyKey: 'test-key',
+      });
       expect(response.success).toBe(true);
       expect(response.data?.id).toBe('123');
       expect(response.metadata?.idempotencyKey).toBe('test-key');
     });
   });
 
-  describe('n8nIntegrationMetadataSchema', () => {
-    it('should validate correct metadata', () => {
-      const result = n8nIntegrationMetadataSchema.safeParse(m1N8nIntegrationManifest);
-      expect(result.success).toBe(true);
+  describe('schema validation', () => {
+    describe('n8nIntegrationMetadataSchema', () => {
+      it('should validate correct metadata', () => {
+        const result = n8nIntegrationMetadataSchema.safeParse(m1N8nIntegrationManifest);
+        expect(result.success).toBe(true);
+      });
     });
-  });
 
-  describe('n8nOperationOutputSchema', () => {
-    it('should validate success response', () => {
-      const result = n8nOperationOutputSchema.safeParse({
-        success: true,
-        data: { id: '123' },
-        metadata: {
+    describe('n8nOperationOutputSchema', () => {
+      it('should validate success response', () => {
+        const result = n8nOperationOutputSchema.safeParse({
+          success: true,
+          data: { id: '123' },
+          metadata: {
+            tenantId: '660e8400-e29b-41d4-a716-446655440001',
+            timestamp: '2024-01-15T10:30:00Z',
+            operationType: 'template_action',
+            operationKey: 'create_user',
+          },
+        });
+        expect(result.success).toBe(true);
+      });
+
+      it('should validate error response', () => {
+        const result = n8nOperationOutputSchema.safeParse({
+          success: false,
+          error: { code: 'ERROR', message: 'Error occurred' },
+          metadata: {
+            tenantId: '660e8400-e29b-41d4-a716-446655440001',
+            timestamp: '2024-01-15T10:30:00Z',
+            operationType: 'template_action',
+            operationKey: 'create_user',
+          },
+        });
+        expect(result.success).toBe(true);
+      });
+    });
+
+    describe('n8nTriggerPayloadSchema', () => {
+      it('should validate trigger payload', () => {
+        const result = n8nTriggerPayloadSchema.safeParse({
+          eventType: 'auth.user.created',
+          eventId: '550e8400-e29b-41d4-a716-446655440000',
+          occurredAt: '2024-01-15T10:30:00Z',
           tenantId: '660e8400-e29b-41d4-a716-446655440001',
-          timestamp: '2024-01-15T10:30:00Z',
-          operationType: 'template_action',
-          operationKey: 'create_user',
-        },
+          version: 1,
+          data: { id: '123' },
+          triggerKey: 'user_created',
+          triggerLabel: 'User Created',
+          triggerDescription: 'User created trigger',
+          templateId: '550e8400-e29b-41d4-a716-446655440001',
+          templateName: 'User Created Workflow',
+          nodeId: '550e8400-e29b-41d4-a716-446655440101',
+          nodeType: 'n8n-nodes-base.webhook',
+        });
+        expect(result.success).toBe(true);
       });
-      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('cross-cutting concerns', () => {
+    describe('tenant isolation', () => {
+      it('should enforce tenant binding in all triggers', () => {
+        Object.values(m1N8nTriggerContractManifest).forEach((contract) => {
+          expect(contract.tenantBindingRequired).toBe(true);
+        });
+      });
+
+      it('should enforce tenant binding in all actions', () => {
+        Object.values(m1N8nActionContractManifest).forEach((contract) => {
+          expect(contract.tenantBindingRequired).toBe(true);
+        });
+      });
     });
 
-    it('should validate error response', () => {
-      const result = n8nOperationOutputSchema.safeParse({
-        success: false,
-        error: { code: 'ERROR', message: 'Error occurred' },
-        metadata: {
+    describe('envelope parity with Zapier', () => {
+      it('should have same success/data/error/metadata structure as Zapier', () => {
+        const n8nResponse = buildN8nSuccessResponse({
+          data: {},
+          operationType: N8nOperationType.TEMPLATE_ACTION,
+          operationKey: 'create_user',
           tenantId: '660e8400-e29b-41d4-a716-446655440001',
-          timestamp: '2024-01-15T10:30:00Z',
-          operationType: 'template_action',
-          operationKey: 'create_user',
-        },
+        });
+        expect(n8nResponse).toHaveProperty('success');
+        expect(n8nResponse).toHaveProperty('data');
+        expect(n8nResponse).toHaveProperty('metadata');
+        expect(n8nResponse.success).toBe(true);
+        expect(n8nResponse.error).toBeUndefined();
       });
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe('n8nTriggerPayloadSchema', () => {
-    it('should validate trigger payload', () => {
-      const result = n8nTriggerPayloadSchema.safeParse({
-        eventType: 'auth.user.created',
-        eventId: '550e8400-e29b-41d4-a716-446655440000',
-        occurredAt: '2024-01-15T10:30:00Z',
-        tenantId: '660e8400-e29b-41d4-a716-446655440001',
-        version: 1,
-        data: { id: '123' },
-        triggerKey: 'user_created',
-        triggerLabel: 'User Created',
-        triggerDescription: 'User created trigger',
-        templateId: '550e8400-e29b-41d4-a716-446655440001',
-        templateName: 'User Created Workflow',
-        nodeId: '550e8400-e29b-41d4-a716-446655440101',
-        nodeType: 'n8n-nodes-base.webhook',
-      });
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe('tenant isolation', () => {
-    it('should enforce tenant binding in all triggers', () => {
-      Object.values(m1N8nTriggerContractManifest).forEach((contract) => {
-        expect(contract.tenantBindingRequired).toBe(true);
-      });
-    });
-
-    it('should enforce tenant binding in all actions', () => {
-      Object.values(m1N8nActionContractManifest).forEach((contract) => {
-        expect(contract.tenantBindingRequired).toBe(true);
-      });
-    });
-  });
-
-  describe('envelope parity with Zapier', () => {
-    it('should have same success/data/error/metadata structure as Zapier', () => {
-      const n8nResponse = buildN8nSuccessResponse(
-        {},
-        N8nOperationType.TEMPLATE_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-      );
-      expect(n8nResponse).toHaveProperty('success');
-      expect(n8nResponse).toHaveProperty('data');
-      expect(n8nResponse).toHaveProperty('metadata');
-      expect(n8nResponse.success).toBe(true);
-      expect(n8nResponse.error).toBeUndefined();
     });
   });
 });

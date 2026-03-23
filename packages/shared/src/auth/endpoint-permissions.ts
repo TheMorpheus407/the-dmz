@@ -82,27 +82,29 @@ export const formatPermissionRequirements = (
   requirements: EndpointPermissionRequirements,
 ): string[] => requirements.permissions.map(formatPermissionDeclaration);
 
+export interface CreateAuthzDenialLogOptions {
+  requestId: string;
+  route: string;
+  method: string;
+  denialReason: AuthorizationDenialLog['denialReason'];
+  tenantId?: string;
+  userId?: string;
+  requiredPermissions?: string[];
+  grantedPermissions?: string[];
+  evaluator?: PermissionEvaluator;
+}
+
 export const createAuthzDenialLog = (
-  requestId: string,
-  route: string,
-  method: string,
-  denialReason: AuthorizationDenialLog['denialReason'],
-  options?: {
-    tenantId?: string;
-    userId?: string;
-    requiredPermissions?: string[];
-    grantedPermissions?: string[];
-    evaluator?: PermissionEvaluator;
-  },
+  options: CreateAuthzDenialLogOptions,
 ): AuthorizationDenialLog => ({
-  requestId,
-  tenantId: options?.tenantId ?? '',
-  userId: options?.userId ?? '',
-  route,
-  method,
-  denialReason,
-  requiredPermissions: options?.requiredPermissions ?? [],
-  grantedPermissions: options?.grantedPermissions ?? [],
-  evaluator: options?.evaluator ?? 'allOf',
+  requestId: options.requestId,
+  tenantId: options.tenantId ?? '',
+  userId: options.userId ?? '',
+  route: options.route,
+  method: options.method,
+  denialReason: options.denialReason,
+  requiredPermissions: options.requiredPermissions ?? [],
+  grantedPermissions: options.grantedPermissions ?? [],
+  evaluator: options.evaluator ?? 'allOf',
   timestamp: new Date().toISOString(),
 });

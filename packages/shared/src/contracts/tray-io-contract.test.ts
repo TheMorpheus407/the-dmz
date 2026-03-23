@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
 
 import {
   TrayIOperationType,
@@ -20,9 +19,6 @@ import {
   validateTrayIOInput,
   buildTrayIOErrorResponse,
   buildTrayIOSuccessResponse,
-  trayIOActionInputSchemas,
-  trayIOActionOutputSchemas,
-  trayIOperationTypeSchema,
   trayIOIntegrationMetadataSchema,
   trayIOOperationOutputSchema,
   trayIOTriggerPayloadSchema,
@@ -253,13 +249,13 @@ describe('tray-io-contract', () => {
 
   describe('buildTrayIOErrorResponse', () => {
     it('should build error response correctly', () => {
-      const response = buildTrayIOErrorResponse(
-        TRAY_IO_ERROR_CODES.INVALID_INPUT,
-        'Invalid input',
-        TrayIOperationType.CONNECTOR_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-      );
+      const response = buildTrayIOErrorResponse({
+        code: TRAY_IO_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid input',
+        operationType: TrayIOperationType.CONNECTOR_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+      });
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe('TRAY_IO_INVALID_INPUT');
       expect(response.metadata?.tenantId).toBe('660e8400-e29b-41d4-a716-446655440001');
@@ -268,19 +264,21 @@ describe('tray-io-contract', () => {
 
   describe('buildTrayIOSuccessResponse', () => {
     it('should build success response correctly', () => {
-      const response = buildTrayIOSuccessResponse(
-        { id: '123' },
-        TrayIOperationType.CONNECTOR_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-        'test-key',
-      );
+      const response = buildTrayIOSuccessResponse({
+        data: { id: '123' },
+        operationType: TrayIOperationType.CONNECTOR_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+        idempotencyKey: 'test-key',
+      });
       expect(response.success).toBe(true);
       expect(response.data?.id).toBe('123');
       expect(response.metadata?.idempotencyKey).toBe('test-key');
     });
   });
+});
 
+describe('tray-io-contract schemas and invariants', () => {
   describe('trayIOIntegrationMetadataSchema', () => {
     it('should validate correct metadata', () => {
       const result = trayIOIntegrationMetadataSchema.safeParse(m1TrayIOIntegrationManifest);
@@ -354,12 +352,12 @@ describe('tray-io-contract', () => {
 
   describe('envelope parity with Zapier', () => {
     it('should have same success/data/error/metadata structure as Zapier', () => {
-      const trayIOResponse = buildTrayIOSuccessResponse(
-        {},
-        TrayIOperationType.CONNECTOR_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-      );
+      const trayIOResponse = buildTrayIOSuccessResponse({
+        data: {},
+        operationType: TrayIOperationType.CONNECTOR_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+      });
       expect(trayIOResponse).toHaveProperty('success');
       expect(trayIOResponse).toHaveProperty('data');
       expect(trayIOResponse).toHaveProperty('metadata');

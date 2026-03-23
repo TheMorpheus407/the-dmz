@@ -553,41 +553,49 @@ export const validateWorkatoInput = (
   return { valid: false, errors: undefined };
 };
 
+export interface WorkatoErrorResponseOptions {
+  code: WorkatoErrorCode;
+  message: string;
+  operationType: WorkatoOperationType;
+  operationKey: string;
+  tenantId: string;
+  recipeId?: string;
+}
+
 export const buildWorkatoErrorResponse = (
-  code: WorkatoErrorCode,
-  message: string,
-  operationType: WorkatoOperationType,
-  operationKey: string,
-  tenantId: string,
-  recipeId?: string,
+  options: WorkatoErrorResponseOptions,
 ): WorkatoOperationOutput => ({
   success: false,
-  error: { code, message },
+  error: { code: options.code, message: options.message },
   metadata: {
-    tenantId,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    recipeId,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    recipeId: options.recipeId,
   },
 });
 
+export interface WorkatoSuccessResponseOptions {
+  data: Record<string, unknown>;
+  operationType: WorkatoOperationType;
+  operationKey: string;
+  tenantId: string;
+  idempotencyKey?: string;
+  recipeId?: string;
+}
+
 export const buildWorkatoSuccessResponse = (
-  data: Record<string, unknown>,
-  operationType: WorkatoOperationType,
-  operationKey: string,
-  tenantId: string,
-  idempotencyKey?: string,
-  recipeId?: string,
+  options: WorkatoSuccessResponseOptions,
 ): WorkatoOperationOutput => ({
   success: true,
-  data,
+  data: options.data,
   metadata: {
-    idempotencyKey,
-    tenantId,
+    idempotencyKey: options.idempotencyKey,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    recipeId,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    recipeId: options.recipeId,
   },
 });

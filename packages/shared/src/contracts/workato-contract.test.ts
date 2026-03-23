@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
 
 import {
   WorkatoOperationType,
@@ -20,9 +19,6 @@ import {
   validateWorkatoInput,
   buildWorkatoErrorResponse,
   buildWorkatoSuccessResponse,
-  workatoActionInputSchemas,
-  workatoActionOutputSchemas,
-  workatoOperationTypeSchema,
   workatoIntegrationMetadataSchema,
   workatoOperationOutputSchema,
   workatoTriggerPayloadSchema,
@@ -247,13 +243,13 @@ describe('workato-contract', () => {
 
   describe('buildWorkatoErrorResponse', () => {
     it('should build error response correctly', () => {
-      const response = buildWorkatoErrorResponse(
-        WORKATO_ERROR_CODES.INVALID_INPUT,
-        'Invalid input',
-        WorkatoOperationType.RECIPE_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-      );
+      const response = buildWorkatoErrorResponse({
+        code: WORKATO_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid input',
+        operationType: WorkatoOperationType.RECIPE_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+      });
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe('WORKATO_INVALID_INPUT');
       expect(response.metadata?.tenantId).toBe('660e8400-e29b-41d4-a716-446655440001');
@@ -262,19 +258,21 @@ describe('workato-contract', () => {
 
   describe('buildWorkatoSuccessResponse', () => {
     it('should build success response correctly', () => {
-      const response = buildWorkatoSuccessResponse(
-        { id: '123' },
-        WorkatoOperationType.RECIPE_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-        'test-key',
-      );
+      const response = buildWorkatoSuccessResponse({
+        data: { id: '123' },
+        operationType: WorkatoOperationType.RECIPE_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+        idempotencyKey: 'test-key',
+      });
       expect(response.success).toBe(true);
       expect(response.data?.id).toBe('123');
       expect(response.metadata?.idempotencyKey).toBe('test-key');
     });
   });
+});
 
+describe('workato-contract schemas and invariants', () => {
   describe('workatoIntegrationMetadataSchema', () => {
     it('should validate correct metadata', () => {
       const result = workatoIntegrationMetadataSchema.safeParse(m1WorkatoIntegrationManifest);
@@ -347,12 +345,12 @@ describe('workato-contract', () => {
 
   describe('envelope parity with Zapier', () => {
     it('should have same success/data/error/metadata structure as Zapier', () => {
-      const workatoResponse = buildWorkatoSuccessResponse(
-        {},
-        WorkatoOperationType.RECIPE_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-      );
+      const workatoResponse = buildWorkatoSuccessResponse({
+        data: {},
+        operationType: WorkatoOperationType.RECIPE_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+      });
       expect(workatoResponse).toHaveProperty('success');
       expect(workatoResponse).toHaveProperty('data');
       expect(workatoResponse).toHaveProperty('metadata');

@@ -574,41 +574,49 @@ export const validateTrayIOInput = (
   return { valid: false, errors: undefined };
 };
 
+export interface TrayIOErrorResponseOptions {
+  code: TrayIOErrorCode;
+  message: string;
+  operationType: TrayIOperationType;
+  operationKey: string;
+  tenantId: string;
+  connectorId?: string;
+}
+
 export const buildTrayIOErrorResponse = (
-  code: TrayIOErrorCode,
-  message: string,
-  operationType: TrayIOperationType,
-  operationKey: string,
-  tenantId: string,
-  connectorId?: string,
+  options: TrayIOErrorResponseOptions,
 ): TrayIOOperationOutput => ({
   success: false,
-  error: { code, message },
+  error: { code: options.code, message: options.message },
   metadata: {
-    tenantId,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    connectorId,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    connectorId: options.connectorId,
   },
 });
 
+export interface TrayIOSuccessResponseOptions {
+  data: Record<string, unknown>;
+  operationType: TrayIOperationType;
+  operationKey: string;
+  tenantId: string;
+  idempotencyKey?: string;
+  connectorId?: string;
+}
+
 export const buildTrayIOSuccessResponse = (
-  data: Record<string, unknown>,
-  operationType: TrayIOperationType,
-  operationKey: string,
-  tenantId: string,
-  idempotencyKey?: string,
-  connectorId?: string,
+  options: TrayIOSuccessResponseOptions,
 ): TrayIOOperationOutput => ({
   success: true,
-  data,
+  data: options.data,
   metadata: {
-    idempotencyKey,
-    tenantId,
+    idempotencyKey: options.idempotencyKey,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    connectorId,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    connectorId: options.connectorId,
   },
 });

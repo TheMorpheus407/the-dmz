@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
 
 import {
   MakeComOperationType,
@@ -20,9 +19,6 @@ import {
   validateMakeComInput,
   buildMakeComErrorResponse,
   buildMakeComSuccessResponse,
-  makeComActionInputSchemas,
-  makeComActionOutputSchemas,
-  makeComOperationTypeSchema,
   makeComIntegrationMetadataSchema,
   makeComOperationOutputSchema,
   makeComTriggerPayloadSchema,
@@ -261,13 +257,13 @@ describe('make-com-contract', () => {
 
   describe('buildMakeComErrorResponse', () => {
     it('should build error response correctly', () => {
-      const response = buildMakeComErrorResponse(
-        MAKE_COM_ERROR_CODES.INVALID_INPUT,
-        'Invalid input',
-        MakeComOperationType.TEMPLATE_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-      );
+      const response = buildMakeComErrorResponse({
+        code: MAKE_COM_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid input',
+        operationType: MakeComOperationType.TEMPLATE_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+      });
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe('MAKE_COM_INVALID_INPUT');
       expect(response.metadata?.tenantId).toBe('660e8400-e29b-41d4-a716-446655440001');
@@ -276,104 +272,108 @@ describe('make-com-contract', () => {
 
   describe('buildMakeComSuccessResponse', () => {
     it('should build success response correctly', () => {
-      const response = buildMakeComSuccessResponse(
-        { id: '123' },
-        MakeComOperationType.TEMPLATE_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-        'test-key',
-      );
+      const response = buildMakeComSuccessResponse({
+        data: { id: '123' },
+        operationType: MakeComOperationType.TEMPLATE_ACTION,
+        operationKey: 'create_user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+        idempotencyKey: 'test-key',
+      });
       expect(response.success).toBe(true);
       expect(response.data?.id).toBe('123');
       expect(response.metadata?.idempotencyKey).toBe('test-key');
     });
   });
 
-  describe('makeComIntegrationMetadataSchema', () => {
-    it('should validate correct metadata', () => {
-      const result = makeComIntegrationMetadataSchema.safeParse(m1MakeComIntegrationManifest);
-      expect(result.success).toBe(true);
+  describe('schema validation', () => {
+    describe('makeComIntegrationMetadataSchema', () => {
+      it('should validate correct metadata', () => {
+        const result = makeComIntegrationMetadataSchema.safeParse(m1MakeComIntegrationManifest);
+        expect(result.success).toBe(true);
+      });
     });
-  });
 
-  describe('makeComOperationOutputSchema', () => {
-    it('should validate success response', () => {
-      const result = makeComOperationOutputSchema.safeParse({
-        success: true,
-        data: { id: '123' },
-        metadata: {
+    describe('makeComOperationOutputSchema', () => {
+      it('should validate success response', () => {
+        const result = makeComOperationOutputSchema.safeParse({
+          success: true,
+          data: { id: '123' },
+          metadata: {
+            tenantId: '660e8400-e29b-41d4-a716-446655440001',
+            timestamp: '2024-01-15T10:30:00Z',
+            operationType: 'template_action',
+            operationKey: 'create_user',
+          },
+        });
+        expect(result.success).toBe(true);
+      });
+
+      it('should validate error response', () => {
+        const result = makeComOperationOutputSchema.safeParse({
+          success: false,
+          error: { code: 'ERROR', message: 'Error occurred' },
+          metadata: {
+            tenantId: '660e8400-e29b-41d4-a716-446655440001',
+            timestamp: '2024-01-15T10:30:00Z',
+            operationType: 'template_action',
+            operationKey: 'create_user',
+          },
+        });
+        expect(result.success).toBe(true);
+      });
+    });
+
+    describe('makeComTriggerPayloadSchema', () => {
+      it('should validate trigger payload', () => {
+        const result = makeComTriggerPayloadSchema.safeParse({
+          eventType: 'auth.user.created',
+          eventId: '550e8400-e29b-41d4-a716-446655440000',
+          occurredAt: '2024-01-15T10:30:00Z',
           tenantId: '660e8400-e29b-41d4-a716-446655440001',
-          timestamp: '2024-01-15T10:30:00Z',
-          operationType: 'template_action',
-          operationKey: 'create_user',
-        },
+          version: 1,
+          data: { id: '123' },
+          triggerKey: 'user_created',
+          triggerLabel: 'User Created',
+          triggerDescription: 'User created trigger',
+          scenarioId: '550e8400-e29b-41d4-a716-446655440001',
+          scenarioName: 'User Created Scenario',
+          moduleId: '550e8400-e29b-41d4-a716-446655440101',
+          moduleType: 'HTTP',
+        });
+        expect(result.success).toBe(true);
       });
-      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('cross-cutting concerns', () => {
+    describe('tenant isolation', () => {
+      it('should enforce tenant binding in all triggers', () => {
+        Object.values(m1MakeComTriggerContractManifest).forEach((contract) => {
+          expect(contract.tenantBindingRequired).toBe(true);
+        });
+      });
+
+      it('should enforce tenant binding in all actions', () => {
+        Object.values(m1MakeComActionContractManifest).forEach((contract) => {
+          expect(contract.tenantBindingRequired).toBe(true);
+        });
+      });
     });
 
-    it('should validate error response', () => {
-      const result = makeComOperationOutputSchema.safeParse({
-        success: false,
-        error: { code: 'ERROR', message: 'Error occurred' },
-        metadata: {
+    describe('envelope parity with Zapier', () => {
+      it('should have same success/data/error/metadata structure as Zapier', () => {
+        const makeComResponse = buildMakeComSuccessResponse({
+          data: {},
+          operationType: MakeComOperationType.TEMPLATE_ACTION,
+          operationKey: 'create_user',
           tenantId: '660e8400-e29b-41d4-a716-446655440001',
-          timestamp: '2024-01-15T10:30:00Z',
-          operationType: 'template_action',
-          operationKey: 'create_user',
-        },
+        });
+        expect(makeComResponse).toHaveProperty('success');
+        expect(makeComResponse).toHaveProperty('data');
+        expect(makeComResponse).toHaveProperty('metadata');
+        expect(makeComResponse.success).toBe(true);
+        expect(makeComResponse.error).toBeUndefined();
       });
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe('makeComTriggerPayloadSchema', () => {
-    it('should validate trigger payload', () => {
-      const result = makeComTriggerPayloadSchema.safeParse({
-        eventType: 'auth.user.created',
-        eventId: '550e8400-e29b-41d4-a716-446655440000',
-        occurredAt: '2024-01-15T10:30:00Z',
-        tenantId: '660e8400-e29b-41d4-a716-446655440001',
-        version: 1,
-        data: { id: '123' },
-        triggerKey: 'user_created',
-        triggerLabel: 'User Created',
-        triggerDescription: 'User created trigger',
-        scenarioId: '550e8400-e29b-41d4-a716-446655440001',
-        scenarioName: 'User Created Scenario',
-        moduleId: '550e8400-e29b-41d4-a716-446655440101',
-        moduleType: 'HTTP',
-      });
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe('tenant isolation', () => {
-    it('should enforce tenant binding in all triggers', () => {
-      Object.values(m1MakeComTriggerContractManifest).forEach((contract) => {
-        expect(contract.tenantBindingRequired).toBe(true);
-      });
-    });
-
-    it('should enforce tenant binding in all actions', () => {
-      Object.values(m1MakeComActionContractManifest).forEach((contract) => {
-        expect(contract.tenantBindingRequired).toBe(true);
-      });
-    });
-  });
-
-  describe('envelope parity with Zapier', () => {
-    it('should have same success/data/error/metadata structure as Zapier', () => {
-      const makeComResponse = buildMakeComSuccessResponse(
-        {},
-        MakeComOperationType.TEMPLATE_ACTION,
-        'create_user',
-        '660e8400-e29b-41d4-a716-446655440001',
-      );
-      expect(makeComResponse).toHaveProperty('success');
-      expect(makeComResponse).toHaveProperty('data');
-      expect(makeComResponse).toHaveProperty('metadata');
-      expect(makeComResponse.success).toBe(true);
-      expect(makeComResponse.error).toBeUndefined();
     });
   });
 });

@@ -108,19 +108,17 @@ export const requirePermissions = (
     const hasAccess = evaluatePermissionRequirements(permissionContext.permissions, requirements);
 
     if (!hasAccess) {
-      const denialLog = createAuthzDenialLog(
-        request.id,
-        request.routeOptions?.url ?? request.url,
-        request.method,
-        'insufficient_permissions',
-        {
-          tenantId: tenantContext.tenantId,
-          userId: user.userId,
-          requiredPermissions: requiredPermStrings,
-          grantedPermissions: permissionContext.permissions,
-          evaluator,
-        },
-      );
+      const denialLog = createAuthzDenialLog({
+        requestId: request.id,
+        route: request.routeOptions?.url ?? request.url,
+        method: request.method,
+        denialReason: 'insufficient_permissions',
+        tenantId: tenantContext.tenantId,
+        userId: user.userId,
+        requiredPermissions: requiredPermStrings,
+        grantedPermissions: permissionContext.permissions,
+        evaluator,
+      });
 
       logAuthorizationDenial(request, denialLog);
 

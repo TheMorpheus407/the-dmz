@@ -798,44 +798,52 @@ export const validatePowerAutomateInput = (
   return { valid: false, errors: undefined };
 };
 
+export interface BuildPowerAutomateErrorResponseOptions {
+  code: PowerAutomateErrorCode;
+  message: string;
+  operationType: PowerAutomateOperationType;
+  operationKey: string;
+  tenantId: string;
+  executionMode?: PowerAutomateExecutionMode;
+}
+
 export const buildPowerAutomateErrorResponse = (
-  code: PowerAutomateErrorCode,
-  message: string,
-  operationType: PowerAutomateOperationType,
-  operationKey: string,
-  tenantId: string,
-  executionMode?: PowerAutomateExecutionMode,
+  options: BuildPowerAutomateErrorResponseOptions,
 ): PowerAutomateOperationOutput => ({
   success: false,
-  error: { code, message },
+  error: { code: options.code, message: options.message },
   metadata: {
-    tenantId,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    executionMode,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    executionMode: options.executionMode,
   },
 });
 
+export interface BuildPowerAutomateSuccessResponseOptions {
+  data: Record<string, unknown>;
+  operationType: PowerAutomateOperationType;
+  operationKey: string;
+  tenantId: string;
+  idempotencyKey?: string;
+  executionMode?: PowerAutomateExecutionMode;
+  m365FieldMappings?: M365FieldMapping[];
+}
+
 export const buildPowerAutomateSuccessResponse = (
-  data: Record<string, unknown>,
-  operationType: PowerAutomateOperationType,
-  operationKey: string,
-  tenantId: string,
-  idempotencyKey?: string,
-  executionMode?: PowerAutomateExecutionMode,
-  m365FieldMappings?: M365FieldMapping[],
+  options: BuildPowerAutomateSuccessResponseOptions,
 ): PowerAutomateOperationOutput => ({
   success: true,
-  data,
+  data: options.data,
   metadata: {
-    idempotencyKey,
-    tenantId,
+    idempotencyKey: options.idempotencyKey,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    executionMode,
-    m365FieldMappings,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    executionMode: options.executionMode,
+    m365FieldMappings: options.m365FieldMappings,
   },
 });
 

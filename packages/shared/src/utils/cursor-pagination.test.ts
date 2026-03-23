@@ -89,26 +89,41 @@ describe('cursor-pagination', () => {
 
   describe('buildCursorPaginationMeta', () => {
     it('builds meta with hasMore true', () => {
-      const meta = buildCursorPaginationMeta(true, 0, 20, 100);
+      const meta = buildCursorPaginationMeta({
+        hasMore: true,
+        currentOffset: 0,
+        limit: 20,
+        total: 100,
+      });
       expect(meta.hasMore).toBe(true);
       expect(meta.nextCursor).toBeTruthy();
       expect(meta.total).toBe(100);
     });
 
     it('builds meta with hasMore false', () => {
-      const meta = buildCursorPaginationMeta(false, 80, 20, 100);
+      const meta = buildCursorPaginationMeta({
+        hasMore: false,
+        currentOffset: 80,
+        limit: 20,
+        total: 100,
+      });
       expect(meta.hasMore).toBe(false);
       expect(meta.nextCursor).toBeNull();
       expect(meta.total).toBe(100);
     });
 
     it('omits total when not provided', () => {
-      const meta = buildCursorPaginationMeta(true, 0, 20);
+      const meta = buildCursorPaginationMeta({ hasMore: true, currentOffset: 0, limit: 20 });
       expect(meta.total).toBeUndefined();
     });
 
     it('includes sort values in cursor', () => {
-      const meta = buildCursorPaginationMeta(true, 0, 20, undefined, ['2024-01-01']);
+      const meta = buildCursorPaginationMeta({
+        hasMore: true,
+        currentOffset: 0,
+        limit: 20,
+        sortValues: ['2024-01-01'],
+      });
       expect(meta.nextCursor).toBeTruthy();
       const decoded = decodeCursor(meta.nextCursor!);
       expect(decoded?.sortValues).toEqual(['2024-01-01']);

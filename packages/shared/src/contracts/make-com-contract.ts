@@ -597,41 +597,49 @@ export const validateMakeComInput = (
   return { valid: false, errors: undefined };
 };
 
+export interface BuildMakeComErrorResponseOptions {
+  code: MakeComErrorCode;
+  message: string;
+  operationType: MakeComOperationType;
+  operationKey: string;
+  tenantId: string;
+  scenarioId?: string;
+}
+
 export const buildMakeComErrorResponse = (
-  code: MakeComErrorCode,
-  message: string,
-  operationType: MakeComOperationType,
-  operationKey: string,
-  tenantId: string,
-  scenarioId?: string,
+  options: BuildMakeComErrorResponseOptions,
 ): MakeComOperationOutput => ({
   success: false,
-  error: { code, message },
+  error: { code: options.code, message: options.message },
   metadata: {
-    tenantId,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    scenarioId,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    scenarioId: options.scenarioId,
   },
 });
 
+export interface BuildMakeComSuccessResponseOptions {
+  data: Record<string, unknown>;
+  operationType: MakeComOperationType;
+  operationKey: string;
+  tenantId: string;
+  idempotencyKey?: string;
+  scenarioId?: string;
+}
+
 export const buildMakeComSuccessResponse = (
-  data: Record<string, unknown>,
-  operationType: MakeComOperationType,
-  operationKey: string,
-  tenantId: string,
-  idempotencyKey?: string,
-  scenarioId?: string,
+  options: BuildMakeComSuccessResponseOptions,
 ): MakeComOperationOutput => ({
   success: true,
-  data,
+  data: options.data,
   metadata: {
-    idempotencyKey,
-    tenantId,
+    idempotencyKey: options.idempotencyKey,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
-    scenarioId,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
+    scenarioId: options.scenarioId,
   },
 });

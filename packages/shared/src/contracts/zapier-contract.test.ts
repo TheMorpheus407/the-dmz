@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
 
 import {
   ZapierOperationType,
@@ -495,7 +494,9 @@ describe('zapier-contract', () => {
       expect(searches.length).toBe(ZAPIER_SEARCH_KEYS.length);
     });
   });
+});
 
+describe('zapier-contract validation and responses', () => {
   describe('validateZapierInput', () => {
     it('should validate valid action input', () => {
       const validInput = {
@@ -542,13 +543,13 @@ describe('zapier-contract', () => {
   describe('buildZapierErrorResponse', () => {
     it('should build valid error response', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildZapierErrorResponse(
-        ZAPIER_ERROR_CODES.INVALID_INPUT,
-        'Invalid input provided',
-        ZapierOperationType.ACTION,
-        'create_user',
+      const response = buildZapierErrorResponse({
+        code: ZAPIER_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid input provided',
+        operationType: ZapierOperationType.ACTION,
+        operationKey: 'create_user',
         tenantId,
-      );
+      });
 
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe('ZAPIER_INVALID_INPUT');
@@ -563,13 +564,13 @@ describe('zapier-contract', () => {
     it('should build valid success response', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
       const data = { id: '123', email: 'test@example.com' };
-      const response = buildZapierSuccessResponse(
+      const response = buildZapierSuccessResponse({
         data,
-        ZapierOperationType.ACTION,
-        'create_user',
+        operationType: ZapierOperationType.ACTION,
+        operationKey: 'create_user',
         tenantId,
-        'user:test@example.com',
-      );
+        idempotencyKey: 'user:test@example.com',
+      });
 
       expect(response.success).toBe(true);
       expect(response.data).toEqual(data);
@@ -582,12 +583,12 @@ describe('zapier-contract', () => {
     it('should work without idempotency key', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
       const data = { id: '123' };
-      const response = buildZapierSuccessResponse(
+      const response = buildZapierSuccessResponse({
         data,
-        ZapierOperationType.TRIGGER,
-        'user_created',
+        operationType: ZapierOperationType.TRIGGER,
+        operationKey: 'user_created',
         tenantId,
-      );
+      });
 
       expect(response.success).toBe(true);
       expect(response.metadata?.idempotencyKey).toBeUndefined();
@@ -716,13 +717,13 @@ describe('zapier-contract', () => {
 
     it('should include tenantId in error responses', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildZapierErrorResponse(
-        ZAPIER_ERROR_CODES.TENANT_MISMATCH,
-        'Tenant mismatch',
-        ZapierOperationType.ACTION,
-        'create_user',
+      const response = buildZapierErrorResponse({
+        code: ZAPIER_ERROR_CODES.TENANT_MISMATCH,
+        message: 'Tenant mismatch',
+        operationType: ZapierOperationType.ACTION,
+        operationKey: 'create_user',
         tenantId,
-      );
+      });
 
       expect(response.metadata?.tenantId).toBe(tenantId);
     });

@@ -34,14 +34,13 @@ import {
   teamsOperationInputSchema,
   teamsOperationOutputSchema,
   teamsAdaptiveCardActionSchema,
-  teamsAdaptiveCardCallbackPayloadSchema,
   teamsAdaptiveCardSchema,
   teamsWebhookFallbackSchema,
   teamsWebhookDeliverySchema,
   teamsIntegrationMetadataSchema,
 } from './teams-contract';
 
-describe('teams-contract', () => {
+describe('teams-contract constants', () => {
   describe('TeamsDeliveryMode', () => {
     it('should have correct TEAMS_APP value', () => {
       expect(TeamsDeliveryMode.TEAMS_APP).toBe('teams-app');
@@ -233,7 +232,9 @@ describe('teams-contract', () => {
       expect(TeamsAdaptiveCardActionType.CUSTOM).toBe('custom');
     });
   });
+});
 
+describe('teams-contract manifests', () => {
   describe('m1TeamsNotificationContractManifest', () => {
     it('should have contract for user_created notification', () => {
       const contract = m1TeamsNotificationContractManifest.user_created;
@@ -354,7 +355,9 @@ describe('teams-contract', () => {
       expect(result.success).toBe(true);
     });
   });
+});
 
+describe('teams-contract utility functions', () => {
   describe('isValidTeamsNotificationKey', () => {
     it('should return true for valid notification key', () => {
       expect(isValidTeamsNotificationKey('user_created')).toBe(true);
@@ -463,13 +466,13 @@ describe('teams-contract', () => {
   describe('buildTeamsErrorResponse', () => {
     it('should build valid error response', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildTeamsErrorResponse(
-        TEAMS_ERROR_CODES.INVALID_INPUT,
-        'Invalid input provided',
-        TeamsOperationType.NOTIFICATION,
-        TeamsDeliveryMode.TEAMS_APP,
+      const response = buildTeamsErrorResponse({
+        code: TEAMS_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid input provided',
+        operationType: TeamsOperationType.NOTIFICATION,
+        deliveryMode: TeamsDeliveryMode.TEAMS_APP,
         tenantId,
-      );
+      });
 
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe('TEAMS_INVALID_INPUT');
@@ -484,13 +487,13 @@ describe('teams-contract', () => {
     it('should build valid success response', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
       const data = { messageId: 'msg-123' };
-      const response = buildTeamsSuccessResponse(
+      const response = buildTeamsSuccessResponse({
         data,
-        TeamsOperationType.NOTIFICATION,
-        TeamsDeliveryMode.TEAMS_APP,
+        operationType: TeamsOperationType.NOTIFICATION,
+        deliveryMode: TeamsDeliveryMode.TEAMS_APP,
         tenantId,
-        'notif-123',
-      );
+        idempotencyKey: 'notif-123',
+      });
 
       expect(response.success).toBe(true);
       expect(response.data).toEqual(data);
@@ -503,12 +506,12 @@ describe('teams-contract', () => {
     it('should work without idempotency key', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
       const data = { messageId: 'msg-123' };
-      const response = buildTeamsSuccessResponse(
+      const response = buildTeamsSuccessResponse({
         data,
-        TeamsOperationType.NOTIFICATION,
-        TeamsDeliveryMode.INCOMING_WEBHOOK,
+        operationType: TeamsOperationType.NOTIFICATION,
+        deliveryMode: TeamsDeliveryMode.INCOMING_WEBHOOK,
         tenantId,
-      );
+      });
 
       expect(response.success).toBe(true);
       expect(response.metadata?.idempotencyKey).toBeUndefined();
@@ -572,7 +575,9 @@ describe('teams-contract', () => {
       expect(isTerminalError(TEAMS_ERROR_CODES.RATE_LIMIT_EXCEEDED)).toBe(false);
     });
   });
+});
 
+describe('teams-contract Zod schemas', () => {
   describe('teamsDeliveryModeSchema', () => {
     it('should validate teams-app', () => {
       const result = teamsDeliveryModeSchema.safeParse('teams-app');
@@ -904,7 +909,9 @@ describe('teams-contract', () => {
       expect(result.success).toBe(true);
     });
   });
+});
 
+describe('teams-contract cross-cutting concerns', () => {
   describe('Schema validation for all notification contracts', () => {
     it('should validate all notification contracts against schema', () => {
       Object.values(m1TeamsNotificationContractManifest).forEach((contract) => {
@@ -941,25 +948,25 @@ describe('teams-contract', () => {
 
     it('should include tenantId in error responses', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildTeamsErrorResponse(
-        TEAMS_ERROR_CODES.TENANT_MISMATCH,
-        'Tenant mismatch',
-        TeamsOperationType.NOTIFICATION,
-        TeamsDeliveryMode.TEAMS_APP,
+      const response = buildTeamsErrorResponse({
+        code: TEAMS_ERROR_CODES.TENANT_MISMATCH,
+        message: 'Tenant mismatch',
+        operationType: TeamsOperationType.NOTIFICATION,
+        deliveryMode: TeamsDeliveryMode.TEAMS_APP,
         tenantId,
-      );
+      });
 
       expect(response.metadata?.tenantId).toBe(tenantId);
     });
 
     it('should include tenantId in success responses', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildTeamsSuccessResponse(
-        { messageId: 'msg-123' },
-        TeamsOperationType.NOTIFICATION,
-        TeamsDeliveryMode.TEAMS_APP,
+      const response = buildTeamsSuccessResponse({
+        data: { messageId: 'msg-123' },
+        operationType: TeamsOperationType.NOTIFICATION,
+        deliveryMode: TeamsDeliveryMode.TEAMS_APP,
         tenantId,
-      );
+      });
 
       expect(response.metadata?.tenantId).toBe(tenantId);
     });

@@ -358,6 +358,8 @@ export {
   type ZapierSearchInputSchemas,
   type ZapierOutputInvariants,
   type ZapierErrorCode,
+  type ZapierErrorResponseOptions,
+  type ZapierSuccessResponseOptions,
 } from './zapier-contract.js';
 
 export {
@@ -636,6 +638,8 @@ export type {
   WorkatoActionInputSchemas,
   WorkatoOutputInvariants,
   WorkatoErrorCode,
+  WorkatoErrorResponseOptions,
+  WorkatoSuccessResponseOptions,
 } from './workato-contract.js';
 
 export {
@@ -680,6 +684,8 @@ export type {
   TrayIOActionInputSchemas,
   TrayIOOutputInvariants,
   TrayIOErrorCode,
+  TrayIOErrorResponseOptions,
+  TrayIOSuccessResponseOptions,
 } from './tray-io-contract.js';
 
 export {

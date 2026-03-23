@@ -59,7 +59,13 @@ export const logAuthorizationDenial = (
   if (tenantId) logOptions.tenantId = tenantId;
   if (userId) logOptions.userId = userId;
 
-  const denialLog = createAuthzDenialLog(request.id, route, method, reason, logOptions);
+  const denialLog = createAuthzDenialLog({
+    requestId: request.id,
+    route,
+    method,
+    denialReason: reason,
+    ...logOptions,
+  });
 
   request.log.warn(
     {

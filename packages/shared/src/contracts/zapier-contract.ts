@@ -687,37 +687,45 @@ export const validateZapierInput = (
   return { valid: false, errors: undefined };
 };
 
+export interface ZapierErrorResponseOptions {
+  code: ZapierErrorCode;
+  message: string;
+  operationType: ZapierOperationType;
+  operationKey: string;
+  tenantId: string;
+}
+
 export const buildZapierErrorResponse = (
-  code: ZapierErrorCode,
-  message: string,
-  operationType: ZapierOperationType,
-  operationKey: string,
-  tenantId: string,
+  options: ZapierErrorResponseOptions,
 ): ZapierOperationOutput => ({
   success: false,
-  error: { code, message },
+  error: { code: options.code, message: options.message },
   metadata: {
-    tenantId,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
   },
 });
 
+export interface ZapierSuccessResponseOptions {
+  data: Record<string, unknown>;
+  operationType: ZapierOperationType;
+  operationKey: string;
+  tenantId: string;
+  idempotencyKey?: string;
+}
+
 export const buildZapierSuccessResponse = (
-  data: Record<string, unknown>,
-  operationType: ZapierOperationType,
-  operationKey: string,
-  tenantId: string,
-  idempotencyKey?: string,
+  options: ZapierSuccessResponseOptions,
 ): ZapierOperationOutput => ({
   success: true,
-  data,
+  data: options.data,
   metadata: {
-    idempotencyKey,
-    tenantId,
+    idempotencyKey: options.idempotencyKey,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    operationKey,
+    operationType: options.operationType,
+    operationKey: options.operationKey,
   },
 });

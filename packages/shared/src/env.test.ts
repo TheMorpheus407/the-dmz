@@ -113,166 +113,176 @@ describe('parseBackendEnv', () => {
     expect(config.RATE_LIMIT_WINDOW_MS).toBe(90_000);
   });
 
-  it('accepts zero AI_MAX_RETRIES to disable extra retries', () => {
-    const config = parseBackendEnv({
-      ...validBackendEnv,
-      AI_MAX_RETRIES: '0',
-    });
-
-    expect(config.AI_MAX_RETRIES).toBe(0);
-  });
-
-  it('rejects AI_MAX_RETRIES values above the three-retry contract', () => {
-    expect(() => parseBackendEnv({ ...validBackendEnv, AI_MAX_RETRIES: '4' })).toThrow(
-      /Invalid backend environment configuration/,
-    );
-  });
-
-  it('accepts configurable frame ancestors for LMS embedding', () => {
-    const config = parseBackendEnv({
-      ...validBackendEnv,
-      CSP_FRAME_ANCESTORS: 'https://lms.example.com,https://canvas.example.com',
-    });
-
-    expect(config.CSP_FRAME_ANCESTORS).toBe('https://lms.example.com,https://canvas.example.com');
-  });
-
-  it('accepts configurable extra CSP sources', () => {
-    const config = parseBackendEnv({
-      ...validBackendEnv,
-      CSP_CONNECT_SRC: 'https://api.example.com,wss://realtime.example.com',
-      CSP_IMG_SRC: 'https://cdn.example.com',
-    });
-
-    expect(config.CSP_CONNECT_SRC).toBe('https://api.example.com,wss://realtime.example.com');
-    expect(config.CSP_IMG_SRC).toBe('https://cdn.example.com');
-  });
-
-  it('accepts COEP credentialless fallback policy', () => {
-    const config = parseBackendEnv({
-      ...validBackendEnv,
-      COEP_POLICY: 'credentialless',
-    });
-
-    expect(config.COEP_POLICY).toBe('credentialless');
-  });
-
-  it('rejects non-numeric PORT values', () => {
-    expect(() => parseBackendEnv({ ...validBackendEnv, PORT: 'abc' })).toThrow(
-      /Invalid backend environment configuration/,
-    );
-  });
-
-  it('rejects invalid MAX_BODY_SIZE values', () => {
-    expect(() => parseBackendEnv({ ...validBackendEnv, MAX_BODY_SIZE: '-1' })).toThrow(
-      /Invalid backend environment configuration/,
-    );
-  });
-
-  it('rejects invalid rate limit values', () => {
-    expect(() =>
-      parseBackendEnv({
+  describe('AI configuration', () => {
+    it('accepts zero AI_MAX_RETRIES to disable extra retries', () => {
+      const config = parseBackendEnv({
         ...validBackendEnv,
-        RATE_LIMIT_MAX: '0',
-        RATE_LIMIT_WINDOW_MS: '-1',
-      }),
-    ).toThrow(/Invalid backend environment configuration/);
+        AI_MAX_RETRIES: '0',
+      });
+
+      expect(config.AI_MAX_RETRIES).toBe(0);
+    });
+
+    it('rejects AI_MAX_RETRIES values above the three-retry contract', () => {
+      expect(() => parseBackendEnv({ ...validBackendEnv, AI_MAX_RETRIES: '4' })).toThrow(
+        /Invalid backend environment configuration/,
+      );
+    });
   });
 
-  it('rejects invalid LOG_LEVEL values', () => {
-    expect(() => parseBackendEnv({ ...validBackendEnv, LOG_LEVEL: 'verbose' })).toThrow(
-      /Invalid backend environment configuration/,
-    );
+  describe('CSP and security headers', () => {
+    it('accepts configurable frame ancestors for LMS embedding', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        CSP_FRAME_ANCESTORS: 'https://lms.example.com,https://canvas.example.com',
+      });
+
+      expect(config.CSP_FRAME_ANCESTORS).toBe('https://lms.example.com,https://canvas.example.com');
+    });
+
+    it('accepts configurable extra CSP sources', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        CSP_CONNECT_SRC: 'https://api.example.com,wss://realtime.example.com',
+        CSP_IMG_SRC: 'https://cdn.example.com',
+      });
+
+      expect(config.CSP_CONNECT_SRC).toBe('https://api.example.com,wss://realtime.example.com');
+      expect(config.CSP_IMG_SRC).toBe('https://cdn.example.com');
+    });
+
+    it('accepts COEP credentialless fallback policy', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        COEP_POLICY: 'credentialless',
+      });
+
+      expect(config.COEP_POLICY).toBe('credentialless');
+    });
   });
 
-  it('rejects invalid COEP_POLICY values', () => {
-    expect(() => parseBackendEnv({ ...validBackendEnv, COEP_POLICY: 'unsafe-none' })).toThrow(
-      /Invalid backend environment configuration/,
-    );
+  describe('input validation', () => {
+    it('rejects non-numeric PORT values', () => {
+      expect(() => parseBackendEnv({ ...validBackendEnv, PORT: 'abc' })).toThrow(
+        /Invalid backend environment configuration/,
+      );
+    });
+
+    it('rejects invalid MAX_BODY_SIZE values', () => {
+      expect(() => parseBackendEnv({ ...validBackendEnv, MAX_BODY_SIZE: '-1' })).toThrow(
+        /Invalid backend environment configuration/,
+      );
+    });
+
+    it('rejects invalid rate limit values', () => {
+      expect(() =>
+        parseBackendEnv({
+          ...validBackendEnv,
+          RATE_LIMIT_MAX: '0',
+          RATE_LIMIT_WINDOW_MS: '-1',
+        }),
+      ).toThrow(/Invalid backend environment configuration/);
+    });
+
+    it('rejects invalid LOG_LEVEL values', () => {
+      expect(() => parseBackendEnv({ ...validBackendEnv, LOG_LEVEL: 'verbose' })).toThrow(
+        /Invalid backend environment configuration/,
+      );
+    });
+
+    it('rejects invalid COEP_POLICY values', () => {
+      expect(() => parseBackendEnv({ ...validBackendEnv, COEP_POLICY: 'unsafe-none' })).toThrow(
+        /Invalid backend environment configuration/,
+      );
+    });
+
+    it('rejects empty DATABASE_URL', () => {
+      expect(() => parseBackendEnv({ ...validBackendEnv, DATABASE_URL: '' })).toThrow(
+        /Invalid backend environment configuration/,
+      );
+    });
   });
 
-  it('rejects empty DATABASE_URL', () => {
-    expect(() => parseBackendEnv({ ...validBackendEnv, DATABASE_URL: '' })).toThrow(
-      /Invalid backend environment configuration/,
-    );
-  });
+  describe('JWT_SECRET handling', () => {
+    it('rejects dev JWT_SECRET in production', () => {
+      expect(() =>
+        parseBackendEnv({
+          ...validBackendEnv,
+          NODE_ENV: 'production',
+          JWT_SECRET: 'dev-secret-change-in-production',
+        }),
+      ).toThrow(/JWT_SECRET must be changed from the default value in production/);
+    });
 
-  it('rejects dev JWT_SECRET in production', () => {
-    expect(() =>
-      parseBackendEnv({
+    it('allows strong JWT_SECRET in production', () => {
+      const config = parseBackendEnv({
         ...validBackendEnv,
         NODE_ENV: 'production',
+        JWT_SECRET: 'prod',
+        TOKEN_HASH_SALT: 'prod-salt-value',
+        JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
+      });
+
+      expect(config.JWT_SECRET).toBe('prod');
+    });
+
+    it('allows dev JWT_SECRET in development', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        NODE_ENV: 'development',
         JWT_SECRET: 'dev-secret-change-in-production',
-      }),
-    ).toThrow(/JWT_SECRET must be changed from the default value in production/);
+      });
+
+      expect(config.JWT_SECRET).toBe('dev-secret-change-in-production');
+    });
   });
 
-  it('allows strong JWT_SECRET in production', () => {
-    const config = parseBackendEnv({
-      ...validBackendEnv,
-      NODE_ENV: 'production',
-      JWT_SECRET: 'prod',
-      TOKEN_HASH_SALT: 'prod-salt-value',
-      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
+  describe('boolean and default parsing', () => {
+    it('parses DATABASE_SSL boolean from string', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        DATABASE_SSL: 'true',
+      });
+
+      expect(config.DATABASE_SSL).toBe(true);
     });
 
-    expect(config.JWT_SECRET).toBe('prod');
-  });
+    it('parses ENABLE_SWAGGER boolean from string', () => {
+      const enabled = parseBackendEnv({
+        ...validBackendEnv,
+        ENABLE_SWAGGER: 'true',
+      });
+      const disabled = parseBackendEnv({
+        ...validBackendEnv,
+        ENABLE_SWAGGER: 'false',
+      });
 
-  it('allows dev JWT_SECRET in development', () => {
-    const config = parseBackendEnv({
-      ...validBackendEnv,
-      NODE_ENV: 'development',
-      JWT_SECRET: 'dev-secret-change-in-production',
+      expect(enabled.ENABLE_SWAGGER).toBe(true);
+      expect(disabled.ENABLE_SWAGGER).toBe(false);
     });
 
-    expect(config.JWT_SECRET).toBe('dev-secret-change-in-production');
-  });
+    it('defaults ENABLE_SWAGGER to false in production', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        NODE_ENV: 'production',
+        JWT_SECRET: 'prod-jwt-value',
+        TOKEN_HASH_SALT: 'prod-salt-value',
+        JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
+      });
 
-  it('parses DATABASE_SSL boolean from string', () => {
-    const config = parseBackendEnv({
-      ...validBackendEnv,
-      DATABASE_SSL: 'true',
+      expect(config.ENABLE_SWAGGER).toBe(false);
     });
 
-    expect(config.DATABASE_SSL).toBe(true);
-  });
+    it('overrides pool defaults with explicit values', () => {
+      const config = parseBackendEnv({
+        ...validBackendEnv,
+        DATABASE_POOL_MIN: '3',
+        DATABASE_POOL_MAX: '15',
+      });
 
-  it('parses ENABLE_SWAGGER boolean from string', () => {
-    const enabled = parseBackendEnv({
-      ...validBackendEnv,
-      ENABLE_SWAGGER: 'true',
+      expect(config.DATABASE_POOL_MIN).toBe(3);
+      expect(config.DATABASE_POOL_MAX).toBe(15);
     });
-    const disabled = parseBackendEnv({
-      ...validBackendEnv,
-      ENABLE_SWAGGER: 'false',
-    });
-
-    expect(enabled.ENABLE_SWAGGER).toBe(true);
-    expect(disabled.ENABLE_SWAGGER).toBe(false);
-  });
-
-  it('defaults ENABLE_SWAGGER to false in production', () => {
-    const config = parseBackendEnv({
-      ...validBackendEnv,
-      NODE_ENV: 'production',
-      JWT_SECRET: 'prod-jwt-value',
-      TOKEN_HASH_SALT: 'prod-salt-value',
-      JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'prod-' + 'encryption-key-32-chars-min',
-    });
-
-    expect(config.ENABLE_SWAGGER).toBe(false);
-  });
-
-  it('overrides pool defaults with explicit values', () => {
-    const config = parseBackendEnv({
-      ...validBackendEnv,
-      DATABASE_POOL_MIN: '3',
-      DATABASE_POOL_MAX: '15',
-    });
-
-    expect(config.DATABASE_POOL_MIN).toBe(3);
-    expect(config.DATABASE_POOL_MAX).toBe(15);
   });
 
   describe('TENANT_FALLBACK_ENABLED', () => {

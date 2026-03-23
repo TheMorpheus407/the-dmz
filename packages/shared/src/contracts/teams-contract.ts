@@ -648,38 +648,46 @@ export const validateAdaptiveCardCallback = (
   return { valid: result.success, errors: result.error };
 };
 
+export interface BuildTeamsErrorResponseOptions {
+  code: TeamsErrorCode;
+  message: string;
+  operationType: TeamsOperationType;
+  deliveryMode: TeamsDeliveryMode;
+  tenantId: string;
+}
+
 export const buildTeamsErrorResponse = (
-  code: TeamsErrorCode,
-  message: string,
-  operationType: TeamsOperationType,
-  deliveryMode: TeamsDeliveryMode,
-  tenantId: string,
+  options: BuildTeamsErrorResponseOptions,
 ): TeamsOperationOutput => ({
   success: false,
-  error: { code, message },
+  error: { code: options.code, message: options.message },
   metadata: {
-    tenantId,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    deliveryMode,
+    operationType: options.operationType,
+    deliveryMode: options.deliveryMode,
   },
 });
 
+export interface BuildTeamsSuccessResponseOptions {
+  data: Record<string, unknown>;
+  operationType: TeamsOperationType;
+  deliveryMode: TeamsDeliveryMode;
+  tenantId: string;
+  idempotencyKey?: string;
+}
+
 export const buildTeamsSuccessResponse = (
-  data: Record<string, unknown>,
-  operationType: TeamsOperationType,
-  deliveryMode: TeamsDeliveryMode,
-  tenantId: string,
-  idempotencyKey?: string,
+  options: BuildTeamsSuccessResponseOptions,
 ): TeamsOperationOutput => ({
   success: true,
-  data,
+  data: options.data,
   metadata: {
-    idempotencyKey,
-    tenantId,
+    idempotencyKey: options.idempotencyKey,
+    tenantId: options.tenantId,
     timestamp: new Date().toISOString(),
-    operationType,
-    deliveryMode,
+    operationType: options.operationType,
+    deliveryMode: options.deliveryMode,
   },
 });
 

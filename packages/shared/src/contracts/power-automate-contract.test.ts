@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
 
 import {
   PowerAutomateOperationType,
@@ -38,7 +37,7 @@ import {
   powerAutomateExecutionModeSchema,
 } from '@the-dmz/shared/contracts/power-automate-contract';
 
-describe('power-automate-contract', () => {
+describe('power-automate-contract constants', () => {
   describe('PowerAutomateOperationType', () => {
     it('should have correct TRIGGER value', () => {
       expect(PowerAutomateOperationType.TRIGGER).toBe('trigger');
@@ -175,6 +174,26 @@ describe('power-automate-contract', () => {
     });
   });
 
+  describe('M365ServiceType', () => {
+    it('should have correct SHAREPOINT value', () => {
+      expect(M365ServiceType.SHAREPOINT).toBe('sharepoint');
+    });
+
+    it('should have correct OUTLOOK value', () => {
+      expect(M365ServiceType.OUTLOOK).toBe('outlook');
+    });
+
+    it('should have correct TEAMS value', () => {
+      expect(M365ServiceType.TEAMS).toBe('teams');
+    });
+
+    it('should have correct EXCEL value', () => {
+      expect(M365ServiceType.EXCEL).toBe('excel');
+    });
+  });
+});
+
+describe('power-automate-contract keys', () => {
   describe('POWER_AUTOMATE_TRIGGER_KEYS', () => {
     it('should include user_created trigger', () => {
       expect(POWER_AUTOMATE_TRIGGER_KEYS).toContain('user_created');
@@ -238,25 +257,9 @@ describe('power-automate-contract', () => {
       expect(POWER_AUTOMATE_ACTION_KEYS).toContain('send_notification');
     });
   });
+});
 
-  describe('M365ServiceType', () => {
-    it('should have correct SHAREPOINT value', () => {
-      expect(M365ServiceType.SHAREPOINT).toBe('sharepoint');
-    });
-
-    it('should have correct OUTLOOK value', () => {
-      expect(M365ServiceType.OUTLOOK).toBe('outlook');
-    });
-
-    it('should have correct TEAMS value', () => {
-      expect(M365ServiceType.TEAMS).toBe('teams');
-    });
-
-    it('should have correct EXCEL value', () => {
-      expect(M365ServiceType.EXCEL).toBe('excel');
-    });
-  });
-
+describe('power-automate-contract manifests', () => {
   describe('m1PowerAutomateTriggerContractManifest', () => {
     it('should have contract for user_created trigger', () => {
       const contract = m1PowerAutomateTriggerContractManifest.user_created;
@@ -485,7 +488,9 @@ describe('power-automate-contract', () => {
       expect(result.success).toBe(true);
     });
   });
+});
 
+describe('power-automate-contract utility functions', () => {
   describe('isValidPowerAutomateTriggerKey', () => {
     it('should return true for valid trigger key', () => {
       expect(isValidPowerAutomateTriggerKey('user_created')).toBe(true);
@@ -575,13 +580,13 @@ describe('power-automate-contract', () => {
   describe('buildPowerAutomateErrorResponse', () => {
     it('should build valid error response', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildPowerAutomateErrorResponse(
-        POWER_AUTOMATE_ERROR_CODES.INVALID_INPUT,
-        'Invalid input provided',
-        PowerAutomateOperationType.ACTION,
-        'create_user',
+      const response = buildPowerAutomateErrorResponse({
+        code: POWER_AUTOMATE_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid input provided',
+        operationType: PowerAutomateOperationType.ACTION,
+        operationKey: 'create_user',
         tenantId,
-      );
+      });
 
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe('PA_INVALID_INPUT');
@@ -593,14 +598,14 @@ describe('power-automate-contract', () => {
 
     it('should include execution mode when provided', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildPowerAutomateErrorResponse(
-        POWER_AUTOMATE_ERROR_CODES.GATEWAY_UNREACHABLE,
-        'Gateway unreachable',
-        PowerAutomateOperationType.ACTION,
-        'update_user',
+      const response = buildPowerAutomateErrorResponse({
+        code: POWER_AUTOMATE_ERROR_CODES.GATEWAY_UNREACHABLE,
+        message: 'Gateway unreachable',
+        operationType: PowerAutomateOperationType.ACTION,
+        operationKey: 'update_user',
         tenantId,
-        PowerAutomateExecutionMode.DESKTOP_FLOW,
-      );
+        executionMode: PowerAutomateExecutionMode.DESKTOP_FLOW,
+      });
 
       expect(response.metadata?.executionMode).toBe(PowerAutomateExecutionMode.DESKTOP_FLOW);
     });
@@ -610,13 +615,13 @@ describe('power-automate-contract', () => {
     it('should build valid success response', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
       const data = { id: '123', email: 'test@example.com' };
-      const response = buildPowerAutomateSuccessResponse(
+      const response = buildPowerAutomateSuccessResponse({
         data,
-        PowerAutomateOperationType.ACTION,
-        'create_user',
+        operationType: PowerAutomateOperationType.ACTION,
+        operationKey: 'create_user',
         tenantId,
-        'user:test@example.com',
-      );
+        idempotencyKey: 'user:test@example.com',
+      });
 
       expect(response.success).toBe(true);
       expect(response.data).toEqual(data);
@@ -644,21 +649,79 @@ describe('power-automate-contract', () => {
           nullable: false,
         },
       ];
-      const response = buildPowerAutomateSuccessResponse(
+      const response = buildPowerAutomateSuccessResponse({
         data,
-        PowerAutomateOperationType.ACTION,
-        'create_user',
+        operationType: PowerAutomateOperationType.ACTION,
+        operationKey: 'create_user',
         tenantId,
-        undefined,
-        PowerAutomateExecutionMode.CLOUD,
-        mappings,
-      );
+        executionMode: PowerAutomateExecutionMode.CLOUD,
+        m365FieldMappings: mappings,
+      });
 
       expect(response.metadata?.m365FieldMappings).toBeDefined();
       expect(response.metadata?.m365FieldMappings?.length).toBe(1);
     });
   });
 
+  describe('getPowerAutomateRetryDelayMs', () => {
+    it('should return correct delay for first attempt', () => {
+      const delay = getPowerAutomateRetryDelayMs(1);
+      expect(delay).toBe(POWER_AUTOMATE_RETRY_DELAYS_MS[0]);
+    });
+
+    it('should return correct delay for second attempt', () => {
+      const delay = getPowerAutomateRetryDelayMs(2);
+      expect(delay).toBe(POWER_AUTOMATE_RETRY_DELAYS_MS[1]);
+    });
+
+    it('should cap at maximum delay for high attempt numbers', () => {
+      const delay = getPowerAutomateRetryDelayMs(100);
+      expect(delay).toBe(POWER_AUTOMATE_RETRY_DELAYS_MS[POWER_AUTOMATE_RETRY_DELAYS_MS.length - 1]);
+    });
+  });
+
+  describe('isPowerAutomateRetryableError', () => {
+    it('should return true for DEFERRED', () => {
+      expect(isPowerAutomateRetryableError('PA_DEFERRED')).toBe(true);
+    });
+
+    it('should return true for RATE_LIMIT_EXCEEDED', () => {
+      expect(isPowerAutomateRetryableError('PA_RATE_LIMIT_EXCEEDED')).toBe(true);
+    });
+
+    it('should return true for GATEWAY_UNREACHABLE', () => {
+      expect(isPowerAutomateRetryableError('PA_GATEWAY_UNREACHABLE')).toBe(true);
+    });
+
+    it('should return false for M365_CONNECTION_FAILED', () => {
+      expect(isPowerAutomateRetryableError('PA_M365_CONNECTION_FAILED')).toBe(false);
+    });
+
+    it('should return false for DESKTOP_FLOW_FAILED', () => {
+      expect(isPowerAutomateRetryableError('PA_DESKTOP_FLOW_FAILED')).toBe(false);
+    });
+  });
+
+  describe('isPowerAutomateTerminalError', () => {
+    it('should return true for M365_CONNECTION_FAILED', () => {
+      expect(isPowerAutomateTerminalError('PA_M365_CONNECTION_FAILED')).toBe(true);
+    });
+
+    it('should return true for DESKTOP_FLOW_FAILED', () => {
+      expect(isPowerAutomateTerminalError('PA_DESKTOP_FLOW_FAILED')).toBe(true);
+    });
+
+    it('should return true for TENANT_MISMATCH', () => {
+      expect(isPowerAutomateTerminalError('PA_TENANT_MISMATCH')).toBe(true);
+    });
+
+    it('should return false for DEFERRED', () => {
+      expect(isPowerAutomateTerminalError('PA_DEFERRED')).toBe(false);
+    });
+  });
+});
+
+describe('power-automate-contract Zod schemas', () => {
   describe('powerAutomateOperationOutputSchema', () => {
     it('should validate valid success output', () => {
       const output = {
@@ -727,64 +790,9 @@ describe('power-automate-contract', () => {
       expect(result.success).toBe(true);
     });
   });
+});
 
-  describe('getPowerAutomateRetryDelayMs', () => {
-    it('should return correct delay for first attempt', () => {
-      const delay = getPowerAutomateRetryDelayMs(1);
-      expect(delay).toBe(POWER_AUTOMATE_RETRY_DELAYS_MS[0]);
-    });
-
-    it('should return correct delay for second attempt', () => {
-      const delay = getPowerAutomateRetryDelayMs(2);
-      expect(delay).toBe(POWER_AUTOMATE_RETRY_DELAYS_MS[1]);
-    });
-
-    it('should cap at maximum delay for high attempt numbers', () => {
-      const delay = getPowerAutomateRetryDelayMs(100);
-      expect(delay).toBe(POWER_AUTOMATE_RETRY_DELAYS_MS[POWER_AUTOMATE_RETRY_DELAYS_MS.length - 1]);
-    });
-  });
-
-  describe('isPowerAutomateRetryableError', () => {
-    it('should return true for DEFERRED', () => {
-      expect(isPowerAutomateRetryableError('PA_DEFERRED')).toBe(true);
-    });
-
-    it('should return true for RATE_LIMIT_EXCEEDED', () => {
-      expect(isPowerAutomateRetryableError('PA_RATE_LIMIT_EXCEEDED')).toBe(true);
-    });
-
-    it('should return true for GATEWAY_UNREACHABLE', () => {
-      expect(isPowerAutomateRetryableError('PA_GATEWAY_UNREACHABLE')).toBe(true);
-    });
-
-    it('should return false for M365_CONNECTION_FAILED', () => {
-      expect(isPowerAutomateRetryableError('PA_M365_CONNECTION_FAILED')).toBe(false);
-    });
-
-    it('should return false for DESKTOP_FLOW_FAILED', () => {
-      expect(isPowerAutomateRetryableError('PA_DESKTOP_FLOW_FAILED')).toBe(false);
-    });
-  });
-
-  describe('isPowerAutomateTerminalError', () => {
-    it('should return true for M365_CONNECTION_FAILED', () => {
-      expect(isPowerAutomateTerminalError('PA_M365_CONNECTION_FAILED')).toBe(true);
-    });
-
-    it('should return true for DESKTOP_FLOW_FAILED', () => {
-      expect(isPowerAutomateTerminalError('PA_DESKTOP_FLOW_FAILED')).toBe(true);
-    });
-
-    it('should return true for TENANT_MISMATCH', () => {
-      expect(isPowerAutomateTerminalError('PA_TENANT_MISMATCH')).toBe(true);
-    });
-
-    it('should return false for DEFERRED', () => {
-      expect(isPowerAutomateTerminalError('PA_DEFERRED')).toBe(false);
-    });
-  });
-
+describe('power-automate-contract cross-cutting concerns', () => {
   describe('Multi-step passthrough invariants', () => {
     it('should ensure output always includes id field', () => {
       const outputSchema = powerAutomateActionOutputSchemas.create_user;
@@ -845,13 +853,13 @@ describe('power-automate-contract', () => {
 
     it('should include tenantId in error responses', () => {
       const tenantId = '550e8400-e29b-41d4-a716-446655440000';
-      const response = buildPowerAutomateErrorResponse(
-        POWER_AUTOMATE_ERROR_CODES.TENANT_MISMATCH,
-        'Tenant mismatch',
-        PowerAutomateOperationType.ACTION,
-        'create_user',
+      const response = buildPowerAutomateErrorResponse({
+        code: POWER_AUTOMATE_ERROR_CODES.TENANT_MISMATCH,
+        message: 'Tenant mismatch',
+        operationType: PowerAutomateOperationType.ACTION,
+        operationKey: 'create_user',
         tenantId,
-      );
+      });
 
       expect(response.metadata?.tenantId).toBe(tenantId);
     });

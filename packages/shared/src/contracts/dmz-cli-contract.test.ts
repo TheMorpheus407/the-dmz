@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import { z } from 'zod';
 
 import {
   DmzCliCommandType,
@@ -31,7 +30,7 @@ import {
   dmzCliAdminInputSchemas,
 } from '@the-dmz/shared/contracts/dmz-cli-contract';
 
-describe('dmz-cli-contract', () => {
+describe('dmz-cli-contract - constants and manifests', () => {
   describe('DmzCliCommandType', () => {
     it('should have correct QUERY value', () => {
       expect(DmzCliCommandType.QUERY).toBe('query');
@@ -229,7 +228,9 @@ describe('dmz-cli-contract', () => {
       expect(m1DmzCliIntegrationManifest.authRequirements.apiKeyScopes).toContain('dmz_cli.admin');
     });
   });
+});
 
+describe('dmz-cli-contract - functions and validation', () => {
   describe('isValidDmzCliQueryCommand', () => {
     it('should return true for valid query command', () => {
       expect(isValidDmzCliQueryCommand('get-user')).toBe(true);
@@ -326,14 +327,14 @@ describe('dmz-cli-contract', () => {
 
   describe('buildDmzCliErrorResponse', () => {
     it('should build error response correctly', () => {
-      const response = buildDmzCliErrorResponse(
-        DMZ_CLI_ERROR_CODES.INVALID_INPUT,
-        'Invalid input',
-        DmzCliCommandType.MUTATION,
-        'create-user',
-        '660e8400-e29b-41d4-a716-446655440001',
-        100,
-      );
+      const response = buildDmzCliErrorResponse({
+        code: DMZ_CLI_ERROR_CODES.INVALID_INPUT,
+        message: 'Invalid input',
+        commandType: DmzCliCommandType.MUTATION,
+        command: 'create-user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+        executionTimeMs: 100,
+      });
       expect(response.success).toBe(false);
       expect(response.error?.code).toBe('DMZ_CLI_INVALID_INPUT');
       expect(response.metadata?.tenantId).toBe('660e8400-e29b-41d4-a716-446655440001');
@@ -343,14 +344,14 @@ describe('dmz-cli-contract', () => {
 
   describe('buildDmzCliSuccessResponse', () => {
     it('should build success response correctly', () => {
-      const response = buildDmzCliSuccessResponse(
-        { id: '123' },
-        DmzCliCommandType.MUTATION,
-        'create-user',
-        '660e8400-e29b-41d4-a716-446655440001',
-        'test-key',
-        150,
-      );
+      const response = buildDmzCliSuccessResponse({
+        data: { id: '123' },
+        commandType: DmzCliCommandType.MUTATION,
+        command: 'create-user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+        idempotencyKey: 'test-key',
+        executionTimeMs: 150,
+      });
       expect(response.success).toBe(true);
       expect(response.data?.id).toBe('123');
       expect(response.metadata?.idempotencyKey).toBe('test-key');
@@ -421,12 +422,12 @@ describe('dmz-cli-contract', () => {
 
   describe('envelope parity with Zapier', () => {
     it('should have same success/data/error/metadata structure as Zapier', () => {
-      const dmzCliResponse = buildDmzCliSuccessResponse(
-        {},
-        DmzCliCommandType.MUTATION,
-        'create-user',
-        '660e8400-e29b-41d4-a716-446655440001',
-      );
+      const dmzCliResponse = buildDmzCliSuccessResponse({
+        data: {},
+        commandType: DmzCliCommandType.MUTATION,
+        command: 'create-user',
+        tenantId: '660e8400-e29b-41d4-a716-446655440001',
+      });
       expect(dmzCliResponse).toHaveProperty('success');
       expect(dmzCliResponse).toHaveProperty('data');
       expect(dmzCliResponse).toHaveProperty('metadata');
