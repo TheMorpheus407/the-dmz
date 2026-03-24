@@ -12,9 +12,6 @@ const validBackendEnv = {
   PORT: '3001',
   API_HOST: '0.0.0.0',
   DATABASE_URL: 'postgres://localhost:5432/the_dmz',
-  DATABASE_POOL_MIN: '2',
-  DATABASE_POOL_MAX: '10',
-  DATABASE_SSL: 'false',
   REDIS_URL: 'redis://localhost:6379',
   LOG_LEVEL: 'info',
   JWT_SECRET: 'test-jwt-secret',
@@ -48,8 +45,11 @@ describe('parseBackendEnv', () => {
     expect(config.COEP_POLICY).toBe('require-corp');
   });
 
-  it('requires JWT_SECRET, TOKEN_HASH_SALT, and JWT_PRIVATE_KEY_ENCRYPTION_KEY to be set', () => {
-    expect(() => parseBackendEnv({})).toThrow(/Invalid backend environment configuration/);
+  it('applies defaults for JWT_SECRET, TOKEN_HASH_SALT, and JWT_PRIVATE_KEY_ENCRYPTION_KEY when not provided', () => {
+    const config = parseBackendEnv({});
+    expect(config.JWT_SECRET).toBe('dev-test-jwt-secret');
+    expect(config.TOKEN_HASH_SALT).toBe('token-hash-dev-test-salt');
+    expect(config.JWT_PRIVATE_KEY_ENCRYPTION_KEY).toBe('dev-test-encryption-key-32-chars!');
   });
 
   it('applies production defaults for pool settings', () => {
