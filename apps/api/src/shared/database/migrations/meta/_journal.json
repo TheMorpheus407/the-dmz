@@ -386,6 +386,13 @@
       "when": 1776150000000,
       "tag": "0053_oauth_client_grace_period",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1776200000000,
+      "tag": "0054_add_missing_tenant_columns",
+      "breakpoints": true
     }
   ]
 }
