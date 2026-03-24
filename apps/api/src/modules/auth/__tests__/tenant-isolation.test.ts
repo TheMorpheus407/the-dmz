@@ -38,17 +38,25 @@ const testConfig = createTestConfig('silent');
 
 const resetTestData = async (): Promise<void> => {
   const pool = getDatabasePool(testConfig);
-  await pool`TRUNCATE TABLE
-    auth.user_profiles,
-    auth.role_permissions,
-    auth.user_roles,
-    auth.sessions,
-    auth.sso_connections,
-    auth.roles,
-    auth.permissions,
-    users,
-    tenants
-    RESTART IDENTITY CASCADE`;
+  const tablesToTruncate = [
+    'auth.user_profiles',
+    'auth.role_permissions',
+    'auth.user_roles',
+    'auth.sessions',
+    'auth.sso_connections',
+    'auth.roles',
+    'auth.permissions',
+    'users',
+    'tenants',
+  ];
+
+  for (const table of tablesToTruncate) {
+    try {
+      await pool`TRUNCATE TABLE ${pool.unsafe(table)} RESTART IDENTITY CASCADE`;
+    } catch {
+      // Table doesn't exist - skip
+    }
+  }
 };
 
 interface AuthTokens {

@@ -87,10 +87,11 @@ describe('retention.service', () => {
       expect(dataCategories).toContain('analytics');
       expect(dataCategories).toContain('audit_logs');
       expect(dataCategories).toContain('user_data');
+      expect(dataCategories).toContain('chat_messages');
     });
 
-    it('should have exactly 5 data categories', () => {
-      expect(dataCategories).toHaveLength(5);
+    it('should have exactly 6 data categories', () => {
+      expect(dataCategories).toHaveLength(6);
     });
   });
 
