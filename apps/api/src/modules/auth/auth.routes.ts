@@ -513,7 +513,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.patch(
     '/auth/profile',
     {
-      preHandler: [authGuard, tenantContext, tenantStatusGuard, idempotency],
+      preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf, idempotency],
       schema: {
         security: [{ bearerAuth: [] }],
         body: updateProfileBodyJsonSchema,
@@ -1610,6 +1610,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         authGuard,
         tenantContext,
         tenantStatusGuard,
+        validateCsrf,
         requirePermission('admin', 'sessions:revoke:tenant'),
       ],
       schema: {
@@ -1773,6 +1774,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         authGuard,
         tenantContext,
         tenantStatusGuard,
+        validateCsrf,
         requirePermission('admin', 'role:create'),
         idempotency,
       ],
@@ -1905,6 +1907,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         authGuard,
         tenantContext,
         tenantStatusGuard,
+        validateCsrf,
         requirePermission('admin', 'role:assign'),
       ],
       schema: {
@@ -2043,6 +2046,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         authGuard,
         tenantContext,
         tenantStatusGuard,
+        validateCsrf,
         requirePermission('admin', 'role:write'),
         idempotency,
       ],

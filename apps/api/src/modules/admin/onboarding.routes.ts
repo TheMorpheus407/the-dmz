@@ -2,6 +2,8 @@ import { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fa
 
 import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
+import { validateCsrf } from '../auth/csrf.js'; // eslint-disable-line import-x/no-restricted-paths
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 import {
   type RegulatoryRegion,
@@ -232,7 +234,13 @@ export const registerOnboardingRoutes = async (fastify: FastifyInstance): Promis
   fastify.post(
     '/admin/onboarding/start',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('tenant', 'write')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requirePermission('tenant', 'write'),
+      ],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
@@ -271,7 +279,13 @@ export const registerOnboardingRoutes = async (fastify: FastifyInstance): Promis
   fastify.put(
     '/admin/onboarding/org-profile',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('tenant', 'write')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requirePermission('tenant', 'write'),
+      ],
       schema: {
         security: [{ bearerAuth: [] }],
         body: orgProfileBodySchema,
@@ -318,7 +332,13 @@ export const registerOnboardingRoutes = async (fastify: FastifyInstance): Promis
   fastify.put(
     '/admin/onboarding/idp-config',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('tenant', 'write')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requirePermission('tenant', 'write'),
+      ],
       schema: {
         security: [{ bearerAuth: [] }],
         body: idpConfigBodySchema,
@@ -372,7 +392,13 @@ export const registerOnboardingRoutes = async (fastify: FastifyInstance): Promis
   fastify.post(
     '/admin/onboarding/test-connection',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('tenant', 'read')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requirePermission('tenant', 'read'),
+      ],
       schema: {
         security: [{ bearerAuth: [] }],
         body: idpConfigBodySchema,
@@ -426,7 +452,13 @@ export const registerOnboardingRoutes = async (fastify: FastifyInstance): Promis
   fastify.post(
     '/admin/onboarding/scim-token',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('scim', 'write')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requirePermission('scim', 'write'),
+      ],
       schema: {
         security: [{ bearerAuth: [] }],
         body: scimTokenBodySchema,
@@ -458,7 +490,13 @@ export const registerOnboardingRoutes = async (fastify: FastifyInstance): Promis
   fastify.put(
     '/admin/onboarding/compliance',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('tenant', 'write')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requirePermission('tenant', 'write'),
+      ],
       schema: {
         security: [{ bearerAuth: [] }],
         body: complianceBodySchema,
@@ -504,7 +542,13 @@ export const registerOnboardingRoutes = async (fastify: FastifyInstance): Promis
   fastify.post(
     '/admin/onboarding/complete',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('tenant', 'write')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requirePermission('tenant', 'write'),
+      ],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
@@ -543,7 +587,13 @@ export const registerOnboardingRoutes = async (fastify: FastifyInstance): Promis
   fastify.post(
     '/admin/onboarding/reset',
     {
-      preHandler: [authGuard, tenantContext, requirePermission('tenant', 'write')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requirePermission('tenant', 'write'),
+      ],
       schema: {
         security: [{ bearerAuth: [] }],
         response: {

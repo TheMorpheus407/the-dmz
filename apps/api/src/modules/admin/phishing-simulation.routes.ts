@@ -3,6 +3,8 @@ import { z } from 'zod';
 
 import { authGuard, requireRole } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
+import { validateCsrf } from '../auth/csrf.js'; // eslint-disable-line import-x/no-restricted-paths
 
 import * as phishingService from './phishing-simulation.service.js';
 
@@ -87,7 +89,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.post(
     '/api/v1/admin/simulations',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -141,7 +149,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -167,7 +181,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/:id',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -192,7 +212,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.put(
     '/api/v1/admin/simulations/:id',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -238,7 +264,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.delete(
     '/api/v1/admin/simulations/:id',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -253,7 +285,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.post(
     '/api/v1/admin/simulations/:id/launch',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -278,7 +316,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.post(
     '/api/v1/admin/simulations/:id/pause',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -303,7 +347,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.post(
     '/api/v1/admin/simulations/:id/resume',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -328,7 +378,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/:id/results',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -353,7 +409,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/:id/results/summary',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -384,7 +446,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/:id/results/export',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -419,7 +487,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.put(
     '/api/v1/admin/simulations/:id/audience',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -437,7 +511,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/:id/audience',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { id } = request.params as { id: string };
@@ -461,7 +541,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/:id/eligible-users',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -478,7 +564,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.post(
     '/api/v1/admin/simulations/templates',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -495,7 +587,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/templates',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -520,7 +618,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/templates/:templateId',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { templateId } = request.params as { templateId: string };
@@ -544,7 +648,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.put(
     '/api/v1/admin/simulations/templates/:templateId',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -580,7 +690,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.delete(
     '/api/v1/admin/simulations/templates/:templateId',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -602,7 +718,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.post(
     '/api/v1/admin/simulations/teachable-moments',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -619,7 +741,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/teachable-moments',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
@@ -640,7 +768,13 @@ export async function registerPhishingSimulationRoutes(fastify: FastifyInstance)
   fastify.get(
     '/api/v1/admin/simulations/teachable-moments/:momentId',
     {
-      preHandler: [authGuard, tenantContext, requireRole('tenant_admin', 'super_admin')],
+      preHandler: [
+        authGuard,
+        tenantContext,
+        tenantStatusGuard,
+        validateCsrf,
+        requireRole('tenant_admin', 'super_admin'),
+      ],
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
