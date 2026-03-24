@@ -45,7 +45,7 @@ END $$;
 
 DO $$ BEGIN
     ALTER TABLE "training"."certificates" ADD CONSTRAINT "certificates_user_id_auth_users_fk" 
-        FOREIGN KEY ("user_id") REFERENCES "auth"."users"("user_id") ON DELETE restrict ON UPDATE no action;
+        FOREIGN KEY ("user_id") REFERENCES "public"."users"("user_id") ON DELETE restrict ON UPDATE no action;
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;

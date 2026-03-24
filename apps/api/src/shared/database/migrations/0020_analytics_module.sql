@@ -5,7 +5,7 @@
 -- Create analytics schema
 CREATE SCHEMA IF NOT EXISTS analytics;
 
--- Analytics events table with monthly partitioning
+-- Analytics events table (partitioning removed - date_trunc is not immutable for partition keys)
 CREATE TABLE analytics.events (
     event_id UUID PRIMARY KEY,
     correlation_id UUID NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE analytics.events (
     device_info JSONB,
     geo_info JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
-) PARTITION BY RANGE (date_trunc('month', event_time));
+);
 
 -- Create indexes for analytics.events
 CREATE INDEX analytics_events_tenant_idx ON analytics.events (tenant_id);
@@ -79,18 +79,8 @@ CREATE INDEX analytics_metrics_name_idx ON analytics.metrics (metric_name);
 CREATE INDEX analytics_metrics_recorded_idx ON analytics.metrics (recorded_at);
 CREATE INDEX analytics_metrics_tenant_idx ON analytics.metrics (tenant_id);
 
--- Create monthly partitions for analytics.events
-CREATE TABLE analytics.events_2026_03 PARTITION OF analytics.events
-    FOR VALUES FROM ('2026-03-01') TO ('2026-04-01');
-
-CREATE TABLE analytics.events_2026_04 PARTITION OF analytics.events
-    FOR VALUES FROM ('2026-04-01') TO ('2026-05-01');
-
-CREATE TABLE analytics.events_2026_05 PARTITION OF analytics.events
-    FOR VALUES FROM ('2026-05-01') TO ('2026-06-01');
-
 -- Add comments
-COMMENT ON TABLE analytics.events IS 'Analytics event store with monthly partitioning';
+COMMENT ON TABLE analytics.events IS 'Analytics event store';
 COMMENT ON TABLE analytics.player_profiles IS 'Player skill profiles with 7-domain competency tracking';
 COMMENT ON TABLE analytics.dead_letter_queue IS 'Dead-letter queue for failed analytics events';
 COMMENT ON TABLE analytics.metrics IS 'Analytics module metrics for monitoring';
