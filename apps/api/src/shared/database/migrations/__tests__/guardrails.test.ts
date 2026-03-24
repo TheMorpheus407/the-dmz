@@ -24,7 +24,7 @@ function getMigrationFiles(): MigrationFile[] {
 }
 
 function extractTableCreate(content: string, schema: string, table: string): string {
-  const schemaPrefix = schema === 'public' ? '' : `["']?${schema}["']?\\.`;
+  const schemaPrefix = `(?:["']?${schema}["']?\\.)?`;
   const regex = new RegExp(
     `CREATE\\s+TABLE\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?${schemaPrefix}["']?${table}["']?\\s*\\([\\s\\S]*?\\)\\s*;`,
     'i',
@@ -34,7 +34,7 @@ function extractTableCreate(content: string, schema: string, table: string): str
 }
 
 function extractForeignKeys(content: string, schema: string, table: string): string {
-  const schemaPrefix = schema === 'public' ? '' : `["']?${schema}["']?\\.`;
+  const schemaPrefix = `(?:["']?${schema}["']?\\.)?`;
   const regex = new RegExp(
     `ALTER\\s+TABLE\\s+${schemaPrefix}["']?${table}["']?\\s+[\\s\\S]*?ADD\\s+CONSTRAINT[\\s\\S]*?;`,
     'gi',
@@ -44,9 +44,9 @@ function extractForeignKeys(content: string, schema: string, table: string): str
 }
 
 function extractPolicies(content: string, schema: string, table: string): string {
-  const schemaPrefix = schema === 'public' ? '' : `["']?${schema}["']?\\.`;
+  const schemaPrefix = `(?:["']?${schema}["']?\\.)?`;
   const directRegex = new RegExp(
-    `CREATE\\s+POLICY\\s+["']?tenant_isolation_${table}["']?\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
+    `CREATE\\s+POLICY\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?["']?tenant_isolation_${table}["']?\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
     'gi',
   );
   const doBlockRegex = new RegExp(`DO\\s+\\$\\$[\\s\\S]*?END\\s+\\$\\$`, 'gi');
@@ -58,7 +58,7 @@ function extractPolicies(content: string, schema: string, table: string): string
     .map((block) => {
       const match = block.match(
         new RegExp(
-          `CREATE\\s+POLICY\\s+["']?tenant_isolation_${table}["']?\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
+          `CREATE\\s+POLICY\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?["']?tenant_isolation_${table}["']?\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
           'i',
         ),
       );
