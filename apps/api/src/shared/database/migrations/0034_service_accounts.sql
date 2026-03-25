@@ -77,18 +77,87 @@ BEGIN
   END IF;
 END $$;
 
--- Add columns to api_keys table for IP allowlist, referer restrictions, and service account reference
+-- Create api_keys table if it doesn't exist (needed for IP allowlist and service account columns)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_tables
+    WHERE schemaname = 'auth' AND tablename = 'api_keys'
+  ) THEN
+    CREATE TABLE "auth"."api_keys" (
+      "id" uuid NOT NULL DEFAULT uuid_generate_v7(),
+      "key_id" uuid NOT NULL DEFAULT uuid_generate_v7(),
+      "tenant_id" uuid NOT NULL,
+      "name" varchar(255) NOT NULL,
+      "type" varchar(16) NOT NULL,
+      "owner_type" varchar(16) NOT NULL,
+      "owner_id" uuid,
+      "service_account_id" uuid,
+      "secret_hash" varchar(255) NOT NULL,
+      "previous_secret_hash" varchar(255),
+      "scopes" jsonb NOT NULL,
+      "status" varchar(16) NOT NULL DEFAULT 'active',
+      "expires_at" timestamptz,
+      "rotation_grace_period_days" varchar(3) NOT NULL DEFAULT '7',
+      "rotation_grace_ends_at" timestamptz,
+      "last_used_at" timestamptz,
+      "ip_allowlist" jsonb,
+      "referer_restrictions" jsonb,
+      "rate_limit_requests_per_window" jsonb,
+      "rate_limit_window_ms" jsonb,
+      "created_by" uuid NOT NULL,
+      "created_at" timestamptz NOT NULL DEFAULT now(),
+      "updated_at" timestamptz NOT NULL DEFAULT now(),
+      "revoked_at" timestamptz,
+      "revoked_by" uuid,
+      "revocation_reason" text,
+      "metadata" jsonb,
+      PRIMARY KEY ("id")
+    );
+    
+    -- Create indexes for api_keys
+    CREATE UNIQUE INDEX "auth_api_keys_key_id_unique" ON "auth"."api_keys" ("key_id");
+    CREATE INDEX "auth_api_keys_tenant_id_idx" ON "auth"."api_keys" ("tenant_id");
+    CREATE INDEX "auth_api_keys_tenant_key_idx" ON "auth"."api_keys" ("tenant_id", "key_id");
+    CREATE INDEX "auth_api_keys_tenant_name_idx" ON "auth"."api_keys" ("tenant_id", "name");
+    CREATE INDEX "auth_api_keys_status_idx" ON "auth"."api_keys" ("status");
+    CREATE INDEX "auth_api_keys_owner_id_idx" ON "auth"."api_keys" ("owner_id");
+    CREATE INDEX "auth_api_keys_service_account_id_idx" ON "auth"."api_keys" ("service_account_id");
+    CREATE INDEX "auth_api_keys_created_by_idx" ON "auth"."api_keys" ("created_by");
+    CREATE INDEX "auth_api_keys_revoked_at_idx" ON "auth"."api_keys" ("revoked_at");
+    CREATE INDEX "auth_api_keys_expires_at_idx" ON "auth"."api_keys" ("expires_at");
+    CREATE INDEX "auth_api_keys_rotation_grace_ends_at_idx" ON "auth"."api_keys" ("rotation_grace_ends_at");
+    CREATE INDEX "auth_api_keys_tenant_owner_type_idx" ON "auth"."api_keys" ("tenant_id", "owner_type");
+    
+    -- Enable RLS
+    ALTER TABLE "auth"."api_keys" ENABLE ROW LEVEL SECURITY;
+    
+    -- RLS policy for tenant isolation
+    CREATE POLICY "tenant_isolation_api_keys" ON "auth"."api_keys"
+      USING ("tenant_id" = "auth"."current_tenant_id"() OR "auth"."is_super_admin"() = true)
+      WITH CHECK ("tenant_id" = "auth"."current_tenant_id"() OR "auth"."is_super_admin"() = true);
+    
+    -- Create trigger for updated_at
+    CREATE TRIGGER "trg_api_keys_updated_at"
+      BEFORE UPDATE ON "auth"."api_keys"
+      FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+    
+    -- Add comments
+    COMMENT ON COLUMN "auth"."api_keys"."ip_allowlist" IS 'Array of allowed IP addresses or CIDR ranges for this API key';
+    COMMENT ON COLUMN "auth"."api_keys"."referer_restrictions" IS 'Array of allowed referer patterns for this API key';
+    COMMENT ON COLUMN "auth"."api_keys"."service_account_id" IS 'Reference to the service account that owns this API key';
+  END IF;
+END $$;
+
+-- Add columns to api_keys table for IP allowlist, referer restrictions, and service account reference (if not already added)
+-- Note: tenant_id is created by the DO block above if the table didn't exist
 ALTER TABLE "auth"."api_keys" ADD COLUMN IF NOT EXISTS "ip_allowlist" jsonb;
 ALTER TABLE "auth"."api_keys" ADD COLUMN IF NOT EXISTS "referer_restrictions" jsonb;
 ALTER TABLE "auth"."api_keys" ADD COLUMN IF NOT EXISTS "service_account_id" uuid REFERENCES "auth"."service_accounts" ("id") ON DELETE SET NULL;
 
 -- Create indexes for new api_keys columns
 CREATE INDEX IF NOT EXISTS "auth_api_keys_service_account_id_idx" ON "auth"."api_keys" ("service_account_id");
-
--- Add comments for new columns
-COMMENT ON COLUMN "auth"."api_keys"."ip_allowlist" IS 'Array of allowed IP addresses or CIDR ranges for this API key';
-COMMENT ON COLUMN "auth"."api_keys"."referer_restrictions" IS 'Array of allowed referer patterns for this API key';
-COMMENT ON COLUMN "auth"."api_keys"."service_account_id" IS 'Reference to the service account that owns this API key';
 
 -- Function to validate IP against allowlist
 CREATE OR REPLACE FUNCTION "auth"."validate_ip_allowlist"(
