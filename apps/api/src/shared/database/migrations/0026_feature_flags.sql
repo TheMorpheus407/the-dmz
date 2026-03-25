@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS "feature_flags"."ab_test_assignments" (
 
 -- Indexes for efficient querying
 CREATE INDEX IF NOT EXISTS "feature_flags_tenant_id_idx" ON feature_flags.flags USING btree ("tenant_id");
-CREATE INDEX IF NOT EXISTS "feature_flags_tenant_key_unique" ON feature_flags.flags USING btree ("tenant_id", "key");
+CREATE UNIQUE INDEX IF NOT EXISTS "feature_flags_tenant_key_unique" ON feature_flags.flags USING btree ("tenant_id", "key");
 CREATE INDEX IF NOT EXISTS "feature_flags_tenant_active_idx" ON feature_flags.flags USING btree ("tenant_id", "is_active");
 
 CREATE INDEX IF NOT EXISTS "feature_flag_overrides_flag_id_idx" ON feature_flags.tenant_overrides USING btree ("flag_id");

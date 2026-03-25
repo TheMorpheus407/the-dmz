@@ -502,7 +502,6 @@ export const backfillProfiles = async (db: DB): Promise<number> => {
       WHERE "auth"."user_profiles"."tenant_id" = "public"."users"."tenant_id"
         AND "auth"."user_profiles"."user_id" = "public"."users"."user_id"
     )
-    ON CONFLICT (tenant_id, user_id) DO NOTHING
   `);
   const rowCount = (result as { rowCount?: number }).rowCount;
   return rowCount ?? 0;
