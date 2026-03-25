@@ -45,6 +45,21 @@ const testConfig = createTestConfig('silent');
 
 const resetTestData = async (): Promise<void> => {
   const pool = getDatabasePool(testConfig);
+
+  const columnDefs = [
+    "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS onboarding_state jsonb DEFAULT '{}'::jsonb",
+    "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS idp_config jsonb DEFAULT '{}'::jsonb",
+    "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS compliance_frameworks jsonb DEFAULT '{}'::jsonb",
+  ];
+
+  for (const columnDef of columnDefs) {
+    try {
+      await pool`${pool.unsafe(columnDef)}`;
+    } catch {
+      // Column may already exist
+    }
+  }
+
   const tablesToTruncate = [
     'auth.user_profiles',
     'auth.role_permissions',
