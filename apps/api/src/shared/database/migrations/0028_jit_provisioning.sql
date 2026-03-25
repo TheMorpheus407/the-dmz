@@ -33,8 +33,23 @@ CREATE INDEX IF NOT EXISTS admin_notifications_is_read_idx ON auth.admin_notific
 CREATE INDEX IF NOT EXISTS admin_notifications_created_at_idx ON auth.admin_notifications(created_at);
 
 -- Add FK constraints for tenant isolation
-ALTER TABLE auth.admin_notifications ADD CONSTRAINT admin_notifications_tenant_id_tenants_tenant_id_fk FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE restrict ON UPDATE no action;
-ALTER TABLE auth.admin_notifications ADD CONSTRAINT admin_notifications_admin_user_id_users_user_id_fk FOREIGN KEY (admin_user_id) REFERENCES users(user_id) ON DELETE restrict ON UPDATE no action;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'admin_notifications_tenant_id_tenants_tenant_id_fk'
+  ) THEN
+    ALTER TABLE auth.admin_notifications ADD CONSTRAINT admin_notifications_tenant_id_tenants_tenant_id_fk FOREIGN KEY (tenant_id) REFERENCES public.tenants(tenant_id) ON DELETE restrict ON UPDATE no action;
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'admin_notifications_admin_user_id_users_user_id_fk'
+  ) THEN
+    ALTER TABLE auth.admin_notifications ADD CONSTRAINT admin_notifications_admin_user_id_users_user_id_fk FOREIGN KEY (admin_user_id) REFERENCES users(user_id) ON DELETE restrict ON UPDATE no action;
+  END IF;
+END $$;
 
 -- RLS policies for admin notifications
 DO $$
