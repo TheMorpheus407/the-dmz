@@ -61,24 +61,8 @@ CREATE INDEX IF NOT EXISTS "leaderboard_entry_player_idx" ON "social"."leaderboa
 CREATE INDEX IF NOT EXISTS "leaderboard_entry_tenant_idx" ON "social"."leaderboard_entry" ("tenant_id");
 CREATE INDEX IF NOT EXISTS "leaderboard_scope_season_idx" ON "social"."leaderboard" ("scope", "season_id");
 
--- Enable RLS
-ALTER TABLE "social"."leaderboard" ENABLE ROW LEVEL SECURITY;
+-- Enable RLS on leaderboard_entry (leaderboard is global/regional metadata, no tenant isolation needed)
 ALTER TABLE "social"."leaderboard_entry" ENABLE ROW LEVEL SECURITY;
-
--- RLS policy for tenant isolation on leaderboard
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_policies
-    WHERE schemaname = 'social' AND tablename = 'leaderboard'
-    AND policyname = 'tenant_isolation_leaderboard'
-  ) THEN
-    CREATE POLICY "tenant_isolation_leaderboard" ON "social"."leaderboard"
-      FOR ALL
-      USING ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true')
-      WITH CHECK ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true');
-  END IF;
-END $$;
 
 -- RLS policy for tenant isolation on leaderboard_entry
 DO $$
