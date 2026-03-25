@@ -42,7 +42,7 @@ COMMENT ON TABLE training.phishing_simulations IS 'Phishing simulation campaigns
 -- Phishing Simulation Templates table
 CREATE TABLE IF NOT EXISTS training.phishing_simulation_templates (
     template_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id UUID NOT NULL,
+    tenant_id UUID,
     name VARCHAR(255) NOT NULL,
     description VARCHAR(65535),
     category VARCHAR(100),
@@ -196,31 +196,31 @@ ALTER TABLE training.phishing_simulation_events ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for phishing simulation tables (tenant isolation)
 -- Note: RLS policy comments must contain "tenant_isolation" for migration guardrails tests
-CREATE POLICY IF NOT EXISTS tenant_isolation_phishing_simulations ON training.phishing_simulations
+CREATE POLICY tenant_isolation_phishing_simulations ON training.phishing_simulations
     USING ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true')
     WITH CHECK ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true');
 
-CREATE POLICY IF NOT EXISTS tenant_isolation_phishing_simulation_templates ON training.phishing_simulation_templates
+CREATE POLICY tenant_isolation_phishing_simulation_templates ON training.phishing_simulation_templates
     USING ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true' OR "tenant_id" IS NULL)
     WITH CHECK ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true' OR "tenant_id" IS NULL);
 
-CREATE POLICY IF NOT EXISTS tenant_isolation_phishing_simulation_audience ON training.phishing_simulation_audience
+CREATE POLICY tenant_isolation_phishing_simulation_audience ON training.phishing_simulation_audience
     USING (simulation_id IN (
         SELECT simulation_id FROM training.phishing_simulations 
         WHERE "tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true'
     ));
 
-CREATE POLICY IF NOT EXISTS tenant_isolation_phishing_simulation_results ON training.phishing_simulation_results
+CREATE POLICY tenant_isolation_phishing_simulation_results ON training.phishing_simulation_results
     USING (simulation_id IN (
         SELECT simulation_id FROM training.phishing_simulations 
         WHERE "tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true'
     ));
 
-CREATE POLICY IF NOT EXISTS tenant_isolation_phishing_teachable_moments ON training.phishing_teachable_moments
+CREATE POLICY tenant_isolation_phishing_teachable_moments ON training.phishing_teachable_moments
     USING ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true')
     WITH CHECK ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true');
 
-CREATE POLICY IF NOT EXISTS tenant_isolation_phishing_simulation_events ON training.phishing_simulation_events
+CREATE POLICY tenant_isolation_phishing_simulation_events ON training.phishing_simulation_events
     USING (simulation_id IN (
         SELECT simulation_id FROM training.phishing_simulations 
         WHERE "tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true'

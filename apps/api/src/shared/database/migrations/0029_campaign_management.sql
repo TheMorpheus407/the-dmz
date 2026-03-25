@@ -147,33 +147,33 @@ ALTER TABLE training.campaign_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE training.campaign_escalations ENABLE ROW LEVEL SECURITY;
 
 -- RLS policies for campaigns (tenant isolation)
-CREATE POLICY IF NOT EXISTS campaigns_tenant_isolation_policy ON training.campaigns
+CREATE POLICY campaigns_tenant_isolation_policy ON training.campaigns
     USING ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true')
     WITH CHECK ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true');
 
-CREATE POLICY IF NOT EXISTS campaign_audience_tenant_isolation_policy ON training.campaign_audience
+CREATE POLICY campaign_audience_tenant_isolation_policy ON training.campaign_audience
     USING (campaign_id IN (
         SELECT campaign_id FROM training.campaigns 
         WHERE "tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true'
     ));
 
-CREATE POLICY IF NOT EXISTS campaign_content_tenant_isolation_policy ON training.campaign_content
+CREATE POLICY campaign_content_tenant_isolation_policy ON training.campaign_content
     USING (campaign_id IN (
         SELECT campaign_id FROM training.campaigns 
         WHERE "tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true'
     ));
 
-CREATE POLICY IF NOT EXISTS campaign_enrollments_tenant_isolation_policy ON training.campaign_enrollments
+CREATE POLICY campaign_enrollments_tenant_isolation_policy ON training.campaign_enrollments
     USING (campaign_id IN (
         SELECT campaign_id FROM training.campaigns 
         WHERE "tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true'
     ));
 
-CREATE POLICY IF NOT EXISTS campaign_templates_tenant_isolation_policy ON training.campaign_templates
+CREATE POLICY campaign_templates_tenant_isolation_policy ON training.campaign_templates
     USING ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true')
     WITH CHECK ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true');
 
-CREATE POLICY IF NOT EXISTS campaign_escalations_tenant_isolation_policy ON training.campaign_escalations
+CREATE POLICY campaign_escalations_tenant_isolation_policy ON training.campaign_escalations
     USING (campaign_id IN (
         SELECT campaign_id FROM training.campaigns 
         WHERE "tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true'
