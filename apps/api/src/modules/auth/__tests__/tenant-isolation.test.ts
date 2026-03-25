@@ -1,5 +1,8 @@
+import { fileURLToPath } from 'node:url';
+
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
 
 import type { LogLevel } from '@the-dmz/shared';
 
@@ -19,6 +22,10 @@ import {
   type DualTenantFixture,
   type TestTenant,
 } from '../../../__tests__/helpers/factory.js';
+
+const migrationsFolder = fileURLToPath(
+  new URL('../../../shared/database/migrations', import.meta.url),
+);
 
 const createTestConfig = (logLevel: LogLevel = 'silent'): AppConfig => {
   const base = loadConfig();
@@ -121,6 +128,8 @@ describe('tenant-isolation', () => {
   let fixture: DualTenantFixture;
 
   beforeAll(async () => {
+    const db = getDatabaseClient(testConfig);
+    await migrate(db, { migrationsFolder });
     await resetTestData();
     await app.ready();
   });
