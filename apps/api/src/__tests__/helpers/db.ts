@@ -29,6 +29,13 @@ export async function withTestTransaction<T>(fn: TestTransaction<T>): Promise<T>
   return result as T;
 }
 
+export const TENANT_COLUMN_DEFS = [
+  'ALTER TABLE tenants ADD COLUMN IF NOT EXISTS contact_email varchar(255)',
+  "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS onboarding_state jsonb DEFAULT '{}'::jsonb",
+  "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS idp_config jsonb DEFAULT '{}'::jsonb",
+  "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS compliance_frameworks jsonb DEFAULT '{}'::jsonb",
+] as const;
+
 export async function resetTestDatabase(): Promise<void> {
   if (process.env['NODE_ENV'] !== 'test') {
     throw new Error('resetTestDatabase can only be used in test environment.');
@@ -36,14 +43,7 @@ export async function resetTestDatabase(): Promise<void> {
 
   const pool = getDatabasePool();
 
-  const columnDefs = [
-    'ALTER TABLE tenants ADD COLUMN IF NOT EXISTS contact_email varchar(255)',
-    "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS onboarding_state jsonb DEFAULT '{}'::jsonb",
-    "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS idp_config jsonb DEFAULT '{}'::jsonb",
-    "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS compliance_frameworks jsonb DEFAULT '{}'::jsonb",
-  ];
-
-  for (const columnDef of columnDefs) {
+  for (const columnDef of TENANT_COLUMN_DEFS) {
     try {
       await pool`${pool.unsafe(columnDef)}`;
     } catch {
