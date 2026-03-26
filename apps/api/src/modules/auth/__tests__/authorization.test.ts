@@ -35,7 +35,7 @@ const resetTestData = async (): Promise<void> => {
 
   for (const columnDef of TENANT_COLUMN_DEFS) {
     try {
-      await pool`${pool.unsafe(columnDef)}`;
+      await pool.unsafe(columnDef);
     } catch {
       // Column may already exist
     }
