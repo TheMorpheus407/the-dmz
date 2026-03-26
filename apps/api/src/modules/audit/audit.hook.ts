@@ -98,7 +98,7 @@ export function createAuditLogHook(options: AuditHookOptions = {}) {
             logInput.userAgent = sanitizeForLogging(userAgentHeader);
           }
 
-          await createAuditLog(logInput);
+          await createAuditLog(logInput, request.server.config);
         } catch (error) {
           request.log.error(error, 'Failed to create audit log entry');
         }
