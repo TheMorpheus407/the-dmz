@@ -50,7 +50,7 @@ CREATE INDEX IF NOT EXISTS "avatars_tags_idx" ON "content"."avatars" USING GIN (
 CREATE TABLE IF NOT EXISTS "social"."tenant_avatar_restrictions" (
   "restriction_id" uuid DEFAULT uuid_generate_v7() PRIMARY KEY,
   "tenant_id" uuid NOT NULL REFERENCES "tenants"("tenant_id") ON DELETE CASCADE,
-  "avatar_id" uuid NOT NULL REFERENCES "content"."avatars"("id") ON DELETE CASCADE,
+  "avatar_id" varchar(36) NOT NULL REFERENCES "content"."avatars"("id") ON DELETE CASCADE,
   "is_allowed" boolean NOT NULL DEFAULT true,
   "created_at" timestamp with time zone NOT NULL DEFAULT now(),
   "created_by" uuid,

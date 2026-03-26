@@ -2,12 +2,104 @@
 -- Description: Create co-op session infrastructure for M11-02: Co-op Session Service
 --
 -- Creates:
+-- - multiplayer schema
+-- - multiplayer.party table (co-op party/team entity)
+-- - multiplayer.party_member table (party membership with player profiles)
 -- - multiplayer.coop_session table (session state and metadata)
 -- - multiplayer.coop_role_assignment table (role assignments per player)
 -- - multiplayer.coop_decision_proposal table (decision proposals with conflict tracking)
 -- - multiplayer.coop_incident_response table (incident response actions)
 --
 -- Required by Issue #253: M11-02: Co-op Session Service
+
+-- Create multiplayer schema
+CREATE SCHEMA IF NOT EXISTS multiplayer;
+
+-- Party table - represents a co-op party/team
+CREATE TABLE IF NOT EXISTS "multiplayer"."party" (
+    "party_id" uuid PRIMARY KEY DEFAULT uuid_generate_v7() NOT NULL,
+    "tenant_id" uuid NOT NULL REFERENCES "tenants"("tenant_id") ON DELETE RESTRICT,
+    "name" varchar(100) NOT NULL,
+    "max_members" integer DEFAULT 4 NOT NULL,
+    "invite_code" varchar(20) UNIQUE,
+    "status" varchar(20) DEFAULT 'open' NOT NULL,
+    "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "created_by" uuid REFERENCES "social"."player_profiles"("profile_id") ON DELETE SET NULL,
+    "leader_id" uuid REFERENCES "social"."player_profiles"("profile_id") ON DELETE SET NULL
+);
+
+-- Indexes for party
+CREATE INDEX IF NOT EXISTS "party_tenant_idx" ON "multiplayer"."party" USING btree ("tenant_id");
+CREATE INDEX IF NOT EXISTS "party_invite_code_idx" ON "multiplayer"."party" USING btree ("invite_code");
+CREATE INDEX IF NOT EXISTS "party_status_idx" ON "multiplayer"."party" USING btree ("status");
+
+-- Enable RLS on party
+ALTER TABLE "multiplayer"."party" ENABLE ROW LEVEL SECURITY;
+
+-- RLS policy for tenant isolation on party
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'multiplayer' AND tablename = 'party' 
+    AND policyname = 'tenant_isolation_party'
+  ) THEN
+    CREATE POLICY "tenant_isolation_party" ON "multiplayer"."party"
+      FOR ALL
+      USING ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true')
+      WITH CHECK ("tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true');
+  END IF;
+END $$;
+
+-- Party member table - links players to parties
+CREATE TABLE IF NOT EXISTS "multiplayer"."party_member" (
+    "member_id" uuid PRIMARY KEY DEFAULT uuid_generate_v7() NOT NULL,
+    "party_id" uuid NOT NULL REFERENCES "multiplayer"."party"("party_id") ON DELETE CASCADE,
+    "player_id" uuid NOT NULL REFERENCES "social"."player_profiles"("profile_id") ON DELETE CASCADE,
+    "role" varchar(30) DEFAULT 'member' NOT NULL,
+    "joined_at" timestamp with time zone DEFAULT now() NOT NULL,
+    "status" varchar(20) DEFAULT 'active' NOT NULL,
+    "invited_by" uuid REFERENCES "social"."player_profiles"("profile_id") ON DELETE SET NULL,
+    UNIQUE("party_id", "player_id")
+);
+
+-- Indexes for party_member
+CREATE INDEX IF NOT EXISTS "party_member_party_idx" ON "multiplayer"."party_member" USING btree ("party_id");
+CREATE INDEX IF NOT EXISTS "party_member_player_idx" ON "multiplayer"."party_member" USING btree ("player_id");
+CREATE INDEX IF NOT EXISTS "party_member_status_idx" ON "multiplayer"."party_member" USING btree ("status");
+
+-- Enable RLS on party_member
+ALTER TABLE "multiplayer"."party_member" ENABLE ROW LEVEL SECURITY;
+
+-- RLS policy for tenant isolation on party_member
+-- Note: party_member joins through party to get tenant_id
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_policies
+    WHERE schemaname = 'multiplayer' AND tablename = 'party_member' 
+    AND policyname = 'tenant_isolation_party_member'
+  ) THEN
+    CREATE POLICY "tenant_isolation_party_member" ON "multiplayer"."party_member"
+      FOR ALL
+      USING (
+        EXISTS (
+          SELECT 1 FROM "multiplayer"."party" p 
+          WHERE p."party_id" = "multiplayer"."party_member"."party_id"
+          AND (p."tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true')
+        )
+      )
+      WITH CHECK (
+        EXISTS (
+          SELECT 1 FROM "multiplayer"."party" p 
+          WHERE p."party_id" = "multiplayer"."party_member"."party_id"
+          AND (p."tenant_id" = "auth"."current_tenant_id"() OR current_setting('app.is_super_admin', true) = 'true')
+        )
+      );
+  END IF;
+END $$;
 
 -- coop_session table - session state and metadata
 CREATE TABLE IF NOT EXISTS "multiplayer"."coop_session" (

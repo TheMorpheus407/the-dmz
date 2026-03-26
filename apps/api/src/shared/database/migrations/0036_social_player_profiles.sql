@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS "social"."player_profiles" (
 
 -- Indexes for efficient querying
 CREATE UNIQUE INDEX IF NOT EXISTS "social_player_profiles_user_unique" ON "social"."player_profiles" USING btree ("user_id");
+CREATE UNIQUE INDEX IF NOT EXISTS "social_player_profiles_tenant_profile_unique" ON "social"."player_profiles" USING btree ("tenant_id", "profile_id");
 CREATE INDEX IF NOT EXISTS "social_player_profiles_tenant_idx" ON "social"."player_profiles" USING btree ("tenant_id");
 CREATE INDEX IF NOT EXISTS "social_player_profiles_season_rank_idx" ON "social"."player_profiles" USING btree ("season_rank" DESC);
 CREATE INDEX IF NOT EXISTS "social_player_profiles_last_active_idx" ON "social"."player_profiles" USING btree ("last_active_at");
