@@ -1,15 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { beginMock, sqlTagMock, getDatabasePoolMock } = vi.hoisted(() => {
+const { beginMock, sqlTagMock, unsafeMock, reserveMock, getDatabasePoolMock } = vi.hoisted(() => {
   const beginMock = vi.fn();
   const sqlTagMock = vi.fn();
+  const unsafeMock = vi.fn().mockResolvedValue([]);
+  const reserveMock = vi.fn(() => ({
+    begin: beginMock,
+    release: vi.fn(),
+  }));
   const getDatabasePoolMock = vi.fn(() =>
     Object.assign(sqlTagMock, {
       begin: beginMock,
+      unsafe: unsafeMock,
+      reserve: reserveMock,
     }),
   );
 
-  return { beginMock, sqlTagMock, getDatabasePoolMock };
+  return { beginMock, sqlTagMock, unsafeMock, reserveMock, getDatabasePoolMock };
 });
 
 vi.mock('../../shared/database/connection.js', () => ({
@@ -25,6 +32,8 @@ const originalNodeEnv = process.env['NODE_ENV'];
 beforeEach(() => {
   beginMock.mockReset();
   sqlTagMock.mockReset();
+  unsafeMock.mockReset();
+  reserveMock.mockReset();
   getDatabasePoolMock.mockClear();
   process.env['NODE_ENV'] = 'test';
 });
@@ -69,21 +78,27 @@ describe('resetTestDatabase', () => {
     await expect(resetTestDatabase()).rejects.toThrow(
       'resetTestDatabase can only be used in test environment.',
     );
-    expect(sqlTagMock).not.toHaveBeenCalled();
+    expect(unsafeMock).not.toHaveBeenCalled();
   });
 
   it('runs truncate in test environment', async () => {
-    sqlTagMock.mockResolvedValueOnce([]);
-
     await resetTestDatabase();
 
-    expect(sqlTagMock).toHaveBeenCalledTimes(1);
-    const [template] = sqlTagMock.mock.calls[0] ?? [];
-    expect(Array.isArray(template)).toBe(true);
-    const sqlText = (template as TemplateStringsArray)[0] ?? '';
-    expect(sqlText).toContain('TRUNCATE TABLE');
-    expect(sqlText).toContain('auth.permissions');
-    expect(sqlText).toContain('users');
-    expect(sqlText).toContain('tenants');
+    expect(unsafeMock).toHaveBeenCalledTimes(12);
+    const calls = unsafeMock.mock.calls.map(([sql]) => sql as string);
+
+    const alterTableCalls = calls.filter((sql) => sql.includes('ALTER TABLE'));
+    expect(alterTableCalls).toHaveLength(4);
+    expect(alterTableCalls.some((sql) => sql.includes('contact_email'))).toBe(true);
+    expect(alterTableCalls.some((sql) => sql.includes('onboarding_state'))).toBe(true);
+    expect(alterTableCalls.some((sql) => sql.includes('idp_config'))).toBe(true);
+    expect(alterTableCalls.some((sql) => sql.includes('compliance_frameworks'))).toBe(true);
+
+    const truncateTableCalls = calls.filter((sql) => sql.includes('TRUNCATE TABLE'));
+    expect(truncateTableCalls).toHaveLength(8);
+    expect(truncateTableCalls.some((sql) => sql.includes('auth.role_permissions'))).toBe(true);
+    expect(truncateTableCalls.some((sql) => sql.includes('auth.permissions'))).toBe(true);
+    expect(truncateTableCalls.some((sql) => sql.includes('users'))).toBe(true);
+    expect(truncateTableCalls.some((sql) => sql.includes('tenants'))).toBe(true);
   });
 });
