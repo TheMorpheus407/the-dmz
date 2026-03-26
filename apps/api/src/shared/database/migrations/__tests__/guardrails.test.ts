@@ -45,8 +45,10 @@ function extractForeignKeys(content: string, schema: string, table: string): str
 
 function extractPolicies(content: string, schema: string, table: string): string {
   const schemaPrefix = `(?:["']?${schema}["']?\\.)?`;
+  const policyNameVariants = [`tenant_isolation_${table}`, `tenant_isolation_${schema}_${table}`];
+  const policyNameRegex = policyNameVariants.map((n) => `["']?${n}["']?`).join('|');
   const directRegex = new RegExp(
-    `CREATE\\s+POLICY\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?["']?tenant_isolation_${table}["']?\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
+    `CREATE\\s+POLICY\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?(?:${policyNameRegex})\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
     'gi',
   );
   const doBlockRegex = new RegExp(`DO\\s+\\$\\$[\\s\\S]*?END\\s+\\$\\$`, 'gi');
@@ -58,7 +60,7 @@ function extractPolicies(content: string, schema: string, table: string): string
     .map((block) => {
       const match = block.match(
         new RegExp(
-          `CREATE\\s+POLICY\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?["']?tenant_isolation_${table}["']?\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
+          `CREATE\\s+POLICY\\s+(?:IF\\s+NOT\\s+EXISTS\\s+)?(?:${policyNameRegex})\\s+ON\\s+${schemaPrefix}["']?${table}["']?[^;]+;`,
           'i',
         ),
       );

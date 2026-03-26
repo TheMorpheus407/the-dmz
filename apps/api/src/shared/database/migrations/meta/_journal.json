@@ -400,6 +400,13 @@
       "when": 1776250000000,
       "tag": "0055_fix_missing_tenant_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1776300000000,
+      "tag": "0056_add_device_fingerprint_to_sessions",
+      "breakpoints": true
     }
   ]
 }
