@@ -1,5 +1,6 @@
 import { getDatabasePool } from '../../shared/database/connection.js';
 
+import type { AppConfig } from '../../config.js';
 import type { TransactionSql } from 'postgres';
 
 const rollbackSignal = new Error('ROLLBACK_TEST_TRANSACTION');
@@ -36,12 +37,8 @@ export const TENANT_COLUMN_DEFS = [
   "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS compliance_frameworks jsonb DEFAULT '{}'::jsonb",
 ] as const;
 
-export async function resetTestDatabase(): Promise<void> {
-  if (process.env['NODE_ENV'] !== 'test') {
-    throw new Error('resetTestDatabase can only be used in test environment.');
-  }
-
-  const pool = getDatabasePool();
+export async function ensureTenantColumns(config?: AppConfig): Promise<void> {
+  const pool = getDatabasePool(config);
 
   for (const columnDef of TENANT_COLUMN_DEFS) {
     try {
@@ -50,6 +47,16 @@ export async function resetTestDatabase(): Promise<void> {
       // Column may already exist
     }
   }
+}
+
+export async function resetTestDatabase(config?: AppConfig): Promise<void> {
+  if (process.env['NODE_ENV'] !== 'test') {
+    throw new Error('resetTestDatabase can only be used in test environment.');
+  }
+
+  await ensureTenantColumns(config);
+
+  const pool = getDatabasePool(config);
 
   await pool`TRUNCATE TABLE
     auth.role_permissions,
