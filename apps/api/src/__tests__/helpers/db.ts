@@ -11,10 +11,15 @@ export async function withTestTransaction<T>(fn: TestTransaction<T>): Promise<T>
   let result: T | undefined;
 
   try {
-    await pool.begin(async (transaction) => {
-      result = await fn(transaction);
-      throw rollbackSignal;
-    });
+    const reserved = await pool.reserve();
+    try {
+      await reserved.begin(async (transaction) => {
+        result = await fn(transaction);
+        throw rollbackSignal;
+      });
+    } finally {
+      reserved.release();
+    }
   } catch (error) {
     if (error !== rollbackSignal) {
       throw error;

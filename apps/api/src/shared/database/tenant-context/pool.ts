@@ -47,8 +47,9 @@ export const createTenantScopedConnection = (
         throw new Error('Tenant context not set. Use setContext() first.');
       }
 
+      const reserved = await pool.reserve();
       try {
-        const result = await pool.begin(async (tx) => {
+        const result = await reserved.begin(async (tx) => {
           await tx.unsafe(
             `SELECT set_config('app.current_tenant_id', $1, true), set_config('app.tenant_id', $1, true)`,
             [currentTenantId],
@@ -69,6 +70,8 @@ export const createTenantScopedConnection = (
           await this.reset();
         }
         throw error;
+      } finally {
+        reserved.release();
       }
     },
 
