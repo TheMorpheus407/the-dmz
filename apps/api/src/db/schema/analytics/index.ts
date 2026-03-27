@@ -12,7 +12,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 export const analyticsEvents = pgTable(
-  'analytics_events',
+  'analytics.events',
   {
     eventId: uuid('event_id').primaryKey(),
     correlationId: uuid('correlation_id').notNull(),
@@ -45,7 +45,7 @@ export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type NewAnalyticsEvent = typeof analyticsEvents.$inferInsert;
 
 export const playerProfiles = pgTable(
-  'analytics_player_profiles',
+  'analytics.player_profiles',
   {
     userId: uuid('user_id').primaryKey(),
     tenantId: uuid('tenant_id').notNull(),
@@ -79,7 +79,7 @@ export type PlayerProfile = typeof playerProfiles.$inferSelect;
 export type NewPlayerProfile = typeof playerProfiles.$inferInsert;
 
 export const deadLetterQueue = pgTable(
-  'analytics_dead_letter_queue',
+  'analytics.dead_letter_queue',
   {
     id: uuid('id')
       .primaryKey()
@@ -103,7 +103,7 @@ export type DeadLetterQueueItem = typeof deadLetterQueue.$inferSelect;
 export type NewDeadLetterQueueItem = typeof deadLetterQueue.$inferInsert;
 
 export const analyticsMetrics = pgTable(
-  'analytics_metrics',
+  'analytics.metrics',
   {
     id: uuid('id')
       .primaryKey()
@@ -126,7 +126,7 @@ export type AnalyticsMetric = typeof analyticsMetrics.$inferSelect;
 export type NewAnalyticsMetric = typeof analyticsMetrics.$inferInsert;
 
 export const retentionCohorts = pgTable(
-  'analytics_retention_cohorts',
+  'analytics.retention_cohorts',
   {
     id: uuid('id')
       .primaryKey()
@@ -162,7 +162,7 @@ export type RetentionCohort = typeof retentionCohorts.$inferSelect;
 export type NewRetentionCohort = typeof retentionCohorts.$inferInsert;
 
 export const pseudonymizationMappings = pgTable(
-  'analytics_pseudonymization_mappings',
+  'analytics.pseudonymization_mappings',
   {
     id: uuid('id')
       .primaryKey()
