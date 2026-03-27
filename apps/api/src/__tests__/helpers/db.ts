@@ -59,6 +59,7 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
   const pool = getDatabasePool(config);
 
   const tablesToTruncate = [
+    'auth.user_profiles',
     'auth.role_permissions',
     'auth.user_roles',
     'auth.sessions',
@@ -71,7 +72,14 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
 
   for (const table of tablesToTruncate) {
     try {
-      await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+      const tableParts = table.split('.');
+      if (tableParts.length === 2) {
+        await pool.unsafe(
+          `TRUNCATE TABLE "${tableParts[0]}"."${tableParts[1]}" RESTART IDENTITY CASCADE`,
+        );
+      } else {
+        await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+      }
     } catch {
       // Table doesn't exist - skip
     }

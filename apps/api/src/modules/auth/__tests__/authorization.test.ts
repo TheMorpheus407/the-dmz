@@ -3,12 +3,8 @@ import { eq } from 'drizzle-orm';
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
-import {
-  closeDatabase,
-  getDatabasePool,
-  getDatabaseClient,
-} from '../../../shared/database/connection.js';
-import { TENANT_COLUMN_DEFS } from '../../../__tests__/helpers/db.js';
+import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
+import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { permissions, roles, rolePermissions, userRoles } from '../../../db/schema/auth/index.js';
 import {
   hasPermission,
@@ -29,29 +25,6 @@ const createTestConfig = (): AppConfig => {
 };
 
 const testConfig = createTestConfig();
-
-const resetTestData = async (): Promise<void> => {
-  const pool = getDatabasePool(testConfig);
-
-  for (const columnDef of TENANT_COLUMN_DEFS) {
-    try {
-      await pool.unsafe(columnDef);
-    } catch {
-      // Column may already exist
-    }
-  }
-
-  await pool`TRUNCATE TABLE
-    auth.role_permissions,
-    auth.user_roles,
-    auth.sessions,
-    auth.sso_connections,
-    auth.roles,
-    auth.permissions,
-    users,
-    tenants
-    RESTART IDENTITY CASCADE`;
-};
 
 describe('authorization middleware - permission checking', () => {
   describe('hasPermission', () => {
@@ -122,7 +95,7 @@ describe('authorization middleware - integration tests', () => {
   });
 
   beforeEach(async () => {
-    await resetTestData();
+    await resetTestDatabase(testConfig);
   });
 
   afterAll(async () => {
@@ -638,7 +611,7 @@ describe('authorization middleware - role assignment expiry and scope integratio
   const app = buildApp(testConfig);
 
   beforeAll(async () => {
-    await resetTestData();
+    await resetTestDatabase(testConfig);
     await app.ready();
   });
 

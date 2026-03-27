@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
-import { closeDatabase, getDatabasePool } from '../../../shared/database/connection.js';
+import { closeDatabase } from '../../../shared/database/connection.js';
 import { AUTH_EVENTS } from '../auth.events.js';
-import { TENANT_COLUMN_DEFS } from '../../../__tests__/helpers/db.js';
+import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { getRefreshCookieName } from '../cookies.js';
 import { csrfCookieName } from '../csrf.js';
 
@@ -21,34 +21,11 @@ const createTestConfig = (): AppConfig => {
 
 const testConfig = createTestConfig();
 
-const resetTestData = async (): Promise<void> => {
-  const pool = getDatabasePool(testConfig);
-
-  for (const columnDef of TENANT_COLUMN_DEFS) {
-    try {
-      await pool.unsafe(columnDef);
-    } catch {
-      // Column may already exist
-    }
-  }
-
-  await pool`TRUNCATE TABLE
-    auth.role_permissions,
-    auth.user_roles,
-    auth.sessions,
-    auth.sso_connections,
-    auth.roles,
-    auth.permissions,
-    users,
-    tenants
-    RESTART IDENTITY CASCADE`;
-};
-
 describe('auth events', () => {
   const app = buildApp(testConfig);
 
   beforeAll(async () => {
-    await resetTestData();
+    await resetTestDatabase(testConfig);
     await app.ready();
   });
 

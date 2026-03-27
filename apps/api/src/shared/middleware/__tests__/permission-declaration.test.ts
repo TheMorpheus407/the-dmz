@@ -11,12 +11,8 @@ import {
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
-import {
-  closeDatabase,
-  getDatabasePool,
-  getDatabaseClient,
-} from '../../../shared/database/connection.js';
-import { TENANT_COLUMN_DEFS } from '../../../__tests__/helpers/db.js';
+import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
+import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { permissions, roles, rolePermissions, userRoles } from '../../../db/schema/auth/index.js';
 import { clearPermissionCache } from '../../../shared/middleware/authorization.js';
 
@@ -32,29 +28,6 @@ const createTestConfig = (): AppConfig => {
 };
 
 const testConfig = createTestConfig();
-
-const resetTestData = async (): Promise<void> => {
-  const pool = getDatabasePool(testConfig);
-
-  for (const columnDef of TENANT_COLUMN_DEFS) {
-    try {
-      await pool.unsafe(columnDef);
-    } catch {
-      // Column may already exist
-    }
-  }
-
-  await pool`TRUNCATE TABLE
-    auth.role_permissions,
-    auth.user_roles,
-    auth.sessions,
-    auth.sso_connections,
-    auth.roles,
-    auth.permissions,
-    users,
-    tenants
-    RESTART IDENTITY CASCADE`;
-};
 
 const ensurePermission = async (
   db: ReturnType<typeof getDatabaseClient>,
@@ -203,7 +176,7 @@ describe('permission declaration middleware - integration tests', () => {
   const app = buildApp(testConfig);
 
   beforeAll(async () => {
-    await resetTestData();
+    await resetTestDatabase(testConfig);
     await app.ready();
   });
 

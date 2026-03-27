@@ -5,7 +5,7 @@ import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabasePool } from '../../../shared/database/connection.js';
 import { seedDatabase, seedTenantAuthModel } from '../../../shared/database/seed.js';
-import { TENANT_COLUMN_DEFS } from '../../../__tests__/helpers/db.js';
+import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
 
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
@@ -21,33 +21,21 @@ const createTestConfig = (): AppConfig => {
 const testConfig = createTestConfig();
 
 const resetTestData = async (): Promise<void> => {
+  await resetTestDatabase(testConfig);
+
   const pool = getDatabasePool(testConfig);
+  const additionalTables = ['audit.logs', 'audit.retention_config'];
 
-  for (const columnDef of TENANT_COLUMN_DEFS) {
+  for (const table of additionalTables) {
     try {
-      await pool.unsafe(columnDef);
-    } catch {
-      // Column may already exist
-    }
-  }
-
-  const tablesToTruncate = [
-    'audit.logs',
-    'audit.retention_config',
-    'auth.user_profiles',
-    'auth.role_permissions',
-    'auth.user_roles',
-    'auth.sessions',
-    'auth.sso_connections',
-    'auth.roles',
-    'auth.permissions',
-    'users',
-    'tenants',
-  ];
-
-  for (const table of tablesToTruncate) {
-    try {
-      await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+      const tableParts = table.split('.');
+      if (tableParts.length === 2) {
+        await pool.unsafe(
+          `TRUNCATE TABLE "${tableParts[0]}"."${tableParts[1]}" RESTART IDENTITY CASCADE`,
+        );
+      } else {
+        await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+      }
     } catch {
       // Table doesn't exist - skip
     }

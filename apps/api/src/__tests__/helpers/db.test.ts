@@ -84,7 +84,7 @@ describe('resetTestDatabase', () => {
   it('runs truncate in test environment', async () => {
     await resetTestDatabase();
 
-    expect(unsafeMock).toHaveBeenCalledTimes(12);
+    expect(unsafeMock).toHaveBeenCalledTimes(13);
     const calls = unsafeMock.mock.calls.map(([sql]) => sql as string);
 
     const alterTableCalls = calls.filter((sql) => sql.includes('ALTER TABLE'));
@@ -95,10 +95,11 @@ describe('resetTestDatabase', () => {
     expect(alterTableCalls.some((sql) => sql.includes('compliance_frameworks'))).toBe(true);
 
     const truncateTableCalls = calls.filter((sql) => sql.includes('TRUNCATE TABLE'));
-    expect(truncateTableCalls).toHaveLength(8);
-    expect(truncateTableCalls.some((sql) => sql.includes('auth.role_permissions'))).toBe(true);
-    expect(truncateTableCalls.some((sql) => sql.includes('auth.permissions'))).toBe(true);
-    expect(truncateTableCalls.some((sql) => sql.includes('users'))).toBe(true);
-    expect(truncateTableCalls.some((sql) => sql.includes('tenants'))).toBe(true);
+    expect(truncateTableCalls).toHaveLength(9);
+    expect(truncateTableCalls.some((sql) => sql.includes('"auth"."user_profiles"'))).toBe(true);
+    expect(truncateTableCalls.some((sql) => sql.includes('"auth"."role_permissions"'))).toBe(true);
+    expect(truncateTableCalls.some((sql) => sql.includes('"auth"."permissions"'))).toBe(true);
+    expect(truncateTableCalls.some((sql) => sql.includes('"users"'))).toBe(true);
+    expect(truncateTableCalls.some((sql) => sql.includes('"tenants"'))).toBe(true);
   });
 });

@@ -3,9 +3,9 @@ import { type FastifyInstance } from 'fastify';
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
-import { closeDatabase, getDatabasePool } from '../../../shared/database/connection.js';
+import { closeDatabase } from '../../../shared/database/connection.js';
 import { seedTenantAuthModel } from '../../../shared/database/seed.js';
-import { TENANT_COLUMN_DEFS } from '../../../__tests__/helpers/db.js';
+import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
 
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
@@ -19,38 +19,6 @@ const createTestConfig = (): AppConfig => {
 };
 
 const testConfig = createTestConfig();
-
-const resetTestData = async (): Promise<void> => {
-  const pool = getDatabasePool(testConfig);
-
-  for (const columnDef of TENANT_COLUMN_DEFS) {
-    try {
-      await pool.unsafe(columnDef);
-    } catch {
-      // Column may already exist
-    }
-  }
-
-  const tablesToTruncate = [
-    'auth.user_profiles',
-    'auth.role_permissions',
-    'auth.user_roles',
-    'auth.sessions',
-    'auth.sso_connections',
-    'auth.roles',
-    'auth.permissions',
-    'users',
-    'tenants',
-  ];
-
-  for (const table of tablesToTruncate) {
-    try {
-      await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
-    } catch {
-      // Table doesn't exist - skip
-    }
-  }
-};
 
 const registerUser = async (
   app: FastifyInstance,
@@ -77,7 +45,7 @@ describe('admin-tenants routes security', () => {
   const app = buildApp(testConfig);
 
   beforeAll(async () => {
-    await resetTestData();
+    await resetTestDatabase(testConfig);
     await app.ready();
   });
 
@@ -87,7 +55,7 @@ describe('admin-tenants routes security', () => {
   });
 
   beforeEach(async () => {
-    await resetTestData();
+    await resetTestDatabase(testConfig);
   });
 
   describe('POST /admin/tenants', () => {

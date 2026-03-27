@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../../app.js';
 import { loadConfig, type AppConfig } from '../../../../config.js';
 import { closeDatabase, getDatabasePool } from '../../../../shared/database/connection.js';
-import { TENANT_COLUMN_DEFS } from '../../../../__tests__/helpers/db.js';
+import { resetTestDatabase } from '../../../../__tests__/helpers/db.js';
 
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
@@ -19,30 +19,11 @@ const createTestConfig = (): AppConfig => {
 const testConfig = createTestConfig();
 
 const resetTestData = async (): Promise<void> => {
+  await resetTestDatabase(testConfig);
+
   const pool = getDatabasePool(testConfig);
-
-  for (const columnDef of TENANT_COLUMN_DEFS) {
-    try {
-      await pool.unsafe(columnDef);
-    } catch {
-      // Column may already exist
-    }
-  }
-
-  await pool`TRUNCATE TABLE
-    auth.user_profiles,
-    auth.role_permissions,
-    auth.user_roles,
-    auth.sessions,
-    auth.sso_connections,
-    auth.roles,
-    auth.permissions,
-    users,
-    tenants
-    RESTART IDENTITY CASCADE`;
-
   try {
-    await pool`TRUNCATE TABLE game_sessions RESTART IDENTITY CASCADE`;
+    await pool.unsafe(`TRUNCATE TABLE "game_sessions" RESTART IDENTITY CASCADE`);
   } catch {
     // Some local test databases do not have the game schema fully migrated yet.
   }

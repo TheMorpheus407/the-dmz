@@ -8,12 +8,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
-import {
-  closeDatabase,
-  getDatabaseClient,
-  getDatabasePool,
-} from '../../../shared/database/connection.js';
-import { TENANT_COLUMN_DEFS } from '../../../__tests__/helpers/db.js';
+import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
+import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { sessions as sessionsTable } from '../../../db/schema/auth/sessions.js';
 import { users } from '../../../shared/database/schema/users.js';
 import { getRefreshCookieName } from '../cookies.js';
@@ -72,24 +68,7 @@ let app: FastifyInstance;
 let cleanupDatabase: (() => Promise<void>) | undefined;
 
 const resetTestData = async (): Promise<void> => {
-  const pool = getDatabasePool(testConfig);
-
-  for (const columnDef of TENANT_COLUMN_DEFS) {
-    try {
-      await pool.unsafe(columnDef);
-    } catch {
-      // Column may already exist
-    }
-  }
-
-  await pool`
-    TRUNCATE TABLE
-      auth.webauthn_credentials,
-      auth.sessions,
-      users,
-      tenants
-    RESTART IDENTITY CASCADE
-  `;
+  await resetTestDatabase(testConfig);
 };
 
 describe('MFA Access Control - Super Admin Step-up Flow', () => {
