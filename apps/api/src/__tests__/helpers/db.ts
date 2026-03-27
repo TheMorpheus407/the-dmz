@@ -56,6 +56,8 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
 
   const pool = getDatabasePool(config);
 
+  await ensureTenantColumns(config);
+
   const tablesToTruncate = [
     'auth.user_profiles',
     'auth.role_permissions',
@@ -82,6 +84,4 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
       // Table doesn't exist - skip
     }
   }
-
-  await ensureTenantColumns(config);
 }

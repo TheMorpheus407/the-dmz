@@ -8,6 +8,7 @@ import {
   getDatabasePool,
   getDatabaseClient,
 } from '../../../shared/database/connection.js';
+import { ensureTenantColumns } from '../../../__tests__/helpers/db.js';
 import { tenants, users } from '../../../shared/database/schema/index.js';
 import { playerProfiles } from '../../../db/schema/analytics/index.js';
 import * as complianceService from '../compliance.service.js';
@@ -28,12 +29,13 @@ const testConfig = createTestConfig();
 
 const resetTestData = async (): Promise<void> => {
   const pool = getDatabasePool(testConfig);
+  await ensureTenantColumns(testConfig);
   await pool`TRUNCATE TABLE
     compliance.framework_requirements,
     compliance.compliance_snapshots,
     training.certificates,
-    analytics.analytics_events,
-    analytics.analytics_player_profiles,
+    analytics.events,
+    analytics.player_profiles,
     auth.sessions,
     auth.user_roles,
     users,
