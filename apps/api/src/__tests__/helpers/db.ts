@@ -54,8 +54,6 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
     throw new Error('resetTestDatabase can only be used in test environment.');
   }
 
-  await ensureTenantColumns(config);
-
   const pool = getDatabasePool(config);
 
   const tablesToTruncate = [
@@ -84,4 +82,6 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
       // Table doesn't exist - skip
     }
   }
+
+  await ensureTenantColumns(config);
 }
