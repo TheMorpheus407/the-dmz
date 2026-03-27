@@ -8,11 +8,7 @@ import type { LogLevel } from '@the-dmz/shared';
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
-import {
-  closeDatabase,
-  getDatabasePool,
-  getDatabaseClient,
-} from '../../../shared/database/connection.js';
+import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
 import { tenants } from '../../../shared/database/schema/tenants.js';
 import { users } from '../../../shared/database/schema/users.js';
 import { getRefreshCookieName } from '../cookies.js';
@@ -22,7 +18,7 @@ import {
   type DualTenantFixture,
   type TestTenant,
 } from '../../../__tests__/helpers/factory.js';
-import { TENANT_COLUMN_DEFS } from '../../../__tests__/helpers/db.js';
+import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
 
 const migrationsFolder = fileURLToPath(
   new URL('../../../shared/database/migrations', import.meta.url),
@@ -43,45 +39,6 @@ const createTestConfig = (logLevel: LogLevel = 'silent'): AppConfig => {
 };
 
 const testConfig = createTestConfig('silent');
-
-const resetTestData = async (): Promise<void> => {
-  const pool = getDatabasePool(testConfig);
-
-  for (const columnDef of TENANT_COLUMN_DEFS) {
-    try {
-      await pool.unsafe(columnDef);
-    } catch {
-      // Column may already exist
-    }
-  }
-
-  const tablesToTruncate = [
-    'auth.user_profiles',
-    'auth.role_permissions',
-    'auth.user_roles',
-    'auth.sessions',
-    'auth.sso_connections',
-    'auth.roles',
-    'auth.permissions',
-    'users',
-    'tenants',
-  ];
-
-  for (const table of tablesToTruncate) {
-    try {
-      const tableParts = table.split('.');
-      if (tableParts.length === 2) {
-        await pool.unsafe(
-          `TRUNCATE TABLE "${tableParts[0]}"."${tableParts[1]}" RESTART IDENTITY CASCADE`,
-        );
-      } else {
-        await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
-      }
-    } catch {
-      // Table doesn't exist - skip
-    }
-  }
-};
 
 interface AuthTokens {
   accessToken: string;
@@ -147,7 +104,7 @@ describe('tenant-isolation', () => {
   beforeAll(async () => {
     const db = getDatabaseClient(testConfig);
     await migrate(db, { migrationsFolder });
-    await resetTestData();
+    await resetTestDatabase(testConfig);
     await app.ready();
   });
 
@@ -157,7 +114,7 @@ describe('tenant-isolation', () => {
   });
 
   beforeEach(async () => {
-    await resetTestData();
+    await resetTestDatabase(testConfig);
     fixture = createDualTenantFixture('isolation');
   });
 
@@ -548,7 +505,7 @@ describe('tenant-isolation', () => {
       });
 
       await appWithLogs.ready();
-      await resetTestData();
+      await resetTestDatabase(testConfig);
     });
 
     afterAll(async () => {
