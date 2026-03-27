@@ -43,8 +43,17 @@ export async function ensureTenantColumns(config?: AppConfig): Promise<void> {
   for (const columnDef of TENANT_COLUMN_DEFS) {
     try {
       await pool.unsafe(columnDef);
-    } catch {
-      // Column may already exist
+    } catch (error) {
+      // Column may already exist - this is expected and safe to ignore
+      // Only re-throw if it's a genuine error (not "already exists")
+      if (
+        error &&
+        typeof error === 'object' &&
+        'code' in error &&
+        error.code !== '42701' // 42701 = column_already_exists
+      ) {
+        throw error;
+      }
     }
   }
 }

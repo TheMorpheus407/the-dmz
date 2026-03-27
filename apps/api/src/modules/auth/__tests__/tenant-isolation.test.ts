@@ -18,7 +18,7 @@ import {
   type DualTenantFixture,
   type TestTenant,
 } from '../../../__tests__/helpers/factory.js';
-import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
+import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 
 const migrationsFolder = fileURLToPath(
   new URL('../../../shared/database/migrations', import.meta.url),
@@ -115,6 +115,7 @@ describe('tenant-isolation', () => {
 
   beforeEach(async () => {
     await resetTestDatabase(testConfig);
+    await ensureTenantColumns(testConfig);
     fixture = createDualTenantFixture('isolation');
   });
 

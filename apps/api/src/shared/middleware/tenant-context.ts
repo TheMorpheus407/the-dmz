@@ -70,13 +70,17 @@ export const tenantContext = async (
   const pool = getDatabasePool(config);
 
   try {
-    await pool.unsafe(
-      `SELECT set_config('app.current_tenant_id', $1, true), set_config('app.tenant_id', $1, true), set_config('app.current_user_id', $2, true)`,
-      [tenantId, userId],
-    );
-
-    if (isSuperAdmin) {
-      await pool.unsafe(`SELECT set_config('app.is_super_admin', 'true', true)`);
+    const conn = await pool.reserve();
+    try {
+      await conn.begin(async (tx) => {
+        const isSuperAdminFlag = isSuperAdmin ? 'true' : 'false';
+        await tx.unsafe(
+          `SELECT set_config('app.current_tenant_id', $1, true), set_config('app.tenant_id', $1, true), set_config('app.current_user_id', $2, true), set_config('app.is_super_admin', $3, true)`,
+          [tenantId, userId, isSuperAdminFlag],
+        );
+      });
+    } finally {
+      conn.release();
     }
   } catch (error) {
     request.log.error({ err: error }, 'tenant context set failed');
