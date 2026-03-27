@@ -247,11 +247,15 @@ describe('tenant-isolation', () => {
     it('blocks Tenant A user from updating Tenant B profile', async () => {
       const { userAStandard } = await insertTenantAndUsers();
 
+      const cookieHeader = `${getRefreshCookieName()}=${userAStandard.tokens.refreshToken}; ${csrfCookieName}=${userAStandard.tokens.csrfToken}`;
+
       const response = await app.inject({
         method: 'PATCH',
         url: '/api/v1/auth/profile',
         headers: {
           authorization: `Bearer ${userAStandard.tokens.accessToken}`,
+          'x-csrf-token': userAStandard.tokens.csrfToken,
+          cookie: cookieHeader,
         },
         payload: {
           displayName: 'Trying to update',
