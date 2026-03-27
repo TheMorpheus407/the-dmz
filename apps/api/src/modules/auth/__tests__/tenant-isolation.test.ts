@@ -69,7 +69,14 @@ const resetTestData = async (): Promise<void> => {
 
   for (const table of tablesToTruncate) {
     try {
-      await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+      const tableParts = table.split('.');
+      if (tableParts.length === 2) {
+        await pool.unsafe(
+          `TRUNCATE TABLE "${tableParts[0]}"."${tableParts[1]}" RESTART IDENTITY CASCADE`,
+        );
+      } else {
+        await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+      }
     } catch {
       // Table doesn't exist - skip
     }
