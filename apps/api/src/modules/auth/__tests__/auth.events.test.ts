@@ -4,7 +4,7 @@ import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase } from '../../../shared/database/connection.js';
 import { AUTH_EVENTS } from '../auth.events.js';
-import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
+import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { getRefreshCookieName } from '../cookies.js';
 import { csrfCookieName } from '../csrf.js';
 
@@ -26,6 +26,7 @@ describe('auth events', () => {
 
   beforeAll(async () => {
     await resetTestDatabase(testConfig);
+    await ensureTenantColumns(testConfig);
     await app.ready();
   });
 

@@ -5,7 +5,7 @@ import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase } from '../../../shared/database/connection.js';
 import { seedTenantAuthModel } from '../../../shared/database/seed.js';
-import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
+import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
@@ -56,6 +56,7 @@ describe('admin-tenants routes security', () => {
 
   beforeEach(async () => {
     await resetTestDatabase(testConfig);
+    await ensureTenantColumns(testConfig);
   });
 
   describe('POST /admin/tenants', () => {

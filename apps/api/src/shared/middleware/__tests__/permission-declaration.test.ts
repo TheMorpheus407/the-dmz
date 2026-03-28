@@ -12,7 +12,7 @@ import {
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
-import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
+import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { permissions, roles, rolePermissions, userRoles } from '../../../db/schema/auth/index.js';
 import { clearPermissionCache } from '../../../shared/middleware/authorization.js';
 
@@ -177,6 +177,7 @@ describe('permission declaration middleware - integration tests', () => {
 
   beforeAll(async () => {
     await resetTestDatabase(testConfig);
+    await ensureTenantColumns(testConfig);
     await app.ready();
   });
 

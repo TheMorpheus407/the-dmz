@@ -9,7 +9,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
-import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
+import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { sessions as sessionsTable } from '../../../db/schema/auth/sessions.js';
 import { users } from '../../../shared/database/schema/users.js';
 import { getRefreshCookieName } from '../cookies.js';
@@ -69,6 +69,7 @@ let cleanupDatabase: (() => Promise<void>) | undefined;
 
 const resetTestData = async (): Promise<void> => {
   await resetTestDatabase(testConfig);
+  await ensureTenantColumns(testConfig);
 };
 
 describe('MFA Access Control - Super Admin Step-up Flow', () => {

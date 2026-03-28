@@ -72,7 +72,7 @@ export const tenantContext = async (
   try {
     const isSuperAdminFlag = isSuperAdmin ? 'true' : 'false';
     await pool.unsafe(
-      `SELECT set_config('app.current_tenant_id', $1, true), set_config('app.tenant_id', $1, true), set_config('app.current_user_id', $2, true), set_config('app.is_super_admin', $3, true)`,
+      `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false), set_config('app.current_user_id', $2, false), set_config('app.is_super_admin', $3, false)`,
       [tenantId, userId, isSuperAdminFlag],
     );
   } catch (error) {

@@ -5,7 +5,7 @@ import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabasePool } from '../../../shared/database/connection.js';
 import { seedDatabase, seedTenantAuthModel } from '../../../shared/database/seed.js';
-import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
+import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
@@ -44,6 +44,8 @@ const resetTestData = async (): Promise<void> => {
       // Table doesn't exist - skip
     }
   }
+
+  await ensureTenantColumns(testConfig);
 };
 
 const registerUser = async (

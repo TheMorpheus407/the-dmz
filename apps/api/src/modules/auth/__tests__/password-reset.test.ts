@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabasePool } from '../../../shared/database/connection.js';
-import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
+import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
@@ -27,6 +27,8 @@ const resetTestData = async (): Promise<void> => {
   } catch {
     // Table doesn't exist - skip
   }
+
+  await ensureTenantColumns(testConfig);
 };
 
 describe('password reset routes', () => {

@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
-import { resetTestDatabase } from '../../../__tests__/helpers/db.js';
+import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { permissions, roles, rolePermissions, userRoles } from '../../../db/schema/auth/index.js';
 import {
   hasPermission,
@@ -96,6 +96,7 @@ describe('authorization middleware - integration tests', () => {
 
   beforeEach(async () => {
     await resetTestDatabase(testConfig);
+    await ensureTenantColumns(testConfig);
   });
 
   afterAll(async () => {

@@ -76,7 +76,7 @@ const setTenantSessionVariables = async (config: AppConfig, tenantId: string): P
 
   try {
     await pool.unsafe(
-      `SELECT set_config('app.current_tenant_id', $1, true), set_config('app.tenant_id', $1, true)`,
+      `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false)`,
       [tenantId],
     );
   } catch {
