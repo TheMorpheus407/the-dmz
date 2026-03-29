@@ -65,6 +65,10 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
 
   const pool = getDatabasePool(config);
 
+  await pool.unsafe(
+    `RESET app.current_tenant_id; RESET app.tenant_id; RESET app.current_user_id; RESET app.is_super_admin;`,
+  );
+
   const tablesToTruncate = [
     'auth.user_profiles',
     'auth.role_permissions',
