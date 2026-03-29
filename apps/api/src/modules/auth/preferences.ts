@@ -32,6 +32,17 @@ const defaultEffectStates: Record<string, Record<string, boolean>> = {
   },
 };
 
+const defaultEffectIntensity: Record<string, number> = {
+  scanlines: 70,
+  curvature: 50,
+  glow: 60,
+  noise: 30,
+  vignette: 50,
+  flicker: 40,
+};
+
+const defaultTerminalGlowIntensity = 60;
+
 const defaultRoutePreferences: Record<string, { themePreferences?: { theme?: ThemeId } }> = {
   game: {
     themePreferences: {
@@ -61,7 +72,9 @@ export interface PreferenceResolutionOptions {
       theme?: ThemeId;
       enableTerminalEffects?: boolean;
       effects?: Record<string, boolean>;
+      effectIntensity?: Record<string, number>;
       fontSize?: number;
+      terminalGlowIntensity?: number;
     };
     accessibilityPreferences?: {
       reducedMotion?: boolean;
@@ -73,9 +86,11 @@ export interface PreferenceResolutionOptions {
     theme?: boolean;
     enableTerminalEffects?: boolean;
     effects?: Record<string, boolean>;
+    effectIntensity?: Record<string, boolean>;
     fontSize?: boolean;
     reducedMotion?: boolean;
     highContrast?: boolean;
+    terminalGlowIntensity?: boolean;
   };
   surface?: SurfaceId;
   osPreferences?: {
@@ -177,6 +192,36 @@ function resolveFontSizePreference(
   return { value: 16, source: 'default' };
 }
 
+function resolveEffectIntensityPreference(
+  userValue: Record<string, number> | undefined,
+  locked: boolean,
+): EffectivePreferenceValue<Record<string, number>> {
+  if (locked && userValue) {
+    return { value: { ...defaultEffectIntensity, ...userValue }, source: 'policy' };
+  }
+
+  if (userValue) {
+    return { value: { ...defaultEffectIntensity, ...userValue }, source: 'server' };
+  }
+
+  return { value: defaultEffectIntensity, source: 'default' };
+}
+
+function resolveTerminalGlowIntensityPreference(
+  userValue: number | undefined,
+  locked: boolean,
+): EffectivePreferenceValue<number> {
+  if (locked && userValue !== undefined) {
+    return { value: userValue, source: 'policy' };
+  }
+
+  if (userValue !== undefined) {
+    return { value: userValue, source: 'server' };
+  }
+
+  return { value: defaultTerminalGlowIntensity, source: 'default' };
+}
+
 function resolveAccessibilityPreference(
   userValue: boolean | undefined,
   locked: boolean,
@@ -206,7 +251,9 @@ export interface EffectiveThemePreferences {
   theme: EffectivePreferenceValue<ThemeId>;
   enableTerminalEffects: EffectivePreferenceValue<boolean>;
   effects: EffectivePreferenceValue<Record<string, boolean>>;
+  effectIntensity: EffectivePreferenceValue<Record<string, number>>;
   fontSize: EffectivePreferenceValue<number>;
+  terminalGlowIntensity: EffectivePreferenceValue<number>;
 }
 
 export interface EffectiveAccessibilityPreferences {
@@ -237,6 +284,10 @@ export function resolveEffectivePreferences(
   const lockedEffects = policyLockedPreferences.effects
     ? Object.keys(policyLockedPreferences.effects).length > 0
     : false;
+  const lockedEffectIntensity = policyLockedPreferences.effectIntensity
+    ? Object.keys(policyLockedPreferences.effectIntensity).length > 0
+    : false;
+  const lockedTerminalGlowIntensity = policyLockedPreferences.terminalGlowIntensity ?? false;
   const lockedFontSize = policyLockedPreferences.fontSize ?? false;
   const lockedReducedMotion = policyLockedPreferences.reducedMotion ?? false;
   const lockedHighContrast = policyLockedPreferences.highContrast ?? false;
@@ -249,6 +300,14 @@ export function resolveEffectivePreferences(
     themePrefs?.enableTerminalEffects,
     lockedTheme || lockedEffects,
     themeId,
+  );
+  const effectiveEffectIntensity = resolveEffectIntensityPreference(
+    themePrefs?.effectIntensity,
+    lockedEffectIntensity,
+  );
+  const effectiveTerminalGlowIntensity = resolveTerminalGlowIntensityPreference(
+    themePrefs?.terminalGlowIntensity,
+    lockedTerminalGlowIntensity,
   );
   const effectiveFontSize = resolveFontSizePreference(
     themePrefs?.fontSize,
@@ -272,7 +331,9 @@ export function resolveEffectivePreferences(
     theme: effectiveTheme,
     enableTerminalEffects: effectiveEnableTerminalEffects,
     effects: effectiveEffects,
+    effectIntensity: effectiveEffectIntensity,
     fontSize: effectiveFontSize,
+    terminalGlowIntensity: effectiveTerminalGlowIntensity,
   };
 
   const accessibilityPreferences: EffectiveAccessibilityPreferences = {
@@ -293,9 +354,11 @@ export function getLockedPreferenceKeys(
         theme?: boolean;
         enableTerminalEffects?: boolean;
         effects?: Record<string, boolean>;
+        effectIntensity?: Record<string, boolean>;
         fontSize?: boolean;
         reducedMotion?: boolean;
         highContrast?: boolean;
+        terminalGlowIntensity?: boolean;
       }
     | undefined,
 ): string[] {
@@ -306,9 +369,11 @@ export function getLockedPreferenceKeys(
   if (policyLocked.theme) keys.push('theme');
   if (policyLocked.enableTerminalEffects) keys.push('enableTerminalEffects');
   if (policyLocked.effects) keys.push('effects');
+  if (policyLocked.effectIntensity) keys.push('effectIntensity');
   if (policyLocked.fontSize) keys.push('fontSize');
   if (policyLocked.reducedMotion) keys.push('reducedMotion');
   if (policyLocked.highContrast) keys.push('highContrast');
+  if (policyLocked.terminalGlowIntensity) keys.push('terminalGlowIntensity');
 
   return keys;
 }

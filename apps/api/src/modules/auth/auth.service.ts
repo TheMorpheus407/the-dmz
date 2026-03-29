@@ -707,7 +707,9 @@ export const getEffectivePreferences = async (
       theme?: 'green' | 'amber' | 'high-contrast' | 'enterprise';
       enableTerminalEffects?: boolean;
       effects?: Record<string, boolean>;
+      effectIntensity?: Record<string, number>;
       fontSize?: number;
+      terminalGlowIntensity?: number;
     };
     accessibilityPreferences?: {
       reducedMotion?: boolean;
@@ -720,9 +722,11 @@ export const getEffectivePreferences = async (
     theme?: boolean;
     enableTerminalEffects?: boolean;
     effects?: Record<string, boolean>;
+    effectIntensity?: Record<string, boolean>;
     fontSize?: boolean;
     reducedMotion?: boolean;
     highContrast?: boolean;
+    terminalGlowIntensity?: boolean;
   };
 
   const userPrefs = profile.preferences as UserPrefs | undefined;
