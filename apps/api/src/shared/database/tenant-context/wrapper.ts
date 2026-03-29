@@ -49,7 +49,7 @@ export const setTenantSessionContext = async (
   if (!validation.valid) {
     throw new AppError({
       code: ErrorCodes.TENANT_CONTEXT_INVALID,
-      message: `Failed to set tenant context: ${validation.errors.join(', ')}`,
+      message: 'Failed to set tenant context',
       statusCode: 401,
       details: { errors: validation.errors },
     });
