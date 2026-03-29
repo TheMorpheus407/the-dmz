@@ -51,7 +51,6 @@ export const setTenantSessionContext = async (
       code: ErrorCodes.TENANT_CONTEXT_INVALID,
       message: 'Failed to set tenant context',
       statusCode: 401,
-      details: { errors: validation.errors },
     });
   }
 
