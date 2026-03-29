@@ -58,6 +58,24 @@ export const tenantContext = async (
     });
   }
 
+  if (typeof tenantId !== 'string' || tenantId.length === 0) {
+    throw new AppError({
+      code: ErrorCodes.TENANT_CONTEXT_INVALID,
+      message: 'Tenant ID must be a non-empty string',
+      statusCode: 401,
+      details: { field: 'tenantId', received: typeof tenantId },
+    });
+  }
+
+  if (typeof userId !== 'string' || userId.length === 0) {
+    throw new AppError({
+      code: ErrorCodes.TENANT_CONTEXT_INVALID,
+      message: 'User ID must be a non-empty string',
+      statusCode: 401,
+      details: { field: 'userId', received: typeof userId },
+    });
+  }
+
   if (!isValidUuid(tenantId)) {
     throw new AppError({
       code: ErrorCodes.TENANT_CONTEXT_INVALID,
@@ -77,7 +95,7 @@ export const tenantContext = async (
              set_config('app.is_super_admin', ${isSuperAdmin ? 'true' : 'false'}, false)
     `;
   } catch (error) {
-    request.log.error({ err: error }, 'tenant context set failed');
+    request.log.error({ err: error, tenantId, userId, isSuperAdmin }, 'tenant context set failed');
     throw new AppError({
       code: ErrorCodes.TENANT_CONTEXT_INVALID,
       message: 'Failed to set tenant context',
