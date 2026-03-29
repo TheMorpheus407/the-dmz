@@ -91,10 +91,6 @@ export const requireTenantContext = (
       code: ErrorCodes.TENANT_CONTEXT_MISSING,
       message: `Tenant-scoped ${operation} requires valid tenant context`,
       statusCode: 401,
-      details: {
-        operation,
-        errors: validation.errors,
-      },
     });
   }
 };
