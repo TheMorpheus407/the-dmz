@@ -24,37 +24,52 @@ export const tenantStatusGuard = async (
   const config = request.server.config;
   const db = getDatabaseClient(config);
 
-  const tenant = await db.query.tenants.findFirst({
-    where: (t, { eq }) => eq(t.tenantId, user.tenantId),
-    columns: {
-      tenantId: true,
-      status: true,
-    },
-  });
-
-  if (!tenant) {
-    return;
-  }
-
-  if (!isTenantStatusAllowed(tenant.status)) {
-    request.log.warn(
-      {
-        requestId: request.id,
-        tenantId: tenant.tenantId,
-        userId: user.userId,
-        tenantStatus: tenant.status,
+  try {
+    const tenant = await db.query.tenants.findFirst({
+      where: (t, { eq }) => eq(t.tenantId, user.tenantId),
+      columns: {
+        tenantId: true,
+        status: true,
       },
-      'tenant status check failed - inactive tenant',
+    });
+
+    if (!tenant) {
+      return;
+    }
+
+    if (!isTenantStatusAllowed(tenant.status)) {
+      request.log.warn(
+        {
+          requestId: request.id,
+          tenantId: tenant.tenantId,
+          userId: user.userId,
+          tenantStatus: tenant.status,
+        },
+        'tenant status check failed - inactive tenant',
+      );
+
+      throw new AppError({
+        code: ErrorCodes.TENANT_INACTIVE,
+        message: `Tenant is ${tenant.status}`,
+        statusCode: 403,
+        details: {
+          tenantId: tenant.tenantId,
+          tenantStatus: tenant.status,
+        },
+      });
+    }
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    request.log.error(
+      { err: error, tenantId: user.tenantId, userId: user.userId },
+      'tenant status guard query failed',
     );
-
     throw new AppError({
-      code: ErrorCodes.TENANT_INACTIVE,
-      message: `Tenant is ${tenant.status}`,
-      statusCode: 403,
-      details: {
-        tenantId: tenant.tenantId,
-        tenantStatus: tenant.status,
-      },
+      code: ErrorCodes.INTERNAL_SERVER_ERROR,
+      message: 'Failed to verify tenant status',
+      statusCode: 500,
     });
   }
 };

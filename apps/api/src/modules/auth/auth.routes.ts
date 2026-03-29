@@ -486,27 +486,39 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
     },
     async (request) => {
       const user = request.user as AuthenticatedUser;
-      const currentUser = await authService.getCurrentUser(config, user.userId, user.tenantId);
-      const permissionContext = await resolvePermissions(config, user.tenantId, user.userId);
-      const { profile, effectivePreferences } = await authService.getEffectivePreferences(
-        config,
-        user.userId,
-        user.tenantId,
-      );
 
-      return {
-        user: currentUser,
-        profile: profile
-          ? {
-              ...profile,
-              preferences: profile.preferences,
-              policyLockedPreferences: profile.policyLockedPreferences,
-            }
-          : undefined,
-        effectivePreferences,
-        permissions: permissionContext.permissions,
-        roles: permissionContext.roles,
-      };
+      try {
+        const currentUser = await authService.getCurrentUser(config, user.userId, user.tenantId);
+        const permissionContext = await resolvePermissions(config, user.tenantId, user.userId);
+        const { profile, effectivePreferences } = await authService.getEffectivePreferences(
+          config,
+          user.userId,
+          user.tenantId,
+        );
+
+        return {
+          user: currentUser,
+          profile: profile
+            ? {
+                ...profile,
+                preferences: profile.preferences,
+                policyLockedPreferences: profile.policyLockedPreferences,
+              }
+            : undefined,
+          effectivePreferences,
+          permissions: permissionContext.permissions,
+          roles: permissionContext.roles,
+        };
+      } catch (error) {
+        request.log.error(
+          { err: error, userId: user.userId, tenantId: user.tenantId },
+          'auth/me handler failed',
+        );
+        throw new AuthError({
+          message: 'Failed to retrieve user information',
+          statusCode: 500,
+        });
+      }
     },
   );
 
