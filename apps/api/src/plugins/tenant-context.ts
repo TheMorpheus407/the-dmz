@@ -74,8 +74,9 @@ const validateTenantAndGetContext = async (
 const setTenantSessionVariables = async (config: AppConfig, tenantId: string): Promise<void> => {
   const pool = getDatabasePool(config);
 
+  const reserved = await pool.reserve();
   try {
-    await pool.unsafe(
+    await reserved.unsafe(
       `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false)`,
       [tenantId],
     );
@@ -85,6 +86,8 @@ const setTenantSessionVariables = async (config: AppConfig, tenantId: string): P
       message: `Failed to set tenant context: ${error instanceof Error ? error.message : String(error)}`,
       statusCode: 500,
     });
+  } finally {
+    reserved.release();
   }
 };
 
