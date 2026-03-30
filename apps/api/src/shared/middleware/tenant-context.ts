@@ -95,19 +95,16 @@ export const tenantContext = async (
       [tenantId, userId, isSuperAdmin ? 'true' : 'false'],
     );
   } catch (error) {
-    if (reserved) {
-      reserved.release();
-    }
     request.log.error({ err: error, tenantId, userId, isSuperAdmin }, 'tenant context set failed');
     throw new AppError({
       code: ErrorCodes.TENANT_CONTEXT_INVALID,
       message: `Failed to set tenant context: ${error instanceof Error ? error.message : String(error)}`,
       statusCode: 500,
     });
-  }
-
-  if (reserved) {
-    reserved.release();
+  } finally {
+    if (reserved) {
+      reserved.release();
+    }
   }
 
   request.tenantContext = {
