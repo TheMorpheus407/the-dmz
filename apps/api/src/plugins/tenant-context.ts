@@ -79,10 +79,10 @@ const setTenantSessionVariables = async (config: AppConfig, tenantId: string): P
       `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false)`,
       [tenantId],
     );
-  } catch {
+  } catch (error) {
     throw new AppError({
       code: ErrorCodes.TENANT_CONTEXT_INVALID,
-      message: 'Failed to set tenant session variables',
+      message: `Failed to set tenant context: ${error instanceof Error ? error.message : String(error)}`,
       statusCode: 500,
     });
   }
