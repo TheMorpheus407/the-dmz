@@ -40,21 +40,19 @@ export const TENANT_COLUMN_DEFS = [
 export async function ensureTenantColumns(config?: AppConfig): Promise<void> {
   const pool = getDatabasePool(config);
 
-  for (const columnDef of TENANT_COLUMN_DEFS) {
-    try {
-      await pool.unsafe(columnDef);
-    } catch (error) {
-      // Column may already exist - this is expected and safe to ignore
-      // Only re-throw if it's a genuine error (not "already exists")
-      if (
-        error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        error.code !== '42701' // 42701 = column_already_exists
-      ) {
-        throw error;
+  const reserved = await pool.reserve();
+  try {
+    for (const columnDef of TENANT_COLUMN_DEFS) {
+      try {
+        await reserved.unsafe(columnDef);
+      } catch (error) {
+        if (error && typeof error === 'object' && 'code' in error && error.code !== '42701') {
+          throw error;
+        }
       }
     }
+  } finally {
+    reserved.release();
   }
 }
 
@@ -64,16 +62,10 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
   }
 
   const pool = getDatabasePool(config);
-  let conn;
 
+  const reserved = await pool.reserve();
   try {
-    conn = await pool.reserve();
-    try {
-      await conn.unsafe(`ROLLBACK`);
-    } catch {
-      // ROLLBACK might fail if there's no active transaction - ignore and continue
-    }
-    await conn.unsafe(
+    await reserved.unsafe(
       `SELECT set_config('app.current_tenant_id', '', false), set_config('app.tenant_id', '', false), set_config('app.current_user_id', '', false), set_config('app.is_super_admin', '', false)`,
     );
 
@@ -93,11 +85,11 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
       try {
         const tableParts = table.split('.');
         if (tableParts.length === 2) {
-          await conn.unsafe(
+          await reserved.unsafe(
             `TRUNCATE TABLE "${tableParts[0]}"."${tableParts[1]}" RESTART IDENTITY CASCADE`,
           );
         } else {
-          await conn.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+          await reserved.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
         }
       } catch {
         // Table doesn't exist - skip
@@ -106,7 +98,7 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
 
     for (const columnDef of TENANT_COLUMN_DEFS) {
       try {
-        await conn.unsafe(columnDef);
+        await reserved.unsafe(columnDef);
       } catch (error) {
         if (error && typeof error === 'object' && 'code' in error && error.code !== '42701') {
           throw error;
@@ -114,8 +106,6 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
       }
     }
   } finally {
-    if (conn) {
-      conn.release();
-    }
+    reserved.release();
   }
 }
