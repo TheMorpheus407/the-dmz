@@ -103,6 +103,13 @@ export const tenantContext = async (
     });
   } finally {
     if (reserved) {
+      try {
+        await reserved.unsafe(
+          `RESET app.current_tenant_id; RESET app.tenant_id; RESET app.current_user_id; RESET app.is_super_admin;`,
+        );
+      } catch {
+        // ignore reset errors during cleanup
+      }
       reserved.release();
     }
   }

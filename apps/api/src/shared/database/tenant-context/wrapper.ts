@@ -62,7 +62,7 @@ export const setTenantSessionContext = async (
 
 export const clearTenantSessionContext = async (pool: DatabasePool): Promise<void> => {
   await pool.unsafe(
-    `SELECT set_config('app.current_tenant_id', '', false), set_config('app.tenant_id', '', false)`,
+    `SELECT set_config('app.current_tenant_id', '', false), set_config('app.tenant_id', '', false), set_config('app.current_user_id', '', false), set_config('app.is_super_admin', '', false)`,
   );
 };
 
