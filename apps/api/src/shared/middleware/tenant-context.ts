@@ -90,23 +90,24 @@ export const tenantContext = async (
   let reserved;
   try {
     reserved = await pool.reserve();
-    try {
-      await reserved.unsafe(
-        `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false), set_config('app.current_user_id', $2, false), set_config('app.is_super_admin', $3, false)`,
-        [tenantId, userId, isSuperAdmin ? 'true' : 'false'],
-      );
-    } finally {
-      if (reserved) {
-        reserved.release();
-      }
-    }
+    await reserved.unsafe(
+      `SELECT set_config('app.current_tenant_id', $1, false), set_config('app.tenant_id', $1, false), set_config('app.current_user_id', $2, false), set_config('app.is_super_admin', $3, false)`,
+      [tenantId, userId, isSuperAdmin ? 'true' : 'false'],
+    );
   } catch (error) {
+    if (reserved) {
+      reserved.release();
+    }
     request.log.error({ err: error, tenantId, userId, isSuperAdmin }, 'tenant context set failed');
     throw new AppError({
       code: ErrorCodes.TENANT_CONTEXT_INVALID,
       message: `Failed to set tenant context: ${error instanceof Error ? error.message : String(error)}`,
       statusCode: 500,
     });
+  }
+
+  if (reserved) {
+    reserved.release();
   }
 
   request.tenantContext = {
