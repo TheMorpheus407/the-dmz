@@ -68,6 +68,11 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
 
   try {
     conn = await pool.reserve();
+    try {
+      await conn.unsafe(`ROLLBACK`);
+    } catch {
+      // ROLLBACK might fail if there's no active transaction - ignore and continue
+    }
     await conn.unsafe(
       `RESET app.current_tenant_id; RESET app.tenant_id; RESET app.current_user_id; RESET app.is_super_admin;`,
     );
