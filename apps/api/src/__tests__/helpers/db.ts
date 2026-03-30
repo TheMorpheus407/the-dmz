@@ -64,37 +64,44 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
   }
 
   const pool = getDatabasePool(config);
+  const reserved = await pool.reserve();
 
-  await pool.unsafe(
-    `RESET app.current_tenant_id; RESET app.tenant_id; RESET app.current_user_id; RESET app.is_super_admin;`,
-  );
+  try {
+    await reserved.unsafe(`ROLLBACK;`);
 
-  const tablesToTruncate = [
-    'auth.user_profiles',
-    'auth.role_permissions',
-    'auth.user_roles',
-    'auth.sessions',
-    'auth.sso_connections',
-    'auth.roles',
-    'auth.permissions',
-    'users',
-    'tenants',
-  ];
+    await reserved.unsafe(
+      `RESET app.current_tenant_id; RESET app.tenant_id; RESET app.current_user_id; RESET app.is_super_admin;`,
+    );
 
-  for (const table of tablesToTruncate) {
-    try {
-      const tableParts = table.split('.');
-      if (tableParts.length === 2) {
-        await pool.unsafe(
-          `TRUNCATE TABLE "${tableParts[0]}"."${tableParts[1]}" RESTART IDENTITY CASCADE`,
-        );
-      } else {
-        await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+    const tablesToTruncate = [
+      'auth.user_profiles',
+      'auth.role_permissions',
+      'auth.user_roles',
+      'auth.sessions',
+      'auth.sso_connections',
+      'auth.roles',
+      'auth.permissions',
+      'users',
+      'tenants',
+    ];
+
+    for (const table of tablesToTruncate) {
+      try {
+        const tableParts = table.split('.');
+        if (tableParts.length === 2) {
+          await reserved.unsafe(
+            `TRUNCATE TABLE "${tableParts[0]}"."${tableParts[1]}" RESTART IDENTITY CASCADE`,
+          );
+        } else {
+          await reserved.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+        }
+      } catch {
+        // Table doesn't exist - skip
       }
-    } catch {
-      // Table doesn't exist - skip
     }
-  }
 
-  await ensureTenantColumns(config);
+    await ensureTenantColumns(config);
+  } finally {
+    reserved.release();
+  }
 }
