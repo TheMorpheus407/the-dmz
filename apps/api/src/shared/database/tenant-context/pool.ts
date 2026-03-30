@@ -57,7 +57,9 @@ export const createTenantScopedConnection = (
           try {
             return await txFn();
           } finally {
-            await tx.unsafe(`RESET app.current_tenant_id; RESET app.tenant_id;`);
+            await tx.unsafe(
+              `SELECT set_config('app.current_tenant_id', '', true), set_config('app.tenant_id', '', true)`,
+            );
           }
         });
 

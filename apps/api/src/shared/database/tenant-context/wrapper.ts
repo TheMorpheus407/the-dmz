@@ -61,7 +61,9 @@ export const setTenantSessionContext = async (
 };
 
 export const clearTenantSessionContext = async (pool: DatabasePool): Promise<void> => {
-  await pool.unsafe(`RESET app.current_tenant_id; RESET app.tenant_id;`);
+  await pool.unsafe(
+    `SELECT set_config('app.current_tenant_id', '', false), set_config('app.tenant_id', '', false)`,
+  );
 };
 
 export const verifyTenantSessionContext = async (
@@ -69,12 +71,14 @@ export const verifyTenantSessionContext = async (
 ): Promise<{ currentTenantId: string | null; tenantId: string | null }> => {
   const result = await pool.unsafe<
     Array<{ current_tenant_id: string | null; tenant_id: string | null }>
-  >(`SHOW app.current_tenant_id; SHOW app.tenant_id;`);
+  >(
+    `SELECT current_setting('app.current_tenant_id', true) as current_tenant_id, current_setting('app.tenant_id', true) as tenant_id`,
+  );
 
-  if (result.length >= 2) {
+  if (result.length >= 1) {
     return {
       currentTenantId: result[0]?.current_tenant_id ?? null,
-      tenantId: result[1]?.tenant_id ?? null,
+      tenantId: result[0]?.tenant_id ?? null,
     };
   }
 

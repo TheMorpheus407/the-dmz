@@ -74,7 +74,7 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
       // ROLLBACK might fail if there's no active transaction - ignore and continue
     }
     await conn.unsafe(
-      `RESET app.current_tenant_id; RESET app.tenant_id; RESET app.current_user_id; RESET app.is_super_admin;`,
+      `SELECT set_config('app.current_tenant_id', '', false), set_config('app.tenant_id', '', false), set_config('app.current_user_id', '', false), set_config('app.is_super_admin', '', false)`,
     );
 
     const tablesToTruncate = [
