@@ -64,37 +64,53 @@ export async function resetTestDatabase(config?: AppConfig): Promise<void> {
   }
 
   const pool = getDatabasePool(config);
+  let conn;
 
-  await pool.unsafe(
-    `RESET app.current_tenant_id; RESET app.tenant_id; RESET app.current_user_id; RESET app.is_super_admin;`,
-  );
+  try {
+    conn = await pool.reserve();
+    await conn.unsafe(
+      `RESET app.current_tenant_id; RESET app.tenant_id; RESET app.current_user_id; RESET app.is_super_admin;`,
+    );
 
-  const tablesToTruncate = [
-    'auth.user_profiles',
-    'auth.role_permissions',
-    'auth.user_roles',
-    'auth.sessions',
-    'auth.sso_connections',
-    'auth.roles',
-    'auth.permissions',
-    'users',
-    'tenants',
-  ];
+    const tablesToTruncate = [
+      'auth.user_profiles',
+      'auth.role_permissions',
+      'auth.user_roles',
+      'auth.sessions',
+      'auth.sso_connections',
+      'auth.roles',
+      'auth.permissions',
+      'users',
+      'tenants',
+    ];
 
-  for (const table of tablesToTruncate) {
-    try {
-      const tableParts = table.split('.');
-      if (tableParts.length === 2) {
-        await pool.unsafe(
-          `TRUNCATE TABLE "${tableParts[0]}"."${tableParts[1]}" RESTART IDENTITY CASCADE`,
-        );
-      } else {
-        await pool.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+    for (const table of tablesToTruncate) {
+      try {
+        const tableParts = table.split('.');
+        if (tableParts.length === 2) {
+          await conn.unsafe(
+            `TRUNCATE TABLE "${tableParts[0]}"."${tableParts[1]}" RESTART IDENTITY CASCADE`,
+          );
+        } else {
+          await conn.unsafe(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+        }
+      } catch {
+        // Table doesn't exist - skip
       }
-    } catch {
-      // Table doesn't exist - skip
+    }
+
+    for (const columnDef of TENANT_COLUMN_DEFS) {
+      try {
+        await conn.unsafe(columnDef);
+      } catch (error) {
+        if (error && typeof error === 'object' && 'code' in error && error.code !== '42701') {
+          throw error;
+        }
+      }
+    }
+  } finally {
+    if (conn) {
+      conn.release();
     }
   }
-
-  await ensureTenantColumns(config);
 }
