@@ -49,5 +49,3 @@ export {
   updateEnterprisePlayerScore,
   type ScoreUpdateInput as LeaderboardScoreUpdateInput,
 } from './leaderboard-score.service.js';
-
-export type { LeaderboardMetrics, ScoreWeights } from '../db/schema/social/index.js';

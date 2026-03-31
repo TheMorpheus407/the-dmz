@@ -22,6 +22,12 @@ vi.mock('../social-relationship.service.js', () => ({
   listFriends: vi.fn().mockResolvedValue([]),
 }));
 
+const mockEvaluateFlag = vi.fn().mockResolvedValue(true);
+
+vi.mock('../../feature-flags/feature-flags.service.js', () => ({
+  evaluateFlag: (...args: unknown[]) => mockEvaluateFlag(...args),
+}));
+
 const mockConfig = {
   tenantId: 'tenant-123',
   seasonId: 'season-123',
@@ -75,6 +81,7 @@ describe('consumer-leaderboard service - listLeaderboards', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -85,6 +92,7 @@ describe('consumer-leaderboard service - listLeaderboards', () => {
   });
 
   it('should return leaderboards successfully', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -159,6 +167,7 @@ describe('consumer-leaderboard service - getLeaderboardEntries', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -169,6 +178,7 @@ describe('consumer-leaderboard service - getLeaderboardEntries', () => {
   });
 
   it('should return error when leaderboard not found', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -250,6 +260,7 @@ describe('consumer-leaderboard service - getPlayerPosition', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -260,6 +271,7 @@ describe('consumer-leaderboard service - getPlayerPosition', () => {
   });
 
   it('should return error when leaderboard not found', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -309,6 +321,7 @@ describe('consumer-leaderboard service - getPlayerRanks', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -319,6 +332,7 @@ describe('consumer-leaderboard service - getPlayerRanks', () => {
   });
 
   it('should filter out entries with no matching leaderboard', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -384,6 +398,7 @@ describe('consumer-leaderboard service - getFriendsLeaderboard', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -394,6 +409,7 @@ describe('consumer-leaderboard service - getFriendsLeaderboard', () => {
   });
 
   it('should return error when friends leaderboard not found', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -495,6 +511,7 @@ describe('consumer-leaderboard service - getGuildLeaderboard', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -505,6 +522,7 @@ describe('consumer-leaderboard service - getGuildLeaderboard', () => {
   });
 
   it('should return error when guild leaderboard not found', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 

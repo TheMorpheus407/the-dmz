@@ -1,4 +1,4 @@
-import type { PrivacyLevel } from '../../../db/schema/social/index.js';
+import type { PrivacyLevel } from '../../db/schema/social/index.js';
 
 function applyPrivacyFilter<T extends { displayName?: string | null; playerId: string }>(
   entries: T[],

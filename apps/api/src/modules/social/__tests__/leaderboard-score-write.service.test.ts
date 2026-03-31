@@ -10,7 +10,7 @@ import { getRedisClient } from '../../../shared/database/redis.js';
 
 import type { AppConfig } from '../../../config.js';
 import type { DatabaseClient } from '../../../shared/database/connection.js';
-import type { RedisClient } from '../../../shared/database/redis.js';
+import type { RedisRateLimitClient } from '../../../shared/database/redis.js';
 
 vi.mock('../../../shared/database/connection.js', () => ({
   getDatabaseClient: vi.fn(),
@@ -98,7 +98,7 @@ const createMockRedis = () => {
     zrevrange: vi.fn().mockImplementation(async () => {
       return [];
     }),
-  } as unknown as RedisClient;
+  } as unknown as RedisRateLimitClient;
 
   return { mockRedis };
 };

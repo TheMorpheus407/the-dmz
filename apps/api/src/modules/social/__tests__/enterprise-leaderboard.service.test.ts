@@ -18,6 +18,12 @@ vi.mock('../../../shared/database/connection.js', () => ({
   getDatabaseClient: vi.fn(),
 }));
 
+const mockEvaluateFlag = vi.fn().mockResolvedValue(true);
+
+vi.mock('../../feature-flags/feature-flags.service.js', () => ({
+  evaluateFlag: (...args: unknown[]) => mockEvaluateFlag(...args),
+}));
+
 const mockConfig = {
   tenantId: 'tenant-123',
   seasonId: 'season-123',
@@ -49,6 +55,14 @@ const createMockDb = () => {
           return mockQueryResults.get('playerProfiles.findMany') ?? [];
         }),
       },
+      featureFlags: {
+        findFirst: vi.fn().mockImplementation(async () => {
+          return mockQueryResults.get('featureFlags.findFirst') ?? null;
+        }),
+        findMany: vi.fn().mockImplementation(async () => {
+          return mockQueryResults.get('featureFlags.findMany') ?? [];
+        }),
+      },
     },
     select: vi.fn().mockReturnThis(),
     from: vi.fn().mockReturnThis(),
@@ -74,6 +88,7 @@ describe('enterprise-leaderboard service - listEnterpriseLeaderboards', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -84,6 +99,7 @@ describe('enterprise-leaderboard service - listEnterpriseLeaderboards', () => {
   });
 
   it('should return enterprise leaderboards successfully', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -145,6 +161,7 @@ describe('enterprise-leaderboard service - getEnterpriseLeaderboardEntries', () 
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -155,6 +172,7 @@ describe('enterprise-leaderboard service - getEnterpriseLeaderboardEntries', () 
   });
 
   it('should return error when leaderboard not found', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -260,6 +278,7 @@ describe('enterprise-leaderboard service - getPlayerEnterprisePosition', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -270,6 +289,7 @@ describe('enterprise-leaderboard service - getPlayerEnterprisePosition', () => {
   });
 
   it('should return error when player not found', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -305,6 +325,7 @@ describe('enterprise-leaderboard service - getDepartmentLeaderboard', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -315,6 +336,7 @@ describe('enterprise-leaderboard service - getDepartmentLeaderboard', () => {
   });
 
   it('should return error when department leaderboard not found', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -352,6 +374,7 @@ describe('enterprise-leaderboard service - getCorporationLeaderboard', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -362,6 +385,7 @@ describe('enterprise-leaderboard service - getCorporationLeaderboard', () => {
   });
 
   it('should return error when corporation leaderboard not found', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -374,6 +398,7 @@ describe('enterprise-leaderboard service - getCorporationLeaderboard', () => {
   });
 
   it('should delegate to getEnterpriseLeaderboardEntries', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -399,6 +424,7 @@ describe('enterprise-leaderboard service - getTeamSummary', () => {
   });
 
   it('should return error when flag disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
     const { mockDb } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -413,6 +439,7 @@ describe('enterprise-leaderboard service - getTeamSummary', () => {
   });
 
   it('should return empty summary when no entries', async () => {
+    mockEvaluateFlag.mockResolvedValue(true);
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
@@ -488,10 +515,7 @@ describe('enterprise-leaderboard service - updatePrivacyLevel', () => {
     const { mockDb, setQueryResult } = createMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
-      id: 'elb-1',
-      tenantId: 'different-tenant',
-    });
+    setQueryResult('enterpriseLeaderboards.findFirst', null);
 
     const result = await updatePrivacyLevel(mockConfig, 'tenant-123', 'elb-1', 'pseudonym');
 
