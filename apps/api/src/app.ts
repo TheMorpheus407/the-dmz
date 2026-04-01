@@ -46,6 +46,9 @@ import {
   registerComplianceRoutes,
   registerCampaignRoutes,
   registerPhishingSimulationRoutes,
+  registerPhishingSimulationResultRoutes,
+  registerPhishingSimulationTemplateRoutes,
+  registerPhishingSimulationTeachableMomentRoutes,
   registerCertificateEventHandlers,
 } from './modules/admin/index.js';
 import { registerAuditRoutes, registerAuditHook } from './modules/audit/index.js';
@@ -335,6 +338,9 @@ export const buildApp = (
   app.register(registerCampaignRoutes);
 
   app.register(registerPhishingSimulationRoutes);
+  app.register(registerPhishingSimulationResultRoutes);
+  app.register(registerPhishingSimulationTemplateRoutes);
+  app.register(registerPhishingSimulationTeachableMomentRoutes);
 
   app.register(registerAuditRoutes);
 
