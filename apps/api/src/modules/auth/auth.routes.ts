@@ -14,6 +14,7 @@ import {
   passwordChangeRequestJsonSchema,
   passwordChangeRequestResponseJsonSchema,
 } from '@the-dmz/shared/schemas';
+import { AuthAbuseCategory } from '@the-dmz/shared/contracts';
 
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
@@ -27,12 +28,11 @@ import {
 import { requireMfaForSuperAdmin } from '../../shared/middleware/mfa-guard.js';
 import { idempotency } from '../../shared/middleware/idempotency.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
-import { getAbuseCounterService } from '../../shared/services/abuse-counter.service.js';
 import {
-  evaluateAbuseResult,
-  setAbuseHeaders,
-  getClientIp,
-} from '../../shared/policies/auth-abuse-policy.js';
+  createAbuseGuard,
+  incrementAbuseCounter,
+  resetAbuseCounters,
+} from '../../shared/middleware/abuse-guard.js';
 
 import * as authService from './auth.service.js';
 import * as delegationService from './delegation.service.js';
@@ -118,7 +118,10 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.post<{ Body: RegisterInput }>(
     '/auth/register',
     {
-      preHandler: preAuthMiddleware,
+      preHandler: [
+        ...preAuthMiddleware,
+        createAbuseGuard(AuthAbuseCategory.REGISTER, { emailField: 'email' }),
+      ],
       config: {
         rateLimit: isTest
           ? false
@@ -151,30 +154,6 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
     },
     async (request, reply) => {
       const tenantId = request.preAuthTenantContext?.tenantId;
-      const clientIp = getClientIp(request);
-
-      const abuseService = getAbuseCounterService(config);
-
-      const registerAbuseOptions: {
-        tenantId?: string;
-        email: string;
-        ip?: string;
-        category: 'register';
-      } = {
-        email: request.body.email,
-        category: 'register',
-      };
-      if (tenantId) {
-        registerAbuseOptions.tenantId = tenantId;
-      }
-      if (clientIp) {
-        registerAbuseOptions.ip = clientIp;
-      }
-
-      const preAuthAbuse = await abuseService.checkAbuseLevel(registerAbuseOptions);
-
-      evaluateAbuseResult(preAuthAbuse);
-      setAbuseHeaders(reply, preAuthAbuse);
 
       try {
         const result = await authService.register(
@@ -183,7 +162,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           tenantId ? { tenantId } : undefined,
         );
 
-        await abuseService.resetCounters(registerAbuseOptions);
+        await resetAbuseCounters(request, config);
 
         setCsrfCookie(request, reply);
         setRefreshCookie({ refreshToken: result.refreshToken, reply });
@@ -222,7 +201,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         reply.code(201);
         return { user: result.user, accessToken: result.accessToken };
       } catch (error) {
-        await abuseService.incrementAndEvaluate(registerAbuseOptions);
+        await incrementAbuseCounter(request, config);
         throw error;
       }
     },
@@ -231,7 +210,10 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.post<{ Body: LoginInput }>(
     '/auth/login',
     {
-      preHandler: preAuthMiddleware,
+      preHandler: [
+        ...preAuthMiddleware,
+        createAbuseGuard(AuthAbuseCategory.LOGIN, { emailField: 'email' }),
+      ],
       config: {
         rateLimit: isTest
           ? false
@@ -264,31 +246,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
     },
     async (request, reply) => {
       const tenantId = request.preAuthTenantContext?.tenantId;
-      const clientIp = getClientIp(request);
       const eventTenantId = tenantId ?? config.TENANT_FALLBACK_SLUG ?? '';
-
-      const abuseService = getAbuseCounterService(config);
-
-      const abuseCheckOptions: {
-        tenantId?: string;
-        email: string;
-        ip?: string;
-        category: 'login' | 'register';
-      } = {
-        email: request.body.email,
-        category: 'login',
-      };
-      if (tenantId) {
-        abuseCheckOptions.tenantId = tenantId;
-      }
-      if (clientIp) {
-        abuseCheckOptions.ip = clientIp;
-      }
-
-      const preAuthAbuse = await abuseService.checkAbuseLevel(abuseCheckOptions);
-
-      evaluateAbuseResult(preAuthAbuse);
-      setAbuseHeaders(reply, preAuthAbuse);
 
       try {
         const result = await authService.login(
@@ -297,7 +255,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
           tenantId ? { tenantId } : undefined,
         );
 
-        await abuseService.resetCounters(abuseCheckOptions);
+        await resetAbuseCounters(request, config);
 
         setCsrfCookie(request, reply);
         setRefreshCookie({ refreshToken: result.refreshToken, reply });
@@ -321,10 +279,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         return { user: result.user, accessToken: result.accessToken };
       } catch (error) {
         if (error instanceof InvalidCredentialsError) {
-          const postAuthAbuse = await abuseService.incrementAndEvaluate(abuseCheckOptions);
-
-          evaluateAbuseResult(postAuthAbuse);
-          setAbuseHeaders(reply, postAuthAbuse);
+          await incrementAbuseCounter(request, config);
 
           const eventBus = fastify.eventBus;
           eventBus.publish(
@@ -648,7 +603,10 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.post<{ Body: { email: string } }>(
     '/auth/password/reset',
     {
-      preHandler: preAuthMiddleware,
+      preHandler: [
+        ...preAuthMiddleware,
+        createAbuseGuard(AuthAbuseCategory.PASSWORD_RESET, { emailField: 'email' }),
+      ],
       config: {
         rateLimit: isTest
           ? false
@@ -681,32 +639,8 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         },
       },
     },
-    async (request, reply) => {
+    async (request) => {
       const tenantId = request.preAuthTenantContext?.tenantId;
-      const clientIp = getClientIp(request);
-
-      const abuseService = getAbuseCounterService(config);
-
-      const abuseCheckOptions: {
-        tenantId?: string;
-        email: string;
-        ip?: string;
-        category: 'password_reset';
-      } = {
-        email: request.body.email,
-        category: 'password_reset',
-      };
-      if (tenantId) {
-        abuseCheckOptions.tenantId = tenantId;
-      }
-      if (clientIp) {
-        abuseCheckOptions.ip = clientIp;
-      }
-
-      const preAuthAbuse = await abuseService.checkAbuseLevel(abuseCheckOptions);
-
-      evaluateAbuseResult(preAuthAbuse);
-      setAbuseHeaders(reply, preAuthAbuse);
 
       try {
         const result = await authService.requestPasswordReset(
@@ -735,7 +669,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
 
         return { success: true };
       } catch (error) {
-        await abuseService.incrementAndEvaluate(abuseCheckOptions);
+        await incrementAbuseCounter(request, config);
         throw error;
       }
     },
@@ -744,7 +678,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   fastify.post<{ Body: { token: string; password: string } }>(
     '/auth/password/change',
     {
-      preHandler: preAuthMiddleware,
+      preHandler: [...preAuthMiddleware, createAbuseGuard(AuthAbuseCategory.PASSWORD_CHANGE)],
       config: {
         rateLimit: isTest
           ? false
@@ -781,30 +715,8 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         },
       },
     },
-    async (request, reply) => {
+    async (request) => {
       const tenantId = request.preAuthTenantContext?.tenantId;
-      const clientIp = getClientIp(request);
-
-      const abuseService = getAbuseCounterService(config);
-
-      const abuseCheckOptions: {
-        tenantId?: string;
-        ip?: string;
-        category: 'password_change';
-      } = {
-        category: 'password_change',
-      };
-      if (tenantId) {
-        abuseCheckOptions.tenantId = tenantId;
-      }
-      if (clientIp) {
-        abuseCheckOptions.ip = clientIp;
-      }
-
-      const preAuthAbuse = await abuseService.checkAbuseLevel(abuseCheckOptions);
-
-      evaluateAbuseResult(preAuthAbuse);
-      setAbuseHeaders(reply, preAuthAbuse);
 
       try {
         const result = await authService.changePasswordWithToken(
@@ -836,7 +748,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         };
       } catch (error) {
         if (error instanceof InvalidCredentialsError === false) {
-          await abuseService.incrementAndEvaluate(abuseCheckOptions);
+          await incrementAbuseCounter(request, config);
         }
         throw error;
       }
