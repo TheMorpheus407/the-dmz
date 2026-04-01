@@ -1269,9 +1269,10 @@ export const registerCampaignRoutes = async (fastify: FastifyInstance): Promise<
     },
     async (request: FastifyRequest<{ Params: { userId: string } }>, reply: FastifyReply) => {
       try {
+        const { tenantId } = request.tenantContext!;
         const { userId } = request.params;
 
-        const canEnroll = await checkInterventionThrottling(userId);
+        const canEnroll = await checkInterventionThrottling(tenantId, userId);
 
         return reply.code(200).send({
           success: true,

@@ -965,10 +965,21 @@ export const getEligibleUsersForCampaign = async (
 };
 
 export const checkInterventionThrottling = async (
+  tenantId: string,
   userId: string,
   config: AppConfig = loadConfig(),
 ): Promise<boolean> => {
   const db = getDatabaseClient(config);
+
+  const [user] = await db
+    .select({ tenantId: users.tenantId })
+    .from(users)
+    .where(eq(users.userId, userId))
+    .limit(1);
+
+  if (!user || user.tenantId !== tenantId) {
+    throw new Error('User not found or does not belong to your tenant');
+  }
 
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
