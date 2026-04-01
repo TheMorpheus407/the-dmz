@@ -15,7 +15,7 @@ import {
   resolveDecision,
   type DecisionEvaluationResult,
 } from '../../email-instance/decision-resolution.service.js';
-import { assembleVerificationPacket } from '../../email-instance/verification-packet.service.js';
+import { assembleVerificationPacket } from '../../verification/verification-packet.service.js';
 import {
   clampTrustScore,
   calculateXPForLevel,
