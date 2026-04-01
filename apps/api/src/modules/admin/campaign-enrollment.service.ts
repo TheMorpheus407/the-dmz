@@ -4,11 +4,11 @@ import { eq, and, inArray, sql as sqlFn } from 'drizzle-orm';
 
 import { loadConfig, type AppConfig } from '../../config.js';
 import { getDatabaseClient } from '../../shared/database/connection.js';
+import { users } from '../../shared/database/schema/users.js';
 import {
   campaigns,
   campaignEnrollments,
   campaignAudience,
-  users,
 } from '../../shared/database/schema/training/campaign.schema.js';
 
 import { getCampaignById } from './campaign-crud.service.js';
@@ -70,15 +70,14 @@ export const getCampaignProgress = async (
       ? await db
 
           .select({
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
             userId: users.userId,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
+
             department: users.department,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
+
             role: users.role,
           })
           .from(users)
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
           .where(inArray(users.userId, userIds))
       : [];
   const usersWithDept: UserDeptRole[] = rawUsersWithDept as UserDeptRole[];
@@ -218,9 +217,8 @@ export const getEligibleUsersForCampaign = async (
   }
 
   const conditions: ReturnType<typeof eq>[] = [
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     eq(users.tenantId, tenantId),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
     eq(users.isActive, true),
   ];
 
@@ -233,13 +231,12 @@ export const getEligibleUsersForCampaign = async (
 
   const rawUserList = await db
     .select({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
       userId: users.userId,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
+
       department: users.department,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
+
       role: users.role,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
+
       title: users.title,
     })
     .from(users)
@@ -296,11 +293,10 @@ export const checkInterventionThrottling = async (
 
   const rawUserResult = await db
     .select({
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
       tenantId: users.tenantId,
     })
     .from(users)
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+
     .where(eq(users.userId, userId))
     .limit(1);
   const userResult: (UserTenant | undefined)[] = rawUserResult as UserTenant[];

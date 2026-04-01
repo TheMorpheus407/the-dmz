@@ -6,7 +6,11 @@ import { loadConfig, type AppConfig } from '../../config.js';
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { campaignContent } from '../../shared/database/schema/training/campaign.schema.js';
 
-import type { CampaignContent, CampaignContentInput } from './campaign.types.js';
+import type {
+  CampaignContent,
+  CampaignContentInput,
+  CampaignContentType,
+} from './campaign.types.js';
 
 export const addCampaignContent = async (
   _tenantId: string,
@@ -46,7 +50,7 @@ export const addCampaignContent = async (
     return {
       contentId: content.contentId,
       campaignId: content.campaignId,
-      contentType: content.contentType,
+      contentType: content.contentType as CampaignContentType,
       contentItemId: content.contentItemId,
       orderIndex: content.orderIndex ?? 0,
       dueDays: content.dueDays ?? 7,
@@ -84,7 +88,7 @@ export const addCampaignContent = async (
   return {
     contentId: content.contentId,
     campaignId: content.campaignId,
-    contentType: content.contentType,
+    contentType: content.contentType as CampaignContentType,
     contentItemId: content.contentItemId,
     orderIndex: content.orderIndex ?? 0,
     dueDays: content.dueDays ?? 7,
