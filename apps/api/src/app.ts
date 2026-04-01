@@ -34,6 +34,8 @@ import { xapiPlugin } from './modules/xapi/index.js';
 import {
   registerAdminRateLimitRoutes,
   registerAdminTenantRoutes,
+  registerAdminTenantProvisioningRoutes,
+  registerAdminTenantManagementRoutes,
   registerAdminRoleRoutes,
   registerAdminDashboardRoutes,
   registerAdminUserRoutes,
@@ -312,6 +314,8 @@ export const buildApp = (
   app.register(registerAdminRateLimitRoutes);
 
   app.register(registerAdminTenantRoutes);
+  app.register(registerAdminTenantProvisioningRoutes);
+  app.register(registerAdminTenantManagementRoutes);
 
   app.register(registerAdminRoleRoutes);
 

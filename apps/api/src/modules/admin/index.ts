@@ -1,5 +1,7 @@
 export { registerAdminRateLimitRoutes } from './admin-rate-limit.routes.js';
 export { registerAdminTenantRoutes } from './admin-tenants.routes.js';
+export { registerAdminTenantProvisioningRoutes } from './admin-tenants-provisioning.routes.js';
+export { registerAdminTenantManagementRoutes } from './admin-tenants-management.routes.js';
 export { registerAdminRoleRoutes } from './admin-roles.routes.js';
 export { registerAdminDashboardRoutes } from './admin-dashboard.routes.js';
 export { registerAdminUserRoutes } from './admin-users.routes.js';
