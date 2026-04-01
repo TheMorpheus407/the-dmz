@@ -1,22 +1,24 @@
-import { eq, and, desc, sql } from 'drizzle-orm';
-
 import { getDatabaseClient } from '../../shared/database/connection.js';
-import { getRedisClient, type RedisRateLimitClient } from '../../shared/database/redis.js';
-import {
-  chatChannel,
-  chatMessage,
-  moderationReport,
-  type ChannelType,
-  type ChatChannel,
-  type ChatMessage,
-  type ModerationStatus,
-} from '../../db/schema/social/index.js';
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
-import { wsGateway, buildChannelName } from '../notification/websocket/websocket.gateway.js'; // eslint-disable-line import-x/no-restricted-paths
-import { checkContent } from '../social/content-filter.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { checkRateLimit } from '../social/rate-limit.service.js'; // eslint-disable-line import-x/no-restricted-paths
 
+import { requireChatEnabled, requireChannelChatEnabled } from './chat-flags.js';
+import {
+  createChatMessageSentEvent,
+  createChatMessageDeletedEvent,
+  createChatChannelCreatedEvent,
+} from './chat.events.js';
+import { ChatRepository } from './chat.repository.js';
+import { ChatModerationService } from './chat-moderation.service.js';
+
+import type { RedisRateLimitClient } from '../../shared/database/redis.js';
+import type {
+  ChatChannel,
+  ChatMessage,
+  ModerationStatus,
+  ChannelType,
+} from '../../db/schema/social/index.js';
 import type { AppConfig } from '../../config.js';
-import type { WSServerMessage } from '../notification/websocket/websocket.types.js'; // eslint-disable-line import-x/no-restricted-paths
+import type { IEventBus } from '../../shared/events/event-types.js';
 
 const MAX_MESSAGE_LENGTH = 280;
 
@@ -75,75 +77,34 @@ export interface GetChannelResult {
   error?: string;
 }
 
-async function checkChatRateLimit(
-  config: AppConfig,
-  tenantId: string,
-  playerId: string,
-  channelId: string,
-  redisClient?: RedisRateLimitClient,
-): Promise<{ allowed: boolean; retryAfterMs?: number }> {
-  const client = redisClient ?? getRedisClient(config);
-
-  if (!client) {
-    return { allowed: true };
-  }
-
-  const key = `chat:${tenantId}:${playerId}:${channelId}`;
-  const result = await client.incrementRateLimitKey({
-    key,
-    timeWindowMs: 2000,
-    max: 1,
-    continueExceeding: false,
-    exponentialBackoff: false,
-  });
-
-  if (result.current > 1) {
-    return {
-      allowed: false,
-      retryAfterMs: result.ttl,
-    };
-  }
-
-  return { allowed: true };
-}
-
 export async function sendMessage(
   config: AppConfig,
   tenantId: string,
   playerId: string,
   input: SendMessageInput,
   redisClient?: RedisRateLimitClient,
+  eventBus?: IEventBus,
 ): Promise<SendMessageResult> {
-  const chatEnabled = await evaluateFlag(config, tenantId, 'social.chat.enabled');
-  if (!chatEnabled) {
-    return { success: false, error: 'Chat is disabled' };
+  const chatEnabled = await requireChatEnabled(config, tenantId);
+  if (!chatEnabled.enabled) {
+    return { success: false, error: chatEnabled.error };
   }
 
   const db = getDatabaseClient(config);
+  const repository = new ChatRepository(db);
 
-  const channel = await db.query.chatChannel.findFirst({
-    where: and(eq(chatChannel.channelId, input.channelId), eq(chatChannel.tenantId, tenantId)),
+  const channel = await repository.findChannel({
+    channelId: input.channelId,
+    tenantId,
   });
 
   if (!channel) {
     return { success: false, error: 'Channel not found' };
   }
 
-  if (channel.channelType === 'party') {
-    const partyChatEnabled = await evaluateFlag(config, tenantId, 'social.chat.party');
-    if (!partyChatEnabled) {
-      return { success: false, error: 'Party chat is disabled' };
-    }
-  } else if (channel.channelType === 'guild') {
-    const guildChatEnabled = await evaluateFlag(config, tenantId, 'social.chat.guild');
-    if (!guildChatEnabled) {
-      return { success: false, error: 'Guild chat is disabled' };
-    }
-  } else if (channel.channelType === 'direct') {
-    const directChatEnabled = await evaluateFlag(config, tenantId, 'social.chat.direct');
-    if (!directChatEnabled) {
-      return { success: false, error: 'Direct chat is disabled' };
-    }
+  const channelEnabled = await requireChannelChatEnabled(config, tenantId, channel.channelType);
+  if (!channelEnabled.enabled) {
+    return { success: false, error: channelEnabled.error };
   }
 
   const content = input.content.trim();
@@ -158,11 +119,11 @@ export async function sendMessage(
     };
   }
 
-  const rateLimitResult = await checkChatRateLimit(
+  const rateLimitResult = await checkRateLimit(
     config,
     tenantId,
     playerId,
-    input.channelId,
+    'send_chat_message',
     redisClient,
   );
   if (!rateLimitResult.allowed) {
@@ -174,19 +135,8 @@ export async function sendMessage(
     };
   }
 
-  const moderationResult = await checkContent(config, tenantId, { content, context: 'chat' });
-
-  let moderationStatus: ModerationStatus = 'approved';
-  if (!moderationResult.allowed) {
-    if (
-      moderationResult.highestSeverity === 'block' ||
-      moderationResult.highestSeverity === 'mute'
-    ) {
-      moderationStatus = 'rejected';
-    } else {
-      moderationStatus = 'flagged';
-    }
-  }
+  const moderationService = new ChatModerationService(config, tenantId);
+  const { moderationStatus } = await moderationService.moderateChat({ content });
 
   if (moderationStatus === 'rejected') {
     return {
@@ -196,30 +146,34 @@ export async function sendMessage(
     };
   }
 
-  const [message] = await db
-    .insert(chatMessage)
-    .values({
-      channelId: input.channelId,
-      senderPlayerId: playerId,
-      content,
-      moderationStatus,
-    })
-    .returning();
+  const message = await repository.createMessage({
+    channelId: input.channelId,
+    senderPlayerId: playerId,
+    content,
+    moderationStatus,
+  });
 
   if (!message) {
     return { success: false, error: 'Failed to create message' };
   }
 
-  const wsChannel = buildChannelName('chat', input.channelId);
-  const wsMessage: WSServerMessage = wsGateway.createMessage('CHAT_MESSAGE', {
-    messageId: message.messageId,
-    channelId: message.channelId,
-    senderPlayerId: message.senderPlayerId,
-    content: message.content,
-    moderationStatus: message.moderationStatus,
-    createdAt: message.createdAt.toISOString(),
-  });
-  wsGateway.broadcastToChannel(wsChannel, wsMessage);
+  if (eventBus) {
+    const event = createChatMessageSentEvent(
+      'chat.service',
+      message.messageId,
+      {
+        messageId: message.messageId,
+        channelId: message.channelId,
+        senderPlayerId: message.senderPlayerId,
+        content: message.content,
+        moderationStatus: message.moderationStatus,
+        createdAt: message.createdAt.toISOString(),
+        tenantId,
+      },
+      { tenantId, userId: playerId },
+    );
+    eventBus.publish(event);
+  }
 
   return {
     success: true,
@@ -236,31 +190,29 @@ export async function getMessages(
   limit = 50,
   cursor?: string,
 ): Promise<GetMessagesResult> {
-  const chatEnabled = await evaluateFlag(config, tenantId, 'social.chat.enabled');
-  if (!chatEnabled) {
-    return { success: false, error: 'Chat is disabled' };
+  const chatEnabled = await requireChatEnabled(config, tenantId);
+  if (!chatEnabled.enabled) {
+    return { success: false, error: chatEnabled.error };
   }
 
   const db = getDatabaseClient(config);
+  const repository = new ChatRepository(db);
 
-  const channel = await db.query.chatChannel.findFirst({
-    where: and(eq(chatChannel.channelId, channelId), eq(chatChannel.tenantId, tenantId)),
+  const channel = await repository.findChannel({
+    channelId,
+    tenantId,
   });
 
   if (!channel) {
     return { success: false, error: 'Channel not found' };
   }
 
-  const whereConditions = [eq(chatMessage.channelId, channelId), eq(chatMessage.isDeleted, false)];
-
-  if (cursor) {
-    whereConditions.push(sql`${chatMessage.createdAt} < ${new Date(cursor)}`);
-  }
-
-  const messages = await db.query.chatMessage.findMany({
-    where: and(...whereConditions),
-    orderBy: [desc(chatMessage.createdAt)],
-    limit,
+  const messages = await repository.findMessages({
+    channelId,
+    tenantId,
+    isDeleted: false,
+    ...(cursor !== undefined ? { cursor } : {}),
+    ...(limit !== undefined ? { limit } : {}),
   });
 
   return { success: true, messages };
@@ -272,38 +224,42 @@ export async function deleteMessage(
   playerId: string,
   channelId: string,
   messageId: string,
+  eventBus?: IEventBus,
 ): Promise<DeleteMessageResult> {
-  const chatEnabled = await evaluateFlag(config, tenantId, 'social.chat.enabled');
-  if (!chatEnabled) {
-    return { success: false, error: 'Chat is disabled' };
+  const chatEnabled = await requireChatEnabled(config, tenantId);
+  if (!chatEnabled.enabled) {
+    return { success: false, error: chatEnabled.error };
   }
 
   const db = getDatabaseClient(config);
+  const repository = new ChatRepository(db);
 
-  const message = await db.query.chatMessage.findFirst({
-    where: and(
-      eq(chatMessage.messageId, messageId),
-      eq(chatMessage.channelId, channelId),
-      eq(chatMessage.senderPlayerId, playerId),
-    ),
-  });
+  const message = await repository.findMessage(messageId, channelId);
 
-  if (!message) {
+  if (!message || message.senderPlayerId !== playerId) {
     return {
       success: false,
       error: 'Message not found or you do not have permission to delete it',
     };
   }
 
-  await db.update(chatMessage).set({ isDeleted: true }).where(eq(chatMessage.messageId, messageId));
-
-  const wsChannel = buildChannelName('chat', channelId);
-  const wsMessage: WSServerMessage = wsGateway.createMessage('CHAT_MESSAGE', {
+  await repository.updateMessage({
     messageId,
-    channelId,
-    deleted: true,
+    isDeleted: true,
   });
-  wsGateway.broadcastToChannel(wsChannel, wsMessage);
+
+  if (eventBus) {
+    const event = createChatMessageDeletedEvent(
+      'chat.service',
+      messageId,
+      {
+        messageId,
+        channelId,
+      },
+      { tenantId, userId: playerId },
+    );
+    eventBus.publish(event);
+  }
 
   return { success: true };
 }
@@ -316,29 +272,27 @@ export async function reportMessage(
   messageId: string,
   reason: string,
 ): Promise<ReportMessageResult> {
-  const chatEnabled = await evaluateFlag(config, tenantId, 'social.chat.enabled');
-  if (!chatEnabled) {
-    return { success: false, error: 'Chat is disabled' };
+  const chatEnabled = await requireChatEnabled(config, tenantId);
+  if (!chatEnabled.enabled) {
+    return { success: false, error: chatEnabled.error };
   }
 
   const db = getDatabaseClient(config);
+  const repository = new ChatRepository(db);
 
-  const message = await db.query.chatMessage.findFirst({
-    where: and(eq(chatMessage.messageId, messageId), eq(chatMessage.channelId, channelId)),
-  });
+  const message = await repository.findMessage(messageId, channelId);
 
   if (!message) {
     return { success: false, error: 'Message not found' };
   }
 
-  await db.insert(moderationReport).values({
+  await repository.createModerationReport({
     tenantId,
     reporterPlayerId: playerId,
     reportedPlayerId: message.senderPlayerId,
     reportType: 'content',
     contentReference: { type: 'chat_message', id: messageId },
     description: reason,
-    status: 'pending',
   });
 
   return { success: true };
@@ -349,17 +303,15 @@ export async function listChannels(
   tenantId: string,
   _playerId: string,
 ): Promise<ListChannelsResult> {
-  const chatEnabled = await evaluateFlag(config, tenantId, 'social.chat.enabled');
-  if (!chatEnabled) {
-    return { success: false, error: 'Chat is disabled' };
+  const chatEnabled = await requireChatEnabled(config, tenantId);
+  if (!chatEnabled.enabled) {
+    return { success: false, error: chatEnabled.error };
   }
 
   const db = getDatabaseClient(config);
+  const repository = new ChatRepository(db);
 
-  const channels = await db.query.chatChannel.findMany({
-    where: eq(chatChannel.tenantId, tenantId),
-    orderBy: [desc(chatChannel.createdAt)],
-  });
+  const channels = await repository.findChannels(tenantId);
 
   return { success: true, channels };
 }
@@ -370,9 +322,11 @@ export async function getChannel(
   channelId: string,
 ): Promise<GetChannelResult> {
   const db = getDatabaseClient(config);
+  const repository = new ChatRepository(db);
 
-  const channel = await db.query.chatChannel.findFirst({
-    where: and(eq(chatChannel.channelId, channelId), eq(chatChannel.tenantId, tenantId)),
+  const channel = await repository.findChannel({
+    channelId,
+    tenantId,
   });
 
   if (!channel) {
@@ -386,57 +340,56 @@ export async function createChannel(
   config: AppConfig,
   tenantId: string,
   input: CreateChannelInput,
+  eventBus?: IEventBus,
 ): Promise<CreateChannelResult> {
-  const chatEnabled = await evaluateFlag(config, tenantId, 'social.chat.enabled');
-  if (!chatEnabled) {
-    return { success: false, error: 'Chat is disabled' };
+  const chatEnabled = await requireChatEnabled(config, tenantId);
+  if (!chatEnabled.enabled) {
+    return { success: false, error: chatEnabled.error };
   }
 
-  if (input.channelType === 'party') {
-    const partyChatEnabled = await evaluateFlag(config, tenantId, 'social.chat.party');
-    if (!partyChatEnabled) {
-      return { success: false, error: 'Party chat is disabled' };
-    }
-  } else if (input.channelType === 'guild') {
-    const guildChatEnabled = await evaluateFlag(config, tenantId, 'social.chat.guild');
-    if (!guildChatEnabled) {
-      return { success: false, error: 'Guild chat is disabled' };
-    }
-  } else if (input.channelType === 'direct') {
-    const directChatEnabled = await evaluateFlag(config, tenantId, 'social.chat.direct');
-    if (!directChatEnabled) {
-      return { success: false, error: 'Direct chat is disabled' };
-    }
+  const channelEnabled = await requireChannelChatEnabled(config, tenantId, input.channelType);
+  if (!channelEnabled.enabled) {
+    return { success: false, error: channelEnabled.error };
   }
 
   const db = getDatabaseClient(config);
+  const repository = new ChatRepository(db);
 
-  const existingChannel = await db.query.chatChannel.findFirst({
-    where: and(
-      eq(chatChannel.tenantId, tenantId),
-      eq(chatChannel.channelType, input.channelType),
-      input.partyId ? eq(chatChannel.partyId, input.partyId) : sql`1=1`,
-      input.guildId ? eq(chatChannel.guildId, input.guildId) : sql`1=1`,
-    ),
+  const existingChannel = await repository.findExistingChannel({
+    tenantId,
+    channelType: input.channelType,
+    ...(input.partyId !== undefined ? { partyId: input.partyId } : {}),
+    ...(input.guildId !== undefined ? { guildId: input.guildId } : {}),
   });
 
   if (existingChannel) {
     return { success: true, channel: existingChannel };
   }
 
-  const [channel] = await db
-    .insert(chatChannel)
-    .values({
-      tenantId,
-      channelType: input.channelType,
-      partyId: input.partyId ?? null,
-      guildId: input.guildId ?? null,
-      name: input.name ?? null,
-    })
-    .returning();
+  const channel = await repository.createChannel({
+    tenantId,
+    channelType: input.channelType,
+    ...(input.partyId !== undefined ? { partyId: input.partyId } : {}),
+    ...(input.guildId !== undefined ? { guildId: input.guildId } : {}),
+    ...(input.name !== undefined ? { name: input.name } : {}),
+  });
 
   if (!channel) {
     return { success: false, error: 'Failed to create channel' };
+  }
+
+  if (eventBus) {
+    const event = createChatChannelCreatedEvent(
+      'chat.service',
+      channel.channelId,
+      {
+        channelId: channel.channelId,
+        channelType: channel.channelType,
+        tenantId: channel.tenantId,
+      },
+      { tenantId, userId: tenantId },
+    );
+    eventBus.publish(event);
   }
 
   return { success: true, channel };
@@ -446,11 +399,17 @@ export async function getOrCreatePartyChannel(
   config: AppConfig,
   tenantId: string,
   partyId: string,
+  eventBus?: IEventBus,
 ): Promise<CreateChannelResult> {
-  return createChannel(config, tenantId, {
-    channelType: 'party',
-    partyId,
-  });
+  return createChannel(
+    config,
+    tenantId,
+    {
+      channelType: 'party',
+      partyId,
+    },
+    eventBus,
+  );
 }
 
 export async function getOrCreateDirectChannel(
@@ -458,11 +417,17 @@ export async function getOrCreateDirectChannel(
   tenantId: string,
   playerId1: string,
   playerId2: string,
+  eventBus?: IEventBus,
 ): Promise<CreateChannelResult> {
   const channelName = [playerId1, playerId2].sort().join('-');
 
-  return createChannel(config, tenantId, {
-    channelType: 'direct',
-    name: `dm-${channelName}`,
-  });
+  return createChannel(
+    config,
+    tenantId,
+    {
+      channelType: 'direct',
+      name: `dm-${channelName}`,
+    },
+    eventBus,
+  );
 }

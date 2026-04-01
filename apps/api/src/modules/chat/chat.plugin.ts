@@ -3,6 +3,10 @@ import websocket from '@fastify/websocket';
 
 import { chatRoutes } from './chat.routes.js';
 import { chatWebSocketHandler } from './chat.ws.handler.js';
+import {
+  createChatBroadcastHandler,
+  removeChatBroadcastHandler,
+} from './chat-broadcast.handler.js';
 
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../../config.js';
@@ -15,7 +19,13 @@ async function registerChatPlugin(fastify: FastifyInstance, config: AppConfig): 
   });
 
   fastify.get('/ws/chat', { websocket: true }, async (connection, request) => {
-    await chatWebSocketHandler(connection, request, config);
+    await chatWebSocketHandler(connection, request, config, fastify.eventBus);
+  });
+
+  createChatBroadcastHandler(fastify.eventBus);
+
+  fastify.addHook('onClose', async () => {
+    removeChatBroadcastHandler(fastify.eventBus);
   });
 
   fastify.register(chatRoutes, config);

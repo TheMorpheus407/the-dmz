@@ -11,6 +11,7 @@ import type {
   JWTAuthPayload,
 } from '../notification/websocket/websocket.types.js'; // eslint-disable-line import-x/no-restricted-paths
 import type { AppConfig } from '../../config.js';
+import type { IEventBus } from '../../shared/events/event-types.js';
 
 interface JWTPayload {
   sub: string;
@@ -27,6 +28,7 @@ export async function chatWebSocketHandler(
   connection: WebSocket,
   request: FastifyRequest,
   config: AppConfig,
+  eventBus?: IEventBus,
 ): Promise<void> {
   const authResult = await authenticateWebSocket(request, config);
 
@@ -51,7 +53,14 @@ export async function chatWebSocketHandler(
   connection.send(JSON.stringify(welcomeMsg));
 
   connection.on('message', (data: Buffer | string) => {
-    void handleChatMessage(data, connection, config, authResult.payload!.tenantId, userId);
+    void handleChatMessage(
+      data,
+      connection,
+      config,
+      authResult.payload!.tenantId,
+      userId,
+      eventBus,
+    );
   });
 
   connection.on('close', () => {
@@ -114,6 +123,7 @@ async function handleChatMessage(
   config: AppConfig,
   tenantId: string,
   userId: string,
+  eventBus?: IEventBus,
 ): Promise<void> {
   let message: Record<string, unknown>;
 
@@ -144,7 +154,7 @@ async function handleChatMessage(
       break;
     }
     case 'CHAT_SEND': {
-      await handleSend(message, connection, config, tenantId, userId);
+      await handleSend(message, connection, config, tenantId, userId, eventBus);
       break;
     }
     default: {
@@ -254,6 +264,7 @@ async function handleSend(
   config: AppConfig,
   tenantId: string,
   userId: string,
+  eventBus?: IEventBus,
 ): Promise<void> {
   const channelId = message['channelId'] as string | undefined;
   const content = message['content'] as string | undefined;
@@ -266,10 +277,17 @@ async function handleSend(
     return;
   }
 
-  const result: SendMessageResult = await sendMessage(config, tenantId, userId, {
-    channelId,
-    content,
-  });
+  const result: SendMessageResult = await sendMessage(
+    config,
+    tenantId,
+    userId,
+    {
+      channelId,
+      content,
+    },
+    undefined,
+    eventBus,
+  );
 
   if (!result.success) {
     if (result.rateLimited) {

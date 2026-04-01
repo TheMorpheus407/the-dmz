@@ -223,10 +223,17 @@ export async function chatRoutes(fastify: FastifyInstance, config: AppConfig): P
       const { channelId } = request.params as { channelId: string };
       const { content } = request.body as { content: string };
 
-      const result = await sendMessage(config, user.tenantId, user.userId, {
-        channelId,
-        content,
-      });
+      const result = await sendMessage(
+        config,
+        user.tenantId,
+        user.userId,
+        {
+          channelId,
+          content,
+        },
+        undefined,
+        fastify.eventBus,
+      );
 
       if (!result.success) {
         if (result.rateLimited) {
@@ -272,7 +279,14 @@ export async function chatRoutes(fastify: FastifyInstance, config: AppConfig): P
         messageId: string;
       };
 
-      const result = await deleteMessage(config, user.tenantId, user.userId, channelId, messageId);
+      const result = await deleteMessage(
+        config,
+        user.tenantId,
+        user.userId,
+        channelId,
+        messageId,
+        fastify.eventBus,
+      );
 
       if (!result.success) {
         throw new AppError({
