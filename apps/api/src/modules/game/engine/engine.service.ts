@@ -5,65 +5,14 @@ import {
   type GameActionPayload,
 } from '@the-dmz/shared';
 
-import {
-  createInitialGameState,
-  reduce,
-  transitionPhase,
-  transitionMacroState,
-} from './reducer.js';
-import {
-  GAME_ENGINE_EVENTS,
-  createSessionStartedEvent,
-  createSessionPausedEvent,
-  createSessionResumedEvent,
-  createSessionCompletedEvent,
-  createSessionAbandonedEvent,
-  createDayStartedEvent,
-  createDayPhaseChangedEvent,
-  createDayEndedEvent,
-  createEmailOpenedEvent,
-  createEmailDecisionSubmittedEvent,
-  createIncidentCreatedEvent,
-  createIncidentResolvedEvent,
-  createBreachOccurredEvent,
-} from './engine.events.js';
-import { isActionAllowedInPhase, canTransitionMacroState } from './state-machine.js';
+import { createInitialGameState, reduce } from './reducer.js';
+import { isActionAllowedInPhase } from './state-machine.js';
+import { createSessionStartedEvent } from './engine.events.js';
+import { GameEventMapper } from './game-event-mapper.js';
+import { SessionLifecycleManager } from './session-lifecycle-manager.js';
 
-import type { IEventBus, DomainEvent } from '../../../shared/events/event-types.js';
-
-type GameEngineEventCreator = (params: {
-  source: string;
-  correlationId: string;
-  tenantId: string;
-  userId: string;
-  version: number;
-  payload: unknown;
-}) => unknown;
-
-const EVENT_CREATOR_MAP: Record<string, GameEngineEventCreator> = {
-  [GAME_ENGINE_EVENTS.SESSION_STARTED]: (p) =>
-    createSessionStartedEvent(p as Parameters<typeof createSessionStartedEvent>[0]),
-  [GAME_ENGINE_EVENTS.SESSION_PAUSED]: (p) =>
-    createSessionPausedEvent(p as Parameters<typeof createSessionPausedEvent>[0]),
-  [GAME_ENGINE_EVENTS.SESSION_RESUMED]: (p) =>
-    createSessionResumedEvent(p as Parameters<typeof createSessionResumedEvent>[0]),
-  [GAME_ENGINE_EVENTS.SESSION_ABANDONED]: (p) =>
-    createSessionAbandonedEvent(p as Parameters<typeof createSessionAbandonedEvent>[0]),
-  [GAME_ENGINE_EVENTS.DAY_STARTED]: (p) =>
-    createDayStartedEvent(p as Parameters<typeof createDayStartedEvent>[0]),
-  [GAME_ENGINE_EVENTS.DAY_ENDED]: (p) =>
-    createDayEndedEvent(p as Parameters<typeof createDayEndedEvent>[0]),
-  [GAME_ENGINE_EVENTS.EMAIL_OPENED]: (p) =>
-    createEmailOpenedEvent(p as Parameters<typeof createEmailOpenedEvent>[0]),
-  [GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED]: (p) =>
-    createEmailDecisionSubmittedEvent(p as Parameters<typeof createEmailDecisionSubmittedEvent>[0]),
-  [GAME_ENGINE_EVENTS.INCIDENT_CREATED]: (p) =>
-    createIncidentCreatedEvent(p as Parameters<typeof createIncidentCreatedEvent>[0]),
-  [GAME_ENGINE_EVENTS.INCIDENT_RESOLVED]: (p) =>
-    createIncidentResolvedEvent(p as Parameters<typeof createIncidentResolvedEvent>[0]),
-  [GAME_ENGINE_EVENTS.BREACH_OCCURRED]: (p) =>
-    createBreachOccurredEvent(p as Parameters<typeof createBreachOccurredEvent>[0]),
-};
+import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { InternalGameEvent } from './game-event-mapper.js';
 
 export interface ProcessActionParams {
   sessionId: string;
@@ -88,7 +37,13 @@ export interface InitializeSessionParams {
 }
 
 export class GameEngineService {
-  constructor(private readonly eventBus: IEventBus) {}
+  private readonly eventMapper: GameEventMapper;
+  private readonly sessionManager: SessionLifecycleManager;
+
+  constructor(private readonly eventBus: IEventBus) {
+    this.eventMapper = new GameEventMapper();
+    this.sessionManager = new SessionLifecycleManager(this.eventMapper, this.eventBus);
+  }
 
   public initializeSession(params: InitializeSessionParams): GameState {
     const { sessionId, userId, tenantId, seed } = params;
@@ -152,11 +107,13 @@ export class GameEngineService {
       };
     }
 
-    const domainEvents = this.mapToDomainEvents(result.events, userId, tenantId);
+    const domainEvents = this.eventMapper.mapToDomainEvents(
+      result.events as InternalGameEvent[],
+      userId,
+      tenantId,
+    );
 
-    for (const event of domainEvents) {
-      this.eventBus.publish(event as DomainEvent<unknown>);
-    }
+    this.eventMapper.publishEvents(this.eventBus, domainEvents);
 
     return {
       success: true,
@@ -166,199 +123,25 @@ export class GameEngineService {
   }
 
   public pauseSession(state: GameState): ActionProcessingResult {
-    if (!canTransitionMacroState(state.currentMacroState, SESSION_MACRO_STATES.SESSION_PAUSED)) {
-      return {
-        success: false,
-        newState: state,
-        events: [],
-        error: 'Cannot pause session in current state',
-      };
-    }
-
-    const result = transitionMacroState(state, SESSION_MACRO_STATES.SESSION_PAUSED);
-
-    const event = createSessionPausedEvent({
-      source: 'game-engine',
-      correlationId: crypto.randomUUID(),
-      tenantId: state.tenantId,
-      userId: state.userId,
-      version: 1,
-      payload: {
-        sessionId: state.sessionId,
-        userId: state.userId,
-      },
-    });
-
-    this.eventBus.publish(event);
-
-    return {
-      success: true,
-      newState: result.newState,
-      events: [event],
-    };
+    return this.sessionManager.pauseSession(state);
   }
 
   public resumeSession(state: GameState): ActionProcessingResult {
-    if (!canTransitionMacroState(state.currentMacroState, SESSION_MACRO_STATES.SESSION_ACTIVE)) {
-      return {
-        success: false,
-        newState: state,
-        events: [],
-        error: 'Cannot resume session in current state',
-      };
-    }
-
-    const result = transitionMacroState(state, SESSION_MACRO_STATES.SESSION_ACTIVE);
-
-    const event = createSessionResumedEvent({
-      source: 'game-engine',
-      correlationId: crypto.randomUUID(),
-      tenantId: state.tenantId,
-      userId: state.userId,
-      version: 1,
-      payload: {
-        sessionId: state.sessionId,
-        userId: state.userId,
-      },
-    });
-
-    this.eventBus.publish(event);
-
-    return {
-      success: true,
-      newState: result.newState,
-      events: [event],
-    };
+    return this.sessionManager.resumeSession(state);
   }
 
   public completeSession(state: GameState, reason: string): ActionProcessingResult {
-    if (!canTransitionMacroState(state.currentMacroState, SESSION_MACRO_STATES.SESSION_COMPLETED)) {
-      return {
-        success: false,
-        newState: state,
-        events: [],
-        error: 'Cannot complete session in current state',
-      };
-    }
-
-    const result = transitionMacroState(state, SESSION_MACRO_STATES.SESSION_COMPLETED);
-
-    const event = createSessionCompletedEvent({
-      source: 'game-engine',
-      correlationId: crypto.randomUUID(),
-      tenantId: state.tenantId,
-      userId: state.userId,
-      version: 1,
-      payload: {
-        sessionId: state.sessionId,
-        userId: state.userId,
-        reason,
-      },
-    });
-
-    this.eventBus.publish(event);
-
-    return {
-      success: true,
-      newState: result.newState,
-      events: [event],
-    };
+    return this.sessionManager.completeSession(state, reason);
   }
 
   public abandonSession(state: GameState, reason?: string): ActionProcessingResult {
-    if (!canTransitionMacroState(state.currentMacroState, SESSION_MACRO_STATES.SESSION_ABANDONED)) {
-      return {
-        success: false,
-        newState: state,
-        events: [],
-        error: 'Cannot abandon session in current state',
-      };
-    }
-
-    const result = transitionMacroState(state, SESSION_MACRO_STATES.SESSION_ABANDONED);
-
-    const event = createSessionAbandonedEvent({
-      source: 'game-engine',
-      correlationId: crypto.randomUUID(),
-      tenantId: state.tenantId,
-      userId: state.userId,
-      version: 1,
-      payload: {
-        sessionId: state.sessionId,
-        userId: state.userId,
-        reason: reason ?? '',
-      },
-    });
-
-    this.eventBus.publish(event);
-
-    return {
-      success: true,
-      newState: result.newState,
-      events: [event],
-    };
+    return this.sessionManager.abandonSession(state, reason);
   }
 
   public transitionToPhase(state: GameState, newPhase: string): ActionProcessingResult {
-    const result = transitionPhase(state, newPhase as (typeof DAY_PHASES)[keyof typeof DAY_PHASES]);
-
-    if (!result.success) {
-      return {
-        success: false,
-        newState: state,
-        events: [],
-        error: result.error?.message ?? 'Unknown error',
-      };
-    }
-
-    const event = createDayPhaseChangedEvent({
-      source: 'game-engine',
-      correlationId: crypto.randomUUID(),
-      tenantId: state.tenantId,
-      userId: state.userId,
-      version: 1,
-      payload: {
-        sessionId: state.sessionId,
-        day: state.currentDay,
-        oldPhase: state.currentPhase,
-        newPhase: result.newState.currentPhase,
-      },
-    });
-
-    this.eventBus.publish(event);
-
-    return {
-      success: true,
-      newState: result.newState,
-      events: [event],
-    };
-  }
-
-  private mapToDomainEvents(
-    events: Array<{
-      eventId: string;
-      eventType: string;
-      timestamp: string;
-      payload: Record<string, unknown>;
-    }>,
-    userId: string,
-    tenantId: string,
-  ): unknown[] {
-    return events
-      .map((event) => {
-        const creator = EVENT_CREATOR_MAP[event.eventType];
-        if (!creator) {
-          return null;
-        }
-        return creator({
-          source: 'game-engine',
-          correlationId: crypto.randomUUID(),
-          tenantId,
-          userId,
-          version: 1,
-          payload: event.payload,
-        });
-      })
-      .filter(Boolean);
+    return this.sessionManager.transitionToPhase(
+      state,
+      newPhase as (typeof DAY_PHASES)[keyof typeof DAY_PHASES],
+    );
   }
 }

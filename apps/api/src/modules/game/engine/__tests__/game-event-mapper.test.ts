@@ -1,7 +1,9 @@
-import { describe, expect, it, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { GameEventMapper } from '../game-event-mapper.js';
 import { GAME_ENGINE_EVENTS } from '../engine.events.js';
+
+import type { IEventBus } from '../../../../shared/events/event-types.js';
 
 describe('GameEventMapper - mapToDomainEvents', () => {
   let mapper: GameEventMapper;
@@ -17,70 +19,75 @@ describe('GameEventMapper - mapToDomainEvents', () => {
     payload: Record<string, unknown>;
   }> = [
     {
-      eventId: '1',
+      eventId: 'event-1',
       eventType: GAME_ENGINE_EVENTS.SESSION_STARTED,
-      timestamp: '2024-01-01T00:00:00Z',
-      payload: { sessionId: 's1', userId: 'u1', tenantId: 't1', day: 1, seed: 123 },
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', userId: 'user-1', tenantId: 'tenant-1', day: 1, seed: 123 },
     },
     {
-      eventId: '2',
+      eventId: 'event-2',
       eventType: GAME_ENGINE_EVENTS.SESSION_PAUSED,
-      timestamp: '2024-01-01T00:01:00Z',
-      payload: { sessionId: 's1', userId: 'u1' },
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', userId: 'user-1' },
     },
     {
-      eventId: '3',
+      eventId: 'event-3',
       eventType: GAME_ENGINE_EVENTS.SESSION_RESUMED,
-      timestamp: '2024-01-01T00:02:00Z',
-      payload: { sessionId: 's1', userId: 'u1' },
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', userId: 'user-1' },
     },
     {
-      eventId: '4',
+      eventId: 'event-4',
+      eventType: GAME_ENGINE_EVENTS.SESSION_COMPLETED,
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', userId: 'user-1', reason: 'completed' },
+    },
+    {
+      eventId: 'event-5',
       eventType: GAME_ENGINE_EVENTS.SESSION_ABANDONED,
-      timestamp: '2024-01-01T00:03:00Z',
-      payload: { sessionId: 's1', userId: 'u1', reason: 'user quit' },
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', userId: 'user-1', reason: 'abandoned' },
     },
     {
-      eventId: '5',
+      eventId: 'event-6',
       eventType: GAME_ENGINE_EVENTS.DAY_STARTED,
-      timestamp: '2024-01-01T00:04:00Z',
-      payload: { sessionId: 's1', day: 2 },
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', day: 1 },
     },
     {
-      eventId: '6',
+      eventId: 'event-7',
       eventType: GAME_ENGINE_EVENTS.DAY_ENDED,
-      timestamp: '2024-01-01T00:05:00Z',
-      payload: { sessionId: 's1', day: 1 },
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', day: 1 },
     },
     {
-      eventId: '7',
+      eventId: 'event-8',
       eventType: GAME_ENGINE_EVENTS.EMAIL_OPENED,
-      timestamp: '2024-01-01T00:06:00Z',
-      payload: { sessionId: 's1', emailId: 'e1' },
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', emailId: 'email-1' },
     },
     {
-      eventId: '8',
+      eventId: 'event-9',
       eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED,
-      timestamp: '2024-01-01T00:07:00Z',
-      payload: { sessionId: 's1', emailId: 'e1', decision: 'safe', timeSpentMs: 5000 },
+      timestamp: new Date().toISOString(),
+      payload: {
+        sessionId: 'sess-1',
+        emailId: 'email-1',
+        decision: 'approve',
+        timeSpentMs: 1000,
+      },
     },
     {
-      eventId: '9',
+      eventId: 'event-10',
       eventType: GAME_ENGINE_EVENTS.INCIDENT_CREATED,
-      timestamp: '2024-01-01T00:08:00Z',
-      payload: { sessionId: 's1', incidentId: 'i1', severity: 3, type: 'phishing' },
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', incidentId: 'inc-1', severity: 5, type: 'breach' },
     },
     {
-      eventId: '10',
-      eventType: GAME_ENGINE_EVENTS.INCIDENT_RESOLVED,
-      timestamp: '2024-01-01T00:09:00Z',
-      payload: { sessionId: 's1', incidentId: 'i1', responseActions: ['blocked'] },
-    },
-    {
-      eventId: '11',
+      eventId: 'event-11',
       eventType: GAME_ENGINE_EVENTS.BREACH_OCCURRED,
-      timestamp: '2024-01-01T00:10:00Z',
-      payload: { sessionId: 's1', userId: 'u1', severity: 5 },
+      timestamp: new Date().toISOString(),
+      payload: { sessionId: 'sess-1', userId: 'user-1', severity: 8 },
     },
   ];
 
@@ -93,9 +100,9 @@ describe('GameEventMapper - mapToDomainEvents', () => {
     const eventsWithUnknown = [
       ...mockEvents,
       {
-        eventId: '12',
+        eventId: 'event-unknown',
         eventType: 'game.unknown.event',
-        timestamp: '2024-01-01T00:11:00Z',
+        timestamp: new Date().toISOString(),
         payload: {},
       },
     ];
@@ -148,17 +155,17 @@ describe('GameEventMapper - mapToDomainEvents', () => {
 
   it('preserves eventType in mapped events', () => {
     const result = mapper.mapToDomainEvents(mockEvents, 'user-123', 'tenant-456');
-    const eventTypes = result.map((e) => (e as { eventType: string }).eventType);
+    const eventTypes = result.map((e: unknown) => (e as { eventType: string }).eventType);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.SESSION_STARTED);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.SESSION_PAUSED);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.SESSION_RESUMED);
+    expect(eventTypes).toContain(GAME_ENGINE_EVENTS.SESSION_COMPLETED);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.SESSION_ABANDONED);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.DAY_STARTED);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.DAY_ENDED);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.EMAIL_OPENED);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.INCIDENT_CREATED);
-    expect(eventTypes).toContain(GAME_ENGINE_EVENTS.INCIDENT_RESOLVED);
     expect(eventTypes).toContain(GAME_ENGINE_EVENTS.BREACH_OCCURRED);
   });
 
@@ -168,21 +175,23 @@ describe('GameEventMapper - mapToDomainEvents', () => {
     expect(result).toHaveLength(1);
     const mapped = result[0] as { eventType: string; payload: { sessionId: string; day: number } };
     expect(mapped.eventType).toBe(GAME_ENGINE_EVENTS.SESSION_STARTED);
-    expect(mapped.payload.sessionId).toBe('s1');
+    expect(mapped.payload.sessionId).toBe('sess-1');
     expect(mapped.payload.day).toBe(1);
   });
 
   it('maps game.email.decision_submitted event correctly', () => {
-    const emailEvent = mockEvents[7]!;
+    const emailEvent = mockEvents[8]!;
     const result = mapper.mapToDomainEvents([emailEvent], 'user-123', 'tenant-456');
     expect(result).toHaveLength(1);
     const mapped = result[0] as {
       eventType: string;
-      payload: { emailId: string; decision: string };
+      payload: { sessionId: string; emailId: string; decision: string; timeSpentMs: number };
     };
     expect(mapped.eventType).toBe(GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED);
-    expect(mapped.payload.emailId).toBe('e1');
-    expect(mapped.payload.decision).toBe('safe');
+    expect(mapped.payload.sessionId).toBe('sess-1');
+    expect(mapped.payload.emailId).toBe('email-1');
+    expect(mapped.payload.decision).toBe('approve');
+    expect(mapped.payload.timeSpentMs).toBe(1000);
   });
 
   it('maps game.breach.occurred event correctly', () => {
@@ -191,26 +200,56 @@ describe('GameEventMapper - mapToDomainEvents', () => {
     expect(result).toHaveLength(1);
     const mapped = result[0] as { eventType: string; payload: { severity: number } };
     expect(mapped.eventType).toBe(GAME_ENGINE_EVENTS.BREACH_OCCURRED);
-    expect(mapped.payload.severity).toBe(5);
+    expect(mapped.payload.severity).toBe(8);
   });
 
-  it('handles mixed known and unknown events', () => {
-    const mixedEvents: Array<{
-      eventId: string;
-      eventType: string;
-      timestamp: string;
-      payload: Record<string, unknown>;
-    }> = [
-      mockEvents[0]!,
+  it('maps multiple events correctly', () => {
+    const mixedEvents = [
       {
-        eventId: 'unknown',
-        eventType: 'game.unknown.type',
-        timestamp: '2024-01-01T00:00:00Z',
-        payload: {},
+        eventId: 'event-a',
+        eventType: GAME_ENGINE_EVENTS.SESSION_STARTED,
+        timestamp: new Date().toISOString(),
+        payload: { sessionId: 'sess-1', userId: 'user-1', tenantId: 'tenant-1', day: 1, seed: 123 },
       },
       mockEvents[1]!,
     ];
     const result = mapper.mapToDomainEvents(mixedEvents, 'user-123', 'tenant-456');
     expect(result).toHaveLength(2);
+  });
+});
+
+describe('GameEventMapper - publishEvents', () => {
+  let mockEventBus: IEventBus;
+
+  beforeEach(() => {
+    mockEventBus = {
+      publish: vi.fn(),
+      subscribe: vi.fn(),
+      unsubscribe: vi.fn(),
+    };
+  });
+
+  it('publishes all events to eventBus when provided', () => {
+    const mapper = new GameEventMapper();
+    const events = [
+      { eventType: 'test.event.1', payload: {} },
+      { eventType: 'test.event.2', payload: {} },
+    ];
+    mapper.publishEvents(mockEventBus, events);
+    expect(mockEventBus.publish).toHaveBeenCalledTimes(2);
+    expect(mockEventBus.publish).toHaveBeenCalledWith(events[0]);
+    expect(mockEventBus.publish).toHaveBeenCalledWith(events[1]);
+  });
+
+  it('does not throw when eventBus is undefined', () => {
+    const mapper = new GameEventMapper();
+    const events = [{ eventType: 'test.event', payload: {} }];
+    expect(() => mapper.publishEvents(undefined, events)).not.toThrow();
+  });
+
+  it('does not call publish when events array is empty', () => {
+    const mapper = new GameEventMapper();
+    mapper.publishEvents(mockEventBus, []);
+    expect(mockEventBus.publish).not.toHaveBeenCalled();
   });
 });
