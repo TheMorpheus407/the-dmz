@@ -100,6 +100,7 @@ function buildRevokedValidationResult(key: {
   ownerId: string | null;
   serviceAccountId: string | null;
   status: string;
+  scopes: unknown;
   ipAllowlist: unknown;
   refererRestrictions: unknown;
   rateLimitRequestsPerWindow: unknown;
@@ -149,6 +150,7 @@ function buildExpiredValidationResult(key: {
   ownerType: string;
   ownerId: string | null;
   serviceAccountId: string | null;
+  scopes: unknown;
   ipAllowlist: unknown;
   refererRestrictions: unknown;
   rateLimitRequestsPerWindow: unknown;
@@ -197,6 +199,7 @@ function buildRotationGraceExpiredValidationResult(key: {
   ownerType: string;
   ownerId: string | null;
   serviceAccountId: string | null;
+  scopes: unknown;
   ipAllowlist: unknown;
   refererRestrictions: unknown;
   rateLimitRequestsPerWindow: unknown;
@@ -246,6 +249,7 @@ function buildRotatingValidationResult(key: {
   ownerId: string | null;
   serviceAccountId: string | null;
   status: string;
+  scopes: unknown;
   ipAllowlist: unknown;
   refererRestrictions: unknown;
   rateLimitRequestsPerWindow: unknown;
@@ -291,6 +295,7 @@ function buildActiveValidationResult(key: {
   ownerId: string | null;
   serviceAccountId: string | null;
   status: string;
+  scopes: unknown;
   ipAllowlist: unknown;
   refererRestrictions: unknown;
   rateLimitRequestsPerWindow: unknown;

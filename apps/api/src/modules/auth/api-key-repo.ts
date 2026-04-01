@@ -24,7 +24,7 @@ import type { DB } from '../../shared/database/connection.js';
 
 const DEFAULT_GRACE_PERIOD = DEFAULT_ROTATION_GRACE_PERIOD_DAYS;
 
-interface DbApiKey {
+export interface DbApiKey {
   id: string;
   keyId: string;
   tenantId: string;

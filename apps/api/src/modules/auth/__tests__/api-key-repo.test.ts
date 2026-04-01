@@ -174,7 +174,19 @@ describe('api-key-repo', () => {
         }),
       });
 
-      await expect(createApiKey(mockDb, { name: 'Test' }, 'user', 'tenant')).rejects.toMatchObject({
+      await expect(
+        createApiKey(
+          mockDb,
+          {
+            name: 'Test',
+            type: CredentialType.API_KEY,
+            ownerType: CredentialOwnerType.SERVICE,
+            scopes: [{ resource: 'users', actions: ['read'] }],
+          },
+          'user',
+          'tenant',
+        ),
+      ).rejects.toMatchObject({
         code: ErrorCodes.API_KEY_TOO_MANY,
       });
     });
@@ -190,7 +202,18 @@ describe('api-key-repo', () => {
       });
 
       await expect(
-        createApiKey(mockDb, { name: 'Test', ownerId: 'user-1' }, 'user', 'tenant'),
+        createApiKey(
+          mockDb,
+          {
+            name: 'Test',
+            ownerId: 'user-1',
+            type: CredentialType.API_KEY,
+            ownerType: CredentialOwnerType.SERVICE,
+            scopes: [{ resource: 'users', actions: ['read'] }],
+          },
+          'user',
+          'tenant',
+        ),
       ).rejects.toMatchObject({
         code: ErrorCodes.API_KEY_TOO_MANY,
       });
@@ -231,7 +254,18 @@ describe('api-key-repo', () => {
 
       mockDb.returning.mockResolvedValue([createdKey]);
 
-      const result = await createApiKey(mockDb, { name: 'Test Key', expiresAt }, 'user', 'tenant');
+      const result = await createApiKey(
+        mockDb,
+        {
+          name: 'Test Key',
+          expiresAt,
+          type: CredentialType.API_KEY,
+          ownerType: CredentialOwnerType.SERVICE,
+          scopes: [{ resource: 'users', actions: ['read'] }],
+        },
+        'user',
+        'tenant',
+      );
 
       expect(result.expiresAt).toEqual(new Date(expiresAt));
       expect(result.secret).toBe('dmz_ak_test-secret');
@@ -273,12 +307,17 @@ describe('api-key-repo', () => {
 
       const result = await createApiKey(
         mockDb,
-        { name: 'Test Key', scopes: ['read:items'] },
+        {
+          name: 'Test Key',
+          type: CredentialType.API_KEY,
+          ownerType: CredentialOwnerType.SERVICE,
+          scopes: [{ resource: 'users', actions: ['read'] }],
+        },
         'user',
         'tenant',
       );
 
-      expect(result.scopes).toEqual(['read:items']);
+      expect(result.scopes).toEqual([{ resource: 'users', actions: ['read'] }]);
     });
   });
 

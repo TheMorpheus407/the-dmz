@@ -13,7 +13,7 @@ import { apiKeys } from '../../db/schema/auth/api-keys.js';
 import { createAppError } from '../../shared/middleware/error-handler.js';
 
 import { hashSecret, getKeyPrefix, generateSecret } from './api-key-crypto.js';
-import { getApiKeyByIdRaw, mapDbToResponse } from './api-key-repo.js';
+import { mapDbToResponse } from './api-key-repo.js';
 
 import type { DB } from '../../shared/database/connection.js';
 
