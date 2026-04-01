@@ -5,18 +5,18 @@ export {
   type AssignRoleInput,
   type UpdateRoleAssignmentInput,
   type RoleAssignmentResponse,
-} from './role/assignment.service.js';
+} from './assignment.service.js';
 
-export { getTenantRoles, getRolePermissions, getAllPermissions } from './role/role.service.js';
+export { getTenantRoles, getRolePermissions, getAllPermissions } from './role.service.js';
 
 export {
   createCustomRole,
   updateCustomRole,
   deleteCustomRole,
   checkPlanEntitlement,
-} from './role/custom-role.service.js';
+} from './custom-role.service.js';
 
 export {
   getUserEffectivePermissions,
   type EffectivePermissionsResponse,
-} from './role/permission-query.service.js';
+} from './permission-query.service.js';
