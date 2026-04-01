@@ -1,16 +1,22 @@
-import { randomUUID } from 'crypto';
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../shared/database/connection.js', () => ({
-  getDatabaseClient: vi.fn(),
+const mockGetDatabaseClient = vi.fn();
+const mockCheckRateLimit = vi.fn();
+const mockEvaluateFlag = vi.fn();
+
+vi.mock('../../../shared/database/connection.js', () => ({
+  getDatabaseClient: (...args: unknown[]) => mockGetDatabaseClient(...args),
 }));
 
-vi.mock('../social/rate-limit.service.js', () => ({
-  checkRateLimit: vi.fn(),
+vi.mock('../../feature-flags/feature-flags.service.js', () => ({
+  evaluateFlag: (...args: unknown[]) => mockEvaluateFlag(...args),
 }));
 
-vi.mock('./chat-moderation.service.js', () => ({
+vi.mock('../../social/rate-limit.service.js', () => ({
+  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
+}));
+
+vi.mock('../chat-moderation.service.js', () => ({
   ChatModerationService: vi.fn().mockImplementation(() => ({
     moderateChat: vi.fn().mockResolvedValue({
       moderationStatus: 'approved',
@@ -19,7 +25,7 @@ vi.mock('./chat-moderation.service.js', () => ({
   })),
 }));
 
-vi.mock('./chat.repository.js', () => ({
+vi.mock('../chat.repository.js', () => ({
   ChatRepository: vi.fn().mockImplementation(() => ({
     findChannel: vi.fn(),
     findChannels: vi.fn(),
@@ -33,26 +39,23 @@ vi.mock('./chat.repository.js', () => ({
   })),
 }));
 
-vi.mock('./chat.events.js', () => ({
+vi.mock('../chat.events.js', () => ({
   createChatMessageSentEvent: vi.fn().mockReturnValue({ eventType: 'chat.message.sent' }),
   createChatMessageDeletedEvent: vi.fn().mockReturnValue({ eventType: 'chat.message.deleted' }),
   createChatChannelCreatedEvent: vi.fn().mockReturnValue({ eventType: 'chat.channel.created' }),
 }));
 
-import { getDatabaseClient } from '../../shared/database/connection.js';
-import { checkRateLimit } from '../social/rate-limit.service.js';
-
-import { ChatRepository } from './chat.repository.js';
-import { ChatModerationService } from './chat-moderation.service.js';
+import { ChatRepository } from '../chat.repository.js';
+import { ChatModerationService } from '../chat-moderation.service.js';
 import {
   createChatMessageSentEvent,
   createChatMessageDeletedEvent,
   createChatChannelCreatedEvent,
-} from './chat.events.js';
-import { sendMessage, deleteMessage, createChannel } from './chat.service.js';
+} from '../chat.events.js';
+import { sendMessage, deleteMessage, createChannel } from '../chat.service.js';
 
-import type { AppConfig } from '../../config.js';
-import type { IEventBus } from '../../shared/events/event-types.js';
+import type { AppConfig } from '../../../config.js';
+import type { IEventBus } from '../../../shared/events/event-types.js';
 
 const mockConfig = {} as AppConfig;
 const mockTenantId = 'test-tenant-id';
@@ -60,7 +63,17 @@ const mockPlayerId = 'test-player-id';
 
 describe('chat.service event bus integration', () => {
   let mockEventBus: IEventBus;
-  let mockRepository: InstanceType<typeof ChatRepository>;
+  let mockRepository: {
+    findChannel: ReturnType<typeof vi.fn>;
+    findChannels: ReturnType<typeof vi.fn>;
+    findExistingChannel: ReturnType<typeof vi.fn>;
+    createChannel: ReturnType<typeof vi.fn>;
+    findMessage: ReturnType<typeof vi.fn>;
+    findMessages: ReturnType<typeof vi.fn>;
+    createMessage: ReturnType<typeof vi.fn>;
+    updateMessage: ReturnType<typeof vi.fn>;
+    createModerationReport: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -69,11 +82,21 @@ describe('chat.service event bus integration', () => {
       publish: vi.fn(),
     } as unknown as IEventBus;
 
-    mockRepository = new ChatRepository({} as never);
-    vi.mocked(ChatRepository).mockImplementation(() => mockRepository);
+    mockRepository = {
+      findChannel: vi.fn(),
+      findChannels: vi.fn(),
+      findExistingChannel: vi.fn(),
+      createChannel: vi.fn(),
+      findMessage: vi.fn(),
+      findMessages: vi.fn(),
+      createMessage: vi.fn(),
+      updateMessage: vi.fn(),
+      createModerationReport: vi.fn(),
+    };
 
-    vi.mocked(getDatabaseClient).mockReturnValue({} as never);
-    vi.mocked(checkRateLimit).mockResolvedValue({ allowed: true });
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockCheckRateLimit.mockResolvedValue({ allowed: true, current: 1, limit: 10 });
+    mockEvaluateFlag.mockResolvedValue(true);
   });
 
   describe('sendMessage', () => {
@@ -334,7 +357,6 @@ describe('chat.service event bus integration', () => {
         guildId: null,
         name: null,
         createdAt: new Date(),
-        updatedAt: new Date(),
       });
 
       const result = await createChannel(

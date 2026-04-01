@@ -1,16 +1,13 @@
-import { randomUUID } from 'crypto';
-
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../../shared/database/connection.js', () => ({
+vi.mock('../../../shared/database/connection.js', () => ({
   getDatabaseClient: vi.fn(),
 }));
 
-import { getDatabaseClient } from '../../shared/database/connection.js';
+import { getDatabaseClient } from '../../../shared/database/connection.js';
+import { ChatRepository } from '../chat.repository.js';
 
-import { ChatRepository } from './chat.repository.js';
-
-import type { DatabaseClient } from '../../shared/database/connection.js';
+import type { DatabaseClient } from '../../../shared/database/connection.js';
 
 const mockDb = {
   query: {
@@ -80,12 +77,18 @@ describe('ChatRepository', () => {
           tenantId: 'tenant-1',
           channelType: 'party' as const,
           createdAt: new Date('2026-01-02'),
+          name: null,
+          partyId: 'party-1',
+          guildId: null,
         },
         {
           channelId: 'channel-2',
           tenantId: 'tenant-1',
           channelType: 'guild' as const,
           createdAt: new Date('2026-01-01'),
+          name: null,
+          partyId: null,
+          guildId: 'guild-1',
         },
       ];
 
@@ -246,7 +249,9 @@ describe('ChatRepository', () => {
       };
 
       const mockInsert = vi.fn().mockReturnValue({
-        returning: vi.fn().mockResolvedValue([mockMessage]),
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockMessage]),
+        }),
       });
       vi.mocked(mockDb.insert).mockReturnValue(mockInsert as never);
 
@@ -262,7 +267,9 @@ describe('ChatRepository', () => {
 
     it('returns undefined when insert fails', async () => {
       const mockInsert = vi.fn().mockReturnValue({
-        returning: vi.fn().mockResolvedValue([]),
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([]),
+        }),
       });
       vi.mocked(mockDb.insert).mockReturnValue(mockInsert as never);
 

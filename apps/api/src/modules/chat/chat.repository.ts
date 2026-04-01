@@ -1,6 +1,5 @@
 import { eq, and, desc, sql } from 'drizzle-orm';
 
-import { getDatabaseClient } from '../../shared/database/connection.js';
 import {
   chatChannel,
   chatMessage,
@@ -41,7 +40,7 @@ interface CreateMessageParams {
 
 interface UpdateMessageParams {
   messageId: string;
-  isDeleted?: boolean;
+  isDeleted: boolean;
 }
 
 interface CreateChannelParams {

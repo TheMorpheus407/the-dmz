@@ -9,5 +9,6 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src", "scripts", "vitest*.config.ts", "drizzle.config.ts"]
+  "include": ["src", "scripts", "vitest*.config.ts", "drizzle.config.ts"],
+  "exclude": ["src/**/__tests__/**", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }

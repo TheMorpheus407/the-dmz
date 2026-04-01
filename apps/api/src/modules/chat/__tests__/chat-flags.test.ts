@@ -1,10 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../feature-flags/feature-flags.service.js', () => ({
-  evaluateFlag: vi.fn(),
+const mockEvaluateFlag = vi.fn();
+
+vi.mock('../../feature-flags/feature-flags.service.js', () => ({
+  evaluateFlag: (...args: unknown[]) => mockEvaluateFlag(...args),
 }));
-
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js';
 
 import {
   requireChatEnabled,
@@ -12,9 +12,9 @@ import {
   requireGuildChatEnabled,
   requireDirectChatEnabled,
   requireChannelChatEnabled,
-} from './chat-flags.js';
+} from '../chat-flags.js';
 
-import type { AppConfig } from '../../config.js';
+import type { AppConfig } from '../../../config.js';
 
 const mockConfig = {} as AppConfig;
 const mockTenantId = 'test-tenant-id';
@@ -26,16 +26,20 @@ describe('chat-flags', () => {
 
   describe('requireChatEnabled', () => {
     it('returns enabled:true when flag is true', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(true);
+      mockEvaluateFlag.mockResolvedValue(true);
 
       const result = await requireChatEnabled(mockConfig, mockTenantId);
 
       expect(result).toEqual({ enabled: true });
-      expect(evaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.enabled');
+      expect(mockEvaluateFlag).toHaveBeenCalledWith(
+        mockConfig,
+        mockTenantId,
+        'social.chat.enabled',
+      );
     });
 
     it('returns enabled:false with error when flag is false', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(false);
+      mockEvaluateFlag.mockResolvedValue(false);
 
       const result = await requireChatEnabled(mockConfig, mockTenantId);
 
@@ -45,16 +49,16 @@ describe('chat-flags', () => {
 
   describe('requirePartyChatEnabled', () => {
     it('returns enabled:true when flag is true', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(true);
+      mockEvaluateFlag.mockResolvedValue(true);
 
       const result = await requirePartyChatEnabled(mockConfig, mockTenantId);
 
       expect(result).toEqual({ enabled: true });
-      expect(evaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.party');
+      expect(mockEvaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.party');
     });
 
     it('returns enabled:false with error when flag is false', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(false);
+      mockEvaluateFlag.mockResolvedValue(false);
 
       const result = await requirePartyChatEnabled(mockConfig, mockTenantId);
 
@@ -64,16 +68,16 @@ describe('chat-flags', () => {
 
   describe('requireGuildChatEnabled', () => {
     it('returns enabled:true when flag is true', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(true);
+      mockEvaluateFlag.mockResolvedValue(true);
 
       const result = await requireGuildChatEnabled(mockConfig, mockTenantId);
 
       expect(result).toEqual({ enabled: true });
-      expect(evaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.guild');
+      expect(mockEvaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.guild');
     });
 
     it('returns enabled:false with error when flag is false', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(false);
+      mockEvaluateFlag.mockResolvedValue(false);
 
       const result = await requireGuildChatEnabled(mockConfig, mockTenantId);
 
@@ -83,16 +87,16 @@ describe('chat-flags', () => {
 
   describe('requireDirectChatEnabled', () => {
     it('returns enabled:true when flag is true', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(true);
+      mockEvaluateFlag.mockResolvedValue(true);
 
       const result = await requireDirectChatEnabled(mockConfig, mockTenantId);
 
       expect(result).toEqual({ enabled: true });
-      expect(evaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.direct');
+      expect(mockEvaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.direct');
     });
 
     it('returns enabled:false with error when flag is false', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(false);
+      mockEvaluateFlag.mockResolvedValue(false);
 
       const result = await requireDirectChatEnabled(mockConfig, mockTenantId);
 
@@ -102,34 +106,34 @@ describe('chat-flags', () => {
 
   describe('requireChannelChatEnabled', () => {
     it('delegates to requirePartyChatEnabled for party channelType', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(true);
+      mockEvaluateFlag.mockResolvedValue(true);
 
       const result = await requireChannelChatEnabled(mockConfig, mockTenantId, 'party');
 
       expect(result).toEqual({ enabled: true });
-      expect(evaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.party');
+      expect(mockEvaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.party');
     });
 
     it('delegates to requireGuildChatEnabled for guild channelType', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(true);
+      mockEvaluateFlag.mockResolvedValue(true);
 
       const result = await requireChannelChatEnabled(mockConfig, mockTenantId, 'guild');
 
       expect(result).toEqual({ enabled: true });
-      expect(evaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.guild');
+      expect(mockEvaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.guild');
     });
 
     it('delegates to requireDirectChatEnabled for direct channelType', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(true);
+      mockEvaluateFlag.mockResolvedValue(true);
 
       const result = await requireChannelChatEnabled(mockConfig, mockTenantId, 'direct');
 
       expect(result).toEqual({ enabled: true });
-      expect(evaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.direct');
+      expect(mockEvaluateFlag).toHaveBeenCalledWith(mockConfig, mockTenantId, 'social.chat.direct');
     });
 
     it('returns enabled:true for unknown channelType', async () => {
-      vi.mocked(evaluateFlag).mockResolvedValue(false);
+      mockEvaluateFlag.mockResolvedValue(false);
 
       const result = await requireChannelChatEnabled(
         mockConfig,
@@ -138,7 +142,7 @@ describe('chat-flags', () => {
       );
 
       expect(result).toEqual({ enabled: true });
-      expect(evaluateFlag).not.toHaveBeenCalled();
+      expect(mockEvaluateFlag).not.toHaveBeenCalled();
     });
   });
 });

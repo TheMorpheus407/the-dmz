@@ -1,14 +1,14 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../social/content-filter.service.js', () => ({
-  checkContent: vi.fn(),
+const mockCheckContent = vi.fn();
+
+vi.mock('../../social/content-filter.service.js', () => ({
+  checkContent: (...args: unknown[]) => mockCheckContent(...args),
 }));
 
-import { checkContent } from '../social/content-filter.service.js';
+import { ChatModerationService } from '../chat-moderation.service.js';
 
-import { ChatModerationService } from './chat-moderation.service.js';
-
-import type { AppConfig } from '../../config.js';
+import type { AppConfig } from '../../../config.js';
 
 const mockConfig = {} as AppConfig;
 const mockTenantId = 'test-tenant-id';
@@ -20,7 +20,7 @@ describe('ChatModerationService', () => {
 
   describe('moderateChat', () => {
     it('returns approved status when content is allowed', async () => {
-      vi.mocked(checkContent).mockResolvedValue({
+      mockCheckContent.mockResolvedValue({
         allowed: true,
         violations: [],
         highestSeverity: null,
@@ -31,14 +31,14 @@ describe('ChatModerationService', () => {
 
       expect(result.moderationStatus).toBe('approved');
       expect(result.contentCheckResult.allowed).toBe(true);
-      expect(checkContent).toHaveBeenCalledWith(mockConfig, mockTenantId, {
+      expect(mockCheckContent).toHaveBeenCalledWith(mockConfig, mockTenantId, {
         content: 'Hello world',
         context: 'chat',
       });
     });
 
     it('returns rejected status when highestSeverity is block', async () => {
-      vi.mocked(checkContent).mockResolvedValue({
+      mockCheckContent.mockResolvedValue({
         allowed: false,
         violations: [
           {
@@ -58,7 +58,7 @@ describe('ChatModerationService', () => {
     });
 
     it('returns rejected status when highestSeverity is mute', async () => {
-      vi.mocked(checkContent).mockResolvedValue({
+      mockCheckContent.mockResolvedValue({
         allowed: false,
         violations: [
           {
@@ -78,14 +78,14 @@ describe('ChatModerationService', () => {
     });
 
     it('returns flagged status when highestSeverity is flag', async () => {
-      vi.mocked(checkContent).mockResolvedValue({
+      mockCheckContent.mockResolvedValue({
         allowed: true,
         violations: [
           {
             pattern: 'warning',
             patternType: 'contains' as const,
             severity: 'flag' as const,
-            category: 'policy' as const,
+            category: 'profanity' as const,
           },
         ],
         highestSeverity: 'flag',

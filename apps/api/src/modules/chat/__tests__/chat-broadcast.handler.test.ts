@@ -2,27 +2,25 @@ import { randomUUID } from 'crypto';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../notification/websocket/websocket.gateway.js', () => ({
-  wsGateway: {
-    createMessage: vi.fn(),
-    broadcastToChannel: vi.fn(),
-  },
-  buildChannelName: vi.fn((prefix: string, id: string) => `${prefix}:${id}`),
-}));
+const mockWsGateway = {
+  createMessage: vi.fn(),
+  broadcastToChannel: vi.fn(),
+};
 
-import { wsGateway, buildChannelName } from '../notification/websocket/websocket.gateway.js';
+const mockBuildChannelName = vi.fn((prefix: string, id: string) => `${prefix}:${id}`);
+
+vi.mock('../../notification/websocket/websocket.gateway.js', () => ({
+  wsGateway: mockWsGateway,
+  buildChannelName: mockBuildChannelName,
+}));
 
 import {
   createChatBroadcastHandler,
   removeChatBroadcastHandler,
-} from './chat-broadcast.handler.js';
+} from '../chat-broadcast.handler.js';
 
-import type { IEventBus, DomainEvent } from '../../shared/events/event-types.js';
-import type {
-  ChatMessageSentPayload,
-  ChatMessageDeletedPayload,
-  ChatChannelCreatedPayload,
-} from './chat.events.js';
+import type { IEventBus, DomainEvent } from '../../../shared/events/event-types.js';
+import type { ChatMessageSentPayload, ChatMessageDeletedPayload } from '../chat.events.js';
 
 describe('chat-broadcast.handler', () => {
   let mockEventBus: IEventBus;
@@ -88,16 +86,21 @@ describe('chat-broadcast.handler', () => {
           tenantId: 'tenant-1',
         },
         metadata: {},
-        timestamp: new Date(),
+        timestamp: Date.now(),
       };
 
-      vi.mocked(wsGateway.createMessage).mockReturnValue({ type: 'CHAT_MESSAGE', data: {} });
-      vi.mocked(wsGateway.broadcastToChannel).mockReturnValue(undefined);
+      mockWsGateway.createMessage.mockReturnValue({
+        type: 'CHAT_MESSAGE',
+        payload: {},
+        timestamp: 1234567890,
+        sequence: 1,
+      });
+      mockWsGateway.broadcastToChannel.mockReturnValue(undefined);
 
       await sentHandler(mockEvent);
 
-      expect(buildChannelName).toHaveBeenCalledWith('chat', 'channel-1');
-      expect(wsGateway.createMessage).toHaveBeenCalledWith(
+      expect(mockBuildChannelName).toHaveBeenCalledWith('chat', 'channel-1');
+      expect(mockWsGateway.createMessage).toHaveBeenCalledWith(
         'CHAT_MESSAGE',
         expect.objectContaining({
           messageId: 'msg-1',
@@ -108,7 +111,7 @@ describe('chat-broadcast.handler', () => {
           createdAt: '2026-03-01T00:00:00.000Z',
         }),
       );
-      expect(wsGateway.broadcastToChannel).toHaveBeenCalledWith(
+      expect(mockWsGateway.broadcastToChannel).toHaveBeenCalledWith(
         'chat:channel-1',
         expect.anything(),
       );
@@ -136,21 +139,26 @@ describe('chat-broadcast.handler', () => {
           channelId: 'channel-1',
         },
         metadata: {},
-        timestamp: new Date(),
+        timestamp: Date.now(),
       };
 
-      vi.mocked(wsGateway.createMessage).mockReturnValue({ type: 'CHAT_MESSAGE', data: {} });
-      vi.mocked(wsGateway.broadcastToChannel).mockReturnValue(undefined);
+      mockWsGateway.createMessage.mockReturnValue({
+        type: 'CHAT_MESSAGE',
+        payload: {},
+        timestamp: 1234567890,
+        sequence: 1,
+      });
+      mockWsGateway.broadcastToChannel.mockReturnValue(undefined);
 
       await deletedHandler(mockEvent);
 
-      expect(buildChannelName).toHaveBeenCalledWith('chat', 'channel-1');
-      expect(wsGateway.createMessage).toHaveBeenCalledWith('CHAT_MESSAGE', {
+      expect(mockBuildChannelName).toHaveBeenCalledWith('chat', 'channel-1');
+      expect(mockWsGateway.createMessage).toHaveBeenCalledWith('CHAT_MESSAGE', {
         messageId: 'msg-1',
         channelId: 'channel-1',
         deleted: true,
       });
-      expect(wsGateway.broadcastToChannel).toHaveBeenCalledWith(
+      expect(mockWsGateway.broadcastToChannel).toHaveBeenCalledWith(
         'chat:channel-1',
         expect.anything(),
       );
