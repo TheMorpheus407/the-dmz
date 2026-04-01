@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { type ThreatTier } from '@the-dmz/shared/constants';
-
   import ThreatLevelDisplay from './ThreatLevelDisplay.svelte';
   import ActiveThreatsList from './ActiveThreatsList.svelte';
   import SecurityToolsGrid from './SecurityToolsGrid.svelte';
