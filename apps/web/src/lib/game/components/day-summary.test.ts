@@ -193,9 +193,9 @@ describe('DaySummaryPanel', () => {
       },
     });
 
-    const fundsLabel = Array.from(container.querySelectorAll('.day-summary__stat-label')).find(
-      (el) => el.textContent === 'Funds Change',
-    );
+    const fundsLabel = Array.from(
+      container.querySelectorAll('.summary-statistics__stat-label'),
+    ).find((el) => el.textContent === 'Funds Change');
     const fundsValue = fundsLabel?.nextElementSibling;
     expect(fundsValue?.textContent).toContain('+2,500 CR');
   });
