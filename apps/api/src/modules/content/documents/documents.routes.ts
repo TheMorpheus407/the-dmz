@@ -1,0 +1,74 @@
+import { authGuard, requirePermission } from '../../../shared/middleware/authorization.js';
+import { tenantContext } from '../../../shared/middleware/tenant-context.js';
+import { tenantStatusGuard } from '../../../shared/middleware/tenant-status-guard.js';
+import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
+
+import * as documentsService from './documents.service.js';
+
+// eslint-disable-next-line import-x/no-restricted-paths
+import type { AuthenticatedUser } from '../../game/session/game-session.service.js';
+import type { FastifyInstance } from 'fastify';
+
+const protectedRoutePreHandlers = [authGuard, tenantContext, tenantStatusGuard];
+const contentReadRoutePreHandlers = [
+  ...protectedRoutePreHandlers,
+  requirePermission('admin', 'read'),
+];
+const tenantInactiveOrForbiddenResponseJsonSchema = {
+  oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
+} as const;
+
+export const registerDocumentRoutes = async (fastify: FastifyInstance): Promise<void> => {
+  const config = fastify.config;
+
+  fastify.get(
+    '/content/templates/:type',
+    {
+      preHandler: contentReadRoutePreHandlers,
+      schema: {
+        security: [{ bearerAuth: [] }],
+        params: {
+          type: 'object',
+          properties: {
+            type: { type: 'string' },
+          },
+          required: ['type'],
+        },
+        querystring: {
+          type: 'object',
+          properties: {
+            faction: { type: 'string' },
+            locale: { type: 'string' },
+            isActive: { type: 'boolean' },
+          },
+        },
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              data: {
+                type: 'array',
+                items: { type: 'object' },
+              },
+            },
+          },
+          401: errorResponseSchemas.Unauthorized,
+          403: tenantInactiveOrForbiddenResponseJsonSchema,
+          429: errorResponseSchemas.RateLimitExceeded,
+        },
+      },
+    },
+    async (request, _reply) => {
+      const user = request.user as AuthenticatedUser;
+      const { type } = request.params as { type: string };
+
+      const templates = await documentsService.getDocumentTemplatesByType(
+        config,
+        user.tenantId,
+        type,
+      );
+
+      return { data: templates };
+    },
+  );
+};

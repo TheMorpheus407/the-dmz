@@ -1,5 +1,14 @@
 export { contentPlugin } from './content.plugin.js';
 export * from './content.service.js';
+export * from './email-templates/index.js';
+export * from './scenarios/index.js';
+export * from './documents/index.js';
+export * from './localized/index.js';
+export * from './seasons/index.js';
+export * from './chapters/index.js';
+export * from './narrative/index.js';
+export * from './difficulty/index.js';
+export * from './quality/index.js';
 export * from './email-pool/index.js';
 export * from './difficulty-classifier/index.js';
 export * from './quality-scorer/index.js';

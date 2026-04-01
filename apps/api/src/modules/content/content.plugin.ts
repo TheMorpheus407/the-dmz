@@ -2,12 +2,12 @@ import fp from 'fastify-plugin';
 
 import { registerContentRoutes } from './content.routes.js';
 import {
-  createDocumentTemplateRecord,
   createEmailTemplateRecord,
-  createScenarioRecord,
   listEmailTemplates,
   listFallbackEmailTemplates,
-} from './content.service.js';
+} from './email-templates/index.js';
+import { createDocumentTemplateRecord } from './documents/index.js';
+import { createScenarioRecord } from './scenarios/index.js';
 
 import type { FastifyPluginAsync } from 'fastify';
 
