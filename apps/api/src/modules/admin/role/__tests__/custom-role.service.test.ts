@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { eq } from 'drizzle-orm';
 
 import { buildApp } from '../../../../app.js';
 import { loadConfig, type AppConfig } from '../../../../config.js';
@@ -7,7 +8,12 @@ import {
   getDatabasePool,
   getDatabaseClient,
 } from '../../../../shared/database/connection.js';
-import { permissions, roles, tenants } from '../../../../shared/database/schema/index.js';
+import {
+  permissions,
+  rolePermissions,
+  roles,
+  tenants,
+} from '../../../../shared/database/schema/index.js';
 import * as customRoleService from '../custom-role.service.js';
 
 const createTestConfig = (): AppConfig => {
@@ -389,7 +395,7 @@ describe('custom-role-service', () => {
       const deletedRole = await db
         .select()
         .from(roles)
-        .where(db.helpers.eq(roles.id, customRole!.id))
+        .where(eq(roles.id, customRole!.id))
         .limit(1);
 
       expect(deletedRole).toHaveLength(0);

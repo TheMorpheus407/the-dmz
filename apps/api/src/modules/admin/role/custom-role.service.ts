@@ -1,4 +1,4 @@
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, ne, sql } from 'drizzle-orm';
 
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { getDatabaseClient } from '../../../shared/database/connection.js';
@@ -99,6 +99,16 @@ export const updateCustomRole = async (
 
   if (existingRole.isSystem) {
     throw new Error('Cannot modify system roles');
+  }
+
+  const [conflictingRole] = await db
+    .select()
+    .from(roles)
+    .where(and(eq(roles.tenantId, tenantId), eq(roles.name, name), ne(roles.id, roleId)))
+    .limit(1);
+
+  if (conflictingRole) {
+    throw new Error('Role with this name already exists');
   }
 
   await db
