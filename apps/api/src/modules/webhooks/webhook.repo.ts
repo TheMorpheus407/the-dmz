@@ -12,16 +12,14 @@ import {
   type WebhookCircuitBreakerDb,
   type NewWebhookCircuitBreakerDb,
 } from '../../db/schema/webhooks.js';
+import { assertCreated } from '../../shared/utils/db-utils.js';
 
 const db = getDatabaseClient();
 
 export class WebhookRepo {
   async createSubscription(data: NewWebhookSubscriptionDb): Promise<WebhookSubscriptionDb> {
     const [subscription] = await db.insert(webhookSubscriptions).values(data).returning();
-    if (!subscription) {
-      throw new Error('Failed to create webhook subscription');
-    }
-    return subscription;
+    return assertCreated(subscription, 'webhook subscription');
   }
 
   async getSubscriptionById(
@@ -128,10 +126,7 @@ export class WebhookRepo {
 
   async createDelivery(data: NewWebhookDeliveryDb): Promise<WebhookDeliveryDb> {
     const [delivery] = await db.insert(webhookDeliveries).values(data).returning();
-    if (!delivery) {
-      throw new Error('Failed to create webhook delivery');
-    }
-    return delivery;
+    return assertCreated(delivery, 'webhook delivery');
   }
 
   async getDeliveryById(
@@ -233,10 +228,7 @@ export class WebhookRepo {
           isOpen: false,
         } as NewWebhookCircuitBreakerDb)
         .returning();
-      if (!newBreaker) {
-        throw new Error('Failed to create circuit breaker');
-      }
-      breaker = newBreaker;
+      breaker = assertCreated(newBreaker, 'circuit breaker');
     }
 
     return breaker;

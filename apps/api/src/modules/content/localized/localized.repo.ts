@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 
 import { type DB } from '../../../shared/database/connection.js';
 import { localizedContent, type LocalizedContent } from '../../../db/schema/content/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 export type { LocalizedContent };
 
@@ -34,8 +35,5 @@ export const createLocalizedContent = async (
   data: Omit<LocalizedContent, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<LocalizedContent> => {
   const [created] = await db.insert(localizedContent).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create localized content');
-  }
-  return created;
+  return assertCreated(created, 'localized content');
 };

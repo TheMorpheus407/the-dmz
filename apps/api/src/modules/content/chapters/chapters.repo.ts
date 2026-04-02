@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 
 import { type DB } from '../../../shared/database/connection.js';
 import { chapters, type Chapter } from '../../../db/schema/content/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 export type { Chapter };
 
@@ -48,8 +49,5 @@ export const createChapter = async (
   data: Omit<Chapter, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<Chapter> => {
   const [created] = await db.insert(chapters).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create chapter');
-  }
-  return created;
+  return assertCreated(created, 'chapter');
 };

@@ -2,6 +2,7 @@ import { eq, and, sql, desc } from 'drizzle-orm';
 
 import { type DB } from '../../../shared/database/connection.js';
 import { incidents, type Incident, type NewIncident } from '../../../db/schema/game/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 import type { IncidentStatus } from '../../../db/schema/game/incidents.schema.js';
 
@@ -9,12 +10,7 @@ export type { Incident, NewIncident };
 
 export const createIncident = async (db: DB, data: NewIncident): Promise<Incident> => {
   const [created] = await db.insert(incidents).values(data).returning();
-
-  if (!created) {
-    throw new Error('Failed to create incident');
-  }
-
-  return created;
+  return assertCreated(created, 'incident');
 };
 
 export const findIncidentById = async (db: DB, incidentId: string): Promise<Incident | null> => {

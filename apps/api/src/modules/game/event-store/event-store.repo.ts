@@ -9,6 +9,7 @@ import {
   type GameStateSnapshot,
   type NewGameStateSnapshot,
 } from '../../../db/schema/game/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 export type { GameEvent, NewGameEvent };
 export type { GameStateSnapshot, NewGameStateSnapshot };
@@ -104,11 +105,7 @@ export const createSnapshot = async (
     })
     .returning();
 
-  if (!created) {
-    throw new Error('Failed to create snapshot');
-  }
-
-  return created;
+  return assertCreated(created, 'snapshot');
 };
 
 export const getLatestSnapshot = async (

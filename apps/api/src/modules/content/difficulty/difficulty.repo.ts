@@ -7,6 +7,7 @@ import {
   type DifficultyHistory,
   type EmailFeature,
 } from '../../../db/schema/content/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 export type { DifficultyHistory, EmailFeature };
 
@@ -109,10 +110,7 @@ export const createDifficultyHistory = async (
   data: Omit<DifficultyHistory, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<DifficultyHistory> => {
   const [created] = await db.insert(difficultyHistory).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create difficulty history record');
-  }
-  return created;
+  return assertCreated(created, 'difficulty history record');
 };
 
 export const createEmailFeature = async (
@@ -120,8 +118,5 @@ export const createEmailFeature = async (
   data: Omit<EmailFeature, 'id' | 'createdAt'>,
 ): Promise<EmailFeature> => {
   const [created] = await db.insert(emailFeatures).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create email feature record');
-  }
-  return created;
+  return assertCreated(created, 'email feature record');
 };

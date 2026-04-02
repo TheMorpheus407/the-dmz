@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 
 import { type DB } from '../../../shared/database/connection.js';
 import { documentTemplates, type DocumentTemplate } from '../../../db/schema/content/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 export type { DocumentTemplate };
 
@@ -71,8 +72,5 @@ export const createDocumentTemplate = async (
   data: Omit<DocumentTemplate, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<DocumentTemplate> => {
   const [created] = await db.insert(documentTemplates).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create document template');
-  }
-  return created;
+  return assertCreated(created, 'document template');
 };

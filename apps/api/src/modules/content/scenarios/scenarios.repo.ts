@@ -7,6 +7,7 @@ import {
   type Scenario,
   type ScenarioBeat,
 } from '../../../db/schema/content/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 export type { Scenario, ScenarioBeat };
 
@@ -76,8 +77,5 @@ export const createScenario = async (
   data: Omit<Scenario, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<Scenario> => {
   const [created] = await db.insert(scenarios).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create scenario');
-  }
-  return created;
+  return assertCreated(created, 'scenario');
 };

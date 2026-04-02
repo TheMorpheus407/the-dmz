@@ -11,6 +11,7 @@ import {
   type QualityFlag,
   type QualityHistory,
 } from '../../../db/schema/content/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 export type { QualityScore, QualityThreshold, QualityFlag, QualityHistory };
 
@@ -45,10 +46,7 @@ export const createQualityScore = async (
   data: Omit<QualityScore, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<QualityScore> => {
   const [created] = await db.insert(qualityScores).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create quality score');
-  }
-  return created;
+  return assertCreated(created, 'quality score');
 };
 
 export const updateQualityScore = async (
@@ -93,10 +91,7 @@ export const createQualityThreshold = async (
   data: Omit<QualityThreshold, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<QualityThreshold> => {
   const [created] = await db.insert(qualityThresholds).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create quality threshold');
-  }
-  return created;
+  return assertCreated(created, 'quality threshold');
 };
 
 export const createQualityFlag = async (
@@ -104,10 +99,7 @@ export const createQualityFlag = async (
   data: Omit<QualityFlag, 'id' | 'createdAt'>,
 ): Promise<QualityFlag> => {
   const [created] = await db.insert(qualityFlags).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create quality flag');
-  }
-  return created;
+  return assertCreated(created, 'quality flag');
 };
 
 export const resolveQualityFlag = async (
@@ -141,10 +133,7 @@ export const createQualityHistory = async (
   data: Omit<QualityHistory, 'id' | 'createdAt'>,
 ): Promise<QualityHistory> => {
   const [created] = await db.insert(qualityHistory).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create quality history record');
-  }
-  return created;
+  return assertCreated(created, 'quality history record');
 };
 
 export const findQualityHistoryByEmailId = async (

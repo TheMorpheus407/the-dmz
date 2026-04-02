@@ -2,6 +2,7 @@ import { and, eq, isNull, or } from 'drizzle-orm';
 
 import { type DB } from '../../../shared/database/connection.js';
 import { emailTemplates, type EmailTemplate } from '../../../db/schema/content/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 export type { EmailTemplate };
 
@@ -166,8 +167,5 @@ export const createEmailTemplate = async (
   data: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<EmailTemplate> => {
   const [created] = await db.insert(emailTemplates).values(data).returning();
-  if (!created) {
-    throw new Error('Failed to create email template');
-  }
-  return created;
+  return assertCreated(created, 'email template');
 };

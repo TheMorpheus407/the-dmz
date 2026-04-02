@@ -25,6 +25,7 @@ import {
   type NewWebhookEvent,
   type SubscriptionStatus,
 } from '../../db/schema/billing/index.js';
+import { assertCreated } from '../../shared/utils/db-utils.js';
 
 import type { AppConfig } from '../../config.js';
 
@@ -54,10 +55,7 @@ export const billingRepo = {
   async createSubscription(data: NewSubscription, config?: AppConfig): Promise<Subscription> {
     const db = getDatabaseClient(config);
     const [result] = await db.insert(subscriptions).values(data).returning();
-    if (!result) {
-      throw new Error('Failed to create subscription');
-    }
-    return result;
+    return assertCreated(result, 'subscription');
   },
 
   async updateSubscription(
@@ -237,10 +235,7 @@ export const billingRepo = {
   async createInvoice(data: NewInvoice, config?: AppConfig): Promise<Invoice> {
     const db = getDatabaseClient(config);
     const [result] = await db.insert(invoices).values(data).returning();
-    if (!result) {
-      throw new Error('Failed to create invoice');
-    }
-    return result;
+    return assertCreated(result, 'invoice');
   },
 
   async getInvoiceByStripeId(stripeInvoiceId: string, config?: AppConfig): Promise<Invoice | null> {

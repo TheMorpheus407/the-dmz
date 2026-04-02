@@ -4,6 +4,7 @@ import type { GameThreatTier } from '@the-dmz/shared/game';
 
 import { type DB } from '../../../shared/database/connection.js';
 import { gameSessions } from '../../../db/schema/game/index.js';
+import { assertCreated } from '../../../shared/utils/db-utils.js';
 
 import type { GameSession } from '../../../db/schema/game/index.js';
 
@@ -56,11 +57,7 @@ export const createGameSession = async (db: DB, data: GameSessionData): Promise<
     })
     .returning();
 
-  if (!created) {
-    throw new Error('Failed to create game session');
-  }
-
-  return created;
+  return assertCreated(created, 'game session');
 };
 
 type GameSessionUpdateData = {

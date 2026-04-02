@@ -6,6 +6,7 @@ import { sessions as sessionsTable } from '../../db/schema/auth/sessions.js';
 import { userProfiles } from '../../db/schema/auth/user-profiles.js';
 import { passwordResetTokens } from '../../db/schema/auth/password-reset-tokens.js';
 import { oauthClients } from '../../db/schema/auth/oauth-clients.js';
+import { assertCreated } from '../../shared/utils/db-utils.js';
 
 import { UserExistsError } from './auth.errors.js';
 
@@ -57,17 +58,15 @@ export const createUser = async (
       isActive: users.isActive,
     });
 
-  if (!created) {
-    throw new Error('Failed to create user');
-  }
+  const createdUser = assertCreated(created, 'user');
 
   return {
-    id: created.userId,
-    email: created.email,
-    displayName: created.displayName ?? '',
-    tenantId: created.tenantId,
-    role: created.role,
-    isActive: created.isActive,
+    id: createdUser.userId,
+    email: createdUser.email,
+    displayName: createdUser.displayName ?? '',
+    tenantId: createdUser.tenantId,
+    role: createdUser.role,
+    isActive: createdUser.isActive,
   };
 };
 
@@ -154,11 +153,7 @@ export const createSession = async (
     lastActiveAt: sessionsTable.lastActiveAt,
   });
 
-  if (!session) {
-    throw new Error('Failed to create session');
-  }
-
-  return session;
+  return assertCreated(session, 'session');
 };
 
 export const findSessionById = async (db: DB, sessionId: string): Promise<AuthSession | null> => {
@@ -302,20 +297,18 @@ export const createProfile = async (
       notificationSettings: userProfiles.notificationSettings,
     });
 
-  if (!created) {
-    throw new Error('Failed to create user profile');
-  }
+  const createdProfile = assertCreated(created, 'user profile');
 
   return {
-    profileId: created.profileId,
-    tenantId: created.tenantId,
-    userId: created.userId,
-    locale: created.locale,
-    timezone: created.timezone,
+    profileId: createdProfile.profileId,
+    tenantId: createdProfile.tenantId,
+    userId: createdProfile.userId,
+    locale: createdProfile.locale,
+    timezone: createdProfile.timezone,
     preferences: data.preferences,
     policyLockedPreferences: data.policyLockedPreferences,
-    accessibilitySettings: created.accessibilitySettings as Record<string, unknown>,
-    notificationSettings: created.notificationSettings as Record<string, unknown>,
+    accessibilitySettings: createdProfile.accessibilitySettings as Record<string, unknown>,
+    notificationSettings: createdProfile.notificationSettings as Record<string, unknown>,
   } as unknown as {
     profileId: string;
     tenantId: string;
@@ -546,11 +539,7 @@ export const createPasswordResetToken = async (
       createdAt: passwordResetTokens.createdAt,
     });
 
-  if (!created) {
-    throw new Error('Failed to create password reset token');
-  }
-
-  return created;
+  return assertCreated(created, 'password reset token');
 };
 
 export const findValidPasswordResetToken = async (
@@ -682,11 +671,7 @@ export const createOAuthClient = async (
       lastUsedAt: oauthClients.lastUsedAt,
     });
 
-  if (!created) {
-    throw new Error('Failed to create OAuth client');
-  }
-
-  return created;
+  return assertCreated(created, 'OAuth client');
 };
 
 export const findOAuthClientByClientIdOnly = async (
