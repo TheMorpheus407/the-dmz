@@ -8,6 +8,7 @@ import {
   type PayRansomPayload,
   type RefuseRansomPayload,
   type AdvanceRecoveryPayload,
+  SEVERITY_LEVEL_GAME_OVER,
 } from '@the-dmz/shared';
 
 import { breachService } from '../../breach/index.js';
@@ -159,7 +160,7 @@ export function handleRefuseRansom(
   }
 
   const breachState = state.breachState;
-  const canCauseGameOver = breachState.currentSeverity === 4;
+  const canCauseGameOver = breachState.currentSeverity === SEVERITY_LEVEL_GAME_OVER;
 
   if (canCauseGameOver) {
     state.currentMacroState = SESSION_MACRO_STATES.SESSION_COMPLETED;

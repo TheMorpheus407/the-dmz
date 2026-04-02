@@ -1,5 +1,7 @@
 export type BreachSeverity = 1 | 2 | 3 | 4;
 
+export const SEVERITY_LEVEL_GAME_OVER: BreachSeverity = 4;
+
 export type BreachTriggerType =
   | 'accepted_phishing_email'
   | 'undetected_supply_chain_malware'

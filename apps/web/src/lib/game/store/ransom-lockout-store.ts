@@ -1,7 +1,11 @@
 import { writable, derived } from 'svelte/store';
 
 import type { BreachSeverity } from '@the-dmz/shared/game';
-import { calculateRansomAmount, canPayRansom } from '@the-dmz/shared/game';
+import {
+  calculateRansomAmount,
+  canPayRansom,
+  SEVERITY_LEVEL_GAME_OVER,
+} from '@the-dmz/shared/game';
 
 export type RansomLockoutPhase = 'active' | 'countdown_warning' | 'imminent' | 'expired';
 
@@ -62,7 +66,7 @@ function createRansomLockoutStore() {
     ): void {
       const ransomAmount = calculateRansomAmount(lifetimeEarnings);
       const canAfford = canPayRansom(currentFunds, ransomAmount);
-      const willCauseGameOver = severity === 4 && !canAfford;
+      const willCauseGameOver = severity === SEVERITY_LEVEL_GAME_OVER && !canAfford;
 
       const deadlineTimestamp = Date.now() + deadlineDays * 24 * 60 * 60 * 1000;
 
