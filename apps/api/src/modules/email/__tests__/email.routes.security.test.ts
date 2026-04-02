@@ -351,6 +351,14 @@ describe('email routes security', () => {
       });
 
       expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'EMAIL_CONFIG_NOT_FOUND',
+          }),
+        }),
+      );
     });
   });
 
@@ -390,6 +398,14 @@ describe('email routes security', () => {
       });
 
       expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'EMAIL_CONFIG_NOT_FOUND',
+          }),
+        }),
+      );
     });
   });
 
@@ -427,6 +443,14 @@ describe('email routes security', () => {
       });
 
       expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'EMAIL_CONFIG_NOT_FOUND',
+          }),
+        }),
+      );
     });
   });
 
@@ -464,6 +488,14 @@ describe('email routes security', () => {
       });
 
       expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'EMAIL_CONFIG_NOT_FOUND',
+          }),
+        }),
+      );
     });
   });
 
@@ -501,6 +533,14 @@ describe('email routes security', () => {
       });
 
       expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'EMAIL_CONFIG_NOT_FOUND',
+          }),
+        }),
+      );
     });
   });
 
@@ -543,6 +583,14 @@ describe('email routes security', () => {
       });
 
       expect(response.statusCode).toBe(404);
+      expect(response.json()).toEqual(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'EMAIL_CONFIG_NOT_FOUND',
+          }),
+        }),
+      );
     });
   });
 });
