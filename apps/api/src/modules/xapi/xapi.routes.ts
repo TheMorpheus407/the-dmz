@@ -21,6 +21,7 @@ import {
   updateLrsConfig,
   deleteLrsConfig,
   sendPendingStatements,
+  XAPI_VERBS,
   type XapiVersion,
   type XapiVerb,
   type XapiActivity,
@@ -83,8 +84,8 @@ export async function registerXapiRoutes(app: FastifyInstance, config: AppConfig
       }
 
       const verb: XapiVerb = {
-        id: body.verb.id ?? 'http://adlnet.gov/expapi/verbs/experienced',
-        display: body.verb.display ?? { 'en-US': 'experienced' },
+        id: body.verb.id ?? XAPI_VERBS.EXPERIENCED.id,
+        display: body.verb.display ?? XAPI_VERBS.EXPERIENCED.display,
       };
 
       let result: XapiResult | undefined;
