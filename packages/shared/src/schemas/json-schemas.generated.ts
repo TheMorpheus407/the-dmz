@@ -2045,36 +2045,19 @@ export const readinessResponseJsonSchema = {
     },
     checks: {
       type: 'object',
-      properties: {
-        database: {
-          type: 'object',
-          properties: {
-            ok: {
-              type: 'boolean',
-            },
-            message: {
-              type: 'string',
-            },
+      additionalProperties: {
+        type: 'object',
+        properties: {
+          ok: {
+            type: 'boolean',
           },
-          required: ['ok', 'message'],
-          additionalProperties: false,
-        },
-        redis: {
-          type: 'object',
-          properties: {
-            ok: {
-              type: 'boolean',
-            },
-            message: {
-              type: 'string',
-            },
+          message: {
+            type: 'string',
           },
-          required: ['ok', 'message'],
-          additionalProperties: false,
         },
+        required: ['ok', 'message'],
+        additionalProperties: false,
       },
-      required: ['database', 'redis'],
-      additionalProperties: false,
     },
   },
   required: ['status', 'checks'],

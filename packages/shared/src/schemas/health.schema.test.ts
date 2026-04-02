@@ -46,6 +46,44 @@ describe('health schemas', () => {
 
     expect(result.status).toBe('degraded');
   });
+
+  it('accepts a readiness response with custom check names', () => {
+    const result = readinessResponseSchema.parse({
+      status: 'ok',
+      checks: {
+        cache: { ok: true, message: 'Cache is healthy' },
+        queue: { ok: true, message: 'Queue is healthy' },
+      },
+    });
+
+    expect(result.status).toBe('ok');
+    expect(result.checks.cache.ok).toBe(true);
+    expect(result.checks.queue.ok).toBe(true);
+  });
+
+  it('rejects invalid status values', () => {
+    expect(() => readinessResponseSchema.parse({ status: 'pending', checks: {} })).toThrow();
+    expect(() => readinessResponseSchema.parse({ status: null, checks: {} })).toThrow();
+    expect(() => readinessResponseSchema.parse({ status: 123, checks: {} })).toThrow();
+  });
+
+  it('rejects wrong types in checks', () => {
+    expect(() =>
+      readinessResponseSchema.parse({
+        status: 'ok',
+        checks: { foo: { ok: 'true', message: 'ok' } },
+      }),
+    ).toThrow();
+    expect(() =>
+      readinessResponseSchema.parse({ status: 'ok', checks: { foo: { ok: true, message: 123 } } }),
+    ).toThrow();
+  });
+
+  it('rejects top-level extra fields', () => {
+    expect(() =>
+      readinessResponseSchema.parse({ status: 'ok', checks: {}, extra: true }),
+    ).toThrow();
+  });
 });
 
 describe('health json schemas', () => {

@@ -26,12 +26,7 @@ export type HealthResponse = z.infer<typeof healthResponseSchema>;
 export const readinessResponseSchema = z
   .object({
     status: z.enum(['ok', 'degraded']),
-    checks: z
-      .object({
-        database: serviceCheckSchema,
-        redis: serviceCheckSchema,
-      })
-      .strict(),
+    checks: z.record(z.string(), serviceCheckSchema),
   })
   .strict();
 
