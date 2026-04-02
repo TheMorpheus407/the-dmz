@@ -282,3 +282,7 @@ export async function initializeOfflineGame(): Promise<OfflineGameEngine> {
 export function createOfflineEngine(config?: Partial<OfflineGameConfig>): OfflineGameEngine {
   return new OfflineGameEngine(config);
 }
+
+export function resetOfflineEngine(): void {
+  offlineEngine = null;
+}

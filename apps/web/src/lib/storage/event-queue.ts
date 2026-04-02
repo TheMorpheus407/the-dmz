@@ -14,7 +14,23 @@ export interface QueuedEvent {
   synced: boolean;
 }
 
-let clientSequenceId = 0;
+class SequenceGenerator {
+  private counter = 0;
+
+  next(): number {
+    return ++this.counter;
+  }
+
+  reset(): void {
+    this.counter = 0;
+  }
+
+  get current(): number {
+    return this.counter;
+  }
+}
+
+const sequenceGenerator = new SequenceGenerator();
 
 async function enforceQueueLimit(): Promise<void> {
   const db = await getDB();
@@ -46,12 +62,20 @@ export async function saveEvent(type: string, payload: unknown): Promise<QueuedE
     type,
     payload,
     timestamp: Date.now(),
-    clientSequenceId: ++clientSequenceId,
+    clientSequenceId: sequenceGenerator.next(),
     synced: false,
   };
 
   await db.add('events', event);
   return event;
+}
+
+export function resetSequenceGenerator(): void {
+  sequenceGenerator.reset();
+}
+
+export function getCurrentSequence(): number {
+  return sequenceGenerator.current;
 }
 
 export async function getEvents(includeSynced = false): Promise<QueuedEvent[]> {

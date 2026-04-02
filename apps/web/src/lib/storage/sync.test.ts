@@ -9,6 +9,79 @@ vi.mock('$lib/utils/id', () => ({
   generateId: vi.fn((i) => `test-id-${i}`),
 }));
 
+vi.mock('$lib/logger', () => ({
+  logger: {
+    error: vi.fn(),
+    debug: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+  },
+}));
+
+const mockDB = {
+  put: vi.fn().mockResolvedValue(undefined),
+  get: vi.fn().mockResolvedValue(null),
+  transaction: vi.fn().mockReturnValue({
+    store: {
+      index: vi.fn().mockReturnValue({
+        getAll: vi.fn().mockResolvedValue([]),
+      }),
+      getAll: vi.fn().mockResolvedValue([]),
+      delete: vi.fn().mockResolvedValue(undefined),
+    },
+    done: vi.fn().mockResolvedValue(undefined),
+  }),
+  getAll: vi.fn().mockResolvedValue([]),
+  getAllFromIndex: vi.fn().mockResolvedValue([]),
+  add: vi.fn().mockResolvedValue(undefined),
+  delete: vi.fn().mockResolvedValue(undefined),
+};
+
+vi.mock('$lib/storage/idb', () => ({
+  getDB: vi.fn().mockResolvedValue(mockDB),
+}));
+
+describe('sequence generator', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+  });
+
+  it('should export resetSequenceGenerator function', async () => {
+    const { resetSequenceGenerator } = await import('$lib/storage/event-queue');
+    expect(typeof resetSequenceGenerator).toBe('function');
+  });
+
+  it('should export getCurrentSequence function', async () => {
+    const { getCurrentSequence } = await import('$lib/storage/event-queue');
+    expect(typeof getCurrentSequence).toBe('function');
+  });
+
+  it('should increment sequence on saveEvent', async () => {
+    const { saveEvent, getCurrentSequence } = await import('$lib/storage/event-queue');
+
+    await saveEvent('test-event-1', { data: 1 });
+    expect(getCurrentSequence()).toBe(1);
+
+    await saveEvent('test-event-2', { data: 2 });
+    expect(getCurrentSequence()).toBe(2);
+
+    await saveEvent('test-event-3', { data: 3 });
+    expect(getCurrentSequence()).toBe(3);
+  });
+
+  it('should reset sequence with resetSequenceGenerator', async () => {
+    const { saveEvent, getCurrentSequence, resetSequenceGenerator } =
+      await import('$lib/storage/event-queue');
+
+    await saveEvent('test-event-1', { data: 1 });
+    expect(getCurrentSequence()).toBe(1);
+
+    resetSequenceGenerator();
+    expect(getCurrentSequence()).toBe(0);
+  });
+});
+
 describe('event-queue', () => {
   beforeEach(() => {
     vi.resetModules();

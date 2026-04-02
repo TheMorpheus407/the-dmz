@@ -219,12 +219,13 @@ export type SyncCallback = (preferences: {
   fontSize?: number;
 }) => Promise<void>;
 
-let syncCallback: SyncCallback | null = null;
-let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-let keyboardEventHandler: ((event: KeyboardEvent) => void) | null = null;
 const DEBOUNCE_DELAY_MS = 500;
 
 function createThemeStore() {
+  let syncCallback: SyncCallback | null = null;
+  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  let keyboardEventHandler: ((event: KeyboardEvent) => void) | null = null;
+
   const { subscribe, set, update } = writable<ThemeStoreState>(initialThemeState);
 
   function getSystemPreferences(): {
@@ -935,6 +936,19 @@ function createThemeStore() {
       if (!browser || !keyboardEventHandler) return;
       document.removeEventListener('keydown', keyboardEventHandler);
       keyboardEventHandler = null;
+      syncCallback = null;
+    },
+
+    clearAll: () => {
+      if (debounceTimer) {
+        clearTimeout(debounceTimer);
+        debounceTimer = null;
+      }
+      if (keyboardEventHandler) {
+        document.removeEventListener('keydown', keyboardEventHandler);
+        keyboardEventHandler = null;
+      }
+      syncCallback = null;
     },
 
     isHighContrastTheme: (): boolean => {

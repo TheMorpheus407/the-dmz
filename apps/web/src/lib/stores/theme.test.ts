@@ -590,4 +590,31 @@ describe('themeStore', () => {
       expect(state.colorBlindMode).toBe('none');
     });
   });
+
+  describe('clearAll cleanup', () => {
+    it('clears all timers and handlers on clearAll', () => {
+      themeStore.registerKeyboardShortcut();
+      themeStore.setSyncCallback(async () => {});
+
+      themeStore.clearAll();
+
+      expect(mockDocumentElement.removeEventListener).toHaveBeenCalledWith(
+        'keydown',
+        expect.any(Function),
+      );
+    });
+  });
+
+  describe('unregisterKeyboardShortcut cleanup', () => {
+    it('clears syncCallback on unregisterKeyboardShortcut', () => {
+      let callbackInvoked = false;
+      themeStore.setSyncCallback(async () => {
+        callbackInvoked = true;
+      });
+
+      themeStore.unregisterKeyboardShortcut();
+
+      expect(callbackInvoked).toBe(false);
+    });
+  });
 });

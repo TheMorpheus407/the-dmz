@@ -27,83 +27,134 @@ export const connectivityStore = writable<ConnectivityState>(initialConnectivity
 export const SYNC_BACKOFF_DELAYS = [1000, 2000, 4000, 8000, 30000];
 export const MAX_RETRY_ATTEMPTS = 3;
 
-let syncCallback: (() => Promise<void>) | null = null;
-let retryTimeout: ReturnType<typeof setTimeout> | null = null;
-let currentRetryCount = 0;
-
-export function setSyncCallback(callback: () => Promise<void>): void {
-  syncCallback = callback;
+interface ConnectivityManager {
+  setSyncCallback(callback: () => Promise<void>): void;
+  triggerSync(): Promise<void>;
+  cancelSync(): void;
+  destroy(): void;
 }
 
-function clearRetryTimeout(): void {
-  if (retryTimeout) {
-    clearTimeout(retryTimeout);
-    retryTimeout = null;
-  }
-}
+function createConnectivityManager(): ConnectivityManager {
+  let syncCallback: (() => Promise<void>) | null = null;
+  let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+  let currentRetryCount = 0;
 
-function getBackoffDelay(attempt: number): number {
-  return SYNC_BACKOFF_DELAYS[Math.min(attempt, SYNC_BACKOFF_DELAYS.length - 1)] ?? 30000;
-}
-
-async function executeSyncWithRetry(): Promise<void> {
-  const state = get(connectivityStore);
-
-  if (!state.online || state.syncInProgress) {
-    return;
+  function clearRetryTimeout(): void {
+    if (retryTimeout) {
+      clearTimeout(retryTimeout);
+      retryTimeout = null;
+    }
   }
 
-  clearRetryTimeout();
-  connectivityStore.update((s) => ({
-    ...s,
-    syncInProgress: true,
-    syncError: null,
-    retryCount: currentRetryCount,
-  }));
+  function getBackoffDelay(attempt: number): number {
+    return SYNC_BACKOFF_DELAYS[Math.min(attempt, SYNC_BACKOFF_DELAYS.length - 1)] ?? 30000;
+  }
 
-  try {
-    if (syncCallback) {
-      await syncCallback();
+  async function executeSyncWithRetry(): Promise<void> {
+    const state = get(connectivityStore);
+
+    if (!state.online || state.syncInProgress) {
+      return;
     }
 
+    clearRetryTimeout();
+    connectivityStore.update((s) => ({
+      ...s,
+      syncInProgress: true,
+      syncError: null,
+      retryCount: currentRetryCount,
+    }));
+
+    try {
+      if (syncCallback) {
+        await syncCallback();
+      }
+
+      currentRetryCount = 0;
+      connectivityStore.update((s) => ({
+        ...s,
+        syncInProgress: false,
+        retryCount: 0,
+        syncError: null,
+      }));
+    } catch (error) {
+      logger.error('Sync failed', { error });
+
+      currentRetryCount++;
+
+      if (currentRetryCount >= MAX_RETRY_ATTEMPTS) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
+        connectivityStore.update((s) => ({
+          ...s,
+          syncInProgress: false,
+          syncError: `Sync failed after ${MAX_RETRY_ATTEMPTS} attempts: ${errorMessage}`,
+          retryCount: currentRetryCount,
+        }));
+        currentRetryCount = 0;
+      } else {
+        const delay = getBackoffDelay(currentRetryCount - 1);
+        logger.debug(
+          `Sync failed, retrying in ${delay}ms (attempt ${currentRetryCount}/${MAX_RETRY_ATTEMPTS})`,
+        );
+
+        connectivityStore.update((s) => ({
+          ...s,
+          syncInProgress: false,
+          retryCount: currentRetryCount,
+        }));
+
+        retryTimeout = setTimeout(() => {
+          void executeSyncWithRetry();
+        }, delay);
+      }
+    }
+  }
+
+  async function triggerSyncInternal(): Promise<void> {
+    if (!browser) {
+      return;
+    }
+
+    const state = get(connectivityStore);
+    if (!state.online || state.syncInProgress) {
+      return;
+    }
+
+    currentRetryCount = 0;
+    await executeSyncWithRetry();
+  }
+
+  function cancelSync(): void {
+    clearRetryTimeout();
     currentRetryCount = 0;
     connectivityStore.update((s) => ({
       ...s,
       syncInProgress: false,
-      retryCount: 0,
       syncError: null,
+      retryCount: 0,
     }));
-  } catch (error) {
-    logger.error('Sync failed', { error });
-
-    currentRetryCount++;
-
-    if (currentRetryCount >= MAX_RETRY_ATTEMPTS) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown sync error';
-      connectivityStore.update((s) => ({
-        ...s,
-        syncInProgress: false,
-        syncError: `Sync failed after ${MAX_RETRY_ATTEMPTS} attempts: ${errorMessage}`,
-        retryCount: currentRetryCount,
-      }));
-      currentRetryCount = 0;
-    } else {
-      const delay = getBackoffDelay(currentRetryCount - 1);
-      logger.debug(
-        `Sync failed, retrying in ${delay}ms (attempt ${currentRetryCount}/${MAX_RETRY_ATTEMPTS})`,
-      );
-
-      connectivityStore.update((s) => ({
-        ...s,
-        syncInProgress: false,
-        retryCount: currentRetryCount,
-      }));
-
-      retryTimeout = setTimeout(() => {
-        void executeSyncWithRetry();
-      }, delay);
-    }
   }
+
+  function destroy(): void {
+    clearRetryTimeout();
+    syncCallback = null;
+    currentRetryCount = 0;
+  }
+
+  return {
+    setSyncCallback(callback: () => Promise<void>): void {
+      syncCallback = callback;
+    },
+    triggerSync: triggerSyncInternal,
+    cancelSync,
+    destroy,
+  };
+}
+
+export const connectivityManager = createConnectivityManager();
+
+export function setSyncCallback(callback: () => Promise<void>): void {
+  connectivityManager.setSyncCallback(callback);
 }
 
 export async function initializeConnectivityListeners(): Promise<void> {
@@ -118,9 +169,8 @@ export async function initializeConnectivityListeners(): Promise<void> {
       lastChange: new Date().toISOString(),
     }));
 
-    if (online && syncCallback) {
-      currentRetryCount = 0;
-      void executeSyncWithRetry();
+    if (online) {
+      void connectivityManager.triggerSync();
     }
   };
 
@@ -133,28 +183,11 @@ export async function initializeConnectivityListeners(): Promise<void> {
 }
 
 export async function triggerSync(): Promise<void> {
-  if (!browser) {
-    return;
-  }
-
-  const state = get(connectivityStore);
-  if (!state.online || state.syncInProgress) {
-    return;
-  }
-
-  currentRetryCount = 0;
-  await executeSyncWithRetry();
+  await connectivityManager.triggerSync();
 }
 
 export function cancelSync(): void {
-  clearRetryTimeout();
-  currentRetryCount = 0;
-  connectivityStore.update((s) => ({
-    ...s,
-    syncInProgress: false,
-    syncError: null,
-    retryCount: 0,
-  }));
+  connectivityManager.cancelSync();
 }
 
 export function updatePendingEvents(count: number): void {
