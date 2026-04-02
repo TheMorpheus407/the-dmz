@@ -1,9 +1,8 @@
-import type { DocumentType } from '@the-dmz/shared';
+import type { DocumentType, IncidentStatus } from '@the-dmz/shared';
 
-export type { DocumentType };
+export type { DocumentType, IncidentStatus };
 
 export type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical';
-export type IncidentStatus = 'open' | 'investigating' | 'contained' | 'resolved' | 'closed';
 export type SystemStatus = 'online' | 'degraded' | 'offline';
 export type UpgradePriority = 'low' | 'medium' | 'high';
 export type ExceptionStatus = 'pending' | 'approved' | 'denied' | 'expired';
@@ -293,7 +292,8 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
 };
 
 export function getDocumentTypeLabel(type: DocumentType): string {
-  return DOCUMENT_TYPE_LABELS[type];
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+  return DOCUMENT_TYPE_LABELS[type] ?? 'Unknown Document';
 }
 
 export function formatTimestamp(dateString: string): string {

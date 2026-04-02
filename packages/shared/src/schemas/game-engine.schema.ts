@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { INCIDENT_STATUSES } from '../game/incident.js';
 import {
   SESSION_MACRO_STATES,
   DAY_PHASES,
@@ -36,7 +37,9 @@ export const emailStatusSchema = z.enum([
   'deferred',
 ]);
 
-export const incidentStatusSchema = z.enum(['active', 'resolved']);
+export const incidentStatusSchema = z.enum(
+  Object.values(INCIDENT_STATUSES) as [string, ...string[]],
+);
 
 export const gameStateSchema = z
   .object({

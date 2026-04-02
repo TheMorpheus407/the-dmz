@@ -1,10 +1,10 @@
 <script lang="ts">
   import Button from '$lib/ui/components/Button.svelte';
+  import type { IncidentStatus } from '@the-dmz/shared';
 
   import { formatTimestamp } from './document-viewer';
 
   type IncidentSeverity = 'low' | 'medium' | 'high' | 'critical';
-  type IncidentStatus = 'open' | 'investigating' | 'contained' | 'resolved' | 'closed';
 
   interface IncidentEvent {
     id: string;
@@ -67,10 +67,12 @@
       open: 'var(--color-danger)',
       investigating: 'var(--color-warning)',
       contained: 'var(--color-info)',
-      resolved: 'var(--color-safe)',
+      eradicated: 'var(--color-info)',
+      recovered: 'var(--color-safe)',
       closed: 'var(--color-archived)',
     };
-    return colors[status];
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    return colors[status] ?? 'var(--color-safe)';
   }
 
   function getSystemStatusColor(status: AffectedSystem['status']): string {
@@ -122,7 +124,7 @@
           class="incident-log__badge incident-log__badge--status"
           style="color: {getStatusColor(data.status)}"
         >
-          {data.status.toUpperCase()}
+          {String(data.status).toUpperCase()}
         </span>
       </div>
     </div>
