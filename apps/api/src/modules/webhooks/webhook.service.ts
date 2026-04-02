@@ -12,9 +12,9 @@ import {
   WEBHOOK_DELIVERY_TIMEOUT_MS,
   isValidHttpsUrl,
   type WebhookSubscription,
-  type WebhookDelivery,
+  type HttpWebhookDelivery,
   type WebhookEventEnvelope,
-  type WebhookTestResult,
+  type HttpWebhookTestResult,
 } from '@the-dmz/shared/contracts';
 
 import { webhookRepo } from './webhook.repo.js';
@@ -227,7 +227,7 @@ export class WebhookService {
     };
   }
 
-  async testSubscription(tenantId: string, subscriptionId: string): Promise<WebhookTestResult> {
+  async testSubscription(tenantId: string, subscriptionId: string): Promise<HttpWebhookTestResult> {
     const subscription = await webhookRepo.getSubscriptionById(tenantId, subscriptionId);
 
     if (!subscription) {
@@ -260,7 +260,7 @@ export class WebhookService {
       } as Partial<NewWebhookSubscriptionDb>);
     }
 
-    const testResult: WebhookTestResult = {
+    const testResult: HttpWebhookTestResult = {
       success: result.success,
       statusCode: result.statusCode,
       latencyMs: result.latencyMs,
@@ -277,7 +277,7 @@ export class WebhookService {
   async listDeliveries(
     tenantId: string,
     options?: { subscriptionId?: string; status?: string; limit?: number; cursor?: string },
-  ): Promise<{ deliveries: WebhookDelivery[]; nextCursor?: string }> {
+  ): Promise<{ deliveries: HttpWebhookDelivery[]; nextCursor?: string }> {
     const result = await webhookRepo.listDeliveries(tenantId, options);
 
     const dels = result.deliveries.map((d) => this.mapDbToDelivery(d));
@@ -288,7 +288,7 @@ export class WebhookService {
     return { deliveries: dels };
   }
 
-  async getDelivery(tenantId: string, deliveryId: string): Promise<WebhookDelivery> {
+  async getDelivery(tenantId: string, deliveryId: string): Promise<HttpWebhookDelivery> {
     const delivery = await webhookRepo.getDeliveryById(tenantId, deliveryId);
 
     if (!delivery) {
@@ -661,7 +661,7 @@ export class WebhookService {
     };
   }
 
-  private mapDbToDelivery(db: WebhookDeliveryDb): WebhookDelivery {
+  private mapDbToDelivery(db: WebhookDeliveryDb): HttpWebhookDelivery {
     return {
       id: db.id,
       subscriptionId: db.subscriptionId,

@@ -85,7 +85,7 @@ export const updateWebhookSubscriptionSchema = z.object({
 
 export type UpdateWebhookSubscriptionInput = z.infer<typeof updateWebhookSubscriptionSchema>;
 
-export const webhookDeliverySchema = z.object({
+export const webhookDeliveryBaseSchema = z.object({
   id: z.string().uuid(),
   subscriptionId: z.string().uuid(),
   eventId: z.string().uuid(),
@@ -97,15 +97,24 @@ export const webhookDeliverySchema = z.object({
   maxAttempts: z.number().int().positive(),
   nextAttemptAt: z.date().optional(),
   lastAttemptAt: z.date().optional(),
-  responseStatusCode: z.number().int().optional(),
-  responseBody: z.string().optional(),
   errorMessage: z.string().optional(),
-  latencyMs: z.number().int().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
-export type WebhookDelivery = z.infer<typeof webhookDeliverySchema>;
+export type WebhookDeliveryBase = z.infer<typeof webhookDeliveryBaseSchema>;
+
+export const httpWebhookDeliverySchema = webhookDeliveryBaseSchema.extend({
+  responseStatusCode: z.number().int().optional(),
+  responseBody: z.string().optional(),
+  latencyMs: z.number().int().optional(),
+});
+
+export type HttpWebhookDelivery = z.infer<typeof httpWebhookDeliverySchema>;
+
+export const webhookDeliverySchema: z.ZodType<HttpWebhookDelivery> = httpWebhookDeliverySchema;
+
+export type WebhookDelivery = HttpWebhookDelivery;
 
 export const webhookEventEnvelopeSchema = z.object({
   eventId: z.string().uuid(),
@@ -127,15 +136,25 @@ export const webhookSignatureHeadersSchema = z.object({
 
 export type WebhookSignatureHeaders = z.infer<typeof webhookSignatureHeadersSchema>;
 
-export const webhookTestResultSchema = z.object({
+export const webhookTestResultBaseSchema = z.object({
   success: z.boolean(),
-  statusCode: z.number().int().optional(),
-  latencyMs: z.number().int().optional(),
   errorMessage: z.string().optional(),
   signatureValid: z.boolean().optional(),
 });
 
-export type WebhookTestResult = z.infer<typeof webhookTestResultSchema>;
+export type WebhookTestResultBase = z.infer<typeof webhookTestResultBaseSchema>;
+
+export const httpWebhookTestResultSchema = webhookTestResultBaseSchema.extend({
+  statusCode: z.number().int().optional(),
+  latencyMs: z.number().int().optional(),
+});
+
+export type HttpWebhookTestResult = z.infer<typeof httpWebhookTestResultSchema>;
+
+export const webhookTestResultSchema: z.ZodType<HttpWebhookTestResult> =
+  httpWebhookTestResultSchema;
+
+export type WebhookTestResult = HttpWebhookTestResult;
 
 export const webhookSecretRotationSchema = z.object({
   previousSecretHash: z.string().min(1),

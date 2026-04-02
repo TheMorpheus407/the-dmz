@@ -10,6 +10,10 @@ import {
   WEBHOOK_EVENT_TYPES,
   WEBHOOK_CIRCUIT_BREAKER,
   WEBHOOK_RATE_LIMITS,
+  webhookDeliveryBaseSchema,
+  httpWebhookDeliverySchema,
+  webhookTestResultBaseSchema,
+  httpWebhookTestResultSchema,
 } from '@the-dmz/shared/contracts';
 
 import { WebhookService } from '../webhook.service.js';
@@ -17,12 +21,14 @@ import {
   WebhookSubscriptionNotFoundError,
   WebhookSignatureInvalidError,
   WebhookSignatureExpiredError,
+  WebhookCircuitBreakerOpenError,
 } from '../webhook.errors.js';
 import { webhookRepo } from '../webhook.repo.js';
 
 import type {
   WebhookCircuitBreakerDb,
   WebhookSubscriptionDb,
+  WebhookDeliveryDb,
 } from '../../../db/schema/webhooks.js';
 
 vi.mock('../webhook.repo.js');
@@ -470,5 +476,475 @@ describe('WebhookPolicy Contract Tests', () => {
     expect(WEBHOOK_RATE_LIMITS.ROTATE_SECRET.limit).toBe(10);
     expect(WEBHOOK_RATE_LIMITS.DELIVERY_LIST.limit).toBe(60);
     expect(WEBHOOK_RATE_LIMITS.DELIVERY_GET.limit).toBe(60);
+  });
+});
+
+describe('testSubscription', () => {
+  let service: WebhookService;
+  const mockRepo = vi.mocked(webhookRepo);
+  const mockTenantId = randomUUID();
+  const mockSubscriptionId = randomUUID();
+  const fixedDate = new Date('2026-03-10T00:00:00.000Z');
+
+  beforeAll(() => {
+    service = new WebhookService();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return HttpWebhookTestResult with statusCode and latencyMs on success', async () => {
+    const mockDbSubscription = {
+      id: mockSubscriptionId,
+      tenantId: mockTenantId,
+      name: 'Test Webhook',
+      targetUrl: 'https://example.com/webhook',
+      eventTypes: JSON.stringify(['auth.user.created']),
+      status: 'test_pending',
+      secretHash: 'hashed-secret',
+      filters: null,
+      ipAllowlist: null,
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+      disabledAt: null,
+      testPendingAt: new Date(),
+      failureDisabledAt: null,
+    };
+
+    mockRepo.getSubscriptionById.mockResolvedValue(mockDbSubscription);
+    mockRepo.getOrCreateCircuitBreaker.mockResolvedValue({
+      id: randomUUID(),
+      subscriptionId: mockSubscriptionId,
+      totalRequests: 0,
+      failedRequests: 0,
+      consecutiveFailures: 0,
+      isOpen: false,
+      openedAt: null,
+      closedAt: null,
+      lastCheckedAt: fixedDate,
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+    });
+    mockRepo.updateSubscription.mockResolvedValue({
+      ...mockDbSubscription,
+      status: 'active',
+      testPendingAt: null,
+    });
+
+    const result = await service.testSubscription(mockTenantId, mockSubscriptionId);
+
+    expect(result.success).toBe(true);
+    expect(result.statusCode).toBeDefined();
+    expect(result.latencyMs).toBeDefined();
+    expect(result.signatureValid).toBe(true);
+    expect(result.errorMessage).toBeUndefined();
+  });
+
+  it('should return HttpWebhookTestResult with errorMessage but NOT statusCode on failure', async () => {
+    const mockDbSubscription = {
+      id: mockSubscriptionId,
+      tenantId: mockTenantId,
+      name: 'Test Webhook',
+      targetUrl: 'https://invalid.example.com/webhook',
+      eventTypes: JSON.stringify(['auth.user.created']),
+      status: 'test_pending',
+      secretHash: 'hashed-secret',
+      filters: null,
+      ipAllowlist: null,
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+      disabledAt: null,
+      testPendingAt: new Date(),
+      failureDisabledAt: null,
+    };
+
+    mockRepo.getSubscriptionById.mockResolvedValue(mockDbSubscription);
+    mockRepo.getOrCreateCircuitBreaker.mockResolvedValue({
+      id: randomUUID(),
+      subscriptionId: mockSubscriptionId,
+      totalRequests: 0,
+      failedRequests: 0,
+      consecutiveFailures: 0,
+      isOpen: false,
+      openedAt: null,
+      closedAt: null,
+      lastCheckedAt: fixedDate,
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+    });
+    mockRepo.updateSubscription.mockResolvedValue(mockDbSubscription);
+
+    const result = await service.testSubscription(mockTenantId, mockSubscriptionId);
+
+    expect(result.success).toBe(false);
+    expect(result.statusCode).toBeUndefined();
+    expect(result.errorMessage).toBeDefined();
+    expect(result.signatureValid).toBe(true);
+  });
+
+  it('should throw WebhookSubscriptionNotFoundError when subscription not found', async () => {
+    mockRepo.getSubscriptionById.mockResolvedValue(undefined);
+
+    await expect(service.testSubscription(mockTenantId, mockSubscriptionId)).rejects.toThrow(
+      WebhookSubscriptionNotFoundError,
+    );
+  });
+
+  it('should throw WebhookCircuitBreakerOpenError when circuit breaker is open', async () => {
+    const mockDbSubscription = {
+      id: mockSubscriptionId,
+      tenantId: mockTenantId,
+      name: 'Test Webhook',
+      targetUrl: 'https://example.com/webhook',
+      eventTypes: JSON.stringify(['auth.user.created']),
+      status: 'active',
+      secretHash: 'hashed-secret',
+      filters: null,
+      ipAllowlist: null,
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+      disabledAt: null,
+      testPendingAt: null,
+      failureDisabledAt: null,
+    };
+
+    mockRepo.getSubscriptionById.mockResolvedValue(mockDbSubscription);
+    mockRepo.getOrCreateCircuitBreaker.mockResolvedValue({
+      id: randomUUID(),
+      subscriptionId: mockSubscriptionId,
+      totalRequests: 20,
+      failedRequests: 19,
+      consecutiveFailures: 19,
+      isOpen: true,
+      openedAt: new Date(),
+      closedAt: null,
+      lastCheckedAt: fixedDate,
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+    });
+
+    await expect(service.testSubscription(mockTenantId, mockSubscriptionId)).rejects.toThrow(
+      WebhookCircuitBreakerOpenError,
+    );
+  });
+});
+
+describe('listDeliveries', () => {
+  let service: WebhookService;
+  const mockRepo = vi.mocked(webhookRepo);
+  const mockTenantId = randomUUID();
+  const mockDeliveryId = randomUUID();
+  const mockSubscriptionId = randomUUID();
+  const fixedDate = new Date('2026-03-10T00:00:00.000Z');
+
+  beforeAll(() => {
+    service = new WebhookService();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return deliveries with HTTP fields responseStatusCode, responseBody, latencyMs', async () => {
+    const mockDbDelivery: WebhookDeliveryDb = {
+      id: mockDeliveryId,
+      subscriptionId: mockSubscriptionId,
+      eventId: randomUUID(),
+      eventType: 'auth.user.created',
+      tenantId: mockTenantId,
+      targetUrl: 'https://example.com/webhook',
+      status: 'success',
+      attemptNumber: 1,
+      maxAttempts: 5,
+      nextAttemptAt: null,
+      lastAttemptAt: fixedDate,
+      responseStatusCode: 200,
+      responseBody: '{"status":"ok"}',
+      errorMessage: null,
+      latencyMs: 150,
+      payload: { test: true },
+      signatureHeaders: { 'X-Webhook-Id': '123' },
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+    };
+
+    mockRepo.listDeliveries.mockResolvedValue({
+      deliveries: [mockDbDelivery],
+    });
+
+    const result = await service.listDeliveries(mockTenantId);
+
+    expect(result.deliveries).toHaveLength(1);
+    const delivery = result.deliveries[0];
+    expect(delivery.id).toBe(mockDeliveryId);
+    expect(delivery.responseStatusCode).toBe(200);
+    expect(delivery.responseBody).toBe('{"status":"ok"}');
+    expect(delivery.latencyMs).toBe(150);
+    expect(delivery.subscriptionId).toBe(mockSubscriptionId);
+    expect(delivery.eventType).toBe('auth.user.created');
+    expect(delivery.status).toBe('success');
+  });
+
+  it('should return empty list when no deliveries exist', async () => {
+    mockRepo.listDeliveries.mockResolvedValue({
+      deliveries: [],
+    });
+
+    const result = await service.listDeliveries(mockTenantId);
+
+    expect(result.deliveries).toHaveLength(0);
+  });
+
+  it('should return nextCursor when provided by repo', async () => {
+    const mockCursor = 'cursor-123';
+    mockRepo.listDeliveries.mockResolvedValue({
+      deliveries: [],
+      nextCursor: mockCursor,
+    });
+
+    const result = await service.listDeliveries(mockTenantId);
+
+    expect(result.nextCursor).toBe(mockCursor);
+  });
+
+  it('should pass subscriptionId filter to repo', async () => {
+    const filterSubscriptionId = randomUUID();
+    mockRepo.listDeliveries.mockResolvedValue({
+      deliveries: [],
+    });
+
+    await service.listDeliveries(mockTenantId, { subscriptionId: filterSubscriptionId });
+
+    expect(mockRepo.listDeliveries).toHaveBeenCalledWith(mockTenantId, {
+      subscriptionId: filterSubscriptionId,
+    });
+  });
+
+  it('should pass status filter to repo', async () => {
+    mockRepo.listDeliveries.mockResolvedValue({
+      deliveries: [],
+    });
+
+    await service.listDeliveries(mockTenantId, { status: 'failed' });
+
+    expect(mockRepo.listDeliveries).toHaveBeenCalledWith(mockTenantId, {
+      status: 'failed',
+    });
+  });
+
+  it('should pass limit option to repo', async () => {
+    mockRepo.listDeliveries.mockResolvedValue({
+      deliveries: [],
+    });
+
+    await service.listDeliveries(mockTenantId, { limit: 10 });
+
+    expect(mockRepo.listDeliveries).toHaveBeenCalledWith(mockTenantId, {
+      limit: 10,
+    });
+  });
+
+  it('should return both deliveries and nextCursor when both are present', async () => {
+    const mockCursor = 'cursor-456';
+    const mockDbDelivery: WebhookDeliveryDb = {
+      id: mockDeliveryId,
+      subscriptionId: mockSubscriptionId,
+      eventId: randomUUID(),
+      eventType: 'auth.user.created',
+      tenantId: mockTenantId,
+      targetUrl: 'https://example.com/webhook',
+      status: 'success',
+      attemptNumber: 1,
+      maxAttempts: 5,
+      nextAttemptAt: null,
+      lastAttemptAt: fixedDate,
+      responseStatusCode: 200,
+      responseBody: '{"status":"ok"}',
+      errorMessage: null,
+      latencyMs: 150,
+      payload: { test: true },
+      signatureHeaders: { 'X-Webhook-Id': '123' },
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+    };
+
+    mockRepo.listDeliveries.mockResolvedValue({
+      deliveries: [mockDbDelivery],
+      nextCursor: mockCursor,
+    });
+
+    const result = await service.listDeliveries(mockTenantId);
+
+    expect(result.deliveries).toHaveLength(1);
+    expect(result.nextCursor).toBe(mockCursor);
+  });
+});
+
+describe('getDelivery', () => {
+  let service: WebhookService;
+  const mockRepo = vi.mocked(webhookRepo);
+  const mockTenantId = randomUUID();
+  const mockDeliveryId = randomUUID();
+  const mockSubscriptionId = randomUUID();
+  const fixedDate = new Date('2026-03-10T00:00:00.000Z');
+
+  beforeAll(() => {
+    service = new WebhookService();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should return HttpWebhookDelivery with HTTP fields responseStatusCode, responseBody, latencyMs', async () => {
+    const mockDbDelivery: WebhookDeliveryDb = {
+      id: mockDeliveryId,
+      subscriptionId: mockSubscriptionId,
+      eventId: randomUUID(),
+      eventType: 'auth.user.created',
+      tenantId: mockTenantId,
+      targetUrl: 'https://example.com/webhook',
+      status: 'success',
+      attemptNumber: 1,
+      maxAttempts: 5,
+      nextAttemptAt: null,
+      lastAttemptAt: fixedDate,
+      responseStatusCode: 201,
+      responseBody: '{"id":"123"}',
+      errorMessage: null,
+      latencyMs: 85,
+      payload: { test: true },
+      signatureHeaders: { 'X-Webhook-Id': '123' },
+      createdAt: fixedDate,
+      updatedAt: fixedDate,
+    };
+
+    mockRepo.getDeliveryById.mockResolvedValue(mockDbDelivery);
+
+    const result = await service.getDelivery(mockTenantId, mockDeliveryId);
+
+    expect(result.id).toBe(mockDeliveryId);
+    expect(result.responseStatusCode).toBe(201);
+    expect(result.responseBody).toBe('{"id":"123"}');
+    expect(result.latencyMs).toBe(85);
+    expect(result.subscriptionId).toBe(mockSubscriptionId);
+    expect(result.eventType).toBe('auth.user.created');
+    expect(result.status).toBe('success');
+    expect(result.attemptNumber).toBe(1);
+  });
+
+  it('should throw error when delivery not found', async () => {
+    mockRepo.getDeliveryById.mockResolvedValue(undefined);
+
+    await expect(service.getDelivery(mockTenantId, randomUUID())).rejects.toThrow();
+  });
+});
+
+describe('WebhookPolicy Schema Tests', () => {
+  it('webhookDeliveryBaseSchema should NOT have responseStatusCode, responseBody, latencyMs fields', () => {
+    const baseSchemaShape = webhookDeliveryBaseSchema.shape;
+    expect(baseSchemaShape.responseStatusCode).toBeUndefined();
+    expect(baseSchemaShape.responseBody).toBeUndefined();
+    expect(baseSchemaShape.latencyMs).toBeUndefined();
+  });
+
+  it('httpWebhookDeliverySchema should extend base with responseStatusCode, responseBody, latencyMs fields', () => {
+    const httpSchemaShape = httpWebhookDeliverySchema.shape;
+    expect(httpSchemaShape.responseStatusCode).toBeDefined();
+    expect(httpSchemaShape.responseBody).toBeDefined();
+    expect(httpSchemaShape.latencyMs).toBeDefined();
+  });
+
+  it('httpWebhookDeliverySchema should parse valid HTTP delivery with all fields', () => {
+    const validDelivery = {
+      id: randomUUID(),
+      subscriptionId: randomUUID(),
+      eventId: randomUUID(),
+      eventType: 'auth.user.created',
+      tenantId: randomUUID(),
+      targetUrl: 'https://example.com/webhook',
+      status: 'success',
+      attemptNumber: 1,
+      maxAttempts: 5,
+      nextAttemptAt: new Date(),
+      lastAttemptAt: new Date(),
+      errorMessage: undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      responseStatusCode: 200,
+      responseBody: '{"status":"ok"}',
+      latencyMs: 100,
+    };
+
+    const result = httpWebhookDeliverySchema.safeParse(validDelivery);
+    expect(result.success).toBe(true);
+  });
+
+  it('webhookDeliveryBaseSchema should NOT accept responseStatusCode', () => {
+    const invalidDelivery = {
+      id: randomUUID(),
+      subscriptionId: randomUUID(),
+      eventId: randomUUID(),
+      eventType: 'auth.user.created',
+      tenantId: randomUUID(),
+      targetUrl: 'https://example.com/webhook',
+      status: 'success',
+      attemptNumber: 1,
+      maxAttempts: 5,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      responseStatusCode: 200,
+    };
+
+    const result = webhookDeliveryBaseSchema.safeParse(invalidDelivery);
+    expect(result.success).toBe(false);
+  });
+
+  it('webhookTestResultBaseSchema should NOT have statusCode, latencyMs fields', () => {
+    const baseSchemaShape = webhookTestResultBaseSchema.shape;
+    expect(baseSchemaShape.statusCode).toBeUndefined();
+    expect(baseSchemaShape.latencyMs).toBeUndefined();
+  });
+
+  it('httpWebhookTestResultSchema should extend base with statusCode, latencyMs fields', () => {
+    const httpSchemaShape = httpWebhookTestResultSchema.shape;
+    expect(httpSchemaShape.statusCode).toBeDefined();
+    expect(httpSchemaShape.latencyMs).toBeDefined();
+  });
+
+  it('httpWebhookTestResultSchema should parse valid HTTP test result with all fields', () => {
+    const validResult = {
+      success: true,
+      statusCode: 200,
+      latencyMs: 50,
+      signatureValid: true,
+    };
+
+    const result = httpWebhookTestResultSchema.safeParse(validResult);
+    expect(result.success).toBe(true);
+  });
+
+  it('httpWebhookTestResultSchema should parse result with errorMessage but no statusCode', () => {
+    const errorResult = {
+      success: false,
+      errorMessage: 'Connection refused',
+      signatureValid: true,
+    };
+
+    const result = httpWebhookTestResultSchema.safeParse(errorResult);
+    expect(result.success).toBe(true);
+    expect(result.data?.errorMessage).toBe('Connection refused');
+    expect(result.data?.statusCode).toBeUndefined();
+  });
+
+  it('webhookTestResultBaseSchema should NOT accept statusCode', () => {
+    const invalidResult = {
+      success: true,
+      statusCode: 200,
+    };
+
+    const result = webhookTestResultBaseSchema.safeParse(invalidResult);
+    expect(result.success).toBe(false);
   });
 });
