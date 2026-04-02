@@ -4,11 +4,11 @@ import { sanitizeForLogging, sanitizeHeaderValue } from '../utils/sanitizer.js';
 
 import type { FastifyInstance } from 'fastify';
 
-interface RequestLogFields {
+interface HttpLogFields {
   requestId: string;
   method: string;
   url: string;
-  statusCode?: number;
+  outcomeCode: number;
   durationMs?: number;
   ip: string | undefined;
   userAgent: string | undefined;
@@ -50,10 +50,11 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
 
     reply.header(REQUEST_ID_HEADER, request.id);
 
-    const onRequestFields: RequestLogFields = {
+    const onRequestFields: HttpLogFields = {
       requestId: request.id,
       method: request.method,
       url: sanitizeForLogging(stripQueryParams(request.url)),
+      outcomeCode: 0,
       ip: sanitizeForLogging(getIp(request) || ''),
       userAgent: sanitizeForLogging(getUserAgent(request) || ''),
     };
@@ -67,7 +68,7 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
       {
         ...onRequestFields,
         service: { name: serviceName, version: serviceVersion, environment: serviceEnv },
-        event: 'request_received',
+        event: 'operation_started',
       },
       'request received',
     );
@@ -77,11 +78,11 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
     const end = process.hrtime.bigint();
     const durationMs = request.startTime ? Number(end - request.startTime) / 1_000_000 : undefined;
 
-    const onResponseFields: RequestLogFields = {
+    const onResponseFields: HttpLogFields = {
       requestId: request.id,
       method: request.method,
       url: sanitizeForLogging(stripQueryParams(request.url)),
-      statusCode: reply.statusCode,
+      outcomeCode: reply.statusCode,
       ip: sanitizeForLogging(getIp(request) || ''),
       userAgent: sanitizeForLogging(getUserAgent(request) || ''),
       ...(durationMs !== undefined && { durationMs }),
@@ -99,7 +100,7 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
       {
         ...onResponseFields,
         service: { name: serviceName, version: serviceVersion, environment: serviceEnv },
-        event: 'request_completed',
+        event: 'operation_completed',
       },
       message,
     );

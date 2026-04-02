@@ -2,8 +2,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   m1LoggingContractManifest,
-  requiredRequestLogFields,
-  requiredResponseLogFields,
+  requiredOperationLogFields,
+  requiredCompletedLogFields,
 } from '@the-dmz/shared/contracts';
 
 import { buildApp } from '../../../app.js';
@@ -28,21 +28,21 @@ interface CapturedLog {
 describe('logging contract validation', () => {
   describe('contract manifest', () => {
     it('defines required event categories', () => {
-      expect(m1LoggingContractManifest.eventCategories).toContain('request_received');
-      expect(m1LoggingContractManifest.eventCategories).toContain('request_completed');
+      expect(m1LoggingContractManifest.eventCategories).toContain('operation_started');
+      expect(m1LoggingContractManifest.eventCategories).toContain('operation_completed');
     });
 
-    it('defines required fields for request events', () => {
+    it('defines required fields for operation events', () => {
       const requestFields = m1LoggingContractManifest.requiredFields.filter((f) =>
-        f.requiredForEvents.includes('request_received'),
+        f.requiredForEvents.includes('operation_started'),
       );
       expect(requestFields.length).toBeGreaterThan(0);
     });
 
-    it('defines level semantics for status codes', () => {
-      expect(m1LoggingContractManifest.levelSemantics.warn).toContain(400);
-      expect(m1LoggingContractManifest.levelSemantics.warn).toContain(401);
-      expect(m1LoggingContractManifest.levelSemantics.error).toContain(500);
+    it('defines generic level semantics (protocol-specific mappings in API layer)', () => {
+      expect(m1LoggingContractManifest.levelSemantics).toBeDefined();
+      expect(m1LoggingContractManifest.levelSemantics.warn).toBeInstanceOf(Array);
+      expect(m1LoggingContractManifest.levelSemantics.error).toBeInstanceOf(Array);
     });
 
     it('defines redaction paths', () => {
@@ -88,7 +88,7 @@ describe('logging contract validation', () => {
       await app.close();
     });
 
-    it('/health emits request_received log with required fields', async () => {
+    it('/health emits operation_started log with required fields', async () => {
       capturedLogs.length = 0;
 
       const response = await app.inject({
@@ -105,7 +105,7 @@ describe('logging contract validation', () => {
 
       const logPayload = requestLog?.args[0] as Record<string, unknown>;
 
-      for (const field of requiredRequestLogFields) {
+      for (const field of requiredOperationLogFields) {
         expect(logPayload).toHaveProperty(field);
       }
 
@@ -113,7 +113,7 @@ describe('logging contract validation', () => {
       expect((logPayload['service'] as Record<string, unknown>)['name']).toBe('the-dmz-api');
     });
 
-    it('/health emits request_completed log with required fields', async () => {
+    it('/health emits operation_completed log with required fields', async () => {
       capturedLogs.length = 0;
 
       const response = await app.inject({
@@ -130,11 +130,11 @@ describe('logging contract validation', () => {
 
       const logPayload = responseLog?.args[0] as Record<string, unknown>;
 
-      for (const field of requiredResponseLogFields) {
+      for (const field of requiredCompletedLogFields) {
         expect(logPayload).toHaveProperty(field);
       }
 
-      expect(logPayload['statusCode']).toBe(200);
+      expect(logPayload['outcomeCode']).toBe(200);
       expect(logPayload['durationMs']).toBeDefined();
       expect(typeof logPayload['durationMs']).toBe('number');
     });
@@ -212,7 +212,7 @@ describe('logging contract validation', () => {
       expect(errorLog).toBeDefined();
 
       const logPayload = errorLog?.args[0] as Record<string, unknown>;
-      expect(logPayload['statusCode']).toBe(response.statusCode);
+      expect(logPayload['outcomeCode']).toBe(response.statusCode);
       expect(logPayload['requestId']).toBeDefined();
     });
 
@@ -233,7 +233,7 @@ describe('logging contract validation', () => {
       expect(errorLog).toBeDefined();
 
       const logPayload = errorLog?.args[0] as Record<string, unknown>;
-      expect(logPayload['statusCode']).toBe(400);
+      expect(logPayload['outcomeCode']).toBe(400);
     });
   });
 
@@ -287,7 +287,7 @@ describe('logging contract validation', () => {
       expect(errorLog).toBeDefined();
 
       const logPayload = errorLog?.args[0] as Record<string, unknown>;
-      expect(logPayload['statusCode']).toBe(401);
+      expect(logPayload['outcomeCode']).toBe(401);
       expect(logPayload['requestId']).toBeDefined();
     });
 
@@ -307,7 +307,7 @@ describe('logging contract validation', () => {
       expect(errorLog).toBeDefined();
 
       const logPayload = errorLog?.args[0] as Record<string, unknown>;
-      expect(logPayload['statusCode']).toBe(404);
+      expect(logPayload['outcomeCode']).toBe(404);
     });
   });
 
@@ -617,7 +617,7 @@ describe('logging contract validation', () => {
       expect(errorLog).toBeDefined();
 
       const logPayload = errorLog?.args[0] as Record<string, unknown>;
-      expect(logPayload['statusCode']).toBe(429);
+      expect(logPayload['outcomeCode']).toBe(429);
       expect(logPayload['requestId']).toBeDefined();
       expect(logPayload['method']).toBe('GET');
       expect(logPayload['url']).toBe('/api/v1/');

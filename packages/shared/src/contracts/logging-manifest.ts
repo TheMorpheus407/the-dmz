@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 export const logEventCategorySchema = z.enum([
-  'request_received',
-  'request_completed',
+  'operation_started',
+  'operation_completed',
   'auth_success',
   'auth_failure',
   'tenant_context_failure',
@@ -13,9 +13,9 @@ export const logEventCategorySchema = z.enum([
 export type LogEventCategory = z.infer<typeof logEventCategorySchema>;
 
 export const logLevelSemanticsSchema = z.object({
-  info: z.array(z.number()).describe('Status codes that should log at info level'),
-  warn: z.array(z.number()).describe('Status codes that should log at warn level'),
-  error: z.array(z.number()).describe('Status codes that should log at error level'),
+  info: z.array(z.number()).describe('Outcome codes that should log at info level'),
+  warn: z.array(z.number()).describe('Outcome codes that should log at warn level'),
+  error: z.array(z.number()).describe('Outcome codes that should log at error level'),
 });
 
 export type LogLevelSemantics = z.infer<typeof logLevelSemanticsSchema>;
@@ -81,10 +81,10 @@ export const LOG_REDACTION_KEYS = [
 export type LogRedactionKey = (typeof LOG_REDACTION_KEYS)[number];
 
 export const m1LoggingContractManifest: LoggingContractManifest = {
-  version: '1.0.0',
+  version: '1.1.0',
   eventCategories: [
-    'request_received',
-    'request_completed',
+    'operation_started',
+    'operation_completed',
     'auth_success',
     'auth_failure',
     'tenant_context_failure',
@@ -94,50 +94,30 @@ export const m1LoggingContractManifest: LoggingContractManifest = {
   requiredFields: [
     {
       field: 'requestId',
-      description: 'Unique identifier for the request',
+      description: 'Unique identifier for the operation',
       requiredForEvents: [
-        'request_received',
-        'request_completed',
+        'operation_started',
+        'operation_completed',
         'auth_failure',
         'tenant_context_failure',
       ],
     },
     {
-      field: 'method',
-      description: 'HTTP method',
-      requiredForEvents: ['request_received', 'request_completed'],
-    },
-    {
-      field: 'url',
-      description: 'Request URL or route',
-      requiredForEvents: ['request_received', 'request_completed'],
-    },
-    {
-      field: 'statusCode',
-      description: 'HTTP response status code',
-      requiredForEvents: ['request_completed'],
+      field: 'outcomeCode',
+      description: 'Operation outcome code (protocol-specific)',
+      requiredForEvents: ['operation_completed'],
     },
     {
       field: 'durationMs',
-      description: 'Request duration in milliseconds',
-      requiredForEvents: ['request_completed'],
-    },
-    {
-      field: 'ip',
-      description: 'Client IP address',
-      requiredForEvents: ['request_received', 'request_completed'],
-    },
-    {
-      field: 'userAgent',
-      description: 'Client user agent',
-      requiredForEvents: ['request_received', 'request_completed'],
+      description: 'Operation duration in milliseconds',
+      requiredForEvents: ['operation_completed'],
     },
     {
       field: 'tenantId',
       description: 'Tenant identifier (when available)',
       requiredForEvents: [
-        'request_received',
-        'request_completed',
+        'operation_started',
+        'operation_completed',
         'auth_success',
         'auth_failure',
         'tenant_context_failure',
@@ -146,23 +126,28 @@ export const m1LoggingContractManifest: LoggingContractManifest = {
     {
       field: 'userId',
       description: 'User identifier (when available)',
-      requiredForEvents: ['request_received', 'request_completed', 'auth_success', 'auth_failure'],
+      requiredForEvents: [
+        'operation_started',
+        'operation_completed',
+        'auth_success',
+        'auth_failure',
+      ],
     },
     {
       field: 'service',
       description: 'Service metadata (name, version, environment)',
-      requiredForEvents: ['request_received', 'request_completed'],
+      requiredForEvents: ['operation_started', 'operation_completed'],
     },
     {
       field: 'event',
       description: 'Event category/type',
-      requiredForEvents: ['request_received', 'request_completed'],
+      requiredForEvents: ['operation_started', 'operation_completed'],
     },
   ],
   levelSemantics: {
-    info: [200, 201, 204],
-    warn: [400, 401, 403, 404, 409, 422, 429],
-    error: [500, 502, 503, 504],
+    info: [],
+    warn: [],
+    error: [],
   },
   redactionPaths: [
     {
@@ -245,24 +230,12 @@ export const m1LoggingContractManifest: LoggingContractManifest = {
 
 export type M1LoggingContractManifest = typeof m1LoggingContractManifest;
 
-export const requiredRequestLogFields = [
-  'requestId',
-  'method',
-  'url',
-  'ip',
-  'userAgent',
-  'service',
-  'event',
-] as const;
+export const requiredOperationLogFields = ['requestId', 'service', 'event'] as const;
 
-export const requiredResponseLogFields = [
+export const requiredCompletedLogFields = [
   'requestId',
-  'method',
-  'url',
-  'statusCode',
+  'outcomeCode',
   'durationMs',
-  'ip',
-  'userAgent',
   'service',
   'event',
 ] as const;

@@ -2,7 +2,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { m1LoggingContractManifest, requiredRequestLogFields } from '@the-dmz/shared/contracts';
+import { m1LoggingContractManifest, requiredOperationLogFields } from '@the-dmz/shared/contracts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -27,7 +27,7 @@ function checkRequestLoggerExists(): string[] {
 
   const content = readFileSync(REQUEST_LOGGER_FILE, 'utf-8');
 
-  const requiredEvents = ['request_received', 'request_completed'];
+  const requiredEvents = ['operation_started', 'operation_completed'];
   for (const event of requiredEvents) {
     const eventRegex = new RegExp(`['"]${event}['"]`);
     if (!eventRegex.test(content)) {
@@ -35,7 +35,7 @@ function checkRequestLoggerExists(): string[] {
     }
   }
 
-  const requiredFields = [...requiredRequestLogFields];
+  const requiredFields = [...requiredOperationLogFields];
   for (const field of requiredFields) {
     const fieldRegex = new RegExp(`\\b${field}\\b`);
     if (!fieldRegex.test(content)) {
@@ -46,7 +46,7 @@ function checkRequestLoggerExists(): string[] {
   return errors;
 }
 
-function checkLevelSemantics(): string[] {
+function checkHttpLevelSemantics(): string[] {
   const errors: string[] = [];
 
   if (!existsSync(REQUEST_LOGGER_FILE)) {
@@ -56,14 +56,14 @@ function checkLevelSemantics(): string[] {
 
   const content = readFileSync(REQUEST_LOGGER_FILE, 'utf-8');
 
-  const warnCheckRegex = /statusCode\s*>=\s*400/;
+  const warnCheckRegex = /outcomeCode\s*>=\s*400/;
   if (!warnCheckRegex.test(content)) {
-    errors.push('Missing 4xx -> warn level mapping');
+    errors.push('Missing 4xx -> warn level mapping (using outcomeCode)');
   }
 
-  const errorCheckRegex = /statusCode\s*>=\s*500/;
+  const errorCheckRegex = /outcomeCode\s*>=\s*500/;
   if (!errorCheckRegex.test(content)) {
-    errors.push('Missing 5xx -> error level mapping');
+    errors.push('Missing 5xx -> error level mapping (using outcomeCode)');
   }
 
   return errors;
@@ -179,15 +179,15 @@ async function runLoggingContractCheck(): Promise<void> {
   }
   console.log('');
 
-  console.log('[3/6] Checking log level semantics...');
-  const levelErrors = checkLevelSemantics();
+  console.log('[3/6] Checking HTTP log level semantics...');
+  const levelErrors = checkHttpLevelSemantics();
   allErrors.push(...levelErrors);
   if (levelErrors.length > 0) {
     for (const error of levelErrors) {
       console.log(`  ❌ ${error}`);
     }
   } else {
-    console.log('  ✅ Log level semantics match contract');
+    console.log('  ✅ HTTP log level semantics implemented correctly');
   }
   console.log('');
 
