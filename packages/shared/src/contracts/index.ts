@@ -249,8 +249,6 @@ export {
 } from './mfa-policy.js';
 
 export {
-  m1IdempotencyPolicyManifest,
-  idempotencyPolicyManifestSchema,
   idempotencyOutcomeSchema,
   idempotencyKeyFormatSchema,
   idempotencyKeyConstraintsSchema,
@@ -262,14 +260,11 @@ export {
   IdempotencyOutcome,
   validateIdempotencyKey,
   generateFingerprint,
-  isIdempotencyRequiredForMethod,
   type IdempotencyKeyConstraints,
   type IdempotencyRecord,
   type IdempotencyReplayResponse,
   type IdempotencyErrorResponse,
   type IdempotencyErrorCode,
-  type IdempotencyPolicyManifest,
-  type M1IdempotencyPolicyManifest,
 } from './idempotency-policy.js';
 
 export {

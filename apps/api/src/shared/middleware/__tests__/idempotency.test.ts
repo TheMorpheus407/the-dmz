@@ -1,10 +1,53 @@
-import crypto from 'node:crypto';
-
 import { describe, expect, it } from 'vitest';
+
+import {
+  isIdempotencyEnabledRoute,
+  hashKey,
+  extractTenantId,
+  extractActorId,
+  isIdempotencyRequiredForOperation,
+} from '../idempotency.js';
 
 import type { FastifyRequest } from 'fastify';
 
 describe('Idempotency Middleware', () => {
+  describe('isIdempotencyRequiredForOperation', () => {
+    it('should return true for POST', () => {
+      expect(isIdempotencyRequiredForOperation('POST')).toBe(true);
+    });
+
+    it('should return true for PUT', () => {
+      expect(isIdempotencyRequiredForOperation('PUT')).toBe(true);
+    });
+
+    it('should return true for PATCH', () => {
+      expect(isIdempotencyRequiredForOperation('PATCH')).toBe(true);
+    });
+
+    it('should return false for GET', () => {
+      expect(isIdempotencyRequiredForOperation('GET')).toBe(false);
+    });
+
+    it('should return false for DELETE', () => {
+      expect(isIdempotencyRequiredForOperation('DELETE')).toBe(false);
+    });
+
+    it('should return false for HEAD', () => {
+      expect(isIdempotencyRequiredForOperation('HEAD')).toBe(false);
+    });
+
+    it('should return false for OPTIONS', () => {
+      expect(isIdempotencyRequiredForOperation('OPTIONS')).toBe(false);
+    });
+
+    it('should be case insensitive', () => {
+      expect(isIdempotencyRequiredForOperation('post')).toBe(true);
+      expect(isIdempotencyRequiredForOperation('Post')).toBe(true);
+      expect(isIdempotencyRequiredForOperation('put')).toBe(true);
+      expect(isIdempotencyRequiredForOperation('patch')).toBe(true);
+    });
+  });
+
   describe('isIdempotencyEnabledRoute', () => {
     it('should return false for GET requests', () => {
       const mockRequest = {
@@ -63,6 +106,39 @@ describe('Idempotency Middleware', () => {
 
       const result = isIdempotencyEnabledRoute(mockRequest);
       expect(result).toBe(true);
+    });
+
+    it('should return false for DELETE requests', () => {
+      const mockRequest = {
+        method: 'DELETE',
+        routeOptions: { url: '/api/v1/items/123' },
+        url: '/api/v1/items/123',
+      } as unknown as FastifyRequest;
+
+      const result = isIdempotencyEnabledRoute(mockRequest);
+      expect(result).toBe(false);
+    });
+
+    it('should return false for HEAD requests', () => {
+      const mockRequest = {
+        method: 'HEAD',
+        routeOptions: { url: '/api/v1/items/123' },
+        url: '/api/v1/items/123',
+      } as unknown as FastifyRequest;
+
+      const result = isIdempotencyEnabledRoute(mockRequest);
+      expect(result).toBe(false);
+    });
+
+    it('should return false for OPTIONS requests', () => {
+      const mockRequest = {
+        method: 'OPTIONS',
+        routeOptions: { url: '/api/v1/items/123' },
+        url: '/api/v1/items/123',
+      } as unknown as FastifyRequest;
+
+      const result = isIdempotencyEnabledRoute(mockRequest);
+      expect(result).toBe(false);
     });
   });
 
@@ -129,38 +205,3 @@ describe('Idempotency Middleware', () => {
     });
   });
 });
-
-function isIdempotencyEnabledRoute(request: FastifyRequest): boolean {
-  const method = request.method.toUpperCase();
-  const route = request.routeOptions?.url || request.url;
-
-  const requiredForMethods = ['POST', 'PUT', 'PATCH'];
-  if (!requiredForMethods.includes(method)) {
-    return false;
-  }
-
-  const exemptPaths = ['/health', '/ready', '/auth/refresh', '/auth/login'];
-  if (exemptPaths.some((path) => route.startsWith(path))) {
-    return false;
-  }
-
-  return true;
-}
-
-function hashKey(key: string): string {
-  return crypto.createHash('sha256').update(key).digest('hex').substring(0, 64);
-}
-
-function extractTenantId(request: FastifyRequest): string | undefined {
-  if (request.tenantContext?.tenantId) {
-    return request.tenantContext.tenantId;
-  }
-  return undefined;
-}
-
-function extractActorId(request: FastifyRequest): string | null {
-  if (request.user?.userId) {
-    return request.user.userId;
-  }
-  return null;
-}

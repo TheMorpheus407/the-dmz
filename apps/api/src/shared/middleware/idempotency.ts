@@ -5,10 +5,17 @@ import { eq, and } from 'drizzle-orm';
 import {
   IDEMPOTENCY_KEY_FORMAT,
   IdempotencyOutcome,
-  isIdempotencyRequiredForMethod,
   validateIdempotencyKey,
   generateFingerprint,
 } from '@the-dmz/shared';
+
+const IDEMPOTENCY_REQUIRED_OPERATIONS = ['POST', 'PUT', 'PATCH'];
+
+const isIdempotencyRequiredForOperation = (operation: string): boolean => {
+  return IDEMPOTENCY_REQUIRED_OPERATIONS.map((m) => m.toUpperCase()).includes(
+    operation.toUpperCase(),
+  );
+};
 
 import { getDatabaseClient, type DB } from '../database/connection.js';
 import { idempotencyRecords } from '../../db/schema/idempotency.js';
@@ -45,7 +52,7 @@ const isIdempotencyEnabledRoute = (request: FastifyRequest): boolean => {
   const method = request.method.toUpperCase();
   const route = request.routeOptions?.url || request.url;
 
-  if (!isIdempotencyRequiredForMethod(method)) {
+  if (!isIdempotencyRequiredForOperation(method)) {
     return false;
   }
 
@@ -83,7 +90,7 @@ const createInProgressRecord = async (
   tenantId: string,
   actorId: string | null,
   route: string,
-  method: string,
+  operation: string,
   keyHash: string,
   keyValue: string,
   fingerprint: string,
@@ -96,12 +103,11 @@ const createInProgressRecord = async (
       tenantId,
       actorId,
       route,
-      method,
+      operation,
       keyHash,
       keyValue,
       fingerprint,
       status: IdempotencyOutcome.IN_PROGRESS,
-      responseStatus: null,
       responseBody: null,
       expiresAt,
     })
@@ -129,14 +135,12 @@ const updateRecordWithResponse = async (
   db: DB,
   recordId: string,
   status: IdempotencyOutcome,
-  responseStatus: number,
   responseBody: unknown,
 ): Promise<void> => {
   await db
     .update(idempotencyRecords)
     .set({
       status,
-      responseStatus,
       responseBody: responseBody ? JSON.stringify(responseBody) : null,
     })
     .where(eq(idempotencyRecords.id, recordId));
@@ -145,10 +149,6 @@ const updateRecordWithResponse = async (
 const sendReplayResponse = (reply: FastifyReply, record: IdempotencyRecord): void => {
   reply.header(REPLAY_HEADER, 'true');
   reply.header(OUTCOME_HEADER, IdempotencyOutcome.REPLAY);
-
-  if (record.responseStatus) {
-    reply.status(record.responseStatus);
-  }
 
   if (record.responseBody) {
     try {
@@ -273,32 +273,20 @@ declare module 'fastify' {
 
 export const idempotency = createIdempotencyMiddleware();
 
+export { isIdempotencyEnabledRoute, hashKey, extractTenantId, extractActorId };
+
 export const completeIdempotencyRecord = async (
   recordId: string,
-  responseStatus: number,
   responseBody: unknown,
 ): Promise<void> => {
   const db = getDatabaseClient();
-  await updateRecordWithResponse(
-    db,
-    recordId,
-    IdempotencyOutcome.REPLAY,
-    responseStatus,
-    responseBody,
-  );
+  await updateRecordWithResponse(db, recordId, IdempotencyOutcome.REPLAY, responseBody);
 };
 
 export const failIdempotencyRecord = async (
   recordId: string,
-  responseStatus: number,
   responseBody: unknown,
 ): Promise<void> => {
   const db = getDatabaseClient();
-  await updateRecordWithResponse(
-    db,
-    recordId,
-    IdempotencyOutcome.CONFLICT,
-    responseStatus,
-    responseBody,
-  );
+  await updateRecordWithResponse(db, recordId, IdempotencyOutcome.CONFLICT, responseBody);
 };
