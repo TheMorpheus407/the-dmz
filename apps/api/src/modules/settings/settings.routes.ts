@@ -10,6 +10,7 @@ import {
   requestAccountDeletion,
   requestDataExport,
 } from './settings.service.js';
+import { SettingsRepository } from './settings.repository.js';
 
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance } from 'fastify';
@@ -75,7 +76,8 @@ export async function settingsRoutes(fastify: FastifyInstance, config: AppConfig
       const user = request.user as AuthenticatedUser;
       const { category } = request.params;
 
-      const settings = await getUserSettings(config, user.userId, user.tenantId);
+      const repository = SettingsRepository.create(config);
+      const settings = await getUserSettings(repository, user.userId, user.tenantId);
 
       if (category === 'all') {
         return settings;
@@ -126,7 +128,14 @@ export async function settingsRoutes(fastify: FastifyInstance, config: AppConfig
       const { category } = request.params;
       const body = request.body as Record<string, unknown>;
 
-      const settings = await updateUserSettings(config, user.userId, user.tenantId, category, body);
+      const repository = SettingsRepository.create(config);
+      const settings = await updateUserSettings(
+        repository,
+        user.userId,
+        user.tenantId,
+        category,
+        body,
+      );
 
       return {
         success: true,
@@ -157,7 +166,8 @@ export async function settingsRoutes(fastify: FastifyInstance, config: AppConfig
     },
     async (request) => {
       const user = request.user as AuthenticatedUser;
-      const exportedData = await exportUserSettings(config, user.userId, user.tenantId);
+      const repository = SettingsRepository.create(config);
+      const exportedData = await exportUserSettings(repository, user.userId, user.tenantId);
       return exportedData;
     },
   );
@@ -185,7 +195,7 @@ export async function settingsRoutes(fastify: FastifyInstance, config: AppConfig
     },
     async (request) => {
       const user = request.user as AuthenticatedUser;
-      const result = await requestDataExport(config, user.userId, user.tenantId);
+      const result = await requestDataExport(user.userId, user.tenantId);
       return result;
     },
   );
@@ -213,7 +223,7 @@ export async function settingsRoutes(fastify: FastifyInstance, config: AppConfig
     },
     async (request) => {
       const user = request.user as AuthenticatedUser;
-      const result = await requestAccountDeletion(config, user.userId, user.tenantId);
+      const result = await requestAccountDeletion(user.userId, user.tenantId);
       return result;
     },
   );

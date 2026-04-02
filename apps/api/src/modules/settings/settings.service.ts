@@ -1,7 +1,5 @@
 import { randomUUID } from 'crypto';
 
-import { eq, and } from 'drizzle-orm';
-
 import {
   themePreferencesSchema,
   accessibilityPreferencesSchema,
@@ -10,11 +8,9 @@ import {
   accountPreferencesSchema,
 } from '@the-dmz/shared';
 
-import { getDatabaseClient } from '../../shared/database/connection.js';
-import { userProfiles } from '../../db/schema/auth/user-profiles.js';
 import { validationFailed } from '../../shared/middleware/error-handler.js';
 
-import type { AppConfig } from '../../config.js';
+import type { SettingsRepository } from './settings.repository.js';
 
 export interface DisplaySettings {
   theme?: string;
@@ -182,22 +178,18 @@ export const defaultSettings: UserAllSettings = {
 };
 
 export async function getUserSettings(
-  config: AppConfig,
+  repository: SettingsRepository,
   userId: string,
   tenantId: string,
 ): Promise<UserAllSettings> {
-  const db = getDatabaseClient(config);
-
-  const profile = await db.query.userProfiles.findFirst({
-    where: and(eq(userProfiles.userId, userId), eq(userProfiles.tenantId, tenantId)),
-  });
+  const profile = await repository.findUserProfile(userId, tenantId);
 
   if (!profile) {
     return defaultSettings;
   }
 
-  const preferences = (profile.preferences as Record<string, unknown>) || {};
-  const accessibilitySettings = (profile.accessibilitySettings as Record<string, unknown>) || {};
+  const preferences = profile.preferences || {};
+  const accessibilitySettings = profile.accessibilitySettings || {};
 
   return {
     display: {
@@ -225,7 +217,7 @@ export async function getUserSettings(
 }
 
 export async function updateUserSettings(
-  config: AppConfig,
+  repository: SettingsRepository,
   userId: string,
   tenantId: string,
   category: string,
@@ -233,15 +225,10 @@ export async function updateUserSettings(
 ): Promise<UserAllSettings> {
   const validatedSettings = validateSettingsInput(category, settings);
 
-  const db = getDatabaseClient(config);
+  const profile = await repository.findUserProfile(userId, tenantId);
 
-  const profile = await db.query.userProfiles.findFirst({
-    where: and(eq(userProfiles.userId, userId), eq(userProfiles.tenantId, tenantId)),
-  });
-
-  const existingPreferences = (profile?.preferences as Record<string, unknown>) || {};
-  const existingAccessibilitySettings =
-    (profile?.accessibilitySettings as Record<string, unknown>) || {};
+  const existingPreferences = profile?.preferences || {};
+  const existingAccessibilitySettings = profile?.accessibilitySettings || {};
 
   let updatedPreferences: Record<string, unknown>;
   let updatedAccessibilitySettings: Record<string, unknown> = existingAccessibilitySettings;
@@ -262,24 +249,20 @@ export async function updateUserSettings(
     };
   }
 
-  await db
-    .update(userProfiles)
-    .set({
-      preferences: updatedPreferences,
-      accessibilitySettings: updatedAccessibilitySettings,
-      updatedAt: new Date(),
-    })
-    .where(and(eq(userProfiles.userId, userId), eq(userProfiles.tenantId, tenantId)));
+  await repository.updateUserSettings(userId, tenantId, {
+    preferences: updatedPreferences,
+    accessibilitySettings: updatedAccessibilitySettings,
+  });
 
-  return getUserSettings(config, userId, tenantId);
+  return getUserSettings(repository, userId, tenantId);
 }
 
 export async function exportUserSettings(
-  _config: AppConfig,
+  repository: SettingsRepository,
   userId: string,
   tenantId: string,
 ): Promise<ExportData> {
-  const settings = await getUserSettings(_config, userId, tenantId);
+  const settings = await getUserSettings(repository, userId, tenantId);
   return {
     settings,
     exportedAt: new Date().toISOString(),
@@ -287,7 +270,6 @@ export async function exportUserSettings(
 }
 
 export async function requestDataExport(
-  _config: AppConfig,
   _userId: string,
   _tenantId: string,
 ): Promise<{ success: boolean; requestId: string; message: string }> {
@@ -302,7 +284,6 @@ export async function requestDataExport(
 }
 
 export async function requestAccountDeletion(
-  _config: AppConfig,
   _userId: string,
   _tenantId: string,
 ): Promise<{ success: boolean; requestId: string; message: string }> {
