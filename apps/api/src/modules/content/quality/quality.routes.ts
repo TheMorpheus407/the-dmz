@@ -1,7 +1,9 @@
-import { authGuard, requirePermission } from '../../../shared/middleware/authorization.js';
-import { tenantContext } from '../../../shared/middleware/tenant-context.js';
-import { tenantStatusGuard } from '../../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
+import {
+  contentReadRoutePreHandlers,
+  contentWriteRoutePreHandlers,
+  tenantInactiveOrForbiddenResponseJsonSchema,
+} from '../../../shared/routes/content-routes-config.js';
 import { scoreEmail, scoreBatch } from '../quality-scorer/index.js';
 
 import * as qualityService from './quality.service.js';
@@ -9,19 +11,6 @@ import * as qualityService from './quality.service.js';
 // eslint-disable-next-line import-x/no-restricted-paths
 import type { AuthenticatedUser } from '../../game/session/game-session.service.js';
 import type { FastifyInstance } from 'fastify';
-
-const protectedRoutePreHandlers = [authGuard, tenantContext, tenantStatusGuard];
-const contentReadRoutePreHandlers = [
-  ...protectedRoutePreHandlers,
-  requirePermission('admin', 'read'),
-];
-const contentWriteRoutePreHandlers = [
-  ...protectedRoutePreHandlers,
-  requirePermission('admin', 'write'),
-];
-const tenantInactiveOrForbiddenResponseJsonSchema = {
-  oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
-} as const;
 
 export const registerQualityRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const config = fastify.config;

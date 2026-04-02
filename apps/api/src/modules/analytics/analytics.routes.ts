@@ -1,9 +1,7 @@
 import { z } from 'zod';
 
-import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
-import { tenantContext } from '../../shared/middleware/tenant-context.js';
-import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
+import { analyticsReadRoutePreHandlers } from '../../shared/routes/content-routes-config.js';
 
 import { PhishingMetricsService } from './phishing-metrics.service.js';
 import { DecisionQualityService } from './decision-quality.service.js';
@@ -11,12 +9,6 @@ import { metricsCache } from './metrics-cache.js';
 
 import type { FastifyPluginAsync } from 'fastify';
 import type { AuthenticatedUser } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
-
-const protectedRoutePreHandlers = [authGuard, tenantContext, tenantStatusGuard];
-const analyticsReadRoutePreHandlers = [
-  ...protectedRoutePreHandlers,
-  requirePermission('analytics', 'read'),
-];
 
 const metricsResponseSchema = z.object({
   eventsIngested: z.number(),

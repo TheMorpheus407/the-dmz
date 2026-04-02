@@ -1,7 +1,8 @@
-import { authGuard, requirePermission } from '../../../shared/middleware/authorization.js';
-import { tenantContext } from '../../../shared/middleware/tenant-context.js';
-import { tenantStatusGuard } from '../../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
+import {
+  contentReadRoutePreHandlers,
+  tenantInactiveOrForbiddenResponseJsonSchema,
+} from '../../../shared/routes/content-routes-config.js';
 import * as emailTemplatesService from '../email-templates/email-templates.service.js';
 
 import * as scenariosService from './scenarios.service.js';
@@ -9,15 +10,6 @@ import * as scenariosService from './scenarios.service.js';
 // eslint-disable-next-line import-x/no-restricted-paths
 import type { AuthenticatedUser } from '../../game/session/game-session.service.js';
 import type { FastifyInstance } from 'fastify';
-
-const protectedRoutePreHandlers = [authGuard, tenantContext, tenantStatusGuard];
-const contentReadRoutePreHandlers = [
-  ...protectedRoutePreHandlers,
-  requirePermission('admin', 'read'),
-];
-const tenantInactiveOrForbiddenResponseJsonSchema = {
-  oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
-} as const;
 
 export const registerScenarioRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const config = fastify.config;

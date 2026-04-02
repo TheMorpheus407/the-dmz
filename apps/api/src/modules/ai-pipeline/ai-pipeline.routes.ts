@@ -1,8 +1,10 @@
-import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { notFound } from '../../shared/middleware/error-handler.js';
-import { tenantContext } from '../../shared/middleware/tenant-context.js';
-import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
+import {
+  adminReadRoutePreHandlers,
+  adminWriteRoutePreHandlers,
+  tenantInactiveOrForbiddenResponseJsonSchema,
+} from '../../shared/routes/content-routes-config.js';
 
 import {
   fictionalFactions,
@@ -20,18 +22,6 @@ type RouteUser = {
 
 const emailGenerationCategories = ['email_phishing', 'email_legitimate'] as const;
 const threatLevels = ['LOW', 'GUARDED', 'ELEVATED', 'HIGH', 'SEVERE'] as const;
-const protectedRoutePreHandlers = [authGuard, tenantContext, tenantStatusGuard];
-const adminReadRoutePreHandlers = [
-  ...protectedRoutePreHandlers,
-  requirePermission('admin', 'read'),
-];
-const adminWriteRoutePreHandlers = [
-  ...protectedRoutePreHandlers,
-  requirePermission('admin', 'write'),
-];
-const tenantInactiveOrForbiddenResponseJsonSchema = {
-  oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
-} as const;
 
 const asNullable = <T extends Record<string, unknown>>(schema: T) =>
   ({
