@@ -1,5 +1,7 @@
 import { eq, and, isNotNull, sql } from 'drizzle-orm';
 
+import type { GameThreatTier } from '@the-dmz/shared/game';
+
 import { type DB } from '../../../shared/database/connection.js';
 import { gameSessions } from '../../../db/schema/game/index.js';
 
@@ -12,7 +14,7 @@ export type GameSessionData = {
   day?: number;
   funds?: number;
   clientCount?: number;
-  threatLevel?: 'low' | 'medium' | 'high';
+  threatLevel?: GameThreatTier;
   defenseLevel?: number;
   serverLevel?: number;
   networkLevel?: number;

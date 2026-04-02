@@ -33,7 +33,7 @@ export const gameSessions = pgTable(
     playerLevel: integer('player_level').notNull().default(1),
     playerXP: integer('player_xp').notNull().default(0),
     clientCount: integer('client_count').notNull().default(5),
-    threatLevel: varchar('threat_level', { length: 16 }).notNull().default('low'),
+    threatLevel: varchar('threat_level', { length: 20 }).notNull().default('low'),
     defenseLevel: integer('defense_level').notNull().default(1),
     serverLevel: integer('server_level').notNull().default(1),
     networkLevel: integer('network_level').notNull().default(1),

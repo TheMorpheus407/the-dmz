@@ -80,8 +80,10 @@ export interface ConsequencePayload {
   riskChange: number;
 }
 
+import type { GameThreatTier } from '@the-dmz/shared/game';
+
 export interface ThreatPayload {
-  threatLevel: 'low' | 'medium' | 'high';
+  threatLevel: GameThreatTier;
   attacksGenerated: number;
   incidentsTriggered: number;
 }
@@ -142,13 +144,16 @@ export interface DialogCompletedPayload {
   totalChoices: number;
 }
 
-export function createGameEvent(
-  type: GameEventType,
-  payload: Record<string, unknown>,
-  sessionId?: string,
-  day?: number,
-  phase?: string,
-): GameEvent {
+interface CreateGameEventOptions {
+  type: GameEventType;
+  payload: Record<string, unknown>;
+  sessionId?: string;
+  day?: number;
+  phase?: string;
+}
+
+export function createGameEvent(options: CreateGameEventOptions): GameEvent {
+  const { type, payload, sessionId, day, phase } = options;
   const event: GameEvent = {
     id: crypto.randomUUID(),
     type,

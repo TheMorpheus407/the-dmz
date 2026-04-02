@@ -1,6 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 
 import type { GameSessionBootstrap } from '@the-dmz/shared/schemas';
+import type { GameThreatTier } from '@the-dmz/shared/game';
 import { bootstrapGameSession, getGameSession } from '$lib/api/game';
 import type { CategorizedApiError } from '$lib/api/types';
 import type { GamePhase } from '$lib/game/state/state-machine';
@@ -24,7 +25,7 @@ export interface FacilityState {
 }
 
 export interface ThreatState {
-  level: 'low' | 'medium' | 'high';
+  level: GameThreatTier;
   activeIncidents: number;
 }
 

@@ -1,4 +1,4 @@
-import { generateSeed } from '@the-dmz/shared/game';
+import { generateSeed, type GameThreatTier } from '@the-dmz/shared/game';
 
 import { getDatabaseClient } from '../../../shared/database/connection.js';
 import { recordGameSession } from '../../../shared/metrics/hooks.js';
@@ -27,7 +27,7 @@ export type GameSessionBootstrapData = {
   day: number;
   funds: number;
   clientCount: number;
-  threatLevel: 'low' | 'medium' | 'high';
+  threatLevel: GameThreatTier;
   facilityLoadout: {
     defenseLevel: number;
     serverLevel: number;
@@ -113,7 +113,7 @@ function mapToBootstrapData(session: GameSession): GameSessionBootstrapData {
     day: session.day,
     funds: session.funds,
     clientCount: session.clientCount,
-    threatLevel: session.threatLevel as 'low' | 'medium' | 'high',
+    threatLevel: session.threatLevel as GameThreatTier,
     facilityLoadout: {
       defenseLevel: session.defenseLevel,
       serverLevel: session.serverLevel,

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { GAME_THREAT_TIERS } from '../types/game-engine.js';
 import { ErrorCodes } from '../constants/error-codes.js';
 
 export const gameSessionBootstrapSchema = z
@@ -11,7 +12,15 @@ export const gameSessionBootstrapSchema = z
     day: z.number().int().min(1).default(1),
     funds: z.number().int().min(0).default(1000),
     clientCount: z.number().int().min(0).default(5),
-    threatLevel: z.enum(['low', 'medium', 'high']).default('low'),
+    threatLevel: z
+      .enum([
+        GAME_THREAT_TIERS.LOW,
+        GAME_THREAT_TIERS.GUARDED,
+        GAME_THREAT_TIERS.ELEVATED,
+        GAME_THREAT_TIERS.HIGH,
+        GAME_THREAT_TIERS.SEVERE,
+      ])
+      .default('low'),
     facilityLoadout: z
       .object({
         defenseLevel: z.number().int().min(1).max(10).default(1),

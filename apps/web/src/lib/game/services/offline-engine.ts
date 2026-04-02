@@ -1,4 +1,4 @@
-import type { EmailDifficulty } from '@the-dmz/shared/game';
+import { GAME_THREAT_TIERS, type EmailDifficulty, type GameThreatTier } from '@the-dmz/shared/game';
 import { generateId } from '$lib/utils/id';
 import { getLatestSessionSnapshot, saveSessionSnapshot } from '$lib/storage/session';
 import { saveEvent } from '$lib/storage/event-queue';
@@ -24,7 +24,7 @@ export interface OfflineGameState {
     clients: number;
   };
   threat: {
-    level: 'low' | 'medium' | 'high';
+    level: GameThreatTier;
     activeIncidents: number;
   };
   inbox: OfflineEmail[];
@@ -86,7 +86,7 @@ export class OfflineGameEngine {
         clients: 5,
       },
       threat: {
-        level: 'low',
+        level: GAME_THREAT_TIERS.LOW,
         activeIncidents: 0,
       },
       inbox: [],
@@ -151,7 +151,16 @@ export class OfflineGameEngine {
     }
 
     const groundTruth = email.groundTruth;
-    const consequenceKey = decisionType as keyof typeof groundTruth.consequences;
+    const consequenceKeyMap: Record<
+      'approve' | 'deny' | 'flag' | 'request_verification',
+      keyof typeof groundTruth.consequences
+    > = {
+      approve: 'approved',
+      deny: 'denied',
+      flag: 'flagged',
+      request_verification: 'deferred',
+    };
+    const consequenceKey = consequenceKeyMap[decisionType];
     const consequences = groundTruth.consequences[consequenceKey];
 
     this.state.player.trust += consequences.trustImpact;
@@ -162,13 +171,7 @@ export class OfflineGameEngine {
     this.state.player.funds = Math.max(0, this.state.player.funds);
     this.state.threat.activeIncidents = Math.max(0, this.state.threat.activeIncidents);
 
-    if (this.state.threat.activeIncidents > 5) {
-      this.state.threat.level = 'high';
-    } else if (this.state.threat.activeIncidents > 2) {
-      this.state.threat.level = 'medium';
-    } else {
-      this.state.threat.level = 'low';
-    }
+    this.state.threat.level = this.#deriveThreatLevel(this.state.threat.activeIncidents);
 
     const decision = {
       id: generateId(),
@@ -261,6 +264,14 @@ export class OfflineGameEngine {
       this.state.player.intelFragments * 5 -
       this.state.threat.activeIncidents * 10
     );
+  }
+
+  #deriveThreatLevel(activeIncidents: number): GameThreatTier {
+    if (activeIncidents > 6) return GAME_THREAT_TIERS.SEVERE;
+    if (activeIncidents > 4) return GAME_THREAT_TIERS.HIGH;
+    if (activeIncidents > 2) return GAME_THREAT_TIERS.ELEVATED;
+    if (activeIncidents > 1) return GAME_THREAT_TIERS.GUARDED;
+    return GAME_THREAT_TIERS.LOW;
   }
 }
 

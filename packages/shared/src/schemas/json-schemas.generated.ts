@@ -3866,7 +3866,7 @@ export const gameSessionBootstrapJsonSchema = {
     },
     threatLevel: {
       type: 'string',
-      enum: ['low', 'medium', 'high'],
+      enum: ['low', 'guarded', 'elevated', 'high', 'severe'],
       default: 'low',
     },
     facilityLoadout: {
@@ -3951,7 +3951,7 @@ export const gameSessionBootstrapResponseJsonSchema = {
         },
         threatLevel: {
           type: 'string',
-          enum: ['low', 'medium', 'high'],
+          enum: ['low', 'guarded', 'elevated', 'high', 'severe'],
           default: 'low',
         },
         facilityLoadout: {
