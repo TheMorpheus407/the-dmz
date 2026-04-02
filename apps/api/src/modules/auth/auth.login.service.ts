@@ -1,15 +1,14 @@
 import { randomUUID } from 'crypto';
 
-import {
-  resolveTenantSessionPolicy,
-  evaluateConcurrentSessions,
-  ConcurrentSessionStrategy,
-} from '@the-dmz/shared/auth/session-policy.js';
-
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { ALLOWED_TENANT_STATUSES } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
 
+import {
+  resolveTenantSessionPolicy,
+  evaluateConcurrentSessions,
+  ConcurrentSessionStrategy,
+} from './session-policy.service.js';
 import {
   findUserByEmail,
   createSession,

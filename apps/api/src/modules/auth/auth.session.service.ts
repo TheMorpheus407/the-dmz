@@ -1,19 +1,19 @@
 import { randomUUID } from 'crypto';
 
+import type { SessionBindingContext } from '@the-dmz/shared/auth/session-policy.js';
+import { SessionRevocationReason } from '@the-dmz/shared/auth/session-policy.js';
+
+import { getDatabaseClient } from '../../shared/database/connection.js';
+import { ALLOWED_TENANT_STATUSES } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
+import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
+
 import {
   canRefreshSession,
   getSessionPolicyForRole,
   resolveTenantSessionPolicy,
   evaluateSessionTimeouts,
   validateSessionBinding,
-  type SessionBindingContext,
-  SessionRevocationReason,
-} from '@the-dmz/shared/auth/session-policy.js';
-
-import { getDatabaseClient } from '../../shared/database/connection.js';
-import { ALLOWED_TENANT_STATUSES } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
-import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
-
+} from './session-policy.service.js';
 import {
   findSessionByTokenHash,
   findUserById,

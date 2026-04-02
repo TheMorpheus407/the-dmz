@@ -1,8 +1,8 @@
-import { resolveTenantSessionPolicy } from '@the-dmz/shared/auth/session-policy.js';
 import { getTenantRecoveryPolicy, generateResetToken } from '@the-dmz/shared/contracts';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
 
+import { resolveTenantSessionPolicy } from './session-policy.service.js';
 import {
   findValidPasswordResetToken,
   markPasswordResetTokenUsed,

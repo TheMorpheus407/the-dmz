@@ -1,14 +1,12 @@
 import { eq, and, or } from 'drizzle-orm';
 
-import {
-  resolveTenantSessionPolicy,
-  SessionRevocationReason,
-} from '@the-dmz/shared/auth/session-policy.js';
+import { SessionRevocationReason } from '@the-dmz/shared/auth/session-policy.js';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { users } from '../../shared/database/schema/users.js';
 import { sessions as sessionsTable } from '../../db/schema/auth/sessions.js';
 
+import { resolveTenantSessionPolicy } from './session-policy.service.js';
 import {
   findUserByEmail,
   findUserById,
