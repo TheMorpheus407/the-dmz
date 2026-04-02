@@ -25,6 +25,7 @@
     "storybook:build": "storybook build"
   },
   "dependencies": {
+    "@sentry/sveltekit": "^8.0.0",
     "@the-dmz/shared": "workspace:*",
     "idb": "^8.0.0",
     "workbox-cacheable-response": "^7.0.0",

@@ -18,6 +18,7 @@ import { generateId } from './shared/utils/id.js';
 import { resolveRequestId } from './shared/utils/request-id.js';
 import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js';
 import { ssrfProtectionPlugin } from './shared/plugins/ssrf-protection.plugin.js';
+import { sentryPlugin } from './shared/plugins/sentry.plugin.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
 import { healthPlugin } from './modules/health/index.js';
 import { cachePlugin } from './modules/cache/index.js';
@@ -64,6 +65,7 @@ import { deprecationMiddleware } from './shared/middleware/deprecation.js';
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
   eventBus: { plugin: eventBusPlugin },
+  sentry: { plugin: sentryPlugin },
   health: { plugin: healthPlugin },
   cache: { plugin: cachePlugin },
   auth: { plugin: authPlugin, routePrefix: '/auth' },

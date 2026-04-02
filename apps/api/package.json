@@ -50,6 +50,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
+    "@sentry/node": "^8.0.0",
     "fastify-raw-body": "^5.0.0",
     "stripe": "^16.0.0",
     "@fastify/cookie": "^11.0.2",

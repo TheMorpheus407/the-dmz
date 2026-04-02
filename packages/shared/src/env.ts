@@ -105,6 +105,7 @@ export const backendEnvSchema = z
       .min(32, 'XAPI_ENCRYPTION_KEY must be at least 32 characters')
       .optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
+    SENTRY_DSN: z.string().url().optional(),
   })
   .transform((config) => {
     const isProd = config.NODE_ENV === 'production';
@@ -184,6 +185,7 @@ export const frontendEnvSchema = z.object({
   CSP_CONNECT_SRC: z.string().optional().default(''),
   CSP_IMG_SRC: z.string().optional().default(''),
   COEP_POLICY: z.enum(coepPolicyValues).default('require-corp'),
+  PUBLIC_SENTRY_DSN: z.string().url().optional(),
 });
 
 export type FrontendEnv = z.infer<typeof frontendEnvSchema>;

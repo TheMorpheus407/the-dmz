@@ -5,6 +5,7 @@ import {
   ErrorCodeCategory,
   errorCodeMetadata as sharedErrorCodeMetadata,
   JWT_ERROR_CODES,
+  sanitizeContext,
 } from '@the-dmz/shared';
 
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
@@ -500,8 +501,33 @@ const INVALID_JSON_BODY_ERROR_CODE = 'FST_ERR_CTP_INVALID_JSON_BODY';
 const normalizeDetails = (details?: Record<string, unknown>): Record<string, unknown> =>
   details ?? {};
 
+const captureSentryError = async (
+  error: FastifyError,
+  request: FastifyRequest,
+  code: string,
+): Promise<void> => {
+  try {
+    const Sentry = await import('@sentry/node');
+    const sentry = Sentry.default ?? Sentry;
+
+    const context = sanitizeContext({
+      requestId: request.id,
+      code,
+      tenantId: request.tenantContext?.tenantId,
+      userId: request.tenantContext?.userId,
+      method: request.method,
+      url: request.url,
+      statusCode: error.statusCode ?? 500,
+    });
+
+    sentry.captureException(error, { extra: context });
+  } catch {
+    // Sentry capture failed, continue without error tracking
+  }
+};
+
 export const createErrorHandler = () =>
-  function errorHandler(error: FastifyError, request: FastifyRequest, reply: FastifyReply) {
+  async function errorHandler(error: FastifyError, request: FastifyRequest, reply: FastifyReply) {
     let statusCode = error.statusCode ?? 500;
     let code: string = ErrorCodes.INTERNAL_SERVER_ERROR;
     let message = 'Internal Server Error';
@@ -542,6 +568,7 @@ export const createErrorHandler = () =>
         },
         'request failed',
       );
+      await captureSentryError(error, request, code);
     } else {
       request.log.warn(
         {

@@ -1,5 +1,7 @@
 import { Worker, Queue, type WorkerOptions, type Job } from 'bullmq';
 
+import { sanitizeContext } from '@the-dmz/shared';
+
 import { recordQueueDepth } from '../../../shared/metrics/hooks.js';
 
 import {
@@ -97,10 +99,30 @@ export class EmailGeneratorWorker {
       this.updateQueueDepth().catch(() => {});
     });
 
-    this.worker.on('failed', () => {
+    this.worker.on('failed', (job, error) => {
       this.health.failedCount++;
       this.health.currentJobCount = Math.max(0, this.health.currentJobCount - 1);
       this.updateQueueDepth().catch(() => {});
+
+      if (error && job) {
+        const captureError = async () => {
+          try {
+            const Sentry = await import('@sentry/node');
+            const sentry = Sentry.default ?? Sentry;
+            const context = sanitizeContext({
+              jobId: job.id,
+              jobName: job.name,
+              queueName: job.queueName,
+              attemptsMade: job.attemptsMade,
+              tenantId: job.data.tenantId,
+            });
+            sentry.captureException(error, { extra: context });
+          } catch {
+            // Sentry capture failed, continue without error tracking
+          }
+        };
+        void captureError();
+      }
     });
 
     this.worker.on('active', () => {
