@@ -46,7 +46,8 @@ export async function handleSSEConnection(
   }
 
   const query = request.query as Record<string, string>;
-  const lastEventId = parseInt(query['lastEventId'] ?? '0', 10);
+  const parsedLastEventId = parseInt(query['lastEventId'] ?? '0', 10);
+  const lastEventId = Number.isNaN(parsedLastEventId) ? 0 : parsedLastEventId;
   sseResponse.sequence = lastEventId;
 
   const initialEvent = createSSEEvent(
