@@ -490,7 +490,7 @@ describe('SCIM lifecycle API', () => {
         },
       });
 
-      expect([200, 500]).toContain(listResponse.statusCode);
+      expect(listResponse.statusCode).toBe(200);
     });
 
     it('rejects quote injection in filter: userName eq "test" extra"', async () => {
@@ -558,7 +558,7 @@ describe('SCIM lifecycle API', () => {
         },
       });
 
-      expect([200, 500]).toContain(listResponse.statusCode);
+      expect(listResponse.statusCode).toBe(200);
     });
 
     it('accepts valid filter: active eq true', async () => {
@@ -570,7 +570,7 @@ describe('SCIM lifecycle API', () => {
         },
       });
 
-      expect([200, 500]).toContain(listResponse.statusCode);
+      expect(listResponse.statusCode).toBe(200);
     });
   });
 });
