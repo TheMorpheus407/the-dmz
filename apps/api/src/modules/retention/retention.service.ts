@@ -1,20 +1,16 @@
-import { and, eq, sql } from 'drizzle-orm';
-
-import { loadConfig, type AppConfig } from '../../config.js';
+import { type AppConfig, loadConfig } from '../../config.js';
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import {
-  retentionPolicies,
-  retentionJobLog,
-  type RetentionPolicy,
-  type NewRetentionPolicy,
-  type RetentionJobLog,
   dataCategories,
   DEFAULT_RETENTION_DAYS,
   MIN_AUDIT_RETENTION_DAYS,
   type DataCategory,
   type ActionOnExpiry,
+  type RetentionPolicy,
+  type RetentionJobLog,
 } from '../../db/schema/retention/index.js';
 
+import { RetentionRepository } from './retention.repository.js';
 import {
   type CreateRetentionPolicyInput,
   type UpdateRetentionPolicyInput,
@@ -37,19 +33,17 @@ export async function createRetentionPolicy(
   config: AppConfig = loadConfig(),
 ): Promise<RetentionPolicy> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
   const validatedDays = validateRetentionDays(input.dataCategory, input.retentionDays);
 
-  const [policy] = await db
-    .insert(retentionPolicies)
-    .values({
-      tenantId,
-      dataCategory: input.dataCategory,
-      retentionDays: validatedDays,
-      actionOnExpiry: input.actionOnExpiry,
-      createdBy: createdBy ?? null,
-    })
-    .returning();
+  const policy = await repository.createPolicy({
+    tenantId,
+    dataCategory: input.dataCategory,
+    retentionDays: validatedDays,
+    actionOnExpiry: input.actionOnExpiry,
+    createdBy: createdBy ?? null,
+  });
 
   if (!policy) {
     throw new Error('Failed to create retention policy');
@@ -64,18 +58,9 @@ export async function getRetentionPolicy(
   config: AppConfig = loadConfig(),
 ): Promise<RetentionPolicy | null> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
-  const [policy] = await db
-    .select()
-    .from(retentionPolicies)
-    .where(
-      and(
-        eq(retentionPolicies.tenantId, tenantId),
-        eq(retentionPolicies.dataCategory, dataCategory),
-      ),
-    )
-    .limit(1);
-
+  const policy = await repository.findPolicy({ tenantId, dataCategory });
   return policy ?? null;
 }
 
@@ -84,8 +69,9 @@ export async function listRetentionPolicies(
   config: AppConfig = loadConfig(),
 ): Promise<RetentionPolicy[]> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
-  return db.select().from(retentionPolicies).where(eq(retentionPolicies.tenantId, tenantId));
+  return repository.listPolicies({ tenantId });
 }
 
 export async function updateRetentionPolicy(
@@ -95,13 +81,21 @@ export async function updateRetentionPolicy(
   config: AppConfig = loadConfig(),
 ): Promise<RetentionPolicy | null> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
-  const existing = await getRetentionPolicy(tenantId, dataCategory, config);
+  const existing = await repository.findPolicy({ tenantId, dataCategory });
   if (!existing) {
     return null;
   }
 
-  const updates: Partial<NewRetentionPolicy> = {};
+  const updates: {
+    retentionDays?: number;
+    actionOnExpiry?: string;
+    legalHold?: number;
+    updatedAt: Date;
+  } = {
+    updatedAt: new Date(),
+  };
 
   if (input.retentionDays !== undefined) {
     updates.retentionDays = validateRetentionDays(dataCategory, input.retentionDays);
@@ -115,19 +109,7 @@ export async function updateRetentionPolicy(
     updates.legalHold = input.legalHold ? 1 : 0;
   }
 
-  updates.updatedAt = new Date();
-
-  const [updated] = await db
-    .update(retentionPolicies)
-    .set(updates)
-    .where(
-      and(
-        eq(retentionPolicies.tenantId, tenantId),
-        eq(retentionPolicies.dataCategory, dataCategory),
-      ),
-    )
-    .returning();
-
+  const updated = await repository.updatePolicy({ tenantId, dataCategory }, updates);
   return updated ?? null;
 }
 
@@ -137,18 +119,9 @@ export async function deleteRetentionPolicy(
   config: AppConfig = loadConfig(),
 ): Promise<boolean> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
-  const result = await db
-    .delete(retentionPolicies)
-    .where(
-      and(
-        eq(retentionPolicies.tenantId, tenantId),
-        eq(retentionPolicies.dataCategory, dataCategory),
-      ),
-    )
-    .returning({ id: retentionPolicies.id });
-
-  return result.length > 0;
+  return repository.deletePolicy({ tenantId, dataCategory });
 }
 
 export async function getEffectiveRetentionPolicy(
@@ -157,17 +130,9 @@ export async function getEffectiveRetentionPolicy(
   config: AppConfig = loadConfig(),
 ): Promise<RetentionPolicyWithEffectiveDays> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
-  const [policy] = await db
-    .select()
-    .from(retentionPolicies)
-    .where(
-      and(
-        eq(retentionPolicies.tenantId, tenantId),
-        eq(retentionPolicies.dataCategory, dataCategory),
-      ),
-    )
-    .limit(1);
+  const policy = await repository.findPolicy({ tenantId, dataCategory });
 
   if (policy) {
     return {
@@ -198,19 +163,10 @@ export async function isLegalHoldActive(
   config: AppConfig = loadConfig(),
 ): Promise<boolean> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
-  const [policy] = await db
-    .select({ legalHold: retentionPolicies.legalHold })
-    .from(retentionPolicies)
-    .where(
-      and(
-        eq(retentionPolicies.tenantId, tenantId),
-        eq(retentionPolicies.dataCategory, dataCategory),
-      ),
-    )
-    .limit(1);
-
-  return policy ? policy.legalHold === 1 : false;
+  const legalHold = await repository.getLegalHoldStatus({ tenantId, dataCategory });
+  return legalHold !== undefined ? legalHold === 1 : false;
 }
 
 export async function setLegalHold(
@@ -220,23 +176,15 @@ export async function setLegalHold(
   config: AppConfig = loadConfig(),
 ): Promise<void> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
-  await db
-    .insert(retentionPolicies)
-    .values({
-      tenantId,
-      dataCategory,
-      retentionDays: DEFAULT_RETENTION_DAYS[dataCategory],
-      actionOnExpiry: dataCategory === 'user_data' ? 'anonymize' : 'archive',
-      legalHold: enabled ? 1 : 0,
-    })
-    .onConflictDoUpdate({
-      target: [retentionPolicies.tenantId, retentionPolicies.dataCategory],
-      set: {
-        legalHold: enabled ? 1 : 0,
-        updatedAt: new Date(),
-      },
-    });
+  await repository.upsertPolicy({
+    tenantId,
+    dataCategory,
+    retentionDays: DEFAULT_RETENTION_DAYS[dataCategory],
+    actionOnExpiry: dataCategory === 'user_data' ? 'anonymize' : 'archive',
+    legalHold: enabled ? 1 : 0,
+  });
 }
 
 export function validateRetentionDays(dataCategory: DataCategory, days: number): number {
@@ -350,8 +298,9 @@ export async function logRetentionJob(
   config: AppConfig = loadConfig(),
 ): Promise<void> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
-  await db.insert(retentionJobLog).values({
+  await repository.logJob({
     tenantId: result.tenantId,
     dataCategory: result.dataCategory,
     jobType: result.jobType,
@@ -373,18 +322,13 @@ export async function getRetentionJobHistory(
   config: AppConfig = loadConfig(),
 ): Promise<RetentionJobLog[]> {
   const db = getDatabaseClient(config);
+  const repository = new RetentionRepository(db);
 
-  const conditions = [eq(retentionJobLog.tenantId, tenantId)];
-  if (dataCategory) {
-    conditions.push(eq(retentionJobLog.dataCategory, dataCategory));
-  }
-
-  return db
-    .select()
-    .from(retentionJobLog)
-    .where(and(...conditions))
-    .orderBy(sql`${retentionJobLog.startedAt} DESC`)
-    .limit(limit);
+  return repository.getJobHistory({
+    tenantId,
+    ...(dataCategory !== undefined ? { dataCategory } : {}),
+    limit,
+  });
 }
 
 export async function getDefaultPoliciesForNewTenant(
