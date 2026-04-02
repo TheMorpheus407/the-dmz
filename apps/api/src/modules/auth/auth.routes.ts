@@ -1,103 +1,24 @@
 import type { LoginInput, RegisterInput, RefreshTokenInput } from '@the-dmz/shared/schemas';
-import {
-  loginJsonSchema,
-  registerJsonSchema,
-  refreshTokenJsonSchema,
-  loginResponseJsonSchema,
-  profileJsonSchema,
-  updateProfileJsonSchema,
-  refreshResponseJsonSchema as sharedRefreshResponseJsonSchema,
-  meResponseJsonSchema as sharedMeResponseJsonSchema,
-  effectivePreferencesJsonSchema,
-  passwordResetRequestJsonSchema,
-  passwordResetRequestResponseJsonSchema,
-  passwordChangeRequestJsonSchema,
-  passwordChangeRequestResponseJsonSchema,
-} from '@the-dmz/shared/schemas';
 import { AuthAbuseCategory } from '@the-dmz/shared/contracts';
 
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { preAuthTenantResolver } from '../../shared/middleware/pre-auth-tenant-resolver.js';
 import { preAuthTenantStatusGuard } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
-import {
-  authGuard,
-  requirePermission,
-  resolvePermissions,
-} from '../../shared/middleware/authorization.js';
+import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { requireMfaForSuperAdmin } from '../../shared/middleware/mfa-guard.js';
 import { idempotency } from '../../shared/middleware/idempotency.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
-import {
-  createAbuseGuard,
-  incrementAbuseCounter,
-  resetAbuseCounters,
-} from '../../shared/middleware/abuse-guard.js';
+import { createAbuseGuard } from '../../shared/middleware/abuse-guard.js';
 
-import * as authService from './auth.service.js';
-import * as delegationService from './delegation.service.js';
-import { AuthError, InvalidCredentialsError } from './auth.errors.js';
-import {
-  createAuthUserCreatedEvent,
-  createAuthSessionCreatedEvent,
-  createAuthSessionRevokedEvent,
-  createAuthLoginFailedEvent,
-  createAuthPasswordResetRequestedEvent,
-  createAuthPasswordResetCompletedEvent,
-  createOAuthClientCreatedEvent,
-  createOAuthClientRotatedEvent,
-  createOAuthClientRevokedEvent,
-  createOAuthTokenIssuedEvent,
-  createAuthSessionRevokedFederatedEvent,
-  createAuthSessionRevokedAdminEvent,
-  createAuthSessionRevokedUserAllEvent,
-  createAuthSessionRevokedTenantAllEvent,
-  createAuthDelegationRoleCreatedEvent,
-  createAuthDelegationRoleUpdatedEvent,
-  createAuthDelegationRoleAssignedEvent,
-  createAuthDelegationDeniedEvent,
-} from './auth.events.js';
-import { validateCsrf, setCsrfCookie } from './csrf.js';
-import { setRefreshCookie, clearRefreshCookie, getRefreshCookieName } from './cookies.js';
+import { validateCsrf } from './csrf.js';
+import * as handlers from './auth.handlers.js';
+import * as schemas from './auth.schemas.js';
 
-import type { UpdateProfileData } from './auth.repo.js';
-import type { FastifyInstance } from 'fastify';
 import type { AuthenticatedUser } from './auth.types.js';
+import type { FastifyInstance } from 'fastify';
+import type { UpdateProfileData } from './auth.repo.js';
 
-export const loginBodyJsonSchema = loginJsonSchema;
-
-export const registerBodyJsonSchema = registerJsonSchema;
-
-export const refreshBodyJsonSchema = refreshTokenJsonSchema;
-
-export const authResponseJsonSchema = loginResponseJsonSchema;
-
-export const refreshResponseJsonSchema = sharedRefreshResponseJsonSchema;
-
-export const meResponseJsonSchema = {
-  ...sharedMeResponseJsonSchema,
-  properties: {
-    ...sharedMeResponseJsonSchema.properties,
-    permissions: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-    roles: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-    effectivePreferences: effectivePreferencesJsonSchema,
-  },
-  required: [...(sharedMeResponseJsonSchema.required || []), 'permissions', 'roles'],
-} as const;
-
-export const updateProfileBodyJsonSchema = updateProfileJsonSchema;
-
-export const profileResponseJsonSchema = profileJsonSchema;
-
-export const passwordResetRequestBodyJsonSchema = passwordResetRequestJsonSchema;
-
-export const passwordChangeRequestBodyJsonSchema = passwordChangeRequestJsonSchema;
 export { authGuard };
 
 declare module 'fastify' {
@@ -110,6 +31,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
   const config = fastify.config;
   const isTest = config.NODE_ENV === 'test';
   const tenantResolverEnabled = config.TENANT_RESOLVER_ENABLED ?? false;
+  const deps = { config, eventBus: fastify.eventBus };
 
   const preAuthMiddleware = tenantResolverEnabled
     ? [preAuthTenantResolver(), preAuthTenantStatusGuard]
@@ -131,9 +53,9 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             },
       },
       schema: {
-        body: registerBodyJsonSchema,
+        body: schemas.registerBodyJsonSchema,
         response: {
-          201: authResponseJsonSchema,
+          201: schemas.authResponseJsonSchema,
           400: errorResponseSchemas.BadRequest,
           403: {
             oneOf: [
@@ -152,59 +74,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         security: [{ cookieAuth: [] }],
       },
     },
-    async (request, reply) => {
-      const tenantId = request.preAuthTenantContext?.tenantId;
-
-      try {
-        const result = await authService.register(
-          config,
-          request.body,
-          tenantId ? { tenantId } : undefined,
-        );
-
-        await resetAbuseCounters(request, config);
-
-        setCsrfCookie(request, reply);
-        setRefreshCookie({ refreshToken: result.refreshToken, reply });
-
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createAuthUserCreatedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: result.user.tenantId,
-            userId: result.user.id,
-            version: 1,
-            payload: {
-              userId: result.user.id,
-              email: result.user.email,
-              tenantId: result.user.tenantId,
-            },
-          }),
-        );
-
-        eventBus.publish(
-          createAuthSessionCreatedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: result.user.tenantId,
-            userId: result.user.id,
-            version: 1,
-            payload: {
-              sessionId: result.sessionId,
-              userId: result.user.id,
-              tenantId: result.user.tenantId,
-            },
-          }),
-        );
-
-        reply.code(201);
-        return { user: result.user, accessToken: result.accessToken };
-      } catch (error) {
-        await incrementAbuseCounter(request, config);
-        throw error;
-      }
-    },
+    (request, reply) => handlers.handleRegister(request, reply, deps),
   );
 
   fastify.post<{ Body: LoginInput }>(
@@ -223,9 +93,9 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             },
       },
       schema: {
-        body: loginBodyJsonSchema,
+        body: schemas.loginBodyJsonSchema,
         response: {
-          200: authResponseJsonSchema,
+          200: schemas.authResponseJsonSchema,
           400: errorResponseSchemas.BadRequest,
           401: errorResponseSchemas.Unauthorized,
           403: {
@@ -244,63 +114,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         security: [{ cookieAuth: [] }],
       },
     },
-    async (request, reply) => {
-      const tenantId = request.preAuthTenantContext?.tenantId;
-      const eventTenantId = tenantId ?? config.TENANT_FALLBACK_SLUG ?? '';
-
-      try {
-        const result = await authService.login(
-          config,
-          request.body,
-          tenantId ? { tenantId } : undefined,
-        );
-
-        await resetAbuseCounters(request, config);
-
-        setCsrfCookie(request, reply);
-        setRefreshCookie({ refreshToken: result.refreshToken, reply });
-
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createAuthSessionCreatedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: result.user.tenantId,
-            userId: result.user.id,
-            version: 1,
-            payload: {
-              sessionId: result.sessionId,
-              userId: result.user.id,
-              tenantId: result.user.tenantId,
-            },
-          }),
-        );
-
-        return { user: result.user, accessToken: result.accessToken };
-      } catch (error) {
-        if (error instanceof InvalidCredentialsError) {
-          await incrementAbuseCounter(request, config);
-
-          const eventBus = fastify.eventBus;
-          eventBus.publish(
-            createAuthLoginFailedEvent({
-              source: 'auth-module',
-              correlationId: request.id,
-              tenantId: eventTenantId,
-              userId: '',
-              version: 1,
-              payload: {
-                tenantId: eventTenantId,
-                email: request.body.email,
-                reason: 'invalid_credentials',
-                correlationId: request.id,
-              },
-            }),
-          );
-        }
-        throw error;
-      }
-    },
+    (request, reply) => handlers.handleLogin(request, reply, deps),
   );
 
   fastify.post<{ Body: RefreshTokenInput }>(
@@ -318,7 +132,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       },
       schema: {
         response: {
-          200: refreshResponseJsonSchema,
+          200: schemas.refreshResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           429: errorResponseSchemas.RateLimitExceeded,
           500: errorResponseSchemas.InternalServerError,
@@ -326,55 +140,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         security: [{ cookieAuth: [] }, { csrfToken: [] }],
       },
     },
-    async (request, reply) => {
-      const refreshToken = request.cookies[getRefreshCookieName()];
-
-      if (!refreshToken) {
-        throw new AuthError({
-          message: 'Refresh token not provided',
-          statusCode: 401,
-        });
-      }
-
-      const result = await authService.refresh(config, refreshToken);
-
-      setCsrfCookie(request, reply);
-      setRefreshCookie({ refreshToken: result.refreshToken, reply });
-
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createAuthSessionCreatedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: result.tenantId,
-          userId: result.userId,
-          version: 1,
-          payload: {
-            sessionId: result.sessionId,
-            userId: result.userId,
-            tenantId: result.tenantId,
-          },
-        }),
-      );
-
-      eventBus.publish(
-        createAuthSessionRevokedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: result.tenantId,
-          userId: result.userId,
-          version: 1,
-          payload: {
-            sessionId: result.oldSessionId,
-            userId: result.userId,
-            tenantId: result.tenantId,
-            reason: 'refresh_rotation',
-          },
-        }),
-      );
-
-      return { accessToken: result.accessToken };
-    },
+    (request, reply) => handlers.handleRefresh(request, reply, deps),
   );
 
   fastify.delete(
@@ -384,45 +150,14 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       schema: {
         security: [{ bearerAuth: [] }, { cookieAuth: [] }, { csrfToken: [] }],
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-            },
-            required: ['success'],
-          },
+          200: schemas.logoutResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           429: errorResponseSchemas.RateLimitExceeded,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
-    async (request, reply) => {
-      const user = request.user as AuthenticatedUser;
-      const refreshToken = request.cookies[getRefreshCookieName()];
-      if (refreshToken) {
-        await authService.logout(config, refreshToken);
-
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createAuthSessionRevokedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: user.tenantId,
-            userId: user.userId,
-            version: 1,
-            payload: {
-              sessionId: user.sessionId,
-              userId: user.userId,
-              tenantId: user.tenantId,
-              reason: 'logout',
-            },
-          }),
-        );
-      }
-      clearRefreshCookie(reply);
-      return { success: true };
-    },
+    (request, reply) => handlers.handleLogout(request, reply, deps),
   );
 
   fastify.get(
@@ -432,60 +167,25 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
-          200: meResponseJsonSchema,
+          200: schemas.meResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           429: errorResponseSchemas.RateLimitExceeded,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-
-      try {
-        const currentUser = await authService.getCurrentUser(config, user.userId, user.tenantId);
-        const permissionContext = await resolvePermissions(config, user.tenantId, user.userId);
-        const { profile, effectivePreferences } = await authService.getEffectivePreferences(
-          config,
-          user.userId,
-          user.tenantId,
-        );
-
-        return {
-          user: currentUser,
-          profile: profile
-            ? {
-                ...profile,
-                preferences: profile.preferences,
-                policyLockedPreferences: profile.policyLockedPreferences,
-              }
-            : undefined,
-          effectivePreferences,
-          permissions: permissionContext.permissions,
-          roles: permissionContext.roles,
-        };
-      } catch (error) {
-        request.log.error(
-          { err: error, userId: user.userId, tenantId: user.tenantId },
-          'auth/me handler failed',
-        );
-        throw new AuthError({
-          message: 'Failed to retrieve user information',
-          statusCode: 500,
-        });
-      }
-    },
+    (request) => handlers.handleMe(request, deps),
   );
 
-  fastify.patch(
+  fastify.patch<{ Body: UpdateProfileData }>(
     '/auth/profile',
     {
       preHandler: [authGuard, tenantContext, tenantStatusGuard, validateCsrf, idempotency],
       schema: {
         security: [{ bearerAuth: [] }],
-        body: updateProfileBodyJsonSchema,
+        body: schemas.updateProfileBodyJsonSchema,
         response: {
-          200: profileResponseJsonSchema,
+          200: schemas.profileResponseJsonSchema,
           400: errorResponseSchemas.BadRequest,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
@@ -494,20 +194,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const body = request.body as UpdateProfileData;
-      const profile = await authService.updateUserProfile(config, user.userId, user.tenantId, body);
-
-      if (!profile) {
-        throw new AuthError({
-          message: 'Profile not found',
-          statusCode: 404,
-        });
-      }
-
-      return profile;
-    },
+    (request) => handlers.handleUpdateProfile(request, deps),
   );
 
   fastify.get(
@@ -520,39 +207,14 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              status: { type: 'string' },
-              user: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  tenantId: { type: 'string' },
-                  role: { type: 'string' },
-                },
-                required: ['id', 'tenantId', 'role'],
-              },
-            },
-            required: ['status', 'user'],
-          },
+          200: schemas.healthAuthenticatedResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           429: errorResponseSchemas.RateLimitExceeded,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      return {
-        status: 'ok',
-        user: {
-          id: user.userId,
-          tenantId: user.tenantId,
-          role: user.role,
-        },
-      };
-    },
+    (request) => handlers.handleHealthAuthenticated(request),
   );
 
   fastify.get(
@@ -568,23 +230,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              users: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string', format: 'uuid' },
-                    email: { type: 'string', format: 'email' },
-                    displayName: { type: 'string' },
-                    role: { type: 'string' },
-                  },
-                },
-              },
-            },
-          },
+          200: schemas.adminUsersListResponseJsonSchema,
           403: {
             oneOf: [errorResponseSchemas.Forbidden, errorResponseSchemas.TenantInactive],
           },
@@ -593,11 +239,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         },
       },
     },
-    async (_request) => {
-      return {
-        users: [],
-      };
-    },
+    () => handlers.handleAdminUsersList(),
   );
 
   fastify.post<{ Body: { email: string } }>(
@@ -616,9 +258,9 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             },
       },
       schema: {
-        body: passwordResetRequestBodyJsonSchema,
+        body: schemas.passwordResetRequestBodyJsonSchema,
         response: {
-          200: passwordResetRequestResponseJsonSchema,
+          200: schemas.passwordResetRequestResponseJsonSchema,
           400: errorResponseSchemas.BadRequest,
           403: {
             oneOf: [
@@ -639,40 +281,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         },
       },
     },
-    async (request) => {
-      const tenantId = request.preAuthTenantContext?.tenantId;
-
-      try {
-        const result = await authService.requestPasswordReset(
-          config,
-          request.body,
-          tenantId ? { tenantId } : undefined,
-        );
-
-        const eventBus = fastify.eventBus;
-        if (result.success) {
-          eventBus.publish(
-            createAuthPasswordResetRequestedEvent({
-              source: 'auth-module',
-              correlationId: request.id,
-              tenantId: tenantId ?? '',
-              userId: '',
-              version: 1,
-              payload: {
-                userId: '',
-                email: request.body.email,
-                tenantId: tenantId ?? '',
-              },
-            }),
-          );
-        }
-
-        return { success: true };
-      } catch (error) {
-        await incrementAbuseCounter(request, config);
-        throw error;
-      }
-    },
+    (request) => handlers.handlePasswordReset(request, deps),
   );
 
   fastify.post<{ Body: { token: string; password: string } }>(
@@ -688,9 +297,9 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             },
       },
       schema: {
-        body: passwordChangeRequestBodyJsonSchema,
+        body: schemas.passwordChangeRequestBodyJsonSchema,
         response: {
-          200: passwordChangeRequestResponseJsonSchema,
+          200: schemas.passwordChangeRequestResponseJsonSchema,
           400: {
             oneOf: [
               errorResponseSchemas.BadRequest,
@@ -715,44 +324,7 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
         },
       },
     },
-    async (request) => {
-      const tenantId = request.preAuthTenantContext?.tenantId;
-
-      try {
-        const result = await authService.changePasswordWithToken(
-          config,
-          request.body,
-          tenantId ? { tenantId } : undefined,
-        );
-
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createAuthPasswordResetCompletedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: tenantId ?? '',
-            userId: '',
-            version: 1,
-            payload: {
-              userId: '',
-              email: '',
-              tenantId: tenantId ?? '',
-              sessionsRevoked: result.sessionsRevoked ?? 0,
-            },
-          }),
-        );
-
-        return {
-          success: result.success,
-          sessionsRevoked: result.sessionsRevoked,
-        };
-      } catch (error) {
-        if (error instanceof InvalidCredentialsError === false) {
-          await incrementAbuseCounter(request, config);
-        }
-        throw error;
-      }
-    },
+    (request) => handlers.handlePasswordChange(request, deps),
   );
 
   fastify.post<{
@@ -769,84 +341,15 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
             },
       },
       schema: {
-        body: {
-          type: 'object',
-          required: ['grant_type', 'client_id', 'client_secret'],
-          properties: {
-            grant_type: { type: 'string', enum: ['client_credentials'] },
-            client_id: { type: 'string', format: 'uuid' },
-            client_secret: { type: 'string', minLength: 1 },
-            scope: { type: 'string' },
-          },
-        },
+        body: schemas.oauthTokenBodyJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              access_token: { type: 'string' },
-              token_type: { type: 'string', enum: ['Bearer'] },
-              expires_in: { type: 'integer' },
-              scope: { type: 'string' },
-            },
-            required: ['access_token', 'token_type', 'expires_in', 'scope'],
-          },
+          200: schemas.oauthTokenResponseJsonSchema,
           400: errorResponseSchemas.BadRequest,
           401: errorResponseSchemas.Unauthorized,
         },
       },
     },
-    async (request, _reply) => {
-      const { grant_type, client_id, client_secret, scope } = request.body;
-
-      if (grant_type !== 'client_credentials') {
-        throw new AuthError({
-          message: 'Invalid grant type',
-          statusCode: 400,
-        });
-      }
-
-      try {
-        const client = await authService.findOAuthClientByClientIdOnly(config, client_id);
-        if (!client) {
-          throw new AuthError({
-            message: 'Invalid client credentials',
-            statusCode: 401,
-          });
-        }
-
-        const tokenResponse = await authService.issueClientCredentialsToken(config, {
-          clientId: client_id,
-          clientSecret: client_secret,
-          tenantId: client.tenantId,
-          ...(scope && { scope }),
-        });
-
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createOAuthTokenIssuedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: client.tenantId,
-            version: 1,
-            payload: {
-              clientId: client_id,
-              tenantId: client.tenantId,
-              scopes: tokenResponse.scope.split(' '),
-            },
-          }),
-        );
-
-        return tokenResponse;
-      } catch (err) {
-        if (err instanceof AuthError) {
-          throw err;
-        }
-        throw new AuthError({
-          message: 'Invalid client credentials',
-          statusCode: 401,
-        });
-      }
-    },
+    (request) => handlers.handleOAuthToken(request, deps),
   );
 
   fastify.get(
@@ -856,37 +359,13 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              clients: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    clientId: { type: 'string', format: 'uuid' },
-                    name: { type: 'string' },
-                    tenantId: { type: 'string', format: 'uuid' },
-                    scopes: { type: 'array', items: { type: 'string' } },
-                    createdAt: { type: 'string', format: 'date-time' },
-                    expiresAt: { type: 'string', format: 'date-time', nullable: true },
-                    revokedAt: { type: 'string', format: 'date-time', nullable: true },
-                    lastUsedAt: { type: 'string', format: 'date-time', nullable: true },
-                  },
-                },
-              },
-            },
-          },
+          200: schemas.oauthClientsListResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const clients = await authService.listOAuthClients(config, user.tenantId);
-      return { clients };
-    },
+    (request) => handlers.handleOAuthClientsList(request, deps),
   );
 
   fastify.post<{ Body: { name: string; scopes: string[] } }>(
@@ -895,66 +374,16 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        body: {
-          type: 'object',
-          required: ['name', 'scopes'],
-          properties: {
-            name: { type: 'string', minLength: 1, maxLength: 255 },
-            scopes: {
-              type: 'array',
-              items: { type: 'string', enum: ['scim.read', 'scim.write'] },
-              minItems: 1,
-            },
-          },
-        },
+        body: schemas.oauthClientCreateBodyJsonSchema,
         response: {
-          201: {
-            type: 'object',
-            properties: {
-              clientId: { type: 'string', format: 'uuid' },
-              clientSecret: { type: 'string' },
-              name: { type: 'string' },
-              tenantId: { type: 'string', format: 'uuid' },
-              scopes: { type: 'array', items: { type: 'string' } },
-              expiresAt: { type: 'string', format: 'date-time', nullable: true },
-            },
-            required: ['clientId', 'clientSecret', 'name', 'tenantId', 'scopes', 'expiresAt'],
-          },
+          201: schemas.oauthClientCreateResponseJsonSchema,
           400: errorResponseSchemas.BadRequest,
           403: errorResponseSchemas.TenantInactive,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
-    async (request, reply) => {
-      const user = request.user as AuthenticatedUser;
-      const { name, scopes } = request.body;
-
-      const result = await authService.createOAuthClient(config, {
-        name,
-        tenantId: user.tenantId,
-        scopes,
-      });
-
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createOAuthClientCreatedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: user.tenantId,
-          version: 1,
-          payload: {
-            clientId: result.clientId,
-            name: result.name,
-            tenantId: result.tenantId,
-            scopes: result.scopes,
-          },
-        }),
-      );
-
-      reply.code(201);
-      return result;
-    },
+    (request, reply) => handlers.handleOAuthClientCreate(request, reply, deps),
   );
 
   fastify.post<{ Params: { id: string } }>(
@@ -963,58 +392,16 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-          },
-          required: ['id'],
-        },
+        params: schemas.oauthClientIdParamJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              clientSecret: { type: 'string' },
-            },
-            required: ['clientSecret'],
-          },
+          200: schemas.oauthClientRotateResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const { id } = request.params;
-
-      const existingClient = await authService.findOAuthClientByClientIdOnly(config, id);
-      if (!existingClient) {
-        throw new AuthError({
-          message: 'OAuth client not found',
-          statusCode: 404,
-        });
-      }
-
-      const result = await authService.rotateOAuthClientSecret(config, id, user.tenantId);
-
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createOAuthClientRotatedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: user.tenantId,
-          version: 1,
-          payload: {
-            clientId: id,
-            name: existingClient.name,
-            tenantId: user.tenantId,
-          },
-        }),
-      );
-
-      return result;
-    },
+    (request) => handlers.handleOAuthClientRotate(request, deps),
   );
 
   fastify.post<{ Params: { id: string } }>(
@@ -1023,59 +410,16 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-          },
-          required: ['id'],
-        },
+        params: schemas.oauthClientIdParamJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-            },
-            required: ['success'],
-          },
+          200: schemas.oauthClientRevokeResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const { id } = request.params;
-
-      const existingClient = await authService.findOAuthClientByClientIdOnly(config, id);
-      if (!existingClient) {
-        throw new AuthError({
-          message: 'OAuth client not found',
-          statusCode: 404,
-        });
-      }
-
-      await authService.revokeOAuthClient(config, id, user.tenantId);
-
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createOAuthClientRevokedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: user.tenantId,
-          version: 1,
-          payload: {
-            clientId: id,
-            name: existingClient.name,
-            tenantId: user.tenantId,
-            reason: 'admin_revocation',
-          },
-        }),
-      );
-
-      return { success: true };
-    },
+    (request) => handlers.handleOAuthClientRevoke(request, deps),
   );
 
   fastify.delete<{ Params: { id: string } }>(
@@ -1084,46 +428,17 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            id: { type: 'string', format: 'uuid' },
-          },
-          required: ['id'],
-        },
+        params: schemas.oauthClientIdParamJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              success: { type: 'boolean' },
-            },
-            required: ['success'],
-          },
+          200: schemas.oauthClientRevokeResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const { id } = request.params;
-
-      await authService.deleteOAuthClient(config, id, user.tenantId);
-      return { success: true };
-    },
+    (request) => handlers.handleOAuthClientDelete(request, deps),
   );
-
-  const federatedRevocationBodyJsonSchema = {
-    type: 'object',
-    properties: {
-      userId: { type: 'string', format: 'uuid' },
-      email: { type: 'string', format: 'email' },
-      sourceType: { type: 'string', enum: ['saml', 'oidc', 'scim'] },
-      ssoProviderId: { type: 'string' },
-    },
-    required: ['sourceType'],
-  };
 
   fastify.post<{
     Body: { userId?: string; email?: string; sourceType: string; ssoProviderId?: string };
@@ -1138,77 +453,15 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       ],
       schema: {
         security: [{ bearerAuth: [] }],
-        body: federatedRevocationBodyJsonSchema,
+        body: schemas.federatedRevocationBodyJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              result: {
-                type: 'string',
-                enum: ['revoked', 'already_revoked', 'ignored_invalid', 'failed'],
-              },
-              sessionsRevoked: { type: 'integer' },
-              userId: { type: 'string', format: 'uuid' },
-              reason: { type: 'string' },
-            },
-          },
+          200: schemas.federatedRevocationResponseJsonSchema,
           400: errorResponseSchemas.BadRequest,
           403: errorResponseSchemas.TenantInactive,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const { userId, email, sourceType, ssoProviderId } = request.body;
-
-      const input = {
-        tenantId: user.tenantId,
-        ...(userId && { userId }),
-        ...(email && { email }),
-        sourceType: sourceType as 'saml' | 'oidc' | 'scim' | 'admin',
-        ...(ssoProviderId && { ssoProviderId }),
-      };
-
-      const result = await authService.revokeUserSessionsByFederatedIdentity(config, input);
-
-      const eventBus = fastify.eventBus;
-      if (result.result === 'revoked' && result.userId) {
-        const payload: {
-          sessionId: string;
-          userId: string;
-          tenantId: string;
-          reason: 'saml_logout' | 'oidc_logout' | 'scim_deprovision';
-          sourceType: 'saml' | 'oidc' | 'scim';
-          correlationId: string;
-          sessionsRevoked: number;
-          ssoProviderId?: string;
-        } = {
-          sessionId: '',
-          userId: result.userId,
-          tenantId: user.tenantId,
-          reason: `${sourceType}_logout` as 'saml_logout' | 'oidc_logout' | 'scim_deprovision',
-          sourceType: sourceType as 'saml' | 'oidc' | 'scim',
-          correlationId: request.id,
-          sessionsRevoked: result.sessionsRevoked,
-        };
-        if (ssoProviderId) {
-          payload.ssoProviderId = ssoProviderId;
-        }
-
-        eventBus.publish(
-          createAuthSessionRevokedFederatedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: user.tenantId,
-            userId: result.userId,
-            version: 1,
-            payload,
-          }),
-        );
-      }
-
-      return result;
-    },
+    (request) => handlers.handleFederatedSessionRevoke(request, deps),
   );
 
   fastify.delete<{ Params: { userId: string } }>(
@@ -1222,67 +475,15 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       ],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            userId: { type: 'string', format: 'uuid' },
-          },
-          required: ['userId'],
-        },
+        params: schemas.userIdParamJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              sessionsRevoked: { type: 'integer' },
-            },
-          },
+          200: schemas.sessionRevokeResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const { userId } = request.params;
-
-      const result = await authService.revokeUserSessionsByFederatedIdentity(config, {
-        tenantId: user.tenantId,
-        userId,
-        sourceType: 'admin',
-      });
-
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createAuthSessionRevokedFederatedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: user.tenantId,
-          userId,
-          version: 1,
-          payload: {
-            sessionId: '',
-            userId,
-            tenantId: user.tenantId,
-            reason: 'saml_logout' as const,
-            sourceType: 'saml' as const,
-            correlationId: request.id,
-            sessionsRevoked: result.sessionsRevoked,
-          },
-        }),
-      );
-
-      return { sessionsRevoked: result.sessionsRevoked };
-    },
+    (request) => handlers.handleAdminSessionRevokeByUser(request, deps),
   );
-
-  const sessionListQueryJsonSchema = {
-    type: 'object',
-    properties: {
-      userId: { type: 'string', format: 'uuid' },
-      status: { type: 'string', enum: ['active', 'expired', 'revoked'] },
-      cursor: { type: 'string' },
-      limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
-    },
-  };
 
   fastify.get<{
     Querystring: { userId?: string; status?: string; cursor?: string; limit?: number };
@@ -1297,95 +498,15 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       ],
       schema: {
         security: [{ bearerAuth: [] }],
-        querystring: sessionListQueryJsonSchema,
+        querystring: schemas.sessionListQueryJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              sessions: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    sessionId: { type: 'string', format: 'uuid' },
-                    userId: { type: 'string', format: 'uuid' },
-                    userEmail: { type: 'string', format: 'email' },
-                    tenantId: { type: 'string', format: 'uuid' },
-                    createdAt: { type: 'string', format: 'date-time' },
-                    lastSeenAt: { type: 'string', format: 'date-time', nullable: true },
-                    expiresAt: { type: 'string', format: 'date-time' },
-                    deviceInfo: {
-                      type: 'object',
-                      properties: {
-                        userAgent: { type: 'string', nullable: true },
-                        ipAddress: { type: 'string', nullable: true },
-                      },
-                      nullable: true,
-                    },
-                    status: { type: 'string', enum: ['active', 'expired', 'revoked'] },
-                  },
-                  required: [
-                    'sessionId',
-                    'userId',
-                    'userEmail',
-                    'tenantId',
-                    'createdAt',
-                    'expiresAt',
-                    'status',
-                  ],
-                },
-              },
-              nextCursor: { type: 'string', nullable: true },
-              total: { type: 'number' },
-            },
-            required: ['sessions', 'total'],
-          },
+          200: schemas.sessionListResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           500: errorResponseSchemas.InternalServerError,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const { userId, cursor, limit } = request.query;
-
-      const serviceInput: {
-        tenantId: string;
-        userId?: string;
-        cursor?: string;
-        limit?: number;
-      } = {
-        tenantId: user.tenantId,
-      };
-
-      if (userId) {
-        serviceInput.userId = userId;
-      }
-      if (cursor) {
-        serviceInput.cursor = cursor;
-      }
-      if (limit) {
-        serviceInput.limit = limit;
-      }
-
-      const sessions = await authService.listTenantSessions(config, serviceInput);
-
-      return {
-        sessions: sessions.sessions.map((s) => ({
-          sessionId: s.sessionId,
-          userId: s.userId,
-          userEmail: s.userEmail,
-          tenantId: s.tenantId,
-          createdAt: s.createdAt.toISOString(),
-          lastSeenAt: s.lastSeenAt?.toISOString() ?? null,
-          expiresAt: s.expiresAt.toISOString(),
-          deviceInfo: s.deviceInfo,
-          status: s.status,
-        })),
-        nextCursor: sessions.nextCursor ?? undefined,
-        total: sessions.total,
-      };
-    },
+    (request) => handlers.handleAdminSessionList(request, deps),
   );
 
   fastify.post<{ Params: { sessionId: string } }>(
@@ -1399,62 +520,14 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       ],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId'],
-        },
+        params: schemas.sessionIdParamJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              result: {
-                type: 'string',
-                enum: ['revoked', 'already_revoked', 'not_found', 'forbidden', 'failed'],
-              },
-              sessionId: { type: 'string', format: 'uuid' },
-              reason: { type: 'string' },
-            },
-            required: ['result', 'sessionId', 'reason'],
-          },
+          200: schemas.sessionSingleRevokeResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const { sessionId } = request.params;
-
-      const result = await authService.revokeSingleSession(config, {
-        sessionId,
-        tenantId: user.tenantId,
-      });
-
-      if (result.result === 'revoked') {
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createAuthSessionRevokedAdminEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: user.tenantId,
-            userId: user.userId,
-            version: 1,
-            payload: {
-              sessionId,
-              userId: user.userId,
-              tenantId: user.tenantId,
-              reason: 'admin_revoked',
-              initiatedBy: user.userId,
-              correlationId: request.id,
-            },
-          }),
-        );
-      }
-
-      return result;
-    },
+    (request) => handlers.handleAdminSessionRevokeSingle(request, deps),
   );
 
   fastify.delete<{ Params: { userId: string } }>(
@@ -1468,63 +541,14 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       ],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            userId: { type: 'string', format: 'uuid' },
-          },
-          required: ['userId'],
-        },
+        params: schemas.userIdParamJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              result: {
-                type: 'string',
-                enum: ['revoked', 'already_revoked', 'not_found', 'forbidden', 'failed'],
-              },
-              sessionsRevoked: { type: 'number' },
-              reason: { type: 'string' },
-            },
-            required: ['result', 'sessionsRevoked', 'reason'],
-          },
+          200: schemas.sessionUserAllRevokeResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-      const { userId } = request.params;
-
-      const result = await authService.revokeAllUserSessions(config, {
-        userId,
-        tenantId: user.tenantId,
-        initiatedBy: user.userId,
-      });
-
-      if (result.result === 'revoked') {
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createAuthSessionRevokedUserAllEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: user.tenantId,
-            userId,
-            version: 1,
-            payload: {
-              userId,
-              tenantId: user.tenantId,
-              sessionsRevoked: result.sessionsRevoked,
-              reason: 'admin_revoked',
-              initiatedBy: user.userId,
-              correlationId: request.id,
-            },
-          }),
-        );
-      }
-
-      return result;
-    },
+    (request) => handlers.handleAdminSessionRevokeUserAll(request, deps),
   );
 
   fastify.delete(
@@ -1540,47 +564,12 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              result: { type: 'string', enum: ['revoked', 'failed'] },
-              sessionsRevoked: { type: 'number' },
-              reason: { type: 'string' },
-            },
-            required: ['result', 'sessionsRevoked', 'reason'],
-          },
+          200: schemas.sessionTenantAllRevokeResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
         },
       },
     },
-    async (request) => {
-      const user = request.user as AuthenticatedUser;
-
-      const result = await authService.revokeAllTenantSessions(config, {
-        tenantId: user.tenantId,
-        initiatedBy: user.userId,
-      });
-
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createAuthSessionRevokedTenantAllEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: user.tenantId,
-          userId: user.userId,
-          version: 1,
-          payload: {
-            tenantId: user.tenantId,
-            sessionsRevoked: result.sessionsRevoked,
-            reason: 'tenant_wide_admin_revocation',
-            initiatedBy: user.userId,
-            correlationId: request.id,
-          },
-        }),
-      );
-
-      return result;
-    },
+    (request) => handlers.handleAdminSessionRevokeTenantAll(request, deps),
   );
 
   fastify.get(
@@ -1590,105 +579,29 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       schema: {
         security: [{ bearerAuth: [] }],
         response: {
-          200: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'string', format: 'uuid' },
-                name: { type: 'string' },
-                description: { type: 'string', nullable: true },
-                isSystem: { type: 'boolean' },
-                createdAt: { type: 'string', format: 'date-time' },
-                updatedAt: { type: 'string', format: 'date-time' },
-              },
-              required: ['id', 'name', 'description', 'isSystem', 'createdAt', 'updatedAt'],
-            },
-          },
+          200: schemas.rolesListResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
         },
       },
     },
-    async (request, _reply) => {
-      const tenantContextVal = request.tenantContext;
-
-      if (!tenantContextVal) {
-        throw new AuthError({
-          message: 'Tenant context required',
-          statusCode: 400,
-        });
-      }
-
-      const roles = await delegationService.listTenantRoles(config, tenantContextVal.tenantId);
-
-      return roles;
-    },
+    (request) => handlers.handleRolesList(request, deps),
   );
 
-  fastify.get(
+  fastify.get<{ Params: { roleId: string } }>(
     '/auth/roles/:roleId',
     {
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            roleId: { type: 'string', format: 'uuid' },
-          },
-          required: ['roleId'],
-        },
+        params: schemas.roleIdParamJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              id: { type: 'string', format: 'uuid' },
-              name: { type: 'string' },
-              description: { type: 'string', nullable: true },
-              isSystem: { type: 'boolean' },
-              permissions: { type: 'array', items: { type: 'string' } },
-              createdAt: { type: 'string', format: 'date-time' },
-              updatedAt: { type: 'string', format: 'date-time' },
-            },
-            required: [
-              'id',
-              'name',
-              'description',
-              'isSystem',
-              'permissions',
-              'createdAt',
-              'updatedAt',
-            ],
-          },
+          200: schemas.roleDetailsResponseJsonSchema,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
         },
       },
     },
-    async (request, reply) => {
-      const tenantContextVal = request.tenantContext;
-      const { roleId } = request.params as { roleId: string };
-
-      if (!tenantContextVal) {
-        throw new AuthError({
-          message: 'Tenant context required',
-          statusCode: 400,
-        });
-      }
-
-      const role = await delegationService.getRoleDetails(
-        config,
-        roleId,
-        tenantContextVal.tenantId,
-      );
-
-      if (!role) {
-        reply.code(404);
-        return { message: 'Role not found' };
-      }
-
-      return role;
-    },
+    (request, reply) => handlers.handleRoleDetails(request, reply, deps),
   );
 
   fastify.post(
@@ -1704,127 +617,19 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       ],
       schema: {
         security: [{ bearerAuth: [] }],
-        body: {
-          type: 'object',
-          properties: {
-            name: { type: 'string', minLength: 1, maxLength: 64 },
-            description: { type: 'string' },
-            permissions: { type: 'array', items: { type: 'string' } },
-          },
-          required: ['name', 'permissions'],
-        },
+        body: schemas.roleCreateBodyJsonSchema,
         response: {
-          201: {
-            type: 'object',
-            properties: {
-              outcome: { type: 'string', enum: ['allowed'] },
-              roleId: { type: 'string', format: 'uuid' },
-            },
-            required: ['outcome', 'roleId'],
-          },
+          201: schemas.roleCreateResponseJsonSchema,
           403: {
             oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
           },
         },
       },
     },
-    async (request, reply) => {
-      const user = request.user as AuthenticatedUser;
-      const tenantContextVal = request.tenantContext;
-      const body = request.body as { name?: string; description?: string; permissions?: string[] };
-
-      if (!tenantContextVal) {
-        throw new AuthError({
-          message: 'Tenant context required',
-          statusCode: 400,
-        });
-      }
-
-      if (!body.name || !body.permissions) {
-        throw new AuthError({
-          message: 'Role name and permissions are required',
-          statusCode: 400,
-        });
-      }
-
-      const createData: {
-        actorId: string;
-        actorTenantId: string;
-        name: string;
-        description?: string;
-        permissions: string[];
-      } = {
-        actorId: user.userId,
-        actorTenantId: tenantContextVal.tenantId,
-        name: body.name,
-        permissions: body.permissions,
-      };
-
-      if (body.description) {
-        createData.description = body.description;
-      }
-
-      const result = await delegationService.createCustomRole(config, createData, {
-        logger: request.log,
-      });
-
-      if (result.outcome !== 'allowed') {
-        reply.code(403);
-
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createAuthDelegationDeniedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: tenantContextVal.tenantId,
-            userId: user.userId,
-            version: 1,
-            payload: {
-              actorId: user.userId,
-              tenantId: tenantContextVal.tenantId,
-              roleName: body.name,
-              reason: result.reason ?? 'Permission ceiling exceeded',
-              outcome: result.outcome,
-              correlationId: request.id,
-              ...(body.permissions && { permissions: body.permissions }),
-            },
-          }),
-        );
-
-        return {
-          outcome: result.outcome,
-          reason: result.reason,
-        };
-      }
-
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createAuthDelegationRoleCreatedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: tenantContextVal.tenantId,
-          userId: user.userId,
-          version: 1,
-          payload: {
-            actorId: user.userId,
-            tenantId: tenantContextVal.tenantId,
-            roleId: result.roleId!,
-            roleName: body.name,
-            permissions: body.permissions,
-            correlationId: request.id,
-          },
-        }),
-      );
-
-      reply.code(201);
-      return {
-        outcome: result.outcome,
-        roleId: result.roleId,
-      };
-    },
+    (request, reply) => handlers.handleRoleCreate(request, reply, deps),
   );
 
-  fastify.post(
+  fastify.post<{ Params: { roleId: string } }>(
     '/auth/roles/:roleId/assign',
     {
       preHandler: [
@@ -1836,134 +641,20 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       ],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            roleId: { type: 'string', format: 'uuid' },
-          },
-          required: ['roleId'],
-        },
-        body: {
-          type: 'object',
-          properties: {
-            targetUserId: { type: 'string', format: 'uuid' },
-            scope: { type: 'string', nullable: true },
-            expiresAt: { type: 'string', format: 'date-time', nullable: true },
-          },
-          required: ['targetUserId'],
-        },
+        params: schemas.roleIdParamJsonSchema,
+        body: schemas.roleAssignBodyJsonSchema,
         response: {
-          201: {
-            type: 'object',
-            properties: {
-              outcome: { type: 'string', enum: ['allowed'] },
-            },
-            required: ['outcome'],
-          },
+          201: schemas.roleAssignResponseJsonSchema,
           403: {
             oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
           },
         },
       },
     },
-    async (request, reply) => {
-      const user = request.user as AuthenticatedUser;
-      const tenantContextVal = request.tenantContext;
-      const { roleId } = request.params as { roleId: string };
-      const body = request.body as {
-        targetUserId: string;
-        scope?: string | null;
-        expiresAt?: string | null;
-      };
-
-      if (!tenantContextVal) {
-        throw new AuthError({
-          message: 'Tenant context required',
-          statusCode: 400,
-        });
-      }
-
-      const expiresAt = body.expiresAt ? new Date(body.expiresAt) : null;
-
-      const result = await delegationService.assignRoleToUser(
-        config,
-        {
-          actorId: user.userId,
-          actorTenantId: tenantContextVal.tenantId,
-          targetUserId: body.targetUserId,
-          targetRoleId: roleId,
-          scope: body.scope ?? null,
-          expiresAt,
-        },
-        {
-          logger: request.log,
-        },
-      );
-
-      if (result.outcome !== 'allowed') {
-        reply.code(403);
-
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createAuthDelegationDeniedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: tenantContextVal.tenantId,
-            userId: user.userId,
-            version: 1,
-            payload: {
-              actorId: user.userId,
-              tenantId: tenantContextVal.tenantId,
-              targetUserId: body.targetUserId,
-              roleId: roleId,
-              reason: result.reason ?? 'Role assignment denied',
-              outcome: result.outcome,
-              correlationId: request.id,
-            },
-          }),
-        );
-
-        return {
-          outcome: result.outcome,
-          reason: result.reason,
-        };
-      }
-
-      const roleDetails = await delegationService.getRoleDetails(
-        config,
-        roleId,
-        tenantContextVal.tenantId,
-      );
-
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createAuthDelegationRoleAssignedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: tenantContextVal.tenantId,
-          userId: user.userId,
-          version: 1,
-          payload: {
-            actorId: user.userId,
-            tenantId: tenantContextVal.tenantId,
-            targetUserId: body.targetUserId,
-            roleId: roleId,
-            roleName: roleDetails?.name ?? 'unknown',
-            scope: body.scope ?? null,
-            expiresAt: expiresAt ? expiresAt.toISOString() : null,
-            correlationId: request.id,
-          },
-        }),
-      );
-
-      reply.code(201);
-      return {
-        outcome: result.outcome,
-      };
-    },
+    (request, reply) => handlers.handleRoleAssign(request, reply, deps),
   );
 
-  fastify.patch(
+  fastify.patch<{ Params: { roleId: string } }>(
     '/auth/roles/:roleId',
     {
       preHandler: [
@@ -1976,156 +667,16 @@ export const registerAuthRoutes = async (fastify: FastifyInstance): Promise<void
       ],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            roleId: { type: 'string', format: 'uuid' },
-          },
-          required: ['roleId'],
-        },
-        body: {
-          type: 'object',
-          properties: {
-            name: { type: 'string', minLength: 1, maxLength: 64 },
-            description: { type: 'string', nullable: true },
-            permissions: { type: 'array', items: { type: 'string' } },
-          },
-        },
+        params: schemas.roleIdParamJsonSchema,
+        body: schemas.roleUpdateBodyJsonSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              outcome: { type: 'string', enum: ['allowed'] },
-            },
-            required: ['outcome'],
-          },
+          200: schemas.roleAssignResponseJsonSchema,
           403: {
             oneOf: [errorResponseSchemas.TenantInactive, errorResponseSchemas.Forbidden],
           },
         },
       },
     },
-    async (request, reply) => {
-      const user = request.user as AuthenticatedUser;
-      const tenantContextVal = request.tenantContext;
-      const { roleId } = request.params as { roleId: string };
-      const body = request.body as {
-        name?: string;
-        description?: string | null;
-        permissions?: string[];
-      };
-
-      if (!tenantContextVal) {
-        throw new AuthError({
-          message: 'Tenant context required',
-          statusCode: 400,
-        });
-      }
-
-      if (!body.name && !body.description && !body.permissions) {
-        throw new AuthError({
-          message: 'At least one field (name, description, or permissions) is required',
-          statusCode: 400,
-        });
-      }
-
-      const updateData: {
-        actorId: string;
-        actorTenantId: string;
-        roleId: string;
-        name?: string;
-        description?: string;
-        permissions?: string[];
-      } = {
-        actorId: user.userId,
-        actorTenantId: tenantContextVal.tenantId,
-        roleId: roleId,
-      };
-
-      if (body.name) {
-        updateData.name = body.name;
-      }
-      if (body.description) {
-        updateData.description = body.description;
-      }
-      if (body.permissions) {
-        updateData.permissions = body.permissions;
-      }
-
-      const result = await delegationService.updateCustomRole(config, updateData, {
-        logger: request.log,
-      });
-
-      if (result.outcome !== 'allowed') {
-        reply.code(403);
-
-        const deniedPayload: {
-          actorId: string;
-          tenantId: string;
-          roleId: string;
-          permissions?: string[];
-          reason: string;
-          outcome: string;
-          correlationId: string;
-        } = {
-          actorId: user.userId,
-          tenantId: tenantContextVal.tenantId,
-          roleId: roleId,
-          reason: result.reason ?? 'Role update denied',
-          outcome: result.outcome,
-          correlationId: request.id,
-        };
-        if (body.permissions) {
-          deniedPayload.permissions = body.permissions;
-        }
-
-        const eventBus = fastify.eventBus;
-        eventBus.publish(
-          createAuthDelegationDeniedEvent({
-            source: 'auth-module',
-            correlationId: request.id,
-            tenantId: tenantContextVal.tenantId,
-            userId: user.userId,
-            version: 1,
-            payload: deniedPayload,
-          }),
-        );
-
-        return {
-          outcome: result.outcome,
-          reason: result.reason,
-        };
-      }
-
-      const roleDetails = await delegationService.getRoleDetails(
-        config,
-        roleId,
-        tenantContextVal.tenantId,
-      );
-
-      const eventBus = fastify.eventBus;
-      eventBus.publish(
-        createAuthDelegationRoleUpdatedEvent({
-          source: 'auth-module',
-          correlationId: request.id,
-          tenantId: tenantContextVal.tenantId,
-          userId: user.userId,
-          version: 1,
-          payload: {
-            actorId: user.userId,
-            tenantId: tenantContextVal.tenantId,
-            roleId: roleId,
-            roleName: roleDetails?.name ?? 'unknown',
-            permissions: body.permissions ?? roleDetails?.permissions ?? [],
-            correlationId: request.id,
-          },
-        }),
-      );
-
-      reply.code(200);
-      return {
-        outcome: result.outcome,
-      };
-    },
+    (request, reply) => handlers.handleRoleUpdate(request, reply, deps),
   );
 };

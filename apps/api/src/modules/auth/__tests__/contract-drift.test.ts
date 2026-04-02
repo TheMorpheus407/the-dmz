@@ -21,7 +21,7 @@ import {
   meResponseJsonSchema as apiMeResponseJsonSchema,
   updateProfileBodyJsonSchema,
   profileResponseJsonSchema,
-} from '../auth.routes.js';
+} from '../auth.schemas.js';
 
 describe('anti-drift: API routes derive from shared contracts', () => {
   describe('request schemas', () => {
