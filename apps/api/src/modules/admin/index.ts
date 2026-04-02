@@ -18,6 +18,9 @@ export {
 } from './certificate.events.js';
 export { registerComplianceRoutes } from './compliance.routes.js';
 export { registerCampaignRoutes } from './campaign.routes.js';
+
+export * from './campaign.schemas.js';
+export * from './campaign.handlers.js';
 export { registerPhishingSimulationRoutes } from './phishing-simulation.routes.js';
 export { registerPhishingSimulationResultRoutes } from './phishing-simulation-results.routes.js';
 export { registerPhishingSimulationTemplateRoutes } from './phishing-simulation-templates.routes.js';
