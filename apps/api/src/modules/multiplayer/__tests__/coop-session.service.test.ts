@@ -1,438 +1,1014 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.mock('../../../shared/database/connection.js', () => ({
+  getDatabaseClient: vi.fn(),
+}));
+
+vi.mock('../../../shared/cache/index.js', () => ({
+  getCachedCoopSession: vi.fn(),
+  setCachedCoopSession: vi.fn(),
+  deleteCachedCoopSession: vi.fn(),
+}));
+
+vi.mock('../../feature-flags/feature-flags.service.js', () => ({
+  evaluateFlag: vi.fn(),
+}));
+
+import { getDatabaseClient } from '../../../shared/database/connection.js';
+import {
+  getCachedCoopSession,
+  setCachedCoopSession,
+  deleteCachedCoopSession,
+} from '../../../shared/cache/index.js';
+import { evaluateFlag } from '../../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
 import {
   DEFAULT_PERMISSION_MATRIX,
   getRolePermissionsForPhase,
   isActionPermitted,
 } from '../permissions/permission-matrix.js';
 import { PermissionDeniedError, checkPermission } from '../permissions/permission.enforcer.js';
+import {
+  createCoopSession,
+  getCoopSession,
+  assignRoles,
+  startCoopSession,
+  submitRolePreference,
+  rotateAuthority,
+  submitProposal,
+  authorityConfirm,
+  authorityOverride,
+  advanceDay,
+  endCoopSession,
+  abandonCoopSession,
+} from '../coop-session.service.js';
 
-describe('coop session service - session statuses', () => {
-  const coopSessionStatuses = ['lobby', 'active', 'paused', 'completed', 'abandoned'] as const;
+import type { AppConfig } from '../../../config.js';
+import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { DatabaseClient } from '../../../shared/database/connection.js';
 
-  it('should have five session statuses', () => {
-    expect(coopSessionStatuses).toHaveLength(5);
-  });
+const mockConfig = {
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+  REDIS_URL: 'redis://localhost:6379',
+  NODE_ENV: 'test',
+  LOG_LEVEL: 'silent',
+} as unknown as AppConfig;
 
-  it('should include lobby status', () => {
-    expect(coopSessionStatuses).toContain('lobby');
-  });
+const TENANT_ID = 'tenant-1';
+const LEADER_ID = 'leader-profile-1';
+const PLAYER_1_ID = 'player-1-profile';
+const PLAYER_2_ID = 'player-2-profile';
+const SESSION_ID = 'session-1';
+const PARTY_ID = 'party-1';
 
-  it('should include active status', () => {
-    expect(coopSessionStatuses).toContain('active');
-  });
-
-  it('should include paused status', () => {
-    expect(coopSessionStatuses).toContain('paused');
-  });
-
-  it('should include completed status', () => {
-    expect(coopSessionStatuses).toContain('completed');
-  });
-
-  it('should include abandoned status', () => {
-    expect(coopSessionStatuses).toContain('abandoned');
-  });
+const createMockEventBus = (): IEventBus => ({
+  publish: vi.fn(),
+  subscribe: vi.fn(),
+  unsubscribe: vi.fn(),
 });
 
-describe('coop session service - session lifecycle state machine', () => {
-  type CoopSessionStatus = 'lobby' | 'active' | 'paused' | 'completed' | 'abandoned';
+const createMockDb = (): DatabaseClient => {
+  const mockQueryResults: Record<string, unknown> = {};
 
-  function isValidStatusTransition(current: CoopSessionStatus, next: CoopSessionStatus): boolean {
-    const validTransitions: Record<CoopSessionStatus, CoopSessionStatus[]> = {
-      lobby: ['active', 'abandoned'],
-      active: ['paused', 'completed', 'abandoned'],
-      paused: ['active', 'completed', 'abandoned'],
-      completed: [],
-      abandoned: [],
-    };
-    return validTransitions[current]?.includes(next) ?? false;
-  }
-
-  it('lobby can transition to active', () => {
-    expect(isValidStatusTransition('lobby', 'active')).toBe(true);
-  });
-
-  it('lobby can transition to abandoned', () => {
-    expect(isValidStatusTransition('lobby', 'abandoned')).toBe(true);
-  });
-
-  it('active can transition to paused', () => {
-    expect(isValidStatusTransition('active', 'paused')).toBe(true);
-  });
-
-  it('active can transition to completed', () => {
-    expect(isValidStatusTransition('active', 'completed')).toBe(true);
-  });
-
-  it('active can transition to abandoned', () => {
-    expect(isValidStatusTransition('active', 'abandoned')).toBe(true);
-  });
-
-  it('paused can transition to active', () => {
-    expect(isValidStatusTransition('paused', 'active')).toBe(true);
-  });
-
-  it('paused can transition to completed', () => {
-    expect(isValidStatusTransition('paused', 'completed')).toBe(true);
-  });
-
-  it('paused can transition to abandoned', () => {
-    expect(isValidStatusTransition('paused', 'abandoned')).toBe(true);
-  });
-
-  it('completed cannot transition to any status', () => {
-    const statuses: CoopSessionStatus[] = ['lobby', 'active', 'paused', 'completed', 'abandoned'];
-    for (const status of statuses) {
-      expect(isValidStatusTransition('completed', status)).toBe(false);
-    }
-  });
-
-  it('abandoned cannot transition to any status', () => {
-    const statuses: CoopSessionStatus[] = ['lobby', 'active', 'paused', 'completed', 'abandoned'];
-    for (const status of statuses) {
-      expect(isValidStatusTransition('abandoned', status)).toBe(false);
-    }
-  });
-});
-
-describe('coop session service - coop roles', () => {
-  const coopRoles = ['triage_lead', 'verification_lead'] as const;
-
-  it('should have two coop roles', () => {
-    expect(coopRoles).toHaveLength(2);
-  });
-
-  it('should include triage_lead role', () => {
-    expect(coopRoles).toContain('triage_lead');
-  });
-
-  it('should include verification_lead role', () => {
-    expect(coopRoles).toContain('verification_lead');
-  });
-});
-
-describe('coop session service - proposal statuses', () => {
-  const proposalStatuses = ['proposed', 'confirmed', 'overridden', 'withdrawn'] as const;
-
-  it('should have four proposal statuses', () => {
-    expect(proposalStatuses).toHaveLength(4);
-  });
-
-  it('should include proposed status', () => {
-    expect(proposalStatuses).toContain('proposed');
-  });
-
-  it('should include confirmed status', () => {
-    expect(proposalStatuses).toContain('confirmed');
-  });
-
-  it('should include overridden status', () => {
-    expect(proposalStatuses).toContain('overridden');
-  });
-
-  it('should include withdrawn status', () => {
-    expect(proposalStatuses).toContain('withdrawn');
-  });
-});
-
-describe('coop session service - authority actions', () => {
-  const authorityActions = ['confirm', 'override'] as const;
-
-  it('should have two authority actions', () => {
-    expect(authorityActions).toHaveLength(2);
-  });
-
-  it('should include confirm action', () => {
-    expect(authorityActions).toContain('confirm');
-  });
-
-  it('should include override action', () => {
-    expect(authorityActions).toContain('override');
-  });
-});
-
-describe('coop session service - conflict reasons', () => {
-  const conflictReasons = [
-    'insufficient_verification',
-    'risk_tolerance',
-    'factual_dispute',
-    'policy_conflict',
-  ] as const;
-
-  it('should have four conflict reasons', () => {
-    expect(conflictReasons).toHaveLength(4);
-  });
-
-  it('should include insufficient_verification', () => {
-    expect(conflictReasons).toContain('insufficient_verification');
-  });
-
-  it('should include risk_tolerance', () => {
-    expect(conflictReasons).toContain('risk_tolerance');
-  });
-
-  it('should include factual_dispute', () => {
-    expect(conflictReasons).toContain('factual_dispute');
-  });
-
-  it('should include policy_conflict', () => {
-    expect(conflictReasons).toContain('policy_conflict');
-  });
-});
-
-describe('coop session service - incident actions', () => {
-  const incidentActions = ['quarantine', 'delete', 'escalate', 'resolve'] as const;
-
-  it('should have four incident actions', () => {
-    expect(incidentActions).toHaveLength(4);
-  });
-
-  it('should include quarantine action', () => {
-    expect(incidentActions).toContain('quarantine');
-  });
-
-  it('should include delete action', () => {
-    expect(incidentActions).toContain('delete');
-  });
-
-  it('should include escalate action', () => {
-    expect(incidentActions).toContain('escalate');
-  });
-
-  it('should include resolve action', () => {
-    expect(incidentActions).toContain('resolve');
-  });
-});
-
-describe('coop session service - session cache TTL', () => {
-  const SESSION_CACHE_TTL = 300;
-
-  it('should have TTL of 5 minutes (300 seconds)', () => {
-    expect(SESSION_CACHE_TTL).toBe(300);
-  });
-});
-
-describe('coop session service - authority token rules', () => {
-  function canFinalizeProposal(
-    isAuthority: boolean,
-    isOwnProposal: boolean,
-  ): { canFinalize: boolean; reason?: string } {
-    if (!isAuthority) {
-      return { canFinalize: false, reason: 'Only authority can finalize proposals' };
-    }
-    if (isOwnProposal) {
-      return { canFinalize: false, reason: 'Authority cannot finalize own proposal' };
-    }
-    return { canFinalize: true };
-  }
-
-  it('authority cannot finalize own proposal', () => {
-    const result = canFinalizeProposal(true, true);
-    expect(result.canFinalize).toBe(false);
-    expect(result.reason).toBe('Authority cannot finalize own proposal');
-  });
-
-  it('authority can finalize other player proposal', () => {
-    const result = canFinalizeProposal(true, false);
-    expect(result.canFinalize).toBe(true);
-  });
-
-  it('non-authority cannot finalize any proposal', () => {
-    const result = canFinalizeProposal(false, false);
-    expect(result.canFinalize).toBe(false);
-    expect(result.reason).toBe('Only authority can finalize proposals');
-  });
-});
-
-describe('coop session service - day advancement', () => {
-  function advanceDay(
-    currentDay: number,
-    currentAuthority: string,
-    player1Id: string,
-    player2Id: string,
-  ): { newDay: number; newAuthority: string } {
-    const newAuthority = currentAuthority === player1Id ? player2Id : player1Id;
-    return { newDay: currentDay + 1, newAuthority };
-  }
-
-  it('advances day and rotates authority from player1 to player2', () => {
-    const result = advanceDay(1, 'player1', 'player1', 'player2');
-    expect(result.newDay).toBe(2);
-    expect(result.newAuthority).toBe('player2');
-  });
-
-  it('advances day and rotates authority from player2 to player1', () => {
-    const result = advanceDay(1, 'player2', 'player1', 'player2');
-    expect(result.newDay).toBe(2);
-    expect(result.newAuthority).toBe('player1');
-  });
-
-  it('day number increments correctly through multiple advances', () => {
-    let day = 1;
-    let authority = 'player1';
-
-    for (let i = 0; i < 5; i++) {
-      const result = advanceDay(day, authority, 'player1', 'player2');
-      day = result.newDay;
-      authority = result.newAuthority;
-    }
-
-    expect(day).toBe(6);
-  });
-});
-
-describe('coop session service - role assignment', () => {
-  interface RoleAssignmentResult {
-    player1Role: string;
-    player2Role: string;
-    player1IsAuthority: boolean;
-    player2IsAuthority: boolean;
-  }
-
-  function assignRoles(
-    player1Id: string,
-    _player2Id: string,
-    authorityPlayerId: string,
-  ): RoleAssignmentResult {
-    const isPlayer1Authority = authorityPlayerId === player1Id;
-    return {
-      player1Role: isPlayer1Authority ? 'triage_lead' : 'verification_lead',
-      player2Role: isPlayer1Authority ? 'verification_lead' : 'triage_lead',
-      player1IsAuthority: isPlayer1Authority,
-      player2IsAuthority: !isPlayer1Authority,
-    };
-  }
-
-  it('player1 gets triage_lead when authority', () => {
-    const result = assignRoles('player1', 'player2', 'player1');
-    expect(result.player1Role).toBe('triage_lead');
-    expect(result.player1IsAuthority).toBe(true);
-    expect(result.player2Role).toBe('verification_lead');
-    expect(result.player2IsAuthority).toBe(false);
-  });
-
-  it('player1 gets verification_lead when not authority', () => {
-    const result = assignRoles('player1', 'player2', 'player2');
-    expect(result.player1Role).toBe('verification_lead');
-    expect(result.player1IsAuthority).toBe(false);
-    expect(result.player2Role).toBe('triage_lead');
-    expect(result.player2IsAuthority).toBe(true);
-  });
-});
-
-describe('coop session service - session seed', () => {
-  function generateSessionSeed(): string {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const bytes = crypto.getRandomValues(new Uint8Array(32));
-    return Array.from(bytes)
-      .map((b) => chars[b % chars.length])
-      .join('');
-  }
-
-  it('generates correct length (32)', () => {
-    const seed = generateSessionSeed();
-    expect(seed).toHaveLength(32);
-  });
-
-  it('each call produces unique seed', () => {
-    const seeds = new Set<string>();
-    for (let i = 0; i < 100; i++) {
-      seeds.add(generateSessionSeed());
-    }
-    expect(seeds.size).toBe(100);
-  });
-
-  it('seed uses only valid characters', () => {
-    const validChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const seed = generateSessionSeed();
-    for (const char of seed) {
-      expect(validChars.includes(char)).toBe(true);
-    }
-  });
-});
-
-describe('coop session service - role permission matrix', () => {
-  type Action =
-    | 'view_inbox'
-    | 'mark_indicators'
-    | 'request_verification'
-    | 'view_verification_packets'
-    | 'propose_decision'
-    | 'finalize_decision'
-    | 'advance_day';
-
-  function canPerformAction(
-    role: 'triage_lead' | 'verification_lead' | 'authority',
-    action: Action,
-  ): boolean {
-    const permissions: Record<string, Record<Action, boolean>> = {
-      triage_lead: {
-        view_inbox: true,
-        mark_indicators: true,
-        request_verification: true,
-        view_verification_packets: false,
-        propose_decision: true,
-        finalize_decision: false,
-        advance_day: false,
+  return {
+    query: {
+      coopSession: {
+        findFirst: vi
+          .fn()
+          .mockImplementation(() => Promise.resolve(mockQueryResults.coopSessionFindFirst)),
+        findMany: vi
+          .fn()
+          .mockImplementation(() => Promise.resolve(mockQueryResults.coopSessionFindMany)),
       },
-      verification_lead: {
-        view_inbox: false,
-        mark_indicators: false,
-        request_verification: true,
-        view_verification_packets: true,
-        propose_decision: true,
-        finalize_decision: false,
-        advance_day: false,
+      coopRoleAssignment: {
+        findFirst: vi
+          .fn()
+          .mockImplementation(() => Promise.resolve(mockQueryResults.roleAssignmentFindFirst)),
+        findMany: vi
+          .fn()
+          .mockImplementation(() => Promise.resolve(mockQueryResults.roleAssignmentFindMany)),
       },
-      authority: {
-        view_inbox: true,
-        mark_indicators: true,
-        request_verification: true,
-        view_verification_packets: true,
-        propose_decision: true,
-        finalize_decision: true,
-        advance_day: true,
+      coopDecisionProposal: {
+        findFirst: vi
+          .fn()
+          .mockImplementation(() => Promise.resolve(mockQueryResults.proposalFindFirst)),
+        findMany: vi
+          .fn()
+          .mockImplementation(() => Promise.resolve(mockQueryResults.proposalFindMany)),
       },
-    };
-    return permissions[role]?.[action] ?? false;
-  }
+      playerProfiles: {
+        findFirst: vi
+          .fn()
+          .mockImplementation(() => Promise.resolve(mockQueryResults.playerProfileFindFirst)),
+      },
+      party: {
+        findFirst: vi
+          .fn()
+          .mockImplementation(() => Promise.resolve(mockQueryResults.partyFindFirst)),
+      },
+    },
+    insert: vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockImplementation(() => ({
+        returning: vi.fn().mockImplementation(() => Promise.resolve([mockQueryResults.insert])),
+      })),
+    })),
+    update: vi.fn().mockImplementation(() => ({
+      set: vi.fn().mockImplementation(() => ({
+        where: vi.fn().mockImplementation(() => ({
+          returning: vi.fn().mockImplementation(() => Promise.resolve([mockQueryResults.update])),
+        })),
+      })),
+    })),
+    delete: vi.fn().mockImplementation(() => ({
+      where: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResults.delete)),
+    })),
+  } as unknown as DatabaseClient;
+};
 
-  it('triage_lead can view inbox', () => {
-    expect(canPerformAction('triage_lead', 'view_inbox')).toBe(true);
+const createMockCoopSession = (overrides: Partial<Record<string, unknown>> = {}) => ({
+  sessionId: SESSION_ID,
+  tenantId: TENANT_ID,
+  partyId: PARTY_ID,
+  seed: 'TESTSEED123456789012345678901234',
+  status: 'lobby',
+  authorityPlayerId: LEADER_ID,
+  gameSessionId: null,
+  dayNumber: 1,
+  sessionSeq: 0,
+  lastSnapshotSeq: 0,
+  lastSnapshotAt: null,
+  createdAt: new Date(),
+  completedAt: null,
+  roleConfig: null,
+  scenarioId: null,
+  difficultyTier: null,
+  ...overrides,
+});
+
+const createMockRoleAssignment = (overrides: Partial<Record<string, unknown>> = {}) => ({
+  assignmentId: 'assignment-1',
+  sessionId: SESSION_ID,
+  playerId: PLAYER_1_ID,
+  role: 'triage_lead',
+  rolePreference: null,
+  isAuthority: true,
+  assignedAt: new Date(),
+  ...overrides,
+});
+
+const setupMockDb = (
+  mockDb: DatabaseClient,
+  mockSession: Record<string, unknown> | null,
+  mockRoles: Record<string, unknown>[] = [],
+) => {
+  (mockDb.query.coopSession.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(mockSession);
+  (mockDb.query.coopRoleAssignment.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+    mockRoles[0] || null,
+  );
+  (mockDb.query.coopRoleAssignment.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(
+    mockRoles,
+  );
+};
+
+describe('coop-session service', () => {
+  let mockDb: DatabaseClient;
+  let mockEventBus: IEventBus;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockDb = createMockDb();
+    mockEventBus = createMockEventBus();
+    vi.mocked(getDatabaseClient).mockReturnValue(mockDb);
+    vi.mocked(evaluateFlag).mockResolvedValue(true);
+    vi.mocked(getCachedCoopSession).mockResolvedValue(null);
+    vi.mocked(setCachedCoopSession).mockResolvedValue(undefined);
+    vi.mocked(deleteCachedCoopSession).mockResolvedValue(undefined);
   });
 
-  it('triage_lead cannot view verification packets', () => {
-    expect(canPerformAction('triage_lead', 'view_verification_packets')).toBe(false);
+  describe('createCoopSession', () => {
+    it('should create a co-op session successfully', async () => {
+      const mockSession = createMockCoopSession();
+      let callCount = 0;
+
+      const findFirstMock = vi.fn().mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve(null);
+        }
+        return Promise.resolve(mockSession);
+      });
+
+      (mockDb.query.coopSession.findFirst as ReturnType<typeof vi.fn>).mockImplementation(
+        findFirstMock,
+      );
+      (mockDb.insert as ReturnType<typeof vi.fn>).mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockSession]),
+        }),
+      });
+      (mockDb.query.playerProfiles.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
+      (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ ...mockSession, status: 'in_session' }]),
+        }),
+      });
+      (mockDb.query.coopRoleAssignment.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+      const result = await createCoopSession(
+        mockConfig,
+        TENANT_ID,
+        LEADER_ID,
+        { partyId: PARTY_ID, seed: 'TESTSEED123456789012345678901234' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.session).toBeDefined();
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when coop feature is disabled', async () => {
+      vi.mocked(evaluateFlag).mockResolvedValue(false);
+
+      const result = await createCoopSession(
+        mockConfig,
+        TENANT_ID,
+        LEADER_ID,
+        { partyId: PARTY_ID, seed: 'TESTSEED123456789012345678901234' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op system is disabled');
+    });
+
+    it('should fail when session already exists for party', async () => {
+      setupMockDb(mockDb, createMockCoopSession());
+
+      const result = await createCoopSession(
+        mockConfig,
+        TENANT_ID,
+        LEADER_ID,
+        { partyId: PARTY_ID, seed: 'TESTSEED123456789012345678901234' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op session already exists for this party');
+    });
   });
 
-  it('verification_lead can view verification packets', () => {
-    expect(canPerformAction('verification_lead', 'view_verification_packets')).toBe(true);
+  describe('getCoopSession', () => {
+    it('should return session from database when not cached', async () => {
+      const mockSession = createMockCoopSession();
+      setupMockDb(mockDb, mockSession, []);
+
+      const result = await getCoopSession(mockConfig, TENANT_ID, SESSION_ID, mockEventBus);
+
+      expect(result.success).toBe(true);
+      expect(result.session).toBeDefined();
+      expect(result.session?.sessionId).toBe(SESSION_ID);
+      expect(setCachedCoopSession).toHaveBeenCalled();
+    });
+
+    it('should return error when session not found', async () => {
+      setupMockDb(mockDb, null);
+
+      const result = await getCoopSession(mockConfig, TENANT_ID, SESSION_ID, mockEventBus);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op session not found');
+    });
   });
 
-  it('verification_lead cannot mark indicators', () => {
-    expect(canPerformAction('verification_lead', 'mark_indicators')).toBe(false);
+  describe('assignRoles', () => {
+    it('should assign roles and change status to active', async () => {
+      const mockSession = createMockCoopSession({ status: 'lobby' });
+      setupMockDb(mockDb, mockSession);
+
+      (mockDb.insert as ReturnType<typeof vi.fn>).mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([
+            createMockRoleAssignment(),
+            createMockRoleAssignment({
+              assignmentId: 'assignment-2',
+              playerId: PLAYER_2_ID,
+              role: 'verification_lead',
+              isAuthority: false,
+            }),
+          ]),
+        }),
+      });
+
+      const result = await assignRoles(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { player1Id: PLAYER_1_ID, player2Id: PLAYER_2_ID },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.session).toBeDefined();
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when session not in lobby status', async () => {
+      const mockSession = createMockCoopSession({ status: 'active' });
+      setupMockDb(mockDb, mockSession);
+
+      const result = await assignRoles(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { player1Id: PLAYER_1_ID, player2Id: PLAYER_2_ID },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Can only assign roles in lobby status');
+    });
+
+    it('should fail when coop feature is disabled', async () => {
+      vi.mocked(evaluateFlag).mockResolvedValue(false);
+
+      const result = await assignRoles(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { player1Id: PLAYER_1_ID, player2Id: PLAYER_2_ID },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op system is disabled');
+    });
   });
 
-  it('neither role can finalize decision', () => {
-    expect(canPerformAction('triage_lead', 'finalize_decision')).toBe(false);
-    expect(canPerformAction('verification_lead', 'finalize_decision')).toBe(false);
+  describe('startCoopSession', () => {
+    it('should start session when in lobby and player is authority', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'lobby',
+        authorityPlayerId: PLAYER_1_ID,
+      });
+      setupMockDb(mockDb, mockSession);
+
+      (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ ...mockSession, status: 'active' }]),
+        }),
+      });
+
+      const result = await startCoopSession(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { scenarioId: 'scenario-1', difficultyTier: 'standard' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when session not in lobby', async () => {
+      const mockSession = createMockCoopSession({ status: 'active' });
+      setupMockDb(mockDb, mockSession);
+
+      const result = await startCoopSession(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { scenarioId: 'scenario-1', difficultyTier: 'standard' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Can only start a session that is in lobby status');
+    });
+
+    it('should fail when player is not authority', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'lobby',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession);
+
+      const result = await startCoopSession(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { scenarioId: 'scenario-1', difficultyTier: 'standard' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Only the session authority can start the session');
+    });
   });
 
-  it('authority can finalize decision', () => {
-    expect(canPerformAction('authority', 'finalize_decision')).toBe(true);
+  describe('advanceDay', () => {
+    it('should advance day and rotate authority', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_1_ID,
+        dayNumber: 1,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, isAuthority: true }),
+        createMockRoleAssignment({
+          playerId: PLAYER_2_ID,
+          isAuthority: false,
+          assignmentId: 'assignment-2',
+        }),
+      ]);
+
+      (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi
+            .fn()
+            .mockResolvedValue([{ ...mockSession, dayNumber: 2, authorityPlayerId: PLAYER_2_ID }]),
+        }),
+      });
+
+      const result = await advanceDay(mockConfig, TENANT_ID, SESSION_ID, PLAYER_1_ID, mockEventBus);
+
+      expect(result.success).toBe(true);
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when player is not authority', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession);
+
+      const result = await advanceDay(mockConfig, TENANT_ID, SESSION_ID, PLAYER_1_ID, mockEventBus);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Only the authority can advance the day');
+    });
+
+    it('should fail when session is not active', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'lobby',
+        authorityPlayerId: PLAYER_1_ID,
+      });
+      setupMockDb(mockDb, mockSession);
+
+      const result = await advanceDay(mockConfig, TENANT_ID, SESSION_ID, PLAYER_1_ID, mockEventBus);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Can only advance day in active session');
+    });
   });
 
-  it('only authority can advance day', () => {
-    expect(canPerformAction('triage_lead', 'advance_day')).toBe(false);
-    expect(canPerformAction('verification_lead', 'advance_day')).toBe(false);
-    expect(canPerformAction('authority', 'advance_day')).toBe(true);
+  describe('rotateAuthority', () => {
+    it('should rotate authority to other player', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_1_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, isAuthority: true }),
+        createMockRoleAssignment({
+          playerId: PLAYER_2_ID,
+          isAuthority: false,
+          assignmentId: 'assignment-2',
+        }),
+      ]);
+
+      (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([{ ...mockSession, authorityPlayerId: PLAYER_2_ID }]),
+        }),
+      });
+
+      const result = await rotateAuthority(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when player is not current authority', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession);
+
+      const result = await rotateAuthority(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Only the current authority can transfer authority');
+    });
   });
 
-  it('all roles can propose decisions', () => {
-    expect(canPerformAction('triage_lead', 'propose_decision')).toBe(true);
-    expect(canPerformAction('verification_lead', 'propose_decision')).toBe(true);
-    expect(canPerformAction('authority', 'propose_decision')).toBe(true);
+  describe('endCoopSession', () => {
+    it('should end session successfully', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_1_ID,
+      });
+      setupMockDb(mockDb, mockSession);
+
+      (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi
+            .fn()
+            .mockResolvedValue([{ ...mockSession, status: 'completed', completedAt: new Date() }]),
+        }),
+      });
+
+      const result = await endCoopSession(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(true);
+      expect(deleteCachedCoopSession).toHaveBeenCalled();
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when session already terminated', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'completed',
+        authorityPlayerId: PLAYER_1_ID,
+      });
+      setupMockDb(mockDb, mockSession);
+
+      const result = await endCoopSession(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Session is already terminated');
+    });
+
+    it('should fail when player is not authority', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession);
+
+      const result = await endCoopSession(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Only the authority can end the session');
+    });
+  });
+
+  describe('abandonCoopSession', () => {
+    it('should abandon session successfully', async () => {
+      const mockSession = createMockCoopSession({ status: 'active' });
+      setupMockDb(mockDb, mockSession, [createMockRoleAssignment({ playerId: PLAYER_1_ID })]);
+
+      (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi
+            .fn()
+            .mockResolvedValue([{ ...mockSession, status: 'abandoned', completedAt: new Date() }]),
+        }),
+      });
+
+      const result = await abandonCoopSession(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(true);
+      expect(deleteCachedCoopSession).toHaveBeenCalled();
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when session already terminated', async () => {
+      const mockSession = createMockCoopSession({ status: 'abandoned' });
+      setupMockDb(mockDb, mockSession, [createMockRoleAssignment({ playerId: PLAYER_1_ID })]);
+
+      const result = await abandonCoopSession(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Session is already terminated');
+    });
+
+    it('should fail when player is not part of session', async () => {
+      const mockSession = createMockCoopSession({ status: 'active' });
+      setupMockDb(mockDb, mockSession, []);
+
+      const result = await abandonCoopSession(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Player is not part of this co-op session');
+    });
+  });
+
+  describe('submitRolePreference', () => {
+    it('should submit role preference successfully', async () => {
+      const mockSession = createMockCoopSession({ status: 'lobby' });
+      setupMockDb(mockDb, mockSession, [createMockRoleAssignment({ playerId: PLAYER_1_ID })]);
+
+      (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([createMockRoleAssignment({ playerId: PLAYER_1_ID })]),
+        }),
+      });
+
+      const result = await submitRolePreference(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        { playerId: PLAYER_1_ID, preference: 'triage_lead' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should fail when session not in lobby', async () => {
+      const mockSession = createMockCoopSession({ status: 'active' });
+      setupMockDb(mockDb, mockSession, [createMockRoleAssignment({ playerId: PLAYER_1_ID })]);
+
+      const result = await submitRolePreference(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        { playerId: PLAYER_1_ID, preference: 'triage_lead' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Can only submit role preference in lobby status');
+    });
+  });
+
+  describe('authorityConfirm', () => {
+    it('should confirm proposal and publish event', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_1_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, isAuthority: true }),
+        createMockRoleAssignment({
+          playerId: PLAYER_2_ID,
+          isAuthority: false,
+          assignmentId: 'assignment-2',
+        }),
+      ]);
+
+      (mockDb.query.coopDecisionProposal.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+        proposalId: 'proposal-1',
+        sessionId: SESSION_ID,
+        playerId: PLAYER_2_ID,
+        role: 'verification_lead',
+        emailId: 'email-1',
+        action: 'quarantine',
+        status: 'proposed',
+        conflictFlag: false,
+      });
+
+      (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([
+            {
+              proposalId: 'proposal-1',
+              status: 'confirmed',
+              authorityAction: 'confirm',
+            },
+          ]),
+        }),
+      });
+
+      const result = await authorityConfirm(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { proposalId: 'proposal-1', action: 'confirm' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when authority tries to confirm own proposal', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_1_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, isAuthority: true }),
+      ]);
+
+      (mockDb.query.coopDecisionProposal.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+        proposalId: 'proposal-1',
+        sessionId: SESSION_ID,
+        playerId: PLAYER_1_ID,
+        status: 'proposed',
+      });
+
+      const result = await authorityConfirm(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { proposalId: 'proposal-1', action: 'confirm' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Authority cannot finalize own proposal');
+    });
+  });
+
+  describe('authorityOverride', () => {
+    it('should override proposal with reason', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_1_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, isAuthority: true }),
+        createMockRoleAssignment({
+          playerId: PLAYER_2_ID,
+          isAuthority: false,
+          assignmentId: 'assignment-2',
+        }),
+      ]);
+
+      (mockDb.query.coopDecisionProposal.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+        proposalId: 'proposal-1',
+        sessionId: SESSION_ID,
+        playerId: PLAYER_2_ID,
+        role: 'verification_lead',
+        status: 'proposed',
+      });
+
+      (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue([
+            {
+              proposalId: 'proposal-1',
+              status: 'overridden',
+              authorityAction: 'override',
+              conflictFlag: true,
+              conflictReason: 'insufficient_verification',
+            },
+          ]),
+        }),
+      });
+
+      const result = await authorityOverride(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        {
+          proposalId: 'proposal-1',
+          action: 'override',
+          conflictReason: 'insufficient_verification',
+        },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when proposal not found', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_1_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, isAuthority: true }),
+      ]);
+
+      (mockDb.query.coopDecisionProposal.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+        null,
+      );
+
+      const result = await authorityOverride(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { proposalId: 'proposal-1', action: 'override' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Proposal not found');
+    });
+  });
+
+  describe('submitProposal', () => {
+    it('should fail when feature flag is disabled', async () => {
+      vi.mocked(evaluateFlag).mockResolvedValue(false);
+
+      const result = await submitProposal(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { emailId: 'email-1', action: 'quarantine' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op system is disabled');
+    });
+
+    it('should fail when session not found', async () => {
+      setupMockDb(mockDb, null);
+
+      const result = await submitProposal(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { emailId: 'email-1', action: 'quarantine' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op session not found');
+    });
+
+    it('should fail when session is not active', async () => {
+      const mockSession = createMockCoopSession({ status: 'lobby' });
+      setupMockDb(mockDb, mockSession);
+
+      const result = await submitProposal(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { emailId: 'email-1', action: 'quarantine' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Can only submit proposals in active session');
+    });
+
+    it('should fail when player is not assigned to session', async () => {
+      const mockSession = createMockCoopSession({ status: 'active' });
+      setupMockDb(mockDb, mockSession, []);
+
+      const result = await submitProposal(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { emailId: 'email-1', action: 'quarantine' },
+        mockEventBus,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Player is not part of this co-op session');
+    });
+
+    it('should fail when permission denied', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
+      ]);
+
+      const result = await submitProposal(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { emailId: 'email-1', action: 'quarantine' },
+        mockEventBus,
+        'PHASE_VERIFICATION',
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('cannot perform');
+    });
+
+    it('should successfully submit proposal', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
+      ]);
+
+      const mockProposal = {
+        proposalId: 'proposal-1',
+        sessionId: SESSION_ID,
+        playerId: PLAYER_1_ID,
+        role: 'triage_lead',
+        emailId: 'email-1',
+        action: 'quarantine',
+        status: 'proposed',
+        conflictFlag: false,
+      };
+
+      (mockDb.insert as ReturnType<typeof vi.fn>).mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockProposal]),
+        }),
+      });
+
+      const result = await submitProposal(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { emailId: 'email-1', action: 'quarantine' },
+        mockEventBus,
+        'PHASE_EMAIL_INTAKE',
+      );
+
+      expect(result.success).toBe(true);
+      expect(deleteCachedCoopSession).toHaveBeenCalledWith(mockConfig, TENANT_ID, SESSION_ID);
+      expect(mockEventBus.publish).toHaveBeenCalled();
+    });
+
+    it('should fail when proposal creation returns empty', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
+      ]);
+
+      (mockDb.insert as ReturnType<typeof vi.fn>).mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([]),
+        }),
+      });
+
+      const result = await submitProposal(
+        mockConfig,
+        TENANT_ID,
+        SESSION_ID,
+        PLAYER_1_ID,
+        { emailId: 'email-1', action: 'quarantine' },
+        mockEventBus,
+        'PHASE_EMAIL_INTAKE',
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Failed to submit proposal');
+    });
   });
 });
 
