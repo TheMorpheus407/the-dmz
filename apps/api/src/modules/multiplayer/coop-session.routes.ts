@@ -5,21 +5,9 @@ import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
+import { getDatabaseClient } from '../../shared/database/connection.js';
 
-import {
-  createCoopSession,
-  getCoopSession,
-  assignRoles,
-  startCoopSession,
-  submitRolePreference,
-  rotateAuthority,
-  submitProposal,
-  authorityConfirm,
-  authorityOverride,
-  advanceDay,
-  endCoopSession,
-  abandonCoopSession,
-} from './coop-session.service.js';
+import { createCoopSessionService } from './coop-session.service.js';
 import {
   getSessionRoleConfig,
   getRolePermissionsForSession,
@@ -133,18 +121,14 @@ export async function coopSessionRoutes(
     async (request, _reply) => {
       const user = request.user as AuthenticatedUser;
       const input = request.body as z.infer<typeof createCoopSessionSchema>;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await createCoopSession(
-        config,
-        user.tenantId,
-        user.userId,
-        {
-          partyId: input.partyId,
-          seed: input.seed,
-        },
-        eventBus,
-      );
+      const result = await service.createSession(user.tenantId, user.userId, {
+        partyId: input.partyId,
+        seed: input.seed,
+      });
 
       if (!result.success) {
         throw new AppError({
@@ -199,9 +183,11 @@ export async function coopSessionRoutes(
     async (request, _reply) => {
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await getCoopSession(config, user.tenantId, sessionId, eventBus);
+      const result = await service.getSession(user.tenantId, sessionId);
 
       if (!result.success) {
         throw new AppError({
@@ -258,19 +244,14 @@ export async function coopSessionRoutes(
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
       const input = request.body as z.infer<typeof assignRolesSchema>;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await assignRoles(
-        config,
-        user.tenantId,
-        sessionId,
-        user.userId,
-        {
-          player1Id: input.player1Id,
-          player2Id: input.player2Id,
-        },
-        eventBus,
-      );
+      const result = await service.assignRoles(user.tenantId, sessionId, user.userId, {
+        player1Id: input.player1Id,
+        player2Id: input.player2Id,
+      });
 
       if (!result.success) {
         throw new AppError({
@@ -327,19 +308,14 @@ export async function coopSessionRoutes(
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
       const input = request.body as z.infer<typeof startCoopSessionSchema>;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await startCoopSession(
-        config,
-        user.tenantId,
-        sessionId,
-        user.userId,
-        {
-          scenarioId: input.scenarioId,
-          difficultyTier: input.difficultyTier,
-        },
-        eventBus,
-      );
+      const result = await service.startSession(user.tenantId, sessionId, user.userId, {
+        scenarioId: input.scenarioId,
+        difficultyTier: input.difficultyTier,
+      });
 
       if (!result.success) {
         throw new AppError({
@@ -398,18 +374,14 @@ export async function coopSessionRoutes(
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
       const input = request.body as z.infer<typeof submitRolePreferenceSchema>;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await submitRolePreference(
-        config,
-        user.tenantId,
-        sessionId,
-        {
-          playerId: input.playerId,
-          preference: input.preference,
-        },
-        eventBus,
-      );
+      const result = await service.submitRolePreference(user.tenantId, sessionId, {
+        playerId: input.playerId,
+        preference: input.preference,
+      });
 
       if (!result.success) {
         throw new AppError({
@@ -466,9 +438,11 @@ export async function coopSessionRoutes(
     async (request, _reply) => {
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await rotateAuthority(config, user.tenantId, sessionId, user.userId, eventBus);
+      const result = await service.rotateAuthority(user.tenantId, sessionId, user.userId);
 
       if (!result.success) {
         throw new AppError({
@@ -525,21 +499,16 @@ export async function coopSessionRoutes(
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
       const input = request.body as z.infer<typeof submitProposalSchema>;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await submitProposal(
-        config,
-        user.tenantId,
-        sessionId,
-        user.userId,
-        {
-          playerId: input.playerId,
-          role: input.role,
-          emailId: input.emailId,
-          action: input.action,
-        },
-        eventBus,
-      );
+      const result = await service.submitProposal(user.tenantId, sessionId, user.userId, {
+        playerId: input.playerId,
+        role: input.role,
+        emailId: input.emailId,
+        action: input.action,
+      });
 
       if (!result.success) {
         throw new AppError({
@@ -596,19 +565,14 @@ export async function coopSessionRoutes(
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
       const input = request.body as z.infer<typeof authorityActionInputSchema>;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await authorityConfirm(
-        config,
-        user.tenantId,
-        sessionId,
-        user.userId,
-        {
-          proposalId: input.proposalId,
-          action: input.action,
-        },
-        eventBus,
-      );
+      const result = await service.authorityConfirm(user.tenantId, sessionId, user.userId, {
+        proposalId: input.proposalId,
+        action: input.action,
+      });
 
       if (!result.success) {
         throw new AppError({
@@ -665,20 +629,15 @@ export async function coopSessionRoutes(
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
       const input = request.body as z.infer<typeof authorityActionInputSchema>;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await authorityOverride(
-        config,
-        user.tenantId,
-        sessionId,
-        user.userId,
-        {
-          proposalId: input.proposalId,
-          action: input.action,
-          conflictReason: input.conflictReason,
-        },
-        eventBus,
-      );
+      const result = await service.authorityOverride(user.tenantId, sessionId, user.userId, {
+        proposalId: input.proposalId,
+        action: input.action,
+        conflictReason: input.conflictReason,
+      });
 
       if (!result.success) {
         throw new AppError({
@@ -733,9 +692,11 @@ export async function coopSessionRoutes(
     async (request, _reply) => {
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await advanceDay(config, user.tenantId, sessionId, user.userId, eventBus);
+      const result = await service.advanceDay(user.tenantId, sessionId, user.userId);
 
       if (!result.success) {
         throw new AppError({
@@ -790,9 +751,11 @@ export async function coopSessionRoutes(
     async (request, _reply) => {
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await endCoopSession(config, user.tenantId, sessionId, user.userId, eventBus);
+      const result = await service.endSession(user.tenantId, sessionId, user.userId);
 
       if (!result.success) {
         throw new AppError({
@@ -847,15 +810,11 @@ export async function coopSessionRoutes(
     async (request, _reply) => {
       const user = request.user as AuthenticatedUser;
       const { sessionId } = request.params;
+      const db = getDatabaseClient(config);
       const eventBus = fastify.eventBus;
+      const service = createCoopSessionService(config, db, eventBus);
 
-      const result = await abandonCoopSession(
-        config,
-        user.tenantId,
-        sessionId,
-        user.userId,
-        eventBus,
-      );
+      const result = await service.abandonSession(user.tenantId, sessionId, user.userId);
 
       if (!result.success) {
         throw new AppError({

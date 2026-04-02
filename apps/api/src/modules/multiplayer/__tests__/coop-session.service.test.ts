@@ -27,20 +27,7 @@ import {
   isActionPermitted,
 } from '../permissions/permission-matrix.js';
 import { PermissionDeniedError, checkPermission } from '../permissions/permission.enforcer.js';
-import {
-  createCoopSession,
-  getCoopSession,
-  assignRoles,
-  startCoopSession,
-  submitRolePreference,
-  rotateAuthority,
-  submitProposal,
-  authorityConfirm,
-  authorityOverride,
-  advanceDay,
-  endCoopSession,
-  abandonCoopSession,
-} from '../coop-session.service.js';
+import { createCoopSessionService, type CoopSessionService } from '../coop-session.service.js';
 
 import type { AppConfig } from '../../../config.js';
 import type { IEventBus } from '../../../shared/events/event-types.js';
@@ -72,55 +59,39 @@ const createMockDb = (): DatabaseClient => {
   return {
     query: {
       coopSession: {
-        findFirst: vi
-          .fn()
-          .mockImplementation(() => Promise.resolve(mockQueryResults.coopSessionFindFirst)),
-        findMany: vi
-          .fn()
-          .mockImplementation(() => Promise.resolve(mockQueryResults.coopSessionFindMany)),
+        findFirst: vi.fn().mockResolvedValue(mockQueryResults.coopSessionFindFirst),
+        findMany: vi.fn().mockResolvedValue(mockQueryResults.coopSessionFindMany),
       },
       coopRoleAssignment: {
-        findFirst: vi
-          .fn()
-          .mockImplementation(() => Promise.resolve(mockQueryResults.roleAssignmentFindFirst)),
-        findMany: vi
-          .fn()
-          .mockImplementation(() => Promise.resolve(mockQueryResults.roleAssignmentFindMany)),
+        findFirst: vi.fn().mockResolvedValue(mockQueryResults.roleAssignmentFindFirst),
+        findMany: vi.fn().mockResolvedValue(mockQueryResults.roleAssignmentFindMany),
       },
       coopDecisionProposal: {
-        findFirst: vi
-          .fn()
-          .mockImplementation(() => Promise.resolve(mockQueryResults.proposalFindFirst)),
-        findMany: vi
-          .fn()
-          .mockImplementation(() => Promise.resolve(mockQueryResults.proposalFindMany)),
+        findFirst: vi.fn().mockResolvedValue(mockQueryResults.proposalFindFirst),
+        findMany: vi.fn().mockResolvedValue(mockQueryResults.proposalFindMany),
       },
       playerProfiles: {
-        findFirst: vi
-          .fn()
-          .mockImplementation(() => Promise.resolve(mockQueryResults.playerProfileFindFirst)),
+        findFirst: vi.fn().mockResolvedValue(mockQueryResults.playerProfileFindFirst),
       },
       party: {
-        findFirst: vi
-          .fn()
-          .mockImplementation(() => Promise.resolve(mockQueryResults.partyFindFirst)),
+        findFirst: vi.fn().mockResolvedValue(mockQueryResults.partyFindFirst),
       },
     },
     insert: vi.fn().mockImplementation(() => ({
-      values: vi.fn().mockImplementation(() => ({
-        returning: vi.fn().mockImplementation(() => Promise.resolve([mockQueryResults.insert])),
-      })),
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([mockQueryResults.insert]),
+      }),
     })),
-    update: vi.fn().mockImplementation(() => ({
-      set: vi.fn().mockImplementation(() => ({
-        where: vi.fn().mockImplementation(() => ({
-          returning: vi.fn().mockImplementation(() => Promise.resolve([mockQueryResults.update])),
-        })),
-      })),
-    })),
-    delete: vi.fn().mockImplementation(() => ({
-      where: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResults.delete)),
-    })),
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([mockQueryResults.update]),
+        }),
+      }),
+    }),
+    delete: vi.fn().mockReturnValue({
+      where: vi.fn().mockResolvedValue(mockQueryResults.delete),
+    }),
   } as unknown as DatabaseClient;
 };
 
@@ -172,6 +143,7 @@ const setupMockDb = (
 describe('coop-session service', () => {
   let mockDb: DatabaseClient;
   let mockEventBus: IEventBus;
+  let service: CoopSessionService;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -182,9 +154,10 @@ describe('coop-session service', () => {
     vi.mocked(getCachedCoopSession).mockResolvedValue(null);
     vi.mocked(setCachedCoopSession).mockResolvedValue(undefined);
     vi.mocked(deleteCachedCoopSession).mockResolvedValue(undefined);
+    service = createCoopSessionService(mockConfig, mockDb, mockEventBus);
   });
 
-  describe('createCoopSession', () => {
+  describe('createSession', () => {
     it('should create a co-op session successfully', async () => {
       const mockSession = createMockCoopSession();
       let callCount = 0;
@@ -213,13 +186,10 @@ describe('coop-session service', () => {
       });
       (mockDb.query.coopRoleAssignment.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
-      const result = await createCoopSession(
-        mockConfig,
-        TENANT_ID,
-        LEADER_ID,
-        { partyId: PARTY_ID, seed: 'TESTSEED123456789012345678901234' },
-        mockEventBus,
-      );
+      const result = await service.createSession(TENANT_ID, LEADER_ID, {
+        partyId: PARTY_ID,
+        seed: 'TESTSEED123456789012345678901234',
+      });
 
       expect(result.success).toBe(true);
       expect(result.session).toBeDefined();
@@ -229,13 +199,10 @@ describe('coop-session service', () => {
     it('should fail when coop feature is disabled', async () => {
       vi.mocked(evaluateFlag).mockResolvedValue(false);
 
-      const result = await createCoopSession(
-        mockConfig,
-        TENANT_ID,
-        LEADER_ID,
-        { partyId: PARTY_ID, seed: 'TESTSEED123456789012345678901234' },
-        mockEventBus,
-      );
+      const result = await service.createSession(TENANT_ID, LEADER_ID, {
+        partyId: PARTY_ID,
+        seed: 'TESTSEED123456789012345678901234',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Co-op system is disabled');
@@ -244,25 +211,22 @@ describe('coop-session service', () => {
     it('should fail when session already exists for party', async () => {
       setupMockDb(mockDb, createMockCoopSession());
 
-      const result = await createCoopSession(
-        mockConfig,
-        TENANT_ID,
-        LEADER_ID,
-        { partyId: PARTY_ID, seed: 'TESTSEED123456789012345678901234' },
-        mockEventBus,
-      );
+      const result = await service.createSession(TENANT_ID, LEADER_ID, {
+        partyId: PARTY_ID,
+        seed: 'TESTSEED123456789012345678901234',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Co-op session already exists for this party');
     });
   });
 
-  describe('getCoopSession', () => {
+  describe('getSession', () => {
     it('should return session from database when not cached', async () => {
       const mockSession = createMockCoopSession();
       setupMockDb(mockDb, mockSession, []);
 
-      const result = await getCoopSession(mockConfig, TENANT_ID, SESSION_ID, mockEventBus);
+      const result = await service.getSession(TENANT_ID, SESSION_ID);
 
       expect(result.success).toBe(true);
       expect(result.session).toBeDefined();
@@ -273,7 +237,7 @@ describe('coop-session service', () => {
     it('should return error when session not found', async () => {
       setupMockDb(mockDb, null);
 
-      const result = await getCoopSession(mockConfig, TENANT_ID, SESSION_ID, mockEventBus);
+      const result = await service.getSession(TENANT_ID, SESSION_ID);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Co-op session not found');
@@ -299,14 +263,10 @@ describe('coop-session service', () => {
         }),
       });
 
-      const result = await assignRoles(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { player1Id: PLAYER_1_ID, player2Id: PLAYER_2_ID },
-        mockEventBus,
-      );
+      const result = await service.assignRoles(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        player1Id: PLAYER_1_ID,
+        player2Id: PLAYER_2_ID,
+      });
 
       expect(result.success).toBe(true);
       expect(result.session).toBeDefined();
@@ -317,14 +277,10 @@ describe('coop-session service', () => {
       const mockSession = createMockCoopSession({ status: 'active' });
       setupMockDb(mockDb, mockSession);
 
-      const result = await assignRoles(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { player1Id: PLAYER_1_ID, player2Id: PLAYER_2_ID },
-        mockEventBus,
-      );
+      const result = await service.assignRoles(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        player1Id: PLAYER_1_ID,
+        player2Id: PLAYER_2_ID,
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Can only assign roles in lobby status');
@@ -333,21 +289,17 @@ describe('coop-session service', () => {
     it('should fail when coop feature is disabled', async () => {
       vi.mocked(evaluateFlag).mockResolvedValue(false);
 
-      const result = await assignRoles(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { player1Id: PLAYER_1_ID, player2Id: PLAYER_2_ID },
-        mockEventBus,
-      );
+      const result = await service.assignRoles(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        player1Id: PLAYER_1_ID,
+        player2Id: PLAYER_2_ID,
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Co-op system is disabled');
     });
   });
 
-  describe('startCoopSession', () => {
+  describe('startSession', () => {
     it('should start session when in lobby and player is authority', async () => {
       const mockSession = createMockCoopSession({
         status: 'lobby',
@@ -357,18 +309,16 @@ describe('coop-session service', () => {
 
       (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
         set: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ ...mockSession, status: 'active' }]),
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([{ ...mockSession, status: 'active' }]),
+          }),
         }),
       });
 
-      const result = await startCoopSession(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { scenarioId: 'scenario-1', difficultyTier: 'standard' },
-        mockEventBus,
-      );
+      const result = await service.startSession(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        scenarioId: 'scenario-1',
+        difficultyTier: 'standard',
+      });
 
       expect(result.success).toBe(true);
       expect(mockEventBus.publish).toHaveBeenCalled();
@@ -378,14 +328,10 @@ describe('coop-session service', () => {
       const mockSession = createMockCoopSession({ status: 'active' });
       setupMockDb(mockDb, mockSession);
 
-      const result = await startCoopSession(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { scenarioId: 'scenario-1', difficultyTier: 'standard' },
-        mockEventBus,
-      );
+      const result = await service.startSession(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        scenarioId: 'scenario-1',
+        difficultyTier: 'standard',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Can only start a session that is in lobby status');
@@ -398,14 +344,10 @@ describe('coop-session service', () => {
       });
       setupMockDb(mockDb, mockSession);
 
-      const result = await startCoopSession(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { scenarioId: 'scenario-1', difficultyTier: 'standard' },
-        mockEventBus,
-      );
+      const result = await service.startSession(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        scenarioId: 'scenario-1',
+        difficultyTier: 'standard',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Only the session authority can start the session');
@@ -430,13 +372,17 @@ describe('coop-session service', () => {
 
       (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
         set: vi.fn().mockReturnValue({
-          where: vi
-            .fn()
-            .mockResolvedValue([{ ...mockSession, dayNumber: 2, authorityPlayerId: PLAYER_2_ID }]),
+          where: vi.fn().mockReturnValue({
+            returning: vi
+              .fn()
+              .mockResolvedValue([
+                { ...mockSession, dayNumber: 2, authorityPlayerId: PLAYER_2_ID },
+              ]),
+          }),
         }),
       });
 
-      const result = await advanceDay(mockConfig, TENANT_ID, SESSION_ID, PLAYER_1_ID, mockEventBus);
+      const result = await service.advanceDay(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(true);
       expect(mockEventBus.publish).toHaveBeenCalled();
@@ -449,7 +395,7 @@ describe('coop-session service', () => {
       });
       setupMockDb(mockDb, mockSession);
 
-      const result = await advanceDay(mockConfig, TENANT_ID, SESSION_ID, PLAYER_1_ID, mockEventBus);
+      const result = await service.advanceDay(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Only the authority can advance the day');
@@ -462,7 +408,7 @@ describe('coop-session service', () => {
       });
       setupMockDb(mockDb, mockSession);
 
-      const result = await advanceDay(mockConfig, TENANT_ID, SESSION_ID, PLAYER_1_ID, mockEventBus);
+      const result = await service.advanceDay(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Can only advance day in active session');
@@ -486,17 +432,15 @@ describe('coop-session service', () => {
 
       (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
         set: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([{ ...mockSession, authorityPlayerId: PLAYER_2_ID }]),
+          where: vi.fn().mockReturnValue({
+            returning: vi
+              .fn()
+              .mockResolvedValue([{ ...mockSession, authorityPlayerId: PLAYER_2_ID }]),
+          }),
         }),
       });
 
-      const result = await rotateAuthority(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        mockEventBus,
-      );
+      const result = await service.rotateAuthority(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(true);
       expect(mockEventBus.publish).toHaveBeenCalled();
@@ -509,20 +453,14 @@ describe('coop-session service', () => {
       });
       setupMockDb(mockDb, mockSession);
 
-      const result = await rotateAuthority(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        mockEventBus,
-      );
+      const result = await service.rotateAuthority(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Only the current authority can transfer authority');
     });
   });
 
-  describe('endCoopSession', () => {
+  describe('endSession', () => {
     it('should end session successfully', async () => {
       const mockSession = createMockCoopSession({
         status: 'active',
@@ -532,19 +470,17 @@ describe('coop-session service', () => {
 
       (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
         set: vi.fn().mockReturnValue({
-          where: vi
-            .fn()
-            .mockResolvedValue([{ ...mockSession, status: 'completed', completedAt: new Date() }]),
+          where: vi.fn().mockReturnValue({
+            returning: vi
+              .fn()
+              .mockResolvedValue([
+                { ...mockSession, status: 'completed', completedAt: new Date() },
+              ]),
+          }),
         }),
       });
 
-      const result = await endCoopSession(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        mockEventBus,
-      );
+      const result = await service.endSession(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(true);
       expect(deleteCachedCoopSession).toHaveBeenCalled();
@@ -558,13 +494,7 @@ describe('coop-session service', () => {
       });
       setupMockDb(mockDb, mockSession);
 
-      const result = await endCoopSession(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        mockEventBus,
-      );
+      const result = await service.endSession(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Session is already terminated');
@@ -577,39 +507,31 @@ describe('coop-session service', () => {
       });
       setupMockDb(mockDb, mockSession);
 
-      const result = await endCoopSession(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        mockEventBus,
-      );
+      const result = await service.endSession(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Only the authority can end the session');
     });
   });
 
-  describe('abandonCoopSession', () => {
+  describe('abandonSession', () => {
     it('should abandon session successfully', async () => {
       const mockSession = createMockCoopSession({ status: 'active' });
       setupMockDb(mockDb, mockSession, [createMockRoleAssignment({ playerId: PLAYER_1_ID })]);
 
       (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
         set: vi.fn().mockReturnValue({
-          where: vi
-            .fn()
-            .mockResolvedValue([{ ...mockSession, status: 'abandoned', completedAt: new Date() }]),
+          where: vi.fn().mockReturnValue({
+            returning: vi
+              .fn()
+              .mockResolvedValue([
+                { ...mockSession, status: 'abandoned', completedAt: new Date() },
+              ]),
+          }),
         }),
       });
 
-      const result = await abandonCoopSession(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        mockEventBus,
-      );
+      const result = await service.abandonSession(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(true);
       expect(deleteCachedCoopSession).toHaveBeenCalled();
@@ -620,13 +542,7 @@ describe('coop-session service', () => {
       const mockSession = createMockCoopSession({ status: 'abandoned' });
       setupMockDb(mockDb, mockSession, [createMockRoleAssignment({ playerId: PLAYER_1_ID })]);
 
-      const result = await abandonCoopSession(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        mockEventBus,
-      );
+      const result = await service.abandonSession(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Session is already terminated');
@@ -636,13 +552,7 @@ describe('coop-session service', () => {
       const mockSession = createMockCoopSession({ status: 'active' });
       setupMockDb(mockDb, mockSession, []);
 
-      const result = await abandonCoopSession(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        mockEventBus,
-      );
+      const result = await service.abandonSession(TENANT_ID, SESSION_ID, PLAYER_1_ID);
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Player is not part of this co-op session');
@@ -656,17 +566,18 @@ describe('coop-session service', () => {
 
       (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
         set: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([createMockRoleAssignment({ playerId: PLAYER_1_ID })]),
+          where: vi.fn().mockReturnValue({
+            returning: vi
+              .fn()
+              .mockResolvedValue([createMockRoleAssignment({ playerId: PLAYER_1_ID })]),
+          }),
         }),
       });
 
-      const result = await submitRolePreference(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        { playerId: PLAYER_1_ID, preference: 'triage_lead' },
-        mockEventBus,
-      );
+      const result = await service.submitRolePreference(TENANT_ID, SESSION_ID, {
+        playerId: PLAYER_1_ID,
+        preference: 'triage_lead',
+      });
 
       expect(result.success).toBe(true);
     });
@@ -675,13 +586,10 @@ describe('coop-session service', () => {
       const mockSession = createMockCoopSession({ status: 'active' });
       setupMockDb(mockDb, mockSession, [createMockRoleAssignment({ playerId: PLAYER_1_ID })]);
 
-      const result = await submitRolePreference(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        { playerId: PLAYER_1_ID, preference: 'triage_lead' },
-        mockEventBus,
-      );
+      const result = await service.submitRolePreference(TENANT_ID, SESSION_ID, {
+        playerId: PLAYER_1_ID,
+        preference: 'triage_lead',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Can only submit role preference in lobby status');
@@ -716,24 +624,22 @@ describe('coop-session service', () => {
 
       (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
         set: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([
-            {
-              proposalId: 'proposal-1',
-              status: 'confirmed',
-              authorityAction: 'confirm',
-            },
-          ]),
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              {
+                proposalId: 'proposal-1',
+                status: 'confirmed',
+                authorityAction: 'confirm',
+              },
+            ]),
+          }),
         }),
       });
 
-      const result = await authorityConfirm(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { proposalId: 'proposal-1', action: 'confirm' },
-        mockEventBus,
-      );
+      const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'confirm',
+      });
 
       expect(result.success).toBe(true);
       expect(mockEventBus.publish).toHaveBeenCalled();
@@ -755,14 +661,10 @@ describe('coop-session service', () => {
         status: 'proposed',
       });
 
-      const result = await authorityConfirm(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { proposalId: 'proposal-1', action: 'confirm' },
-        mockEventBus,
-      );
+      const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'confirm',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Authority cannot finalize own proposal');
@@ -794,30 +696,25 @@ describe('coop-session service', () => {
 
       (mockDb.update as ReturnType<typeof vi.fn>).mockReturnValue({
         set: vi.fn().mockReturnValue({
-          where: vi.fn().mockResolvedValue([
-            {
-              proposalId: 'proposal-1',
-              status: 'overridden',
-              authorityAction: 'override',
-              conflictFlag: true,
-              conflictReason: 'insufficient_verification',
-            },
-          ]),
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              {
+                proposalId: 'proposal-1',
+                status: 'overridden',
+                authorityAction: 'override',
+                conflictFlag: true,
+                conflictReason: 'insufficient_verification',
+              },
+            ]),
+          }),
         }),
       });
 
-      const result = await authorityOverride(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        {
-          proposalId: 'proposal-1',
-          action: 'override',
-          conflictReason: 'insufficient_verification',
-        },
-        mockEventBus,
-      );
+      const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'override',
+        conflictReason: 'insufficient_verification',
+      });
 
       expect(result.success).toBe(true);
       expect(mockEventBus.publish).toHaveBeenCalled();
@@ -836,14 +733,10 @@ describe('coop-session service', () => {
         null,
       );
 
-      const result = await authorityOverride(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { proposalId: 'proposal-1', action: 'override' },
-        mockEventBus,
-      );
+      const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'override',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Proposal not found');
@@ -854,14 +747,12 @@ describe('coop-session service', () => {
     it('should fail when feature flag is disabled', async () => {
       vi.mocked(evaluateFlag).mockResolvedValue(false);
 
-      const result = await submitProposal(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { emailId: 'email-1', action: 'quarantine' },
-        mockEventBus,
-      );
+      const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        emailId: 'email-1',
+        action: 'quarantine',
+        playerId: PLAYER_1_ID,
+        role: 'triage_lead',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Co-op system is disabled');
@@ -870,14 +761,12 @@ describe('coop-session service', () => {
     it('should fail when session not found', async () => {
       setupMockDb(mockDb, null);
 
-      const result = await submitProposal(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { emailId: 'email-1', action: 'quarantine' },
-        mockEventBus,
-      );
+      const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        emailId: 'email-1',
+        action: 'quarantine',
+        playerId: PLAYER_1_ID,
+        role: 'triage_lead',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Co-op session not found');
@@ -887,14 +776,12 @@ describe('coop-session service', () => {
       const mockSession = createMockCoopSession({ status: 'lobby' });
       setupMockDb(mockDb, mockSession);
 
-      const result = await submitProposal(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { emailId: 'email-1', action: 'quarantine' },
-        mockEventBus,
-      );
+      const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        emailId: 'email-1',
+        action: 'quarantine',
+        playerId: PLAYER_1_ID,
+        role: 'triage_lead',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Can only submit proposals in active session');
@@ -904,14 +791,12 @@ describe('coop-session service', () => {
       const mockSession = createMockCoopSession({ status: 'active' });
       setupMockDb(mockDb, mockSession, []);
 
-      const result = await submitProposal(
-        mockConfig,
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        { emailId: 'email-1', action: 'quarantine' },
-        mockEventBus,
-      );
+      const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        emailId: 'email-1',
+        action: 'quarantine',
+        playerId: PLAYER_1_ID,
+        role: 'triage_lead',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Player is not part of this co-op session');
@@ -926,13 +811,16 @@ describe('coop-session service', () => {
         createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
       ]);
 
-      const result = await submitProposal(
-        mockConfig,
+      const result = await service.submitProposal(
         TENANT_ID,
         SESSION_ID,
         PLAYER_1_ID,
-        { emailId: 'email-1', action: 'quarantine' },
-        mockEventBus,
+        {
+          emailId: 'email-1',
+          action: 'quarantine',
+          playerId: PLAYER_1_ID,
+          role: 'triage_lead',
+        },
         'PHASE_VERIFICATION',
       );
 
@@ -966,13 +854,16 @@ describe('coop-session service', () => {
         }),
       });
 
-      const result = await submitProposal(
-        mockConfig,
+      const result = await service.submitProposal(
         TENANT_ID,
         SESSION_ID,
         PLAYER_1_ID,
-        { emailId: 'email-1', action: 'quarantine' },
-        mockEventBus,
+        {
+          emailId: 'email-1',
+          action: 'quarantine',
+          playerId: PLAYER_1_ID,
+          role: 'triage_lead',
+        },
         'PHASE_EMAIL_INTAKE',
       );
 
@@ -996,13 +887,16 @@ describe('coop-session service', () => {
         }),
       });
 
-      const result = await submitProposal(
-        mockConfig,
+      const result = await service.submitProposal(
         TENANT_ID,
         SESSION_ID,
         PLAYER_1_ID,
-        { emailId: 'email-1', action: 'quarantine' },
-        mockEventBus,
+        {
+          emailId: 'email-1',
+          action: 'quarantine',
+          playerId: PLAYER_1_ID,
+          role: 'triage_lead',
+        },
         'PHASE_EMAIL_INTAKE',
       );
 
