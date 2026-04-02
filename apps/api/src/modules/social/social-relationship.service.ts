@@ -1,15 +1,5 @@
-import { eq, and, or, sql } from 'drizzle-orm';
-
 import { getDatabaseClient } from '../../shared/database/connection.js';
-import {
-  socialRelationships,
-  type RelationshipType,
-  type RelationshipStatus,
-  type SocialRelationship,
-  MAX_FRIENDS,
-  MAX_BLOCKED,
-  MAX_MUTED,
-} from '../../db/schema/social/index.js';
+import { MAX_FRIENDS, MAX_BLOCKED, MAX_MUTED } from '../../db/schema/social/index.js';
 import {
   getCachedRelationships,
   setCachedRelationships,
@@ -18,6 +8,13 @@ import {
   type CachedRelationship,
 } from '../../shared/cache/index.js';
 
+import { SocialRelationshipRepository } from './social-relationship.repository.js';
+
+import type {
+  RelationshipType,
+  RelationshipStatus,
+  SocialRelationship,
+} from '../../db/schema/social/index.js';
 import type { AppConfig } from '../../config.js';
 
 export type { RelationshipType, RelationshipStatus, SocialRelationship };
@@ -90,23 +87,16 @@ async function getRelationshipsForPlayer(
   config: AppConfig,
   tenantId: string,
   playerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<Record<string, CachedRelationship>> {
   const cached = await getCachedRelationships(config, tenantId, playerId);
   if (cached) {
     return cached.relationships;
   }
 
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const relationships = await db.query.socialRelationships.findMany({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      or(
-        eq(socialRelationships.requesterId, playerId),
-        eq(socialRelationships.addresseeId, playerId),
-      ),
-    ),
-  });
+  const relationships = await repo.findRelationshipsForPlayer({ tenantId, playerId });
 
   const relationshipMap: Record<string, CachedRelationship> = {};
 
@@ -148,53 +138,28 @@ async function countRelationshipsByType(
   tenantId: string,
   playerId: string,
   type: RelationshipType,
+  repository?: SocialRelationshipRepository,
 ): Promise<number> {
-  const db = getDatabaseClient(config);
-
-  const countResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(socialRelationships)
-    .where(
-      and(
-        eq(socialRelationships.tenantId, tenantId),
-        or(
-          eq(socialRelationships.requesterId, playerId),
-          eq(socialRelationships.addresseeId, playerId),
-        ),
-        eq(socialRelationships.relationshipType, type),
-        eq(socialRelationships.status, 'accepted'),
-      ),
-    );
-
-  return countResult[0]?.count ?? 0;
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
+  return repo.countByType({ tenantId, playerId, type });
 }
 
 export async function sendFriendRequest(
   config: AppConfig,
   tenantId: string,
   input: FriendRequestInput,
+  repository?: SocialRelationshipRepository,
 ): Promise<RelationshipResult> {
   if (input.requesterId === input.addresseeId) {
     return { success: false, error: 'Cannot send friend request to yourself' };
   }
 
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const existingRequest = await db.query.socialRelationships.findFirst({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      or(
-        and(
-          eq(socialRelationships.requesterId, input.requesterId),
-          eq(socialRelationships.addresseeId, input.addresseeId),
-        ),
-        and(
-          eq(socialRelationships.requesterId, input.addresseeId),
-          eq(socialRelationships.addresseeId, input.requesterId),
-        ),
-      ),
-      eq(socialRelationships.relationshipType, 'friend'),
-    ),
+  const existingRequest = await repo.findFriendRequestBetweenPlayers({
+    tenantId,
+    playerId1: input.requesterId,
+    playerId2: input.addresseeId,
   });
 
   if (existingRequest) {
@@ -206,43 +171,34 @@ export async function sendFriendRequest(
     }
   }
 
-  const blockExists = await db.query.socialRelationships.findFirst({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      or(
-        and(
-          eq(socialRelationships.requesterId, input.requesterId),
-          eq(socialRelationships.addresseeId, input.addresseeId),
-        ),
-        and(
-          eq(socialRelationships.requesterId, input.addresseeId),
-          eq(socialRelationships.addresseeId, input.requesterId),
-        ),
-      ),
-      eq(socialRelationships.relationshipType, 'block'),
-      eq(socialRelationships.status, 'accepted'),
-    ),
+  const blockExists = await repo.findBlockBetweenPlayers({
+    tenantId,
+    playerId1: input.requesterId,
+    playerId2: input.addresseeId,
   });
 
   if (blockExists) {
     return { success: false, error: 'Cannot send friend request to blocked player' };
   }
 
-  const friendCount = await countRelationshipsByType(config, tenantId, input.requesterId, 'friend');
+  const friendCount = await countRelationshipsByType(
+    config,
+    tenantId,
+    input.requesterId,
+    'friend',
+    repo,
+  );
   if (friendCount >= MAX_FRIENDS) {
     return { success: false, error: `Maximum friends limit (${MAX_FRIENDS}) reached` };
   }
 
-  const [relationship] = await db
-    .insert(socialRelationships)
-    .values({
-      tenantId,
-      requesterId: input.requesterId,
-      addresseeId: input.addresseeId,
-      relationshipType: 'friend',
-      status: 'pending',
-    })
-    .returning();
+  const relationship = await repo.createRelationship({
+    tenantId,
+    requesterId: input.requesterId,
+    addresseeId: input.addresseeId,
+    relationshipType: 'friend',
+    status: 'pending',
+  });
 
   await invalidateBothPlayersRelationshipCache(
     config,
@@ -259,47 +215,37 @@ export async function acceptFriendRequest(
   tenantId: string,
   addresseeId: string,
   requesterId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<RelationshipResult> {
   if (addresseeId === requesterId) {
     return { success: false, error: 'Cannot accept friend request from yourself' };
   }
 
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const existingRequest = await db.query.socialRelationships.findFirst({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.requesterId, requesterId),
-      eq(socialRelationships.addresseeId, addresseeId),
-      eq(socialRelationships.relationshipType, 'friend'),
-      eq(socialRelationships.status, 'pending'),
-    ),
+  const existingRequest = await repo.findPendingFriendRequest({
+    tenantId,
+    requesterId,
+    addresseeId,
   });
 
   if (!existingRequest) {
     return { success: false, error: 'Friend request not found' };
   }
 
-  const [updatedRelationship] = await db
-    .update(socialRelationships)
-    .set({
-      status: 'accepted',
-      updatedAt: new Date(),
-    })
-    .where(eq(socialRelationships.relationshipId, existingRequest.relationshipId))
-    .returning();
+  const updatedRelationship = await repo.updateRelationship({
+    relationshipId: existingRequest.relationshipId,
+    status: 'accepted',
+  });
 
-  const reverseRelationship = await db.query.socialRelationships.findFirst({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.requesterId, addresseeId),
-      eq(socialRelationships.addresseeId, requesterId),
-      eq(socialRelationships.relationshipType, 'friend'),
-    ),
+  const reverseRelationship = await repo.findFriendRequestBetweenPlayers({
+    tenantId,
+    playerId1: addresseeId,
+    playerId2: requesterId,
   });
 
   if (!reverseRelationship) {
-    await db.insert(socialRelationships).values({
+    await repo.createRelationship({
       tenantId,
       requesterId: addresseeId,
       addresseeId: requesterId,
@@ -307,13 +253,10 @@ export async function acceptFriendRequest(
       status: 'accepted',
     });
   } else if (reverseRelationship.status === 'pending') {
-    await db
-      .update(socialRelationships)
-      .set({
-        status: 'accepted',
-        updatedAt: new Date(),
-      })
-      .where(eq(socialRelationships.relationshipId, reverseRelationship.relationshipId));
+    await repo.updateRelationship({
+      relationshipId: reverseRelationship.relationshipId,
+      status: 'accepted',
+    });
   }
 
   await invalidateBothPlayersRelationshipCache(config, tenantId, requesterId, addresseeId);
@@ -326,35 +269,28 @@ export async function rejectFriendRequest(
   tenantId: string,
   addresseeId: string,
   requesterId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<RelationshipResult> {
   if (addresseeId === requesterId) {
     return { success: false, error: 'Cannot reject friend request from yourself' };
   }
 
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const existingRequest = await db.query.socialRelationships.findFirst({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.requesterId, requesterId),
-      eq(socialRelationships.addresseeId, addresseeId),
-      eq(socialRelationships.relationshipType, 'friend'),
-      eq(socialRelationships.status, 'pending'),
-    ),
+  const existingRequest = await repo.findPendingFriendRequest({
+    tenantId,
+    requesterId,
+    addresseeId,
   });
 
   if (!existingRequest) {
     return { success: false, error: 'Friend request not found' };
   }
 
-  const [updated] = await db
-    .update(socialRelationships)
-    .set({
-      status: 'rejected',
-      updatedAt: new Date(),
-    })
-    .where(eq(socialRelationships.relationshipId, existingRequest.relationshipId))
-    .returning();
+  const updated = await repo.updateRelationship({
+    relationshipId: existingRequest.relationshipId,
+    status: 'rejected',
+  });
 
   await invalidateBothPlayersRelationshipCache(config, tenantId, requesterId, addresseeId);
 
@@ -366,40 +302,22 @@ export async function removeFriend(
   tenantId: string,
   playerId: string,
   friendId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<RelationshipResult> {
   if (playerId === friendId) {
     return { success: false, error: 'Cannot remove yourself as a friend' };
   }
 
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const relationships = await db.query.socialRelationships.findMany({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.relationshipType, 'friend'),
-      eq(socialRelationships.status, 'accepted'),
-      or(
-        and(
-          eq(socialRelationships.requesterId, playerId),
-          eq(socialRelationships.addresseeId, friendId),
-        ),
-        and(
-          eq(socialRelationships.requesterId, friendId),
-          eq(socialRelationships.addresseeId, playerId),
-        ),
-      ),
-    ),
-  });
+  const relationships = await repo.findFriendship({ tenantId, playerId, friendId });
 
   if (relationships.length === 0) {
     return { success: false, error: 'Friendship not found' };
   }
 
-  for (const rel of relationships) {
-    await db
-      .delete(socialRelationships)
-      .where(eq(socialRelationships.relationshipId, rel.relationshipId));
-  }
+  const ids = relationships.map((rel) => rel.relationshipId);
+  await repo.deleteRelationships({ relationshipIds: ids });
 
   await invalidateBothPlayersRelationshipCache(config, tenantId, playerId, friendId);
 
@@ -410,19 +328,14 @@ export async function listFriends(
   config: AppConfig,
   tenantId: string,
   playerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<SocialRelationship[]> {
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const relationships = await db.query.socialRelationships.findMany({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.relationshipType, 'friend'),
-      eq(socialRelationships.status, 'accepted'),
-      or(
-        eq(socialRelationships.requesterId, playerId),
-        eq(socialRelationships.addresseeId, playerId),
-      ),
-    ),
+  const relationships = await repo.findFriendRequestsForPlayer({
+    tenantId,
+    playerId,
+    status: 'accepted',
   });
 
   return relationships;
@@ -432,16 +345,14 @@ export async function listPendingFriendRequests(
   config: AppConfig,
   tenantId: string,
   playerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<SocialRelationship[]> {
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const relationships = await db.query.socialRelationships.findMany({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.relationshipType, 'friend'),
-      eq(socialRelationships.status, 'pending'),
-      eq(socialRelationships.addresseeId, playerId),
-    ),
+  const relationships = await repo.findFriendRequestsForPlayer({
+    tenantId,
+    playerId,
+    status: 'pending',
   });
 
   return relationships;
@@ -452,61 +363,39 @@ export async function blockPlayer(
   tenantId: string,
   playerId: string,
   targetPlayerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<RelationshipResult> {
   if (playerId === targetPlayerId) {
     return { success: false, error: 'Cannot block yourself' };
   }
 
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const existingBlock = await db.query.socialRelationships.findFirst({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.requesterId, playerId),
-      eq(socialRelationships.addresseeId, targetPlayerId),
-      eq(socialRelationships.relationshipType, 'block'),
-      eq(socialRelationships.status, 'accepted'),
-    ),
+  const existingBlock = await repo.findExistingRelationship({
+    tenantId,
+    playerId,
+    targetPlayerId,
+    relationshipType: 'block',
   });
 
   if (existingBlock) {
     return { success: false, error: 'Player already blocked' };
   }
 
-  const blockCount = await countRelationshipsByType(config, tenantId, playerId, 'block');
+  const blockCount = await countRelationshipsByType(config, tenantId, playerId, 'block', repo);
   if (blockCount >= MAX_BLOCKED) {
     return { success: false, error: `Maximum blocked users limit (${MAX_BLOCKED}) reached` };
   }
 
-  await db
-    .delete(socialRelationships)
-    .where(
-      and(
-        eq(socialRelationships.tenantId, tenantId),
-        or(
-          and(
-            eq(socialRelationships.requesterId, playerId),
-            eq(socialRelationships.addresseeId, targetPlayerId),
-          ),
-          and(
-            eq(socialRelationships.requesterId, targetPlayerId),
-            eq(socialRelationships.addresseeId, playerId),
-          ),
-        ),
-        eq(socialRelationships.relationshipType, 'friend'),
-      ),
-    );
+  await repo.deleteFriendShipsBetweenPlayers({ tenantId, playerId, targetPlayerId });
 
-  const [relationship] = await db
-    .insert(socialRelationships)
-    .values({
-      tenantId,
-      requesterId: playerId,
-      addresseeId: targetPlayerId,
-      relationshipType: 'block',
-      status: 'accepted',
-    })
-    .returning();
+  const relationship = await repo.createRelationship({
+    tenantId,
+    requesterId: playerId,
+    addresseeId: targetPlayerId,
+    relationshipType: 'block',
+    status: 'accepted',
+  });
 
   await invalidateBothPlayersRelationshipCache(config, tenantId, playerId, targetPlayerId);
 
@@ -518,30 +407,26 @@ export async function unblockPlayer(
   tenantId: string,
   playerId: string,
   targetPlayerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<RelationshipResult> {
   if (playerId === targetPlayerId) {
     return { success: false, error: 'Cannot unblock yourself' };
   }
 
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const existingBlock = await db.query.socialRelationships.findFirst({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.requesterId, playerId),
-      eq(socialRelationships.addresseeId, targetPlayerId),
-      eq(socialRelationships.relationshipType, 'block'),
-      eq(socialRelationships.status, 'accepted'),
-    ),
+  const existingBlock = await repo.findExistingRelationship({
+    tenantId,
+    playerId,
+    targetPlayerId,
+    relationshipType: 'block',
   });
 
   if (!existingBlock) {
     return { success: false, error: 'Block relationship not found' };
   }
 
-  await db
-    .delete(socialRelationships)
-    .where(eq(socialRelationships.relationshipId, existingBlock.relationshipId));
+  await repo.deleteRelationship({ relationshipId: existingBlock.relationshipId });
 
   await invalidateBothPlayersRelationshipCache(config, tenantId, playerId, targetPlayerId);
 
@@ -552,17 +437,11 @@ export async function listBlockedPlayers(
   config: AppConfig,
   tenantId: string,
   playerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<SocialRelationship[]> {
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const relationships = await db.query.socialRelationships.findMany({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.relationshipType, 'block'),
-      eq(socialRelationships.status, 'accepted'),
-      eq(socialRelationships.requesterId, playerId),
-    ),
-  });
+  const relationships = await repo.findBlockedPlayers({ tenantId, playerId });
 
   return relationships;
 }
@@ -572,42 +451,37 @@ export async function mutePlayer(
   tenantId: string,
   playerId: string,
   targetPlayerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<RelationshipResult> {
   if (playerId === targetPlayerId) {
     return { success: false, error: 'Cannot mute yourself' };
   }
 
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const existingMute = await db.query.socialRelationships.findFirst({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.requesterId, playerId),
-      eq(socialRelationships.addresseeId, targetPlayerId),
-      eq(socialRelationships.relationshipType, 'mute'),
-      eq(socialRelationships.status, 'accepted'),
-    ),
+  const existingMute = await repo.findMuteRelationship({
+    tenantId,
+    playerId,
+    targetPlayerId,
+    relationshipType: 'mute',
   });
 
   if (existingMute) {
     return { success: false, error: 'Player already muted' };
   }
 
-  const muteCount = await countRelationshipsByType(config, tenantId, playerId, 'mute');
+  const muteCount = await countRelationshipsByType(config, tenantId, playerId, 'mute', repo);
   if (muteCount >= MAX_MUTED) {
     return { success: false, error: `Maximum muted users limit (${MAX_MUTED}) reached` };
   }
 
-  const [relationship] = await db
-    .insert(socialRelationships)
-    .values({
-      tenantId,
-      requesterId: playerId,
-      addresseeId: targetPlayerId,
-      relationshipType: 'mute',
-      status: 'accepted',
-    })
-    .returning();
+  const relationship = await repo.createRelationship({
+    tenantId,
+    requesterId: playerId,
+    addresseeId: targetPlayerId,
+    relationshipType: 'mute',
+    status: 'accepted',
+  });
 
   await invalidateRelationshipCache(config, tenantId, playerId);
 
@@ -619,30 +493,26 @@ export async function unmutePlayer(
   tenantId: string,
   playerId: string,
   targetPlayerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<RelationshipResult> {
   if (playerId === targetPlayerId) {
     return { success: false, error: 'Cannot unmute yourself' };
   }
 
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const existingMute = await db.query.socialRelationships.findFirst({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.requesterId, playerId),
-      eq(socialRelationships.addresseeId, targetPlayerId),
-      eq(socialRelationships.relationshipType, 'mute'),
-      eq(socialRelationships.status, 'accepted'),
-    ),
+  const existingMute = await repo.findMuteRelationship({
+    tenantId,
+    playerId,
+    targetPlayerId,
+    relationshipType: 'mute',
   });
 
   if (!existingMute) {
     return { success: false, error: 'Mute relationship not found' };
   }
 
-  await db
-    .delete(socialRelationships)
-    .where(eq(socialRelationships.relationshipId, existingMute.relationshipId));
+  await repo.deleteRelationship({ relationshipId: existingMute.relationshipId });
 
   await invalidateRelationshipCache(config, tenantId, playerId);
 
@@ -653,17 +523,11 @@ export async function listMutedPlayers(
   config: AppConfig,
   tenantId: string,
   playerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<SocialRelationship[]> {
-  const db = getDatabaseClient(config);
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
 
-  const relationships = await db.query.socialRelationships.findMany({
-    where: and(
-      eq(socialRelationships.tenantId, tenantId),
-      eq(socialRelationships.relationshipType, 'mute'),
-      eq(socialRelationships.status, 'accepted'),
-      eq(socialRelationships.requesterId, playerId),
-    ),
-  });
+  const relationships = await repo.findMutedPlayers({ tenantId, playerId });
 
   return relationships;
 }
@@ -673,8 +537,9 @@ export async function getRelationshipStatus(
   tenantId: string,
   playerId: string,
   targetPlayerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<CachedRelationship | null> {
-  const relationships = await getRelationshipsForPlayer(config, tenantId, playerId);
+  const relationships = await getRelationshipsForPlayer(config, tenantId, playerId, repository);
   return relationships[targetPlayerId] ?? null;
 }
 
@@ -682,11 +547,14 @@ export async function getRelationshipCounts(
   config: AppConfig,
   tenantId: string,
   playerId: string,
+  repository?: SocialRelationshipRepository,
 ): Promise<RelationshipCount> {
+  const repo = repository ?? new SocialRelationshipRepository(getDatabaseClient(config));
+
   const [friends, blocked, muted] = await Promise.all([
-    countRelationshipsByType(config, tenantId, playerId, 'friend'),
-    countRelationshipsByType(config, tenantId, playerId, 'block'),
-    countRelationshipsByType(config, tenantId, playerId, 'mute'),
+    countRelationshipsByType(config, tenantId, playerId, 'friend', repo),
+    countRelationshipsByType(config, tenantId, playerId, 'block', repo),
+    countRelationshipsByType(config, tenantId, playerId, 'mute', repo),
   ]);
 
   return { friends, blocked, muted };

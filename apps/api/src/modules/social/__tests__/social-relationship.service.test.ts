@@ -1,271 +1,820 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-type RelationshipType = 'friend' | 'block' | 'mute';
-type RelationshipStatus = 'pending' | 'accepted' | 'rejected';
+vi.mock('../../../shared/cache/index.js', () => ({
+  getCachedRelationships: vi.fn(),
+  setCachedRelationships: vi.fn(),
+  invalidateRelationshipCache: vi.fn(),
+  invalidateBothPlayersRelationshipCache: vi.fn(),
+}));
 
-const MAX_FRIENDS = 500;
-const MAX_BLOCKED = 1000;
-const MAX_MUTED = 1000;
+vi.mock('../../../shared/database/connection.js', () => ({
+  getDatabaseClient: vi.fn(),
+}));
 
-const RELATIONSHIP_PRECEDENCE: Record<RelationshipType, number> = {
-  block: 4,
-  friend: 3,
-  mute: 2,
-};
+import {
+  sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
+  removeFriend,
+  blockPlayer,
+  unblockPlayer,
+  mutePlayer,
+  unmutePlayer,
+  getRelationshipStatus,
+  getRelationshipCounts,
+  listFriends,
+  listPendingFriendRequests,
+  listBlockedPlayers,
+  listMutedPlayers,
+  getRelationshipPrecedence,
+  resolveRelationship,
+} from '../social-relationship.service.js';
+import {
+  getCachedRelationships,
+  invalidateRelationshipCache,
+  invalidateBothPlayersRelationshipCache,
+} from '../../../shared/cache/index.js';
 
-function getRelationshipPrecedence(type: RelationshipType): number {
-  return RELATIONSHIP_PRECEDENCE[type] ?? 0;
-}
+import type { SocialRelationshipRepository } from '../social-relationship.repository.js';
+import type { AppConfig } from '../../../config.js';
+import type { SocialRelationship } from '../../../db/schema/social/index.js';
 
-function resolveRelationship(
-  rel1?: { type: RelationshipType; status: RelationshipStatus },
-  rel2?: { type: RelationshipType; status: RelationshipStatus },
-): { type: RelationshipType; status: RelationshipStatus } | null {
-  if (!rel1 && !rel2) {
-    return null;
-  }
+const mockRepository = {
+  findRelationshipsForPlayer: vi.fn(),
+  findRelationshipBetweenPlayers: vi.fn(),
+  findPendingFriendRequest: vi.fn(),
+  findFriendRequestBetweenPlayers: vi.fn(),
+  findBlockBetweenPlayers: vi.fn(),
+  findExistingRelationship: vi.fn(),
+  findMuteRelationship: vi.fn(),
+  findFriendship: vi.fn(),
+  findFriendRequestsForPlayer: vi.fn(),
+  findBlockedPlayers: vi.fn(),
+  findMutedPlayers: vi.fn(),
+  countByType: vi.fn(),
+  createRelationship: vi.fn(),
+  updateRelationship: vi.fn(),
+  deleteRelationship: vi.fn(),
+  deleteRelationships: vi.fn(),
+  deleteFriendShipsBetweenPlayers: vi.fn(),
+} as unknown as SocialRelationshipRepository;
 
-  if (!rel1) {
-    if (!rel2) {
-      return null;
-    }
-    return rel2.status === 'accepted' ? rel2 : null;
-  }
+const mockConfig = {
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+  REDIS_URL: 'redis://localhost:6379',
+  NODE_ENV: 'test',
+  LOG_LEVEL: 'silent',
+} as unknown as AppConfig;
 
-  if (!rel2) {
-    return rel1.status === 'accepted' ? rel1 : null;
-  }
+const TENANT_ID = 'tenant-1';
+const PLAYER_ID = 'player-1';
+const OTHER_PLAYER_ID = 'player-2';
 
-  if (rel1.status !== 'accepted' && rel2.status !== 'accepted') {
-    return null;
-  }
-
-  if (rel1.status !== 'accepted') {
-    return rel2;
-  }
-
-  if (rel2.status !== 'accepted') {
-    return rel1;
-  }
-
-  const prec1 = getRelationshipPrecedence(rel1.type);
-  const prec2 = getRelationshipPrecedence(rel2.type);
-
-  return prec1 >= prec2 ? rel1 : rel2;
-}
-
-describe('social relationship - relationship precedence', () => {
-  it('should have correct precedence order', () => {
-    expect(getRelationshipPrecedence('block')).toBe(4);
-    expect(getRelationshipPrecedence('friend')).toBe(3);
-    expect(getRelationshipPrecedence('mute')).toBe(2);
-  });
-
-  it('should have block as highest precedence', () => {
-    expect(getRelationshipPrecedence('block')).toBeGreaterThan(getRelationshipPrecedence('friend'));
-    expect(getRelationshipPrecedence('block')).toBeGreaterThan(getRelationshipPrecedence('mute'));
-  });
-
-  it('should have friend as middle precedence', () => {
-    expect(getRelationshipPrecedence('friend')).toBeGreaterThan(getRelationshipPrecedence('mute'));
-  });
+const createMockRelationship = (
+  overrides: Partial<SocialRelationship> = {},
+): SocialRelationship => ({
+  relationshipId: 'rel-1',
+  tenantId: TENANT_ID,
+  requesterId: PLAYER_ID,
+  addresseeId: OTHER_PLAYER_ID,
+  relationshipType: 'friend',
+  status: 'accepted',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  ...overrides,
 });
 
-describe('social relationship - resolve relationship', () => {
-  it('should return null when both relationships are undefined', () => {
-    const result = resolveRelationship(undefined, undefined);
-    expect(result).toBeNull();
+describe('social relationship service', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it('should return first relationship when second is undefined', () => {
-    const rel1 = { type: 'friend' as const, status: 'accepted' as const };
-    const result = resolveRelationship(rel1, undefined);
-    expect(result).toEqual(rel1);
+  describe('getRelationshipPrecedence', () => {
+    it('should return correct precedence for block', () => {
+      expect(getRelationshipPrecedence('block')).toBe(4);
+    });
+
+    it('should return correct precedence for friend', () => {
+      expect(getRelationshipPrecedence('friend')).toBe(3);
+    });
+
+    it('should return correct precedence for mute', () => {
+      expect(getRelationshipPrecedence('mute')).toBe(2);
+    });
   });
 
-  it('should return second relationship when first is undefined', () => {
-    const rel2 = { type: 'block' as const, status: 'accepted' as const };
-    const result = resolveRelationship(undefined, rel2);
-    expect(result).toEqual(rel2);
+  describe('resolveRelationship', () => {
+    it('should return null when both relationships are undefined', () => {
+      expect(resolveRelationship(undefined, undefined)).toBeNull();
+    });
+
+    it('should return first relationship when second is undefined and first is accepted', () => {
+      const rel1 = { type: 'friend' as const, status: 'accepted' as const };
+      expect(resolveRelationship(rel1, undefined)).toEqual(rel1);
+    });
+
+    it('should return null when first is undefined and second is pending', () => {
+      const rel2 = { type: 'friend' as const, status: 'pending' as const };
+      expect(resolveRelationship(undefined, rel2)).toBeNull();
+    });
+
+    it('should return accepted relationship when other is pending', () => {
+      const rel1 = { type: 'friend' as const, status: 'accepted' as const };
+      const rel2 = { type: 'block' as const, status: 'pending' as const };
+      expect(resolveRelationship(rel1, rel2)).toEqual(rel1);
+    });
+
+    it('should return block when both are accepted and block takes precedence', () => {
+      const rel1 = { type: 'friend' as const, status: 'accepted' as const };
+      const rel2 = { type: 'block' as const, status: 'accepted' as const };
+      expect(resolveRelationship(rel1, rel2)).toEqual(rel2);
+    });
+
+    it('should return null when both relationships are not accepted', () => {
+      const rel1 = { type: 'friend' as const, status: 'pending' as const };
+      const rel2 = { type: 'block' as const, status: 'pending' as const };
+      expect(resolveRelationship(rel1, rel2)).toBeNull();
+    });
   });
 
-  it('should return null when both relationships are not accepted', () => {
-    const rel1 = { type: 'friend' as const, status: 'pending' as const };
-    const rel2 = { type: 'block' as const, status: 'pending' as const };
-    const result = resolveRelationship(rel1, rel2);
-    expect(result).toBeNull();
+  describe('sendFriendRequest', () => {
+    it('should reject self-friend requests', async () => {
+      const result = await sendFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        {
+          requesterId: PLAYER_ID,
+          addresseeId: PLAYER_ID,
+        },
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot send friend request to yourself');
+    });
+
+    it('should reject when already friends', async () => {
+      mockRepository.findFriendRequestBetweenPlayers.mockResolvedValue(
+        createMockRelationship({ status: 'accepted' }),
+      );
+
+      const result = await sendFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        {
+          requesterId: PLAYER_ID,
+          addresseeId: OTHER_PLAYER_ID,
+        },
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Already friends');
+    });
+
+    it('should reject when friend request is pending', async () => {
+      mockRepository.findFriendRequestBetweenPlayers.mockResolvedValue(
+        createMockRelationship({ status: 'pending' }),
+      );
+
+      const result = await sendFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        {
+          requesterId: PLAYER_ID,
+          addresseeId: OTHER_PLAYER_ID,
+        },
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Friend request already pending');
+    });
+
+    it('should reject when player is blocked', async () => {
+      mockRepository.findFriendRequestBetweenPlayers.mockResolvedValue(undefined);
+      mockRepository.findBlockBetweenPlayers.mockResolvedValue(
+        createMockRelationship({ relationshipType: 'block' }),
+      );
+
+      const result = await sendFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        {
+          requesterId: PLAYER_ID,
+          addresseeId: OTHER_PLAYER_ID,
+        },
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot send friend request to blocked player');
+    });
+
+    it('should reject when max friends limit reached', async () => {
+      mockRepository.findFriendRequestBetweenPlayers.mockResolvedValue(undefined);
+      mockRepository.findBlockBetweenPlayers.mockResolvedValue(undefined);
+      mockRepository.countByType.mockResolvedValue(500);
+
+      const result = await sendFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        {
+          requesterId: PLAYER_ID,
+          addresseeId: OTHER_PLAYER_ID,
+        },
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Maximum friends limit');
+    });
+
+    it('should successfully send friend request', async () => {
+      const mockRelationship = createMockRelationship({ status: 'pending' });
+      mockRepository.findFriendRequestBetweenPlayers.mockResolvedValue(undefined);
+      mockRepository.findBlockBetweenPlayers.mockResolvedValue(undefined);
+      mockRepository.countByType.mockResolvedValue(0);
+      mockRepository.createRelationship.mockResolvedValue(mockRelationship);
+
+      const result = await sendFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        {
+          requesterId: PLAYER_ID,
+          addresseeId: OTHER_PLAYER_ID,
+        },
+        mockRepository,
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.relationship).toEqual(mockRelationship);
+    });
   });
 
-  it('should return accepted relationship when other is pending', () => {
-    const rel1 = { type: 'friend' as const, status: 'accepted' as const };
-    const rel2 = { type: 'block' as const, status: 'pending' as const };
-    const result = resolveRelationship(rel1, rel2);
-    expect(result).toEqual(rel1);
+  describe('acceptFriendRequest', () => {
+    it('should reject self-accept', async () => {
+      const result = await acceptFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot accept friend request from yourself');
+    });
+
+    it('should reject when request not found', async () => {
+      mockRepository.findPendingFriendRequest.mockResolvedValue(undefined);
+
+      const result = await acceptFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        OTHER_PLAYER_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Friend request not found');
+    });
+
+    it('should successfully accept friend request', async () => {
+      const mockRequest = createMockRelationship({ status: 'pending' });
+      const mockUpdated = createMockRelationship({ status: 'accepted' });
+
+      mockRepository.findPendingFriendRequest.mockResolvedValue(mockRequest);
+      mockRepository.updateRelationship.mockResolvedValue(mockUpdated);
+      mockRepository.findFriendRequestBetweenPlayers.mockResolvedValue(undefined);
+
+      const result = await acceptFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        OTHER_PLAYER_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.relationship).toEqual(mockUpdated);
+    });
   });
 
-  it('should return block when both are accepted and block takes precedence', () => {
-    const rel1 = { type: 'friend' as const, status: 'accepted' as const };
-    const rel2 = { type: 'block' as const, status: 'accepted' as const };
-    const result = resolveRelationship(rel1, rel2);
-    expect(result).toEqual(rel2);
+  describe('rejectFriendRequest', () => {
+    it('should reject self-reject', async () => {
+      const result = await rejectFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot reject friend request from yourself');
+    });
+
+    it('should reject when request not found', async () => {
+      mockRepository.findPendingFriendRequest.mockResolvedValue(undefined);
+
+      const result = await rejectFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        OTHER_PLAYER_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Friend request not found');
+    });
+
+    it('should successfully reject friend request', async () => {
+      const mockRequest = createMockRelationship({ status: 'pending' });
+      const mockUpdated = createMockRelationship({ status: 'rejected' });
+
+      mockRepository.findPendingFriendRequest.mockResolvedValue(mockRequest);
+      mockRepository.updateRelationship.mockResolvedValue(mockUpdated);
+
+      const result = await rejectFriendRequest(
+        mockConfig,
+        TENANT_ID,
+        OTHER_PLAYER_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(true);
+    });
   });
 
-  it('should return friend when both are accepted and friend takes precedence over mute', () => {
-    const rel1 = { type: 'friend' as const, status: 'accepted' as const };
-    const rel2 = { type: 'mute' as const, status: 'accepted' as const };
-    const result = resolveRelationship(rel1, rel2);
-    expect(result).toEqual(rel1);
+  describe('removeFriend', () => {
+    it('should reject self-remove', async () => {
+      const result = await removeFriend(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot remove yourself as a friend');
+    });
+
+    it('should reject when friendship not found', async () => {
+      mockRepository.findFriendship.mockResolvedValue([]);
+
+      const result = await removeFriend(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Friendship not found');
+    });
+
+    it('should successfully remove friend', async () => {
+      const mockRelationships = [
+        createMockRelationship(),
+        createMockRelationship({ requesterId: OTHER_PLAYER_ID, addresseeId: PLAYER_ID }),
+      ];
+
+      mockRepository.findFriendship.mockResolvedValue(mockRelationships);
+      mockRepository.deleteRelationships.mockResolvedValue(undefined);
+
+      const result = await removeFriend(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockRepository.deleteRelationships).toHaveBeenCalledWith({
+        relationshipIds: mockRelationships.map((r) => r.relationshipId),
+      });
+    });
   });
 
-  it('should return the relationship with higher precedence when both accepted', () => {
-    const rel1 = { type: 'mute' as const, status: 'accepted' as const };
-    const rel2 = { type: 'friend' as const, status: 'accepted' as const };
-    const result = resolveRelationship(rel1, rel2);
-    expect(result).toEqual(rel2);
+  describe('blockPlayer', () => {
+    it('should reject self-block', async () => {
+      const result = await blockPlayer(mockConfig, TENANT_ID, PLAYER_ID, PLAYER_ID, mockRepository);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot block yourself');
+    });
+
+    it('should reject when already blocked', async () => {
+      mockRepository.findExistingRelationship.mockResolvedValue(
+        createMockRelationship({ relationshipType: 'block' }),
+      );
+
+      const result = await blockPlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Player already blocked');
+    });
+
+    it('should reject when max blocked limit reached', async () => {
+      mockRepository.findExistingRelationship.mockResolvedValue(undefined);
+      mockRepository.countByType.mockResolvedValue(1000);
+
+      const result = await blockPlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Maximum blocked users limit');
+    });
+
+    it('should succeed when blocked count is at MAX_BLOCKED - 1 (999)', async () => {
+      const mockRelationship = createMockRelationship({ relationshipType: 'block' });
+
+      mockRepository.findExistingRelationship.mockResolvedValue(undefined);
+      mockRepository.countByType.mockResolvedValue(999);
+      mockRepository.createRelationship.mockResolvedValue(mockRelationship);
+
+      const result = await blockPlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockRepository.createRelationship).toHaveBeenCalledWith(
+        expect.objectContaining({
+          relationshipType: 'block',
+          status: 'accepted',
+        }),
+      );
+    });
+
+    it('should successfully block player', async () => {
+      const mockRelationship = createMockRelationship({ relationshipType: 'block' });
+
+      mockRepository.findExistingRelationship.mockResolvedValue(undefined);
+      mockRepository.countByType.mockResolvedValue(0);
+      mockRepository.createRelationship.mockResolvedValue(mockRelationship);
+
+      const result = await blockPlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockRepository.deleteFriendShipsBetweenPlayers).toHaveBeenCalled();
+    });
   });
 
-  it('should return first accepted relationship when second is rejected', () => {
-    const rel1 = { type: 'friend' as const, status: 'accepted' as const };
-    const rel2 = { type: 'block' as const, status: 'rejected' as const };
-    const result = resolveRelationship(rel1, rel2);
-    expect(result).toEqual(rel1);
-  });
-});
+  describe('unblockPlayer', () => {
+    it('should reject self-unblock', async () => {
+      const result = await unblockPlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
 
-describe('social relationship - limits', () => {
-  it('should have max friends limit of 500', () => {
-    expect(MAX_FRIENDS).toBe(500);
-  });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot unblock yourself');
+    });
 
-  it('should have max blocked limit of 1000', () => {
-    expect(MAX_BLOCKED).toBe(1000);
-  });
+    it('should reject when block not found', async () => {
+      mockRepository.findExistingRelationship.mockResolvedValue(undefined);
 
-  it('should have max muted limit of 1000', () => {
-    expect(MAX_MUTED).toBe(1000);
-  });
-});
+      const result = await unblockPlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
 
-describe('social relationship - self-relationship prevention', () => {
-  it('should prevent self-friend requests', () => {
-    const playerId = 'same-player-id';
-    expect(playerId === playerId).toBe(true);
-  });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Block relationship not found');
+    });
 
-  it('should prevent self-blocking', () => {
-    const playerId = 'same-player-id';
-    expect(playerId === playerId).toBe(true);
-  });
+    it('should successfully unblock player', async () => {
+      const mockBlock = createMockRelationship({ relationshipType: 'block' });
 
-  it('should prevent self-muting', () => {
-    const playerId = 'same-player-id';
-    expect(playerId === playerId).toBe(true);
-  });
-});
+      mockRepository.findExistingRelationship.mockResolvedValue(mockBlock);
+      mockRepository.deleteRelationship.mockResolvedValue(undefined);
 
-describe('social relationship - relationship types', () => {
-  const validTypes: RelationshipType[] = ['friend', 'block', 'mute'];
+      const result = await unblockPlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
 
-  it('should have three relationship types', () => {
-    expect(validTypes).toHaveLength(3);
-  });
-
-  it('should include friend type', () => {
-    expect(validTypes).toContain('friend');
+      expect(result.success).toBe(true);
+    });
   });
 
-  it('should include block type', () => {
-    expect(validTypes).toContain('block');
+  describe('mutePlayer', () => {
+    it('should reject self-mute', async () => {
+      const result = await mutePlayer(mockConfig, TENANT_ID, PLAYER_ID, PLAYER_ID, mockRepository);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot mute yourself');
+    });
+
+    it('should reject when already muted', async () => {
+      mockRepository.findMuteRelationship.mockResolvedValue(
+        createMockRelationship({ relationshipType: 'mute' }),
+      );
+
+      const result = await mutePlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Player already muted');
+    });
+
+    it('should reject when max muted limit reached', async () => {
+      mockRepository.findMuteRelationship.mockResolvedValue(undefined);
+      mockRepository.countByType.mockResolvedValue(1000);
+
+      const result = await mutePlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Maximum muted users limit');
+    });
+
+    it('should succeed when muted count is at MAX_MUTED - 1 (999)', async () => {
+      const mockRelationship = createMockRelationship({ relationshipType: 'mute' });
+
+      mockRepository.findMuteRelationship.mockResolvedValue(undefined);
+      mockRepository.countByType.mockResolvedValue(999);
+      mockRepository.createRelationship.mockResolvedValue(mockRelationship);
+
+      const result = await mutePlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(true);
+      expect(mockRepository.createRelationship).toHaveBeenCalledWith(
+        expect.objectContaining({
+          relationshipType: 'mute',
+          status: 'accepted',
+        }),
+      );
+    });
+
+    it('should successfully mute player and call invalidateRelationshipCache', async () => {
+      const mockRelationship = createMockRelationship({ relationshipType: 'mute' });
+
+      mockRepository.findMuteRelationship.mockResolvedValue(undefined);
+      mockRepository.countByType.mockResolvedValue(0);
+      mockRepository.createRelationship.mockResolvedValue(mockRelationship);
+
+      const result = await mutePlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result.success).toBe(true);
+      expect(invalidateRelationshipCache).toHaveBeenCalledWith(mockConfig, TENANT_ID, PLAYER_ID);
+    });
   });
 
-  it('should include mute type', () => {
-    expect(validTypes).toContain('mute');
-  });
-});
+  describe('unmutePlayer', () => {
+    it('should reject self-unmute', async () => {
+      const result = await unmutePlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
 
-describe('social relationship - status types', () => {
-  const validStatuses: RelationshipStatus[] = ['pending', 'accepted', 'rejected'];
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot unmute yourself');
+    });
 
-  it('should have three status types', () => {
-    expect(validStatuses).toHaveLength(3);
-  });
+    it('should reject when mute not found', async () => {
+      mockRepository.findMuteRelationship.mockResolvedValue(undefined);
 
-  it('should include pending status', () => {
-    expect(validStatuses).toContain('pending');
-  });
+      const result = await unmutePlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
 
-  it('should include accepted status', () => {
-    expect(validStatuses).toContain('accepted');
-  });
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Mute relationship not found');
+    });
 
-  it('should include rejected status', () => {
-    expect(validStatuses).toContain('rejected');
-  });
-});
+    it('should successfully unmute player and call invalidateRelationshipCache', async () => {
+      const mockMute = createMockRelationship({ relationshipType: 'mute' });
 
-describe('social relationship - bidirectional friend logic', () => {
-  it('should understand that friends are bidirectional', () => {
-    const aFriendsB = true;
-    const bFriendsA = true;
+      mockRepository.findMuteRelationship.mockResolvedValue(mockMute);
+      mockRepository.deleteRelationship.mockResolvedValue(undefined);
 
-    expect(aFriendsB && bFriendsA).toBe(true);
-  });
+      const result = await unmutePlayer(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
 
-  it('should understand that blocks are unidirectional', () => {
-    const blockerHasBlocked = true;
-    const blockedHasBlockedBlocker = false;
-
-    expect(blockerHasBlocked && !blockedHasBlockedBlocker).toBe(true);
-  });
-
-  it('should understand that mutes are unidirectional', () => {
-    const muterHasMuted = true;
-    const mutedHasMutedMutinger = false;
-
-    expect(muterHasMuted && !mutedHasMutedMutinger).toBe(true);
-  });
-});
-
-describe('social relationship - block precedence', () => {
-  it('should understand block takes precedence over friend', () => {
-    const blockPrecedence = getRelationshipPrecedence('block');
-    const friendPrecedence = getRelationshipPrecedence('friend');
-    expect(blockPrecedence).toBeGreaterThan(friendPrecedence);
+      expect(result.success).toBe(true);
+      expect(invalidateRelationshipCache).toHaveBeenCalledWith(mockConfig, TENANT_ID, PLAYER_ID);
+    });
   });
 
-  it('should understand block takes precedence over mute', () => {
-    const blockPrecedence = getRelationshipPrecedence('block');
-    const mutePrecedence = getRelationshipPrecedence('mute');
-    expect(blockPrecedence).toBeGreaterThan(mutePrecedence);
+  describe('getRelationshipCounts', () => {
+    it('should return correct counts', async () => {
+      mockRepository.countByType
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(5)
+        .mockResolvedValueOnce(3);
+
+      const result = await getRelationshipCounts(mockConfig, TENANT_ID, PLAYER_ID, mockRepository);
+
+      expect(result).toEqual({
+        friends: 10,
+        blocked: 5,
+        muted: 3,
+      });
+    });
   });
 
-  it('should understand friend takes precedence over mute', () => {
-    const friendPrecedence = getRelationshipPrecedence('friend');
-    const mutePrecedence = getRelationshipPrecedence('mute');
-    expect(friendPrecedence).toBeGreaterThan(mutePrecedence);
-  });
-});
+  describe('listFriends', () => {
+    it('should return list of friends', async () => {
+      const mockFriends = [
+        createMockRelationship(),
+        createMockRelationship({ relationshipId: 'rel-2' }),
+      ];
 
-describe('social relationship - resolve edge cases', () => {
-  it('should return the accepted relationship when one is pending', () => {
-    const acceptedRel = { type: 'friend' as const, status: 'accepted' as const };
-    const pendingRel = { type: 'mute' as const, status: 'pending' as const };
+      mockRepository.findFriendRequestsForPlayer.mockResolvedValue(mockFriends);
 
-    expect(resolveRelationship(acceptedRel, pendingRel)).toEqual(acceptedRel);
-    expect(resolveRelationship(pendingRel, acceptedRel)).toEqual(acceptedRel);
-  });
+      const result = await listFriends(mockConfig, TENANT_ID, PLAYER_ID, mockRepository);
 
-  it('should prefer higher precedence when both are accepted', () => {
-    const lowerPrecedence = { type: 'mute' as const, status: 'accepted' as const };
-    const higherPrecedence = { type: 'block' as const, status: 'accepted' as const };
-
-    expect(resolveRelationship(lowerPrecedence, higherPrecedence)).toEqual(higherPrecedence);
+      expect(result).toEqual(mockFriends);
+      expect(mockRepository.findFriendRequestsForPlayer).toHaveBeenCalledWith({
+        tenantId: TENANT_ID,
+        playerId: PLAYER_ID,
+        status: 'accepted',
+      });
+    });
   });
 
-  it('should return the first relationship if both have same precedence and are accepted', () => {
-    const rel1 = { type: 'friend' as const, status: 'accepted' as const };
-    const rel2 = { type: 'friend' as const, status: 'accepted' as const };
+  describe('listPendingFriendRequests', () => {
+    it('should return pending friend requests', async () => {
+      const mockRequests = [createMockRelationship({ status: 'pending' })];
 
-    expect(resolveRelationship(rel1, rel2)).toEqual(rel1);
+      mockRepository.findFriendRequestsForPlayer.mockResolvedValue(mockRequests);
+
+      const result = await listPendingFriendRequests(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result).toEqual(mockRequests);
+      expect(mockRepository.findFriendRequestsForPlayer).toHaveBeenCalledWith({
+        tenantId: TENANT_ID,
+        playerId: PLAYER_ID,
+        status: 'pending',
+      });
+    });
+  });
+
+  describe('listBlockedPlayers', () => {
+    it('should return list of blocked players', async () => {
+      const mockBlocks = [createMockRelationship({ relationshipType: 'block' })];
+
+      mockRepository.findBlockedPlayers.mockResolvedValue(mockBlocks);
+
+      const result = await listBlockedPlayers(mockConfig, TENANT_ID, PLAYER_ID, mockRepository);
+
+      expect(result).toEqual(mockBlocks);
+    });
+  });
+
+  describe('listMutedPlayers', () => {
+    it('should return list of muted players', async () => {
+      const mockMutes = [createMockRelationship({ relationshipType: 'mute' })];
+
+      mockRepository.findMutedPlayers.mockResolvedValue(mockMutes);
+
+      const result = await listMutedPlayers(mockConfig, TENANT_ID, PLAYER_ID, mockRepository);
+
+      expect(result).toEqual(mockMutes);
+    });
+  });
+
+  describe('getRelationshipStatus', () => {
+    it('should return relationship status when found in cache', async () => {
+      const cachedRelationships = {
+        [OTHER_PLAYER_ID]: {
+          relationshipType: 'friend' as const,
+          status: 'accepted' as const,
+          updatedAt: Date.now(),
+        },
+      };
+
+      vi.mocked(getCachedRelationships).mockResolvedValue({
+        relationships: cachedRelationships,
+        cachedAt: Date.now(),
+      });
+
+      const result = await getRelationshipStatus(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result).toEqual(cachedRelationships[OTHER_PLAYER_ID]);
+      expect(mockRepository.findRelationshipsForPlayer).not.toHaveBeenCalled();
+    });
+
+    it('should fetch from repository when cache returns null', async () => {
+      vi.mocked(getCachedRelationships).mockResolvedValue(null);
+
+      mockRepository.findRelationshipsForPlayer.mockResolvedValue([
+        createMockRelationship({ relationshipType: 'friend', status: 'accepted' }),
+      ]);
+
+      const result = await getRelationshipStatus(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result).toBeTruthy();
+      expect(result?.relationshipType).toBe('friend');
+      expect(result?.status).toBe('accepted');
+      expect(mockRepository.findRelationshipsForPlayer).toHaveBeenCalledWith({
+        tenantId: TENANT_ID,
+        playerId: PLAYER_ID,
+      });
+    });
+
+    it('should return null when relationship not found', async () => {
+      vi.mocked(getCachedRelationships).mockResolvedValue(null);
+      mockRepository.findRelationshipsForPlayer.mockResolvedValue([]);
+
+      const result = await getRelationshipStatus(
+        mockConfig,
+        TENANT_ID,
+        PLAYER_ID,
+        OTHER_PLAYER_ID,
+        mockRepository,
+      );
+
+      expect(result).toBeNull();
+    });
   });
 });
