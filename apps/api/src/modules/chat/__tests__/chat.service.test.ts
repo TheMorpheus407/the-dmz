@@ -1,95 +1,77 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const MAX_MESSAGE_LENGTH = 280;
-const CHAT_RATE_LIMIT_WINDOW_MS = 2000;
-const CHAT_RATE_LIMIT_MAX = 1;
+const mockGetDatabaseClient = vi.fn();
+const mockCheckRateLimit = vi.fn();
+const mockEvaluateFlag = vi.fn();
+
+vi.mock('../../../shared/database/connection.js', () => ({
+  getDatabaseClient: (...args: unknown[]) => mockGetDatabaseClient(...args),
+}));
+
+vi.mock('../../feature-flags/feature-flags.service.js', () => ({
+  evaluateFlag: (...args: unknown[]) => mockEvaluateFlag(...args),
+}));
+
+vi.mock('../../social/rate-limit.service.js', () => ({
+  checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
+}));
+
+const mockModerateChat = vi.fn();
+
+vi.mock('../chat-moderation.service.js', () => ({
+  ChatModerationService: vi.fn().mockImplementation(() => ({
+    moderateChat: mockModerateChat,
+  })),
+}));
+
+const mockChatRepository = {
+  findChannel: vi.fn(),
+  findChannels: vi.fn(),
+  findExistingChannel: vi.fn(),
+  createChannel: vi.fn(),
+  findMessage: vi.fn(),
+  findMessages: vi.fn(),
+  createMessage: vi.fn(),
+  updateMessage: vi.fn(),
+  createModerationReport: vi.fn(),
+};
+
+vi.mock('../chat.repository.js', () => ({
+  ChatRepository: vi.fn().mockImplementation(() => mockChatRepository),
+}));
+
+const mockEventBus = {
+  publish: vi.fn(),
+};
+
+import { ChatRepository } from '../chat.repository.js';
+import { ChatModerationService } from '../chat-moderation.service.js';
+import {
+  sendMessage,
+  getMessages,
+  deleteMessage,
+  listChannels,
+  getChannel,
+  createChannel,
+  getOrCreatePartyChannel,
+  getOrCreateDirectChannel,
+  reportMessage,
+} from '../chat.service.js';
+
+import type { AppConfig } from '../../../config.js';
+import type {
+  ChannelType,
+  ChatMessage,
+  ModerationStatus,
+} from '../../../db/schema/social/index.js';
+
+const mockConfig = {} as AppConfig;
+const mockTenantId = 'test-tenant-id';
+const mockPlayerId = 'test-player-id';
 
 const CHANNEL_TYPES = ['party', 'guild', 'direct'] as const;
-type ChannelType = (typeof CHANNEL_TYPES)[number];
-
 const MODERATION_STATUSES = ['approved', 'flagged', 'rejected'] as const;
-type ModerationStatus = (typeof MODERATION_STATUSES)[number];
-
-function isValidChannelType(type: string): type is ChannelType {
-  return CHANNEL_TYPES.includes(type as ChannelType);
-}
-
-function isValidModerationStatus(status: string): status is ModerationStatus {
-  return MODERATION_STATUSES.includes(status as ModerationStatus);
-}
-
-function isValidMessageContent(content: string): { valid: boolean; error?: string } {
-  if (content.trim().length === 0) {
-    return { valid: false, error: 'Message cannot be empty' };
-  }
-  if (content.length > MAX_MESSAGE_LENGTH) {
-    return {
-      valid: false,
-      error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`,
-    };
-  }
-  return { valid: true };
-}
-
-function isValidChannelAccess(
-  channelType: ChannelType,
-  hasChatEnabled: boolean,
-  hasChannelSpecificEnabled: boolean,
-): boolean {
-  if (!hasChatEnabled) {
-    return false;
-  }
-  if (channelType === 'party' || channelType === 'guild' || channelType === 'direct') {
-    return hasChannelSpecificEnabled;
-  }
-  return true;
-}
-
-function shouldAllowMessage(
-  currentCount: number,
-  windowMs: number,
-): { allowed: boolean; retryAfterMs?: number } {
-  if (currentCount >= CHAT_RATE_LIMIT_MAX) {
-    return {
-      allowed: false,
-      retryAfterMs: windowMs,
-    };
-  }
-  return { allowed: true };
-}
-
-function applyModeration(
-  _content: string,
-  hasBlockedContent: boolean,
-  hasFlaggedContent: boolean,
-): ModerationStatus {
-  if (hasBlockedContent) {
-    return 'rejected';
-  }
-  if (hasFlaggedContent) {
-    return 'flagged';
-  }
-  return 'approved';
-}
-
-function shouldBroadcastMessage(moderationStatus: ModerationStatus): boolean {
-  return moderationStatus === 'approved' || moderationStatus === 'flagged';
-}
-
-function shouldNotifySender(moderationStatus: ModerationStatus): boolean {
-  return moderationStatus !== 'approved';
-}
-
-function calculateTypingTimeout(baseTimeoutMs: number): number {
-  return baseTimeoutMs;
-}
-
-function isValidDirectChannelName(name: string | null): boolean {
-  if (!name) {
-    return true;
-  }
-  return name.startsWith('dm-') && name.length > 3;
-}
+const MAX_MESSAGE_LENGTH = 280;
 
 describe('chat service - channel types', () => {
   it('should have three channel types', () => {
@@ -106,18 +88,6 @@ describe('chat service - channel types', () => {
 
   it('should include direct channel type', () => {
     expect(CHANNEL_TYPES).toContain('direct');
-  });
-
-  it('should validate correct channel types', () => {
-    expect(isValidChannelType('party')).toBe(true);
-    expect(isValidChannelType('guild')).toBe(true);
-    expect(isValidChannelType('direct')).toBe(true);
-  });
-
-  it('should reject invalid channel types', () => {
-    expect(isValidChannelType('invalid')).toBe(false);
-    expect(isValidChannelType('')).toBe(false);
-    expect(isValidChannelType('PARTY')).toBe(false);
   });
 });
 
@@ -137,203 +107,1067 @@ describe('chat service - moderation statuses', () => {
   it('should include rejected status', () => {
     expect(MODERATION_STATUSES).toContain('rejected');
   });
-
-  it('should validate correct moderation statuses', () => {
-    expect(isValidModerationStatus('approved')).toBe(true);
-    expect(isValidModerationStatus('flagged')).toBe(true);
-    expect(isValidModerationStatus('rejected')).toBe(true);
-  });
-
-  it('should reject invalid moderation statuses', () => {
-    expect(isValidModerationStatus('pending')).toBe(false);
-    expect(isValidModerationStatus('')).toBe(false);
-    expect(isValidModerationStatus('APPROVED')).toBe(false);
-  });
 });
 
-describe('chat service - message validation', () => {
-  it('should accept valid message content', () => {
-    expect(isValidMessageContent('Hello world')).toEqual({ valid: true });
-    expect(isValidMessageContent('a'.repeat(280))).toEqual({ valid: true });
-    expect(isValidMessageContent('Test message with numbers 123')).toEqual({ valid: true });
-  });
-
-  it('should reject empty message content', () => {
-    expect(isValidMessageContent('')).toEqual({ valid: false, error: 'Message cannot be empty' });
-    expect(isValidMessageContent('   ')).toEqual({
-      valid: false,
-      error: 'Message cannot be empty',
-    });
-    expect(isValidMessageContent('\t\n')).toEqual({
-      valid: false,
-      error: 'Message cannot be empty',
-    });
-  });
-
-  it('should reject message exceeding max length', () => {
-    const maxLengthContent = 'a'.repeat(280);
-    const overLengthContent = 'a'.repeat(281);
-
-    expect(isValidMessageContent(maxLengthContent)).toEqual({ valid: true });
-    expect(isValidMessageContent(overLengthContent)).toEqual({
-      valid: false,
-      error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`,
-    });
-  });
-
+describe('chat service - message length constant', () => {
   it('should have max message length of 280 characters', () => {
     expect(MAX_MESSAGE_LENGTH).toBe(280);
   });
 });
 
-describe('chat service - channel access', () => {
-  it('should deny access when chat is disabled', () => {
-    expect(isValidChannelAccess('party', false, true)).toBe(false);
-    expect(isValidChannelAccess('guild', false, true)).toBe(false);
-    expect(isValidChannelAccess('direct', false, true)).toBe(false);
+describe('sendMessage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockCheckRateLimit.mockResolvedValue({ allowed: true, current: 1, limit: 10 });
+    mockEvaluateFlag.mockResolvedValue(true);
+    mockModerateChat.mockResolvedValue({
+      moderationStatus: 'approved' as ModerationStatus,
+      contentCheckResult: { allowed: true, violations: [], highestSeverity: null },
+    });
+
+    mockChatRepository.findChannel.mockReset();
+    mockChatRepository.findChannels.mockReset();
+    mockChatRepository.findExistingChannel.mockReset();
+    mockChatRepository.createChannel.mockReset();
+    mockChatRepository.findMessage.mockReset();
+    mockChatRepository.findMessages.mockReset();
+    mockChatRepository.createMessage.mockReset();
+    mockChatRepository.updateMessage.mockReset();
+    mockChatRepository.createModerationReport.mockReset();
   });
 
-  it('should deny access when channel-specific chat is disabled', () => {
-    expect(isValidChannelAccess('party', true, false)).toBe(false);
-    expect(isValidChannelAccess('guild', true, false)).toBe(false);
-    expect(isValidChannelAccess('direct', true, false)).toBe(false);
+  it('rejects empty message content', async () => {
+    const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
+      channelId: 'channel-1',
+      content: '',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Message cannot be empty');
   });
 
-  it('should allow access when both chat and channel-specific chat are enabled', () => {
-    expect(isValidChannelAccess('party', true, true)).toBe(true);
-    expect(isValidChannelAccess('guild', true, true)).toBe(true);
-    expect(isValidChannelAccess('direct', true, true)).toBe(true);
+  it('rejects whitespace-only message content', async () => {
+    const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
+      channelId: 'channel-1',
+      content: '   ',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Message cannot be empty');
+  });
+
+  it('rejects message exceeding max length', async () => {
+    const longContent = 'a'.repeat(281);
+
+    const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
+      channelId: 'channel-1',
+      content: longContent,
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe(`Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`);
+  });
+
+  it('accepts message at exactly max length', async () => {
+    const maxContent = 'a'.repeat(280);
+    const mockChannel = {
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockMsg = {
+      messageId: 'msg-1',
+      channelId: 'channel-1',
+      senderPlayerId: mockPlayerId,
+      content: maxContent,
+      moderationStatus: 'approved' as ModerationStatus,
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findChannel.mockResolvedValue(mockChannel);
+    mockChatRepository.createMessage.mockResolvedValue(mockMsg);
+
+    const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
+      channelId: 'channel-1',
+      content: maxContent,
+    });
+
+    expect(result.success).toBe(true);
+    expect(mockChatRepository.findChannel).toHaveBeenCalledWith({
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+    });
+    expect(mockChatRepository.createMessage).toHaveBeenCalled();
+  });
+
+  it('returns error when channel not found', async () => {
+    mockChatRepository.findChannel.mockResolvedValue(undefined);
+
+    const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
+      channelId: 'nonexistent',
+      content: 'Hello',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Channel not found');
+    expect(mockChatRepository.findChannel).toHaveBeenCalledWith({
+      channelId: 'nonexistent',
+      tenantId: mockTenantId,
+    });
+  });
+
+  it('returns rate limit error when limit exceeded', async () => {
+    const mockChannel = {
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findChannel.mockResolvedValue(mockChannel);
+    mockCheckRateLimit.mockResolvedValue({
+      allowed: false,
+      current: 10,
+      limit: 10,
+      retryAfterMs: 2000,
+    });
+
+    const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
+      channelId: 'channel-1',
+      content: 'Hello',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.rateLimited).toBe(true);
+    expect(result.error).toContain('Rate limit exceeded');
+    expect(mockChatRepository.findChannel).toHaveBeenCalledWith({
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+    });
+  });
+
+  it('returns error when chat is disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
+
+    const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
+      channelId: 'channel-1',
+      content: 'Hello',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Chat is disabled');
+  });
+
+  it('returns error when message is rejected by moderation', async () => {
+    const mockChannel = {
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findChannel.mockResolvedValue(mockChannel);
+    mockModerateChat.mockResolvedValue({
+      moderationStatus: 'rejected' as ModerationStatus,
+      contentCheckResult: { allowed: false, violations: [], highestSeverity: null },
+    });
+
+    const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
+      channelId: 'channel-1',
+      content: 'bad content',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Message content is not allowed');
+    expect(result.moderationStatus).toBe('rejected');
+    expect(mockChatRepository.findChannel).toHaveBeenCalledWith({
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+    });
+  });
+
+  it('returns success when message is flagged by moderation', async () => {
+    const mockChannel = {
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockMsg = {
+      messageId: 'msg-1',
+      channelId: 'channel-1',
+      senderPlayerId: mockPlayerId,
+      content: 'Hello',
+      moderationStatus: 'flagged' as ModerationStatus,
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findChannel.mockResolvedValue(mockChannel);
+    mockModerateChat.mockResolvedValue({
+      moderationStatus: 'flagged' as ModerationStatus,
+      contentCheckResult: { allowed: true, violations: [], highestSeverity: null },
+    });
+    mockChatRepository.createMessage.mockResolvedValue(mockMsg);
+
+    const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
+      channelId: 'channel-1',
+      content: 'Hello',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.message).toEqual(mockMsg);
+    expect(result.moderationStatus).toBe('flagged');
+  });
+
+  it('publishes ChatMessageSentEvent when eventBus is provided', async () => {
+    const mockChannel = {
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockMsg = {
+      messageId: 'msg-1',
+      channelId: 'channel-1',
+      senderPlayerId: mockPlayerId,
+      content: 'Hello',
+      moderationStatus: 'approved' as ModerationStatus,
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findChannel.mockResolvedValue(mockChannel);
+    mockChatRepository.createMessage.mockResolvedValue(mockMsg);
+    vi.clearAllMocks();
+    mockEventBus.publish.mockReset();
+
+    const result = await sendMessage(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      {
+        channelId: 'channel-1',
+        content: 'Hello',
+      },
+      undefined,
+      mockEventBus as never,
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockEventBus.publish).toHaveBeenCalled();
   });
 });
 
-describe('chat service - rate limiting', () => {
-  it('should have rate limit of 1 message per window', () => {
-    expect(CHAT_RATE_LIMIT_MAX).toBe(1);
+describe('getMessages', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockEvaluateFlag.mockResolvedValue(true);
+
+    mockChatRepository.findChannel.mockReset();
+    mockChatRepository.findChannels.mockReset();
+    mockChatRepository.findExistingChannel.mockReset();
+    mockChatRepository.createChannel.mockReset();
+    mockChatRepository.findMessage.mockReset();
+    mockChatRepository.findMessages.mockReset();
+    mockChatRepository.createMessage.mockReset();
+    mockChatRepository.updateMessage.mockReset();
+    mockChatRepository.createModerationReport.mockReset();
   });
 
-  it('should have rate limit window of 2 seconds', () => {
-    expect(CHAT_RATE_LIMIT_WINDOW_MS).toBe(2000);
+  it('returns error when chat is disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
+
+    const result = await getMessages(mockConfig, mockTenantId, mockPlayerId, 'channel-1');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Chat is disabled');
   });
 
-  it('should allow messages when under limit', () => {
-    expect(shouldAllowMessage(0, CHAT_RATE_LIMIT_WINDOW_MS)).toEqual({ allowed: true });
+  it('returns error when channel not found', async () => {
+    mockChatRepository.findChannel.mockResolvedValue(undefined);
+
+    const result = await getMessages(mockConfig, mockTenantId, mockPlayerId, 'nonexistent');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Channel not found');
+    expect(mockChatRepository.findChannel).toHaveBeenCalledWith({
+      channelId: 'nonexistent',
+      tenantId: mockTenantId,
+    });
   });
 
-  it('should deny messages when at or over limit', () => {
-    const result = shouldAllowMessage(1, CHAT_RATE_LIMIT_WINDOW_MS);
-    expect(result.allowed).toBe(false);
-    expect(result.retryAfterMs).toBe(CHAT_RATE_LIMIT_WINDOW_MS);
+  it('returns messages successfully', async () => {
+    const mockChannel = {
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockMessages: ChatMessage[] = [
+      {
+        messageId: 'msg-1',
+        channelId: 'channel-1',
+        senderPlayerId: 'player-1',
+        content: 'Hello',
+        moderationStatus: 'approved',
+        isDeleted: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        messageId: 'msg-2',
+        channelId: 'channel-1',
+        senderPlayerId: 'player-2',
+        content: 'Hi there',
+        moderationStatus: 'approved',
+        isDeleted: false,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    mockChatRepository.findChannel.mockResolvedValue(mockChannel);
+    mockChatRepository.findMessages.mockResolvedValue(mockMessages);
+
+    const result = await getMessages(mockConfig, mockTenantId, mockPlayerId, 'channel-1');
+
+    expect(result.success).toBe(true);
+    expect(result.messages).toHaveLength(2);
+    expect(result.messages?.[0].content).toBe('Hello');
+    expect(mockChatRepository.findChannel).toHaveBeenCalledWith({
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+    });
+    expect(mockChatRepository.findMessages).toHaveBeenCalledWith({
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      isDeleted: false,
+    });
   });
 
-  it('should deny messages well over limit', () => {
-    const result = shouldAllowMessage(5, CHAT_RATE_LIMIT_WINDOW_MS);
-    expect(result.allowed).toBe(false);
-    expect(result.retryAfterMs).toBe(CHAT_RATE_LIMIT_WINDOW_MS);
+  it('passes limit and cursor parameters to repository', async () => {
+    const mockChannel = {
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    const mockMessages: ChatMessage[] = [];
+
+    mockChatRepository.findChannel.mockResolvedValue(mockChannel);
+    mockChatRepository.findMessages.mockResolvedValue(mockMessages);
+
+    const result = await getMessages(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      'channel-1',
+      25,
+      'cursor-123',
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockChatRepository.findMessages).toHaveBeenCalledWith({
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      isDeleted: false,
+      limit: 25,
+      cursor: 'cursor-123',
+    });
   });
 });
 
-describe('chat service - moderation', () => {
-  it('should approve clean content', () => {
-    expect(applyModeration('Hello world', false, false)).toBe('approved');
-    expect(applyModeration('Valid message content', false, false)).toBe('approved');
+describe('deleteMessage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockEvaluateFlag.mockResolvedValue(true);
+
+    mockChatRepository.findChannel.mockReset();
+    mockChatRepository.findChannels.mockReset();
+    mockChatRepository.findExistingChannel.mockReset();
+    mockChatRepository.createChannel.mockReset();
+    mockChatRepository.findMessage.mockReset();
+    mockChatRepository.findMessages.mockReset();
+    mockChatRepository.createMessage.mockReset();
+    mockChatRepository.updateMessage.mockReset();
+    mockChatRepository.createModerationReport.mockReset();
   });
 
-  it('should flag content with minor issues', () => {
-    expect(applyModeration('Content with issues', false, true)).toBe('flagged');
+  it('returns error when chat is disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
+
+    const result = await deleteMessage(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      'channel-1',
+      'msg-1',
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Chat is disabled');
   });
 
-  it('should reject blocked content', () => {
-    expect(applyModeration('Blocked content', true, false)).toBe('rejected');
-    expect(applyModeration('Blocked content', true, true)).toBe('rejected');
+  it('returns error when message not found', async () => {
+    mockChatRepository.findMessage.mockResolvedValue(undefined);
+
+    const result = await deleteMessage(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      'channel-1',
+      'nonexistent',
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Message not found or you do not have permission to delete it');
+    expect(mockChatRepository.findMessage).toHaveBeenCalledWith('nonexistent', 'channel-1');
   });
 
-  it('should prioritize rejection over flagging', () => {
-    expect(applyModeration('Bad content', true, true)).toBe('rejected');
+  it('returns error when player does not own message', async () => {
+    mockChatRepository.findMessage.mockResolvedValue({
+      messageId: 'msg-1',
+      channelId: 'channel-1',
+      senderPlayerId: 'other-player',
+      content: 'Hello',
+      moderationStatus: 'approved',
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const result = await deleteMessage(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      'channel-1',
+      'msg-1',
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Message not found or you do not have permission to delete it');
+    expect(mockChatRepository.findMessage).toHaveBeenCalledWith('msg-1', 'channel-1');
+  });
+
+  it('deletes message successfully when player owns it', async () => {
+    mockChatRepository.findMessage.mockResolvedValue({
+      messageId: 'msg-1',
+      channelId: 'channel-1',
+      senderPlayerId: mockPlayerId,
+      content: 'Hello',
+      moderationStatus: 'approved',
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    mockChatRepository.updateMessage.mockResolvedValue(undefined);
+
+    const result = await deleteMessage(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      'channel-1',
+      'msg-1',
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockChatRepository.findMessage).toHaveBeenCalledWith('msg-1', 'channel-1');
+    expect(mockChatRepository.updateMessage).toHaveBeenCalledWith({
+      messageId: 'msg-1',
+      isDeleted: true,
+    });
+  });
+
+  it('publishes ChatMessageDeletedEvent when eventBus is provided', async () => {
+    mockChatRepository.findMessage.mockResolvedValue({
+      messageId: 'msg-1',
+      channelId: 'channel-1',
+      senderPlayerId: mockPlayerId,
+      content: 'Hello',
+      moderationStatus: 'approved',
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    mockChatRepository.updateMessage.mockResolvedValue(undefined);
+    vi.clearAllMocks();
+    mockEventBus.publish.mockReset();
+
+    const result = await deleteMessage(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      'channel-1',
+      'msg-1',
+      mockEventBus as never,
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockEventBus.publish).toHaveBeenCalled();
   });
 });
 
-describe('chat service - message broadcasting', () => {
-  it('should broadcast approved messages', () => {
-    expect(shouldBroadcastMessage('approved')).toBe(true);
+describe('createChannel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockEvaluateFlag.mockResolvedValue(true);
+
+    mockChatRepository.findChannel.mockReset();
+    mockChatRepository.findChannels.mockReset();
+    mockChatRepository.findExistingChannel.mockReset();
+    mockChatRepository.createChannel.mockReset();
+    mockChatRepository.findMessage.mockReset();
+    mockChatRepository.findMessages.mockReset();
+    mockChatRepository.createMessage.mockReset();
+    mockChatRepository.updateMessage.mockReset();
+    mockChatRepository.createModerationReport.mockReset();
   });
 
-  it('should broadcast flagged messages', () => {
-    expect(shouldBroadcastMessage('flagged')).toBe(true);
+  it('returns error when chat is disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
+
+    const result = await createChannel(mockConfig, mockTenantId, {
+      channelType: 'party',
+      partyId: 'party-1',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Chat is disabled');
   });
 
-  it('should not broadcast rejected messages', () => {
-    expect(shouldBroadcastMessage('rejected')).toBe(false);
+  it('returns error when channel type chat is disabled', async () => {
+    mockEvaluateFlag.mockImplementation((config, tenantId, flagName) => {
+      if (flagName === 'social.chat.enabled') return Promise.resolve(true);
+      return Promise.resolve(false);
+    });
+
+    const result = await createChannel(mockConfig, mockTenantId, {
+      channelType: 'party',
+      partyId: 'party-1',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Party chat is disabled');
+  });
+
+  it('returns existing channel if already created', async () => {
+    const existingChannel = {
+      channelId: 'existing-channel',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findExistingChannel.mockResolvedValue(existingChannel);
+
+    const result = await createChannel(mockConfig, mockTenantId, {
+      channelType: 'party',
+      partyId: 'party-1',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.channel).toEqual(existingChannel);
+    expect(mockChatRepository.createChannel).not.toHaveBeenCalled();
+    expect(mockChatRepository.findExistingChannel).toHaveBeenCalledWith({
+      tenantId: mockTenantId,
+      channelType: 'party',
+      partyId: 'party-1',
+    });
+  });
+
+  it('creates new channel successfully', async () => {
+    const newChannel = {
+      channelId: 'new-channel',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findExistingChannel.mockResolvedValue(undefined);
+    mockChatRepository.createChannel.mockResolvedValue(newChannel);
+
+    const result = await createChannel(mockConfig, mockTenantId, {
+      channelType: 'party',
+      partyId: 'party-1',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.channel).toEqual(newChannel);
+    expect(mockChatRepository.findExistingChannel).toHaveBeenCalledWith({
+      tenantId: mockTenantId,
+      channelType: 'party',
+      partyId: 'party-1',
+    });
+    expect(mockChatRepository.createChannel).toHaveBeenCalledWith({
+      tenantId: mockTenantId,
+      channelType: 'party',
+      partyId: 'party-1',
+    });
+  });
+
+  it('returns error when repository.createChannel returns null', async () => {
+    mockChatRepository.findExistingChannel.mockResolvedValue(undefined);
+    mockChatRepository.createChannel.mockResolvedValue(null);
+
+    const result = await createChannel(mockConfig, mockTenantId, {
+      channelType: 'party',
+      partyId: 'party-1',
+    });
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Failed to create channel');
+  });
+
+  it('creates guild channel successfully', async () => {
+    const newChannel = {
+      channelId: 'guild-channel',
+      tenantId: mockTenantId,
+      channelType: 'guild' as ChannelType,
+      partyId: null,
+      guildId: 'guild-1',
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findExistingChannel.mockResolvedValue(undefined);
+    mockChatRepository.createChannel.mockResolvedValue(newChannel);
+
+    const result = await createChannel(mockConfig, mockTenantId, {
+      channelType: 'guild',
+      guildId: 'guild-1',
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.channel).toEqual(newChannel);
+    expect(mockChatRepository.createChannel).toHaveBeenCalledWith({
+      tenantId: mockTenantId,
+      channelType: 'guild',
+      guildId: 'guild-1',
+    });
+  });
+
+  it('publishes ChatChannelCreatedEvent when eventBus is provided', async () => {
+    const newChannel = {
+      channelId: 'new-channel',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findExistingChannel.mockResolvedValue(undefined);
+    mockChatRepository.createChannel.mockResolvedValue(newChannel);
+    vi.clearAllMocks();
+    mockEventBus.publish.mockReset();
+
+    const result = await createChannel(
+      mockConfig,
+      mockTenantId,
+      {
+        channelType: 'party',
+        partyId: 'party-1',
+      },
+      mockEventBus as never,
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockEventBus.publish).toHaveBeenCalled();
   });
 });
 
-describe('chat service - sender notification', () => {
-  it('should not notify sender for approved messages', () => {
-    expect(shouldNotifySender('approved')).toBe(false);
+describe('listChannels', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockEvaluateFlag.mockResolvedValue(true);
+
+    mockChatRepository.findChannel.mockReset();
+    mockChatRepository.findChannels.mockReset();
+    mockChatRepository.findExistingChannel.mockReset();
+    mockChatRepository.createChannel.mockReset();
+    mockChatRepository.findMessage.mockReset();
+    mockChatRepository.findMessages.mockReset();
+    mockChatRepository.createMessage.mockReset();
+    mockChatRepository.updateMessage.mockReset();
+    mockChatRepository.createModerationReport.mockReset();
   });
 
-  it('should notify sender for flagged messages', () => {
-    expect(shouldNotifySender('flagged')).toBe(true);
+  it('returns error when chat is disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
+
+    const result = await listChannels(mockConfig, mockTenantId, mockPlayerId);
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Chat is disabled');
   });
 
-  it('should notify sender for rejected messages', () => {
-    expect(shouldNotifySender('rejected')).toBe(true);
+  it('returns channels successfully', async () => {
+    const mockChannels = [
+      {
+        channelId: 'channel-1',
+        tenantId: mockTenantId,
+        channelType: 'party' as ChannelType,
+        partyId: 'party-1',
+        guildId: null,
+        name: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      {
+        channelId: 'channel-2',
+        tenantId: mockTenantId,
+        channelType: 'guild' as ChannelType,
+        partyId: null,
+        guildId: 'guild-1',
+        name: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ];
+
+    mockChatRepository.findChannels.mockResolvedValue(mockChannels);
+
+    const result = await listChannels(mockConfig, mockTenantId, mockPlayerId);
+
+    expect(result.success).toBe(true);
+    expect(result.channels).toHaveLength(2);
+    expect(mockChatRepository.findChannels).toHaveBeenCalledWith(mockTenantId);
   });
 });
 
-describe('chat service - typing indicator', () => {
-  it('should have typing timeout of 3 seconds', () => {
-    expect(calculateTypingTimeout(3000)).toBe(3000);
+describe('getChannel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockEvaluateFlag.mockResolvedValue(true);
+
+    mockChatRepository.findChannel.mockReset();
+    mockChatRepository.findChannels.mockReset();
+    mockChatRepository.findExistingChannel.mockReset();
+    mockChatRepository.createChannel.mockReset();
+    mockChatRepository.findMessage.mockReset();
+    mockChatRepository.findMessages.mockReset();
+    mockChatRepository.createMessage.mockReset();
+    mockChatRepository.updateMessage.mockReset();
+    mockChatRepository.createModerationReport.mockReset();
   });
 
-  it('should calculate timeout correctly', () => {
-    expect(calculateTypingTimeout(3000)).toBe(3000);
+  it('returns error when channel not found', async () => {
+    mockChatRepository.findChannel.mockResolvedValue(undefined);
+
+    const result = await getChannel(mockConfig, mockTenantId, 'nonexistent');
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Channel not found');
+    expect(mockChatRepository.findChannel).toHaveBeenCalledWith({
+      channelId: 'nonexistent',
+      tenantId: mockTenantId,
+    });
+  });
+
+  it('returns channel successfully', async () => {
+    const mockChannel = {
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findChannel.mockResolvedValue(mockChannel);
+
+    const result = await getChannel(mockConfig, mockTenantId, 'channel-1');
+
+    expect(result.success).toBe(true);
+    expect(result.channel).toEqual(mockChannel);
+    expect(mockChatRepository.findChannel).toHaveBeenCalledWith({
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+    });
   });
 });
 
-describe('chat service - direct channel naming', () => {
-  it('should accept null or undefined channel names', () => {
-    expect(isValidDirectChannelName(null)).toBe(true);
+describe('getOrCreatePartyChannel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockEvaluateFlag.mockResolvedValue(true);
+
+    mockChatRepository.findChannel.mockReset();
+    mockChatRepository.findChannels.mockReset();
+    mockChatRepository.findExistingChannel.mockReset();
+    mockChatRepository.createChannel.mockReset();
+    mockChatRepository.findMessage.mockReset();
+    mockChatRepository.findMessages.mockReset();
+    mockChatRepository.createMessage.mockReset();
+    mockChatRepository.updateMessage.mockReset();
+    mockChatRepository.createModerationReport.mockReset();
   });
 
-  it('should accept valid dm- prefixed names', () => {
-    expect(isValidDirectChannelName('dm-player1-player2')).toBe(true);
+  it('creates party channel with correct channelType', async () => {
+    const newChannel = {
+      channelId: 'party-channel',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findExistingChannel.mockResolvedValue(undefined);
+    mockChatRepository.createChannel.mockResolvedValue(newChannel);
+
+    const result = await getOrCreatePartyChannel(mockConfig, mockTenantId, 'party-1');
+
+    expect(result.success).toBe(true);
+    expect(mockChatRepository.createChannel).toHaveBeenCalledWith(
+      expect.objectContaining({ channelType: 'party', partyId: 'party-1' }),
+    );
   });
 
-  it('should reject invalid channel names', () => {
-    expect(isValidDirectChannelName('invalid')).toBe(false);
-    expect(isValidDirectChannelName('dm-')).toBe(false);
-    expect(isValidDirectChannelName('')).toBe(true);
+  it('returns existing channel if already created', async () => {
+    const existingChannel = {
+      channelId: 'existing-channel',
+      tenantId: mockTenantId,
+      channelType: 'party' as ChannelType,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findExistingChannel.mockResolvedValue(existingChannel);
+
+    const result = await getOrCreatePartyChannel(mockConfig, mockTenantId, 'party-1');
+
+    expect(result.success).toBe(true);
+    expect(result.channel).toEqual(existingChannel);
+    expect(mockChatRepository.createChannel).not.toHaveBeenCalled();
   });
 });
 
-describe('chat service - message constraints', () => {
-  it('should not allow message editing (append-only)', () => {
-    const messages: string[] = [];
-    const originalMessage = 'Original message';
+describe('getOrCreateDirectChannel', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
 
-    messages.push(originalMessage);
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockEvaluateFlag.mockResolvedValue(true);
 
-    const editedMessage = 'Edited message';
-    messages.push(editedMessage);
-
-    expect(messages).toHaveLength(2);
-    expect(messages[0]).toBe('Original message');
-    expect(messages[1]).toBe('Edited message');
+    mockChatRepository.findChannel.mockReset();
+    mockChatRepository.findChannels.mockReset();
+    mockChatRepository.findExistingChannel.mockReset();
+    mockChatRepository.createChannel.mockReset();
+    mockChatRepository.findMessage.mockReset();
+    mockChatRepository.findMessages.mockReset();
+    mockChatRepository.createMessage.mockReset();
+    mockChatRepository.updateMessage.mockReset();
+    mockChatRepository.createModerationReport.mockReset();
   });
 
-  it('should enforce 30-day message retention', () => {
-    const retentionDays = 30;
-    const retentionMs = retentionDays * 24 * 60 * 60 * 1000;
+  it('creates direct channel with dm- prefix', async () => {
+    const newChannel = {
+      channelId: 'dm-channel',
+      tenantId: mockTenantId,
+      channelType: 'direct' as ChannelType,
+      partyId: null,
+      guildId: null,
+      name: 'dm-player1-player2',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-    expect(retentionDays).toBe(30);
-    expect(retentionMs).toBe(2592000000);
+    mockChatRepository.findExistingChannel.mockResolvedValue(undefined);
+    mockChatRepository.createChannel.mockResolvedValue(newChannel);
+
+    const result = await getOrCreateDirectChannel(mockConfig, mockTenantId, 'player1', 'player2');
+
+    expect(result.success).toBe(true);
+    expect(mockChatRepository.createChannel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        channelType: 'direct',
+        name: 'dm-player1-player2',
+      }),
+    );
   });
 
-  it('should have 1 message per 2 seconds rate limit', () => {
-    const windowSeconds = 2;
-    const maxMessages = 1;
+  it('sorts player IDs for consistent channel naming', async () => {
+    const newChannel = {
+      channelId: 'dm-channel',
+      tenantId: mockTenantId,
+      channelType: 'direct' as ChannelType,
+      partyId: null,
+      guildId: null,
+      name: 'dm-player1-player2',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
 
-    expect(windowSeconds).toBe(2);
-    expect(maxMessages).toBe(1);
+    mockChatRepository.findExistingChannel.mockResolvedValue(undefined);
+    mockChatRepository.createChannel.mockResolvedValue(newChannel);
+
+    const result = await getOrCreateDirectChannel(mockConfig, mockTenantId, 'player2', 'player1');
+
+    expect(result.success).toBe(true);
+    expect(mockChatRepository.createChannel).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'dm-player1-player2',
+      }),
+    );
+  });
+});
+
+describe('reportMessage', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockEvaluateFlag.mockResolvedValue(true);
+
+    mockChatRepository.findChannel.mockReset();
+    mockChatRepository.findChannels.mockReset();
+    mockChatRepository.findExistingChannel.mockReset();
+    mockChatRepository.createChannel.mockReset();
+    mockChatRepository.findMessage.mockReset();
+    mockChatRepository.findMessages.mockReset();
+    mockChatRepository.createMessage.mockReset();
+    mockChatRepository.updateMessage.mockReset();
+    mockChatRepository.createModerationReport.mockReset();
+  });
+
+  it('returns error when chat is disabled', async () => {
+    mockEvaluateFlag.mockResolvedValue(false);
+
+    const result = await reportMessage(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      'channel-1',
+      'msg-1',
+      'Spam',
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Chat is disabled');
+  });
+
+  it('returns error when message not found', async () => {
+    mockChatRepository.findMessage.mockResolvedValue(undefined);
+
+    const result = await reportMessage(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      'channel-1',
+      'nonexistent',
+      'Spam',
+    );
+
+    expect(result.success).toBe(false);
+    expect(result.error).toBe('Message not found');
+    expect(mockChatRepository.findMessage).toHaveBeenCalledWith('nonexistent', 'channel-1');
+  });
+
+  it('creates moderation report successfully', async () => {
+    const mockMessage = {
+      messageId: 'msg-1',
+      channelId: 'channel-1',
+      senderPlayerId: 'other-player',
+      content: 'Hello',
+      moderationStatus: 'approved' as ModerationStatus,
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    mockChatRepository.findMessage.mockResolvedValue(mockMessage);
+    mockChatRepository.createModerationReport.mockResolvedValue(undefined);
+
+    const result = await reportMessage(
+      mockConfig,
+      mockTenantId,
+      mockPlayerId,
+      'channel-1',
+      'msg-1',
+      'Inappropriate content',
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockChatRepository.findMessage).toHaveBeenCalledWith('msg-1', 'channel-1');
+    expect(mockChatRepository.createModerationReport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        tenantId: mockTenantId,
+        reporterPlayerId: mockPlayerId,
+        reportedPlayerId: 'other-player',
+        description: 'Inappropriate content',
+      }),
+    );
   });
 });
