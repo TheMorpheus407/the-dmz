@@ -328,6 +328,50 @@ describe('user-service', () => {
 
       await expect(
         userService.deleteUser(tenant!.tenantId, adminUser!.userId, adminUser!.userId, testConfig),
+      ).rejects.toThrow('Cannot delete the last tenant admin');
+    });
+
+    it('should throw SelfDeleteError when deleting yourself as non-last admin', async () => {
+      const db = getDatabaseClient(testConfig);
+
+      const [tenant] = await db
+        .insert(tenants)
+        .values({
+          name: 'Test Tenant',
+          slug: 'test-tenant-self-delete-nonadmin',
+          tier: 'enterprise',
+          status: 'active',
+          provisioningStatus: 'ready',
+          isActive: true,
+        })
+        .returning();
+
+      const [adminUser] = await db
+        .insert(users)
+        .values({
+          tenantId: tenant!.tenantId,
+          email: 'admin@test.com',
+          displayName: 'Admin User',
+          passwordHash: 'hash',
+          role: 'tenant_admin',
+          isActive: true,
+        })
+        .returning();
+
+      const [_otherAdmin] = await db
+        .insert(users)
+        .values({
+          tenantId: tenant!.tenantId,
+          email: 'other@test.com',
+          displayName: 'Other Admin',
+          passwordHash: 'hash',
+          role: 'tenant_admin',
+          isActive: true,
+        })
+        .returning();
+
+      await expect(
+        userService.deleteUser(tenant!.tenantId, adminUser!.userId, adminUser!.userId, testConfig),
       ).rejects.toThrow('Cannot delete your own account');
     });
   });

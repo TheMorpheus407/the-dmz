@@ -2,6 +2,7 @@ import { type AppConfig, loadConfig } from '../../config.js';
 import { createAuditLog } from '../audit/audit.service.js'; // eslint-disable-line import-x/no-restricted-paths
 
 import { UserRepository } from './user.repository.js';
+import { LastAdminDeleteError, SelfDeleteError, UserNotFoundError } from './user.errors.js';
 
 export interface CreateUserInput {
   email: string;
@@ -164,17 +165,17 @@ export const deleteUser = async (
 
   const existingUser = await repo.findUserByTenantAndId(tenantId, userId);
   if (!existingUser) {
-    throw new Error('User not found');
+    throw new UserNotFoundError();
   }
 
   const adminCount = await repo.countAdmins(tenantId);
 
   if (existingUser.role === 'tenant_admin' && adminCount <= 1) {
-    throw new Error('Cannot delete the last tenant admin');
+    throw new LastAdminDeleteError();
   }
 
   if (existingUser.userId === _deletedBy) {
-    throw new Error('Cannot delete your own account');
+    throw new SelfDeleteError();
   }
 
   await repo.deleteUserRoles(tenantId, userId);

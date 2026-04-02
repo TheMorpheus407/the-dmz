@@ -183,6 +183,8 @@ export const ErrorCodes = {
   GAME_EMAIL_NOT_FOUND: 'GAME_EMAIL_NOT_FOUND',
   GAME_INCIDENT_NOT_FOUND: 'GAME_INCIDENT_NOT_FOUND',
   GAME_UPGRADE_NOT_FOUND: 'GAME_UPGRADE_NOT_FOUND',
+  USER_LAST_ADMIN_DELETE: 'USER_LAST_ADMIN_DELETE',
+  USER_SELF_DELETE_FORBIDDEN: 'USER_SELF_DELETE_FORBIDDEN',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -1033,6 +1035,16 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.NOT_FOUND,
     retryable: false,
     messageKey: 'errors.game.upgradeNotFound',
+  },
+  [ErrorCodes.USER_LAST_ADMIN_DELETE]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.user.lastAdminDelete',
+  },
+  [ErrorCodes.USER_SELF_DELETE_FORBIDDEN]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.user.selfDeleteForbidden',
   },
 };
 

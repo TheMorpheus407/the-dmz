@@ -2,9 +2,11 @@ import { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fa
 
 import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
+import { AppError } from '../../shared/middleware/error-handler.js';
 import { validateCsrf } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
 
 import * as userService from './user.service.js';
+import { LastAdminDeleteError, SelfDeleteError } from './user.errors.js';
 
 interface UserIdParams {
   id: string;
@@ -265,22 +267,21 @@ export const registerAdminUserRoutes = async (fastify: FastifyInstance): Promise
           data: updatedUser,
         });
       } catch (error) {
+        if (error instanceof LastAdminDeleteError || error instanceof SelfDeleteError) {
+          return reply.code(error.statusCode).send({
+            success: false,
+            error: { code: error.code, message: error.message },
+          });
+        }
+
+        if (error instanceof AppError) {
+          return reply.code(error.statusCode).send({
+            success: false,
+            error: { code: error.code, message: error.message },
+          });
+        }
+
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-        if (errorMessage.includes('last tenant admin')) {
-          return reply.code(403).send({
-            success: false,
-            error: { code: 'CANNOT_DELETE_ADMIN', message: errorMessage },
-          });
-        }
-
-        if (errorMessage.includes('Cannot delete your own')) {
-          return reply.code(403).send({
-            success: false,
-            error: { code: 'SELF_OPERATION_FORBIDDEN', message: errorMessage },
-          });
-        }
-
         return reply.code(400).send({
           success: false,
           error: { code: 'USER_UPDATE_FAILED', message: errorMessage },
@@ -326,22 +327,21 @@ export const registerAdminUserRoutes = async (fastify: FastifyInstance): Promise
           success: true,
         });
       } catch (error) {
+        if (error instanceof LastAdminDeleteError || error instanceof SelfDeleteError) {
+          return reply.code(error.statusCode).send({
+            success: false,
+            error: { code: error.code, message: error.message },
+          });
+        }
+
+        if (error instanceof AppError) {
+          return reply.code(error.statusCode).send({
+            success: false,
+            error: { code: error.code, message: error.message },
+          });
+        }
+
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-        if (errorMessage.includes('last tenant admin')) {
-          return reply.code(403).send({
-            success: false,
-            error: { code: 'CANNOT_DELETE_ADMIN', message: errorMessage },
-          });
-        }
-
-        if (errorMessage.includes('Cannot delete your own')) {
-          return reply.code(403).send({
-            success: false,
-            error: { code: 'SELF_OPERATION_FORBIDDEN', message: errorMessage },
-          });
-        }
-
         return reply.code(400).send({
           success: false,
           error: { code: 'USER_DELETE_FAILED', message: errorMessage },

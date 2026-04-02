@@ -218,6 +218,8 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.GAME_EMAIL_NOT_FOUND]: 404,
   [ErrorCodes.GAME_INCIDENT_NOT_FOUND]: 404,
   [ErrorCodes.GAME_UPGRADE_NOT_FOUND]: 404,
+  [ErrorCodes.USER_LAST_ADMIN_DELETE]: 403,
+  [ErrorCodes.USER_SELF_DELETE_FORBIDDEN]: 403,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -414,6 +416,8 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.GAME_EMAIL_NOT_FOUND]: 'Email not found in inbox',
   [ErrorCodes.GAME_INCIDENT_NOT_FOUND]: 'Incident not found',
   [ErrorCodes.GAME_UPGRADE_NOT_FOUND]: 'Upgrade not found',
+  [ErrorCodes.USER_LAST_ADMIN_DELETE]: 'Cannot delete the last tenant admin',
+  [ErrorCodes.USER_SELF_DELETE_FORBIDDEN]: 'Cannot delete your own account',
 } as const;
 
 export type AppErrorOptions = {
