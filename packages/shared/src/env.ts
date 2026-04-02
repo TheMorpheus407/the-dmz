@@ -27,7 +27,7 @@ const booleanFromString = z.preprocess((value) => {
 }, z.boolean());
 
 /**
- * Zod schema for backend (Fastify) environment variables.
+ * Zod schema for server environment variables.
  *
  * Validated at application construction time so the server fails fast
  * with actionable error messages when required variables are missing.
@@ -172,9 +172,9 @@ export const backendEnvSchema = z
 export type BackendEnv = z.infer<typeof backendEnvSchema>;
 
 /**
- * Zod schema for frontend (SvelteKit) environment variables.
+ * Zod schema for client environment variables.
  *
- * Validated when hooks.server.ts loads so the app fails fast with
+ * Validated when the client application loads so the app fails fast with
  * actionable error messages if required variables are misconfigured.
  */
 export const frontendEnvSchema = z.object({
