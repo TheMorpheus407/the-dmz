@@ -2,8 +2,17 @@ import { randomUUID } from 'crypto';
 
 import { eq, and } from 'drizzle-orm';
 
+import {
+  themePreferencesSchema,
+  accessibilityPreferencesSchema,
+  gameplayPreferencesSchema,
+  audioPreferencesSchema,
+  accountPreferencesSchema,
+} from '@the-dmz/shared';
+
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { userProfiles } from '../../db/schema/auth/user-profiles.js';
+import { validationFailed } from '../../shared/middleware/error-handler.js';
 
 import type { AppConfig } from '../../config.js';
 
@@ -59,6 +68,54 @@ export interface UserAllSettings {
 export interface ExportData {
   settings: UserAllSettings;
   exportedAt: string;
+}
+
+function validateSettingsInput(
+  category: string,
+  input: Record<string, unknown>,
+): Record<string, unknown> {
+  switch (category) {
+    case 'display': {
+      const result = themePreferencesSchema.safeParse(input);
+      if (!result.success) {
+        throw validationFailed('Invalid display settings', { violations: result.error.errors });
+      }
+      return result.data;
+    }
+    case 'accessibility': {
+      const result = accessibilityPreferencesSchema.safeParse(input);
+      if (!result.success) {
+        throw validationFailed('Invalid accessibility settings', {
+          violations: result.error.errors,
+        });
+      }
+      return result.data;
+    }
+    case 'gameplay': {
+      const result = gameplayPreferencesSchema.safeParse(input);
+      if (!result.success) {
+        throw validationFailed('Invalid gameplay settings', { violations: result.error.errors });
+      }
+      return result.data;
+    }
+    case 'audio': {
+      const result = audioPreferencesSchema.safeParse(input);
+      if (!result.success) {
+        throw validationFailed('Invalid audio settings', { violations: result.error.errors });
+      }
+      return result.data;
+    }
+    case 'account': {
+      const result = accountPreferencesSchema.safeParse(input);
+      if (!result.success) {
+        throw validationFailed('Invalid account settings', { violations: result.error.errors });
+      }
+      return result.data;
+    }
+    default: {
+      throw validationFailed(`Invalid settings category: ${category}`);
+    }
+  }
 }
 
 export const defaultSettings: UserAllSettings = {
@@ -174,6 +231,8 @@ export async function updateUserSettings(
   category: string,
   settings: Record<string, unknown>,
 ): Promise<UserAllSettings> {
+  const validatedSettings = validateSettingsInput(category, settings);
+
   const db = getDatabaseClient(config);
 
   const profile = await db.query.userProfiles.findFirst({
@@ -190,7 +249,7 @@ export async function updateUserSettings(
   if (category === 'accessibility') {
     updatedAccessibilitySettings = {
       ...existingAccessibilitySettings,
-      ...settings,
+      ...validatedSettings,
     };
     updatedPreferences = existingPreferences;
   } else {
@@ -198,7 +257,7 @@ export async function updateUserSettings(
       ...existingPreferences,
       [category]: {
         ...((existingPreferences[category] as Record<string, unknown>) || {}),
-        ...settings,
+        ...validatedSettings,
       },
     };
   }
