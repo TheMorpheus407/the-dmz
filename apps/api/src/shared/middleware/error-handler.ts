@@ -455,6 +455,7 @@ export type AppErrorOptions = {
   message: string;
   statusCode: number;
   details?: Record<string, unknown>;
+  cause?: Error | null;
 };
 
 export class AppError extends Error {
@@ -463,7 +464,7 @@ export class AppError extends Error {
   public readonly details: Record<string, unknown> | undefined;
 
   constructor(options: AppErrorOptions) {
-    super(options.message);
+    super(options.message, { cause: options.cause });
     this.code = options.code;
     this.statusCode = options.statusCode;
     this.details = options.details;
@@ -474,12 +475,14 @@ export const createAppError = (
   code: ErrorCode,
   message?: string,
   details?: Record<string, unknown>,
+  cause?: Error | null,
 ): AppError =>
   new AppError({
     code,
     message: message ?? ErrorMessages[code],
     statusCode: ErrorStatusMap[code],
     ...(details !== undefined && { details }),
+    ...(cause !== undefined && { cause }),
   });
 
 export const badRequest = (message?: string, details?: Record<string, unknown>): AppError =>

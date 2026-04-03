@@ -79,6 +79,94 @@ describe('ErrorCodes and AppError', () => {
 
       expect(error.details).toBeUndefined();
     });
+
+    it('should propagate cause when provided', () => {
+      const originalError = new Error('Original error message');
+      const error = new AppError({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message: 'Wrapped error',
+        statusCode: 400,
+        cause: originalError,
+      });
+
+      expect(error.cause).toBe(originalError);
+      expect(error.cause).toBeInstanceOf(Error);
+      expect((error.cause as Error).message).toBe('Original error message');
+      expect(Object.prototype.hasOwnProperty.call(error, 'cause')).toBe(true);
+    });
+
+    it('should preserve error chain when cause is provided', () => {
+      const originalError = new Error('Database connection failed');
+      const wrappedError = new AppError({
+        code: ErrorCodes.INTERNAL_SERVER_ERROR,
+        message: 'Failed to fetch user',
+        statusCode: 500,
+        cause: originalError,
+      });
+      const finalError = new AppError({
+        code: ErrorCodes.INTERNAL_SERVER_ERROR,
+        message: 'Request failed',
+        statusCode: 500,
+        cause: wrappedError,
+      });
+
+      expect(finalError.cause).toBe(wrappedError);
+      expect((finalError.cause as AppError).cause).toBe(originalError);
+      expect((wrappedError.cause as Error).message).toBe('Database connection failed');
+    });
+
+    it('should have undefined cause when not provided', () => {
+      const error = new AppError({
+        code: ErrorCodes.TEST,
+        message: 'Test',
+        statusCode: 400,
+      });
+      expect(error.cause).toBeUndefined();
+    });
+
+    it('should support both cause and details', () => {
+      const original = new Error('Original');
+      const error = new AppError({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message: 'With cause and details',
+        statusCode: 400,
+        cause: original,
+        details: { field: 'email' },
+      });
+      expect(error.cause).toBe(original);
+      expect(error.details).toEqual({ field: 'email' });
+    });
+
+    it('should handle null cause', () => {
+      const error = new AppError({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message: 'With null cause',
+        statusCode: 400,
+        cause: null,
+      });
+      expect(error.cause).toBe(null);
+    });
+
+    it('should handle undefined explicitly passed as cause', () => {
+      const error = new AppError({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message: 'With undefined cause',
+        statusCode: 400,
+        cause: undefined,
+      });
+      expect(error.cause).toBeUndefined();
+    });
+
+    it('should handle non-Error cause object', () => {
+      const plainObj = { custom: 'data' };
+      const error = new AppError({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message: 'With object cause',
+        statusCode: 400,
+        cause: plainObj as unknown as Error,
+      });
+      expect(error.cause).toBe(plainObj);
+    });
   });
 
   describe('createAppError helper', () => {
@@ -104,6 +192,37 @@ describe('ErrorCodes and AppError', () => {
       });
 
       expect(error.details).toEqual({ issues: [{ path: ['email'], message: 'Invalid email' }] });
+    });
+
+    it('should create AppError with cause', () => {
+      const originalError = new Error('Underlying error');
+      const error = createAppError(
+        ErrorCodes.VALIDATION_FAILED,
+        'Wrapped error',
+        undefined,
+        originalError,
+      );
+
+      expect(error.cause).toBe(originalError);
+      expect(error.code).toBe(ErrorCodes.VALIDATION_FAILED);
+      expect(error.message).toBe('Wrapped error');
+    });
+
+    it('should have undefined cause when createAppError called without cause', () => {
+      const error = createAppError(ErrorCodes.VALIDATION_FAILED);
+      expect(error.cause).toBeUndefined();
+    });
+
+    it('should create AppError with cause and details', () => {
+      const original = new Error('Original');
+      const error = createAppError(
+        ErrorCodes.VALIDATION_FAILED,
+        'With both',
+        { issues: [] },
+        original,
+      );
+      expect(error.cause).toBe(original);
+      expect(error.details).toEqual({ issues: [] });
     });
   });
 
@@ -190,6 +309,41 @@ describe('ErrorCodes and AppError', () => {
       expect(error.code).toBe(ErrorCodes.RATE_LIMIT_EXCEEDED);
       expect(error.statusCode).toBe(429);
       expect(error.details).toEqual({ retryAfterSeconds: 60 });
+    });
+
+    it('badRequest should have undefined cause', () => {
+      const error = badRequest('Invalid email');
+      expect(error.cause).toBeUndefined();
+    });
+
+    it('unauthorized should have undefined cause', () => {
+      const error = unauthorized('Token expired');
+      expect(error.cause).toBeUndefined();
+    });
+
+    it('forbidden should have undefined cause', () => {
+      const error = forbidden('Admin access required');
+      expect(error.cause).toBeUndefined();
+    });
+
+    it('notFound should have undefined cause', () => {
+      const error = notFound('User not found');
+      expect(error.cause).toBeUndefined();
+    });
+
+    it('conflict should have undefined cause', () => {
+      const error = conflict('Email already exists');
+      expect(error.cause).toBeUndefined();
+    });
+
+    it('validationFailed should have undefined cause', () => {
+      const error = validationFailed('Invalid payload');
+      expect(error.cause).toBeUndefined();
+    });
+
+    it('internalError should have undefined cause', () => {
+      const error = internalError('Database connection failed');
+      expect(error.cause).toBeUndefined();
     });
   });
 });
