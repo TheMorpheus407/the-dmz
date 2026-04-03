@@ -1,5 +1,5 @@
 import type { GamePhase } from '$lib/game/state/state-machine';
-import type { ActivePanel } from '$lib/game/store/ui-store';
+import type { ActivePanel } from '$lib/game/store/types';
 
 export interface PhaseViewConfig {
   mainPanel: ActivePanel;

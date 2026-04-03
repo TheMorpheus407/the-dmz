@@ -21,6 +21,8 @@ import {
   canMakeDecision,
   canAdvanceDay,
   canUpgradeFacility,
+  phaseStore,
+  dialogStore,
 } from './ui-store';
 
 describe('uiStore', () => {
@@ -428,7 +430,7 @@ describe('uiStore', () => {
       uiStore.setPhase('DAY_START');
       uiStore.setPhase('EMAIL_TRIAGE');
 
-      const state = get(uiStore);
+      const state = get(phaseStore);
       expect(state.previousPhase).toBe('DAY_START');
       expect(state.currentPhase).toBe('EMAIL_TRIAGE');
     });
@@ -486,7 +488,7 @@ describe('uiStore', () => {
       uiStore.setPhase('EMAIL_TRIAGE');
       uiStore.clearPhase();
 
-      const state = get(uiStore);
+      const state = get(phaseStore);
       expect(state.currentPhase).toBe(null);
       expect(state.previousPhase).toBe('EMAIL_TRIAGE');
     });
@@ -494,38 +496,38 @@ describe('uiStore', () => {
 
   describe('dialog', () => {
     it('should have default dialog state', () => {
-      const state = get(uiStore);
-      expect(state.dialog.isActive).toBe(false);
-      expect(state.dialog.currentTreeId).toBe(null);
-      expect(state.dialog.currentNodeId).toBe(null);
-      expect(state.dialog.history).toEqual([]);
+      const state = get(dialogStore);
+      expect(state.isActive).toBe(false);
+      expect(state.currentTreeId).toBe(null);
+      expect(state.currentNodeId).toBe(null);
+      expect(state.history).toEqual([]);
     });
 
     it('should start a dialog', () => {
       uiStore.startDialog('test-dialog', 'node-1');
-      const state = get(uiStore);
+      const state = get(dialogStore);
 
-      expect(state.dialog.isActive).toBe(true);
-      expect(state.dialog.currentTreeId).toBe('test-dialog');
-      expect(state.dialog.currentNodeId).toBe('node-1');
-      expect(state.dialog.history).toEqual([]);
+      expect(state.isActive).toBe(true);
+      expect(state.currentTreeId).toBe('test-dialog');
+      expect(state.currentNodeId).toBe('node-1');
+      expect(state.history).toEqual([]);
     });
 
     it('should advance dialog node', () => {
       uiStore.startDialog('test-dialog', 'node-1');
       uiStore.advanceDialogNode('node-2');
 
-      const state = get(uiStore);
-      expect(state.dialog.currentNodeId).toBe('node-2');
+      const state = get(dialogStore);
+      expect(state.currentNodeId).toBe('node-2');
     });
 
     it('should record dialog choice', () => {
       uiStore.startDialog('test-dialog', 'node-1');
       uiStore.recordDialogChoice('morpheus', 'Hello there!', 'choice-1');
 
-      const state = get(uiStore);
-      expect(state.dialog.history).toHaveLength(1);
-      const entry = state.dialog.history[0];
+      const state = get(dialogStore);
+      expect(state.history).toHaveLength(1);
+      const entry = state.history[0];
       expect(entry).toBeDefined();
       expect(entry?.speaker).toBe('morpheus');
       expect(entry?.text).toBe('Hello there!');
@@ -536,19 +538,19 @@ describe('uiStore', () => {
       uiStore.startDialog('test-dialog', 'node-1');
       uiStore.endDialog();
 
-      const state = get(uiStore);
-      expect(state.dialog.isActive).toBe(false);
-      expect(state.dialog.currentTreeId).toBe(null);
-      expect(state.dialog.currentNodeId).toBe(null);
+      const state = get(dialogStore);
+      expect(state.isActive).toBe(false);
+      expect(state.currentTreeId).toBe(null);
+      expect(state.currentNodeId).toBe(null);
     });
 
     it('should set player resources for dialog', () => {
       uiStore.setPlayerResourcesForDialog(50, 500, ['flag1', 'flag2']);
 
-      const state = get(uiStore);
-      expect(state.dialog.playerTrust).toBe(50);
-      expect(state.dialog.playerCredits).toBe(500);
-      expect(state.dialog.playerFlags).toEqual(['flag1', 'flag2']);
+      const state = get(dialogStore);
+      expect(state.playerTrust).toBe(50);
+      expect(state.playerCredits).toBe(500);
+      expect(state.playerFlags).toEqual(['flag1', 'flag2']);
     });
   });
 });

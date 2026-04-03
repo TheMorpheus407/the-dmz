@@ -9,511 +9,291 @@ import {
   type PhaseActionConfig,
   type PhaseKeyboardShortcutConfig,
 } from '$lib/game/state/phase-config';
-import type { DialogHistoryEntry, DialogSpeaker } from '@the-dmz/shared/types';
 
-export type ActivePanel =
-  | 'inbox'
-  | 'email'
-  | 'facility'
-  | 'upgrades'
-  | 'incident'
-  | 'settings'
-  | 'day-summary'
-  | 'game-over'
-  | 'worksheet'
-  | 'verification'
-  | 'feedback'
-  | 'threat'
-  | 'landing'
-  | 'decision';
+export type {
+  ActivePanel,
+  Toast,
+  ToastAction,
+  ToastType,
+  NotificationPriority,
+  ModalState,
+  HoverState,
+  FocusState,
+  AnimationState,
+  FormInputState,
+  DialogState,
+} from './types';
 
-export type ToastType =
-  | 'info'
-  | 'success'
-  | 'warning'
-  | 'error'
-  | 'decision'
-  | 'threat'
-  | 'incident'
-  | 'breach'
-  | 'system'
-  | 'achievement';
+export { navigationStore } from './navigation.store';
+export { modalStore } from './modal.store';
+export { notificationStore } from './notification.store';
+export { dialogStore } from './dialog.store';
+export { formStore } from './form.store';
+export { interactionStore } from './interaction.store';
+export { phaseStore } from './phase.store';
 
-export interface ToastAction {
-  label: string;
-  onClick: () => void;
-}
-
-export interface Toast {
-  id: string;
-  message: string;
-  type: ToastType;
-  title?: string;
-  duration?: number;
-  createdAt: number;
-  action?: ToastAction;
-  source?: string;
-}
-
-export type NotificationPriority = 'low' | 'normal' | 'high' | 'urgent';
-
-export interface ModalState {
-  isOpen: boolean;
-  type: 'worksheet' | 'verification' | 'upgrade' | null;
-  data: Record<string, unknown> | null;
-}
-
-export interface HoverState {
-  emailId: string | null;
-  buttonId: string | null;
-}
-
-export interface FocusState {
-  elementId: string | null;
-}
-
-export interface AnimationState {
-  isTransitioning: boolean;
-  transitionType: 'fade' | 'slide' | 'none';
-}
-
-export interface FormInputState {
-  values: Record<string, string>;
-  errors: Record<string, string>;
-  touched: Record<string, boolean>;
-}
-
-interface UiStoreState {
-  activePanel: ActivePanel;
-  currentPhase: GamePhase | null;
-  previousPhase: GamePhase | null;
-  modals: ModalState;
-  notifications: Toast[];
-  notificationQueue: Toast[];
-  hoverState: HoverState;
-  focusState: FocusState;
-  animationState: AnimationState;
-  formInput: FormInputState;
-  sidebarCollapsed: boolean;
-  currentRoute: string;
-  isMobile: boolean;
-  keyboardShortcutsEnabled: boolean;
-  dialog: {
-    isActive: boolean;
-    currentTreeId: string | null;
-    currentNodeId: string | null;
-    history: DialogHistoryEntry[];
-    playerTrust: number;
-    playerCredits: number;
-    playerFlags: string[];
-  };
-}
-
-const initialState: UiStoreState = {
-  activePanel: 'landing',
-  currentPhase: null,
-  previousPhase: null,
-  modals: { isOpen: false, type: null, data: null },
-  notifications: [],
-  notificationQueue: [],
-  hoverState: { emailId: null, buttonId: null },
-  focusState: { elementId: null },
-  animationState: { isTransitioning: false, transitionType: 'none' },
-  formInput: { values: {}, errors: {}, touched: {} },
-  sidebarCollapsed: false,
-  currentRoute: '/game',
-  isMobile: false,
-  keyboardShortcutsEnabled: true,
-  dialog: {
-    isActive: false,
-    currentTreeId: null,
-    currentNodeId: null,
-    history: [],
-    playerTrust: 100,
-    playerCredits: 1000,
-    playerFlags: [],
-  },
-};
+import { navigationStore } from './navigation.store';
+import { modalStore } from './modal.store';
+import { notificationStore } from './notification.store';
+import { dialogStore } from './dialog.store';
+import { formStore } from './form.store';
+import { interactionStore } from './interaction.store';
+import { phaseStore } from './phase.store';
 
 function createUiStore() {
-  const { subscribe, set, update } = writable<UiStoreState>(initialState);
+  const { subscribe } = writable({});
 
   return {
     subscribe,
 
-    setActivePanel(panel: ActivePanel) {
-      update((state) => ({ ...state, activePanel: panel }));
+    setActivePanel(panel: Parameters<typeof navigationStore.setActivePanel>[0]) {
+      navigationStore.setActivePanel(panel);
     },
 
     setPhase(phase: GamePhase) {
-      update((state) => {
-        const viewConfig = getViewConfig(phase);
-        return {
-          ...state,
-          previousPhase: state.currentPhase,
-          currentPhase: phase,
-          activePanel: viewConfig.mainPanel,
-          animationState: {
-            isTransitioning: state.currentPhase !== null && state.currentPhase !== phase,
-            transitionType: viewConfig.transitionType,
-          },
-        };
-      });
+      phaseStore.setPhase(phase);
     },
 
     clearPhase() {
-      update((state) => ({
-        ...state,
-        previousPhase: state.currentPhase,
-        currentPhase: null,
-      }));
+      phaseStore.clearPhase();
     },
 
-    openModal(type: 'worksheet' | 'verification' | 'upgrade', data?: Record<string, unknown>) {
-      update((state) => ({ ...state, modals: { isOpen: true, type, data: data ?? null } }));
+    openModal(
+      type: Parameters<typeof modalStore.openModal>[0],
+      data?: Parameters<typeof modalStore.openModal>[1],
+    ) {
+      modalStore.openModal(type, data);
     },
 
     closeModal() {
-      update((state) => ({ ...state, modals: { isOpen: false, type: null, data: null } }));
+      modalStore.closeModal();
     },
 
     addNotification(
       message: string,
-      type: Toast['type'] = 'info',
-      duration: number | undefined = 5000,
-      options?: { title?: string; action?: ToastAction; source?: string },
+      type?: Parameters<typeof notificationStore.addNotification>[1],
+      duration?: Parameters<typeof notificationStore.addNotification>[2],
+      options?: Parameters<typeof notificationStore.addNotification>[3],
     ) {
-      const id = crypto.randomUUID();
-      const toast: Toast = {
-        id,
-        message,
-        type,
-        duration,
-        createdAt: Date.now(),
-      };
-
-      if (options?.title) {
-        toast.title = options.title;
-      }
-      if (options?.action) {
-        toast.action = options.action;
-      }
-      if (options?.source) {
-        toast.source = options.source;
-      }
-
-      update((state) => {
-        const MAX_VISIBLE = 3;
-        const currentVisible = state.notifications.length;
-
-        if (currentVisible >= MAX_VISIBLE) {
-          return {
-            ...state,
-            notificationQueue: [...state.notificationQueue, toast],
-          };
-        }
-
-        return { ...state, notifications: [...state.notifications, toast] };
-      });
-
-      if (duration && duration > 0) {
-        setTimeout(() => {
-          this.removeNotification(id);
-        }, duration);
-      }
-
-      return id;
+      return notificationStore.addNotification(message, type, duration, options);
     },
 
     addGameNotification(
       message: string,
-      type: Toast['type'],
-      options?: { title?: string; duration?: number; action?: ToastAction; source?: string },
+      type: Parameters<typeof notificationStore.addGameNotification>[1],
+      options?: Parameters<typeof notificationStore.addGameNotification>[2],
     ) {
-      const DURATION_MAP: Record<ToastType, number> = {
-        info: 5000,
-        success: 5000,
-        warning: 8000,
-        error: 10000,
-        decision: 5000,
-        threat: 8000,
-        incident: 10000,
-        breach: 0,
-        system: 4000,
-        achievement: 6000,
-      };
-
-      const duration = options?.duration ?? DURATION_MAP[type] ?? 5000;
-      return this.addNotification(message, type, duration, options);
+      return notificationStore.addGameNotification(message, type, options);
     },
 
     removeNotification(id: string) {
-      update((state) => {
-        const filtered: Toast[] = state.notifications.filter((n) => n.id !== id);
-        const shouldPromote =
-          filtered.length < state.notifications.length && state.notificationQueue.length > 0;
-
-        if (shouldPromote && state.notificationQueue.length > 0) {
-          const [first, ...rest] = state.notificationQueue;
-          if (first) {
-            const newNotifications: Toast[] = [...filtered, first];
-            return {
-              ...state,
-              notifications: newNotifications,
-              notificationQueue: rest,
-            };
-          }
-        }
-
-        return { ...state, notifications: filtered };
-      });
+      notificationStore.removeNotification(id);
     },
 
     clearNotifications() {
-      update((state) => ({ ...state, notifications: [], notificationQueue: [] }));
+      notificationStore.clearNotifications();
     },
 
     setHoverEmail(emailId: string | null) {
-      update((state) => ({ ...state, hoverState: { ...state.hoverState, emailId } }));
+      interactionStore.setHoverEmail(emailId);
     },
 
     setHoverButton(buttonId: string | null) {
-      update((state) => ({ ...state, hoverState: { ...state.hoverState, buttonId } }));
+      interactionStore.setHoverButton(buttonId);
     },
 
     clearHover() {
-      update((state) => ({ ...state, hoverState: { emailId: null, buttonId: null } }));
+      interactionStore.clearHover();
     },
 
     setFocus(elementId: string | null) {
-      update((state) => ({ ...state, focusState: { elementId } }));
+      interactionStore.setFocus(elementId);
     },
 
     clearFocus() {
-      update((state) => ({ ...state, focusState: { elementId: null } }));
+      interactionStore.clearFocus();
     },
 
     setTransitioning(
       isTransitioning: boolean,
-      transitionType: AnimationState['transitionType'] = 'none',
+      transitionType?: Parameters<typeof interactionStore.setTransitioning>[1],
     ) {
-      update((state) => ({ ...state, animationState: { isTransitioning, transitionType } }));
+      interactionStore.setTransitioning(isTransitioning, transitionType);
     },
 
     setFormValue(key: string, value: string) {
-      update((state) => ({
-        ...state,
-        formInput: {
-          ...state.formInput,
-          values: { ...state.formInput.values, [key]: value },
-          touched: { ...state.formInput.touched, [key]: true },
-        },
-      }));
+      formStore.setValue(key, value);
     },
 
     setFormError(key: string, error: string) {
-      update((state) => ({
-        ...state,
-        formInput: { ...state.formInput, errors: { ...state.formInput.errors, [key]: error } },
-      }));
+      formStore.setError(key, error);
     },
 
     clearFormError(key: string) {
-      update((state) => {
-        const newErrors = { ...state.formInput.errors };
-        delete newErrors[key];
-        return { ...state, formInput: { ...state.formInput, errors: newErrors } };
-      });
+      formStore.clearError(key);
     },
 
     resetForm() {
-      update((state) => ({ ...state, formInput: { values: {}, errors: {}, touched: {} } }));
+      formStore.reset();
     },
 
     toggleSidebar() {
-      update((state) => ({ ...state, sidebarCollapsed: !state.sidebarCollapsed }));
+      navigationStore.toggleSidebar();
     },
 
     setSidebarCollapsed(collapsed: boolean) {
-      update((state) => ({ ...state, sidebarCollapsed: collapsed }));
+      navigationStore.setSidebarCollapsed(collapsed);
     },
 
     setCurrentRoute(route: string) {
-      update((state) => ({ ...state, currentRoute: route }));
+      navigationStore.setCurrentRoute(route);
     },
 
     setIsMobile(mobile: boolean) {
-      update((state) => ({ ...state, isMobile: mobile }));
+      navigationStore.setIsMobile(mobile);
     },
 
     setKeyboardShortcutsEnabled(enabled: boolean) {
-      update((state) => ({ ...state, keyboardShortcutsEnabled: enabled }));
+      interactionStore.setKeyboardShortcutsEnabled(enabled);
     },
 
     startDialog(treeId: string, startNodeId: string) {
-      update((state) => ({
-        ...state,
-        dialog: {
-          ...state.dialog,
-          isActive: true,
-          currentTreeId: treeId,
-          currentNodeId: startNodeId,
-          history: [],
-        },
-      }));
+      dialogStore.startDialog(treeId, startNodeId);
     },
 
     advanceDialogNode(nodeId: string) {
-      update((state) => ({
-        ...state,
-        dialog: {
-          ...state.dialog,
-          currentNodeId: nodeId,
-        },
-      }));
+      dialogStore.advanceDialogNode(nodeId);
     },
 
-    recordDialogChoice(speaker: DialogSpeaker, text: string, choiceId: string | undefined) {
-      update((state) => {
-        const entry: DialogHistoryEntry = {
-          dialogId: state.dialog.currentTreeId ?? '',
-          nodeId: state.dialog.currentNodeId ?? '',
-          speaker,
-          text,
-          choiceId,
-          timestamp: new Date().toISOString(),
-        };
-        return {
-          ...state,
-          dialog: {
-            ...state.dialog,
-            history: [...state.dialog.history, entry],
-          },
-        };
-      });
+    recordDialogChoice(
+      speaker: Parameters<typeof dialogStore.recordDialogChoice>[0],
+      text: string,
+      choiceId: string | undefined,
+    ) {
+      dialogStore.recordDialogChoice(speaker, text, choiceId);
     },
 
     endDialog() {
-      update((state) => ({
-        ...state,
-        dialog: {
-          ...state.dialog,
-          isActive: false,
-          currentTreeId: null,
-          currentNodeId: null,
-        },
-      }));
+      dialogStore.endDialog();
     },
 
     setPlayerResourcesForDialog(trust: number, credits: number, flags: string[]) {
-      update((state) => ({
-        ...state,
-        dialog: {
-          ...state.dialog,
-          playerTrust: trust,
-          playerCredits: credits,
-          playerFlags: flags,
-        },
-      }));
+      dialogStore.setPlayerResourcesForDialog(trust, credits, flags);
     },
 
     reset() {
-      set(initialState);
+      navigationStore.reset();
+      modalStore.reset();
+      notificationStore.reset();
+      dialogStore.reset();
+      formStore.reset();
+      interactionStore.reset();
+      phaseStore.reset();
     },
   };
 }
 
 export const uiStore = createUiStore();
 
-export const activePanel = derived(uiStore, ($ui) => $ui.activePanel);
-export const modalState = derived(uiStore, ($ui) => $ui.modals);
-export const notifications = derived(uiStore, ($ui) => $ui.notifications);
-export const notificationQueue = derived(uiStore, ($ui) => $ui.notificationQueue);
-export const hoverState = derived(uiStore, ($ui) => $ui.hoverState);
-export const focusState = derived(uiStore, ($ui) => $ui.focusState);
-export const animationState = derived(uiStore, ($ui) => $ui.animationState);
-export const formInput = derived(uiStore, ($ui) => $ui.formInput);
-export const sidebarCollapsed = derived(uiStore, ($ui) => $ui.sidebarCollapsed);
-export const currentRoute = derived(uiStore, ($ui) => $ui.currentRoute);
-export const isMobile = derived(uiStore, ($ui) => $ui.isMobile);
-export const keyboardShortcutsEnabled = derived(uiStore, ($ui) => $ui.keyboardShortcutsEnabled);
+export const activePanel = derived(navigationStore, ($nav) => $nav.activePanel);
+export const sidebarCollapsed = derived(navigationStore, ($nav) => $nav.sidebarCollapsed);
+export const currentRoute = derived(navigationStore, ($nav) => $nav.currentRoute);
+export const isMobile = derived(navigationStore, ($nav) => $nav.isMobile);
 
-export const currentPhase = derived(uiStore, ($ui) => $ui.currentPhase);
-export const previousPhase = derived(uiStore, ($ui) => $ui.previousPhase);
-export const isTransitioning = derived(uiStore, ($ui) => $ui.animationState.isTransitioning);
+export const modalState = derived(modalStore, ($modal) => $modal);
 
-export const currentViewConfig = derived(uiStore, ($ui): PhaseViewConfig => {
-  if (!$ui.currentPhase) {
+export const notifications = derived(notificationStore, ($notif) => $notif.notifications);
+export const notificationQueue = derived(notificationStore, ($notif) => $notif.notificationQueue);
+
+export const hoverState = derived(interactionStore, ($inter) => $inter.hoverState);
+export const focusState = derived(interactionStore, ($inter) => $inter.focusState);
+export const animationState = derived(interactionStore, ($inter) => $inter.animationState);
+export const keyboardShortcutsEnabled = derived(
+  interactionStore,
+  ($inter) => $inter.keyboardShortcutsEnabled,
+);
+
+export const currentPhase = derived(phaseStore, ($phase) => $phase.currentPhase);
+export const previousPhase = derived(phaseStore, ($phase) => $phase.previousPhase);
+export const isTransitioning = derived(
+  interactionStore,
+  ($inter) => $inter.animationState.isTransitioning,
+);
+
+export const currentViewConfig = derived(phaseStore, ($phase): PhaseViewConfig => {
+  if (!$phase.currentPhase) {
     return getViewConfig('DAY_START');
   }
-  return getViewConfig($ui.currentPhase);
+  return getViewConfig($phase.currentPhase);
 });
 
-export const currentActionConfig = derived(uiStore, ($ui): PhaseActionConfig => {
-  if (!$ui.currentPhase) {
+export const currentActionConfig = derived(phaseStore, ($phase): PhaseActionConfig => {
+  if (!$phase.currentPhase) {
     return getActionConfig('DAY_START');
   }
-  return getActionConfig($ui.currentPhase);
+  return getActionConfig($phase.currentPhase);
 });
 
-export const currentShortcutConfig = derived(uiStore, ($ui): PhaseKeyboardShortcutConfig => {
-  if (!$ui.currentPhase) {
+export const currentShortcutConfig = derived(phaseStore, ($phase): PhaseKeyboardShortcutConfig => {
+  if (!$phase.currentPhase) {
     return getShortcutConfig('DAY_START');
   }
-  return getShortcutConfig($ui.currentPhase);
+  return getShortcutConfig($phase.currentPhase);
 });
 
-export const canSelectEmail = derived(uiStore, ($ui) => {
-  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+export const canSelectEmail = derived(phaseStore, ($phase) => {
+  const config = getActionConfig($phase.currentPhase ?? 'DAY_START');
   return config.canSelectEmail;
 });
 
-export const canOpenWorksheet = derived(uiStore, ($ui) => {
-  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+export const canOpenWorksheet = derived(phaseStore, ($phase) => {
+  const config = getActionConfig($phase.currentPhase ?? 'DAY_START');
   return config.canOpenWorksheet;
 });
 
-export const canRequestVerification = derived(uiStore, ($ui) => {
-  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+export const canRequestVerification = derived(phaseStore, ($phase) => {
+  const config = getActionConfig($phase.currentPhase ?? 'DAY_START');
   return config.canRequestVerification;
 });
 
-export const canViewResults = derived(uiStore, ($ui) => {
-  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+export const canViewResults = derived(phaseStore, ($phase) => {
+  const config = getActionConfig($phase.currentPhase ?? 'DAY_START');
   return config.canViewResults;
 });
 
-export const canMakeDecision = derived(uiStore, ($ui) => {
-  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+export const canMakeDecision = derived(phaseStore, ($phase) => {
+  const config = getActionConfig($phase.currentPhase ?? 'DAY_START');
   return config.canMakeDecision;
 });
 
-export const canAdvanceDay = derived(uiStore, ($ui) => {
-  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+export const canAdvanceDay = derived(phaseStore, ($phase) => {
+  const config = getActionConfig($phase.currentPhase ?? 'DAY_START');
   return config.canAdvanceDay;
 });
 
-export const canUpgradeFacility = derived(uiStore, ($ui) => {
-  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+export const canUpgradeFacility = derived(phaseStore, ($phase) => {
+  const config = getActionConfig($phase.currentPhase ?? 'DAY_START');
   return config.canUpgradeFacility;
 });
 
-export const canContainThreat = derived(uiStore, ($ui) => {
-  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+export const canContainThreat = derived(phaseStore, ($phase) => {
+  const config = getActionConfig($phase.currentPhase ?? 'DAY_START');
   return config.canContainThreat;
 });
 
-export const canRestart = derived(uiStore, ($ui) => {
-  const config = getActionConfig($ui.currentPhase ?? 'DAY_START');
+export const canRestart = derived(phaseStore, ($phase) => {
+  const config = getActionConfig($phase.currentPhase ?? 'DAY_START');
   return config.canRestart;
 });
 
-export const dialogState = derived(uiStore, ($ui) => $ui.dialog);
-export const isDialogActive = derived(uiStore, ($ui) => $ui.dialog.isActive);
-export const dialogCurrentNodeId = derived(uiStore, ($ui) => $ui.dialog.currentNodeId);
-export const dialogHistory = derived(uiStore, ($ui) => $ui.dialog.history);
-export const dialogPlayerResources = derived(uiStore, ($ui) => ({
-  trust: $ui.dialog.playerTrust,
-  credits: $ui.dialog.playerCredits,
-  flags: $ui.dialog.playerFlags,
+export const dialogState = derived(dialogStore, ($dialog) => $dialog);
+export const isDialogActive = derived(dialogStore, ($dialog) => $dialog.isActive);
+export const dialogCurrentNodeId = derived(dialogStore, ($dialog) => $dialog.currentNodeId);
+export const dialogHistory = derived(dialogStore, ($dialog) => $dialog.history);
+export const dialogPlayerResources = derived(dialogStore, ($dialog) => ({
+  trust: $dialog.playerTrust,
+  credits: $dialog.playerCredits,
+  flags: $dialog.playerFlags,
 }));
+
+export const formInput = derived(formStore, ($form) => $form);
