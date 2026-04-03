@@ -22,6 +22,7 @@ import {
   deleteLrsConfig,
   sendPendingStatements,
   XAPI_VERBS,
+  XAPI_ACTIVITY_UNKNOWN,
   type XapiVersion,
   type XapiVerb,
   type XapiActivity,
@@ -72,7 +73,7 @@ export async function registerXapiRoutes(app: FastifyInstance, config: AppConfig
 
       const activity: XapiActivity = {
         objectType: 'Activity',
-        id: body.object.id ?? 'https://the-dmz.example.com/xapi/activities/unknown',
+        id: body.object.id ?? XAPI_ACTIVITY_UNKNOWN,
       };
 
       if (body.object.definition) {

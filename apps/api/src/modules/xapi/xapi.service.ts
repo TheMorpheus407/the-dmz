@@ -62,6 +62,8 @@ export const XAPI_VERBS = {
 
 export type XapiVerbId = keyof typeof XAPI_VERBS;
 
+export const XAPI_ACTIVITY_UNKNOWN = 'https://the-dmz.example.com/xapi/activities/unknown';
+
 export const DMZ_VERB_MAP: Record<GameEventType, XapiVerbId | null> = {
   [GAME_EVENT_TYPES.SESSION_STARTED]: 'LAUNCHED',
   [GAME_EVENT_TYPES.SESSION_COMPLETED]: 'COMPLETED',

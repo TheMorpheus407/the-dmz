@@ -27,6 +27,7 @@ export {
   sendPendingStatements,
   convertStatementToJson,
   XAPI_VERBS,
+  XAPI_ACTIVITY_UNKNOWN,
   DMZ_VERB_MAP,
   getVerbFromMapping,
   isCorrectDecisionVerb,
