@@ -11,20 +11,23 @@ export const GAME_ENGINE_EVENTS = {
   DAY_STARTED: 'game.day.started',
   DAY_PHASE_CHANGED: 'game.day.phase.changed',
   DAY_ENDED: 'game.day.ended',
+  INBOX_LOADED: 'game.inbox.loaded',
   EMAIL_RECEIVED: 'game.email.received',
   EMAIL_OPENED: 'game.email.opened',
-  EMAIL_INDICATOR_MARKED: 'game.email.indicator.marked',
+  EMAIL_INDICATOR_MARKED: 'game.email.indicator_marked',
   EMAIL_HEADER_VIEWED: 'game.email.header.viewed',
   EMAIL_URL_HOVERED: 'game.email.url.hovered',
   EMAIL_ATTACHMENT_PREVIEWED: 'game.email.attachment.previewed',
   EMAIL_VERIFICATION_REQUESTED: 'game.email.verification_requested',
   EMAIL_DECISION_SUBMITTED: 'game.email.decision_submitted',
   EMAIL_DECISION_RESOLVED: 'game.email.decision_resolved',
+  EMAIL_DECISION_EVALUATED: 'game.email.decision_evaluated',
   DECISION_APPROVED: 'game.decision.approved',
   DECISION_DENIED: 'game.decision.denied',
   DECISION_FLAGGED: 'game.decision.flagged',
   DECISION_VERIFICATION_REQUESTED: 'game.decision.verification_requested',
   VERIFICATION_PACKET_OPENED: 'game.verification.packet_opened',
+  VERIFICATION_PACKET_GENERATED: 'game.verification.packet_generated',
   VERIFICATION_OUT_OF_BAND_INITIATED: 'game.verification.out_of_band_initiated',
   VERIFICATION_RESULT: 'game.verification.result',
   CONSEQUENCES_APPLIED: 'game.consequences.applied',
@@ -127,6 +130,12 @@ export interface DayEndedPayload {
   day: number;
 }
 
+export interface InboxLoadedPayload {
+  sessionId: string;
+  day: number;
+  emailCount: number;
+}
+
 export interface EmailReceivedPayload {
   sessionId: string;
   emailId: string;
@@ -188,6 +197,20 @@ export interface EmailDecisionResolvedPayload {
   decision: string;
 }
 
+export interface EmailDecisionEvaluatedPayload {
+  sessionId: string;
+  emailId: string;
+  decision: string;
+  isCorrect: boolean;
+  trustImpact: number;
+  fundsImpact: number;
+  factionImpact: number;
+  threatImpact: number;
+  explanation: string;
+  indicatorsFound: string[];
+  indicatorsMissed: string[];
+}
+
 export interface DecisionApprovedPayload {
   sessionId: string;
   emailId: string;
@@ -225,6 +248,14 @@ export interface VerificationPacketOpenedPayload {
   sessionId: string;
   emailId: string;
   packetId: string;
+}
+
+export interface VerificationPacketGeneratedPayload {
+  sessionId: string;
+  emailId: string;
+  packetId: string;
+  artifactCount: number;
+  hasIntelligenceBrief: boolean;
 }
 
 export interface VerificationOutOfBandInitiatedPayload {
@@ -406,6 +437,7 @@ export type GameEngineEventPayloadMap = {
   [GAME_ENGINE_EVENTS.DAY_STARTED]: DayStartedPayload;
   [GAME_ENGINE_EVENTS.DAY_PHASE_CHANGED]: DayPhaseChangedPayload;
   [GAME_ENGINE_EVENTS.DAY_ENDED]: DayEndedPayload;
+  [GAME_ENGINE_EVENTS.INBOX_LOADED]: InboxLoadedPayload;
   [GAME_ENGINE_EVENTS.EMAIL_RECEIVED]: EmailReceivedPayload;
   [GAME_ENGINE_EVENTS.EMAIL_OPENED]: EmailOpenedPayload;
   [GAME_ENGINE_EVENTS.EMAIL_INDICATOR_MARKED]: EmailIndicatorMarkedPayload;
@@ -415,11 +447,13 @@ export type GameEngineEventPayloadMap = {
   [GAME_ENGINE_EVENTS.EMAIL_VERIFICATION_REQUESTED]: EmailVerificationRequestedPayload;
   [GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED]: EmailDecisionSubmittedPayload;
   [GAME_ENGINE_EVENTS.EMAIL_DECISION_RESOLVED]: EmailDecisionResolvedPayload;
+  [GAME_ENGINE_EVENTS.EMAIL_DECISION_EVALUATED]: EmailDecisionEvaluatedPayload;
   [GAME_ENGINE_EVENTS.DECISION_APPROVED]: DecisionApprovedPayload;
   [GAME_ENGINE_EVENTS.DECISION_DENIED]: DecisionDeniedPayload;
   [GAME_ENGINE_EVENTS.DECISION_FLAGGED]: DecisionFlaggedPayload;
   [GAME_ENGINE_EVENTS.DECISION_VERIFICATION_REQUESTED]: DecisionVerificationRequestedPayload;
   [GAME_ENGINE_EVENTS.VERIFICATION_PACKET_OPENED]: VerificationPacketOpenedPayload;
+  [GAME_ENGINE_EVENTS.VERIFICATION_PACKET_GENERATED]: VerificationPacketGeneratedPayload;
   [GAME_ENGINE_EVENTS.VERIFICATION_OUT_OF_BAND_INITIATED]: VerificationOutOfBandInitiatedPayload;
   [GAME_ENGINE_EVENTS.VERIFICATION_RESULT]: VerificationResultPayload;
   [GAME_ENGINE_EVENTS.CONSEQUENCES_APPLIED]: ConsequencesAppliedPayload;

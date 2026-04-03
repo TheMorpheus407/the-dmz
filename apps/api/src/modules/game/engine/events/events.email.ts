@@ -11,6 +11,9 @@ import {
   type EmailVerificationRequestedPayload,
   type EmailDecisionSubmittedPayload,
   type EmailDecisionResolvedPayload,
+  type EmailDecisionEvaluatedPayload,
+  type VerificationPacketGeneratedPayload,
+  type InboxLoadedPayload,
 } from './shared-types.js';
 
 export type {
@@ -23,6 +26,9 @@ export type {
   EmailVerificationRequestedPayload,
   EmailDecisionSubmittedPayload,
   EmailDecisionResolvedPayload,
+  EmailDecisionEvaluatedPayload,
+  VerificationPacketGeneratedPayload,
+  InboxLoadedPayload,
 } from './shared-types.js';
 
 export const createEmailReceivedEvent = (
@@ -159,6 +165,54 @@ export const createEmailDecisionResolvedEvent = (
   return {
     eventId: crypto.randomUUID(),
     eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_RESOLVED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createEmailDecisionEvaluatedEvent = (
+  params: BaseGameEngineEventParams & { payload: EmailDecisionEvaluatedPayload },
+): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_DECISION_EVALUATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_EVALUATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createVerificationPacketGeneratedEvent = (
+  params: BaseGameEngineEventParams & { payload: VerificationPacketGeneratedPayload },
+): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.VERIFICATION_PACKET_GENERATED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: GAME_ENGINE_EVENTS.VERIFICATION_PACKET_GENERATED,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload: params.payload,
+  };
+};
+
+export const createInboxLoadedEvent = (
+  params: BaseGameEngineEventParams & { payload: InboxLoadedPayload },
+): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.INBOX_LOADED> => {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType: GAME_ENGINE_EVENTS.INBOX_LOADED,
     timestamp: new Date().toISOString(),
     correlationId: params.correlationId,
     tenantId: params.tenantId,

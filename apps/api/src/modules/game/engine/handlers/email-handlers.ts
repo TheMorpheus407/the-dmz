@@ -22,6 +22,7 @@ import {
   getLevelFromXP,
   awardXPForDecision,
 } from '../../../../game/consequence/index.js';
+import { GAME_ENGINE_EVENTS } from '../events/index.js';
 
 import { isActionAllowedInPhase } from './handler-utils.js';
 
@@ -38,7 +39,7 @@ export function handleAckDayStart(
   state.currentPhase = DAY_PHASES.PHASE_EMAIL_INTAKE;
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.day.started',
+    eventType: GAME_ENGINE_EVENTS.DAY_STARTED,
     timestamp: state.updatedAt,
     payload: { day: state.currentDay },
   });
@@ -72,7 +73,7 @@ export function handleLoadInbox(
 
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.inbox.loaded',
+    eventType: GAME_ENGINE_EVENTS.INBOX_LOADED,
     timestamp: state.updatedAt,
     payload: {
       day: state.currentDay,
@@ -99,7 +100,7 @@ export function handleOpenEmail(
   }
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.email.opened',
+    eventType: GAME_ENGINE_EVENTS.EMAIL_OPENED,
     timestamp: state.updatedAt,
     payload: { emailId: action.emailId },
   });
@@ -121,7 +122,7 @@ export function handleMarkIndicator(
   }
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.email.indicator_marked',
+    eventType: GAME_ENGINE_EVENTS.EMAIL_INDICATOR_MARKED,
     timestamp: state.updatedAt,
     payload: { emailId: action.emailId, indicatorType: action.indicatorType },
   });
@@ -166,13 +167,13 @@ export function handleRequestVerification(
   state.analyticsState.verificationsRequested++;
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.email.verification_requested',
+    eventType: GAME_ENGINE_EVENTS.EMAIL_VERIFICATION_REQUESTED,
     timestamp: state.updatedAt,
     payload: { emailId: action.emailId },
   });
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.verification.packet_generated',
+    eventType: GAME_ENGINE_EVENTS.VERIFICATION_PACKET_GENERATED,
     timestamp: state.updatedAt,
     payload: {
       emailId: action.emailId,
@@ -200,7 +201,7 @@ function pushTrustChangeEvent(
   }
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.economy.trust_changed',
+    eventType: GAME_ENGINE_EVENTS.TRUST_CHANGED,
     timestamp: state.updatedAt,
     payload: {
       sessionId: state.sessionId,
@@ -230,7 +231,7 @@ function pushFundsChangeEvent(
   }
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.economy.credits_changed',
+    eventType: GAME_ENGINE_EVENTS.CREDITS_CHANGED,
     timestamp: state.updatedAt,
     payload: {
       sessionId: state.sessionId,
@@ -262,7 +263,7 @@ function processLevelUp(
   state.playerLevel = newLevel;
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.economy.level_up',
+    eventType: GAME_ENGINE_EVENTS.LEVEL_UP,
     timestamp: state.updatedAt,
     payload: {
       sessionId: state.sessionId,
@@ -300,7 +301,7 @@ interface EmailSubmittedCtx {
 function pushEmailDecisionSubmittedEvent(ctx: EmailSubmittedCtx): void {
   ctx.events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.email.decision_submitted',
+    eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED,
     timestamp: ctx.state.updatedAt,
     payload: {
       emailId: ctx.emailId,
@@ -336,7 +337,7 @@ interface DecisionEvaluatedCtx {
 function pushDecisionEvaluatedEvent(ctx: DecisionEvaluatedCtx): void {
   ctx.events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.email.decision_evaluated',
+    eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_EVALUATED,
     timestamp: ctx.state.updatedAt,
     payload: {
       emailId: ctx.emailId,

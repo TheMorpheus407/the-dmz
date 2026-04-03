@@ -41,6 +41,9 @@ export {
   createEmailVerificationRequestedEvent,
   createEmailDecisionSubmittedEvent,
   createEmailDecisionResolvedEvent,
+  createEmailDecisionEvaluatedEvent,
+  createVerificationPacketGeneratedEvent,
+  createInboxLoadedEvent,
 } from './events.email.js';
 export type {
   EmailReceivedPayload,
@@ -52,6 +55,9 @@ export type {
   EmailVerificationRequestedPayload,
   EmailDecisionSubmittedPayload,
   EmailDecisionResolvedPayload,
+  EmailDecisionEvaluatedPayload,
+  VerificationPacketGeneratedPayload,
+  InboxLoadedPayload,
 } from './events.email.js';
 
 export {
