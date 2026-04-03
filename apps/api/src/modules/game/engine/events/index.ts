@@ -100,7 +100,17 @@ export type {
   IncidentCreatedPayload,
   IncidentResolvedPayload,
   IncidentResponseActionTakenPayload,
-} from './events.breach.js';
+} from './shared-types.js';
+
+export type {
+  BreachRansomDisplayedPayload,
+  BreachRansomPaidPayload,
+  BreachRansomRefusedPayload,
+  BreachRecoveryStartedPayload,
+  BreachRecoveryCompletedPayload,
+  BreachPostEffectsStartedPayload,
+  SessionGameOverPayload,
+} from './shared-types.js';
 
 export {
   createUpgradePurchasedEvent,

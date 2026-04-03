@@ -68,6 +68,24 @@ describe('Game Engine Event Types', () => {
       'incident.response.action_taken',
     );
   });
+
+  it('defines all breach-related events', () => {
+    expect(GAME_ENGINE_EVENTS.BREACH_OCCURRED).toBe('game.breach.occurred');
+    expect(GAME_ENGINE_EVENTS.BREACH_RANSOM_DISPLAYED).toBe('game.breach.ransom_displayed');
+    expect(GAME_ENGINE_EVENTS.BREACH_RANSOM_PAID).toBe('game.breach.ransom_paid');
+    expect(GAME_ENGINE_EVENTS.BREACH_RANSOM_REFUSED).toBe('game.breach.ransom_refused');
+    expect(GAME_ENGINE_EVENTS.BREACH_RECOVERY_STARTED).toBe('game.breach.recovery_started');
+    expect(GAME_ENGINE_EVENTS.BREACH_RECOVERY_COMPLETED).toBe('game.breach.recovery_completed');
+    expect(GAME_ENGINE_EVENTS.BREACH_POST_EFFECTS_STARTED).toBe('game.breach.post_effects_started');
+  });
+
+  it('defines session game over event', () => {
+    expect(GAME_ENGINE_EVENTS.SESSION_GAME_OVER).toBe('game.session.game_over');
+  });
+
+  it('defines day started event', () => {
+    expect(GAME_ENGINE_EVENTS.DAY_STARTED).toBe('game.day.started');
+  });
 });
 
 describe('createSessionStartedEvent', () => {

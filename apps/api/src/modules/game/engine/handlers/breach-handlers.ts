@@ -12,6 +12,7 @@ import {
 } from '@the-dmz/shared';
 
 import { breachService } from '../../breach/index.js';
+import { GAME_ENGINE_EVENTS } from '../events/index.js';
 
 import { isActionAllowedInPhase } from './handler-utils.js';
 
@@ -33,7 +34,7 @@ export function handleResolveIncident(
   }
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.incident.resolved',
+    eventType: GAME_ENGINE_EVENTS.INCIDENT_RESOLVED,
     timestamp: state.updatedAt,
     payload: { incidentId: action.incidentId, responseActions: action.responseActions },
   });
@@ -86,7 +87,7 @@ export function handleTriggerBreach(
 
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.breach.occurred',
+    eventType: GAME_ENGINE_EVENTS.BREACH_OCCURRED,
     timestamp: state.updatedAt,
     payload: {
       triggerType: action.triggerType,
@@ -99,7 +100,7 @@ export function handleTriggerBreach(
   if (isBreach) {
     events.push({
       eventId: crypto.randomUUID(),
-      eventType: 'game.breach.ransom_displayed',
+      eventType: GAME_ENGINE_EVENTS.BREACH_RANSOM_DISPLAYED,
       timestamp: state.updatedAt,
       payload: {
         severity,
@@ -130,7 +131,7 @@ export function handlePayRansom(
 
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.breach.ransom_paid',
+    eventType: GAME_ENGINE_EVENTS.BREACH_RANSOM_PAID,
     timestamp: state.updatedAt,
     payload: {
       amount: breachState.ransomAmount,
@@ -140,7 +141,7 @@ export function handlePayRansom(
 
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.breach.recovery_started',
+    eventType: GAME_ENGINE_EVENTS.BREACH_RECOVERY_STARTED,
     timestamp: state.updatedAt,
     payload: {
       recoveryDays: breachState.recoveryDaysRemaining,
@@ -168,7 +169,7 @@ export function handleRefuseRansom(
 
     events.push({
       eventId: crypto.randomUUID(),
-      eventType: 'game.session.game_over',
+      eventType: GAME_ENGINE_EVENTS.SESSION_GAME_OVER,
       timestamp: state.updatedAt,
       payload: {
         reason: 'Unable to pay ransom',
@@ -183,7 +184,7 @@ export function handleRefuseRansom(
 
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.breach.ransom_refused',
+    eventType: GAME_ENGINE_EVENTS.BREACH_RANSOM_REFUSED,
     timestamp: state.updatedAt,
     payload: {
       severity: breachState.currentSeverity,
@@ -217,7 +218,7 @@ export function handleAdvanceRecovery(
 
     events.push({
       eventId: crypto.randomUUID(),
-      eventType: 'game.breach.recovery_completed',
+      eventType: GAME_ENGINE_EVENTS.BREACH_RECOVERY_COMPLETED,
       timestamp: state.updatedAt,
       payload: {
         daysInRecovery: breachState.recoveryDaysRemaining,
@@ -226,7 +227,7 @@ export function handleAdvanceRecovery(
 
     events.push({
       eventId: crypto.randomUUID(),
-      eventType: 'game.breach.post_effects_started',
+      eventType: GAME_ENGINE_EVENTS.BREACH_POST_EFFECTS_STARTED,
       timestamp: state.updatedAt,
       payload: {
         revenueDepressionDays: 30,
@@ -237,7 +238,7 @@ export function handleAdvanceRecovery(
   } else {
     events.push({
       eventId: crypto.randomUUID(),
-      eventType: 'game.day.started',
+      eventType: GAME_ENGINE_EVENTS.DAY_STARTED,
       timestamp: state.updatedAt,
       payload: {
         day: state.currentDay,

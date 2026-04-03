@@ -38,6 +38,13 @@ export const GAME_ENGINE_EVENTS = {
   INCIDENT_RESOLVED: 'game.incident.resolved',
   INCIDENT_RESPONSE_ACTION_TAKEN: 'incident.response.action_taken',
   BREACH_OCCURRED: 'game.breach.occurred',
+  BREACH_RANSOM_DISPLAYED: 'game.breach.ransom_displayed',
+  BREACH_RANSOM_PAID: 'game.breach.ransom_paid',
+  BREACH_RANSOM_REFUSED: 'game.breach.ransom_refused',
+  BREACH_RECOVERY_STARTED: 'game.breach.recovery_started',
+  BREACH_RECOVERY_COMPLETED: 'game.breach.recovery_completed',
+  BREACH_POST_EFFECTS_STARTED: 'game.breach.post_effects_started',
+  SESSION_GAME_OVER: 'game.session.game_over',
   UPGRADE_PURCHASED: 'game.upgrade.purchased',
   RESOURCE_ADJUSTED: 'game.resource.adjusted',
   CREDITS_CHANGED: 'game.economy.credits_changed',
@@ -304,6 +311,42 @@ export interface BreachOccurredPayload {
   ransomCost?: number;
 }
 
+export interface BreachRansomDisplayedPayload {
+  severity: number;
+  currentFunds: number;
+  ransomAmount: number;
+}
+
+export interface BreachRansomPaidPayload {
+  amount: number;
+  remainingFunds: number;
+}
+
+export interface BreachRansomRefusedPayload {
+  severity: number;
+}
+
+export interface BreachRecoveryStartedPayload {
+  recoveryDays: number;
+}
+
+export interface BreachRecoveryCompletedPayload {
+  daysInRecovery: number;
+}
+
+export interface BreachPostEffectsStartedPayload {
+  revenueDepressionDays: number;
+  increasedScrutinyDays: number;
+  reputationImpactDays: number;
+}
+
+export interface SessionGameOverPayload {
+  reason: string;
+  daysSurvived: number;
+  totalEarnings: number;
+  breaches: number;
+}
+
 export interface UpgradePurchasedPayload {
   sessionId: string;
   upgradeId: string;
@@ -390,6 +433,13 @@ export type GameEngineEventPayloadMap = {
   [GAME_ENGINE_EVENTS.INCIDENT_RESOLVED]: IncidentResolvedPayload;
   [GAME_ENGINE_EVENTS.INCIDENT_RESPONSE_ACTION_TAKEN]: IncidentResponseActionTakenPayload;
   [GAME_ENGINE_EVENTS.BREACH_OCCURRED]: BreachOccurredPayload;
+  [GAME_ENGINE_EVENTS.BREACH_RANSOM_DISPLAYED]: BreachRansomDisplayedPayload;
+  [GAME_ENGINE_EVENTS.BREACH_RANSOM_PAID]: BreachRansomPaidPayload;
+  [GAME_ENGINE_EVENTS.BREACH_RANSOM_REFUSED]: BreachRansomRefusedPayload;
+  [GAME_ENGINE_EVENTS.BREACH_RECOVERY_STARTED]: BreachRecoveryStartedPayload;
+  [GAME_ENGINE_EVENTS.BREACH_RECOVERY_COMPLETED]: BreachRecoveryCompletedPayload;
+  [GAME_ENGINE_EVENTS.BREACH_POST_EFFECTS_STARTED]: BreachPostEffectsStartedPayload;
+  [GAME_ENGINE_EVENTS.SESSION_GAME_OVER]: SessionGameOverPayload;
   [GAME_ENGINE_EVENTS.UPGRADE_PURCHASED]: UpgradePurchasedPayload;
   [GAME_ENGINE_EVENTS.RESOURCE_ADJUSTED]: ResourceAdjustedPayload;
   [GAME_ENGINE_EVENTS.CREDITS_CHANGED]: CreditsChangedPayload;
