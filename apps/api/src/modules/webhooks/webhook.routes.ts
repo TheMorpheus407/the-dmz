@@ -106,21 +106,14 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
     ) => {
       const tenantContext = request.tenant as TenantContext;
 
-      try {
-        const subscription = await webhookService.createSubscription(
-          tenantContext.tenantId,
-          request.body,
-        );
+      const subscription = await webhookService.createSubscription(
+        tenantContext.tenantId,
+        request.body,
+      );
 
-        return reply.status(201).send({
-          data: subscription,
-        });
-      } catch (error) {
-        const err = error as Error;
-        request.log.error({ err }, 'Failed to create webhook subscription');
-
-        throw error;
-      }
+      return reply.status(201).send({
+        data: subscription,
+      });
     },
   );
 
@@ -150,19 +143,12 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       if (limit) queryOptions.limit = limit;
       if (cursor) queryOptions.cursor = cursor;
 
-      try {
-        const result = await webhookService.listSubscriptions(tenantContext.tenantId, queryOptions);
+      const result = await webhookService.listSubscriptions(tenantContext.tenantId, queryOptions);
 
-        return reply.send({
-          data: result.subscriptions,
-          ...(result.nextCursor !== undefined && { nextCursor: result.nextCursor }),
-        });
-      } catch (error) {
-        const err = error as Error;
-        request.log.error({ err }, 'Failed to list webhook subscriptions');
-
-        throw error;
-      }
+      return reply.send({
+        data: result.subscriptions,
+        ...(result.nextCursor !== undefined && { nextCursor: result.nextCursor }),
+      });
     },
   );
 
