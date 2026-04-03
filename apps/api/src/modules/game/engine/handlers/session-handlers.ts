@@ -9,6 +9,7 @@ import {
 } from '@the-dmz/shared';
 
 import { canTransitionMacroState, isActionAllowedInPhase } from '../state-machine.js';
+import { GAME_ENGINE_EVENTS } from '../events/shared-types.js';
 
 import type { DomainEvent } from './handler-utils.js';
 
@@ -23,7 +24,7 @@ export function handlePauseSession(
   state.currentMacroState = SESSION_MACRO_STATES.SESSION_PAUSED;
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.session.paused',
+    eventType: GAME_ENGINE_EVENTS.SESSION_PAUSED,
     timestamp: state.updatedAt,
     payload: {},
   });
@@ -40,7 +41,7 @@ export function handleResumeSession(
   state.currentMacroState = SESSION_MACRO_STATES.SESSION_ACTIVE;
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.session.resumed',
+    eventType: GAME_ENGINE_EVENTS.SESSION_RESUMED,
     timestamp: state.updatedAt,
     payload: {},
   });
@@ -57,7 +58,7 @@ export function handleAbandonSession(
   state.currentMacroState = SESSION_MACRO_STATES.SESSION_ABANDONED;
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.session.abandoned',
+    eventType: GAME_ENGINE_EVENTS.SESSION_ABANDONED,
     timestamp: state.updatedAt,
     payload: { reason: action.reason },
   });
@@ -87,7 +88,7 @@ export function handleAdvanceDay(
 
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.day.ended',
+    eventType: GAME_ENGINE_EVENTS.DAY_ENDED,
     timestamp: state.updatedAt,
     payload: {
       day: state.currentDay - 1,
@@ -97,7 +98,7 @@ export function handleAdvanceDay(
   });
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.day.started',
+    eventType: GAME_ENGINE_EVENTS.DAY_STARTED,
     timestamp: state.updatedAt,
     payload: {
       day: state.currentDay,
