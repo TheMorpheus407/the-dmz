@@ -1,5 +1,6 @@
 import type { GameState, ProcessThreatsPayload } from '@the-dmz/shared';
 
+import { GAME_ENGINE_EVENTS } from '../events/shared-types.js';
 import { ThreatEngineService } from '../../threat-engine/index.js';
 
 import { isActionAllowedInPhase, aggregateSecurityDeltas } from './handler-utils.js';
@@ -43,7 +44,7 @@ export function handleProcessThreats(
 
   events.push({
     eventId: crypto.randomUUID(),
-    eventType: 'game.threats.generated',
+    eventType: GAME_ENGINE_EVENTS.THREATS_GENERATED,
     timestamp: state.updatedAt,
     payload: {
       day: action.dayNumber,
@@ -58,7 +59,7 @@ export function handleProcessThreats(
     if (tierChangeResult.event) {
       events.push({
         eventId: crypto.randomUUID(),
-        eventType: 'game.threat.tier_changed',
+        eventType: GAME_ENGINE_EVENTS.THREAT_LEVEL_CHANGED,
         timestamp: state.updatedAt,
         payload: {
           previousTier: tierChangeResult.event.previousTier,
