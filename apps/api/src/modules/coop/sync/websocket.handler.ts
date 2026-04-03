@@ -1,15 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
-import { wsGateway } from '../../notification/websocket/websocket.gateway.js'; // eslint-disable-line import-x/no-restricted-paths
+import { wsGateway, type WebSocketGateway } from '../../notification/websocket/index.js';
 
 import { validateAndApplyAction } from './sync.service.js';
 
 import type { WebSocket } from '@fastify/websocket';
-import type { WebSocketGateway } from '../../notification/websocket/websocket.gateway.js'; // eslint-disable-line import-x/no-restricted-paths
 import type {
   CoopWSClientMessage,
   CoopWSServerMessage,
   WSServerMessage,
-} from '../../notification/websocket/websocket.types.js'; // eslint-disable-line import-x/no-restricted-paths
+} from '../../notification/websocket/index.js';
 import type { AppConfig } from '../../../config.js';
 import type { IEventBus } from '../../../shared/events/event-types.js';
 import type { FastifyRequest } from 'fastify';

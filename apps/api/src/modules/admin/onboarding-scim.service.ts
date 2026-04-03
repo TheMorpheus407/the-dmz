@@ -7,8 +7,8 @@ import {
   type OnboardingState,
   type OnboardingStep,
 } from '../../shared/database/schema/index.js';
-import * as scimService from '../scim/scim.service.js'; // eslint-disable-line import-x/no-restricted-paths
-import { createAuditLog } from '../audit/audit.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import * as scimService from '../scim/index.js';
+import { createAuditLog } from '../audit/index.js';
 
 import {
   DEFAULT_ONBOARDING_STATE,

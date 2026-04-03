@@ -1,5 +1,5 @@
 import { getDatabaseClient } from '../../shared/database/connection.js';
-import { checkRateLimit } from '../social/rate-limit.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { checkRateLimit } from '../social/index.js';
 
 import { requireChatEnabled, requireChannelChatEnabled } from './chat-flags.js';
 import {

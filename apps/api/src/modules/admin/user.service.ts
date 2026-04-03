@@ -1,5 +1,5 @@
 import { type AppConfig, loadConfig } from '../../config.js';
-import { createAuditLog } from '../audit/audit.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { createAuditLog } from '../audit/index.js';
 
 import { UserRepository } from './user.repository.js';
 import { LastAdminDeleteError, SelfDeleteError, UserNotFoundError } from './user.errors.js';

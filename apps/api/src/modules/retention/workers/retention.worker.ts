@@ -11,7 +11,7 @@ import { auditLogs } from '../../../db/schema/audit/index.js';
 import { users } from '../../../shared/database/schema/users.js';
 import { archivedData, type DataCategory } from '../../../db/schema/retention/index.js';
 import { chatChannel, chatMessage } from '../../../db/schema/social/index.js';
-import { getExpiredSessions, deleteSessionsByIds } from '../../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+import { getExpiredSessions, deleteSessionsByIds } from '../../auth/index.js';
 import {
   calculateExpiryDate,
   getEffectiveRetentionPolicy,

@@ -5,7 +5,7 @@ import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
-import { validateCsrf } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+import { validateCsrf } from '../auth/index.js';
 
 import { mutePlayer, unmutePlayer, listMutedPlayers } from './social-relationship.service.js';
 

@@ -1,4 +1,4 @@
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { evaluateFlag } from '../feature-flags/index.js';
 
 import type { AppConfig } from '../../config.js';
 import type { ChannelType } from '../../db/schema/social/index.js';

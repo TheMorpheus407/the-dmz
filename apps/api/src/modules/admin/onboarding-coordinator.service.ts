@@ -7,7 +7,7 @@ import {
   type OnboardingState,
   type OnboardingStep,
 } from '../../shared/database/schema/index.js';
-import { createAuditLog } from '../audit/audit.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { createAuditLog } from '../audit/index.js';
 
 export { type OnboardingStep };
 

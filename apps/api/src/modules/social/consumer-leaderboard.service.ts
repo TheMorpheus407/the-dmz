@@ -8,7 +8,7 @@ import {
   type Leaderboard,
   type LeaderboardMetrics,
 } from '../../db/schema/social/index.js';
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { evaluateFlag } from '../feature-flags/index.js';
 
 import { listFriends } from './social-relationship.service.js';
 

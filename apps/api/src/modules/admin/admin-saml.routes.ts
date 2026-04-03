@@ -5,8 +5,8 @@ import { ErrorCodes } from '@the-dmz/shared/constants';
 import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
-import * as ssoService from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
-import { SSOError } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+import * as ssoService from '../auth/index.js';
+import { SSOError } from '../auth/index.js';
 
 interface SAMLProviderIdParams {
   id: string;

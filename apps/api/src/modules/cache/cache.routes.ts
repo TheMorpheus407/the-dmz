@@ -20,7 +20,7 @@ import {
 import { isABACCacheHealthy, invalidateABACCache } from '../../shared/cache/abac-cache.js';
 import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
-import { createAuditLog } from '../audit/audit.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { createAuditLog } from '../audit/index.js';
 
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../../config.js';

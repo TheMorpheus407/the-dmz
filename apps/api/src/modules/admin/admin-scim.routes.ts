@@ -5,8 +5,8 @@ import { ErrorCodes } from '@the-dmz/shared/constants';
 import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
-import * as scimService from '../scim/scim.service.js'; // eslint-disable-line import-x/no-restricted-paths
-import { SCIMError } from '../scim/scim.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import * as scimService from '../scim/index.js';
+import { SCIMError } from '../scim/index.js';
 
 interface TokenIdParams {
   id: string;

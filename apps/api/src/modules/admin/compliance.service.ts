@@ -11,7 +11,7 @@ import { getDatabaseClient } from '../../shared/database/connection.js';
 import { complianceSnapshots, frameworkRequirements } from '../../db/schema/compliance/index.js';
 import { playerProfiles } from '../../db/schema/analytics/index.js';
 import { certificates } from '../../shared/database/schema/training/index.js';
-import { createAuditLog } from '../audit/audit.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { createAuditLog } from '../audit/index.js';
 
 export type ComplianceStatus = 'compliant' | 'non_compliant' | 'in_progress' | 'not_started';
 

@@ -4,11 +4,11 @@ import { z } from 'zod';
 import { authGuard, requireRole } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
-import { validateCsrf } from '../auth/csrf.js'; // eslint-disable-line import-x/no-restricted-paths
+import { validateCsrf } from '../auth/index.js';
 
 import * as phishingService from './phishing-simulation.service.js';
 
-import type { AuthenticatedUser } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+import type { AuthenticatedUser } from '../auth/index.js';
 
 const simulationInputSchema = z.object({
   name: z.string().min(1).max(255),

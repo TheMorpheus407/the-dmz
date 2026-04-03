@@ -1,15 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
-import { verifyJWT } from '../auth/jwt-keys.service.js'; // eslint-disable-line import-x/no-restricted-paths
-import { wsGateway, buildChannelName } from '../notification/websocket/websocket.gateway.js'; // eslint-disable-line import-x/no-restricted-paths
+import { verifyJWT } from '../auth/index.js';
+import { wsGateway, buildChannelName } from '../notification/websocket/index.js';
 
 import { sendMessage, type SendMessageResult } from './chat.service.js';
 
 import type { FastifyRequest } from 'fastify';
 import type { WebSocket } from '@fastify/websocket';
-import type {
-  WebSocketAuthResult,
-  JWTAuthPayload,
-} from '../notification/websocket/websocket.types.js'; // eslint-disable-line import-x/no-restricted-paths
+import type { WebSocketAuthResult, JWTAuthPayload } from '../notification/websocket/index.js';
 import type { AppConfig } from '../../config.js';
 import type { IEventBus } from '../../shared/events/event-types.js';
 

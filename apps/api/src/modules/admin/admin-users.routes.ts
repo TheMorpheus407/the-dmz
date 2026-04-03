@@ -3,7 +3,7 @@ import { type FastifyInstance, type FastifyRequest, type FastifyReply } from 'fa
 import { authGuard, requirePermission } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { AppError } from '../../shared/middleware/error-handler.js';
-import { validateCsrf } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+import { validateCsrf } from '../auth/index.js';
 
 import * as userService from './user.service.js';
 import { LastAdminDeleteError, SelfDeleteError } from './user.errors.js';

@@ -2,7 +2,7 @@ import { eq, and } from 'drizzle-orm';
 
 import { getDatabaseClient } from '../../../shared/database/connection.js';
 import { coopSession } from '../../../db/schema/multiplayer/index.js';
-import { createSnapshot, getLatestSnapshot } from '../../game/event-store/event-store.repo.js'; // eslint-disable-line import-x/no-restricted-paths
+import { createSnapshot, getLatestSnapshot } from '../../game/event-store/index.js';
 
 import type { AppConfig } from '../../../config.js';
 

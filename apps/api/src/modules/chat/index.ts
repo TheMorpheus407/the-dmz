@@ -6,3 +6,4 @@ export * from './chat.events.js';
 export * from './chat-flags.js';
 export * from './chat.repository.js';
 export * from './chat-broadcast.handler.js';
+export { getOrCreatePartyChannel } from './chat.service.js';

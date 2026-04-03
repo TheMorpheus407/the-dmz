@@ -1,6 +1,6 @@
 import { DAY_PHASES, type DayPhase } from '@the-dmz/shared/game';
 
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { evaluateFlag } from '../feature-flags/index.js';
 
 import { CoopSessionRepository, type CoopSessionWithRoles } from './coop-session.repository.js';
 import { CoopSessionCacheService, toCacheData } from './coop-session.cache-service.js';

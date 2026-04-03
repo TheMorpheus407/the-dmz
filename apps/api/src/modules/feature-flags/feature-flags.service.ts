@@ -13,7 +13,7 @@ import {
   setCachedFeatureFlags,
   invalidateFeatureFlagsCache,
 } from '../../shared/cache/index.js';
-import { createAuditLog } from '../audit/audit.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { createAuditLog } from '../audit/index.js';
 
 import type { AppConfig } from '../../config.js';
 

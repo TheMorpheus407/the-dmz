@@ -11,3 +11,5 @@ export * from './endorsement.service.js';
 export * from './endorsement.routes.js';
 export * from './reputation.service.js';
 export * from './reputation.routes.js';
+export * from './rate-limit.service.js';
+export * from './content-filter.service.js';

@@ -10,7 +10,7 @@ import {
   type PrivacyLevel,
   type LeaderboardType,
 } from '../../db/schema/social/index.js';
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { evaluateFlag } from '../feature-flags/index.js';
 
 import { filterEntriesByPrivacy } from './privacy-filter.service.js';
 

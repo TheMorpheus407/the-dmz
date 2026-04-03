@@ -10,11 +10,14 @@ import {
   type SignalCategory,
   signalCategories,
 } from '../../db/schema/social/index.js';
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
-import { wsGateway, buildChannelName } from '../notification/websocket/websocket.gateway.js'; // eslint-disable-line import-x/no-restricted-paths
+import { evaluateFlag } from '../feature-flags/index.js';
+import {
+  wsGateway,
+  buildChannelName,
+  type WSServerMessage,
+} from '../notification/websocket/index.js';
 
 import type { AppConfig } from '../../config.js';
-import type { WSServerMessage } from '../notification/websocket/websocket.types.js'; // eslint-disable-line import-x/no-restricted-paths
 
 const QUICK_SIGNAL_RATE_LIMIT_MAX = 10;
 const QUICK_SIGNAL_RATE_LIMIT_WINDOW_MS = 60_000;

@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 
 import { getDatabaseClient, type DB } from '../../shared/database/connection.js';
 import { generateId as defaultGenerateId } from '../../shared/utils/id.js';
-import { scoreEmail as scoreContentQuality } from '../content/index.js'; // eslint-disable-line import-x/no-restricted-paths
+import { scoreEmail as scoreContentQuality } from '../content/index.js';
 
 import * as aiPipelineRepo from './ai-pipeline.repo.js';
 import { createClaudeClient, resolveAnthropicModel } from './claude-client.service.js';

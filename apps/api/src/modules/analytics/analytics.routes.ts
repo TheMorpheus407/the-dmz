@@ -8,7 +8,7 @@ import { DecisionQualityService } from './decision-quality.service.js';
 import { metricsCache } from './metrics-cache.js';
 
 import type { FastifyPluginAsync } from 'fastify';
-import type { AuthenticatedUser } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+import type { AuthenticatedUser } from '../auth/index.js';
 
 const metricsResponseSchema = z.object({
   eventsIngested: z.number(),

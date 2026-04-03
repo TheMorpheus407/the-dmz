@@ -9,7 +9,7 @@ import { serviceAccounts } from '../../db/schema/auth/service-accounts.js';
 import { serviceAccountRoles } from '../../db/schema/auth/service-account-roles.js';
 import { apiKeys } from '../../db/schema/auth/api-keys.js';
 import { roles } from '../../db/schema/auth/roles.js';
-import { createAuditLog } from '../audit/audit.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { createAuditLog } from '../audit/index.js';
 
 import type { DB } from '../../shared/database/connection.js';
 

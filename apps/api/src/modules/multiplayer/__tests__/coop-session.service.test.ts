@@ -20,7 +20,7 @@ import {
   setCachedCoopSession,
   deleteCachedCoopSession,
 } from '../../../shared/cache/index.js';
-import { evaluateFlag } from '../../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { evaluateFlag } from '../../feature-flags/index.js';
 import {
   DEFAULT_PERMISSION_MATRIX,
   getRolePermissionsForPhase,

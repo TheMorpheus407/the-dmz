@@ -36,7 +36,7 @@ import {
 } from './campaign.schemas.js';
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import type { AuthenticatedUser } from '../auth/auth.types.js'; // eslint-disable-line import-x/no-restricted-paths
+import type { AuthenticatedUser } from '../auth/index.js';
 
 export type CampaignCreateBody = z.infer<typeof campaignCreateSchema>;
 export type CampaignUpdateBody = z.infer<typeof campaignUpdateSchema>;

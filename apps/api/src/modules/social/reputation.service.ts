@@ -16,7 +16,7 @@ import {
   REPUTATION_COMPONENTS,
   REPUTATION_DEFAULT_SCORE,
 } from '../../db/schema/social/index.js';
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { evaluateFlag } from '../feature-flags/index.js';
 
 import type { PaginatedResult } from './endorsement.service.js';
 import type { AppConfig } from '../../config.js';

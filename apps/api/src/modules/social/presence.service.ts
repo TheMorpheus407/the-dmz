@@ -14,7 +14,7 @@ import {
   deleteCachedPresence,
   type CachedPresence,
 } from '../../shared/cache/index.js';
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { evaluateFlag } from '../feature-flags/index.js';
 
 import { getRelationshipStatus } from './social-relationship.service.js';
 

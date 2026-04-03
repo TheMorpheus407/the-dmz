@@ -32,7 +32,7 @@ import {
 
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance } from 'fastify';
-import type { AuthenticatedUser } from '../auth/index.js'; // eslint-disable-line import-x/no-restricted-paths
+import type { AuthenticatedUser } from '../auth/index.js';
 
 export async function registerXapiRoutes(app: FastifyInstance, config: AppConfig): Promise<void> {
   app.post(

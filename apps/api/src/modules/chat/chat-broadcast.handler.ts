@@ -1,4 +1,4 @@
-import { wsGateway, buildChannelName } from '../notification/websocket/websocket.gateway.js'; // eslint-disable-line import-x/no-restricted-paths
+import { wsGateway, buildChannelName } from '../notification/websocket/index.js';
 
 import type { IEventBus, DomainEvent } from '../../shared/events/event-types.js';
 import type {

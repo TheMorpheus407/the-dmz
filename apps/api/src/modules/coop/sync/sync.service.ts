@@ -2,7 +2,7 @@ import { eq, and, sql } from 'drizzle-orm';
 
 import { getDatabaseClient } from '../../../shared/database/connection.js';
 import { coopSession, coopRoleAssignment } from '../../../db/schema/multiplayer/index.js';
-import { appendEvent } from '../../game/event-store/event-store.repo.js'; // eslint-disable-line import-x/no-restricted-paths
+import { appendEvent } from '../../game/event-store/index.js';
 
 import type { AppConfig } from '../../../config.js';
 import type { IEventBus } from '../../../shared/events/event-types.js';

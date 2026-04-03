@@ -1,4 +1,4 @@
-import { checkContent, type ContentCheckResult } from '../social/content-filter.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { checkContent, type ContentCheckResult } from '../social/index.js';
 
 import type { AppConfig } from '../../config.js';
 import type { ModerationStatus } from '../../db/schema/social/index.js';

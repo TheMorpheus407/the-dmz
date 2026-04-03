@@ -15,8 +15,8 @@ import {
   deleteCachedParty,
   type CachedParty,
 } from '../../shared/cache/index.js';
-import { evaluateFlag } from '../feature-flags/feature-flags.service.js'; // eslint-disable-line import-x/no-restricted-paths
-import { getOrCreatePartyChannel } from '../chat/chat.service.js'; // eslint-disable-line import-x/no-restricted-paths
+import { evaluateFlag } from '../feature-flags/index.js';
+import { getOrCreatePartyChannel } from '../chat/index.js';
 
 import { createInviteCode, isInviteCodeValid } from './invite-code.js';
 

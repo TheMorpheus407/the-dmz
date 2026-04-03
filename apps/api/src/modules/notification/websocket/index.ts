@@ -20,4 +20,7 @@ export type {
   SSEClientInfo,
   JWTAuthPayload,
   WebSocketAuthResult,
+  CoopEventMessage,
+  CoopWSServerMessage,
+  CoopWSClientMessage,
 } from './websocket.types.js';
