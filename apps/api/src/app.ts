@@ -1,6 +1,5 @@
 import http from 'node:http';
 
-import cors from '@fastify/cors';
 import fastify, { type FastifyInstance } from 'fastify';
 import cookie from '@fastify/cookie';
 import fastifyRawBody from 'fastify-raw-body';
@@ -61,6 +60,7 @@ import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.j
 import { versionHeadersMiddleware } from './shared/middleware/version-headers.js';
 import { registerVersionRoutes } from './shared/routes/version.routes.js';
 import { deprecationMiddleware } from './shared/middleware/deprecation.js';
+import { createCorsConfig, configureCors } from './shared/config/index.js';
 
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
@@ -81,21 +81,6 @@ const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }>
   coopScenarios: { plugin: coopScenarioPlugin, routePrefix: '/api/v1' },
 };
 
-const buildCorsOriginSet = (corsOriginsList: string[], nodeEnv: string): Set<string> => {
-  const origins = new Set<string>();
-  for (const origin of corsOriginsList) {
-    origins.add(origin);
-  }
-  if (nodeEnv !== 'production') {
-    for (const origin of corsOriginsList) {
-      if (origin.includes('localhost')) {
-        origins.add(origin.replace('localhost', '127.0.0.1'));
-      }
-    }
-  }
-  return origins;
-};
-
 const createHiddenServer = (
   handler: (req: http.IncomingMessage, res: http.ServerResponse) => void,
   _opts: Record<string, unknown>,
@@ -109,8 +94,6 @@ export const buildApp = (
   config: AppConfig = loadConfig(),
   options?: { skipHealthCheck?: boolean },
 ): FastifyInstance => {
-  const allowedOrigins = buildCorsOriginSet(config.CORS_ORIGINS_LIST, config.NODE_ENV);
-
   const skipHealthCheck = options?.skipHealthCheck;
 
   const app = fastify({
@@ -241,22 +224,8 @@ export const buildApp = (
 
   app.register(requestLogger);
 
-  app.register(cors, {
-    origin: (origin, callback) => {
-      if (!origin) {
-        callback(null, true);
-        return;
-      }
-
-      if (allowedOrigins.has(origin)) {
-        callback(null, true);
-        return;
-      }
-
-      callback(null, false);
-    },
-    credentials: true,
-  });
+  const corsConfig = createCorsConfig(config.CORS_ORIGINS_LIST, config.NODE_ENV);
+  await configureCors(app, corsConfig);
 
   registerSecurityHeaders(app, config);
   app.register(ssrfProtectionPlugin);
@@ -292,7 +261,6 @@ export const buildApp = (
   app.get(
     '/api/v1/',
     {
-      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       preHandler: globalRateLimiter(),
     },
     async () => ({
