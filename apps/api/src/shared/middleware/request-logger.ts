@@ -93,8 +93,9 @@ export const requestLogger = fp(async (fastify: FastifyInstance) => {
       onResponseFields.userId = request.tenantContext.userId;
     }
 
-    const level = reply.statusCode >= 500 ? 'error' : reply.statusCode >= 400 ? 'warn' : 'info';
-    const message = reply.statusCode >= 400 ? 'request completed with error' : 'request completed';
+    const outcomeCode = reply.statusCode;
+    const level = outcomeCode >= 500 ? 'error' : outcomeCode >= 400 ? 'warn' : 'info';
+    const message = outcomeCode >= 400 ? 'request completed with error' : 'request completed';
 
     request.log[level](
       {

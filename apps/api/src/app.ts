@@ -90,10 +90,10 @@ const createHiddenServer = (
   return server;
 };
 
-export const buildApp = (
+export const buildApp = async (
   config: AppConfig = loadConfig(),
   options?: { skipHealthCheck?: boolean },
-): FastifyInstance => {
+): Promise<FastifyInstance> => {
   const skipHealthCheck = options?.skipHealthCheck;
 
   const app = fastify({
@@ -261,6 +261,7 @@ export const buildApp = (
   app.get(
     '/api/v1/',
     {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       preHandler: globalRateLimiter(),
     },
     async () => ({

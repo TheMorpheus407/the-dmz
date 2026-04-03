@@ -80,7 +80,7 @@ async function generateOpenApiSpec(): Promise<void> {
     TENANT_RESOLVER_ENABLED: 'false',
   });
 
-  const app = buildApp(config, { skipHealthCheck: true });
+  const app = await buildApp(config, { skipHealthCheck: true });
 
   await app.ready();
 
