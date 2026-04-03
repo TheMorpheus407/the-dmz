@@ -20,6 +20,8 @@ export type {
   ThreatState,
   Email,
   Decision,
+  SessionInfo,
+  SessionInfoNullable,
 } from './game-store';
 
 export { uiStore } from './ui-store';

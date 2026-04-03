@@ -1,66 +1,49 @@
-import { writable, derived, get } from 'svelte/store';
+import { writable, get } from 'svelte/store';
 
 import type { GameSessionBootstrap } from '@the-dmz/shared/schemas';
-import type { GameThreatTier } from '@the-dmz/shared/game';
-import { bootstrapGameSession, getGameSession } from '$lib/api/game';
-import type { CategorizedApiError } from '$lib/api/types';
 import type { GamePhase } from '$lib/game/state/state-machine';
+import type { CategorizedApiError } from '$lib/api/types';
+import { bootstrapGameSession, getGameSession } from '$lib/api/game';
 import type { QueuedAction, GameAction } from '$lib/game/services/action-queue';
-import { enqueueAction } from '$lib/game/services/action-queue';
-import { reconcileState } from '$lib/game/services/sync';
 import type { GameEvent } from '$lib/game/state/events';
 
-export interface PlayerState {
-  trust: number;
-  funds: number;
-  intelFragments: number;
+import { sessionStore, currentPhase, currentDay } from './session-store';
+import { playerStore, playerResources } from './player-store';
+import { facilityStore, facilityState } from './facility-store';
+import { threatStore, threatLevel } from './threat-store';
+import {
+  gameActivityStore,
+  selectedEmail,
+  pendingDecisions,
+  completedDecisions,
+  actionQueueLength,
+  eventCount,
+  type Email,
+  type Decision,
+} from './game-activity-store';
+import { syncStore, isLoading, hasError } from './sync-store';
+
+import type { PlayerState } from './player-store';
+import type { FacilityState } from './facility-store';
+import type { ThreatState } from './threat-store';
+import type { Readable } from 'svelte/store';
+
+export type { PlayerState, FacilityState, ThreatState, Email, Decision };
+
+export interface SessionInfo {
+  id: string | null;
+  day: number;
+  phase: GamePhase;
+  startedAt: string | null;
 }
 
-export interface FacilityState {
-  rackSpace: number;
-  power: number;
-  cooling: number;
-  bandwidth: number;
-  clients: number;
-}
-
-export interface ThreatState {
-  level: GameThreatTier;
-  activeIncidents: number;
-}
-
-export interface Email {
-  id: string;
-  sender: string;
-  senderDomain: string;
-  subject: string;
-  body: string;
-  timestamp: string;
-  isRead: boolean;
-  isFlagged: boolean;
-  urgency: 'low' | 'medium' | 'high';
-  faction: string;
-  riskIndicators: string[];
-}
-
-export interface Decision {
-  id: string;
-  emailId: string;
-  type: 'approve' | 'deny' | 'flag' | 'request_verification' | 'defer';
-  createdAt: string;
-  resolved: boolean;
-}
+export type SessionInfoNullable = SessionInfo | null;
 
 export interface GameStoreState {
   isLoading: boolean;
   isInitialized: boolean;
   error: CategorizedApiError | null;
-  session: {
-    id: string | null;
-    day: number;
-    phase: GamePhase;
-    startedAt: string | null;
-  } | null;
+  session: SessionInfoNullable;
   player: PlayerState;
   facility: FacilityState;
   threat: ThreatState;
@@ -77,63 +60,92 @@ export interface GameStoreState {
   lastSyncAt: string | null;
 }
 
-const initialPlayerState: PlayerState = {
-  trust: 100,
-  funds: 1000,
-  intelFragments: 0,
-};
+export interface GameStore extends Readable<GameStoreState> {
+  get(): GameStoreState;
+  bootstrap(): Promise<{ error?: CategorizedApiError }>;
+  fetchState(): Promise<{ error?: CategorizedApiError }>;
+  applyServerState(serverState: GameSessionBootstrap): void;
+  setPhase(phase: GamePhase): void;
+  selectEmail(emailId: string | null): void;
+  markEmailAsRead(emailId: string): void;
+  flagEmail(emailId: string, flagged: boolean): void;
+  setEmails(emails: Email[]): void;
+  addDecision(decision: Decision): void;
+  resolveDecision(decisionId: string, resolution: 'approve' | 'deny'): void;
+  updatePlayer(partial: Partial<PlayerState>): void;
+  updateFacility(partial: Partial<FacilityState>): void;
+  updateThreat(partial: Partial<ThreatState>): void;
+  advanceDay(): void;
+  enqueue(action: GameAction): void;
+  dequeue(actionId: string): void;
+  clearActionQueue(): void;
+  addEvent(event: GameEvent): void;
+  reconcile(events: GameEvent[]): void;
+  optimisticUpdate(updater: (state: GameStoreState) => GameStoreState): void;
+  rollback(): void;
+  reset(): void;
+}
 
-const initialFacilityState: FacilityState = {
-  rackSpace: 10,
-  power: 100,
-  cooling: 100,
-  bandwidth: 1000,
-  clients: 5,
-};
+function createGameStore(): GameStore {
+  const gameWritable = writable<GameStoreState>({
+    isLoading: false,
+    isInitialized: false,
+    error: null,
+    session: null,
+    player: { trust: 100, funds: 1000, intelFragments: 0 },
+    facility: { rackSpace: 10, power: 100, cooling: 100, bandwidth: 1000, clients: 5 },
+    threat: { level: 'low', activeIncidents: 0 },
+    inbox: { emails: [], selectedEmailId: null },
+    decisions: { pending: [], completed: [] },
+    actionQueue: [],
+    eventHistory: [],
+    lastSyncAt: null,
+  });
 
-const initialThreatState: ThreatState = {
-  level: 'low',
-  activeIncidents: 0,
-};
+  function syncAll() {
+    const session = sessionStore.get();
+    gameWritable.set({
+      isLoading: syncStore.get().isLoading,
+      isInitialized: syncStore.get().isInitialized,
+      error: syncStore.get().error,
+      session: session.id === null ? null : session,
+      player: playerStore.get(),
+      facility: facilityStore.get(),
+      threat: threatStore.get(),
+      inbox: gameActivityStore.get().inbox,
+      decisions: gameActivityStore.get().decisions,
+      actionQueue: gameActivityStore.get().actionQueue,
+      eventHistory: gameActivityStore.get().eventHistory,
+      lastSyncAt: syncStore.get().lastSyncAt,
+    });
+  }
 
-const initialState: GameStoreState = {
-  isLoading: false,
-  isInitialized: false,
-  error: null,
-  session: null,
-  player: { ...initialPlayerState },
-  facility: { ...initialFacilityState },
-  threat: { ...initialThreatState },
-  inbox: {
-    emails: [],
-    selectedEmailId: null,
-  },
-  decisions: {
-    pending: [],
-    completed: [],
-  },
-  actionQueue: [],
-  eventHistory: [],
-  lastSyncAt: null,
-};
-
-function createGameStore() {
-  const { subscribe, set, update } = writable<GameStoreState>(initialState);
+  syncStore.subscribe(() => syncAll());
+  sessionStore.subscribe(() => syncAll());
+  playerStore.subscribe(() => syncAll());
+  facilityStore.subscribe(() => syncAll());
+  threatStore.subscribe(() => syncAll());
+  gameActivityStore.subscribe(() => syncAll());
 
   return {
-    subscribe,
+    subscribe: gameWritable.subscribe,
 
     get(): GameStoreState {
-      return get({ subscribe });
+      return get(gameWritable);
     },
 
     async bootstrap(): Promise<{ error?: CategorizedApiError }> {
-      update((state) => ({ ...state, isLoading: true, error: null }));
+      syncStore.optimisticUpdate((state) => ({ ...state, isLoading: true, error: null }));
 
       const result = await bootstrapGameSession();
 
       if (result.error) {
-        update((state) => ({ ...state, isLoading: false, error: result.error ?? null }));
+        syncStore.optimisticUpdate((state) => ({
+          ...state,
+          isLoading: false,
+          error: result.error ?? null,
+        }));
+        syncAll();
         return { error: result.error };
       }
 
@@ -141,22 +153,28 @@ function createGameStore() {
         this.applyServerState(result.data);
       }
 
-      update((state) => ({
+      syncStore.optimisticUpdate((state) => ({
         ...state,
         isLoading: false,
         isInitialized: true,
         lastSyncAt: new Date().toISOString(),
       }));
+      syncAll();
       return {};
     },
 
     async fetchState(): Promise<{ error?: CategorizedApiError }> {
-      update((state) => ({ ...state, isLoading: true, error: null }));
+      syncStore.optimisticUpdate((state) => ({ ...state, isLoading: true, error: null }));
 
       const result = await getGameSession();
 
       if (result.error) {
-        update((state) => ({ ...state, isLoading: false, error: result.error ?? null }));
+        syncStore.optimisticUpdate((state) => ({
+          ...state,
+          isLoading: false,
+          error: result.error ?? null,
+        }));
+        syncAll();
         return { error: result.error };
       }
 
@@ -164,241 +182,159 @@ function createGameStore() {
         this.applyServerState(result.data);
       }
 
-      update((state) => ({ ...state, isLoading: false, lastSyncAt: new Date().toISOString() }));
+      syncStore.optimisticUpdate((state) => ({
+        ...state,
+        isLoading: false,
+        lastSyncAt: new Date().toISOString(),
+      }));
+      syncAll();
       return {};
     },
 
     applyServerState(serverState: GameSessionBootstrap): void {
-      update((state) => {
-        const newSession = {
-          id: serverState.sessionId,
-          day: serverState.day,
-          phase: 'DAY_START' as GamePhase,
-          startedAt: serverState.createdAt,
-        };
+      sessionStore.setSession(serverState.sessionId, serverState.day, serverState.createdAt);
 
-        const newFacility: FacilityState = {
-          rackSpace: 10,
-          power: 100,
-          cooling: 100,
-          bandwidth: 1000,
-          clients: serverState.clientCount,
-        };
+      playerStore.setPlayer(100, serverState.funds, 0);
 
-        const newPlayer: PlayerState = {
-          trust: 100,
-          funds: serverState.funds,
-          intelFragments: 0,
-        };
-
-        const newThreat: ThreatState = {
-          level: serverState.threatLevel,
-          activeIncidents: 0,
-        };
-
-        return {
-          ...state,
-          session: newSession,
-          player: newPlayer,
-          facility: newFacility,
-          threat: newThreat,
-          isInitialized: true,
-        };
+      facilityStore.setFacility({
+        rackSpace: 10,
+        power: 100,
+        cooling: 100,
+        bandwidth: 1000,
+        clients: serverState.clientCount,
       });
+
+      threatStore.setThreatLevel(serverState.threatLevel);
+      threatStore.setActiveIncidents(0);
+
+      syncStore.setInitialized();
+      syncAll();
     },
 
     setPhase(phase: GamePhase): void {
-      update((state) => {
-        if (!state.session) return state;
-        return {
-          ...state,
-          session: { ...state.session, phase },
-        };
-      });
+      sessionStore.setPhase(phase);
+      syncAll();
     },
 
     selectEmail(emailId: string | null): void {
-      update((state) => ({
-        ...state,
-        inbox: { ...state.inbox, selectedEmailId: emailId },
-      }));
+      gameActivityStore.selectEmail(emailId);
+      syncAll();
     },
 
     markEmailAsRead(emailId: string): void {
-      update((state) => ({
-        ...state,
-        inbox: {
-          ...state.inbox,
-          emails: state.inbox.emails.map((email) =>
-            email.id === emailId ? { ...email, isRead: true } : email,
-          ),
-        },
-      }));
+      gameActivityStore.markEmailAsRead(emailId);
+      syncAll();
     },
 
     flagEmail(emailId: string, flagged: boolean): void {
-      update((state) => ({
-        ...state,
-        inbox: {
-          ...state.inbox,
-          emails: state.inbox.emails.map((email) =>
-            email.id === emailId ? { ...email, isFlagged: flagged } : email,
-          ),
-        },
-      }));
+      gameActivityStore.flagEmail(emailId, flagged);
+      syncAll();
     },
 
     setEmails(emails: Email[]): void {
-      update((state) => ({
-        ...state,
-        inbox: { ...state.inbox, emails },
-      }));
+      gameActivityStore.setEmails(emails);
+      syncAll();
     },
 
     addDecision(decision: Decision): void {
-      update((state) => ({
-        ...state,
-        decisions: {
-          ...state.decisions,
-          pending: [...state.decisions.pending, decision],
-        },
-      }));
+      gameActivityStore.addDecision(decision);
+      syncAll();
     },
 
     resolveDecision(decisionId: string, resolution: 'approve' | 'deny'): void {
-      update((state) => {
-        const pending = state.decisions.pending.find((d) => d.id === decisionId);
-        if (!pending) return state;
-
-        const resolved: Decision = {
-          ...pending,
-          type: resolution,
-          resolved: true,
-          createdAt: new Date().toISOString(),
-        };
-
-        return {
-          ...state,
-          decisions: {
-            pending: state.decisions.pending.filter((d) => d.id !== decisionId),
-            completed: [...state.decisions.completed, resolved],
-          },
-        };
-      });
+      gameActivityStore.resolveDecision(decisionId, resolution);
+      syncAll();
     },
 
     updatePlayer(partial: Partial<PlayerState>): void {
-      update((state) => ({
-        ...state,
-        player: { ...state.player, ...partial },
-      }));
+      playerStore.updatePlayer(partial);
+      syncAll();
     },
 
     updateFacility(partial: Partial<FacilityState>): void {
-      update((state) => ({
-        ...state,
-        facility: { ...state.facility, ...partial },
-      }));
+      facilityStore.updateFacility(partial);
+      syncAll();
     },
 
     updateThreat(partial: Partial<ThreatState>): void {
-      update((state) => ({
-        ...state,
-        threat: { ...state.threat, ...partial },
-      }));
+      threatStore.updateThreat(partial);
+      syncAll();
     },
 
     advanceDay(): void {
-      update((state) => {
-        if (!state.session) return state;
-        return {
-          ...state,
-          session: {
-            ...state.session,
-            day: state.session.day + 1,
-            phase: 'DAY_START' as GamePhase,
-          },
-          decisions: { pending: [], completed: [] },
-        };
-      });
+      sessionStore.advanceDay();
+      gameActivityStore.clearDecisions();
+      syncAll();
     },
 
     enqueue(action: GameAction): void {
-      update((state) => ({
-        ...state,
-        actionQueue: enqueueAction(state.actionQueue, action),
-      }));
+      gameActivityStore.enqueue(action);
+      syncAll();
     },
 
     dequeue(actionId: string): void {
-      update((state) => ({
-        ...state,
-        actionQueue: state.actionQueue.filter((a) => a.id !== actionId),
-      }));
+      gameActivityStore.dequeue(actionId);
+      syncAll();
     },
 
     clearActionQueue(): void {
-      update((state) => ({
-        ...state,
-        actionQueue: [],
-      }));
+      gameActivityStore.clearActionQueue();
+      syncAll();
     },
 
     addEvent(event: GameEvent): void {
-      update((state) => ({
-        ...state,
-        eventHistory: [...state.eventHistory, event],
-      }));
+      gameActivityStore.addEvent(event);
+      syncAll();
     },
 
     reconcile(events: GameEvent[]): void {
-      const syncResult = reconcileState(events);
-      update((state) => ({
+      gameActivityStore.reconcile(events);
+      syncStore.optimisticUpdate((state) => ({
         ...state,
-        eventHistory: syncResult.events,
         lastSyncAt: new Date().toISOString(),
       }));
+      syncAll();
     },
 
     optimisticUpdate(updater: (state: GameStoreState) => GameStoreState): void {
-      update(updater);
+      const currentState = this.get();
+      const newState = updater(currentState);
+      playerStore.updatePlayer(newState.player);
+      facilityStore.updateFacility(newState.facility);
+      threatStore.updateThreat(newState.threat);
+      syncAll();
     },
 
     rollback(): void {
-      void this.fetchState();
+      syncStore.rollback();
+      syncAll();
     },
 
     reset(): void {
-      set(initialState);
+      syncStore.reset();
+      sessionStore.reset();
+      playerStore.reset();
+      facilityStore.reset();
+      threatStore.reset();
+      gameActivityStore.reset();
+      syncAll();
     },
   };
 }
 
 export const gameStore = createGameStore();
 
-export const currentPhase = derived(gameStore, ($game) => $game.session?.phase ?? null);
-
-export const currentDay = derived(gameStore, ($game) => $game.session?.day ?? 0);
-
-export const selectedEmail = derived(gameStore, ($game) => {
-  if (!$game.inbox.selectedEmailId) return null;
-  return $game.inbox.emails.find((e) => e.id === $game.inbox.selectedEmailId) ?? null;
-});
-
-export const pendingDecisions = derived(gameStore, ($game) => $game.decisions.pending);
-
-export const completedDecisions = derived(gameStore, ($game) => $game.decisions.completed);
-
-export const playerResources = derived(gameStore, ($game) => $game.player);
-
-export const facilityState = derived(gameStore, ($game) => $game.facility);
-
-export const threatLevel = derived(gameStore, ($game) => $game.threat.level);
-
-export const isLoading = derived(gameStore, ($game) => $game.isLoading);
-
-export const hasError = derived(gameStore, ($game) => $game.error !== null);
-
-export const actionQueueLength = derived(gameStore, ($game) => $game.actionQueue.length);
-
-export const eventCount = derived(gameStore, ($game) => $game.eventHistory.length);
+export {
+  currentPhase,
+  currentDay,
+  selectedEmail,
+  pendingDecisions,
+  completedDecisions,
+  playerResources,
+  facilityState,
+  threatLevel,
+  isLoading,
+  hasError,
+  actionQueueLength,
+  eventCount,
+};
