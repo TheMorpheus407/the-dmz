@@ -6,8 +6,7 @@ import {
 
 import * as seasonsService from './seasons.service.js';
 
-// eslint-disable-next-line import-x/no-restricted-paths
-import type { AuthenticatedUser } from '../../game/session/game-session.service.js';
+import type { AuthenticatedUser } from '../../game/session/index.js';
 import type { FastifyInstance } from 'fastify';
 
 export const registerSeasonRoutes = async (fastify: FastifyInstance): Promise<void> => {

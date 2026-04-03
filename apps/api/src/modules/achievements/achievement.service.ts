@@ -1,6 +1,5 @@
 import { eq, and, sql } from 'drizzle-orm';
 
-// eslint-disable-next-line import-x/no-restricted-paths
 import { findActiveGameSession, updatePlayerXP } from '../game/session/game-session.repo.js';
 import {
   achievementDefinitions,

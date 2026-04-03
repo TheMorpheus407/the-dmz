@@ -1,9 +1,7 @@
 import { OAuthInsufficientScopeError, OAuthScope } from '@the-dmz/shared/auth/oauth-scope-contract';
 
-// eslint-disable-next-line import-x/no-restricted-paths
 import { verifyOAuthToken } from '../auth/index.js';
-// eslint-disable-next-line import-x/no-restricted-paths
-import { createOAuthScopeDeniedEvent } from '../auth/auth.events.js';
+import { createOAuthScopeDeniedEvent } from '../auth/index.js';
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
 

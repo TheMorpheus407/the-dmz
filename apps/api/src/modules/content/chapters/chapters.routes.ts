@@ -6,8 +6,7 @@ import {
 
 import * as chaptersService from './chapters.service.js';
 
-// eslint-disable-next-line import-x/no-restricted-paths
-import type { AuthenticatedUser } from '../../game/session/game-session.service.js';
+import type { AuthenticatedUser } from '../../game/session/index.js';
 import type { FastifyInstance } from 'fastify';
 
 export const registerChapterRoutes = async (fastify: FastifyInstance): Promise<void> => {

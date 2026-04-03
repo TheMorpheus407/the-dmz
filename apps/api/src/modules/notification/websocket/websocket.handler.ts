@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
-// eslint-disable-next-line import-x/no-restricted-paths
-import { verifyJWT } from '../../auth/jwt-keys.service.js';
+import { verifyJWT } from '../../auth/index.js';
 
 import { wsGateway, type WebSocketGateway } from './websocket.gateway.js';
 

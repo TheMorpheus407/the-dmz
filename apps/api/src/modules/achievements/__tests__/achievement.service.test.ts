@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { AchievementService } from '../achievement.service.js';
-// eslint-disable-next-line import-x/no-restricted-paths
-import { findActiveGameSession, updatePlayerXP } from '../../game/session/game-session.repo.js';
+import { findActiveGameSession, updatePlayerXP } from '../../game/session/index.js';
 
 import type { DatabaseClient } from '../../../shared/database/connection.js';
 import type { IEventBus } from '../../../shared/events/event-types.js';

@@ -3,8 +3,7 @@ import { type IncidentStatus, type ResponseAction } from '@the-dmz/shared/game';
 import { tenantContext } from '../../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
-// eslint-disable-next-line import-x/no-restricted-paths
-import { authGuard } from '../../auth/auth.routes.js';
+import { authGuard } from '../../auth/index.js';
 
 import * as incidentService from './incident.service.js';
 import * as incidentEvents from './incident.events.js';

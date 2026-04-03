@@ -8,8 +8,7 @@ import * as difficultyClassifier from '../difficulty-classifier/index.js';
 
 import * as difficultyService from './difficulty.service.js';
 
-// eslint-disable-next-line import-x/no-restricted-paths
-import type { AuthenticatedUser } from '../../game/session/game-session.service.js';
+import type { AuthenticatedUser } from '../../game/session/index.js';
 import type { FastifyInstance } from 'fastify';
 
 export const registerDifficultyRoutes = async (fastify: FastifyInstance): Promise<void> => {

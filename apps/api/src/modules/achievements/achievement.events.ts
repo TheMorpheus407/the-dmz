@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto';
 
-// eslint-disable-next-line import-x/no-restricted-paths
-import { GAME_ENGINE_EVENTS } from '../game/engine/engine.events.js';
+import { GAME_ENGINE_EVENTS } from '../game/engine/index.js';
 
 import type { DomainEvent } from '../../shared/events/event-types.js';
 import type { AchievementService } from './achievement.service.js';

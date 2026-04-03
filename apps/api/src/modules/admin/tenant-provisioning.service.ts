@@ -13,7 +13,6 @@ import {
   type ProvisioningStatus,
   type TenantTier,
 } from '../../shared/database/schema/index.js';
-// eslint-disable-next-line import-x/no-restricted-paths
 import { hashPassword } from '../auth/index.js';
 import { generateSecurePassword } from '../../shared/utils/password.js';
 

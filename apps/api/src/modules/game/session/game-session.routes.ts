@@ -3,8 +3,7 @@ import { gameSessionBootstrapResponseJsonSchema } from '@the-dmz/shared/schemas'
 import { tenantContext } from '../../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../../shared/middleware/tenant-status-guard.js';
 import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
-// eslint-disable-next-line import-x/no-restricted-paths
-import { authGuard } from '../../auth/auth.routes.js';
+import { authGuard } from '../../auth/index.js';
 import { idempotency } from '../../../shared/middleware/idempotency.js';
 
 import * as gameSessionService from './game-session.service.js';
