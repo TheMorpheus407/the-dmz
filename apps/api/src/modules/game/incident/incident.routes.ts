@@ -8,6 +8,21 @@ import { authGuard } from '../../auth/auth.routes.js';
 
 import * as incidentService from './incident.service.js';
 import * as incidentEvents from './incident.events.js';
+import {
+  incidentListResponseSchema,
+  incidentSingleResponseSchema,
+  availableActionsResponseSchema,
+  incidentStatusUpdateBodySchema,
+  incidentStatusUpdateResponseSchema,
+  incidentResponseActionBodySchema,
+  incidentResponseActionResponseSchema,
+  incidentResolveBodySchema,
+  incidentResolveResponseSchema,
+  postIncidentReviewResponseSchema,
+  incidentStatsResponseSchema,
+  sessionParamsSchema,
+  incidentParamsSchema,
+} from './incident.schemas.js';
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
@@ -18,25 +33,9 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId'],
-        },
+        params: sessionParamsSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                },
-              },
-            },
-          },
+          200: incidentListResponseSchema,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
@@ -58,25 +57,9 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId'],
-        },
+        params: sessionParamsSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                },
-              },
-            },
-          },
+          200: incidentListResponseSchema,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
         },
@@ -97,21 +80,9 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-            incidentId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId', 'incidentId'],
-        },
+        params: incidentParamsSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: { type: 'object' },
-            },
-          },
+          200: incidentSingleResponseSchema,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
@@ -147,24 +118,9 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-            incidentId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId', 'incidentId'],
-        },
+        params: incidentParamsSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: {
-                type: 'array',
-                items: { type: 'string' },
-              },
-            },
-          },
+          200: availableActionsResponseSchema,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
@@ -205,33 +161,10 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-            incidentId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId', 'incidentId'],
-        },
-        body: {
-          type: 'object',
-          properties: {
-            status: {
-              type: 'string',
-              enum: ['open', 'investigating', 'contained', 'eradicated', 'recovered', 'closed'],
-            },
-            notes: { type: 'string' },
-            day: { type: 'integer' },
-          },
-          required: ['status', 'day'],
-        },
+        params: incidentParamsSchema,
+        body: incidentStatusUpdateBodySchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: { type: 'object' },
-            },
-          },
+          200: incidentStatusUpdateResponseSchema,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
@@ -311,31 +244,10 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-            incidentId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId', 'incidentId'],
-        },
-        body: {
-          type: 'object',
-          properties: {
-            actionType: { type: 'string' },
-            effectiveness: { type: 'number', minimum: 0, maximum: 1 },
-            notes: { type: 'string' },
-            day: { type: 'integer' },
-          },
-          required: ['actionType', 'day'],
-        },
+        params: incidentParamsSchema,
+        body: incidentResponseActionBodySchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: { type: 'object' },
-            },
-          },
+          200: incidentResponseActionResponseSchema,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
@@ -416,31 +328,10 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-            incidentId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId', 'incidentId'],
-        },
-        body: {
-          type: 'object',
-          properties: {
-            outcome: { type: 'string' },
-            rootCause: { type: 'string' },
-            lessonsLearned: { type: 'string' },
-            day: { type: 'integer' },
-          },
-          required: ['outcome', 'day'],
-        },
+        params: incidentParamsSchema,
+        body: incidentResolveBodySchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: { type: 'object' },
-            },
-          },
+          200: incidentResolveResponseSchema,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
@@ -495,21 +386,9 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-            incidentId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId', 'incidentId'],
-        },
+        params: incidentParamsSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: { type: 'object' },
-            },
-          },
+          200: postIncidentReviewResponseSchema,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
           404: errorResponseSchemas.NotFound,
@@ -542,20 +421,9 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
       schema: {
         security: [{ bearerAuth: [] }],
-        params: {
-          type: 'object',
-          properties: {
-            sessionId: { type: 'string', format: 'uuid' },
-          },
-          required: ['sessionId'],
-        },
+        params: sessionParamsSchema,
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: { type: 'object' },
-            },
-          },
+          200: incidentStatsResponseSchema,
           401: errorResponseSchemas.Unauthorized,
           403: errorResponseSchemas.TenantInactive,
         },
