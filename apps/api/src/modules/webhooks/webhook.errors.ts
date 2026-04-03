@@ -1,158 +1,157 @@
-export const WEBHOOK_ERROR_CODES = {
-  SUBSCRIPTION_NOT_FOUND: 'WEBHOOK_SUBSCRIPTION_NOT_FOUND',
-  SUBSCRIPTION_INVALID_STATUS: 'WEBHOOK_SUBSCRIPTION_INVALID_STATUS',
-  SUBSCRIPTION_URL_INVALID: 'WEBHOOK_SUBSCRIPTION_URL_INVALID',
-  SUBSCRIPTION_EVENT_TYPES_INVALID: 'WEBHOOK_SUBSCRIPTION_EVENT_TYPES_INVALID',
-  SUBSCRIPTION_CIRCUIT_BREAKER_OPEN: 'WEBHOOK_SUBSCRIPTION_CIRCUIT_BREAKER_OPEN',
-  DELIVERY_NOT_FOUND: 'WEBHOOK_DELIVERY_NOT_FOUND',
-  DELIVERY_FAILED: 'WEBHOOK_DELIVERY_FAILED',
-  DELIVERY_MAX_RETRIES_EXCEEDED: 'WEBHOOK_DELIVERY_MAX_RETRIES_EXCEEDED',
-  DELIVERY_DLQ: 'WEBHOOK_DELIVERY_DLQ',
-  SIGNATURE_INVALID: 'WEBHOOK_SIGNATURE_INVALID',
-  SIGNATURE_EXPIRED: 'WEBHOOK_SIGNATURE_EXPIRED',
-  RATE_LIMIT_EXCEEDED: 'WEBHOOK_RATE_LIMIT_EXCEEDED',
-  UNAUTHORIZED: 'WEBHOOK_UNAUTHORIZED',
-  INSUFFICIENT_SCOPE: 'WEBHOOK_INSUFFICIENT_SCOPE',
-} as const;
+import { ErrorCodes } from '@the-dmz/shared/constants';
 
-export type WebhookErrorCode = (typeof WEBHOOK_ERROR_CODES)[keyof typeof WEBHOOK_ERROR_CODES];
+import { AppError } from '../../shared/middleware/error-handler.js';
 
-export class WebhookSubscriptionNotFoundError extends Error {
-  code = WEBHOOK_ERROR_CODES.SUBSCRIPTION_NOT_FOUND;
-  statusCode = 404;
-
+export class WebhookSubscriptionNotFoundError extends AppError {
   constructor(subscriptionId: string) {
-    super(`Webhook subscription not found: ${subscriptionId}`);
+    super({
+      code: ErrorCodes.WEBHOOK_SUBSCRIPTION_NOT_FOUND,
+      message: `Webhook subscription not found: ${subscriptionId}`,
+      statusCode: 404,
+    });
     this.name = 'WebhookSubscriptionNotFoundError';
   }
 }
 
-export class WebhookSubscriptionInvalidStatusError extends Error {
-  code = WEBHOOK_ERROR_CODES.SUBSCRIPTION_INVALID_STATUS;
-  statusCode = 400;
-
+export class WebhookSubscriptionInvalidStatusError extends AppError {
   constructor(status: string) {
-    super(`Invalid webhook subscription status: ${status}`);
+    super({
+      code: ErrorCodes.WEBHOOK_SUBSCRIPTION_INVALID_STATUS,
+      message: `Invalid webhook subscription status: ${status}`,
+      statusCode: 400,
+    });
     this.name = 'WebhookSubscriptionInvalidStatusError';
   }
 }
 
-export class WebhookSubscriptionUrlInvalidError extends Error {
-  code = WEBHOOK_ERROR_CODES.SUBSCRIPTION_URL_INVALID;
-  statusCode = 400;
-
+export class WebhookSubscriptionUrlInvalidError extends AppError {
   constructor(url: string) {
-    super(`Invalid webhook URL: ${url}`);
+    super({
+      code: ErrorCodes.WEBHOOK_SUBSCRIPTION_URL_INVALID,
+      message: `Invalid webhook URL: ${url}`,
+      statusCode: 400,
+    });
     this.name = 'WebhookSubscriptionUrlInvalidError';
   }
 }
 
-export class WebhookSubscriptionEventTypesInvalidError extends Error {
-  code = WEBHOOK_ERROR_CODES.SUBSCRIPTION_EVENT_TYPES_INVALID;
-  statusCode = 400;
-
+export class WebhookSubscriptionEventTypesInvalidError extends AppError {
   constructor(types: string[]) {
-    super(`Invalid webhook event types: ${types.join(', ')}`);
+    super({
+      code: ErrorCodes.WEBHOOK_SUBSCRIPTION_EVENT_TYPES_INVALID,
+      message: `Invalid webhook event types: ${types.join(', ')}`,
+      statusCode: 400,
+    });
     this.name = 'WebhookSubscriptionEventTypesInvalidError';
   }
 }
 
-export class WebhookCircuitBreakerOpenError extends Error {
-  code = WEBHOOK_ERROR_CODES.SUBSCRIPTION_CIRCUIT_BREAKER_OPEN;
-  statusCode = 503;
-
+export class WebhookCircuitBreakerOpenError extends AppError {
   constructor(subscriptionId: string) {
-    super(`Circuit breaker is open for subscription: ${subscriptionId}`);
+    super({
+      code: ErrorCodes.WEBHOOK_SUBSCRIPTION_CIRCUIT_BREAKER_OPEN,
+      message: `Circuit breaker is open for subscription: ${subscriptionId}`,
+      statusCode: 503,
+    });
     this.name = 'WebhookCircuitBreakerOpenError';
   }
 }
 
-export class WebhookDeliveryNotFoundError extends Error {
-  code = WEBHOOK_ERROR_CODES.DELIVERY_NOT_FOUND;
-  statusCode = 404;
-
+export class WebhookDeliveryNotFoundError extends AppError {
   constructor(deliveryId: string) {
-    super(`Webhook delivery not found: ${deliveryId}`);
+    super({
+      code: ErrorCodes.WEBHOOK_DELIVERY_NOT_FOUND,
+      message: `Webhook delivery not found: ${deliveryId}`,
+      statusCode: 404,
+    });
     this.name = 'WebhookDeliveryNotFoundError';
   }
 }
 
-export class WebhookDeliveryFailedError extends Error {
-  code = WEBHOOK_ERROR_CODES.DELIVERY_FAILED;
-  statusCode = 502;
-
+export class WebhookDeliveryFailedError extends AppError {
   constructor(deliveryId: string, message: string) {
-    super(`Webhook delivery failed: ${deliveryId} - ${message}`);
+    super({
+      code: ErrorCodes.WEBHOOK_DELIVERY_FAILED,
+      message: `Webhook delivery failed: ${deliveryId} - ${message}`,
+      statusCode: 502,
+    });
     this.name = 'WebhookDeliveryFailedError';
   }
 }
 
-export class WebhookDeliveryMaxRetriesExceededError extends Error {
-  code = WEBHOOK_ERROR_CODES.DELIVERY_MAX_RETRIES_EXCEEDED;
-  statusCode = 502;
-
+export class WebhookDeliveryMaxRetriesExceededError extends AppError {
   constructor(deliveryId: string) {
-    super(`Webhook delivery max retries exceeded: ${deliveryId}`);
+    super({
+      code: ErrorCodes.WEBHOOK_DELIVERY_MAX_RETRIES_EXCEEDED,
+      message: `Webhook delivery max retries exceeded: ${deliveryId}`,
+      statusCode: 502,
+    });
     this.name = 'WebhookDeliveryMaxRetriesExceededError';
   }
 }
 
-export class WebhookDeliveryDlqError extends Error {
-  code = WEBHOOK_ERROR_CODES.DELIVERY_DLQ;
-  statusCode = 502;
-
+export class WebhookDeliveryDlqError extends AppError {
   constructor(deliveryId: string) {
-    super(`Webhook delivery sent to DLQ: ${deliveryId}`);
+    super({
+      code: ErrorCodes.WEBHOOK_DELIVERY_DLQ,
+      message: `Webhook delivery sent to DLQ: ${deliveryId}`,
+      statusCode: 502,
+    });
     this.name = 'WebhookDeliveryDlqError';
   }
 }
 
-export class WebhookSignatureInvalidError extends Error {
-  code = WEBHOOK_ERROR_CODES.SIGNATURE_INVALID;
-  statusCode = 401;
-
+export class WebhookSignatureInvalidError extends AppError {
   constructor() {
-    super('Invalid webhook signature');
+    super({
+      code: ErrorCodes.WEBHOOK_SIGNATURE_INVALID,
+      message: 'Invalid webhook signature',
+      statusCode: 401,
+    });
     this.name = 'WebhookSignatureInvalidError';
   }
 }
 
-export class WebhookSignatureExpiredError extends Error {
-  code = WEBHOOK_ERROR_CODES.SIGNATURE_EXPIRED;
-  statusCode = 401;
-
+export class WebhookSignatureExpiredError extends AppError {
   constructor() {
-    super('Webhook signature expired');
+    super({
+      code: ErrorCodes.WEBHOOK_SIGNATURE_EXPIRED,
+      message: 'Webhook signature expired',
+      statusCode: 401,
+    });
     this.name = 'WebhookSignatureExpiredError';
   }
 }
 
-export class WebhookRateLimitExceededError extends Error {
-  code = WEBHOOK_ERROR_CODES.RATE_LIMIT_EXCEEDED;
-  statusCode = 429;
-
+export class WebhookRateLimitExceededError extends AppError {
   constructor(limit: number, windowMs: number) {
-    super(`Webhook rate limit exceeded: ${limit} per ${windowMs}ms`);
+    super({
+      code: ErrorCodes.WEBHOOK_RATE_LIMIT_EXCEEDED,
+      message: `Webhook rate limit exceeded: ${limit} per ${windowMs}ms`,
+      statusCode: 429,
+    });
     this.name = 'WebhookRateLimitExceededError';
   }
 }
 
-export class WebhookUnauthorizedError extends Error {
-  code = WEBHOOK_ERROR_CODES.UNAUTHORIZED;
-  statusCode = 401;
-
+export class WebhookUnauthorizedError extends AppError {
   constructor() {
-    super('Unauthorized');
+    super({
+      code: ErrorCodes.WEBHOOK_UNAUTHORIZED,
+      message: 'Unauthorized',
+      statusCode: 401,
+    });
     this.name = 'WebhookUnauthorizedError';
   }
 }
 
-export class WebhookInsufficientScopeError extends Error {
-  code = WEBHOOK_ERROR_CODES.INSUFFICIENT_SCOPE;
-  statusCode = 403;
-
+export class WebhookInsufficientScopeError extends AppError {
   constructor(requiredScope: string) {
-    super(`Insufficient scope: ${requiredScope} required`);
+    super({
+      code: ErrorCodes.WEBHOOK_INSUFFICIENT_SCOPE,
+      message: `Insufficient scope: ${requiredScope} required`,
+      statusCode: 403,
+    });
     this.name = 'WebhookInsufficientScopeError';
   }
 }

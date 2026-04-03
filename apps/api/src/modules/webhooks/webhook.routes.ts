@@ -1,11 +1,7 @@
 import { type WebhookSubscriptionStatus, WEBHOOK_RATE_LIMITS } from '@the-dmz/shared/contracts';
 
 import { webhookService } from './webhook.service.js';
-import {
-  WebhookSubscriptionNotFoundError,
-  WebhookCircuitBreakerOpenError,
-  WEBHOOK_ERROR_CODES,
-} from './webhook.errors.js';
+import { WebhookUnauthorizedError, WebhookInsufficientScopeError } from './webhook.errors.js';
 
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 
@@ -59,20 +55,14 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       const tenantContext = request.tenant;
 
       if (!tenantContext) {
-        throw Object.assign(new Error('Unauthorized'), {
-          statusCode: 401,
-          code: WEBHOOK_ERROR_CODES.UNAUTHORIZED,
-        });
+        throw new WebhookUnauthorizedError();
       }
 
       const hasScope =
         tenantContext.scopes?.includes(WEBHOOK_SCOPE) || tenantContext.scopes?.includes('admin');
 
       if (!hasScope && request.url !== '/health') {
-        throw Object.assign(new Error(`Insufficient scope: ${WEBHOOK_SCOPE} required`), {
-          statusCode: 403,
-          code: WEBHOOK_ERROR_CODES.INSUFFICIENT_SCOPE,
-        });
+        throw new WebhookInsufficientScopeError(WEBHOOK_SCOPE);
       }
 
       request.tenant = tenantContext;
@@ -129,11 +119,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
         const err = error as Error;
         request.log.error({ err }, 'Failed to create webhook subscription');
 
-        return reply.status(500).send({
-          code: 'INTERNAL_ERROR',
-          message: 'An internal error occurred',
-          requestId: request.id,
-        });
+        throw error;
       }
     },
   );
@@ -175,11 +161,7 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
         const err = error as Error;
         request.log.error({ err }, 'Failed to list webhook subscriptions');
 
-        return reply.status(500).send({
-          code: 'INTERNAL_ERROR',
-          message: 'An internal error occurred',
-          requestId: request.id,
-        });
+        throw error;
       }
     },
   );
@@ -205,31 +187,12 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       const tenantContext = request.tenant as TenantContext;
       const { subscriptionId } = request.params;
 
-      try {
-        const subscription = await webhookService.getSubscription(
-          tenantContext.tenantId,
-          subscriptionId,
-        );
+      const subscription = await webhookService.getSubscription(
+        tenantContext.tenantId,
+        subscriptionId,
+      );
 
-        return reply.send({ data: subscription });
-      } catch (error) {
-        if (error instanceof WebhookSubscriptionNotFoundError) {
-          return reply.status(404).send({
-            code: WEBHOOK_ERROR_CODES.SUBSCRIPTION_NOT_FOUND,
-            message: error.message,
-            requestId: request.id,
-          });
-        }
-
-        const err = error as Error;
-        request.log.error({ err }, 'Failed to get webhook subscription');
-
-        return reply.status(500).send({
-          code: 'INTERNAL_ERROR',
-          message: 'An internal error occurred',
-          requestId: request.id,
-        });
-      }
+      return reply.send({ data: subscription });
     },
   );
 
@@ -275,51 +238,31 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       const tenantContext = request.tenant as TenantContext;
       const { subscriptionId } = request.params;
 
-      try {
-        const updateData: {
-          name?: string;
-          targetUrl?: string;
-          eventTypes?: string[];
-          filters?: Record<string, unknown>;
-          status?: WebhookSubscriptionStatus;
-          ipAllowlist?: string[];
-        } = {};
+      const updateData: {
+        name?: string;
+        targetUrl?: string;
+        eventTypes?: string[];
+        filters?: Record<string, unknown>;
+        status?: WebhookSubscriptionStatus;
+        ipAllowlist?: string[];
+      } = {};
 
-        if (request.body.name !== undefined) updateData.name = request.body.name;
-        if (request.body.targetUrl !== undefined) updateData.targetUrl = request.body.targetUrl;
-        if (request.body.eventTypes !== undefined) updateData.eventTypes = request.body.eventTypes;
-        if (request.body.filters !== undefined) updateData.filters = request.body.filters;
-        if (request.body.status !== undefined) {
-          updateData.status = request.body.status as WebhookSubscriptionStatus;
-        }
-        if (request.body.ipAllowlist !== undefined)
-          updateData.ipAllowlist = request.body.ipAllowlist;
-
-        const subscription = await webhookService.updateSubscription(
-          tenantContext.tenantId,
-          subscriptionId,
-          updateData as Parameters<typeof webhookService.updateSubscription>[2],
-        );
-
-        return reply.send({ data: subscription });
-      } catch (error) {
-        if (error instanceof WebhookSubscriptionNotFoundError) {
-          return reply.status(404).send({
-            code: WEBHOOK_ERROR_CODES.SUBSCRIPTION_NOT_FOUND,
-            message: error.message,
-            requestId: request.id,
-          });
-        }
-
-        const err = error as Error;
-        request.log.error({ err }, 'Failed to update webhook subscription');
-
-        return reply.status(500).send({
-          code: 'INTERNAL_ERROR',
-          message: 'An internal error occurred',
-          requestId: request.id,
-        });
+      if (request.body.name !== undefined) updateData.name = request.body.name;
+      if (request.body.targetUrl !== undefined) updateData.targetUrl = request.body.targetUrl;
+      if (request.body.eventTypes !== undefined) updateData.eventTypes = request.body.eventTypes;
+      if (request.body.filters !== undefined) updateData.filters = request.body.filters;
+      if (request.body.status !== undefined) {
+        updateData.status = request.body.status as WebhookSubscriptionStatus;
       }
+      if (request.body.ipAllowlist !== undefined) updateData.ipAllowlist = request.body.ipAllowlist;
+
+      const subscription = await webhookService.updateSubscription(
+        tenantContext.tenantId,
+        subscriptionId,
+        updateData as Parameters<typeof webhookService.updateSubscription>[2],
+      );
+
+      return reply.send({ data: subscription });
     },
   );
 
@@ -344,28 +287,9 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       const tenantContext = request.tenant as TenantContext;
       const { subscriptionId } = request.params;
 
-      try {
-        await webhookService.deleteSubscription(tenantContext.tenantId, subscriptionId);
+      await webhookService.deleteSubscription(tenantContext.tenantId, subscriptionId);
 
-        return reply.status(204).send();
-      } catch (error) {
-        if (error instanceof WebhookSubscriptionNotFoundError) {
-          return reply.status(404).send({
-            code: WEBHOOK_ERROR_CODES.SUBSCRIPTION_NOT_FOUND,
-            message: error.message,
-            requestId: request.id,
-          });
-        }
-
-        const err = error as Error;
-        request.log.error({ err }, 'Failed to delete webhook subscription');
-
-        return reply.status(500).send({
-          code: 'INTERNAL_ERROR',
-          message: 'An internal error occurred',
-          requestId: request.id,
-        });
-      }
+      return reply.status(204).send();
     },
   );
 
@@ -390,39 +314,9 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       const tenantContext = request.tenant as TenantContext;
       const { subscriptionId } = request.params;
 
-      try {
-        const result = await webhookService.testSubscription(
-          tenantContext.tenantId,
-          subscriptionId,
-        );
+      const result = await webhookService.testSubscription(tenantContext.tenantId, subscriptionId);
 
-        return reply.send({ data: result });
-      } catch (error) {
-        if (error instanceof WebhookSubscriptionNotFoundError) {
-          return reply.status(404).send({
-            code: WEBHOOK_ERROR_CODES.SUBSCRIPTION_NOT_FOUND,
-            message: error.message,
-            requestId: request.id,
-          });
-        }
-
-        if (error instanceof WebhookCircuitBreakerOpenError) {
-          return reply.status(503).send({
-            code: WEBHOOK_ERROR_CODES.SUBSCRIPTION_CIRCUIT_BREAKER_OPEN,
-            message: error.message,
-            requestId: request.id,
-          });
-        }
-
-        const err = error as Error;
-        request.log.error({ err }, 'Failed to test webhook subscription');
-
-        return reply.status(500).send({
-          code: 'INTERNAL_ERROR',
-          message: 'An internal error occurred',
-          requestId: request.id,
-        });
-      }
+      return reply.send({ data: result });
     },
   );
 
@@ -447,28 +341,9 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       const tenantContext = request.tenant as TenantContext;
       const { subscriptionId } = request.params;
 
-      try {
-        const result = await webhookService.rotateSecret(tenantContext.tenantId, subscriptionId);
+      const result = await webhookService.rotateSecret(tenantContext.tenantId, subscriptionId);
 
-        return reply.send({ data: result });
-      } catch (error) {
-        if (error instanceof WebhookSubscriptionNotFoundError) {
-          return reply.status(404).send({
-            code: WEBHOOK_ERROR_CODES.SUBSCRIPTION_NOT_FOUND,
-            message: error.message,
-            requestId: request.id,
-          });
-        }
-
-        const err = error as Error;
-        request.log.error({ err }, 'Failed to rotate webhook secret');
-
-        return reply.status(500).send({
-          code: 'INTERNAL_ERROR',
-          message: 'An internal error occurred',
-          requestId: request.id,
-        });
-      }
+      return reply.send({ data: result });
     },
   );
 
@@ -509,23 +384,12 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       if (limit) queryOptions.limit = limit;
       if (cursor) queryOptions.cursor = cursor;
 
-      try {
-        const result = await webhookService.listDeliveries(tenantContext.tenantId, queryOptions);
+      const result = await webhookService.listDeliveries(tenantContext.tenantId, queryOptions);
 
-        return reply.send({
-          data: result.deliveries,
-          ...(result.nextCursor !== undefined && { nextCursor: result.nextCursor }),
-        });
-      } catch (error) {
-        const err = error as Error;
-        request.log.error({ err }, 'Failed to list webhook deliveries');
-
-        return reply.status(500).send({
-          code: 'INTERNAL_ERROR',
-          message: 'An internal error occurred',
-          requestId: request.id,
-        });
-      }
+      return reply.send({
+        data: result.deliveries,
+        ...(result.nextCursor !== undefined && { nextCursor: result.nextCursor }),
+      });
     },
   );
 
@@ -547,20 +411,9 @@ export async function webhookRoutes(fastify: FastifyInstance): Promise<void> {
       const tenantContext = request.tenant as TenantContext;
       const { deliveryId } = request.params;
 
-      try {
-        const delivery = await webhookService.getDelivery(tenantContext.tenantId, deliveryId);
+      const delivery = await webhookService.getDelivery(tenantContext.tenantId, deliveryId);
 
-        return reply.send({ data: delivery });
-      } catch (error) {
-        const err = error as Error;
-        request.log.error({ err }, 'Failed to get webhook delivery');
-
-        return reply.status(500).send({
-          code: 'INTERNAL_ERROR',
-          message: 'An internal error occurred',
-          requestId: request.id,
-        });
-      }
+      return reply.send({ data: delivery });
     },
   );
 }

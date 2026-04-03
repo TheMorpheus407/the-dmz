@@ -185,6 +185,20 @@ export const ErrorCodes = {
   GAME_UPGRADE_NOT_FOUND: 'GAME_UPGRADE_NOT_FOUND',
   USER_LAST_ADMIN_DELETE: 'USER_LAST_ADMIN_DELETE',
   USER_SELF_DELETE_FORBIDDEN: 'USER_SELF_DELETE_FORBIDDEN',
+  WEBHOOK_SUBSCRIPTION_NOT_FOUND: 'WEBHOOK_SUBSCRIPTION_NOT_FOUND',
+  WEBHOOK_SUBSCRIPTION_INVALID_STATUS: 'WEBHOOK_SUBSCRIPTION_INVALID_STATUS',
+  WEBHOOK_SUBSCRIPTION_URL_INVALID: 'WEBHOOK_SUBSCRIPTION_URL_INVALID',
+  WEBHOOK_SUBSCRIPTION_EVENT_TYPES_INVALID: 'WEBHOOK_SUBSCRIPTION_EVENT_TYPES_INVALID',
+  WEBHOOK_SUBSCRIPTION_CIRCUIT_BREAKER_OPEN: 'WEBHOOK_SUBSCRIPTION_CIRCUIT_BREAKER_OPEN',
+  WEBHOOK_DELIVERY_NOT_FOUND: 'WEBHOOK_DELIVERY_NOT_FOUND',
+  WEBHOOK_DELIVERY_FAILED: 'WEBHOOK_DELIVERY_FAILED',
+  WEBHOOK_DELIVERY_MAX_RETRIES_EXCEEDED: 'WEBHOOK_DELIVERY_MAX_RETRIES_EXCEEDED',
+  WEBHOOK_DELIVERY_DLQ: 'WEBHOOK_DELIVERY_DLQ',
+  WEBHOOK_SIGNATURE_INVALID: 'WEBHOOK_SIGNATURE_INVALID',
+  WEBHOOK_SIGNATURE_EXPIRED: 'WEBHOOK_SIGNATURE_EXPIRED',
+  WEBHOOK_RATE_LIMIT_EXCEEDED: 'WEBHOOK_RATE_LIMIT_EXCEEDED',
+  WEBHOOK_UNAUTHORIZED: 'WEBHOOK_UNAUTHORIZED',
+  WEBHOOK_INSUFFICIENT_SCOPE: 'WEBHOOK_INSUFFICIENT_SCOPE',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -1045,6 +1059,76 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHORIZATION,
     retryable: false,
     messageKey: 'errors.user.selfDeleteForbidden',
+  },
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.webhook.subscriptionNotFound',
+  },
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_INVALID_STATUS]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.webhook.subscriptionInvalidStatus',
+  },
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_URL_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.webhook.subscriptionUrlInvalid',
+  },
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_EVENT_TYPES_INVALID]: {
+    category: ErrorCodeCategory.VALIDATION,
+    retryable: false,
+    messageKey: 'errors.webhook.subscriptionEventTypesInvalid',
+  },
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_CIRCUIT_BREAKER_OPEN]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: true,
+    messageKey: 'errors.webhook.subscriptionCircuitBreakerOpen',
+  },
+  [ErrorCodes.WEBHOOK_DELIVERY_NOT_FOUND]: {
+    category: ErrorCodeCategory.NOT_FOUND,
+    retryable: false,
+    messageKey: 'errors.webhook.deliveryNotFound',
+  },
+  [ErrorCodes.WEBHOOK_DELIVERY_FAILED]: {
+    category: ErrorCodeCategory.NETWORK,
+    retryable: true,
+    messageKey: 'errors.webhook.deliveryFailed',
+  },
+  [ErrorCodes.WEBHOOK_DELIVERY_MAX_RETRIES_EXCEEDED]: {
+    category: ErrorCodeCategory.NETWORK,
+    retryable: false,
+    messageKey: 'errors.webhook.deliveryMaxRetriesExceeded',
+  },
+  [ErrorCodes.WEBHOOK_DELIVERY_DLQ]: {
+    category: ErrorCodeCategory.NETWORK,
+    retryable: false,
+    messageKey: 'errors.webhook.deliveryDlq',
+  },
+  [ErrorCodes.WEBHOOK_SIGNATURE_INVALID]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.webhook.signatureInvalid',
+  },
+  [ErrorCodes.WEBHOOK_SIGNATURE_EXPIRED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.webhook.signatureExpired',
+  },
+  [ErrorCodes.WEBHOOK_RATE_LIMIT_EXCEEDED]: {
+    category: ErrorCodeCategory.RATE_LIMITING,
+    retryable: true,
+    messageKey: 'errors.webhook.rateLimitExceeded',
+  },
+  [ErrorCodes.WEBHOOK_UNAUTHORIZED]: {
+    category: ErrorCodeCategory.AUTHENTICATION,
+    retryable: false,
+    messageKey: 'errors.webhook.unauthorized',
+  },
+  [ErrorCodes.WEBHOOK_INSUFFICIENT_SCOPE]: {
+    category: ErrorCodeCategory.AUTHORIZATION,
+    retryable: false,
+    messageKey: 'errors.webhook.insufficientScope',
   },
 };
 

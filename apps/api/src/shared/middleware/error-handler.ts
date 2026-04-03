@@ -221,6 +221,20 @@ export const ErrorStatusMap: Record<ErrorCode, number> = {
   [ErrorCodes.GAME_UPGRADE_NOT_FOUND]: 404,
   [ErrorCodes.USER_LAST_ADMIN_DELETE]: 403,
   [ErrorCodes.USER_SELF_DELETE_FORBIDDEN]: 403,
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_NOT_FOUND]: 404,
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_INVALID_STATUS]: 400,
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_URL_INVALID]: 400,
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_EVENT_TYPES_INVALID]: 400,
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_CIRCUIT_BREAKER_OPEN]: 503,
+  [ErrorCodes.WEBHOOK_DELIVERY_NOT_FOUND]: 404,
+  [ErrorCodes.WEBHOOK_DELIVERY_FAILED]: 502,
+  [ErrorCodes.WEBHOOK_DELIVERY_MAX_RETRIES_EXCEEDED]: 502,
+  [ErrorCodes.WEBHOOK_DELIVERY_DLQ]: 502,
+  [ErrorCodes.WEBHOOK_SIGNATURE_INVALID]: 401,
+  [ErrorCodes.WEBHOOK_SIGNATURE_EXPIRED]: 401,
+  [ErrorCodes.WEBHOOK_RATE_LIMIT_EXCEEDED]: 429,
+  [ErrorCodes.WEBHOOK_UNAUTHORIZED]: 401,
+  [ErrorCodes.WEBHOOK_INSUFFICIENT_SCOPE]: 403,
 } as const;
 
 export const ErrorMessages: Record<ErrorCode, string> = {
@@ -419,6 +433,21 @@ export const ErrorMessages: Record<ErrorCode, string> = {
   [ErrorCodes.GAME_UPGRADE_NOT_FOUND]: 'Upgrade not found',
   [ErrorCodes.USER_LAST_ADMIN_DELETE]: 'Cannot delete the last tenant admin',
   [ErrorCodes.USER_SELF_DELETE_FORBIDDEN]: 'Cannot delete your own account',
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_NOT_FOUND]: 'Webhook subscription not found',
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_INVALID_STATUS]: 'Invalid webhook subscription status',
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_URL_INVALID]: 'Invalid webhook URL',
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_EVENT_TYPES_INVALID]: 'Invalid webhook event types',
+  [ErrorCodes.WEBHOOK_SUBSCRIPTION_CIRCUIT_BREAKER_OPEN]:
+    'Circuit breaker is open for this subscription',
+  [ErrorCodes.WEBHOOK_DELIVERY_NOT_FOUND]: 'Webhook delivery not found',
+  [ErrorCodes.WEBHOOK_DELIVERY_FAILED]: 'Webhook delivery failed',
+  [ErrorCodes.WEBHOOK_DELIVERY_MAX_RETRIES_EXCEEDED]: 'Webhook delivery max retries exceeded',
+  [ErrorCodes.WEBHOOK_DELIVERY_DLQ]: 'Webhook delivery sent to dead letter queue',
+  [ErrorCodes.WEBHOOK_SIGNATURE_INVALID]: 'Invalid webhook signature',
+  [ErrorCodes.WEBHOOK_SIGNATURE_EXPIRED]: 'Webhook signature expired',
+  [ErrorCodes.WEBHOOK_RATE_LIMIT_EXCEEDED]: 'Webhook rate limit exceeded',
+  [ErrorCodes.WEBHOOK_UNAUTHORIZED]: 'Unauthorized',
+  [ErrorCodes.WEBHOOK_INSUFFICIENT_SCOPE]: 'Insufficient scope',
 } as const;
 
 export type AppErrorOptions = {
