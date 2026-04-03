@@ -97,6 +97,16 @@ export class RetentionWorker {
       this.health.currentJobCount = Math.max(0, this.health.currentJobCount - 1);
       this.updateQueueDepth().catch(() => {});
 
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      console.error(`Job failed: ${job?.name} (ID: ${job?.id})`, {
+        message: errorMessage,
+        stack: errorStack,
+        queueName: job?.queueName,
+        attemptsMade: job?.attemptsMade,
+        tenantId: job?.data?.tenantId,
+      });
+
       if (error && job) {
         const captureError = async () => {
           try {
