@@ -8,59 +8,36 @@ import {
   type RetryConfig,
 } from './types.js';
 import { mapApiError, mapNetworkError } from './error-mapper.js';
+import { HttpExecutor, buildApiUrl } from './http/executor.js';
+import { RetryHandler, generateRequestId, isIdempotentMethod, delay } from './http/retry.js';
+import { TokenManager } from './http/auth/token-manager.js';
 
 export { defaultApiClientConfig } from './types.js';
 
-function generateRequestId(): string {
-  return crypto.randomUUID();
-}
-
-function isIdempotentMethod(method: string): boolean {
-  return method === 'GET' || method === 'DELETE';
-}
-
-function calculateBackoff(attempt: number, baseDelay: number, maxDelay: number): number {
-  const delay = baseDelay * Math.pow(2, attempt);
-  const jitter = Math.random() * 0.3 * delay;
-  return Math.min(delay + jitter, maxDelay);
-}
-
-function isRetryableStatus(status: number, retryableStatuses: number[]): boolean {
-  return retryableStatuses.includes(status);
-}
-
-function isRetryableError(error: { code?: string }, retryableErrors: string[]): boolean {
-  return error.code ? retryableErrors.includes(error.code) : false;
-}
-
-async function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export class ApiClient {
-  private config: ApiClientConfig;
-  private csrfToken: string | null = null;
+  private httpExecutor: HttpExecutor;
+  private tokenManager: TokenManager;
 
   constructor(config: Partial<ApiClientConfig> = {}) {
-    this.config = {
-      ...defaultApiClientConfig,
-      ...config,
+    const fullConfig = {
+      baseUrl: config.baseUrl ?? defaultApiClientConfig.baseUrl,
+      defaultHeaders: config.defaultHeaders ?? defaultApiClientConfig.defaultHeaders ?? {},
+      credentials: config.credentials ?? defaultApiClientConfig.credentials ?? 'include',
+      timeout: config.timeout ?? defaultApiClientConfig.timeout ?? 0,
     };
+
+    this.httpExecutor = new HttpExecutor({
+      baseUrl: fullConfig.baseUrl,
+      defaultHeaders: fullConfig.defaultHeaders,
+      credentials: fullConfig.credentials,
+      timeout: fullConfig.timeout,
+    });
+
+    this.tokenManager = new TokenManager();
   }
 
   private buildUrl(path: string, params?: Record<string, string | number | boolean>): string {
-    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-    let urlString = `${this.config.baseUrl}${normalizedPath}`;
-
-    if (params) {
-      const searchParams = new URLSearchParams();
-      Object.entries(params).forEach(([key, value]) => {
-        searchParams.append(key, String(value));
-      });
-      urlString += `?${searchParams.toString()}`;
-    }
-
-    return urlString;
+    return this.httpExecutor.buildUrl(path, params);
   }
 
   private async request<TResponse, TRequest = unknown>(
@@ -68,44 +45,38 @@ export class ApiClient {
     retryConfig: RetryConfig,
     attempt: number = 0,
   ): Promise<{ data?: TResponse; error?: CategorizedApiError; requestId?: string }> {
-    const {
-      method,
-      path = '',
-      body,
-      params,
-      headers = {},
-      credentials = this.config.credentials,
-      requestId: customRequestId,
-    } = options;
+    const { method, path = '', body, params, headers = {}, requestId: customRequestId } = options;
 
     const requestId = customRequestId || generateRequestId();
 
     const url = this.buildUrl(path, params);
+
+    const tokenHeaders = this.tokenManager.buildAuthHeaders();
+
+    const executorConfig = this.httpExecutor.getConfig();
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
-      'X-Request-Id': requestId,
-      ...this.config.defaultHeaders,
+      ...tokenHeaders,
+      ...executorConfig.defaultHeaders,
       ...headers,
+      'X-Request-Id': requestId,
     };
 
-    const requestInit: RequestInit = {
+    const requestInit = this.httpExecutor.createRequestInit(
       method,
-      headers: requestHeaders,
-      credentials: credentials ?? 'same-origin',
-    };
+      requestHeaders,
+      body && method !== 'GET' ? JSON.stringify(body) : undefined,
+      options.credentials,
+    );
 
-    if (body && method !== 'GET') {
-      requestInit.body = JSON.stringify(body);
-    }
-
-    if (this.config.timeout) {
+    if (executorConfig.timeout) {
       const controller = new AbortController();
       requestInit.signal = controller.signal;
-      setTimeout(() => controller.abort(), this.config.timeout);
+      setTimeout(() => controller.abort(), executorConfig.timeout);
     }
 
     try {
-      const response = await fetch(url, requestInit);
+      const response = await fetch(url, requestInit as RequestInit);
 
       const contentType = response.headers.get('content-type');
       const responseRequestId = response.headers.get('x-request-id') || requestId;
@@ -120,12 +91,13 @@ export class ApiClient {
           typeof errorBody['error'] === 'object' && errorBody['error'] !== null
             ? (errorBody['error'] as { code?: string })
             : ({} as { code?: string });
+        const retryHandler = new RetryHandler(retryConfig);
         if (
-          isRetryableStatus(response.status, retryConfig.retryableStatuses) ||
-          isRetryableError(errorObj, retryConfig.retryableErrors)
+          retryHandler.shouldRetryByStatus(response.status) ||
+          retryHandler.shouldRetryByError(errorObj)
         ) {
           if (isIdempotentMethod(method)) {
-            await delay(calculateBackoff(attempt, retryConfig.baseDelayMs, retryConfig.maxDelayMs));
+            await delay(retryHandler.getBackoffDelay(attempt));
             return this.request<TResponse, TRequest>(options, retryConfig, attempt + 1);
           }
         }
@@ -200,8 +172,9 @@ export class ApiClient {
         }
         const networkError = mapNetworkError(err);
         if (retryConfig && attempt < retryConfig.maxAttempts - 1 && networkError.retryable) {
+          const retryHandler = new RetryHandler(retryConfig);
           if (isIdempotentMethod(method)) {
-            await delay(calculateBackoff(attempt, retryConfig.baseDelayMs, retryConfig.maxDelayMs));
+            await delay(retryHandler.getBackoffDelay(attempt));
             return this.request<TResponse, TRequest>(options, retryConfig, attempt + 1);
           }
         }
@@ -313,31 +286,27 @@ export class ApiClient {
   }
 
   setBaseUrl(baseUrl: string): void {
-    this.config.baseUrl = baseUrl;
+    this.httpExecutor.setBaseUrl(baseUrl);
   }
 
   setAuthToken(token: string): void {
-    this.config.defaultHeaders = {
-      ...this.config.defaultHeaders,
-      Authorization: `Bearer ${token}`,
-    };
+    this.tokenManager.setAuthToken(token);
   }
 
   clearAuthToken(): void {
-    const { Authorization: _, ...rest } = this.config.defaultHeaders || {};
-    this.config.defaultHeaders = rest;
+    this.tokenManager.clearAuthToken();
   }
 
   setCsrfToken(token: string): void {
-    this.csrfToken = token;
+    this.tokenManager.setCsrfToken(token);
   }
 
   getCsrfToken(): string | null {
-    return this.csrfToken;
+    return this.tokenManager.getCsrfToken();
   }
 
   clearCsrfToken(): void {
-    this.csrfToken = null;
+    this.tokenManager.clearCsrfToken();
   }
 
   async getHealth(): Promise<{ data?: { status: 'ok' }; error?: CategorizedApiError }> {
@@ -374,12 +343,6 @@ export class ApiClient {
   }
 }
 
-export const buildApiUrl = (
-  path: string,
-  config: ApiClientConfig = defaultApiClientConfig,
-): string => {
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${config.baseUrl}${normalizedPath}`;
-};
+export { buildApiUrl };
 
 export const apiClient = new ApiClient();

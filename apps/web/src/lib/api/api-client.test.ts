@@ -898,4 +898,37 @@ describe('Request ID correlation', () => {
 
     expect(result.error?.requestId).toBe('server-req-id');
   });
+
+  it('times out request when timeout is configured', async () => {
+    vi.useFakeTimers();
+
+    let abortTriggered = false;
+    fetchSpy.mockImplementation(
+      () =>
+        new Promise((_, reject) => {
+          setTimeout(() => {
+            abortTriggered = true;
+            const error = new Error('The operation was aborted.');
+            error.name = 'AbortError';
+            reject(error);
+          }, 500);
+        }),
+    );
+
+    const client = new ApiClient({ timeout: 100 });
+
+    const getPromise = client.get('/slow-endpoint');
+
+    await vi.runAllTimersAsync();
+
+    const result = await getPromise;
+
+    vi.useRealTimers();
+
+    expect(abortTriggered).toBe(true);
+    expect(result.error).toBeDefined();
+    expect(result.error?.code).toBe('TIMEOUT');
+    expect(result.error?.category).toBe('network');
+    expect(result.error?.retryable).toBe(true);
+  });
 });
