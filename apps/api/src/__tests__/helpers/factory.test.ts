@@ -8,9 +8,9 @@ describe('buildTestTenant', () => {
   it('returns a tenant with defaults', () => {
     const tenant = buildTestTenant();
 
+    expect(tenant.tenantId).toBeDefined();
     expect(tenant.name).toBe('Test Tenant');
     expect(tenant.slug).toBe('test-tenant');
-    expect(tenant.id).toBeDefined();
   });
 
   it('accepts overrides', () => {

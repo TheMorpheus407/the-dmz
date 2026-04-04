@@ -1,31 +1,24 @@
 import { randomUUID } from 'node:crypto';
 
 import {
+  buildTestTenant as sharedBuildTestTenant,
   createTestTenant as sharedCreateTestTenant,
   createTestUser as sharedCreateTestUser,
   type TenantSeed,
+  type TestTenant,
   type UserSeed,
 } from '@the-dmz/shared/testing';
 
-export type { TenantSeed, UserSeed };
-
-/** Lightweight tenant builder for tests that don't need full seed data. */
-export type TestTenant = {
-  id: string;
-  name: string;
-  slug: string;
-};
-
-export const buildTestTenant = (overrides: Partial<TestTenant> = {}): TestTenant => ({
-  id: overrides.id ?? randomUUID(),
-  name: overrides.name ?? 'Test Tenant',
-  slug: overrides.slug ?? 'test-tenant',
-});
+export type { TenantSeed, TestTenant, UserSeed };
 
 /**
  * Re-export shared factories so API tests can use them from one import path.
  */
-export { sharedCreateTestTenant as createTestTenant, sharedCreateTestUser as createTestUser };
+export {
+  sharedBuildTestTenant as buildTestTenant,
+  sharedCreateTestTenant as createTestTenant,
+  sharedCreateTestUser as createTestUser,
+};
 
 /**
  * Dual-tenant fixture for cross-tenant isolation testing.
@@ -46,16 +39,16 @@ export const createDualTenantFixture = (prefix?: string): DualTenantFixture => {
   const tenantBId = randomUUID();
 
   return {
-    tenantA: {
-      id: tenantAId,
+    tenantA: buildTestTenant({
+      tenantId: tenantAId,
       name: `Tenant A ${uniquePrefix}`,
       slug: `tenant-a-${uniquePrefix}`,
-    },
-    tenantB: {
-      id: tenantBId,
+    }),
+    tenantB: buildTestTenant({
+      tenantId: tenantBId,
       name: `Tenant B ${uniquePrefix}`,
       slug: `tenant-b-${uniquePrefix}`,
-    },
+    }),
     userAStandard: {
       userId: randomUUID(),
       tenantId: tenantAId,

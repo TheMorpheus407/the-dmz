@@ -13,6 +13,15 @@ export type TenantSeed = {
 };
 
 /**
+ * Lightweight tenant type for simple tests that don't need full seed data.
+ */
+export type TestTenant = {
+  tenantId: string;
+  name: string;
+  slug: string;
+};
+
+/**
  * Shape of a user row for seeding. Matches the Drizzle `users` table
  * insert type without importing drizzle-orm (keeps shared package DB-free).
  */
@@ -148,6 +157,16 @@ export const createTestTenant = (overrides: Partial<TenantSeed> = {}): TenantSee
   slug: overrides.slug ?? 'test-factory',
   status: overrides.status ?? 'active',
   settings: overrides.settings ?? {},
+});
+
+/**
+ * Build a lightweight tenant object for tests that don't need full seed data.
+ * Uses tenantId to match the database schema column name.
+ */
+export const buildTestTenant = (overrides: Partial<TestTenant> = {}): TestTenant => ({
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  name: overrides.name ?? 'Test Tenant',
+  slug: overrides.slug ?? 'test-tenant',
 });
 
 /**
