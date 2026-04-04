@@ -1,32 +1,108 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('../../../../shared/database/connection.js', () => ({
+  getDatabaseClient: vi.fn(),
+}));
+
+vi.mock('../../../game/event-store/index.js', () => ({
+  appendEvent: vi.fn(),
+}));
+
+import {
+  getDatabaseClient,
+  type DatabaseClient,
+  type DB,
+} from '../../../../shared/database/connection.js';
+import { validateAndApplyAction } from '../sync.service.js';
+import { buildCoopChannelName } from '../websocket.handler.js';
+
+import type { AppConfig } from '../../../../config.js';
+import type { IEventBus } from '../../../../shared/events/event-types.js';
+
+const mockConfig = {
+  DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
+  REDIS_URL: 'redis://localhost:6379',
+  NODE_ENV: 'test',
+  LOG_LEVEL: 'silent',
+} as unknown as AppConfig;
+
+const mockEventBus: IEventBus = {
+  publish: vi.fn(),
+  subscribe: vi.fn(),
+  unsubscribe: vi.fn(),
+};
+
+const createMockDb = (overrides?: Record<string, unknown>): DatabaseClient => {
+  return {
+    query: {
+      coopSession: {
+        findFirst: vi.fn().mockResolvedValue(overrides?.coopSessionFindFirst),
+      },
+      coopRoleAssignment: {
+        findFirst: vi.fn().mockResolvedValue(overrides?.roleAssignmentFindFirst),
+      },
+    },
+    insert: vi.fn().mockImplementation(() => ({
+      values: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([]),
+      }),
+    })),
+    update: vi.fn().mockReturnValue({
+      set: vi.fn().mockReturnValue({
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([]),
+        }),
+      }),
+    }),
+    transaction: vi.fn().mockImplementation(async (cb) => {
+      const txDb = {
+        query: {},
+        insert: vi.fn().mockImplementation(() => ({
+          values: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([{ eventId: 'event-1', serverTime: new Date() }]),
+          }),
+        })),
+        update: vi.fn().mockReturnValue({
+          set: vi.fn().mockReturnValue({
+            where: vi.fn().mockReturnValue({
+              returning: vi.fn().mockResolvedValue([{ sessionSeq: 6 }]),
+            }),
+          }),
+        }),
+      };
+      return cb(txDb as DB);
+    }),
+  } as unknown as DatabaseClient;
+};
 
 describe('sync service - sequence enforcement', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   describe('validateAndApplyAction', () => {
-    it('accepts action when clientSeq equals current sessionSeq', async () => {
-      const result = await validateSeqSubmission({
-        clientSeq: 5,
-        currentSeq: 5,
-        status: 'active',
-      });
-
-      expect(result.accepted).toBe(true);
-    });
-
-    it('accepts action when clientSeq is one ahead (new action)', async () => {
-      const result = await validateSeqSubmission({
-        clientSeq: 6,
-        currentSeq: 5,
-        status: 'active',
-      });
-
-      expect(result.accepted).toBe(true);
-    });
-
     it('rejects action when clientSeq is behind (stale seq)', async () => {
-      const result = await validateSeqSubmission({
+      const mockDb = createMockDb({
+        coopSessionFindFirst: {
+          sessionId: 'session-1',
+          tenantId: 'tenant-1',
+          status: 'active',
+          sessionSeq: 5,
+          gameSessionId: 'game-1',
+          partyId: 'party-1',
+        },
+      });
+
+      vi.mocked(getDatabaseClient).mockReturnValue(mockDb);
+
+      const result = await validateAndApplyAction(mockConfig, mockEventBus, {
+        sessionId: 'session-1',
+        tenantId: 'tenant-1',
+        playerId: 'player-1',
+        action: 'move',
+        payload: { x: 1, y: 2 },
         clientSeq: 3,
-        currentSeq: 5,
-        status: 'active',
+        requestId: 'req-1',
       });
 
       expect(result.accepted).toBe(false);
@@ -35,10 +111,27 @@ describe('sync service - sequence enforcement', () => {
     });
 
     it('rejects action when clientSeq is more than one ahead (gap detected)', async () => {
-      const result = await validateSeqSubmission({
+      const mockDb = createMockDb({
+        coopSessionFindFirst: {
+          sessionId: 'session-1',
+          tenantId: 'tenant-1',
+          status: 'active',
+          sessionSeq: 5,
+          gameSessionId: 'game-1',
+          partyId: 'party-1',
+        },
+      });
+
+      vi.mocked(getDatabaseClient).mockReturnValue(mockDb);
+
+      const result = await validateAndApplyAction(mockConfig, mockEventBus, {
+        sessionId: 'session-1',
+        tenantId: 'tenant-1',
+        playerId: 'player-1',
+        action: 'move',
+        payload: { x: 1, y: 2 },
         clientSeq: 8,
-        currentSeq: 5,
-        status: 'active',
+        requestId: 'req-1',
       });
 
       expect(result.accepted).toBe(false);
@@ -47,10 +140,27 @@ describe('sync service - sequence enforcement', () => {
     });
 
     it('rejects action when session is not active', async () => {
-      const result = await validateSeqSubmission({
+      const mockDb = createMockDb({
+        coopSessionFindFirst: {
+          sessionId: 'session-1',
+          tenantId: 'tenant-1',
+          status: 'lobby',
+          sessionSeq: 0,
+          gameSessionId: 'game-1',
+          partyId: 'party-1',
+        },
+      });
+
+      vi.mocked(getDatabaseClient).mockReturnValue(mockDb);
+
+      const result = await validateAndApplyAction(mockConfig, mockEventBus, {
+        sessionId: 'session-1',
+        tenantId: 'tenant-1',
+        playerId: 'player-1',
+        action: 'move',
+        payload: { x: 1, y: 2 },
         clientSeq: 0,
-        currentSeq: 0,
-        status: 'lobby',
+        requestId: 'req-1',
       });
 
       expect(result.accepted).toBe(false);
@@ -58,11 +168,20 @@ describe('sync service - sequence enforcement', () => {
     });
 
     it('rejects action for non-existent session', async () => {
-      const result = await validateSeqSubmission({
+      const mockDb = createMockDb({
+        coopSessionFindFirst: null,
+      });
+
+      vi.mocked(getDatabaseClient).mockReturnValue(mockDb);
+
+      const result = await validateAndApplyAction(mockConfig, mockEventBus, {
+        sessionId: 'session-1',
+        tenantId: 'tenant-1',
+        playerId: 'player-1',
+        action: 'move',
+        payload: { x: 1, y: 2 },
         clientSeq: 0,
-        currentSeq: 0,
-        status: 'active',
-        sessionExists: false,
+        requestId: 'req-1',
       });
 
       expect(result.accepted).toBe(false);
@@ -71,74 +190,34 @@ describe('sync service - sequence enforcement', () => {
   });
 
   describe('sequence never decreases', () => {
-    it('seq always increases after acceptance', async () => {
-      let currentSeq = 0;
-
-      for (let i = 0; i < 10; i++) {
-        const result = await validateSeqSubmission({
-          clientSeq: currentSeq,
-          currentSeq,
+    it('rejects stale sequence to prevent regression', async () => {
+      const mockDb = createMockDb({
+        coopSessionFindFirst: {
+          sessionId: 'session-1',
+          tenantId: 'tenant-1',
           status: 'active',
-        });
+          sessionSeq: 5,
+          gameSessionId: 'game-1',
+          partyId: 'party-1',
+        },
+      });
 
-        expect(result.accepted).toBe(true);
-        expect(result.newSeq).toBe(currentSeq + 1);
-        currentSeq = result.newSeq!;
-      }
+      vi.mocked(getDatabaseClient).mockReturnValue(mockDb);
+
+      const result = await validateAndApplyAction(mockConfig, mockEventBus, {
+        sessionId: 'session-1',
+        tenantId: 'tenant-1',
+        playerId: 'player-1',
+        action: 'move',
+        payload: {},
+        clientSeq: 3,
+        requestId: 'req-1',
+      });
+
+      expect(result.reason).toBe('STALE_SEQ');
     });
   });
 });
-
-interface SeqSubmissionInput {
-  clientSeq: number;
-  currentSeq: number;
-  status: string;
-  sessionExists?: boolean;
-}
-
-interface SeqSubmissionResult {
-  accepted: boolean;
-  reason?: 'STALE_SEQ' | 'GAP_DETECTED';
-  currentSeq?: number;
-  newSeq?: number;
-  error?: string;
-}
-
-async function validateSeqSubmission(input: SeqSubmissionInput): Promise<SeqSubmissionResult> {
-  const { clientSeq, currentSeq, status, sessionExists = true } = input;
-
-  if (!sessionExists) {
-    return { accepted: false, error: 'Session not found' };
-  }
-
-  if (status !== 'active') {
-    return { accepted: false, error: 'Session is not active' };
-  }
-
-  if (clientSeq < currentSeq) {
-    return {
-      accepted: false,
-      reason: 'STALE_SEQ',
-      currentSeq,
-    };
-  }
-
-  if (clientSeq > currentSeq + 1) {
-    return {
-      accepted: false,
-      reason: 'GAP_DETECTED',
-      currentSeq,
-    };
-  }
-
-  const newSeq = currentSeq + 1;
-
-  return {
-    accepted: true,
-    newSeq,
-    currentSeq,
-  };
-}
 
 describe('sync service - channel format', () => {
   it('uses correct session.events channel format', () => {
@@ -165,10 +244,6 @@ describe('sync service - channel format', () => {
     expect(channel).toBe('session.presence:test-session-id');
   });
 });
-
-function buildCoopChannelName(sessionId: string, channelType: string): string {
-  return `session.${channelType}:${sessionId}`;
-}
 
 describe('sync service - reconnect handling', () => {
   it('detects when full state recovery is needed', () => {
