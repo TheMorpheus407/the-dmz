@@ -2,6 +2,17 @@ import { describe, it, expect } from 'vitest';
 import * as OTPAuth from 'otpauth';
 import argon2 from 'argon2';
 
+const TEST_CODES = {
+  INVALID_TOTP: '000000',
+  BACKUP_CODE: 'AB12CD34',
+  TEST_CODES_SET_A: ['CODE1AAA', 'CODE2BBB', 'CODE3CCC', 'CODE4DDD'],
+  TEST_CODES_SET_B: ['CODE1AAA', 'CODE2BBB', 'CODE3CCC'],
+  TEST_CODES_SET_PARALLEL: ['PARA1AAA', 'PARA2BBB', 'PARA3CCC', 'PARA4DDD', 'PARA5EEE'],
+  TEST_CODES_SET_POSITION: ['FIRST1AA', 'SECOND2B', 'THIRD3CC', 'FOURTH4D', 'FIFTH5EE'],
+} as const;
+
+const TIMING_THRESHOLD_MS = 500;
+
 describe('TOTP Service Unit Tests', () => {
   describe('TOTP Generation', () => {
     it('should generate valid 6-digit TOTP codes', () => {
@@ -46,7 +57,7 @@ describe('TOTP Service Unit Tests', () => {
         secret: new OTPAuth.Secret({ size: 20 }),
       });
 
-      const invalidToken = '000000';
+      const invalidToken = TEST_CODES.INVALID_TOTP;
       const delta = totp.validate({ token: invalidToken, window: 1 });
 
       expect(delta).toBeNull();
@@ -101,7 +112,7 @@ describe('TOTP Service Unit Tests', () => {
   });
 
   describe('Backup Code Hashing and Verification', () => {
-    const testCode = 'AB12CD34';
+    const testCode = TEST_CODES.BACKUP_CODE;
 
     it('should hash backup codes with argon2id', async () => {
       const hash = await argon2.hash(testCode, {
@@ -148,7 +159,7 @@ describe('TOTP Service Unit Tests', () => {
     });
 
     it('should verify correct code against multiple stored hashes', async () => {
-      const codes = ['CODE1AAA', 'CODE2BBB', 'CODE3CCC', 'CODE4DDD'];
+      const codes = TEST_CODES.TEST_CODES_SET_A;
       const hashes = await Promise.all(
         codes.map((code) =>
           argon2.hash(code, {
@@ -174,7 +185,7 @@ describe('TOTP Service Unit Tests', () => {
     });
 
     it('should not match wrong code against multiple stored hashes', async () => {
-      const codes = ['CODE1AAA', 'CODE2BBB', 'CODE3CCC'];
+      const codes = TEST_CODES.TEST_CODES_SET_B;
       const hashes = await Promise.all(
         codes.map((code) =>
           argon2.hash(code, {
@@ -200,7 +211,7 @@ describe('TOTP Service Unit Tests', () => {
     });
 
     it('should verify in parallel when checking multiple codes', async () => {
-      const codes = ['PARA1AAA', 'PARA2BBB', 'PARA3CCC', 'PARA4DDD', 'PARA5EEE'];
+      const codes = TEST_CODES.TEST_CODES_SET_PARALLEL;
       const hashes = await Promise.all(
         codes.map((code) =>
           argon2.hash(code, {
@@ -223,11 +234,11 @@ describe('TOTP Service Unit Tests', () => {
       const elapsed = Date.now() - startTime;
 
       expect(foundIndex).toBe(2);
-      expect(elapsed).toBeLessThan(500);
+      expect(elapsed).toBeLessThan(TIMING_THRESHOLD_MS);
     });
 
     it('should find correct code regardless of position with parallel verification', async () => {
-      const codes = ['FIRST1AA', 'SECOND2B', 'THIRD3CC', 'FOURTH4D', 'FIFTH5EE'];
+      const codes = TEST_CODES.TEST_CODES_SET_POSITION;
       const hashes = await Promise.all(
         codes.map((code) =>
           argon2.hash(code, {
