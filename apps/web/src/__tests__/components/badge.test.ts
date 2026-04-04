@@ -4,11 +4,12 @@ import Badge from '$lib/ui/components/Badge.svelte';
 
 import { render } from '../helpers/render';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Snippet } from 'svelte';
+
 describe('Badge', () => {
   it('renders badge', () => {
     const { container } = render(Badge, {
-      props: { children: () => 'New' as any },
+      props: { children: (() => {}) as Snippet },
     });
 
     const badge = container.querySelector('.badge');
@@ -17,7 +18,7 @@ describe('Badge', () => {
 
   it('renders with correct variant class', () => {
     const { container } = render(Badge, {
-      props: { variant: 'success', children: () => 'Active' as any },
+      props: { variant: 'success', children: (() => {}) as Snippet },
     });
 
     const badge = container.querySelector('.badge');
@@ -26,7 +27,7 @@ describe('Badge', () => {
 
   it('applies aria-label', () => {
     const { container } = render(Badge, {
-      props: { ariaLabel: 'Status indicator', children: () => '5' as any },
+      props: { ariaLabel: 'Status indicator', children: (() => {}) as Snippet },
     });
 
     const badge = container.querySelector('.badge');
@@ -35,7 +36,7 @@ describe('Badge', () => {
 
   it('has role status', () => {
     const { container } = render(Badge, {
-      props: { children: () => 'Info' as any },
+      props: { children: (() => {}) as Snippet },
     });
 
     const badge = container.querySelector('.badge');

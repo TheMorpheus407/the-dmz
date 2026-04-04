@@ -4,11 +4,12 @@ import Panel from '$lib/ui/components/Panel.svelte';
 
 import { render } from '../helpers/render';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Snippet } from 'svelte';
+
 describe('Panel', () => {
   it('renders panel', () => {
     const { container } = render(Panel, {
-      props: { children: () => 'Panel content' as any },
+      props: { children: (() => {}) as Snippet },
     });
 
     const panel = container.querySelector('.panel');
@@ -17,7 +18,7 @@ describe('Panel', () => {
 
   it('renders with correct variant class', () => {
     const { container } = render(Panel, {
-      props: { variant: 'elevated', children: () => 'Elevated panel' as any },
+      props: { variant: 'elevated', children: (() => {}) as Snippet },
     });
 
     const panel = container.querySelector('.panel');
@@ -26,7 +27,7 @@ describe('Panel', () => {
 
   it('applies aria-label', () => {
     const { container } = render(Panel, {
-      props: { ariaLabel: 'Main panel', children: () => 'Content' as any },
+      props: { ariaLabel: 'Main panel', children: (() => {}) as Snippet },
     });
 
     const panel = container.querySelector('.panel');
@@ -35,7 +36,7 @@ describe('Panel', () => {
 
   it('renders with outlined variant', () => {
     const { container } = render(Panel, {
-      props: { variant: 'outlined', children: () => 'Outlined' as any },
+      props: { variant: 'outlined', children: (() => {}) as Snippet },
     });
 
     const panel = container.querySelector('.panel');

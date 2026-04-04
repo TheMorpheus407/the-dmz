@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import {
@@ -158,7 +157,7 @@ describe('api-key-repo', () => {
       insert: vi.fn().mockReturnThis(),
       values: vi.fn().mockReturnThis(),
       returning: vi.fn(),
-    } as any;
+    };
 
     beforeEach(() => {
       mockDb.select.mockReset();
@@ -328,7 +327,7 @@ describe('api-key-repo', () => {
       where: vi.fn().mockReturnThis(),
       orderBy: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
-    } as any;
+    };
 
     const createKey = (id: string, keyId: string) => ({
       id,
@@ -441,7 +440,7 @@ describe('api-key-repo', () => {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
       where: vi.fn(),
-    } as any;
+    };
 
     beforeEach(() => {
       mockDb.select.mockReset();
@@ -506,7 +505,7 @@ describe('api-key-repo', () => {
       from: vi.fn().mockReturnThis(),
       where: vi.fn().mockReturnThis(),
       delete: vi.fn().mockReturnThis(),
-    } as any;
+    };
 
     beforeEach(() => {
       mockDb.select.mockReset();
@@ -549,7 +548,7 @@ describe('api-key-repo', () => {
       update: vi.fn().mockReturnThis(),
       set: vi.fn().mockReturnThis(),
       where: vi.fn().mockResolvedValue(undefined),
-    } as any;
+    };
 
     it('should update lastUsedAt', async () => {
       await updateApiKeyLastUsed(mockDb, 'key-id');
@@ -564,7 +563,7 @@ describe('api-key-repo', () => {
       select: vi.fn().mockReturnThis(),
       from: vi.fn().mockReturnThis(),
       where: vi.fn(),
-    } as any;
+    };
 
     beforeEach(() => {
       mockDb.select.mockReset();

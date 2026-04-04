@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { CredentialStatus } from '@the-dmz/shared/auth/api-key-contract';
@@ -88,7 +87,7 @@ describe('api-key-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.createApiKey(
         mockDb,
@@ -110,7 +109,7 @@ describe('api-key-service', () => {
             where: vi.fn().mockResolvedValue(Array(100).fill({ id: 'key' })),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         apiKeyService.createApiKey(mockDb, { name: 'Test Key' }, 'user-1', 'tenant-1'),
@@ -133,7 +132,7 @@ describe('api-key-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         apiKeyService.createApiKey(
@@ -180,7 +179,7 @@ describe('api-key-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.listApiKeys(mockDb, 'tenant-1');
 
@@ -201,7 +200,7 @@ describe('api-key-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.listApiKeys(mockDb, 'tenant-1');
 
@@ -244,7 +243,7 @@ describe('api-key-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.listApiKeys(mockDb, 'tenant-1', { limit: 20 });
 
@@ -283,7 +282,7 @@ describe('api-key-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.getApiKeyById(mockDb, 'keyid-1', 'tenant-1');
 
@@ -300,7 +299,7 @@ describe('api-key-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.getApiKeyById(mockDb, 'nonexistent', 'tenant-1');
 
@@ -347,7 +346,7 @@ describe('api-key-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.validateApiKey(mockDb, 'keyid-1', 'valid-secret');
 
@@ -387,7 +386,7 @@ describe('api-key-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.validateApiKey(mockDb, 'keyid-1', 'some-secret');
 
@@ -431,7 +430,7 @@ describe('api-key-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.validateApiKey(mockDb, 'keyid-1', 'some-secret');
 
@@ -497,7 +496,7 @@ describe('api-key-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.rotateApiKey(mockDb, 'keyid-1', {}, 'tenant-1');
 
@@ -514,7 +513,7 @@ describe('api-key-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         apiKeyService.rotateApiKey(mockDb, 'nonexistent', {}, 'tenant-1'),
@@ -550,7 +549,7 @@ describe('api-key-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       await expect(apiKeyService.rotateApiKey(mockDb, 'keyid-1', {}, 'tenant-1')).rejects.toThrow(
         'Cannot rotate a revoked API key',
@@ -586,7 +585,7 @@ describe('api-key-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       await expect(apiKeyService.rotateApiKey(mockDb, 'keyid-1', {}, 'tenant-1')).rejects.toThrow(
         'API key rotation already in progress',
@@ -654,7 +653,7 @@ describe('api-key-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.revokeApiKey(
         mockDb,
@@ -677,7 +676,7 @@ describe('api-key-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         apiKeyService.revokeApiKey(mockDb, 'nonexistent', {}, 'admin-1', 'tenant-1'),
@@ -716,7 +715,7 @@ describe('api-key-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.revokeApiKey(
         mockDb,
@@ -763,7 +762,7 @@ describe('api-key-service', () => {
         delete: vi.fn(() => ({
           where: vi.fn().mockResolvedValue(undefined),
         })),
-      } as any;
+      };
 
       await expect(
         apiKeyService.deleteApiKey(mockDb, 'keyid-1', 'tenant-1'),
@@ -779,7 +778,7 @@ describe('api-key-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(apiKeyService.deleteApiKey(mockDb, 'nonexistent', 'tenant-1')).rejects.toThrow(
         'API key not found',
@@ -817,7 +816,7 @@ describe('api-key-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       const result = await apiKeyService.getApiKeyByIdForAdmin(mockDb, 'keyid-1');
 
@@ -836,7 +835,7 @@ describe('api-key-service', () => {
             where: vi.fn().mockResolvedValue(undefined),
           })),
         })),
-      } as any;
+      };
 
       await expect(apiKeyService.updateApiKeyLastUsed(mockDb, 'keyid-1')).resolves.toBeUndefined();
     });

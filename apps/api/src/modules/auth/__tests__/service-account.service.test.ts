@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import { serviceAccounts } from '../../../db/schema/auth/service-accounts.js';
@@ -84,7 +83,7 @@ describe('service-account-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.createServiceAccount(
         mockDb,
@@ -113,7 +112,7 @@ describe('service-account-service', () => {
             returning: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.createServiceAccount(
@@ -155,7 +154,7 @@ describe('service-account-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.listServiceAccounts(mockDb, 'tenant-1');
 
@@ -176,7 +175,7 @@ describe('service-account-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.listServiceAccounts(mockDb, 'tenant-1');
 
@@ -214,7 +213,7 @@ describe('service-account-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.listServiceAccounts(mockDb, 'tenant-1', {
         limit: 20,
@@ -252,7 +251,7 @@ describe('service-account-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.listServiceAccounts(mockDb, 'tenant-1', {
         status: 'disabled',
@@ -288,7 +287,7 @@ describe('service-account-service', () => {
             ]),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.getServiceAccountById(
         mockDb,
@@ -309,7 +308,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.getServiceAccountById(
         mockDb,
@@ -368,7 +367,7 @@ describe('service-account-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.updateServiceAccount(
         mockDb,
@@ -391,7 +390,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.updateServiceAccount(
@@ -451,7 +450,7 @@ describe('service-account-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.disableServiceAccount(
         mockDb,
@@ -489,7 +488,7 @@ describe('service-account-service', () => {
           })),
         })),
         update: vi.fn(),
-      } as any;
+      };
 
       const result = await serviceAccountService.disableServiceAccount(
         mockDb,
@@ -511,7 +510,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.disableServiceAccount(mockDb, 'nonexistent', 'tenant-1'),
@@ -566,7 +565,7 @@ describe('service-account-service', () => {
             }),
           })),
         })),
-      } as any;
+      };
 
       const result = await serviceAccountService.enableServiceAccount(
         mockDb,
@@ -604,7 +603,7 @@ describe('service-account-service', () => {
           })),
         })),
         update: vi.fn(),
-      } as any;
+      };
 
       const result = await serviceAccountService.enableServiceAccount(
         mockDb,
@@ -626,7 +625,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.enableServiceAccount(mockDb, 'nonexistent', 'tenant-1'),
@@ -664,7 +663,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue(undefined),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.deleteServiceAccount(mockDb, 'service-123', 'tenant-1', 'admin-1'),
@@ -680,7 +679,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.deleteServiceAccount(mockDb, 'nonexistent', 'tenant-1'),
@@ -698,7 +697,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.assignRoleToServiceAccount(
@@ -745,7 +744,7 @@ describe('service-account-service', () => {
             })),
           };
         }),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.assignRoleToServiceAccount(
@@ -768,7 +767,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.revokeRoleFromServiceAccount(
@@ -791,7 +790,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.getServiceAccountRoles(mockDb, 'nonexistent', 'tenant-1'),
@@ -809,7 +808,7 @@ describe('service-account-service', () => {
             where: vi.fn().mockResolvedValue([]),
           })),
         })),
-      } as any;
+      };
 
       await expect(
         serviceAccountService.getServiceAccountApiKeys(mockDb, 'nonexistent', 'tenant-1'),

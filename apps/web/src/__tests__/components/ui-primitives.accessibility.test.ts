@@ -10,7 +10,8 @@ import LoadingState from '$lib/ui/components/LoadingState.svelte';
 import { getAxe } from '../axe';
 import { render } from '../helpers/render';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Snippet } from 'svelte';
+
 describe('UI Primitives Accessibility', () => {
   const a11yOptions = {
     rules: {
@@ -21,7 +22,7 @@ describe('UI Primitives Accessibility', () => {
   describe('Button a11y', () => {
     it('has no WCAG violations', async () => {
       const { container } = render(Button, {
-        props: { children: () => 'Click me' as any, ariaLabel: 'Action button' },
+        props: { children: (() => {}) as Snippet, ariaLabel: 'Action button' },
       });
       const axe = await getAxe();
       const results = await axe.run(container, a11yOptions);
@@ -30,7 +31,7 @@ describe('UI Primitives Accessibility', () => {
 
     it('has focus-visible styles', () => {
       const { getByRole } = render(Button, {
-        props: { children: () => 'Button' as any, ariaLabel: 'Action button' },
+        props: { children: (() => {}) as Snippet, ariaLabel: 'Action button' },
       });
 
       const button = getByRole('button');
@@ -42,7 +43,7 @@ describe('UI Primitives Accessibility', () => {
   describe('Panel a11y', () => {
     it('has no WCAG violations', async () => {
       const { container } = render(Panel, {
-        props: { children: () => 'Panel content' as any },
+        props: { children: (() => {}) as Snippet },
       });
       const axe = await getAxe();
       const results = await axe.run(container, a11yOptions);
@@ -53,7 +54,7 @@ describe('UI Primitives Accessibility', () => {
   describe('Badge a11y', () => {
     it('has no WCAG violations', async () => {
       const { container } = render(Badge, {
-        props: { children: () => 'New' as any },
+        props: { children: (() => {}) as Snippet },
       });
       const axe = await getAxe();
       const results = await axe.run(container, a11yOptions);
@@ -64,8 +65,8 @@ describe('UI Primitives Accessibility', () => {
   describe('Tabs a11y', () => {
     it('has correct ARIA roles', () => {
       const mockTabs = [
-        { id: 'tab1', label: 'Tab One', content: () => ({}) as any },
-        { id: 'tab2', label: 'Tab Two', content: () => ({}) as any },
+        { id: 'tab1', label: 'Tab One', content: (() => {}) as Snippet },
+        { id: 'tab2', label: 'Tab Two', content: (() => {}) as Snippet },
       ];
 
       const { container } = render(Tabs, {
@@ -79,8 +80,8 @@ describe('UI Primitives Accessibility', () => {
 
     it('has no WCAG violations', async () => {
       const mockTabs = [
-        { id: 'tab1', label: 'Tab One', content: () => ({}) as any },
-        { id: 'tab2', label: 'Tab Two', content: () => ({}) as any },
+        { id: 'tab1', label: 'Tab One', content: (() => {}) as Snippet },
+        { id: 'tab2', label: 'Tab Two', content: (() => {}) as Snippet },
       ];
 
       const { container } = render(Tabs, {
@@ -101,7 +102,7 @@ describe('UI Primitives Accessibility', () => {
   describe('Modal a11y', () => {
     it('has correct ARIA attributes when open', () => {
       const { container } = render(Modal, {
-        props: { open: true, title: 'Test Modal', children: () => 'Content' as any },
+        props: { open: true, title: 'Test Modal', children: (() => {}) as Snippet },
       });
 
       const dialog = container.querySelector('[role="dialog"]');
@@ -111,7 +112,7 @@ describe('UI Primitives Accessibility', () => {
 
     it('has no WCAG violations when open', async () => {
       const { container } = render(Modal, {
-        props: { open: true, title: 'Test Modal', children: () => 'Content' as any },
+        props: { open: true, title: 'Test Modal', children: (() => {}) as Snippet },
       });
       const axe = await getAxe();
       const results = await axe.run(container, a11yOptions);

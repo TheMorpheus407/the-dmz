@@ -8,8 +8,9 @@ import { SEMANTIC_CONTRACTS } from '$lib/ui/primitive-contract';
 import { getAxe } from '../axe';
 import { render } from '../helpers/render';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const mockTabContent = () => 'Content' as any;
+import type { Snippet } from 'svelte';
+
+const mockTabContent = (() => {}) as Snippet;
 
 describe('Semantic Contract: Tabs', () => {
   it('should have required ARIA roles', () => {

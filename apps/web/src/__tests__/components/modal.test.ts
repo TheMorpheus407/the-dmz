@@ -4,11 +4,12 @@ import Modal from '$lib/ui/components/Modal.svelte';
 
 import { render } from '../helpers/render';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Snippet } from 'svelte';
+
 describe('Modal', () => {
   it('renders modal when open is true', () => {
     const { container } = render(Modal, {
-      props: { open: true, title: 'Test Modal', children: () => 'Modal content' as any },
+      props: { open: true, title: 'Test Modal', children: (() => {}) as Snippet },
     });
 
     expect(container.querySelector('[role="dialog"]')).toBeTruthy();
@@ -16,7 +17,7 @@ describe('Modal', () => {
 
   it('does not render when open is false', () => {
     const { container } = render(Modal, {
-      props: { open: false, title: 'Test Modal', children: () => 'Content' as any },
+      props: { open: false, title: 'Test Modal', children: (() => {}) as Snippet },
     });
 
     expect(container.querySelector('[role="dialog"]')).toBeFalsy();
@@ -24,7 +25,7 @@ describe('Modal', () => {
 
   it('renders close button', () => {
     const { getByLabelText } = render(Modal, {
-      props: { open: true, title: 'Modal', children: () => 'Content' as any },
+      props: { open: true, title: 'Modal', children: (() => {}) as Snippet },
     });
 
     expect(getByLabelText('Close modal')).toBeTruthy();
@@ -32,7 +33,7 @@ describe('Modal', () => {
 
   it('has role dialog and aria-modal', () => {
     const { container } = render(Modal, {
-      props: { open: true, title: 'Modal', children: () => 'Content' as any },
+      props: { open: true, title: 'Modal', children: (() => {}) as Snippet },
     });
 
     const dialog = container.querySelector('[role="dialog"]');
@@ -42,7 +43,7 @@ describe('Modal', () => {
 
   it('has aria-labelledby referencing title', () => {
     const { container } = render(Modal, {
-      props: { open: true, title: 'My Modal', children: () => 'Content' as any },
+      props: { open: true, title: 'My Modal', children: (() => {}) as Snippet },
     });
 
     const dialog = container.querySelector('[role="dialog"]');
@@ -51,7 +52,7 @@ describe('Modal', () => {
 
   it('has tabindex on dialog', () => {
     const { container } = render(Modal, {
-      props: { open: true, title: 'Modal', children: () => 'Content' as any },
+      props: { open: true, title: 'Modal', children: (() => {}) as Snippet },
     });
 
     const dialog = container.querySelector('[role="dialog"]');

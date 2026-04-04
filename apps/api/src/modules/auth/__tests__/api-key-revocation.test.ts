@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { CredentialStatus } from '@the-dmz/shared/auth/api-key-contract';
@@ -16,16 +15,16 @@ vi.mock('../api-key-repo.js', async () => {
 
 import { revokeApiKey } from '../api-key-revocation.js';
 
-const mockDb = {
+const mockDb: Record<string, unknown> = {
   select: vi.fn(),
   update: vi.fn(),
-} as any;
+};
 
 const mockTenantId = 'test-tenant';
 const mockKeyId = 'test-key-id';
 const mockRevokedBy = 'test-user';
 
-const buildMockKey = (overrides: any = {}) => ({
+const buildMockKey = (overrides: Partial<ReturnType<typeof buildMockKey>> = {}) => ({
   id: 'test-id',
   keyId: mockKeyId,
   tenantId: mockTenantId,

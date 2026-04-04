@@ -4,11 +4,12 @@ import Drawer from '$lib/ui/components/Drawer.svelte';
 
 import { render, fireEvent } from '../helpers/render';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Snippet } from 'svelte';
+
 describe('Drawer', () => {
   it('renders nothing when closed', () => {
     const { container } = render(Drawer, {
-      props: { open: false, children: () => '' as any },
+      props: { open: false, children: (() => {}) as Snippet },
     });
 
     const backdrop = container.querySelector('.drawer-backdrop');
@@ -17,7 +18,7 @@ describe('Drawer', () => {
 
   it('renders when open', () => {
     const { container } = render(Drawer, {
-      props: { open: true, children: () => '' as any },
+      props: { open: true, children: (() => {}) as Snippet },
     });
 
     const backdrop = container.querySelector('.drawer-backdrop');
@@ -29,7 +30,7 @@ describe('Drawer', () => {
 
   it('renders with correct position class', () => {
     const { container } = render(Drawer, {
-      props: { open: true, position: 'left', children: () => '' as any },
+      props: { open: true, position: 'left', children: (() => {}) as Snippet },
     });
 
     const drawer = container.querySelector('.drawer');
@@ -38,7 +39,7 @@ describe('Drawer', () => {
 
   it('renders right position by default', () => {
     const { container } = render(Drawer, {
-      props: { open: true, children: () => '' as any },
+      props: { open: true, children: (() => {}) as Snippet },
     });
 
     const drawer = container.querySelector('.drawer');
@@ -47,7 +48,7 @@ describe('Drawer', () => {
 
   it('has close button', () => {
     const { container } = render(Drawer, {
-      props: { open: true, children: () => '' as any },
+      props: { open: true, children: (() => {}) as Snippet },
     });
 
     const closeButton = container.querySelector('.drawer__close');
@@ -59,7 +60,7 @@ describe('Drawer', () => {
     const onClose = vi.fn();
 
     const { container } = render(Drawer, {
-      props: { open: true, onclose: onClose, children: () => '' as any },
+      props: { open: true, onclose: onClose, children: (() => {}) as Snippet },
     });
 
     const closeButton = container.querySelector('.drawer__close');
@@ -73,7 +74,7 @@ describe('Drawer', () => {
 
   it('applies aria-label', () => {
     const { container } = render(Drawer, {
-      props: { open: true, ariaLabel: 'Custom Drawer', children: () => '' as any },
+      props: { open: true, ariaLabel: 'Custom Drawer', children: (() => {}) as Snippet },
     });
 
     const backdrop = container.querySelector('.drawer-backdrop');
@@ -82,7 +83,7 @@ describe('Drawer', () => {
 
   it('applies role dialog', () => {
     const { container } = render(Drawer, {
-      props: { open: true, children: () => '' as any },
+      props: { open: true, children: (() => {}) as Snippet },
     });
 
     const backdrop = container.querySelector('.drawer-backdrop');
@@ -91,7 +92,7 @@ describe('Drawer', () => {
 
   it('applies aria-modal', () => {
     const { container } = render(Drawer, {
-      props: { open: true, children: () => '' as any },
+      props: { open: true, children: (() => {}) as Snippet },
     });
 
     const backdrop = container.querySelector('.drawer-backdrop');

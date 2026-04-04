@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { subscriptionService } from '../subscription.service.js';
@@ -42,7 +41,7 @@ describe('subscriptionService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(mockSubscription as any);
+      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(mockSubscription);
 
       const result = await subscriptionService.getSubscription('tenant-123');
 
@@ -78,7 +77,7 @@ describe('subscriptionService', () => {
       };
 
       vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(null);
-      vi.mocked(billingRepo.createSubscription).mockResolvedValue(mockSubscription as any);
+      vi.mocked(billingRepo.createSubscription).mockResolvedValue(mockSubscription);
 
       const result = await subscriptionService.createSubscription(input);
 
@@ -96,9 +95,7 @@ describe('subscriptionService', () => {
         seatLimit: -1,
       };
 
-      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(
-        existingSubscription as any,
-      );
+      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(existingSubscription);
 
       const result = await subscriptionService.createSubscription({
         tenantId: 'tenant-123',
@@ -128,7 +125,7 @@ describe('subscriptionService', () => {
       };
 
       vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(null);
-      vi.mocked(billingRepo.createSubscription).mockResolvedValue(mockSubscription as any);
+      vi.mocked(billingRepo.createSubscription).mockResolvedValue(mockSubscription);
 
       const result = await subscriptionService.createSubscription(input);
 
@@ -155,10 +152,8 @@ describe('subscriptionService', () => {
         seatLimit: 500,
       };
 
-      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(
-        existingSubscription as any,
-      );
-      vi.mocked(billingRepo.updateSubscription).mockResolvedValue(updatedSubscription as any);
+      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(existingSubscription);
+      vi.mocked(billingRepo.updateSubscription).mockResolvedValue(updatedSubscription);
 
       const result = await subscriptionService.updateSubscription('tenant-123', {
         planId: 'professional',
@@ -198,10 +193,8 @@ describe('subscriptionService', () => {
         cancelAtPeriodEnd: true,
       };
 
-      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(
-        existingSubscription as any,
-      );
-      vi.mocked(billingRepo.updateSubscription).mockResolvedValue(cancelledSubscription as any);
+      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(existingSubscription);
+      vi.mocked(billingRepo.updateSubscription).mockResolvedValue(cancelledSubscription);
 
       const result = await subscriptionService.cancelSubscription('tenant-123', true);
 
@@ -225,10 +218,8 @@ describe('subscriptionService', () => {
         cancelledAt: expect.any(Date),
       };
 
-      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(
-        existingSubscription as any,
-      );
-      vi.mocked(billingRepo.updateSubscription).mockResolvedValue(cancelledSubscription as any);
+      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(existingSubscription);
+      vi.mocked(billingRepo.updateSubscription).mockResolvedValue(cancelledSubscription);
 
       const result = await subscriptionService.cancelSubscription('tenant-123', false);
 
@@ -255,8 +246,8 @@ describe('subscriptionService', () => {
         currentPeriodEnd: expect.any(Date),
       };
 
-      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(trialSubscription as any);
-      vi.mocked(billingRepo.updateSubscription).mockResolvedValue(activeSubscription as any);
+      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(trialSubscription);
+      vi.mocked(billingRepo.updateSubscription).mockResolvedValue(activeSubscription);
 
       const result = await subscriptionService.transitionFromTrial('tenant-123');
 
@@ -272,7 +263,7 @@ describe('subscriptionService', () => {
         status: 'active',
       };
 
-      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(activeSubscription as any);
+      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(activeSubscription);
 
       const result = await subscriptionService.transitionFromTrial('tenant-123');
 
@@ -290,7 +281,7 @@ describe('subscriptionService', () => {
         trialEndsAt: new Date(Date.now() - 1000),
       };
 
-      const result = subscriptionService.isTrialExpired(subscription as any);
+      const result = subscriptionService.isTrialExpired(subscription);
 
       expect(result).toBe(true);
     });
@@ -304,7 +295,7 @@ describe('subscriptionService', () => {
         trialEndsAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7),
       };
 
-      const result = subscriptionService.isTrialExpired(subscription as any);
+      const result = subscriptionService.isTrialExpired(subscription);
 
       expect(result).toBe(false);
     });
@@ -327,7 +318,7 @@ describe('subscriptionService', () => {
         updatedAt: new Date(),
       };
 
-      const result = subscriptionService.isTrialExpired(subscription as any);
+      const result = subscriptionService.isTrialExpired(subscription);
 
       expect(result).toBe(false);
     });
@@ -352,7 +343,7 @@ describe('subscriptionService', () => {
         updatedAt: new Date(),
       };
 
-      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(subscription as any);
+      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(subscription);
 
       const result = await subscriptionService.getSubscriptionStatus('tenant-123');
 
@@ -381,7 +372,7 @@ describe('subscriptionService', () => {
         updatedAt: new Date(),
       };
 
-      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(subscription as any);
+      vi.mocked(billingRepo.getSubscriptionByTenantId).mockResolvedValue(subscription);
 
       const result = await subscriptionService.getSubscriptionStatus('tenant-123');
 

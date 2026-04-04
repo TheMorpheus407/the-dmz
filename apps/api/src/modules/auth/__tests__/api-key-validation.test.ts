@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { CredentialStatus } from '@the-dmz/shared/auth/api-key-contract';
@@ -28,7 +27,7 @@ import { validateApiKey } from '../api-key-validation.js';
 
 import type { DbApiKey } from '../api-key-repo.js';
 
-const mockDb = {} as any;
+const mockDb: Record<string, unknown> = {};
 const mockKeyId = 'test-key-id';
 const mockSecret = 'test-secret';
 

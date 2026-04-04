@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { seatService } from '../seat.service.js';
@@ -53,7 +52,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(250);
 
       const result = await seatService.getSeatInfo('tenant-123');
@@ -75,7 +74,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(400);
 
       const result = await seatService.getSeatInfo('tenant-123');
@@ -97,7 +96,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(100);
 
       const result = await seatService.getSeatInfo('tenant-123');
@@ -130,7 +129,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.getSeat).mockResolvedValue(null);
       vi.mocked(billingRepo.countSeats).mockResolvedValueOnce(50).mockResolvedValueOnce(51);
       vi.mocked(billingRepo.allocateSeat).mockResolvedValue({
@@ -138,14 +137,14 @@ describe('seatService', () => {
         tenantId: 'tenant-123',
         userId: 'user-123',
         allocatedAt: new Date(),
-      } as any);
+      });
       vi.mocked(billingRepo.recordSeatHistory).mockResolvedValue({
         id: 'history-123',
         tenantId: 'tenant-123',
         userId: 'user-123',
         action: 'allocated',
         seatsDelta: 1,
-      } as any);
+      });
 
       const result = await seatService.allocateSeat('tenant-123', 'user-123');
 
@@ -164,7 +163,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.getSeat).mockResolvedValue(null);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(100);
 
@@ -185,7 +184,7 @@ describe('seatService', () => {
         overagePolicy: 'allow',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.getSeat).mockResolvedValue(null);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(100);
       vi.mocked(billingRepo.allocateSeat).mockResolvedValue({
@@ -193,14 +192,14 @@ describe('seatService', () => {
         tenantId: 'tenant-123',
         userId: 'user-123',
         allocatedAt: new Date(),
-      } as any);
+      });
       vi.mocked(billingRepo.recordSeatHistory).mockResolvedValue({
         id: 'history-123',
         tenantId: 'tenant-123',
         userId: 'user-123',
         action: 'allocated',
         seatsDelta: 1,
-      } as any);
+      });
 
       const result = await seatService.allocateSeat('tenant-123', 'user-123');
 
@@ -218,12 +217,12 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.getSeat).mockResolvedValue({
         id: 'seat-123',
         tenantId: 'tenant-123',
         userId: 'user-123',
-      } as any);
+      });
       vi.mocked(billingRepo.countSeats).mockResolvedValue(50);
 
       const result = await seatService.allocateSeat('tenant-123', 'user-123');
@@ -254,12 +253,12 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.getSeat).mockResolvedValue({
         id: 'seat-123',
         tenantId: 'tenant-123',
         userId: 'user-123',
-      } as any);
+      });
       vi.mocked(billingRepo.deallocateSeat).mockResolvedValue(true);
       vi.mocked(billingRepo.recordSeatHistory).mockResolvedValue({
         id: 'history-123',
@@ -267,7 +266,7 @@ describe('seatService', () => {
         userId: 'user-123',
         action: 'deallocated',
         seatsDelta: -1,
-      } as any);
+      });
       vi.mocked(billingRepo.countSeats).mockResolvedValue(49);
 
       const result = await seatService.deallocateSeat('tenant-123', 'user-123');
@@ -287,7 +286,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.getSeat).mockResolvedValue(null);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(50);
 
@@ -310,7 +309,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(50);
 
       const result = await seatService.hasAvailableSeats('tenant-123');
@@ -328,7 +327,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(100);
 
       const result = await seatService.hasAvailableSeats('tenant-123');
@@ -346,7 +345,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(10000);
 
       const result = await seatService.hasAvailableSeats('tenant-123');
@@ -366,7 +365,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(80);
 
       const result = await seatService.checkSeatAlertThresholds('tenant-123', {
@@ -388,7 +387,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(100);
 
       const result = await seatService.checkSeatAlertThresholds('tenant-123', {
@@ -410,7 +409,7 @@ describe('seatService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(billingRepo.countSeats).mockResolvedValue(50);
 
       const result = await seatService.checkSeatAlertThresholds('tenant-123', {

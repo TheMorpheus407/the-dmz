@@ -4,11 +4,12 @@ import Button from '$lib/ui/components/Button.svelte';
 
 import { render } from '../helpers/render';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Snippet } from 'svelte';
+
 describe('Button', () => {
   it('renders button', () => {
     const { container } = render(Button, {
-      props: { children: () => 'Click me' as any },
+      props: { children: (() => {}) as Snippet },
     });
 
     const button = container.querySelector('button');
@@ -17,7 +18,7 @@ describe('Button', () => {
 
   it('renders with correct variant class', () => {
     const { container } = render(Button, {
-      props: { variant: 'danger', children: () => 'Delete' as any },
+      props: { variant: 'danger', children: (() => {}) as Snippet },
     });
 
     const button = container.querySelector('button');
@@ -26,7 +27,7 @@ describe('Button', () => {
 
   it('renders with correct size class', () => {
     const { container } = render(Button, {
-      props: { size: 'lg', children: () => 'Large' as any },
+      props: { size: 'lg', children: (() => {}) as Snippet },
     });
 
     const button = container.querySelector('button');
@@ -35,7 +36,7 @@ describe('Button', () => {
 
   it('handles disabled state', () => {
     const { container } = render(Button, {
-      props: { disabled: true, children: () => 'Disabled' as any },
+      props: { disabled: true, children: (() => {}) as Snippet },
     });
 
     const button = container.querySelector('button');
@@ -44,7 +45,7 @@ describe('Button', () => {
 
   it('applies aria-label', () => {
     const { container } = render(Button, {
-      props: { ariaLabel: 'Close dialog', children: () => '×' as any },
+      props: { ariaLabel: 'Close dialog', children: (() => {}) as Snippet },
     });
 
     const button = container.querySelector('button');
@@ -58,7 +59,7 @@ describe('Button', () => {
         onclick: () => {
           clicked = true;
         },
-        children: () => 'Click' as any,
+        children: (() => {}) as Snippet,
       },
     });
 

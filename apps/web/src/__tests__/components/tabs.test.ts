@@ -4,12 +4,13 @@ import Tabs from '$lib/ui/components/Tabs.svelte';
 
 import { render } from '../helpers/render';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Snippet } from 'svelte';
+
 describe('Tabs', () => {
-  const mockTabs = [
-    { id: 'tab1', label: 'Tab One', content: () => ({}) as any },
-    { id: 'tab2', label: 'Tab Two', content: () => ({}) as any },
-    { id: 'tab3', label: 'Tab Three', content: () => ({}) as any },
+  const mockTabs: Array<{ id: string; label: string; content: Snippet }> = [
+    { id: 'tab1', label: 'Tab One', content: (() => {}) as Snippet },
+    { id: 'tab2', label: 'Tab Two', content: (() => {}) as Snippet },
+    { id: 'tab3', label: 'Tab Three', content: (() => {}) as Snippet },
   ];
 
   it('renders all tab labels', () => {

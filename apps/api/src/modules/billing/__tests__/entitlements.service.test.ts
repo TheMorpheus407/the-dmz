@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import { entitlementsService } from '../entitlements.service.js';
@@ -38,7 +37,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.checkFeature('tenant-123', 'trainingCampaigns');
 
@@ -55,7 +54,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.checkFeature('tenant-123', 'advancedAnalytics');
 
@@ -83,7 +82,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.checkApiAccess('tenant-123');
 
@@ -100,7 +99,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.checkApiAccess('tenant-123');
 
@@ -119,7 +118,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(seatService.getSeatInfo).mockResolvedValue({
         currentSeats: 100,
         seatLimit: 500,
@@ -145,7 +144,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(seatService.getSeatInfo).mockResolvedValue({
         currentSeats: 1000,
         seatLimit: -1,
@@ -170,7 +169,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(seatService.getSeatInfo).mockResolvedValue({
         currentSeats: 100,
         seatLimit: 100,
@@ -195,7 +194,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'notify',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
       vi.mocked(seatService.getSeatInfo).mockResolvedValue({
         currentSeats: 100,
         seatLimit: 100,
@@ -222,7 +221,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.checkStorageLimit('tenant-123', 50);
 
@@ -240,7 +239,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.checkStorageLimit('tenant-123', 50);
 
@@ -259,7 +258,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.checkStorageLimit('tenant-123', 10000);
 
@@ -279,7 +278,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.getEntitlements('tenant-123');
 
@@ -300,7 +299,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.getEntitlements('tenant-123');
 
@@ -329,7 +328,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.isFeatureEnabled('tenant-123', 'phishingSimulation');
 
@@ -346,7 +345,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.isFeatureEnabled('tenant-123', 'apiAccess');
 
@@ -365,7 +364,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.getPlanFeatures('tenant-123');
 
@@ -384,7 +383,7 @@ describe('entitlementsService', () => {
         overagePolicy: 'deny',
       };
 
-      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription as any);
+      vi.mocked(subscriptionService.getSubscription).mockResolvedValue(subscription);
 
       const result = await entitlementsService.getPlanFeatures('tenant-123');
 
