@@ -1,9 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import type { LogLevel } from '@the-dmz/shared';
+import { createTestConfig } from '@the-dmz/shared/testing';
 
 import { buildApp } from '../../../app.js';
-import { loadConfig, type AppConfig } from '../../../config.js';
+import { type AppConfig } from '../../../config.js';
 import {
   closeDatabase,
   getDatabaseClient,
@@ -16,21 +16,14 @@ import {
 } from '../../../__tests__/helpers/factory.js';
 import { TENANT_COLUMN_DEFS } from '../../../__tests__/helpers/db.js';
 
-const createTestConfig = (logLevel: LogLevel = 'silent'): AppConfig => {
-  const base = loadConfig();
-  return {
-    ...base,
-    NODE_ENV: 'test',
-    LOG_LEVEL: logLevel as LogLevel,
-    DATABASE_URL: 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test',
-    RATE_LIMIT_MAX: 10000,
+const testConfig = createTestConfig({
+  logLevel: 'silent',
+  overrides: {
     TENANT_RESOLVER_ENABLED: true,
     TENANT_HEADER_NAME: 'x-tenant-id',
     TENANT_FALLBACK_ENABLED: false,
-  };
-};
-
-const testConfig = createTestConfig('silent');
+  },
+}) as AppConfig;
 
 const resetTestData = async (): Promise<void> => {
   const pool = getDatabasePool(testConfig);

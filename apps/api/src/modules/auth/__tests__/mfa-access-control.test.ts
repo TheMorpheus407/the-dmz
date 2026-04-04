@@ -6,8 +6,10 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
+import { createTestConfig } from '@the-dmz/shared/testing';
+
 import { buildApp } from '../../../app.js';
-import { loadConfig, type AppConfig } from '../../../config.js';
+import { type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
 import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { sessions as sessionsTable } from '../../../db/schema/auth/sessions.js';
@@ -22,19 +24,10 @@ const migrationsFolder = fileURLToPath(
   new URL('../../../shared/database/migrations', import.meta.url),
 );
 
-const createTestConfig = (): AppConfig => {
-  const base = loadConfig();
-  return {
-    ...base,
-    NODE_ENV: 'test',
-    LOG_LEVEL: 'silent',
-    DATABASE_URL: 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test',
-    RATE_LIMIT_MAX: 10000,
-  };
-};
+let testConfig = createTestConfig();
 
-const createIsolatedTestConfig = (databaseName: string): AppConfig => ({
-  ...createTestConfig(),
+const createIsolatedTestConfig = (base: AppConfig, databaseName: string): AppConfig => ({
+  ...base,
   DATABASE_URL: `postgresql://dmz:dmz_dev@localhost:5432/${databaseName}`,
 });
 
@@ -75,7 +68,7 @@ const resetTestData = async (): Promise<void> => {
 describe('MFA Access Control - Super Admin Step-up Flow', () => {
   beforeAll(async () => {
     const databaseName = `dmz_t_mfa_access_${randomUUID().replace(/-/g, '_')}`;
-    testConfig = createIsolatedTestConfig(databaseName);
+    testConfig = createIsolatedTestConfig(testConfig, databaseName);
     cleanupDatabase = await createIsolatedDatabase(testConfig);
 
     const db = getDatabaseClient(testConfig);

@@ -1,8 +1,10 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 
+import { createTestConfig } from '@the-dmz/shared/testing';
+
 import { buildApp } from '../../../app.js';
-import { loadConfig, type AppConfig } from '../../../config.js';
+import { type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
 import { ensureTenantColumns, resetTestDatabase } from '../../../__tests__/helpers/db.js';
 import { permissions, roles, rolePermissions, userRoles } from '../../../db/schema/auth/index.js';
@@ -13,18 +15,7 @@ import {
   isRoleAssignmentValid,
 } from '../../../shared/middleware/authorization.js';
 
-const createTestConfig = (): AppConfig => {
-  const base = loadConfig();
-  return {
-    ...base,
-    NODE_ENV: 'test',
-    LOG_LEVEL: 'silent',
-    DATABASE_URL: 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test',
-    RATE_LIMIT_MAX: 10000,
-  };
-};
-
-const testConfig = createTestConfig();
+const testConfig = createTestConfig() as AppConfig;
 
 describe('authorization middleware - permission checking', () => {
   describe('hasPermission', () => {

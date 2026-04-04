@@ -4,10 +4,10 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { eq } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 
-import type { LogLevel } from '@the-dmz/shared';
+import { createTestConfig } from '@the-dmz/shared/testing';
 
 import { buildApp } from '../../../app.js';
-import { loadConfig, type AppConfig } from '../../../config.js';
+import { type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
 import { tenants } from '../../../shared/database/schema/tenants.js';
 import { users } from '../../../shared/database/schema/users.js';
@@ -24,21 +24,14 @@ const migrationsFolder = fileURLToPath(
   new URL('../../../shared/database/migrations', import.meta.url),
 );
 
-const createTestConfig = (logLevel: LogLevel = 'silent'): AppConfig => {
-  const base = loadConfig();
-  return {
-    ...base,
-    NODE_ENV: 'test',
-    LOG_LEVEL: logLevel as LogLevel,
-    DATABASE_URL: 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test',
-    RATE_LIMIT_MAX: 10000,
+const testConfig = createTestConfig({
+  logLevel: 'silent',
+  overrides: {
     TENANT_RESOLVER_ENABLED: true,
     TENANT_HEADER_NAME: 'x-tenant-id',
     TENANT_FALLBACK_ENABLED: false,
-  };
-};
-
-const testConfig = createTestConfig('silent');
+  },
+}) as AppConfig;
 
 interface AuthTokens {
   accessToken: string;

@@ -1,21 +1,12 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { createTestConfig } from '@the-dmz/shared/testing';
+
 import { buildApp } from '../../../app.js';
-import { loadConfig, type AppConfig } from '../../../config.js';
+import { type AppConfig } from '../../../config.js';
 import { closeDatabase } from '../../../shared/database/connection.js';
 
-const createTestConfig = (): AppConfig => {
-  const base = loadConfig();
-  return {
-    ...base,
-    NODE_ENV: 'test',
-    LOG_LEVEL: 'silent',
-    DATABASE_URL: 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test',
-    RATE_LIMIT_MAX: 10000,
-  };
-};
-
-const testConfig = createTestConfig();
+const testConfig = createTestConfig() as AppConfig;
 
 describe('jwks routes', () => {
   const app = buildApp(testConfig);

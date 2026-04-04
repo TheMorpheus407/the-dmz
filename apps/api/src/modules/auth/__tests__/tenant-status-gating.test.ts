@@ -3,7 +3,9 @@ import { randomUUID } from 'crypto';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 
-import { loadConfig, type AppConfig } from '../../../config.js';
+import { createTestConfig } from '@the-dmz/shared/testing';
+
+import { type AppConfig } from '../../../config.js';
 import { getDatabasePool, getDatabaseClient } from '../../../shared/database/connection.js';
 import { tenants } from '../../../shared/database/schema/tenants.js';
 import { users } from '../../../shared/database/schema/users.js';
@@ -32,21 +34,13 @@ type MockReply = {
   send?: (body: unknown) => void;
 };
 
-const createTestConfig = (): AppConfig => {
-  const base = loadConfig();
-  return {
-    ...base,
-    NODE_ENV: 'test',
-    LOG_LEVEL: 'silent',
-    DATABASE_URL: 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test',
-    RATE_LIMIT_MAX: 10000,
+const testConfig = createTestConfig({
+  overrides: {
     TENANT_RESOLVER_ENABLED: true,
     TENANT_HEADER_NAME: 'x-tenant-id',
     TENANT_FALLBACK_ENABLED: false,
-  };
-};
-
-const testConfig = createTestConfig();
+  },
+}) as AppConfig;
 
 const resetTestData = async (): Promise<void> => {
   const pool = getDatabasePool(testConfig);
