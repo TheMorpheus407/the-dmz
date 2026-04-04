@@ -83,7 +83,7 @@
     "@types/node": "^22.0.0",
     "@types/pdfkit": "^0.17.5",
     "@vitest/coverage-v8": "^4.0.18",
-    "drizzle-kit": "^0.24.0",
+    "drizzle-kit": "^0.31.0",
     "tsx": "^4.0.0",
     "typescript": "^5.5.4",
     "vitest": "^4.0.18"
