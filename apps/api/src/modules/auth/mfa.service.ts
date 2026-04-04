@@ -336,6 +336,52 @@ export const verifyWebauthnAssertion = async (
   },
   challengeId: string,
 ): Promise<{ success: boolean; mfaVerifiedAt: Date }> => {
+  await validateWebauthnChallenge(config, user, challengeId);
+
+  await checkMfaLockout(config, user);
+
+  const credential = await findWebauthnCredential(config, user, data.credentialId);
+
+  if (!credential) {
+    await recordFailedMfaAttempt(config, user);
+    throw new AppError({
+      code: ErrorCodes.AUTH_WEBAUTHN_CREDENTIAL_NOT_FOUND,
+      message: 'Credential not found',
+      statusCode: 400,
+    });
+  }
+
+  const db = getDatabaseClient(config);
+
+  await db
+    .update(sessionsTable)
+    .set({
+      mfaVerifiedAt: new Date(),
+      mfaMethod: 'webauthn',
+      mfaFailedAttempts: null,
+      mfaLockedAt: null,
+    })
+    .where(eq(sessionsTable.id, user.sessionId));
+
+  await db
+    .update(webauthnCredentialsTable)
+    .set({
+      counter: data.counter,
+      lastUsedAt: new Date(),
+    })
+    .where(eq(webauthnCredentialsTable.id, credential.id));
+
+  return {
+    success: true,
+    mfaVerifiedAt: new Date(),
+  };
+};
+
+async function validateWebauthnChallenge(
+  config: AppConfig,
+  user: AuthenticatedUser,
+  challengeId: string,
+): Promise<WebauthnChallenge> {
   const redis = getRedisClient(config);
   if (!redis) {
     throw new AppError({
@@ -391,6 +437,10 @@ export const verifyWebauthnAssertion = async (
   challenge.used = true;
   await deleteChallenge(redis, user.tenantId, challengeId);
 
+  return challenge;
+}
+
+async function checkMfaLockout(config: AppConfig, user: AuthenticatedUser): Promise<void> {
   const db = getDatabaseClient(config);
 
   const session = await db.query.sessions.findFirst({
@@ -408,73 +458,58 @@ export const verifyWebauthnAssertion = async (
       });
     }
   }
+}
+
+async function findWebauthnCredential(
+  config: AppConfig,
+  user: AuthenticatedUser,
+  credentialId: string,
+): Promise<typeof webauthnCredentialsTable.$inferSelect | null> {
+  const db = getDatabaseClient(config);
 
   const credentialResult = await db
     .select()
     .from(webauthnCredentialsTable)
     .where(
       and(
-        eq(webauthnCredentialsTable.credentialId, data.credentialId),
+        eq(webauthnCredentialsTable.credentialId, credentialId),
         eq(webauthnCredentialsTable.userId, user.userId),
         eq(webauthnCredentialsTable.tenantId, user.tenantId),
       ),
     )
     .limit(1);
 
-  const credential = credentialResult[0];
+  return credentialResult[0] ?? null;
+}
 
-  if (!credential) {
-    const failedAttempts = session?.mfaFailedAttempts ?? 0;
-    const newFailedAttempts = failedAttempts + 1;
-    const maxAttempts = config.MFA_MAX_ATTEMPTS || 10;
+async function recordFailedMfaAttempt(config: AppConfig, user: AuthenticatedUser): Promise<void> {
+  const db = getDatabaseClient(config);
 
-    if (newFailedAttempts >= maxAttempts) {
-      await db
-        .update(sessionsTable)
-        .set({
-          mfaFailedAttempts: newFailedAttempts,
-          mfaLockedAt: new Date(),
-        })
-        .where(eq(sessionsTable.id, user.sessionId));
-    } else {
-      await db
-        .update(sessionsTable)
-        .set({
-          mfaFailedAttempts: newFailedAttempts,
-        })
-        .where(eq(sessionsTable.id, user.sessionId));
-    }
+  const session = await db.query.sessions.findFirst({
+    where: eq(sessionsTable.id, user.sessionId),
+  });
 
-    throw new AppError({
-      code: ErrorCodes.AUTH_WEBAUTHN_CREDENTIAL_NOT_FOUND,
-      message: 'Credential not found',
-      statusCode: 400,
-    });
+  const failedAttempts = session?.mfaFailedAttempts ?? 0;
+  const newFailedAttempts = failedAttempts + 1;
+  const maxAttempts = config.MFA_MAX_ATTEMPTS || 10;
+
+  if (newFailedAttempts >= maxAttempts) {
+    await db
+      .update(sessionsTable)
+      .set({
+        mfaFailedAttempts: newFailedAttempts,
+        mfaLockedAt: new Date(),
+      })
+      .where(eq(sessionsTable.id, user.sessionId));
+  } else {
+    await db
+      .update(sessionsTable)
+      .set({
+        mfaFailedAttempts: newFailedAttempts,
+      })
+      .where(eq(sessionsTable.id, user.sessionId));
   }
-
-  await db
-    .update(sessionsTable)
-    .set({
-      mfaVerifiedAt: new Date(),
-      mfaMethod: 'webauthn',
-      mfaFailedAttempts: null,
-      mfaLockedAt: null,
-    })
-    .where(eq(sessionsTable.id, user.sessionId));
-
-  await db
-    .update(webauthnCredentialsTable)
-    .set({
-      counter: data.counter,
-      lastUsedAt: new Date(),
-    })
-    .where(eq(webauthnCredentialsTable.id, credential.id));
-
-  return {
-    success: true,
-    mfaVerifiedAt: new Date(),
-  };
-};
+}
 
 export const getMfaStatus = async (
   config: AppConfig,
