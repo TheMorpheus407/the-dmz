@@ -31,6 +31,8 @@ const SCIM_ERRORS = {
   INVALID_FILTER: 'SCIM_INVALID_FILTER',
   TENANT_MISMATCH: 'SCIM_TENANT_MISMATCH',
   IDEMPOTENCY_KEY_CONFLICT: 'SCIM_IDEMPOTENCY_KEY_CONFLICT',
+  INVALID_TOKEN: 'SCIM_INVALID_TOKEN',
+  INSUFFICIENT_SCOPE: 'SCIM_INSUFFICIENT_SCOPE',
 } as const;
 
 export class SCIMError extends Error {
@@ -53,6 +55,211 @@ export class SCIMError extends Error {
     };
   }
 }
+
+const RESOURCE_PATH_REGEX = /\/(Users|Groups)\/(.+)/;
+
+type ResourcePathMatch = { resourceType: 'Users' | 'Groups'; id: string };
+
+const parseResourcePath = (path: string): ResourcePathMatch | null => {
+  const match = path.match(RESOURCE_PATH_REGEX);
+  if (!match) return null;
+  const [, resourceType, id] = match;
+  if (!id) return null;
+  return { resourceType: resourceType as 'Users' | 'Groups', id };
+};
+
+const buildLocation = (resourceType: string, id: string): string => {
+  return `/api/v1/scim/v2/${resourceType}/${id}`;
+};
+
+type BulkOperationHandler = (
+  config: AppConfig,
+  tenantId: string,
+  op: { data?: unknown; bulkId?: string; id?: string },
+) => Promise<{ location?: string }>;
+
+const handlePost: BulkOperationHandler = async (config, tenantId, op) => {
+  if (op.data === undefined) return {};
+  const created = await createScimUser(config, tenantId, op.data as SCIMUser);
+  return { location: buildLocation('Users', (created as { id: string }).id) };
+};
+
+const handlePostGroups: BulkOperationHandler = async (config, tenantId, op) => {
+  if (op.data === undefined) return {};
+  const created = await createScimGroup(config, tenantId, op.data as SCIMGroup);
+  return { location: buildLocation('Groups', (created as { id: string }).id) };
+};
+
+const handlePutUsers: BulkOperationHandler = async (config, tenantId, op) => {
+  const parsed = op as { data?: unknown; id?: string };
+  if (!parsed.id || !parsed.data) return {};
+  const updated = await updateScimUser(
+    config,
+    tenantId,
+    parsed.id,
+    parsed.data as Partial<SCIMUser>,
+  );
+  return { location: buildLocation('Users', (updated as { id: string }).id) };
+};
+
+const handlePutGroups: BulkOperationHandler = async (config, tenantId, op) => {
+  const parsed = op as { data?: unknown; id?: string };
+  if (!parsed.id || !parsed.data) return {};
+  const updated = await updateScimGroup(
+    config,
+    tenantId,
+    parsed.id,
+    parsed.data as Partial<SCIMGroup>,
+  );
+  return { location: buildLocation('Groups', (updated as { id: string }).id) };
+};
+
+const handlePatchUsers: BulkOperationHandler = async (config, tenantId, op) => {
+  const parsed = op as { data?: unknown; id?: string };
+  if (!parsed.id || !parsed.data) return {};
+  const updated = await updateScimUser(
+    config,
+    tenantId,
+    parsed.id,
+    parsed.data as Partial<SCIMUser>,
+  );
+  return { location: buildLocation('Users', (updated as { id: string }).id) };
+};
+
+const handlePatchGroups: BulkOperationHandler = async (config, tenantId, op) => {
+  const parsed = op as { data?: unknown; id?: string };
+  if (!parsed.id || !parsed.data) return {};
+  const updated = await updateScimGroup(
+    config,
+    tenantId,
+    parsed.id,
+    parsed.data as Partial<SCIMGroup>,
+  );
+  return { location: buildLocation('Groups', (updated as { id: string }).id) };
+};
+
+const handleDeleteUsers: BulkOperationHandler = async (config, tenantId, op) => {
+  const parsed = op as { id?: string };
+  if (!parsed.id) return {};
+  await deleteScimUser(config, tenantId, parsed.id);
+  return {};
+};
+
+const handleDeleteGroups: BulkOperationHandler = async (config, tenantId, op) => {
+  const parsed = op as { id?: string };
+  if (!parsed.id) return {};
+  await deleteScimGroup(config, tenantId, parsed.id);
+  return {};
+};
+
+const operationHandlers: Record<string, Record<string, BulkOperationHandler>> = {
+  post: {
+    '/Users': handlePost,
+    '/Groups': handlePostGroups,
+  },
+  put: {
+    Users: handlePutUsers,
+    Groups: handlePutGroups,
+  },
+  patch: {
+    Users: handlePatchUsers,
+    Groups: handlePatchGroups,
+  },
+  delete: {
+    Users: handleDeleteUsers,
+    Groups: handleDeleteGroups,
+  },
+};
+
+export const processBulkRequest = async (
+  config: AppConfig,
+  tenantId: string,
+  bulkRequest: SCIMBulkRequest,
+): Promise<SCIMBulkResponse> => {
+  const results: Array<{
+    bulkId?: string;
+    method: string;
+    status: number;
+    location?: string;
+  }> = [];
+
+  const processOperation = async (
+    op: (typeof bulkRequest.operations)[number],
+  ): Promise<{
+    bulkId?: string;
+    method: string;
+    status: number;
+    location?: string;
+  }> => {
+    const methodHandlers = operationHandlers[op.method];
+    if (!methodHandlers) {
+      const result: { bulkId?: string; method: string; status: number } = {
+        method: op.method,
+        status: 500,
+      };
+      if (op.bulkId) result.bulkId = op.bulkId;
+      return result;
+    }
+
+    let location: string | undefined;
+    if (op.method === 'post') {
+      const handler = methodHandlers[op.path];
+      if (handler) {
+        const result = await handler(config, tenantId, { data: op.data, bulkId: op.bulkId });
+        location = result.location;
+      }
+    } else {
+      const pathMatch = parseResourcePath(op.path);
+      if (!pathMatch) {
+        const result: { bulkId?: string; method: string; status: number } = {
+          method: op.method,
+          status: 500,
+        };
+        if (op.bulkId) result.bulkId = op.bulkId;
+        return result;
+      }
+      const handler = methodHandlers[pathMatch.resourceType];
+      if (!handler) {
+        const result: { bulkId?: string; method: string; status: number } = {
+          method: op.method,
+          status: 500,
+        };
+        if (op.bulkId) result.bulkId = op.bulkId;
+        return result;
+      }
+      const opData = op as { data?: unknown; id?: string };
+      const result = await handler(config, tenantId, { data: opData.data, id: pathMatch.id });
+      location = result.location;
+    }
+
+    const result: { bulkId?: string; method: string; status: number; location?: string } = {
+      method: op.method,
+      status: 200,
+    };
+    if (op.bulkId) result.bulkId = op.bulkId;
+    if (location) result.location = location;
+    return result;
+  };
+
+  for (const op of bulkRequest.operations) {
+    try {
+      const result = await processOperation(op);
+      results.push(result);
+    } catch {
+      const errorResult: { bulkId?: string; method: string; status: number } = {
+        method: op.method,
+        status: 500,
+      };
+      if (op.bulkId) errorResult.bulkId = op.bulkId;
+      results.push(errorResult);
+    }
+  }
+
+  return {
+    schemas: ['urn:ietf:params:scim:api:messages:2.0:BulkResponse'],
+    Operations: results,
+  };
+};
 
 interface DbUser {
   userId: string;
@@ -669,102 +876,6 @@ export const deleteScimGroup = async (
   }
 
   await db.delete(scimGroups).where(eq(scimGroups.id, groupId));
-};
-
-export const processBulkRequest = async (
-  config: AppConfig,
-  tenantId: string,
-  bulkRequest: SCIMBulkRequest,
-): Promise<SCIMBulkResponse> => {
-  const results: Array<{
-    bulkId?: string;
-    method: string;
-    status: number;
-    location?: string;
-  }> = [];
-
-  for (const op of bulkRequest.operations) {
-    try {
-      let location: string | undefined;
-      const status = 200;
-
-      if (op.method === 'post') {
-        if (op.path === '/Users') {
-          const created = await createScimUser(config, tenantId, op.data as SCIMUser);
-          location = `/api/v1/scim/v2/Users/${created.id}`;
-        } else if (op.path === '/Groups') {
-          const created = await createScimGroup(config, tenantId, op.data as SCIMGroup);
-          location = `/api/v1/scim/v2/Groups/${created.id}`;
-        }
-      } else if (op.method === 'put') {
-        const pathMatch = op.path.match(/\/(Users|Groups)\/(.+)/);
-        if (pathMatch) {
-          const [, resourceType, id] = pathMatch;
-          if (resourceType === 'Users' && id) {
-            const updated = await updateScimUser(
-              config,
-              tenantId,
-              id,
-              op.data as Partial<SCIMUser>,
-            );
-            location = `/api/v1/scim/v2/Users/${updated.id}`;
-          } else if (resourceType === 'Groups' && id) {
-            const updated = await updateScimGroup(
-              config,
-              tenantId,
-              id,
-              op.data as Partial<SCIMGroup>,
-            );
-            location = `/api/v1/scim/v2/Groups/${updated.id}`;
-          }
-        }
-      } else if (op.method === 'patch') {
-        const pathMatch = op.path.match(/\/(Users|Groups)\/(.+)/);
-        if (pathMatch) {
-          const [, resourceType, id] = pathMatch;
-          if (resourceType === 'Users' && id) {
-            const patchData = op.data as Partial<SCIMUser>;
-            const updated = await updateScimUser(config, tenantId, id, patchData);
-            location = `/api/v1/scim/v2/Users/${updated.id}`;
-          } else if (resourceType === 'Groups' && id) {
-            const patchData = op.data as Partial<SCIMGroup>;
-            const updated = await updateScimGroup(config, tenantId, id, patchData);
-            location = `/api/v1/scim/v2/Groups/${updated.id}`;
-          }
-        }
-      } else if (op.method === 'delete') {
-        const pathMatch = op.path.match(/\/(Users|Groups)\/(.+)/);
-        if (pathMatch) {
-          const [, resourceType, id] = pathMatch;
-          if (resourceType === 'Users' && id) {
-            await deleteScimUser(config, tenantId, id);
-          } else if (resourceType === 'Groups' && id) {
-            await deleteScimGroup(config, tenantId, id);
-          }
-        }
-      }
-
-      const result: { bulkId?: string; method: string; status: number; location?: string } = {
-        method: op.method,
-        status,
-      };
-      if (op.bulkId) result.bulkId = op.bulkId;
-      if (location) result.location = location;
-      results.push(result);
-    } catch {
-      const errorResult: { bulkId?: string; method: string; status: number } = {
-        method: op.method,
-        status: 500,
-      };
-      if (op.bulkId) errorResult.bulkId = op.bulkId;
-      results.push(errorResult);
-    }
-  }
-
-  return {
-    schemas: ['urn:ietf:params:scim:api:messages:2.0:BulkResponse'],
-    Operations: results,
-  };
 };
 
 export const generateScimToken = async (
