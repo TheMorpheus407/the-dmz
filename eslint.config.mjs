@@ -145,6 +145,7 @@ const baseRules = {
   'max-depth': ['warn', { max: 4 }],
   'max-params': ['warn', { max: 4 }],
   'max-statements': ['warn', { max: 20 }],
+  'max-lines': ['warn', { max: 500, skipBlankLines: true, skipComments: true }],
 
   ...(allBoundaryZones.length > 0
     ? {
