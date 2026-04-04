@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import js from '@eslint/js';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
@@ -9,6 +10,10 @@ import sveltePlugin from 'eslint-plugin-svelte';
 import svelteParser from 'svelte-eslint-parser';
 import importX from 'eslint-plugin-import-x';
 import prettierConfig from 'eslint-config-prettier';
+import securityPlugin from 'eslint-plugin-security';
+
+const require = createRequire(import.meta.url);
+const nodePlugin = require('eslint-plugin-n');
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 const isCI = Boolean(process.env.CI);
@@ -131,6 +136,25 @@ const svelteRunesRules = {
   'svelte/prefer-svelte-reactivity': 'error',
   'svelte/no-reactive-reassign': 'error',
   'svelte/no-reactive-literals': 'error',
+};
+
+const securityRules = {
+  'security/detect-non-literal-fs-filename': isCI ? 'error' : 'warn',
+  'security/detect-possible-timing-attacks': isCI ? 'error' : 'warn',
+  'security/detect-non-literal-regexp': isCI ? 'error' : 'warn',
+  'security/detect-unsafe-regex': isCI ? 'error' : 'warn',
+  'security/detect-new-buffer': isCI ? 'error' : 'warn',
+  'security/detect-disable-mustache-escape': isCI ? 'error' : 'warn',
+  'security/detect-eval-with-expression': isCI ? 'error' : 'warn',
+  'security/detect-child-process': isCI ? 'error' : 'warn',
+  'security/detect-bidi-characters': isCI ? 'error' : 'warn',
+};
+
+const nodeRules = {
+  'no-process-env': isCI ? 'error' : 'warn',
+  'no-process-exit': isCI ? 'error' : 'warn',
+  'no-unpublished-require': 'off',
+  'no-unsupported-features': 'off',
 };
 
 const baseRules = {
@@ -325,6 +349,26 @@ export default [
     files: ['**/*.d.ts'],
     rules: {
       '@typescript-eslint/no-empty-object-type': 'off',
+    },
+  },
+  {
+    files: ['apps/api/src/**/*.ts', 'apps/api/src/**/*.js'],
+    ignores: [
+      'apps/api/src/__tests__/**',
+      'apps/api/src/modules/**',
+      'apps/api/src/shared/**',
+      'apps/api/src/lib/**',
+      'apps/api/src/utils/**',
+      'apps/api/src/types/**',
+      'apps/api/src/routes/**',
+    ],
+    plugins: {
+      security: securityPlugin,
+      node: nodePlugin,
+    },
+    rules: {
+      ...securityRules,
+      ...nodeRules,
     },
   },
   {
