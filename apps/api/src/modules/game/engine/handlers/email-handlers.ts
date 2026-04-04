@@ -1,5 +1,6 @@
 import {
   DAY_PHASES,
+  GAME_ACTIONS,
   type GameState,
   type EmailState,
   type EmailInstance,
@@ -33,7 +34,7 @@ export function handleAckDayStart(
   _action: AckDayStartPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('ACK_DAY_START', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.ACK_DAY_START, state.currentPhase)) {
     throw new Error('ACK_DAY_START not allowed in current phase');
   }
   state.currentPhase = DAY_PHASES.PHASE_EMAIL_INTAKE;
@@ -87,7 +88,7 @@ export function handleOpenEmail(
   action: OpenEmailPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('OPEN_EMAIL', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.OPEN_EMAIL, state.currentPhase)) {
     throw new Error('OPEN_EMAIL not allowed in current phase');
   }
   const email = state.inbox.find((e) => e.emailId === action.emailId);
@@ -429,7 +430,7 @@ export function handleSubmitDecision(
   action: SubmitDecisionPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('SUBMIT_DECISION', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.SUBMIT_DECISION, state.currentPhase)) {
     throw new Error('SUBMIT_DECISION not allowed in current phase');
   }
   const emailToDecide = state.inbox.find((e) => e.emailId === action.emailId);
