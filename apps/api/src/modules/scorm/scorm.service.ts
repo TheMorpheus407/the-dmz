@@ -145,15 +145,15 @@ export function generateScormApiWrapper(version: ScormVersion): string {
   if (version === '1.2') {
     return `
 // SCORM 1.2 API Wrapper
-var API = null;
+let API = null;
 
-function findAPI(win) {
-  var attempts = 0;
-  while ((!win.API) && (win.parent) && (win.parent !== win) && (attempts < 10)) {
+function findAPI(targetWindow) {
+  let attempts = 0;
+  while ((!targetWindow.API) && (targetWindow.parent) && (targetWindow.parent !== targetWindow) && (attempts < 10)) {
     attempts++;
-    win = win.parent;
+    targetWindow = targetWindow.parent;
   }
-  return win.API;
+  return targetWindow.API;
 }
 
 function getAPI() {
@@ -167,7 +167,7 @@ function getAPI() {
 }
 
 function LMSInitialize() {
-  var api = getAPI();
+  const api = getAPI();
   if (api == null) {
     return "false";
   }
@@ -175,31 +175,31 @@ function LMSInitialize() {
 }
 
 function LMSFinish() {
-  var api = getAPI();
+  const api = getAPI();
   if (api == null) {
     return "false";
   }
   return api.LMSFinish("");
 }
 
-function LMSGetValue(element) {
-  var api = getAPI();
+function LMSGetValue(cmiElement) {
+  const api = getAPI();
   if (api == null) {
     return "";
   }
-  return api.LMSGetValue(element);
+  return api.LMSGetValue(cmiElement);
 }
 
-function LMSSetValue(element, value) {
-  var api = getAPI();
+function LMSSetValue(cmiElement, elementValue) {
+  const api = getAPI();
   if (api == null) {
     return "false";
   }
-  return api.LMSSetValue(element, value);
+  return api.LMSSetValue(cmiElement, elementValue);
 }
 
 function LMSCommit() {
-  var api = getAPI();
+  const api = getAPI();
   if (api == null) {
     return "false";
   }
@@ -207,44 +207,44 @@ function LMSCommit() {
 }
 
 function LMSGetLastError() {
-  var api = getAPI();
+  const api = getAPI();
   if (api == null) {
     return "0";
   }
   return api.LMSGetLastError();
 }
 
-function LMSGetErrorString(errorCode) {
-  var api = getAPI();
+function LMSGetErrorString(scormErrorCode) {
+  const api = getAPI();
   if (api == null) {
     return "No API";
   }
-  return api.LMSGetErrorString(errorCode);
+  return api.LMSGetErrorString(scormErrorCode);
 }
 
-function LMSGetDiagnostic(errorCode) {
-  var api = getAPI();
+function LMSGetDiagnostic(scormErrorCode) {
+  const api = getAPI();
   if (api == null) {
     return "No API";
   }
-  return api.LMSGetDiagnostic(errorCode);
+  return api.LMSGetDiagnostic(scormErrorCode);
 }
 
 // Completion tracking
-function setCompletionStatus(status) {
-  LMSSetValue("cmi.core.lesson_status", status);
+function setCompletionStatus(completionStatus) {
+  LMSSetValue("cmi.core.lesson_status", completionStatus);
   LMSCommit();
 }
 
-function setScore(score) {
-  LMSSetValue("cmi.core.score.raw", score);
+function setScore(scoreValue) {
+  LMSSetValue("cmi.core.score.raw", scoreValue);
   LMSSetValue("cmi.core.score.min", "0");
   LMSSetValue("cmi.core.score.max", "100");
   LMSCommit();
 }
 
-function saveSuspendData(data) {
-  LMSSetValue("cmi.suspend_data", data);
+function saveSuspendData(suspendData) {
+  LMSSetValue("cmi.suspend_data", suspendData);
   LMSCommit();
 }
 
@@ -256,15 +256,15 @@ function getSuspendData() {
 
   return `
 // SCORM 2004 API Wrapper
-var API_1484_11 = null;
+let API_1484_11 = null;
 
-function findAPI(win) {
-  var attempts = 0;
-  while ((!win.API_1484_11) && (win.parent) && (win.parent !== win) && (attempts < 10)) {
+function findAPI(targetWindow) {
+  let attempts = 0;
+  while ((!targetWindow.API_1484_11) && (targetWindow.parent) && (targetWindow.parent !== targetWindow) && (attempts < 10)) {
     attempts++;
-    win = win.parent;
+    targetWindow = targetWindow.parent;
   }
-  return win.API_1484_11;
+  return targetWindow.API_1484_11;
 }
 
 function getAPI() {
@@ -278,7 +278,7 @@ function getAPI() {
 }
 
 function Initialize() {
-  var api = getAPI();
+  const api = getAPI();
   if (api == null) {
     return "false";
   }
@@ -286,31 +286,31 @@ function Initialize() {
 }
 
 function Terminate() {
-  var api = getAPI();
+  const api = getAPI();
   if (api == null) {
     return "false";
   }
   return api.Terminate("");
 }
 
-function GetValue(element) {
-  var api = getAPI();
+function GetValue(cmiElement) {
+  const api = getAPI();
   if (api == null) {
     return "";
   }
-  return api.GetValue(element);
+  return api.GetValue(cmiElement);
 }
 
-function SetValue(element, value) {
-  var api = getAPI();
+function SetValue(cmiElement, elementValue) {
+  const api = getAPI();
   if (api == null) {
     return "false";
   }
-  return api.SetValue(element, value);
+  return api.SetValue(cmiElement, elementValue);
 }
 
 function Commit() {
-  var api = getAPI();
+  const api = getAPI();
   if (api == null) {
     return "false";
   }
@@ -318,64 +318,64 @@ function Commit() {
 }
 
 function GetLastError() {
-  var api = getAPI();
+  const api = getAPI();
   if (api == null) {
     return "0";
   }
   return api.GetLastError();
 }
 
-function GetErrorString(errorCode) {
-  var api = getAPI();
+function GetErrorString(scormErrorCode) {
+  const api = getAPI();
   if (api == null) {
     return "No API";
   }
-  return api.GetErrorString(errorCode);
+  return api.GetErrorString(scormErrorCode);
 }
 
-function GetDiagnostic(errorCode) {
-  var api = getAPI();
+function GetDiagnostic(scormErrorCode) {
+  const api = getAPI();
   if (api == null) {
     return "No API";
   }
-  return api.GetDiagnostic(errorCode);
+  return api.GetDiagnostic(scormErrorCode);
 }
 
 // Aliases for compatibility
-var LMSInitialize = Initialize;
-var LMSFinish = Terminate;
-var LMSGetValue = GetValue;
-var LMSSetValue = SetValue;
-var LMSCommit = Commit;
-var LMSGetLastError = GetLastError;
-var LMSGetErrorString = GetErrorString;
-var LMSGetDiagnostic = GetDiagnostic;
+const LMSInitialize = Initialize;
+const LMSFinish = Terminate;
+const LMSGetValue = GetValue;
+const LMSSetValue = SetValue;
+const LMSCommit = Commit;
+const LMSGetLastError = GetLastError;
+const LMSGetErrorString = GetErrorString;
+const LMSGetDiagnostic = GetDiagnostic;
 
 // SCORM 2004 specific
-function setCompletionStatus(status) {
-  SetValue("cmi.completion_status", status);
+function setCompletionStatus(completionStatus) {
+  SetValue("cmi.completion_status", completionStatus);
   Commit();
 }
 
-function setSuccessStatus(status) {
-  SetValue("cmi.success_status", status);
+function setSuccessStatus(successStatus) {
+  SetValue("cmi.success_status", successStatus);
   Commit();
 }
 
-function setScore(score) {
-  SetValue("cmi.score.raw", score);
+function setScore(scoreValue) {
+  SetValue("cmi.score.raw", scoreValue);
   SetValue("cmi.score.min", "0");
   SetValue("cmi.score.max", "100");
   Commit();
 }
 
-function setProgressMeasure(measure) {
-  SetValue("cmi.progress_measure", measure);
+function setProgressMeasure(progressMeasure) {
+  SetValue("cmi.progress_measure", progressMeasure);
   Commit();
 }
 
-function saveSuspendData(data) {
-  SetValue("cmi.suspend_data", data);
+function saveSuspendData(suspendData) {
+  SetValue("cmi.suspend_data", suspendData);
   Commit();
 }
 

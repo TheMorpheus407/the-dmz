@@ -124,6 +124,59 @@ describe('SCORM Service', () => {
       expect(apiWrapper2004).toContain('findAPI');
       expect(apiWrapper2004).toContain('getAPI');
     });
+
+    it('should use let/const instead of var in SCORM 1.2 wrapper', () => {
+      const apiWrapper = generateScormApiWrapper('1.2');
+
+      expect(apiWrapper).not.toContain('var ');
+      expect(apiWrapper).toContain('let API');
+      expect(apiWrapper).toContain('let attempts');
+      expect(apiWrapper).toContain('const api');
+    });
+
+    it('should use let/const instead of var in SCORM 2004 wrapper', () => {
+      const apiWrapper = generateScormApiWrapper('2004_4th');
+
+      expect(apiWrapper).not.toContain('var ');
+      expect(apiWrapper).toContain('let API_1484_11');
+      expect(apiWrapper).toContain('let attempts');
+      expect(apiWrapper).toContain('const api');
+      expect(apiWrapper).toContain('const LMSInitialize');
+    });
+
+    it('should use descriptive parameter names in SCORM 1.2 wrapper', () => {
+      const apiWrapper = generateScormApiWrapper('1.2');
+
+      expect(apiWrapper).toContain('function LMSGetValue(cmiElement)');
+      expect(apiWrapper).toContain('function LMSSetValue(cmiElement, elementValue)');
+      expect(apiWrapper).toContain('function LMSGetErrorString(scormErrorCode)');
+      expect(apiWrapper).toContain('function LMSGetDiagnostic(scormErrorCode)');
+      expect(apiWrapper).toContain('function setCompletionStatus(completionStatus)');
+      expect(apiWrapper).toContain('function setScore(scoreValue)');
+      expect(apiWrapper).toContain('function saveSuspendData(suspendData)');
+    });
+
+    it('should use descriptive parameter names in SCORM 2004 wrapper', () => {
+      const apiWrapper = generateScormApiWrapper('2004_4th');
+
+      expect(apiWrapper).toContain('function GetValue(cmiElement)');
+      expect(apiWrapper).toContain('function SetValue(cmiElement, elementValue)');
+      expect(apiWrapper).toContain('function GetErrorString(scormErrorCode)');
+      expect(apiWrapper).toContain('function GetDiagnostic(scormErrorCode)');
+      expect(apiWrapper).toContain('function setCompletionStatus(completionStatus)');
+      expect(apiWrapper).toContain('function setSuccessStatus(successStatus)');
+      expect(apiWrapper).toContain('function setScore(scoreValue)');
+      expect(apiWrapper).toContain('function setProgressMeasure(progressMeasure)');
+      expect(apiWrapper).toContain('function saveSuspendData(suspendData)');
+    });
+
+    it('should use targetWindow parameter in findAPI function', () => {
+      const apiWrapper12 = generateScormApiWrapper('1.2');
+      const apiWrapper2004 = generateScormApiWrapper('2004_4th');
+
+      expect(apiWrapper12).toContain('function findAPI(targetWindow)');
+      expect(apiWrapper2004).toContain('function findAPI(targetWindow)');
+    });
   });
 
   describe('generateLaunchHtml', () => {
