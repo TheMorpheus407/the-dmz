@@ -24,26 +24,47 @@ import {
   getNextIdleTimeout,
 } from '../session-policy.service.js';
 
+const TEST_CONSTANTS = {
+  SUPER_ADMIN_DURATION_MS: 4 * 60 * 60 * 1000,
+  TENANT_ADMIN_DURATION_MS: 8 * 60 * 60 * 1000,
+  MANAGER_DURATION_MS: 24 * 60 * 60 * 1000,
+  DEFAULT_SESSION_DURATION_MS: 30 * 24 * 60 * 60 * 1000,
+  ONE_HOUR_MS: 60 * 60 * 1000,
+  THIRTY_MINUTES_MS: 30 * 60 * 1000,
+  FIVE_MINUTES_MS: 5 * 60 * 1000,
+  FORTY_FIVE_MINUTES_MS: 45 * 60 * 1000,
+  TWENTY_FIVE_HOURS_MS: 25 * 60 * 60 * 1000,
+  FIXED_TEST_DATE: new Date('2024-01-01T00:00:00Z'),
+  FIXED_LATE_TEST_DATE: new Date('2024-01-01T10:00:00Z'),
+  MAX_CONCURRENT_SESSIONS: SESSION_POLICY_DEFAULTS.MAX_CONCURRENT_SESSIONS,
+  IDLE_TIMEOUT_MINUTES: SESSION_POLICY_DEFAULTS.IDLE_TIMEOUT_MINUTES,
+  ABSOLUTE_TIMEOUT_MINUTES: SESSION_POLICY_DEFAULTS.ABSOLUTE_TIMEOUT_MINUTES,
+};
+
 describe('session-policy.service', () => {
   describe('roleBasedSessionPolicies', () => {
     it('should have a policy for super_admin with 4 hour max duration and no refresh', () => {
       const superAdminPolicy = roleBasedSessionPolicies.find((p) => p.role === Role.SUPER_ADMIN);
       expect(superAdminPolicy).toBeDefined();
-      expect(superAdminPolicy!.policy.maxSessionDurationMs).toBe(4 * 60 * 60 * 1000);
+      expect(superAdminPolicy!.policy.maxSessionDurationMs).toBe(
+        TEST_CONSTANTS.SUPER_ADMIN_DURATION_MS,
+      );
       expect(superAdminPolicy!.policy.refreshable).toBe(false);
     });
 
     it('should have a policy for tenant_admin with 8 hour max duration', () => {
       const tenantAdminPolicy = roleBasedSessionPolicies.find((p) => p.role === Role.TENANT_ADMIN);
       expect(tenantAdminPolicy).toBeDefined();
-      expect(tenantAdminPolicy!.policy.maxSessionDurationMs).toBe(8 * 60 * 60 * 1000);
+      expect(tenantAdminPolicy!.policy.maxSessionDurationMs).toBe(
+        TEST_CONSTANTS.TENANT_ADMIN_DURATION_MS,
+      );
       expect(tenantAdminPolicy!.policy.refreshable).toBe(true);
     });
 
     it('should have a policy for manager with 24 hour max duration', () => {
       const managerPolicy = roleBasedSessionPolicies.find((p) => p.role === Role.MANAGER);
       expect(managerPolicy).toBeDefined();
-      expect(managerPolicy!.policy.maxSessionDurationMs).toBe(24 * 60 * 60 * 1000);
+      expect(managerPolicy!.policy.maxSessionDurationMs).toBe(TEST_CONSTANTS.MANAGER_DURATION_MS);
       expect(managerPolicy!.policy.refreshable).toBe(true);
     });
 
@@ -62,13 +83,13 @@ describe('session-policy.service', () => {
   describe('getSessionPolicyForRole', () => {
     it('should return super_admin policy for super_admin role', () => {
       const policy = getSessionPolicyForRole(Role.SUPER_ADMIN);
-      expect(policy.maxSessionDurationMs).toBe(4 * 60 * 60 * 1000);
+      expect(policy.maxSessionDurationMs).toBe(TEST_CONSTANTS.SUPER_ADMIN_DURATION_MS);
       expect(policy.refreshable).toBe(false);
     });
 
     it('should return tenant_admin policy for tenant_admin role', () => {
       const policy = getSessionPolicyForRole(Role.TENANT_ADMIN);
-      expect(policy.maxSessionDurationMs).toBe(8 * 60 * 60 * 1000);
+      expect(policy.maxSessionDurationMs).toBe(TEST_CONSTANTS.TENANT_ADMIN_DURATION_MS);
       expect(policy.refreshable).toBe(true);
     });
 
@@ -85,7 +106,7 @@ describe('session-policy.service', () => {
 
   describe('canRefreshSession', () => {
     it('should return true for refreshable role within duration', () => {
-      const sessionCreatedAt = new Date(Date.now() - 60 * 60 * 1000);
+      const sessionCreatedAt = new Date(Date.now() - TEST_CONSTANTS.ONE_HOUR_MS);
       const result = canRefreshSession(sessionCreatedAt, Role.LEARNER);
       expect(result).toBe(true);
     });
@@ -97,13 +118,17 @@ describe('session-policy.service', () => {
     });
 
     it('should return false for session exceeding max duration', () => {
-      const sessionCreatedAt = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+      const sessionCreatedAt = new Date(
+        Date.now() - TEST_CONSTANTS.DEFAULT_SESSION_DURATION_MS - TEST_CONSTANTS.ONE_HOUR_MS,
+      );
       const result = canRefreshSession(sessionCreatedAt, Role.LEARNER);
       expect(result).toBe(false);
     });
 
     it('should return false for unknown role exceeding default duration', () => {
-      const sessionCreatedAt = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000);
+      const sessionCreatedAt = new Date(
+        Date.now() - TEST_CONSTANTS.DEFAULT_SESSION_DURATION_MS - TEST_CONSTANTS.ONE_HOUR_MS,
+      );
       const result = canRefreshSession(sessionCreatedAt, 'unknown_role');
       expect(result).toBe(false);
     });
@@ -111,21 +136,25 @@ describe('session-policy.service', () => {
 
   describe('getSessionExpiryDate', () => {
     it('should return correct expiry for super_admin role', () => {
-      const sessionCreatedAt = new Date('2024-01-01T00:00:00Z');
+      const sessionCreatedAt = TEST_CONSTANTS.FIXED_TEST_DATE;
       const expiry = getSessionExpiryDate(sessionCreatedAt, Role.SUPER_ADMIN);
 
-      expect(expiry.getTime()).toBe(sessionCreatedAt.getTime() + 4 * 60 * 60 * 1000);
+      expect(expiry.getTime()).toBe(
+        sessionCreatedAt.getTime() + TEST_CONSTANTS.SUPER_ADMIN_DURATION_MS,
+      );
     });
 
     it('should return correct expiry for tenant_admin role', () => {
-      const sessionCreatedAt = new Date('2024-01-01T00:00:00Z');
+      const sessionCreatedAt = TEST_CONSTANTS.FIXED_TEST_DATE;
       const expiry = getSessionExpiryDate(sessionCreatedAt, Role.TENANT_ADMIN);
 
-      expect(expiry.getTime()).toBe(sessionCreatedAt.getTime() + 8 * 60 * 60 * 1000);
+      expect(expiry.getTime()).toBe(
+        sessionCreatedAt.getTime() + TEST_CONSTANTS.TENANT_ADMIN_DURATION_MS,
+      );
     });
 
     it('should return correct expiry for default role', () => {
-      const sessionCreatedAt = new Date('2024-01-01T00:00:00Z');
+      const sessionCreatedAt = TEST_CONSTANTS.FIXED_TEST_DATE;
       const expiry = getSessionExpiryDate(sessionCreatedAt, undefined);
 
       expect(expiry.getTime()).toBe(
@@ -148,14 +177,14 @@ describe('session-policy.service', () => {
     it('should use custom policy when provided in settings', () => {
       const customSettings = {
         sessionPolicy: {
-          idleTimeoutMinutes: 60,
-          absoluteTimeoutMinutes: 480,
+          idleTimeoutMinutes: TEST_CONSTANTS.IDLE_TIMEOUT_MINUTES * 2,
+          absoluteTimeoutMinutes: TEST_CONSTANTS.ABSOLUTE_TIMEOUT_MINUTES,
         },
       };
 
       const result = resolveTenantSessionPolicy(customSettings);
-      expect(result.idleTimeoutMinutes).toBe(60);
-      expect(result.absoluteTimeoutMinutes).toBe(480);
+      expect(result.idleTimeoutMinutes).toBe(TEST_CONSTANTS.IDLE_TIMEOUT_MINUTES * 2);
+      expect(result.absoluteTimeoutMinutes).toBe(TEST_CONSTANTS.ABSOLUTE_TIMEOUT_MINUTES);
       expect(result.maxConcurrentSessionsPerUser).toBe(
         defaultTenantSessionPolicy.maxConcurrentSessionsPerUser,
       );
@@ -176,8 +205,8 @@ describe('session-policy.service', () => {
 
   describe('evaluateSessionTimeouts', () => {
     it('should return active for fresh session within timeouts', () => {
-      const sessionCreatedAt = new Date(Date.now() - 30 * 60 * 1000);
-      const lastActiveAt = new Date(Date.now() - 5 * 60 * 1000);
+      const sessionCreatedAt = new Date(Date.now() - TEST_CONSTANTS.THIRTY_MINUTES_MS);
+      const lastActiveAt = new Date(Date.now() - TEST_CONSTANTS.FIVE_MINUTES_MS);
 
       const result = evaluateSessionTimeouts(
         sessionCreatedAt,
@@ -192,8 +221,8 @@ describe('session-policy.service', () => {
     });
 
     it('should return expired with idle timeout when idle too long', () => {
-      const sessionCreatedAt = new Date(Date.now() - 60 * 60 * 1000);
-      const lastActiveAt = new Date(Date.now() - 45 * 60 * 1000);
+      const sessionCreatedAt = new Date(Date.now() - TEST_CONSTANTS.ONE_HOUR_MS);
+      const lastActiveAt = new Date(Date.now() - TEST_CONSTANTS.FORTY_FIVE_MINUTES_MS);
 
       const policy = { ...defaultTenantSessionPolicy, idleTimeoutMinutes: 30 };
 
@@ -206,10 +235,13 @@ describe('session-policy.service', () => {
     });
 
     it('should return expired with absolute timeout when session too old', () => {
-      const sessionCreatedAt = new Date(Date.now() - 25 * 60 * 60 * 1000);
+      const sessionCreatedAt = new Date(Date.now() - TEST_CONSTANTS.TWENTY_FIVE_HOURS_MS);
       const lastActiveAt = new Date();
 
-      const policy = { ...defaultTenantSessionPolicy, absoluteTimeoutMinutes: 24 * 60 };
+      const policy = {
+        ...defaultTenantSessionPolicy,
+        absoluteTimeoutMinutes: TEST_CONSTANTS.ABSOLUTE_TIMEOUT_MINUTES,
+      };
 
       const result = evaluateSessionTimeouts(sessionCreatedAt, lastActiveAt, policy);
 
@@ -226,7 +258,7 @@ describe('session-policy.service', () => {
 
       expect(result.allowed).toBe(true);
       expect(result.currentSessionCount).toBe(3);
-      expect(result.maxSessions).toBe(5);
+      expect(result.maxSessions).toBe(TEST_CONSTANTS.MAX_CONCURRENT_SESSIONS);
     });
 
     it('should deny session when at limit', () => {
@@ -313,16 +345,18 @@ describe('session-policy.service', () => {
 
   describe('getNextIdleTimeout', () => {
     it('should return correct next idle timeout date', () => {
-      const lastActiveAt = new Date('2024-01-01T10:00:00Z');
-      const nextTimeout = getNextIdleTimeout(lastActiveAt, 30);
+      const lastActiveAt = TEST_CONSTANTS.FIXED_LATE_TEST_DATE;
+      const nextTimeout = getNextIdleTimeout(lastActiveAt, TEST_CONSTANTS.IDLE_TIMEOUT_MINUTES);
 
-      expect(nextTimeout.getTime()).toBe(lastActiveAt.getTime() + 30 * 60 * 1000);
+      expect(nextTimeout.getTime()).toBe(lastActiveAt.getTime() + TEST_CONSTANTS.THIRTY_MINUTES_MS);
     });
   });
 
   describe('defaultSessionPolicy', () => {
     it('should have correct default max session duration (30 days)', () => {
-      expect(defaultSessionPolicy.maxSessionDurationMs).toBe(30 * 24 * 60 * 60 * 1000);
+      expect(defaultSessionPolicy.maxSessionDurationMs).toBe(
+        TEST_CONSTANTS.DEFAULT_SESSION_DURATION_MS,
+      );
     });
 
     it('should be refreshable by default', () => {
