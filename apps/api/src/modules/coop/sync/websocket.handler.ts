@@ -1,7 +1,9 @@
-import { wsGateway, type WebSocketGateway,
+import {
+  type WebSocketGateway,
   type CoopWSClientMessage,
   type CoopWSServerMessage,
-  type WSServerMessage } from '../../notification/websocket/index.js';
+  type WSServerMessage,
+} from '../../notification/websocket/index.js';
 
 import { validateAndApplyAction } from './sync.service.js';
 
@@ -25,8 +27,13 @@ export async function handleCoopWebSocketConnection(
   _request: FastifyRequest,
   options: CoopWebSocketHandlerOptions,
 ): Promise<void> {
-  const gateway = options.gateway ?? wsGateway;
+  const gateway = options.gateway;
   const config = options.config;
+
+  if (!gateway) {
+    connection.close(4001, 'Gateway not available');
+    return;
+  }
 
   connection.on('message', (data: Buffer | string) => {
     void handleCoopMessage(data, connection, gateway, config, options.eventBus);

@@ -4,7 +4,6 @@ import { authGuard } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 
-import { wsGateway } from './websocket/websocket.gateway.js';
 import { handleWebSocketConnection } from './websocket/websocket.handler.js';
 import {
   handleSSEConnection,
@@ -27,7 +26,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       websocket: true,
     },
     async (connection, request) => {
-      await handleWebSocketConnection(connection, request, { gateway: wsGateway });
+      await handleWebSocketConnection(connection, request, { gateway: fastify.wsGateway });
     },
   );
 
@@ -37,7 +36,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
     },
     async (request, reply) => {
-      await handleSSEConnection(request, reply, wsGateway);
+      await handleSSEConnection(request, reply, fastify.wsGateway);
     },
   );
 
@@ -47,7 +46,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
     },
     async (request, reply) => {
-      await handleSSESubscribe(request, reply, wsGateway);
+      await handleSSESubscribe(request, reply, fastify.wsGateway);
     },
   );
 
@@ -57,7 +56,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
       preHandler: [authGuard, tenantContext, tenantStatusGuard],
     },
     async (request, reply) => {
-      await handleSSEUnsubscribe(request, reply, wsGateway);
+      await handleSSEUnsubscribe(request, reply, fastify.wsGateway);
     },
   );
 
@@ -68,7 +67,7 @@ const notificationRoutes: FastifyPluginAsync = async (fastify) => {
     },
     async () => {
       return {
-        totalConnections: wsGateway.getConnectionCount(),
+        totalConnections: fastify.wsGateway.getConnectionCount(),
         timestamp: Date.now(),
       };
     },

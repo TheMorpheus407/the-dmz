@@ -303,8 +303,6 @@ export class WebSocketGateway {
   }
 }
 
-export const wsGateway = new WebSocketGateway();
-
 export function buildChannelName(type: string, id: string): string {
   return `${type}:${id}`;
 }

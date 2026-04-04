@@ -6,35 +6,6 @@ import postgres from 'postgres';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../websocket/websocket.gateway.js', async () => {
-  const mockWsGateway = {
-    getConnectionCount: vi.fn().mockReturnValue(0),
-    getConnection: vi.fn().mockReturnValue(null),
-    getAllConnections: vi.fn().mockReturnValue([].values()),
-    registerConnection: vi.fn(),
-    removeConnection: vi.fn(),
-    subscribe: vi.fn().mockReturnValue(true),
-    unsubscribe: vi.fn().mockReturnValue(true),
-    sendToConnection: vi.fn().mockReturnValue(true),
-    sendToUser: vi.fn().mockReturnValue(0),
-    broadcastToChannel: vi.fn().mockReturnValue(0),
-    broadcastToTenant: vi.fn().mockReturnValue(0),
-    getActiveConnections: vi.fn().mockReturnValue([]),
-    updateHeartbeat: vi.fn().mockReturnValue(true),
-    getNextSequence: vi.fn().mockReturnValue(1),
-    createMessage: vi
-      .fn()
-      .mockReturnValue({ type: 'TEST', payload: {}, timestamp: Date.now(), sequence: 1 }),
-    parseChannel: vi.fn().mockReturnValue({ type: 'test', id: '123' }),
-    isValidChannel: vi.fn().mockReturnValue(true),
-  };
-  return {
-    ...(await vi.importActual('../websocket/websocket.gateway.js')),
-    wsGateway: mockWsGateway,
-    WebSocketGateway: vi.fn().mockImplementation(() => mockWsGateway),
-  };
-});
-
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';

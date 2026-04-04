@@ -1,6 +1,6 @@
 import { verifyJWT } from '../../auth/index.js';
 
-import { wsGateway, type WebSocketGateway } from './websocket.gateway.js';
+import type { WebSocketGateway } from './websocket.gateway.js';
 
 import type { FastifyRequest } from 'fastify';
 import type { WebSocket as WSConnection } from 'ws';
@@ -15,7 +15,12 @@ export async function handleWebSocketConnection(
   request: FastifyRequest,
   options: WebSocketHandlerOptions = {},
 ): Promise<void> {
-  const gateway = options.gateway ?? wsGateway;
+  const gateway = options.gateway;
+
+  if (!gateway) {
+    connection.close(4001, 'Gateway not available');
+    return;
+  }
 
   const authResult = await authenticateWebSocket(request);
 

@@ -19,6 +19,7 @@ import { infrastructurePlugin } from './shared/plugins/infrastructure.plugin.js'
 import { ssrfProtectionPlugin } from './shared/plugins/ssrf-protection.plugin.js';
 import { sentryPlugin } from './shared/plugins/sentry.plugin.js';
 import { eventBusPlugin } from './shared/events/event-bus.plugin.js';
+import { wsGatewayPlugin } from './modules/notification/websocket/websocket-gateway.plugin.js';
 import { healthPlugin } from './modules/health/index.js';
 import { cachePlugin } from './modules/cache/index.js';
 import { authPlugin, jwksPlugin, signingKeyInitPlugin } from './modules/auth/index.js';
@@ -65,6 +66,7 @@ import { createCorsConfig, configureCors } from './shared/config/index.js';
 const MODULE_REGISTRY: Record<string, { plugin: unknown; routePrefix?: string }> = {
   infrastructure: { plugin: infrastructurePlugin },
   eventBus: { plugin: eventBusPlugin },
+  wsGateway: { plugin: wsGatewayPlugin },
   sentry: { plugin: sentryPlugin },
   health: { plugin: healthPlugin },
   cache: { plugin: cachePlugin },
@@ -169,7 +171,7 @@ export const buildApp = async (
 
   const registrationOrder = getRegistrationOrder();
 
-  const infrastructureNames = new Set(['infrastructure', 'eventBus']);
+  const infrastructureNames = new Set(['infrastructure', 'eventBus', 'wsGateway']);
   const infrastructureEntries = registrationOrder.filter((e) => infrastructureNames.has(e.name));
   const domainEntries = registrationOrder.filter((e) => !infrastructureNames.has(e.name));
 

@@ -172,7 +172,14 @@ export async function quickSignalsRoutes(
         ...(body.context !== undefined && { context: body.context }),
       };
 
-      const result = await sendSignal(config, user.tenantId, user.userId, input);
+      const result = await sendSignal(
+        config,
+        user.tenantId,
+        user.userId,
+        input,
+        undefined,
+        fastify.wsGateway,
+      );
 
       if (!result.success) {
         if (result.rateLimited) {

@@ -1,5 +1,5 @@
 import { verifyJWT } from '../auth/index.js';
-import { wsGateway, buildChannelName } from '../notification/websocket/index.js';
+import { buildChannelName, type WebSocketGateway } from '../notification/websocket/index.js';
 
 import { sendMessage, type SendMessageResult } from './chat.service.js';
 
@@ -28,11 +28,17 @@ export async function chatWebSocketHandler(
   request: FastifyRequest,
   config: AppConfig,
   eventBus?: IEventBus,
+  gateway?: WebSocketGateway,
 ): Promise<void> {
+  if (!gateway) {
+    connection.close(4001, 'Gateway not available');
+    return;
+  }
+
   const authResult = await authenticateWebSocket(request, config);
 
   if (!authResult.valid || !authResult.payload) {
-    const errorMsg = wsGateway.createMessage('ERROR', {
+    const errorMsg = gateway.createMessage('ERROR', {
       message: authResult.error ?? 'Authentication failed',
     });
     connection.send(JSON.stringify(errorMsg));
@@ -40,10 +46,10 @@ export async function chatWebSocketHandler(
     return;
   }
 
-  const connectionInfo = wsGateway.registerConnection(connection, authResult.payload);
+  const connectionInfo = gateway.registerConnection(connection, authResult.payload);
   const { userId } = authResult.payload;
 
-  const welcomeMsg = wsGateway.createMessage('NOTIFICATION', {
+  const welcomeMsg = gateway.createMessage('NOTIFICATION', {
     message: 'Connected to chat',
     connectionId: connectionInfo.connectionId,
     userId,
@@ -59,16 +65,17 @@ export async function chatWebSocketHandler(
       authResult.payload!.tenantId,
       userId,
       eventBus,
+      gateway,
     );
   });
 
   connection.on('close', () => {
-    wsGateway.removeConnection(connectionInfo.connectionId);
+    gateway.removeConnection(connectionInfo.connectionId);
     clearTypingTimer(connectionInfo.connectionId);
   });
 
   connection.on('error', () => {
-    wsGateway.removeConnection(connectionInfo.connectionId);
+    gateway.removeConnection(connectionInfo.connectionId);
     clearTypingTimer(connectionInfo.connectionId);
   });
 }
@@ -122,7 +129,8 @@ async function handleChatMessage(
   config: AppConfig,
   tenantId: string,
   userId: string,
-  eventBus?: IEventBus,
+  eventBus: IEventBus | undefined,
+  gateway: WebSocketGateway,
 ): Promise<void> {
   let message: Record<string, unknown>;
 
@@ -130,7 +138,7 @@ async function handleChatMessage(
     const parsed = typeof data === 'string' ? data : data.toString();
     message = JSON.parse(parsed) as Record<string, unknown>;
   } catch {
-    const errorMsg = wsGateway.createMessage('ERROR', {
+    const errorMsg = gateway.createMessage('ERROR', {
       message: 'Invalid message format',
     });
     connection.send(JSON.stringify(errorMsg));
@@ -141,23 +149,23 @@ async function handleChatMessage(
 
   switch (messageType) {
     case 'SUBSCRIBE': {
-      handleSubscribe(message, connection);
+      handleSubscribe(message, connection, gateway);
       break;
     }
     case 'UNSUBSCRIBE': {
-      handleUnsubscribe(message, connection);
+      handleUnsubscribe(message, connection, gateway);
       break;
     }
     case 'CHAT_TYPING': {
-      handleTyping(message, connection, userId);
+      handleTyping(message, connection, userId, gateway);
       break;
     }
     case 'CHAT_SEND': {
-      await handleSend(message, connection, config, tenantId, userId, eventBus);
+      await handleSend(message, connection, config, tenantId, userId, eventBus, gateway);
       break;
     }
     default: {
-      const errorMsg = wsGateway.createMessage('ERROR', {
+      const errorMsg = gateway.createMessage('ERROR', {
         message: `Unknown message type: ${messageType}`,
       });
       connection.send(JSON.stringify(errorMsg));
@@ -165,53 +173,61 @@ async function handleChatMessage(
   }
 }
 
-function handleSubscribe(message: Record<string, unknown>, connection: WSConnection): void {
+function handleSubscribe(
+  message: Record<string, unknown>,
+  connection: WSConnection,
+  gateway: WebSocketGateway,
+): void {
   const channel = message['channel'] as string | undefined;
 
   if (!channel) {
-    const errorMsg = wsGateway.createMessage('ERROR', {
+    const errorMsg = gateway.createMessage('ERROR', {
       message: 'Channel is required for subscribe',
     });
     connection.send(JSON.stringify(errorMsg));
     return;
   }
 
-  if (!wsGateway.isValidChannel(channel)) {
-    const errorMsg = wsGateway.createMessage('ERROR', {
+  if (!gateway.isValidChannel(channel)) {
+    const errorMsg = gateway.createMessage('ERROR', {
       message: 'Invalid channel',
     });
     connection.send(JSON.stringify(errorMsg));
     return;
   }
 
-  const connId = getConnectionIdFromSocket(connection);
+  const connId = getConnectionIdFromSocket(connection, gateway);
   if (connId) {
-    wsGateway.subscribe(connId, channel);
+    gateway.subscribe(connId, channel);
   }
 
-  const ackMsg = wsGateway.createMessage('ACK', {
+  const ackMsg = gateway.createMessage('ACK', {
     subscribed: channel,
   });
   connection.send(JSON.stringify(ackMsg));
 }
 
-function handleUnsubscribe(message: Record<string, unknown>, connection: WSConnection): void {
+function handleUnsubscribe(
+  message: Record<string, unknown>,
+  connection: WSConnection,
+  gateway: WebSocketGateway,
+): void {
   const channel = message['channel'] as string | undefined;
 
   if (!channel) {
-    const errorMsg = wsGateway.createMessage('ERROR', {
+    const errorMsg = gateway.createMessage('ERROR', {
       message: 'Channel is required for unsubscribe',
     });
     connection.send(JSON.stringify(errorMsg));
     return;
   }
 
-  const connId = getConnectionIdFromSocket(connection);
+  const connId = getConnectionIdFromSocket(connection, gateway);
   if (connId) {
-    wsGateway.unsubscribe(connId, channel);
+    gateway.unsubscribe(connId, channel);
   }
 
-  const ackMsg = wsGateway.createMessage('ACK', {
+  const ackMsg = gateway.createMessage('ACK', {
     unsubscribed: channel,
   });
   connection.send(JSON.stringify(ackMsg));
@@ -221,6 +237,7 @@ function handleTyping(
   message: Record<string, unknown>,
   connection: WSConnection,
   userId: string,
+  gateway: WebSocketGateway,
 ): void {
   const channelId = message['channelId'] as string | undefined;
 
@@ -228,29 +245,29 @@ function handleTyping(
     return;
   }
 
-  const connId = getConnectionIdFromSocket(connection);
+  const connId = getConnectionIdFromSocket(connection, gateway);
   if (!connId) {
     return;
   }
 
   const channel = buildChannelName('chat', channelId);
-  const typingMsg = wsGateway.createMessage('CHAT_TYPING', {
+  const typingMsg = gateway.createMessage('CHAT_TYPING', {
     channelId,
     playerId: userId,
     isTyping: true,
   });
 
-  wsGateway.broadcastToChannel(channel, typingMsg);
+  gateway.broadcastToChannel(channel, typingMsg);
 
   clearTypingTimer(`${connId}:${channelId}`);
 
   const timer = setTimeout(() => {
-    const stopTypingMsg = wsGateway.createMessage('CHAT_TYPING', {
+    const stopTypingMsg = gateway.createMessage('CHAT_TYPING', {
       channelId,
       playerId: userId,
       isTyping: false,
     });
-    wsGateway.broadcastToChannel(channel, stopTypingMsg);
+    gateway.broadcastToChannel(channel, stopTypingMsg);
     typingTimers.delete(`${connId}:${channelId}`);
   }, TYPING_TIMEOUT_MS);
 
@@ -263,13 +280,14 @@ async function handleSend(
   config: AppConfig,
   tenantId: string,
   userId: string,
-  eventBus?: IEventBus,
+  eventBus: IEventBus | undefined,
+  gateway: WebSocketGateway,
 ): Promise<void> {
   const channelId = message['channelId'] as string | undefined;
   const content = message['content'] as string | undefined;
 
   if (!channelId || !content) {
-    const errorMsg = wsGateway.createMessage('ERROR', {
+    const errorMsg = gateway.createMessage('ERROR', {
       message: 'channelId and content are required',
     });
     connection.send(JSON.stringify(errorMsg));
@@ -290,7 +308,7 @@ async function handleSend(
 
   if (!result.success) {
     if (result.rateLimited) {
-      const rateLimitMsg = wsGateway.createMessage('CHAT_MODERATION_ACTION', {
+      const rateLimitMsg = gateway.createMessage('CHAT_MODERATION_ACTION', {
         channelId,
         action: 'rate_limited',
         retryAfterMs: result.retryAfterMs,
@@ -300,7 +318,7 @@ async function handleSend(
     }
 
     if (result.moderationStatus === 'rejected') {
-      const modMsg = wsGateway.createMessage('CHAT_MODERATION_ACTION', {
+      const modMsg = gateway.createMessage('CHAT_MODERATION_ACTION', {
         channelId,
         action: 'rejected',
         message: result.error,
@@ -309,7 +327,7 @@ async function handleSend(
       return;
     }
 
-    const errorMsg = wsGateway.createMessage('ERROR', {
+    const errorMsg = gateway.createMessage('ERROR', {
       message: result.error ?? 'Failed to send message',
     });
     connection.send(JSON.stringify(errorMsg));
@@ -317,7 +335,7 @@ async function handleSend(
   }
 
   if (result.moderationStatus === 'flagged') {
-    const modMsg = wsGateway.createMessage('CHAT_MODERATION_ACTION', {
+    const modMsg = gateway.createMessage('CHAT_MODERATION_ACTION', {
       channelId,
       action: 'flagged',
       messageId: result.message?.messageId,
@@ -326,8 +344,11 @@ async function handleSend(
   }
 }
 
-function getConnectionIdFromSocket(connection: WSConnection): string | undefined {
-  for (const [connId, connectionItem] of wsGateway.getAllConnections()) {
+function getConnectionIdFromSocket(
+  connection: WSConnection,
+  gateway: WebSocketGateway,
+): string | undefined {
+  for (const [connId, connectionItem] of gateway.getAllConnections()) {
     if (connectionItem.socket === connection) {
       return connId;
     }

@@ -12,8 +12,8 @@ import {
 } from '../../db/schema/social/index.js';
 import { evaluateFlag } from '../feature-flags/index.js';
 import {
-  wsGateway,
   buildChannelName,
+  type WebSocketGateway,
   type WSServerMessage,
 } from '../notification/websocket/index.js';
 
@@ -118,6 +118,7 @@ export async function sendSignal(
   playerId: string,
   input: SignalSendInput,
   redisClient?: RedisRateLimitClient,
+  gateway?: WebSocketGateway,
 ): Promise<SignalSendResult> {
   const quickSignalsEnabled = await evaluateFlag(config, tenantId, 'social.quick_signals_enabled');
   if (!quickSignalsEnabled) {
@@ -159,9 +160,9 @@ export async function sendSignal(
     })
     .returning();
 
-  if (input.sessionId) {
+  if (input.sessionId && gateway) {
     const channel = buildChannelName('signals', input.sessionId);
-    const message: WSServerMessage = wsGateway.createMessage('QUICK_SIGNAL', {
+    const message: WSServerMessage = gateway.createMessage('QUICK_SIGNAL', {
       signalKey: input.signalKey,
       playerId,
       targetPlayerId: input.targetPlayerId ?? null,
@@ -170,7 +171,7 @@ export async function sendSignal(
       label: template.label,
       timestamp: new Date().toISOString(),
     });
-    wsGateway.broadcastToChannel(channel, message);
+    gateway.broadcastToChannel(channel, message);
   }
 
   if (usage) {

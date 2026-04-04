@@ -2,17 +2,12 @@ import { randomUUID } from 'crypto';
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { buildChannelName } from '../../notification/websocket/index.js';
+
 const mockWsGateway = {
   createMessage: vi.fn(),
   broadcastToChannel: vi.fn(),
 };
-
-const mockBuildChannelName = vi.fn((prefix: string, id: string) => `${prefix}:${id}`);
-
-vi.mock('../../notification/websocket/websocket.gateway.js', () => ({
-  wsGateway: mockWsGateway,
-  buildChannelName: mockBuildChannelName,
-}));
 
 import {
   createChatBroadcastHandler,
@@ -40,29 +35,41 @@ describe('chat-broadcast.handler', () => {
 
   describe('createChatBroadcastHandler', () => {
     it('subscribes to all three event types', () => {
-      createChatBroadcastHandler(mockEventBus);
+      createChatBroadcastHandler(mockEventBus, mockWsGateway as any);
 
       expect(subscribeMock).toHaveBeenCalledTimes(3);
       expect(subscribeMock).toHaveBeenCalledWith('chat.message.sent', expect.any(Function));
       expect(subscribeMock).toHaveBeenCalledWith('chat.message.deleted', expect.any(Function));
       expect(subscribeMock).toHaveBeenCalledWith('chat.channel.created', expect.any(Function));
     });
+
+    it('works without gateway parameter', () => {
+      createChatBroadcastHandler(mockEventBus);
+
+      expect(subscribeMock).toHaveBeenCalledTimes(3);
+    });
   });
 
   describe('removeChatBroadcastHandler', () => {
     it('unsubscribes from all three event types', () => {
-      removeChatBroadcastHandler(mockEventBus);
+      removeChatBroadcastHandler(mockEventBus, mockWsGateway as any);
 
       expect(unsubscribeMock).toHaveBeenCalledTimes(3);
       expect(unsubscribeMock).toHaveBeenCalledWith('chat.message.sent', expect.any(Function));
       expect(unsubscribeMock).toHaveBeenCalledWith('chat.message.deleted', expect.any(Function));
       expect(unsubscribeMock).toHaveBeenCalledWith('chat.channel.created', expect.any(Function));
     });
+
+    it('works without gateway parameter', () => {
+      removeChatBroadcastHandler(mockEventBus);
+
+      expect(unsubscribeMock).toHaveBeenCalledTimes(3);
+    });
   });
 
   describe('handleMessageSent', () => {
     it('broadcasts to correct wsChannel', async () => {
-      createChatBroadcastHandler(mockEventBus);
+      createChatBroadcastHandler(mockEventBus, mockWsGateway as any);
 
       const sentHandler = subscribeMock.mock.calls.find(
         (call) => call[0] === 'chat.message.sent',
@@ -99,7 +106,7 @@ describe('chat-broadcast.handler', () => {
 
       await sentHandler(mockEvent);
 
-      expect(mockBuildChannelName).toHaveBeenCalledWith('chat', 'channel-1');
+      const channelName = buildChannelName('chat', 'channel-1');
       expect(mockWsGateway.createMessage).toHaveBeenCalledWith(
         'CHAT_MESSAGE',
         expect.objectContaining({
@@ -111,16 +118,47 @@ describe('chat-broadcast.handler', () => {
           createdAt: '2026-03-01T00:00:00.000Z',
         }),
       );
-      expect(mockWsGateway.broadcastToChannel).toHaveBeenCalledWith(
-        'chat:channel-1',
-        expect.anything(),
-      );
+      expect(mockWsGateway.broadcastToChannel).toHaveBeenCalledWith(channelName, expect.anything());
+    });
+
+    it('does not broadcast when gateway is not provided', async () => {
+      createChatBroadcastHandler(mockEventBus);
+
+      const sentHandler = subscribeMock.mock.calls.find(
+        (call) => call[0] === 'chat.message.sent',
+      )?.[1] as (event: DomainEvent<ChatMessageSentPayload>) => Promise<void>;
+
+      const mockEvent: DomainEvent<ChatMessageSentPayload> = {
+        eventType: 'chat.message.sent',
+        eventId: randomUUID(),
+        source: 'test',
+        correlationId: randomUUID(),
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        version: 1,
+        payload: {
+          messageId: 'msg-1',
+          channelId: 'channel-1',
+          senderPlayerId: 'player-1',
+          content: 'Hello',
+          moderationStatus: 'approved',
+          createdAt: '2026-03-01T00:00:00.000Z',
+          tenantId: 'tenant-1',
+        },
+        metadata: {},
+        timestamp: Date.now(),
+      };
+
+      await sentHandler(mockEvent);
+
+      expect(mockWsGateway.createMessage).not.toHaveBeenCalled();
+      expect(mockWsGateway.broadcastToChannel).not.toHaveBeenCalled();
     });
   });
 
   describe('handleMessageDeleted', () => {
     it('broadcasts to correct wsChannel with deleted:true', async () => {
-      createChatBroadcastHandler(mockEventBus);
+      createChatBroadcastHandler(mockEventBus, mockWsGateway as any);
 
       const deletedHandler = subscribeMock.mock.calls.find(
         (call) => call[0] === 'chat.message.deleted',
@@ -152,16 +190,45 @@ describe('chat-broadcast.handler', () => {
 
       await deletedHandler(mockEvent);
 
-      expect(mockBuildChannelName).toHaveBeenCalledWith('chat', 'channel-1');
+      const channelName = buildChannelName('chat', 'channel-1');
       expect(mockWsGateway.createMessage).toHaveBeenCalledWith('CHAT_MESSAGE', {
         messageId: 'msg-1',
         channelId: 'channel-1',
         deleted: true,
       });
-      expect(mockWsGateway.broadcastToChannel).toHaveBeenCalledWith(
-        'chat:channel-1',
-        expect.anything(),
-      );
+      expect(mockWsGateway.broadcastToChannel).toHaveBeenCalledWith(channelName, expect.anything());
+    });
+  });
+
+  describe('handleChannelCreated', () => {
+    it('does not throw when called', async () => {
+      createChatBroadcastHandler(mockEventBus, mockWsGateway as any);
+
+      const createdHandler = subscribeMock.mock.calls.find(
+        (call) => call[0] === 'chat.channel.created',
+      )?.[1] as (event: DomainEvent<ChatChannelCreatedPayload>) => Promise<void>;
+
+      const mockEvent: DomainEvent<ChatChannelCreatedPayload> = {
+        eventType: 'chat.channel.created',
+        eventId: randomUUID(),
+        source: 'test',
+        correlationId: randomUUID(),
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        version: 1,
+        payload: {
+          channelId: 'channel-1',
+          name: 'Test Channel',
+          createdBy: 'user-1',
+          tenantId: 'tenant-1',
+        },
+        metadata: {},
+        timestamp: Date.now(),
+      };
+
+      await expect(createdHandler(mockEvent)).resolves.not.toThrow();
+      expect(mockWsGateway.createMessage).not.toHaveBeenCalled();
+      expect(mockWsGateway.broadcastToChannel).not.toHaveBeenCalled();
     });
   });
 });

@@ -19,13 +19,13 @@ async function registerChatPlugin(fastify: FastifyInstance, config: AppConfig): 
   });
 
   fastify.get('/ws/chat', { websocket: true }, async (connection, request) => {
-    await chatWebSocketHandler(connection, request, config, fastify.eventBus);
+    await chatWebSocketHandler(connection, request, config, fastify.eventBus, fastify.wsGateway);
   });
 
-  createChatBroadcastHandler(fastify.eventBus);
+  createChatBroadcastHandler(fastify.eventBus, fastify.wsGateway);
 
   fastify.addHook('onClose', async () => {
-    removeChatBroadcastHandler(fastify.eventBus);
+    removeChatBroadcastHandler(fastify.eventBus, fastify.wsGateway);
   });
 
   fastify.register(chatRoutes, config);

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 type SignalCategory = 'decision' | 'urgency' | 'coordination' | 'resource';
 
@@ -290,5 +290,158 @@ describe('quick signals service - signal count by category', () => {
       ].includes(k),
     );
     expect(resourceSignals).toHaveLength(4);
+  });
+});
+
+describe('quick signals service - gateway parameter', () => {
+  it('sendSignal function accepts gateway as optional parameter', async () => {
+    const { sendSignal } = await import('../quick-signals.service.js');
+    expect(typeof sendSignal).toBe('function');
+  });
+
+  it('sendSignal uses gateway when provided with sessionId', async () => {
+    const mockFeatureFlags = await import('../../feature-flags/index.js');
+    vi.spyOn(mockFeatureFlags, 'evaluateFlag').mockResolvedValue(true);
+
+    const { sendSignal } = await import('../quick-signals.service.js');
+
+    const mockConfig = { JWT_SECRET: 'test-secret' } as any;
+    const mockRedis = {
+      incrementRateLimitKey: vi.fn().mockResolvedValue({ current: 1, ttl: 60000 }),
+    } as any;
+
+    const mockGateway = {
+      createMessage: vi.fn().mockReturnValue({
+        type: 'QUICK_SIGNAL',
+        payload: {},
+        timestamp: Date.now(),
+      }),
+      broadcastToChannel: vi.fn(),
+    };
+
+    const db = await import('../../../shared/database/connection.js');
+    vi.spyOn(db, 'getDatabaseClient').mockReturnValue({
+      query: {
+        quickSignalTemplates: {
+          findFirst: vi.fn().mockResolvedValue({
+            signalKey: 'signal.approve',
+            icon: '👍',
+            label: 'Approve',
+            category: 'decision',
+          }),
+        },
+      },
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: '1' }]),
+        }),
+      }),
+    } as any);
+
+    const result = await sendSignal(
+      mockConfig,
+      'tenant-1',
+      'player-1',
+      { signalKey: 'signal.approve', sessionId: 'session-1' },
+      mockRedis,
+      mockGateway as any,
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockGateway.createMessage).toHaveBeenCalled();
+    expect(mockGateway.broadcastToChannel).toHaveBeenCalledWith(
+      'signals:session-1',
+      expect.objectContaining({ type: 'QUICK_SIGNAL' }),
+    );
+  });
+
+  it('sendSignal skips broadcast when gateway is not provided', async () => {
+    const mockFeatureFlags = await import('../../feature-flags/index.js');
+    vi.spyOn(mockFeatureFlags, 'evaluateFlag').mockResolvedValue(true);
+
+    const { sendSignal } = await import('../quick-signals.service.js');
+
+    const mockConfig = { JWT_SECRET: 'test-secret' } as any;
+    const mockRedis = {
+      incrementRateLimitKey: vi.fn().mockResolvedValue({ current: 1, ttl: 60000 }),
+    } as any;
+
+    const db = await import('../../../shared/database/connection.js');
+    vi.spyOn(db, 'getDatabaseClient').mockReturnValue({
+      query: {
+        quickSignalTemplates: {
+          findFirst: vi.fn().mockResolvedValue({
+            signalKey: 'signal.approve',
+            icon: '👍',
+            label: 'Approve',
+            category: 'decision',
+          }),
+        },
+      },
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: '1' }]),
+        }),
+      }),
+    } as any);
+
+    const result = await sendSignal(
+      mockConfig,
+      'tenant-1',
+      'player-1',
+      { signalKey: 'signal.approve', sessionId: 'session-1' },
+      mockRedis,
+      undefined,
+    );
+
+    expect(result.success).toBe(true);
+  });
+
+  it('sendSignal skips broadcast when sessionId is not provided', async () => {
+    const mockFeatureFlags = await import('../../feature-flags/index.js');
+    vi.spyOn(mockFeatureFlags, 'evaluateFlag').mockResolvedValue(true);
+
+    const { sendSignal } = await import('../quick-signals.service.js');
+
+    const mockConfig = { JWT_SECRET: 'test-secret' } as any;
+    const mockRedis = {
+      incrementRateLimitKey: vi.fn().mockResolvedValue({ current: 1, ttl: 60000 }),
+    } as any;
+
+    const mockGateway = {
+      createMessage: vi.fn(),
+      broadcastToChannel: vi.fn(),
+    };
+
+    const db = await import('../../../shared/database/connection.js');
+    vi.spyOn(db, 'getDatabaseClient').mockReturnValue({
+      query: {
+        quickSignalTemplates: {
+          findFirst: vi.fn().mockResolvedValue({
+            signalKey: 'signal.approve',
+            icon: '👍',
+            label: 'Approve',
+            category: 'decision',
+          }),
+        },
+      },
+      insert: vi.fn().mockReturnValue({
+        values: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([{ id: '1' }]),
+        }),
+      }),
+    } as any);
+
+    const result = await sendSignal(
+      mockConfig,
+      'tenant-1',
+      'player-1',
+      { signalKey: 'signal.approve' },
+      mockRedis,
+      mockGateway as any,
+    );
+
+    expect(result.success).toBe(true);
+    expect(mockGateway.broadcastToChannel).not.toHaveBeenCalled();
   });
 });
