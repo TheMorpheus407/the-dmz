@@ -1,14 +1,12 @@
 import { verifyJWT } from '../auth/index.js';
-import { buildChannelName, type WebSocketGateway } from '../notification/websocket/index.js';
+import { buildChannelName, type WebSocketGateway,
+  type WebSocketAuthResult,
+  type JWTAuthPayload,
+  type WSConnection } from '../notification/websocket/index.js';
 
 import { sendMessage, type SendMessageResult } from './chat.service.js';
 
 import type { FastifyRequest } from 'fastify';
-import type {
-  WebSocketAuthResult,
-  JWTAuthPayload,
-  WSConnection,
-} from '../notification/websocket/index.js';
 import type { AppConfig } from '../../config.js';
 import type { IEventBus } from '../../shared/events/event-types.js';
 

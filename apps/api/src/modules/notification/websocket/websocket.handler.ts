@@ -1,7 +1,6 @@
 import { verifyJWT } from '../../auth/index.js';
 
 import type { WebSocketGateway } from './websocket.gateway.js';
-
 import type { FastifyRequest } from 'fastify';
 import type { WebSocket as WSConnection } from 'ws';
 import type { WSClientMessage, WebSocketAuthResult } from './websocket.types.js';
