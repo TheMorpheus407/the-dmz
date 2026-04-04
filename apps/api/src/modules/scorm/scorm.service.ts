@@ -3,6 +3,15 @@ import { createHash } from 'crypto';
 import { XMLBuilder } from 'fast-xml-parser';
 import { sql } from 'drizzle-orm';
 
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import {
   scormPackages,
@@ -387,12 +396,15 @@ function getSuspendData() {
 
 export function generateLaunchHtml(metadata: ScormPackageMetadata): string {
   const is2004 = metadata.version.startsWith('2004');
+  const safeTitle = escapeHtml(metadata.title);
+  const safeDescription = escapeHtml(metadata.description || 'Training content');
+  const safeLaunchUrl = escapeHtml(metadata.launchUrl);
 
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>${metadata.title}</title>
+  <title>${safeTitle}</title>
   <script src="scorm-api.js"></script>
   <style>
     body {
@@ -435,21 +447,21 @@ export function generateLaunchHtml(metadata: ScormPackageMetadata): string {
 </head>
 <body>
   <div class="container">
-    <h1>${metadata.title}</h1>
-    <p>${metadata.description || 'Training content'}</p>
+    <h1>${safeTitle}</h1>
+    <p>${safeDescription}</p>
     <div>
-      <a href="${metadata.launchUrl}" class="button" onclick="startCourse(); return false;">Start Course</a>
+      <a href="${safeLaunchUrl}" class="button" onclick="startCourse(); return false;">Start Course</a>
     </div>
     <div class="status" id="status">Ready to begin</div>
     <script>
-      var initialized = false;
+      let initialized = false;
 
       function startCourse() {
-        var result = ${is2004 ? 'Initialize()' : 'LMSInitialize()'};
+        const result = ${is2004 ? 'Initialize()' : 'LMSInitialize()'};
         if (result === "true" || result === true) {
           initialized = true;
           document.getElementById('status').textContent = 'Course initialized';
-          window.location.href = '${metadata.launchUrl}';
+          window.location.href = '${safeLaunchUrl}';
         } else {
           document.getElementById('status').textContent = 'Error initializing course';
         }

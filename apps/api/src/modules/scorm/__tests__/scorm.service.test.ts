@@ -205,6 +205,58 @@ describe('SCORM Service', () => {
 
       expect(html).toContain('scorm-api.js');
     });
+
+    it('should use modern let/const instead of var in generated JavaScript', () => {
+      const html = generateLaunchHtml(baseMetadata);
+
+      expect(html).not.toContain('var initialized');
+      expect(html).not.toContain('var result');
+      expect(html).toContain('let initialized');
+      expect(html).toContain('const result');
+    });
+
+    it('should use modern let/const in SCORM 2004 generated JavaScript', () => {
+      const metadata = { ...baseMetadata, version: '2004_4th' as const };
+      const html = generateLaunchHtml(metadata);
+
+      expect(html).not.toContain('var initialized');
+      expect(html).not.toContain('var result');
+      expect(html).toContain('let initialized');
+      expect(html).toContain('const result');
+    });
+
+    it('should escape HTML in title to prevent XSS', () => {
+      const maliciousMetadata = {
+        ...baseMetadata,
+        title: '<img src=x onerror=alert(1)>',
+      };
+      const html = generateLaunchHtml(maliciousMetadata);
+
+      expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');
+      expect(html).not.toContain('<img src=x onerror=alert(1)>');
+    });
+
+    it('should escape HTML in description to prevent XSS', () => {
+      const maliciousMetadata = {
+        ...baseMetadata,
+        description: '<script>alert("xss")</script>',
+      };
+      const html = generateLaunchHtml(maliciousMetadata);
+
+      expect(html).toContain('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+      expect(html).not.toContain('<script>alert("xss")</script>');
+    });
+
+    it('should escape HTML in launchUrl to prevent XSS', () => {
+      const maliciousMetadata = {
+        ...baseMetadata,
+        launchUrl: '"><img src=x onerror=alert(1)>',
+      };
+      const html = generateLaunchHtml(maliciousMetadata);
+
+      expect(html).toContain('&gt;&lt;img src=x onerror=alert(1)&gt;');
+      expect(html).not.toContain('"><img src=x onerror=alert(1)>');
+    });
   });
 });
 
