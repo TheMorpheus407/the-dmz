@@ -1,10 +1,40 @@
 import { act, cleanup, setup } from '@testing-library/svelte';
-import * as axeMatchers from 'vitest-axe/matchers';
 import { afterEach, beforeEach, expect, vi } from 'vitest';
 
-import 'vitest-axe/extend-expect';
+import type { MatcherResult } from 'vitest';
 
-expect.extend(axeMatchers);
+interface AxeViolation {
+  id: string;
+  description: string;
+  nodes: unknown[];
+}
+
+interface AxeResults {
+  violations: AxeViolation[];
+}
+
+expect.extend({
+  async toHaveNoViolations(this: MatcherResult, received: AxeResults): Promise<MatcherResult> {
+    const violations = received.violations ?? [];
+    const pass = violations.length === 0;
+
+    return {
+      pass,
+      message: pass
+        ? () => 'No accessibility violations found.'
+        : () => {
+            const violationList = violations
+              .map((v: AxeViolation) => `  - ${v.id}: ${v.description} (${v.nodes.length} node(s))`)
+              .join('\n');
+            return (
+              `Expected no accessibility violations, but found ${violations.length} violation(s):\n` +
+              violationList +
+              `\n\nRun axe-core directly to debug: await axe(container)`
+            );
+          },
+    };
+  },
+});
 
 vi.stubGlobal(
   'matchMedia',

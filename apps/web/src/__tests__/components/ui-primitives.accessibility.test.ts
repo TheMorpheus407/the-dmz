@@ -1,4 +1,3 @@
-import { axe } from 'vitest-axe';
 import { describe, expect, it } from 'vitest';
 
 import Button from '$lib/ui/components/Button.svelte';
@@ -8,6 +7,7 @@ import Tabs from '$lib/ui/components/Tabs.svelte';
 import Modal from '$lib/ui/components/Modal.svelte';
 import LoadingState from '$lib/ui/components/LoadingState.svelte';
 
+import { getAxe } from '../axe';
 import { render } from '../helpers/render';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -23,7 +23,8 @@ describe('UI Primitives Accessibility', () => {
       const { container } = render(Button, {
         props: { children: () => 'Click me' as any, ariaLabel: 'Action button' },
       });
-      const results = await axe(container, a11yOptions);
+      const axe = await getAxe();
+      const results = await axe.run(container, a11yOptions);
       expect(results).toHaveNoViolations();
     });
 
@@ -43,7 +44,8 @@ describe('UI Primitives Accessibility', () => {
       const { container } = render(Panel, {
         props: { children: () => 'Panel content' as any },
       });
-      const results = await axe(container, a11yOptions);
+      const axe = await getAxe();
+      const results = await axe.run(container, a11yOptions);
       expect(results).toHaveNoViolations();
     });
   });
@@ -53,7 +55,8 @@ describe('UI Primitives Accessibility', () => {
       const { container } = render(Badge, {
         props: { children: () => 'New' as any },
       });
-      const results = await axe(container, a11yOptions);
+      const axe = await getAxe();
+      const results = await axe.run(container, a11yOptions);
       expect(results).toHaveNoViolations();
     });
   });
@@ -83,7 +86,8 @@ describe('UI Primitives Accessibility', () => {
       const { container } = render(Tabs, {
         props: { tabs: mockTabs },
       });
-      const results = await axe(container, {
+      const axe = await getAxe();
+      const results = await axe.run(container, {
         ...a11yOptions,
         rules: {
           ...a11yOptions.rules,
@@ -109,7 +113,8 @@ describe('UI Primitives Accessibility', () => {
       const { container } = render(Modal, {
         props: { open: true, title: 'Test Modal', children: () => 'Content' as any },
       });
-      const results = await axe(container, a11yOptions);
+      const axe = await getAxe();
+      const results = await axe.run(container, a11yOptions);
       expect(results).toHaveNoViolations();
     });
   });
@@ -130,7 +135,8 @@ describe('UI Primitives Accessibility', () => {
       const { container } = render(LoadingState, {
         props: { loading: true, message: 'Loading...' },
       });
-      const results = await axe(container, a11yOptions);
+      const axe = await getAxe();
+      const results = await axe.run(container, a11yOptions);
       expect(results).toHaveNoViolations();
     });
   });

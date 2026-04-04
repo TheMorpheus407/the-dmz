@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { axe } from 'vitest-axe';
 
 import Tabs from '$lib/ui/components/Tabs.svelte';
 import Modal from '$lib/ui/components/Modal.svelte';
 import LoadingState from '$lib/ui/components/LoadingState.svelte';
 import { SEMANTIC_CONTRACTS } from '$lib/ui/primitive-contract';
 
+import { getAxe } from '../axe';
 import { render } from '../helpers/render';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -85,7 +85,8 @@ describe('Semantic Contract: Tabs', () => {
       props: { tabs: mockTabs, ariaLabel: 'Test tabs' },
     });
 
-    const results = await axe(container, {
+    const axe = await getAxe();
+    const results = await axe.run(container, {
       rules: {
         'aria-required-children': { enabled: false },
       },
@@ -143,7 +144,8 @@ describe('Semantic Contract: Modal', () => {
       props: { open: true, title: 'Test Modal', children: mockTabContent },
     });
 
-    const results = await axe(container, {
+    const axe = await getAxe();
+    const results = await axe.run(container, {
       rules: {
         region: { enabled: false },
       },
@@ -203,7 +205,8 @@ describe('Semantic Contract: LoadingState', () => {
       props: { loading: true, message: 'Loading...' },
     });
 
-    const results = await axe(container, {
+    const axe = await getAxe();
+    const results = await axe.run(container, {
       rules: {
         region: { enabled: false },
       },

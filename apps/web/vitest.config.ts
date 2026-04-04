@@ -16,6 +16,9 @@ export default defineConfig({
       $game: resolve('./src/lib/game'),
     },
   },
+  optimizeDeps: {
+    include: ['axe-core'],
+  },
   test: {
     environment: 'jsdom',
     setupFiles: ['src/__tests__/setup.ts'],
