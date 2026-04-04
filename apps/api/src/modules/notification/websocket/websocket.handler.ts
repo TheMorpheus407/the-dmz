@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { verifyJWT } from '../../auth/index.js';
 
 import { wsGateway, type WebSocketGateway } from './websocket.gateway.js';
 
 import type { FastifyRequest } from 'fastify';
-import type { WebSocket } from '@fastify/websocket';
+import type { WebSocket as WSConnection } from 'ws';
 import type { WSClientMessage, WebSocketAuthResult } from './websocket.types.js';
 
 export interface WebSocketHandlerOptions {
@@ -12,7 +11,7 @@ export interface WebSocketHandlerOptions {
 }
 
 export async function handleWebSocketConnection(
-  connection: WebSocket,
+  connection: WSConnection,
   request: FastifyRequest,
   options: WebSocketHandlerOptions = {},
 ): Promise<void> {
@@ -58,7 +57,7 @@ export async function handleWebSocketConnection(
 
 async function handleMessage(
   data: Buffer | string,
-  connection: WebSocket,
+  connection: WSConnection,
   gateway: WebSocketGateway,
   connectionId: string,
 ): Promise<void> {
@@ -104,7 +103,7 @@ async function handleMessage(
 
 function handleSubscribe(
   message: WSClientMessage,
-  connection: WebSocket,
+  connection: WSConnection,
   gateway: WebSocketGateway,
   connectionId: string,
 ): void {
@@ -152,7 +151,7 @@ function handleSubscribe(
 
 function handleUnsubscribe(
   message: WSClientMessage,
-  connection: WebSocket,
+  connection: WSConnection,
   gateway: WebSocketGateway,
   connectionId: string,
 ): void {
@@ -188,7 +187,7 @@ function handleUnsubscribe(
 
 function handleHeartbeat(
   message: WSClientMessage,
-  connection: WebSocket,
+  connection: WSConnection,
   gateway: WebSocketGateway,
   connectionId: string,
 ): void {

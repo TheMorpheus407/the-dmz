@@ -24,3 +24,5 @@ export type {
   CoopWSServerMessage,
   CoopWSClientMessage,
 } from './websocket.types.js';
+
+export type { WebSocket as WSConnection } from 'ws';

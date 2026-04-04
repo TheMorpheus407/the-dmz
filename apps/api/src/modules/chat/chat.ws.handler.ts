@@ -1,12 +1,14 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 import { verifyJWT } from '../auth/index.js';
 import { wsGateway, buildChannelName } from '../notification/websocket/index.js';
 
 import { sendMessage, type SendMessageResult } from './chat.service.js';
 
 import type { FastifyRequest } from 'fastify';
-import type { WebSocket } from '@fastify/websocket';
-import type { WebSocketAuthResult, JWTAuthPayload } from '../notification/websocket/index.js';
+import type {
+  WebSocketAuthResult,
+  JWTAuthPayload,
+  WSConnection,
+} from '../notification/websocket/index.js';
 import type { AppConfig } from '../../config.js';
 import type { IEventBus } from '../../shared/events/event-types.js';
 
@@ -22,7 +24,7 @@ const TYPING_TIMEOUT_MS = 3000;
 const typingTimers = new Map<string, NodeJS.Timeout>();
 
 export async function chatWebSocketHandler(
-  connection: WebSocket,
+  connection: WSConnection,
   request: FastifyRequest,
   config: AppConfig,
   eventBus?: IEventBus,
@@ -116,7 +118,7 @@ async function authenticateWebSocket(
 
 async function handleChatMessage(
   data: Buffer | string,
-  connection: WebSocket,
+  connection: WSConnection,
   config: AppConfig,
   tenantId: string,
   userId: string,
@@ -163,7 +165,7 @@ async function handleChatMessage(
   }
 }
 
-function handleSubscribe(message: Record<string, unknown>, connection: WebSocket): void {
+function handleSubscribe(message: Record<string, unknown>, connection: WSConnection): void {
   const channel = message['channel'] as string | undefined;
 
   if (!channel) {
@@ -193,7 +195,7 @@ function handleSubscribe(message: Record<string, unknown>, connection: WebSocket
   connection.send(JSON.stringify(ackMsg));
 }
 
-function handleUnsubscribe(message: Record<string, unknown>, connection: WebSocket): void {
+function handleUnsubscribe(message: Record<string, unknown>, connection: WSConnection): void {
   const channel = message['channel'] as string | undefined;
 
   if (!channel) {
@@ -217,7 +219,7 @@ function handleUnsubscribe(message: Record<string, unknown>, connection: WebSock
 
 function handleTyping(
   message: Record<string, unknown>,
-  connection: WebSocket,
+  connection: WSConnection,
   userId: string,
 ): void {
   const channelId = message['channelId'] as string | undefined;
@@ -257,7 +259,7 @@ function handleTyping(
 
 async function handleSend(
   message: Record<string, unknown>,
-  connection: WebSocket,
+  connection: WSConnection,
   config: AppConfig,
   tenantId: string,
   userId: string,
@@ -324,7 +326,7 @@ async function handleSend(
   }
 }
 
-function getConnectionIdFromSocket(connection: WebSocket): string | undefined {
+function getConnectionIdFromSocket(connection: WSConnection): string | undefined {
   for (const [connId, connectionItem] of wsGateway.getAllConnections()) {
     if (connectionItem.socket === connection) {
       return connId;

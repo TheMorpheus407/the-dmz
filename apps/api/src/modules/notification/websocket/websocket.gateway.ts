@@ -1,18 +1,19 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment */
+import { WebSocket } from 'ws';
+
 import { generateId } from '../../../shared/utils/id.js';
 import {
   recordWebSocketConnection,
   recordWebSocketMessage,
 } from '../../../shared/metrics/hooks.js';
 
-import type { WebSocket } from '@fastify/websocket';
+import type { WebSocket as WSConnection } from 'ws';
 import type { JWTAuthPayload, WSConnectionInfo, WSServerMessage } from './websocket.types.js';
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
 const CONNECTION_TIMEOUT_MS = 60_000;
 
 interface WebSocketConnection {
-  socket: WebSocket;
+  socket: WSConnection;
   connectionInfo: WSConnectionInfo;
   heartbeatTimer: NodeJS.Timeout | null;
 }
@@ -23,7 +24,7 @@ export class WebSocketGateway {
   private channelSubscriptions = new Map<string, Set<string>>();
   private sequenceNumber = 0;
 
-  public registerConnection(socket: WebSocket, authPayload: JWTAuthPayload): WSConnectionInfo {
+  public registerConnection(socket: WSConnection, authPayload: JWTAuthPayload): WSConnectionInfo {
     const connectionId = generateId();
     const now = Date.now();
 

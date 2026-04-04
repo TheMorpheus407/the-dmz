@@ -1,14 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
-import { wsGateway, type WebSocketGateway } from '../../notification/websocket/index.js';
+import { wsGateway, type WebSocketGateway,
+  type CoopWSClientMessage,
+  type CoopWSServerMessage,
+  type WSServerMessage } from '../../notification/websocket/index.js';
 
 import { validateAndApplyAction } from './sync.service.js';
 
-import type { WebSocket } from '@fastify/websocket';
-import type {
-  CoopWSClientMessage,
-  CoopWSServerMessage,
-  WSServerMessage,
-} from '../../notification/websocket/index.js';
+import type { WebSocket as WSConnection } from 'ws';
 import type { AppConfig } from '../../../config.js';
 import type { IEventBus } from '../../../shared/events/event-types.js';
 import type { FastifyRequest } from 'fastify';
@@ -24,7 +21,7 @@ export function buildCoopChannelName(sessionId: string, channelType: string): st
 }
 
 export async function handleCoopWebSocketConnection(
-  connection: WebSocket,
+  connection: WSConnection,
   _request: FastifyRequest,
   options: CoopWebSocketHandlerOptions,
 ): Promise<void> {
@@ -38,7 +35,7 @@ export async function handleCoopWebSocketConnection(
 
 async function handleCoopMessage(
   data: Buffer | string,
-  connection: WebSocket,
+  connection: WSConnection,
   gateway: WebSocketGateway,
   config: AppConfig,
   eventBus: IEventBus,
@@ -69,7 +66,7 @@ async function handleCoopMessage(
 
 async function handleActionSubmit(
   message: CoopWSClientMessage & { type: 'ACTION_SUBMIT' },
-  connection: WebSocket,
+  connection: WSConnection,
   gateway: WebSocketGateway,
   config: AppConfig,
   eventBus: IEventBus,
