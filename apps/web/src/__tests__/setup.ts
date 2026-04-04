@@ -11,12 +11,8 @@ interface AxeResults {
   violations: AxeViolation[];
 }
 
-interface MatcherContext {
-  (): string;
-}
-
 expect.extend({
-  async toHaveNoViolations(this: MatcherContext, received: AxeResults) {
+  toHaveNoViolations(received: AxeResults) {
     const violations = received.violations ?? [];
     const pass = violations.length === 0;
 
