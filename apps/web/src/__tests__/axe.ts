@@ -2,14 +2,15 @@ import type { ElementContext, RunOptions, AxeResults } from 'axe-core';
 
 export type { ElementContext, RunOptions, AxeResults };
 
-let axeInstance: AxeResults | null = null;
+type AxeCoreModule = {
+  default: (element: ElementContext, options?: RunOptions) => Promise<AxeResults>;
+};
 
-export async function getAxe(): Promise<AxeResults> {
+let axeInstance: AxeCoreModule | null = null;
+
+export async function getAxe(): Promise<AxeCoreModule> {
   if (!axeInstance) {
-    const axeModule = await import('axe-core');
-    // @ts-expect-error - axe-core default export doesn't have proper types
-    axeInstance = axeModule.default;
+    axeInstance = (await import('axe-core')) as AxeCoreModule;
   }
-  // @ts-expect-error - axe-core results compatible with test expectations
   return axeInstance;
 }

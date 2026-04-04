@@ -1,8 +1,6 @@
 import { act, cleanup, setup } from '@testing-library/svelte';
 import { afterEach, beforeEach, expect, vi } from 'vitest';
 
-import type { MatcherResult } from 'vitest';
-
 interface AxeViolation {
   id: string;
   description: string;
@@ -13,8 +11,12 @@ interface AxeResults {
   violations: AxeViolation[];
 }
 
+interface MatcherContext {
+  (): string;
+}
+
 expect.extend({
-  async toHaveNoViolations(this: MatcherResult, received: AxeResults): Promise<MatcherResult> {
+  async toHaveNoViolations(this: MatcherContext, received: AxeResults) {
     const violations = received.violations ?? [];
     const pass = violations.length === 0;
 
