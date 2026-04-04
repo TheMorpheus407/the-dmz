@@ -39,6 +39,105 @@ export type ProfileSeed = {
   notificationSettings: Record<string, unknown>;
 };
 
+export type RoleSeed = {
+  id: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  isSystem: boolean;
+};
+
+export type PermissionSeed = {
+  id: string;
+  resource: string;
+  action: string;
+  description: string | null;
+};
+
+export type SessionSeed = {
+  id: string;
+  tenantId: string;
+  userId: string;
+  tokenHash: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  deviceFingerprint: string | null;
+  expiresAt: Date;
+  mfaVerifiedAt: Date | null;
+  mfaMethod: string | null;
+  mfaFailedAttempts: number;
+  mfaLockedAt: Date | null;
+};
+
+export type UserRoleSeed = {
+  id: string;
+  tenantId: string;
+  userId: string;
+  roleId: string;
+  assignedBy: string | null;
+  expiresAt: Date | null;
+  scope: string | null;
+};
+
+export type RolePermissionSeed = {
+  roleId: string;
+  permissionId: string;
+};
+
+export type SeasonSeed = {
+  id: string;
+  tenantId: string;
+  seasonNumber: number;
+  title: string;
+  theme: string;
+  logline: string;
+  description: string | null;
+  threatCurveStart: string;
+  threatCurveEnd: string;
+  isActive: boolean;
+  metadata: Record<string, unknown>;
+};
+
+export type ChapterSeed = {
+  id: string;
+  tenantId: string;
+  seasonId: string;
+  chapterNumber: number;
+  act: number;
+  title: string;
+  description: string | null;
+  dayStart: number;
+  dayEnd: number;
+  difficultyStart: number;
+  difficultyEnd: number;
+  threatLevel: string;
+  isActive: boolean;
+  metadata: Record<string, unknown>;
+};
+
+export type EmailTemplateSeed = {
+  id: string;
+  tenantId: string;
+  name: string;
+  subject: string;
+  body: string;
+  fromName: string | null;
+  fromEmail: string | null;
+  replyTo: string | null;
+  contentType: string;
+  difficulty: number;
+  faction: string | null;
+  attackType: string | null;
+  threatLevel: string;
+  season: number | null;
+  chapter: number | null;
+  language: string;
+  locale: string;
+  metadata: Record<string, unknown>;
+  isAiGenerated: boolean;
+  isActive: boolean;
+};
+
 /**
  * Build a tenant seed object with sensible defaults.
  * Does NOT insert into the database — pure data factory.
@@ -76,6 +175,109 @@ export const createTestProfile = (overrides: Partial<ProfileSeed> = {}): Profile
   timezone: overrides.timezone ?? 'UTC',
   accessibilitySettings: overrides.accessibilitySettings ?? {},
   notificationSettings: overrides.notificationSettings ?? {},
+});
+
+export const createTestRole = (overrides: Partial<RoleSeed> = {}): RoleSeed => ({
+  id: overrides.id ?? crypto.randomUUID(),
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  name: overrides.name ?? 'test-role',
+  description: overrides.description ?? null,
+  isSystem: overrides.isSystem ?? false,
+});
+
+export const createTestPermission = (overrides: Partial<PermissionSeed> = {}): PermissionSeed => ({
+  id: overrides.id ?? crypto.randomUUID(),
+  resource: overrides.resource ?? 'test',
+  action: overrides.action ?? 'read',
+  description: overrides.description ?? null,
+});
+
+export const createTestSession = (overrides: Partial<SessionSeed> = {}): SessionSeed => ({
+  id: overrides.id ?? crypto.randomUUID(),
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  userId: overrides.userId ?? SEED_USER_IDS.acmeCorp.learner,
+  tokenHash: overrides.tokenHash ?? 'test-hash-' + crypto.randomUUID(),
+  ipAddress: overrides.ipAddress ?? null,
+  userAgent: overrides.userAgent ?? null,
+  deviceFingerprint: overrides.deviceFingerprint ?? null,
+  expiresAt: overrides.expiresAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  mfaVerifiedAt: overrides.mfaVerifiedAt ?? null,
+  mfaMethod: overrides.mfaMethod ?? null,
+  mfaFailedAttempts: overrides.mfaFailedAttempts ?? 0,
+  mfaLockedAt: overrides.mfaLockedAt ?? null,
+});
+
+export const createTestUserRole = (overrides: Partial<UserRoleSeed> = {}): UserRoleSeed => ({
+  id: overrides.id ?? crypto.randomUUID(),
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  userId: overrides.userId ?? SEED_USER_IDS.acmeCorp.learner,
+  roleId: overrides.roleId ?? crypto.randomUUID(),
+  assignedBy: overrides.assignedBy ?? null,
+  expiresAt: overrides.expiresAt ?? null,
+  scope: overrides.scope ?? null,
+});
+
+export const createTestRolePermission = (
+  overrides: Partial<RolePermissionSeed> = {},
+): RolePermissionSeed => ({
+  roleId: overrides.roleId ?? crypto.randomUUID(),
+  permissionId: overrides.permissionId ?? crypto.randomUUID(),
+});
+
+export const createTestSeason = (overrides: Partial<SeasonSeed> = {}): SeasonSeed => ({
+  id: overrides.id ?? crypto.randomUUID(),
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  seasonNumber: overrides.seasonNumber ?? 1,
+  title: overrides.title ?? 'Test Season',
+  theme: overrides.theme ?? 'Test theme',
+  logline: overrides.logline ?? 'Test logline',
+  description: overrides.description ?? null,
+  threatCurveStart: overrides.threatCurveStart ?? 'LOW',
+  threatCurveEnd: overrides.threatCurveEnd ?? 'HIGH',
+  isActive: overrides.isActive ?? true,
+  metadata: overrides.metadata ?? {},
+});
+
+export const createTestChapter = (overrides: Partial<ChapterSeed> = {}): ChapterSeed => ({
+  id: overrides.id ?? crypto.randomUUID(),
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  seasonId: overrides.seasonId ?? crypto.randomUUID(),
+  chapterNumber: overrides.chapterNumber ?? 1,
+  act: overrides.act ?? 1,
+  title: overrides.title ?? 'Test Chapter',
+  description: overrides.description ?? null,
+  dayStart: overrides.dayStart ?? 1,
+  dayEnd: overrides.dayEnd ?? 7,
+  difficultyStart: overrides.difficultyStart ?? 1,
+  difficultyEnd: overrides.difficultyEnd ?? 2,
+  threatLevel: overrides.threatLevel ?? 'LOW',
+  isActive: overrides.isActive ?? true,
+  metadata: overrides.metadata ?? {},
+});
+
+export const createTestEmailTemplate = (
+  overrides: Partial<EmailTemplateSeed> = {},
+): EmailTemplateSeed => ({
+  id: overrides.id ?? crypto.randomUUID(),
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  name: overrides.name ?? 'Test Email',
+  subject: overrides.subject ?? 'Test Subject',
+  body: overrides.body ?? 'Test body content',
+  fromName: overrides.fromName ?? null,
+  fromEmail: overrides.fromEmail ?? null,
+  replyTo: overrides.replyTo ?? null,
+  contentType: overrides.contentType ?? 'phishing',
+  difficulty: overrides.difficulty ?? 1,
+  faction: overrides.faction ?? null,
+  attackType: overrides.attackType ?? null,
+  threatLevel: overrides.threatLevel ?? 'LOW',
+  season: overrides.season ?? null,
+  chapter: overrides.chapter ?? null,
+  language: overrides.language ?? 'en',
+  locale: overrides.locale ?? 'en-US',
+  metadata: overrides.metadata ?? {},
+  isAiGenerated: overrides.isAiGenerated ?? false,
+  isActive: overrides.isActive ?? true,
 });
 
 /**

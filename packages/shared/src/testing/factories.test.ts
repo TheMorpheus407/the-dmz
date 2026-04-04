@@ -2,15 +2,32 @@ import { describe, expect, it } from 'vitest';
 
 import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
 import {
+  createTestChapter,
+  createTestEmailTemplate,
+  createTestPermission,
   createTestProfile,
+  createTestRole,
+  createTestRolePermission,
+  createTestSeason,
+  createTestSession,
   createTestTenant,
   createTestUser,
+  createTestUserRole,
   SEED_PROFILES,
   SEED_TENANTS,
   SEED_USERS,
 } from './factories.js';
 
-import type { ProfileSeed, TenantSeed, UserSeed } from './factories.js';
+import type {
+  ChapterSeed,
+  EmailTemplateSeed,
+  PermissionSeed,
+  RolePermissionSeed,
+  RoleSeed,
+  SeasonSeed,
+  SessionSeed,
+  UserRoleSeed,
+} from './factories.js';
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -345,5 +362,471 @@ describe('SEED_PROFILES', () => {
       expect(matchingUser).toBeDefined();
       expect(matchingUser?.tenantId).toBe(profile.tenantId);
     }
+  });
+});
+
+describe('createTestRole', () => {
+  it('returns a role with all required fields', () => {
+    const role = createTestRole();
+
+    expect(role).toHaveProperty('id');
+    expect(role).toHaveProperty('tenantId');
+    expect(role).toHaveProperty('name');
+    expect(role).toHaveProperty('description');
+    expect(role).toHaveProperty('isSystem');
+  });
+
+  it('uses deterministic defaults', () => {
+    const role = createTestRole();
+
+    expect(role.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(role.name).toBe('test-role');
+    expect(role.description).toBe(null);
+    expect(role.isSystem).toBe(false);
+  });
+
+  it('accepts overrides for all fields', () => {
+    const overrides: RoleSeed = {
+      id: '44444444-4444-4444-a444-444444444444',
+      tenantId: SEED_TENANT_IDS.consumerPlatform,
+      name: 'admin',
+      description: 'Admin role',
+      isSystem: true,
+    };
+
+    const role = createTestRole(overrides);
+    expect(role).toEqual(overrides);
+  });
+
+  it('generates a valid UUID when not provided', () => {
+    const role = createTestRole();
+    expect(role.id).toMatch(UUID_REGEX);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const role = createTestRole({ name: 'custom-role' });
+
+    expect(role.name).toBe('custom-role');
+    expect(role.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(role.description).toBe(null);
+    expect(role.isSystem).toBe(false);
+  });
+});
+
+describe('createTestPermission', () => {
+  it('returns a permission with all required fields', () => {
+    const perm = createTestPermission();
+
+    expect(perm).toHaveProperty('id');
+    expect(perm).toHaveProperty('resource');
+    expect(perm).toHaveProperty('action');
+    expect(perm).toHaveProperty('description');
+  });
+
+  it('uses deterministic defaults', () => {
+    const perm = createTestPermission();
+
+    expect(perm.resource).toBe('test');
+    expect(perm.action).toBe('read');
+    expect(perm.description).toBe(null);
+  });
+
+  it('accepts overrides for all fields', () => {
+    const overrides: PermissionSeed = {
+      id: '55555555-5555-5555-a555-555555555555',
+      resource: 'users',
+      action: 'create',
+      description: 'Create users permission',
+    };
+
+    const perm = createTestPermission(overrides);
+    expect(perm).toEqual(overrides);
+  });
+
+  it('generates a valid UUID when not provided', () => {
+    const perm = createTestPermission();
+    expect(perm.id).toMatch(UUID_REGEX);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const perm = createTestPermission({ resource: 'users' });
+
+    expect(perm.resource).toBe('users');
+    expect(perm.action).toBe('read');
+    expect(perm.description).toBe(null);
+  });
+});
+
+describe('createTestSession', () => {
+  it('returns a session with all required fields', () => {
+    const session = createTestSession();
+
+    expect(session).toHaveProperty('id');
+    expect(session).toHaveProperty('tenantId');
+    expect(session).toHaveProperty('userId');
+    expect(session).toHaveProperty('tokenHash');
+    expect(session).toHaveProperty('expiresAt');
+    expect(session).toHaveProperty('ipAddress');
+    expect(session).toHaveProperty('userAgent');
+    expect(session).toHaveProperty('deviceFingerprint');
+    expect(session).toHaveProperty('mfaVerifiedAt');
+    expect(session).toHaveProperty('mfaMethod');
+    expect(session).toHaveProperty('mfaFailedAttempts');
+    expect(session).toHaveProperty('mfaLockedAt');
+  });
+
+  it('uses deterministic defaults', () => {
+    const session = createTestSession();
+
+    expect(session.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(session.userId).toBe(SEED_USER_IDS.acmeCorp.learner);
+    expect(session.ipAddress).toBe(null);
+    expect(session.userAgent).toBe(null);
+    expect(session.deviceFingerprint).toBe(null);
+    expect(session.mfaVerifiedAt).toBe(null);
+    expect(session.mfaMethod).toBe(null);
+    expect(session.mfaFailedAttempts).toBe(0);
+    expect(session.mfaLockedAt).toBe(null);
+  });
+
+  it('has a token hash by default', () => {
+    const session = createTestSession();
+    expect(session.tokenHash).toMatch(/^test-hash-/);
+  });
+
+  it('has a default expiration 7 days from now', () => {
+    const session = createTestSession();
+    const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    expect(session.expiresAt.getTime()).toBeCloseTo(sevenDaysFromNow.getTime(), -3);
+  });
+
+  it('accepts overrides for all fields', () => {
+    const expiresAt = new Date('2025-12-31');
+    const mfaVerifiedAt = new Date('2025-01-15');
+    const overrides: SessionSeed = {
+      id: '66666666-6666-4666-a666-666666666666',
+      tenantId: SEED_TENANT_IDS.consumerPlatform,
+      userId: SEED_USER_IDS.consumerPlatform.learner,
+      tokenHash: 'custom-hash',
+      ipAddress: '192.168.1.1',
+      userAgent: 'Mozilla/5.0',
+      deviceFingerprint: 'abc123',
+      expiresAt,
+      mfaVerifiedAt,
+      mfaMethod: 'totp',
+      mfaFailedAttempts: 1,
+      mfaLockedAt: null,
+    };
+
+    const session = createTestSession(overrides);
+    expect(session).toEqual(overrides);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const session = createTestSession({ tokenHash: 'custom-hash' });
+
+    expect(session.tokenHash).toBe('custom-hash');
+    expect(session.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(session.userId).toBe(SEED_USER_IDS.acmeCorp.learner);
+    expect(session.mfaFailedAttempts).toBe(0);
+  });
+});
+
+describe('createTestUserRole', () => {
+  it('returns a user role with all required fields', () => {
+    const userRole = createTestUserRole();
+
+    expect(userRole).toHaveProperty('id');
+    expect(userRole).toHaveProperty('tenantId');
+    expect(userRole).toHaveProperty('userId');
+    expect(userRole).toHaveProperty('roleId');
+    expect(userRole).toHaveProperty('assignedBy');
+    expect(userRole).toHaveProperty('expiresAt');
+    expect(userRole).toHaveProperty('scope');
+  });
+
+  it('uses deterministic defaults', () => {
+    const userRole = createTestUserRole();
+
+    expect(userRole.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(userRole.userId).toBe(SEED_USER_IDS.acmeCorp.learner);
+    expect(userRole.assignedBy).toBe(null);
+    expect(userRole.expiresAt).toBe(null);
+    expect(userRole.scope).toBe(null);
+  });
+
+  it('accepts overrides for all fields', () => {
+    const expiresAt = new Date('2025-12-31');
+    const overrides: UserRoleSeed = {
+      id: '77777777-7777-4777-a777-777777777777',
+      tenantId: SEED_TENANT_IDS.consumerPlatform,
+      userId: SEED_USER_IDS.consumerPlatform.learner,
+      roleId: '44444444-4444-4444-a444-444444444444',
+      assignedBy: SEED_USER_IDS.consumerPlatform.superAdmin,
+      expiresAt,
+      scope: 'global',
+    };
+
+    const userRole = createTestUserRole(overrides);
+    expect(userRole).toEqual(overrides);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const userRole = createTestUserRole({ scope: 'tenant' });
+
+    expect(userRole.scope).toBe('tenant');
+    expect(userRole.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(userRole.userId).toBe(SEED_USER_IDS.acmeCorp.learner);
+    expect(userRole.assignedBy).toBe(null);
+  });
+});
+
+describe('createTestRolePermission', () => {
+  it('returns a role permission with all required fields', () => {
+    const rolePerm = createTestRolePermission();
+
+    expect(rolePerm).toHaveProperty('roleId');
+    expect(rolePerm).toHaveProperty('permissionId');
+  });
+
+  it('generates valid UUIDs when not provided', () => {
+    const rolePerm = createTestRolePermission();
+    expect(rolePerm.roleId).toMatch(UUID_REGEX);
+    expect(rolePerm.permissionId).toMatch(UUID_REGEX);
+  });
+
+  it('accepts overrides for all fields', () => {
+    const overrides: RolePermissionSeed = {
+      roleId: '44444444-4444-4444-a444-444444444444',
+      permissionId: '55555555-5555-5555-a555-555555555555',
+    };
+
+    const rolePerm = createTestRolePermission(overrides);
+    expect(rolePerm).toEqual(overrides);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const rolePerm = createTestRolePermission({ roleId: '11111111-1111-4111-a111-111111111111' });
+
+    expect(rolePerm.roleId).toBe('11111111-1111-4111-a111-111111111111');
+    expect(rolePerm.permissionId).toMatch(UUID_REGEX);
+  });
+});
+
+describe('createTestSeason', () => {
+  it('returns a season with all required fields', () => {
+    const season = createTestSeason();
+
+    expect(season).toHaveProperty('id');
+    expect(season).toHaveProperty('tenantId');
+    expect(season).toHaveProperty('seasonNumber');
+    expect(season).toHaveProperty('title');
+    expect(season).toHaveProperty('theme');
+    expect(season).toHaveProperty('logline');
+    expect(season).toHaveProperty('description');
+    expect(season).toHaveProperty('threatCurveStart');
+    expect(season).toHaveProperty('threatCurveEnd');
+    expect(season).toHaveProperty('isActive');
+    expect(season).toHaveProperty('metadata');
+  });
+
+  it('uses deterministic defaults', () => {
+    const season = createTestSeason();
+
+    expect(season.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(season.seasonNumber).toBe(1);
+    expect(season.title).toBe('Test Season');
+    expect(season.theme).toBe('Test theme');
+    expect(season.logline).toBe('Test logline');
+    expect(season.description).toBe(null);
+    expect(season.threatCurveStart).toBe('LOW');
+    expect(season.threatCurveEnd).toBe('HIGH');
+    expect(season.isActive).toBe(true);
+    expect(season.metadata).toEqual({});
+  });
+
+  it('accepts overrides for all fields', () => {
+    const overrides: SeasonSeed = {
+      id: '88888888-8888-4888-a888-888888888888',
+      tenantId: SEED_TENANT_IDS.consumerPlatform,
+      seasonNumber: 2,
+      title: 'Season 2',
+      theme: 'Advanced theme',
+      logline: 'Advanced logline',
+      description: 'Second season',
+      threatCurveStart: 'MEDIUM',
+      threatCurveEnd: 'EXTREME',
+      isActive: false,
+      metadata: { key: 'value' },
+    };
+
+    const season = createTestSeason(overrides);
+    expect(season).toEqual(overrides);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const season = createTestSeason({ title: 'Custom Season' });
+
+    expect(season.title).toBe('Custom Season');
+    expect(season.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(season.seasonNumber).toBe(1);
+    expect(season.isActive).toBe(true);
+  });
+});
+
+describe('createTestChapter', () => {
+  it('returns a chapter with all required fields', () => {
+    const chapter = createTestChapter();
+
+    expect(chapter).toHaveProperty('id');
+    expect(chapter).toHaveProperty('tenantId');
+    expect(chapter).toHaveProperty('seasonId');
+    expect(chapter).toHaveProperty('chapterNumber');
+    expect(chapter).toHaveProperty('act');
+    expect(chapter).toHaveProperty('title');
+    expect(chapter).toHaveProperty('description');
+    expect(chapter).toHaveProperty('dayStart');
+    expect(chapter).toHaveProperty('dayEnd');
+    expect(chapter).toHaveProperty('difficultyStart');
+    expect(chapter).toHaveProperty('difficultyEnd');
+    expect(chapter).toHaveProperty('threatLevel');
+    expect(chapter).toHaveProperty('isActive');
+    expect(chapter).toHaveProperty('metadata');
+  });
+
+  it('uses deterministic defaults', () => {
+    const chapter = createTestChapter();
+
+    expect(chapter.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(chapter.chapterNumber).toBe(1);
+    expect(chapter.act).toBe(1);
+    expect(chapter.title).toBe('Test Chapter');
+    expect(chapter.description).toBe(null);
+    expect(chapter.dayStart).toBe(1);
+    expect(chapter.dayEnd).toBe(7);
+    expect(chapter.difficultyStart).toBe(1);
+    expect(chapter.difficultyEnd).toBe(2);
+    expect(chapter.threatLevel).toBe('LOW');
+    expect(chapter.isActive).toBe(true);
+    expect(chapter.metadata).toEqual({});
+  });
+
+  it('accepts overrides for all fields', () => {
+    const overrides: ChapterSeed = {
+      id: '99999999-9999-4999-a999-999999999999',
+      tenantId: SEED_TENANT_IDS.consumerPlatform,
+      seasonId: '88888888-8888-4888-a888-888888888888',
+      chapterNumber: 3,
+      act: 2,
+      title: 'Chapter 3',
+      description: 'Third chapter',
+      dayStart: 15,
+      dayEnd: 21,
+      difficultyStart: 3,
+      difficultyEnd: 4,
+      threatLevel: 'HIGH',
+      isActive: false,
+      metadata: { difficulty: 'hard' },
+    };
+
+    const chapter = createTestChapter(overrides);
+    expect(chapter).toEqual(overrides);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const chapter = createTestChapter({ title: 'Custom Chapter' });
+
+    expect(chapter.title).toBe('Custom Chapter');
+    expect(chapter.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(chapter.chapterNumber).toBe(1);
+    expect(chapter.isActive).toBe(true);
+  });
+});
+
+describe('createTestEmailTemplate', () => {
+  it('returns an email template with all required fields', () => {
+    const template = createTestEmailTemplate();
+
+    expect(template).toHaveProperty('id');
+    expect(template).toHaveProperty('tenantId');
+    expect(template).toHaveProperty('name');
+    expect(template).toHaveProperty('subject');
+    expect(template).toHaveProperty('body');
+    expect(template).toHaveProperty('fromName');
+    expect(template).toHaveProperty('fromEmail');
+    expect(template).toHaveProperty('replyTo');
+    expect(template).toHaveProperty('contentType');
+    expect(template).toHaveProperty('difficulty');
+    expect(template).toHaveProperty('faction');
+    expect(template).toHaveProperty('attackType');
+    expect(template).toHaveProperty('threatLevel');
+    expect(template).toHaveProperty('season');
+    expect(template).toHaveProperty('chapter');
+    expect(template).toHaveProperty('language');
+    expect(template).toHaveProperty('locale');
+    expect(template).toHaveProperty('metadata');
+    expect(template).toHaveProperty('isAiGenerated');
+    expect(template).toHaveProperty('isActive');
+  });
+
+  it('uses deterministic defaults', () => {
+    const template = createTestEmailTemplate();
+
+    expect(template.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(template.name).toBe('Test Email');
+    expect(template.subject).toBe('Test Subject');
+    expect(template.body).toBe('Test body content');
+    expect(template.fromName).toBe(null);
+    expect(template.fromEmail).toBe(null);
+    expect(template.replyTo).toBe(null);
+    expect(template.contentType).toBe('phishing');
+    expect(template.difficulty).toBe(1);
+    expect(template.faction).toBe(null);
+    expect(template.attackType).toBe(null);
+    expect(template.threatLevel).toBe('LOW');
+    expect(template.season).toBe(null);
+    expect(template.chapter).toBe(null);
+    expect(template.language).toBe('en');
+    expect(template.locale).toBe('en-US');
+    expect(template.metadata).toEqual({});
+    expect(template.isAiGenerated).toBe(false);
+    expect(template.isActive).toBe(true);
+  });
+
+  it('accepts overrides for all fields', () => {
+    const overrides: EmailTemplateSeed = {
+      id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
+      tenantId: SEED_TENANT_IDS.consumerPlatform,
+      name: 'Custom Email',
+      subject: 'Custom Subject',
+      body: 'Custom body',
+      fromName: 'Sender Name',
+      fromEmail: 'sender@example.com',
+      replyTo: 'reply@example.com',
+      contentType: 'training',
+      difficulty: 5,
+      faction: 'criminal_networks',
+      attackType: 'spear_phishing',
+      threatLevel: 'HIGH',
+      season: 1,
+      chapter: 2,
+      language: 'de',
+      locale: 'de-DE',
+      metadata: { templateId: '123' },
+      isAiGenerated: true,
+      isActive: false,
+    };
+
+    const template = createTestEmailTemplate(overrides);
+    expect(template).toEqual(overrides);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const template = createTestEmailTemplate({ subject: 'Custom Subject' });
+
+    expect(template.subject).toBe('Custom Subject');
+    expect(template.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
+    expect(template.name).toBe('Test Email');
+    expect(template.isActive).toBe(true);
   });
 });
