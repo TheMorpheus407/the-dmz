@@ -25,43 +25,48 @@ export function calculateTrustChange(
   isHighUrgency: boolean,
   backlogCount: number,
 ): number {
-  const multiplier = DIFFICULTY_MULTIPLIERS[emailDifficulty];
-  let change = 0;
-
   if (decision === 'defer' && isHighUrgency) {
     return -1;
   }
 
-  if (wasCorrect) {
-    if (decision === 'approve') {
-      const baseMin = 1;
-      const baseMax = 5;
-      change = Math.round((baseMin + Math.random() * (baseMax - baseMin)) * multiplier);
-    } else if (decision === 'deny') {
-      const baseMin = 1;
-      const baseMax = 3;
-      change = Math.round((baseMin + Math.random() * (baseMax - baseMin)) * multiplier);
-    } else if (decision === 'flag') {
-      change = Math.round((1 + Math.random() * 2) * multiplier);
-    }
-  } else {
-    if (isMalicious && decision === 'approve') {
-      const baseMin = 5;
-      const baseMax = 15;
-      change = -Math.round((baseMin + Math.random() * (baseMax - baseMin)) * multiplier);
-    } else if (!isMalicious && decision === 'deny') {
-      const baseMin = 2;
-      const baseMax = 5;
-      change = -Math.round((baseMin + Math.random() * (baseMax - baseMin)) * multiplier);
-    } else if (decision === 'flag') {
-      change = Math.round(-1 * multiplier);
-    }
-  }
+  const multiplier = DIFFICULTY_MULTIPLIERS[emailDifficulty];
+
+  const baseChange = wasCorrect
+    ? calculateCorrectDecisionReward(decision, multiplier)
+    : calculateIncorrectDecisionPenalty(decision, isMalicious, multiplier);
 
   const backlogPenalty = calculateBacklogPenalty(backlogCount);
-  change += backlogPenalty;
+  return baseChange + backlogPenalty;
+}
 
-  return change;
+function calculateCorrectDecisionReward(decision: string, multiplier: number): number {
+  if (decision === 'approve') {
+    return Math.round((1 + Math.random() * 4) * multiplier);
+  }
+  if (decision === 'deny') {
+    return Math.round((1 + Math.random() * 2) * multiplier);
+  }
+  if (decision === 'flag') {
+    return Math.round((1 + Math.random() * 2) * multiplier);
+  }
+  return 0;
+}
+
+function calculateIncorrectDecisionPenalty(
+  decision: string,
+  isMalicious: boolean,
+  multiplier: number,
+): number {
+  if (isMalicious && decision === 'approve') {
+    return -Math.round((5 + Math.random() * 10) * multiplier);
+  }
+  if (!isMalicious && decision === 'deny') {
+    return -Math.round((2 + Math.random() * 3) * multiplier);
+  }
+  if (decision === 'flag') {
+    return Math.round(-1 * multiplier);
+  }
+  return 0;
 }
 
 export function calculateBacklogPenalty(backlogCount: number): number {

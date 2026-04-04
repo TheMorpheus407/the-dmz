@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import {
   getTrustTier,
@@ -6,6 +6,7 @@ import {
   clampTrustScore,
   isTrustAtWarning,
   calculateTrustFromDecisionEvaluation,
+  calculateTrustChange,
 } from '../trust-score.js';
 
 describe('Trust Score Module', () => {
@@ -107,6 +108,52 @@ describe('Trust Score Module', () => {
       const resultLow = calculateTrustFromDecisionEvaluation(4, true, 'approve', 1);
       const resultHigh = calculateTrustFromDecisionEvaluation(4, true, 'approve', 5);
       expect(resultLow).toBeLessThan(resultHigh);
+    });
+  });
+
+  describe('calculateTrustChange', () => {
+    it('should return -1 for defer with high urgency', () => {
+      const result = calculateTrustChange(true, 'defer', 3, false, true, 0);
+      expect(result).toBe(-1);
+    });
+
+    it('should return positive value for correct decisions', () => {
+      const approveResult = calculateTrustChange(true, 'approve', 3, false, false, 0);
+      const denyResult = calculateTrustChange(true, 'deny', 3, false, false, 0);
+      const flagResult = calculateTrustChange(true, 'flag', 3, false, false, 0);
+
+      expect(approveResult).toBeGreaterThan(0);
+      expect(denyResult).toBeGreaterThan(0);
+      expect(flagResult).toBeGreaterThan(0);
+    });
+
+    it('should apply difficulty multiplier', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      const resultLow = calculateTrustChange(true, 'approve', 1, false, false, 0);
+      const resultHigh = calculateTrustChange(true, 'approve', 5, false, false, 0);
+
+      expect(resultLow).toBeLessThan(resultHigh);
+    });
+
+    it('should return negative for incorrect approve of malicious email', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      const result = calculateTrustChange(false, 'approve', 3, true, false, 0);
+
+      expect(result).toBeLessThan(0);
+    });
+
+    it('should return negative for incorrect deny of non-malicious email', () => {
+      vi.spyOn(Math, 'random').mockReturnValue(0.5);
+      const result = calculateTrustChange(false, 'deny', 3, false, false, 0);
+
+      expect(result).toBeLessThan(0);
+    });
+
+    it('should apply backlog penalty', () => {
+      const resultNoBacklog = calculateTrustChange(true, 'approve', 3, false, false, 0);
+      const resultWithBacklog = calculateTrustChange(true, 'approve', 3, false, false, 10);
+
+      expect(resultWithBacklog).toBeLessThan(resultNoBacklog);
     });
   });
 });
