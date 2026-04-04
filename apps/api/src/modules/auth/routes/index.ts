@@ -1,0 +1,9 @@
+export { registerRegistrationRoutes } from './registration.routes.js';
+export { registerLoginRoutes } from './login.routes.js';
+export { registerTokenRoutes } from './token.routes.js';
+export { registerProfileRoutes } from './profile.routes.js';
+export { registerPasswordRoutes } from './password.routes.js';
+export { registerOauthRoutes } from './oauth.routes.js';
+export { registerAdminSessionsRoutes } from './admin-sessions.routes.js';
+export { registerRolesRoutes } from './roles.routes.js';
+export { registerAdminRoutes } from './admin.routes.js';
