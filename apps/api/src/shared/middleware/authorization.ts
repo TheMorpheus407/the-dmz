@@ -77,6 +77,171 @@ export const isRoleAssignmentValid = (
   };
 };
 
+type UserRoleRecord = {
+  roleId: string;
+  roleName: string | null;
+  expiresAt: Date | null;
+  scope: string | null;
+};
+
+type ValidatedRoles = {
+  validRoleAssignments: UserRoleRecord[];
+  hasExpiredAssignment: boolean;
+  hasScopeMismatchAssignment: boolean;
+};
+
+async function fetchUserRoles(
+  db: ReturnType<typeof getDatabaseClient>,
+  tenantId: string,
+  userId: string,
+): Promise<UserRoleRecord[]> {
+  const records = await db
+    .select({
+      roleId: userRoles.roleId,
+      roleName: roles.name,
+      expiresAt: userRoles.expiresAt,
+      scope: userRoles.scope,
+    })
+    .from(userRoles)
+    .leftJoin(roles, and(eq(roles.id, userRoles.roleId), eq(roles.tenantId, tenantId)))
+    .where(and(eq(userRoles.userId, userId), eq(userRoles.tenantId, tenantId)));
+
+  return records.map((r) => ({
+    roleId: r.roleId,
+    roleName: r.roleName,
+    expiresAt: r.expiresAt,
+    scope: r.scope,
+  }));
+}
+
+export function extractRoleIds(validRoleAssignments: UserRoleRecord[]): string[] {
+  return validRoleAssignments.map((ur) => ur.roleId).filter(Boolean);
+}
+
+export function extractRoleNames(validRoleAssignments: UserRoleRecord[]): string[] {
+  return validRoleAssignments.map((ur) => ur.roleName).filter((name): name is string => !!name);
+}
+
+async function fetchPermissionsForRoles(
+  db: ReturnType<typeof getDatabaseClient>,
+  roleIds: string[],
+): Promise<string[]> {
+  if (roleIds.length === 0) {
+    return [];
+  }
+
+  const rolePerms = await db
+    .select({
+      permissionId: rolePermissions.permissionId,
+    })
+    .from(rolePermissions)
+    .where(
+      roleIds.length === 1
+        ? eq(rolePermissions.roleId, roleIds[0]!)
+        : inArray(rolePermissions.roleId, roleIds),
+    );
+
+  return rolePerms.map((rp) => rp.permissionId).filter(Boolean);
+}
+
+type PermissionRecord = {
+  id: string;
+  resource: string;
+  action: string;
+};
+
+async function fetchPermissionRecords(
+  db: ReturnType<typeof getDatabaseClient>,
+  permissionIds: string[],
+): Promise<Map<string, PermissionRecord>> {
+  if (permissionIds.length === 0) {
+    return new Map();
+  }
+
+  const permRecords = await db
+    .select({
+      id: permissions.id,
+      resource: permissions.resource,
+      action: permissions.action,
+    })
+    .from(permissions)
+    .where(inArray(permissions.id, permissionIds));
+
+  return new Map(
+    permRecords.map((p) => [p.id, { id: p.id, resource: p.resource, action: p.action }]),
+  );
+}
+
+export function validateRoleAssignments(userRoleRecords: UserRoleRecord[]): ValidatedRoles {
+  const validRoleAssignments: UserRoleRecord[] = [];
+  let hasExpiredAssignment = false;
+  let hasScopeMismatchAssignment = false;
+
+  for (const assignment of userRoleRecords) {
+    const validity = isRoleAssignmentValid({
+      expiresAt: assignment.expiresAt,
+      scope: assignment.scope,
+    });
+
+    if (validity.isValid) {
+      validRoleAssignments.push(assignment);
+    } else if (validity.reason === 'expired') {
+      hasExpiredAssignment = true;
+    } else if (validity.reason === 'scope_mismatch') {
+      hasScopeMismatchAssignment = true;
+    }
+  }
+
+  return { validRoleAssignments, hasExpiredAssignment, hasScopeMismatchAssignment };
+}
+
+export function assertValidRoleAssignments(
+  validated: ValidatedRoles,
+  userRoleRecordsCount: number,
+): void {
+  if (validated.validRoleAssignments.length === 0 && userRoleRecordsCount > 0) {
+    if (validated.hasExpiredAssignment) {
+      throw insufficientPermissions('Role assignment has expired');
+    }
+    if (validated.hasScopeMismatchAssignment) {
+      throw insufficientPermissions('Role assignment scope does not match');
+    }
+    throw insufficientPermissions('No valid role assignments found');
+  }
+}
+
+export function buildPermissionKeys(
+  permissionIds: string[],
+  permMap: Map<string, PermissionRecord>,
+): string[] {
+  return permissionIds
+    .map((id) => permMap.get(id))
+    .filter((p): p is NonNullable<typeof p> => !!p)
+    .map((p) => `${p.resource}:${p.action}`);
+}
+
+type SlowLogContext = {
+  tenantId: string;
+  userId: string;
+  roleNames: string[];
+  permissionKeys: string[];
+};
+
+function logSlowAuthorization(latencyMs: number, context: SlowLogContext): void {
+  if (latencyMs > ABAC_SLOW_PATH_THRESHOLD_MS) {
+    console.warn(
+      {
+        type: 'SLOW_AUTHORIZATION_EVALUATION',
+        latencyMs,
+        thresholdMs: ABAC_SLOW_PATH_THRESHOLD_MS,
+        targetMs: ABAC_PERFORMANCE_TARGET_MS,
+        ...context,
+      },
+      'Authorization evaluation exceeded slow-path threshold',
+    );
+  }
+}
+
 export const resolvePermissions = async (
   config: AppConfig,
   tenantId: string,
@@ -96,108 +261,23 @@ export const resolvePermissions = async (
 
   const db = getDatabaseClient(config);
 
-  const userRoleRecords = await db
-    .select({
-      roleId: userRoles.roleId,
-      roleName: roles.name,
-      expiresAt: userRoles.expiresAt,
-      scope: userRoles.scope,
-    })
-    .from(userRoles)
-    .leftJoin(roles, and(eq(roles.id, userRoles.roleId), eq(roles.tenantId, tenantId)))
-    .where(and(eq(userRoles.userId, userId), eq(userRoles.tenantId, tenantId)));
+  const userRoleRecords = await fetchUserRoles(db, tenantId, userId);
+  const validated = validateRoleAssignments(userRoleRecords);
+  assertValidRoleAssignments(validated, userRoleRecords.length);
 
-  const validRoleAssignments: typeof userRoleRecords = [];
-  let hasExpiredAssignment = false;
-  let hasScopeMismatchAssignment = false;
+  const roleIds = extractRoleIds(validated.validRoleAssignments);
+  const roleNames = extractRoleNames(validated.validRoleAssignments);
 
-  for (const assignment of userRoleRecords) {
-    const validity = isRoleAssignmentValid({
-      expiresAt: assignment.expiresAt,
-      scope: assignment.scope,
-    });
+  const permissionIds = await fetchPermissionsForRoles(db, roleIds);
 
-    if (validity.isValid) {
-      validRoleAssignments.push(assignment);
-    } else if (validity.reason === 'expired') {
-      hasExpiredAssignment = true;
-    } else if (validity.reason === 'scope_mismatch') {
-      hasScopeMismatchAssignment = true;
-    }
-  }
-
-  if (validRoleAssignments.length === 0 && userRoleRecords.length > 0) {
-    if (hasExpiredAssignment) {
-      throw insufficientPermissions('Role assignment has expired');
-    }
-    if (hasScopeMismatchAssignment) {
-      throw insufficientPermissions('Role assignment scope does not match');
-    }
-    throw insufficientPermissions('No valid role assignments found');
-  }
-
-  const roleIds = validRoleAssignments.map((ur) => ur.roleId).filter(Boolean);
-  const roleNames = validRoleAssignments
-    .map((ur) => ur.roleName)
-    .filter((name): name is string => !!name);
-
-  let permissionIds: string[] = [];
-
-  if (roleIds.length > 0) {
-    const rolePerms = await db
-      .select({
-        permissionId: rolePermissions.permissionId,
-      })
-      .from(rolePermissions)
-      .where(
-        roleIds.length === 1
-          ? eq(rolePermissions.roleId, roleIds[0]!)
-          : inArray(rolePermissions.roleId, roleIds),
-      );
-
-    permissionIds = rolePerms.map((rp) => rp.permissionId).filter(Boolean);
-  }
-
-  let permissionKeys: string[] = [];
-
-  if (permissionIds.length > 0) {
-    const permRecords = await db
-      .select({
-        id: permissions.id,
-        resource: permissions.resource,
-        action: permissions.action,
-      })
-      .from(permissions)
-      .where(inArray(permissions.id, permissionIds));
-
-    const permMap = new Map(permRecords.map((p) => [p.id, p]));
-
-    permissionKeys = permissionIds
-      .map((id) => permMap.get(id))
-      .filter((p): p is NonNullable<typeof p> => !!p)
-      .map((p) => `${p.resource}:${p.action}`);
-  }
+  const permMap = await fetchPermissionRecords(db, permissionIds);
+  const permissionKeys = buildPermissionKeys(permissionIds, permMap);
 
   await setABACCachedPermissions(config, tenantId, userId, permissionKeys, roleNames);
 
   const latencyMs = performance.now() - startTime;
   recordAuthorizationEvaluation(latencyMs, false);
-
-  if (latencyMs > ABAC_SLOW_PATH_THRESHOLD_MS) {
-    console.warn(
-      {
-        type: 'SLOW_AUTHORIZATION_EVALUATION',
-        latencyMs,
-        thresholdMs: ABAC_SLOW_PATH_THRESHOLD_MS,
-        targetMs: ABAC_PERFORMANCE_TARGET_MS,
-        tenantId,
-        userId,
-        roleCount: roleNames.length,
-        permissionCount: permissionKeys.length,
-      },
-      'Authorization evaluation exceeded slow-path threshold',
-    );
-  }
+  logSlowAuthorization(latencyMs, { tenantId, userId, roleNames, permissionKeys });
 
   return {
     permissions: permissionKeys,
