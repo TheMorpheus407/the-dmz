@@ -1,6 +1,6 @@
 import helmet from '@fastify/helmet';
 
-import { buildSecurityHeadersConfig } from './security-headers.config.js';
+import { buildSecurityHeadersConfig } from './security-headers-config.js';
 
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance } from 'fastify';

@@ -1,5 +1,5 @@
 import { generateId } from '../../../shared/utils/id.js';
-import { SSE_SECURITY_HEADERS } from '../../../shared/middleware/security-headers.config.js';
+import { SSE_SECURITY_HEADERS } from '../../../shared/middleware/security-headers-config.js';
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { WSServerMessage } from './websocket.types.js';

@@ -58,7 +58,7 @@ import { ltiPlugin } from './modules/lti/index.js';
 import { coopScenarioPlugin } from './modules/coop/scenarios/scenarios.plugin.js';
 import { createMetricsPlugin, recordHttpMetrics } from './shared/metrics/index.js';
 import { versionHeadersMiddleware } from './shared/middleware/version-headers.js';
-import { registerVersionRoutes } from './shared/routes/version.routes.js';
+import { registerVersionRoutes } from './shared/routes/version-routes.js';
 import { deprecationMiddleware } from './shared/middleware/deprecation.js';
 import { createCorsConfig, configureCors } from './shared/config/index.js';
 

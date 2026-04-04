@@ -5,7 +5,7 @@ import { authGuard, requireRole } from '../../shared/middleware/authorization.js
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
 import { validateCsrf } from '../auth/index.js';
-import { SSE_SECURITY_HEADERS } from '../../shared/middleware/security-headers.config.js';
+import { SSE_SECURITY_HEADERS } from '../../shared/middleware/security-headers-config.js';
 
 import * as auditService from './audit.service.js';
 
