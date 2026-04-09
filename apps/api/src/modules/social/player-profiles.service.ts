@@ -1,6 +1,6 @@
 import { eq, and, sql } from 'drizzle-orm';
 
-import { getDatabaseClient } from '../../shared/database/connection.js';
+import { getDatabaseClient, type DatabaseClient } from '../../shared/database/connection.js';
 import {
   playerProfiles,
   avatars,
@@ -176,6 +176,22 @@ export async function updatePlayerProfile(
   }
 
   return updated ?? null;
+}
+
+export async function getPlayerIdByProfileId(
+  db: DatabaseClient,
+  tenantId: string,
+  profileId: string,
+): Promise<{ profileId: string; userId: string } | undefined> {
+  const profile = await db.query.playerProfiles.findFirst({
+    where: and(eq(playerProfiles.profileId, profileId), eq(playerProfiles.tenantId, tenantId)),
+  });
+
+  if (!profile) {
+    return undefined;
+  }
+
+  return { profileId: profile.profileId, userId: profile.userId };
 }
 
 export async function getPrivacySettings(

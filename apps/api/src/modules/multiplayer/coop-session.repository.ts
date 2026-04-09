@@ -10,8 +10,8 @@ import {
   type CoopDecisionProposal,
 } from '../../db/schema/multiplayer/index.js';
 import { party } from '../../db/schema/multiplayer/index.js';
-import { playerProfiles } from '../../db/schema/social/player-profiles.js';
 import { gameSessions } from '../../db/schema/game/game-sessions.js';
+import { getPlayerIdByProfileId } from '../social/index.js';
 
 import type { DatabaseClient } from '../../shared/database/connection.js';
 
@@ -353,13 +353,7 @@ export class CoopSessionRepository {
     profileId: string;
     tenantId: string;
   }): Promise<{ profileId: string; userId: string } | undefined> {
-    const profile = await this.db.query.playerProfiles.findFirst({
-      where: and(
-        eq(playerProfiles.profileId, params.profileId),
-        eq(playerProfiles.tenantId, params.tenantId),
-      ),
-    });
-    return profile ? { profileId: profile.profileId, userId: profile.userId } : undefined;
+    return getPlayerIdByProfileId(this.db, params.tenantId, params.profileId);
   }
 
   public async createGameSession(params: {
