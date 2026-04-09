@@ -16,8 +16,7 @@ const require = createRequire(import.meta.url);
 const nodePlugin = require('eslint-plugin-n');
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
-const isCI = Boolean(process.env.CI);
-const unusedVarsLevel = isCI ? 'error' : 'warn';
+const unusedVarsLevel = 'error';
 
 const tsconfigProjects = [
   path.join(rootDir, 'apps', 'api', 'tsconfig.json'),
@@ -139,20 +138,20 @@ const svelteRunesRules = {
 };
 
 const securityRules = {
-  'security/detect-non-literal-fs-filename': isCI ? 'error' : 'warn',
-  'security/detect-possible-timing-attacks': isCI ? 'error' : 'warn',
-  'security/detect-non-literal-regexp': isCI ? 'error' : 'warn',
-  'security/detect-unsafe-regex': isCI ? 'error' : 'warn',
-  'security/detect-new-buffer': isCI ? 'error' : 'warn',
-  'security/detect-disable-mustache-escape': isCI ? 'error' : 'warn',
-  'security/detect-eval-with-expression': isCI ? 'error' : 'warn',
-  'security/detect-child-process': isCI ? 'error' : 'warn',
-  'security/detect-bidi-characters': isCI ? 'error' : 'warn',
+  'security/detect-non-literal-fs-filename': 'error',
+  'security/detect-possible-timing-attacks': 'error',
+  'security/detect-non-literal-regexp': 'error',
+  'security/detect-unsafe-regex': 'error',
+  'security/detect-new-buffer': 'error',
+  'security/detect-disable-mustache-escape': 'error',
+  'security/detect-eval-with-expression': 'error',
+  'security/detect-child-process': 'error',
+  'security/detect-bidi-characters': 'error',
 };
 
 const nodeRules = {
-  'no-process-env': isCI ? 'error' : 'warn',
-  'no-process-exit': isCI ? 'error' : 'warn',
+  'no-process-env': 'error',
+  'no-process-exit': 'error',
   'no-unpublished-require': 'off',
   'no-unsupported-features': 'off',
 };
