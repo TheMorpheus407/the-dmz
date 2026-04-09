@@ -1,6 +1,7 @@
 export * from './event-types.js';
 export * from './event-store.types.js';
 export * from './event-store.js';
+export * from './event-adapter.js';
 export * from './rng.js';
 export * from './email-instance.js';
 export * from './indicator-catalog.js';

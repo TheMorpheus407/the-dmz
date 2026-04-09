@@ -9,7 +9,26 @@ import {
   SNAPSHOT_INTERVAL,
   type GameState,
   type GameActionPayload,
-  type DecisionType,
+  EventAdapterRegistry,
+  createSessionStartedAdapter,
+  createDayStartedAdapter,
+  createDayEndedAdapter,
+  createSessionPausedAdapter,
+  createSessionResumedAdapter,
+  createSessionAbandonedAdapter,
+  createSessionCompletedAdapter,
+  createEmailOpenedAdapter,
+  createEmailIndicatorMarkedAdapter,
+  createEmailVerificationRequestedAdapter,
+  createEmailDecisionSubmittedAdapter,
+  createEmailDecisionResolvedAdapter,
+  createConsequencesAppliedAdapter,
+  createThreatsGeneratedAdapter,
+  createIncidentCreatedAdapter,
+  createBreachOccurredAdapter,
+  createIncidentResolvedAdapter,
+  createUpgradePurchasedAdapter,
+  createResourceAdjustedAdapter,
 } from '@the-dmz/shared';
 
 import { type DB } from '../../../shared/database/connection.js';
@@ -18,6 +37,27 @@ import { reduce, createInitialGameState } from '../engine/reducer.js';
 import * as repo from './event-store.repo.js';
 
 import type { GameEvent } from './event-store.repo.js';
+
+const eventAdapterRegistry = new EventAdapterRegistry();
+eventAdapterRegistry.register(createSessionStartedAdapter());
+eventAdapterRegistry.register(createDayStartedAdapter());
+eventAdapterRegistry.register(createDayEndedAdapter());
+eventAdapterRegistry.register(createSessionPausedAdapter());
+eventAdapterRegistry.register(createSessionResumedAdapter());
+eventAdapterRegistry.register(createSessionAbandonedAdapter());
+eventAdapterRegistry.register(createSessionCompletedAdapter());
+eventAdapterRegistry.register(createEmailOpenedAdapter());
+eventAdapterRegistry.register(createEmailIndicatorMarkedAdapter());
+eventAdapterRegistry.register(createEmailVerificationRequestedAdapter());
+eventAdapterRegistry.register(createEmailDecisionSubmittedAdapter());
+eventAdapterRegistry.register(createEmailDecisionResolvedAdapter());
+eventAdapterRegistry.register(createConsequencesAppliedAdapter());
+eventAdapterRegistry.register(createThreatsGeneratedAdapter());
+eventAdapterRegistry.register(createIncidentCreatedAdapter());
+eventAdapterRegistry.register(createBreachOccurredAdapter());
+eventAdapterRegistry.register(createIncidentResolvedAdapter());
+eventAdapterRegistry.register(createUpgradePurchasedAdapter());
+eventAdapterRegistry.register(createResourceAdjustedAdapter());
 
 export { shouldCreateSnapshot, SNAPSHOT_INTERVAL };
 export type {
@@ -177,92 +217,6 @@ export class GameEventStoreService implements EventStore {
   }
 
   private eventToActionPayload(event: StoredGameEvent): GameActionPayload | null {
-    switch (event.eventType) {
-      case 'game.session.started':
-        return { type: 'ACK_DAY_START' };
-      case 'game.day.started':
-        return { type: 'ACK_DAY_START' };
-      case 'game.email.opened':
-        return {
-          type: 'OPEN_EMAIL',
-          emailId: (event.eventData as { emailId?: string }).emailId ?? '',
-        };
-      case 'game.email.indicator_marked':
-        return {
-          type: 'MARK_INDICATOR',
-          emailId: (event.eventData as { emailId?: string }).emailId ?? '',
-          indicatorType: (event.eventData as { indicatorType?: string }).indicatorType ?? '',
-        };
-      case 'game.email.verification_requested':
-        return {
-          type: 'REQUEST_VERIFICATION',
-          emailId: (event.eventData as { emailId?: string }).emailId ?? '',
-        };
-      case 'game.email.decision_submitted':
-        return {
-          type: 'SUBMIT_DECISION',
-          emailId: (event.eventData as { emailId?: string }).emailId ?? '',
-          decision: ((event.eventData as { decision?: string }).decision as DecisionType) ?? 'deny',
-          timeSpentMs: (event.eventData as { timeSpentMs?: number }).timeSpentMs ?? 0,
-        };
-      case 'game.email.decision_resolved':
-        return {
-          type: 'CLOSE_VERIFICATION',
-          emailId: (event.eventData as { emailId?: string }).emailId ?? '',
-        };
-      case 'game.consequences.applied':
-        return {
-          type: 'APPLY_CONSEQUENCES',
-          dayNumber: (event.eventData as { day?: number }).day ?? 1,
-        };
-      case 'game.threats.generated':
-        return {
-          type: 'PROCESS_THREATS',
-          dayNumber: (event.eventData as { day?: number }).day ?? 1,
-        };
-      case 'game.incident.created':
-        return {
-          type: 'PROCESS_THREATS',
-          dayNumber: (event.eventData as { day?: number }).day ?? 1,
-        };
-      case 'game.incident.resolved':
-        return {
-          type: 'RESOLVE_INCIDENT',
-          incidentId: (event.eventData as { incidentId?: string }).incidentId ?? '',
-          responseActions:
-            (event.eventData as { responseActions?: string[] }).responseActions ?? [],
-        };
-      case 'game.breach.occurred':
-        return {
-          type: 'PROCESS_THREATS',
-          dayNumber: (event.eventData as { day?: number }).day ?? 1,
-        };
-      case 'game.upgrade.purchased':
-        return {
-          type: 'PURCHASE_UPGRADE',
-          upgradeId: (event.eventData as { upgradeId?: string }).upgradeId ?? '',
-        };
-      case 'game.resource.adjusted':
-        return {
-          type: 'ADJUST_RESOURCE',
-          resourceId: (event.eventData as { resourceId?: string }).resourceId ?? '',
-          delta: (event.eventData as { delta?: number }).delta ?? 0,
-        };
-      case 'game.day.ended':
-        return { type: 'ADVANCE_DAY' };
-      case 'game.session.paused':
-        return { type: 'PAUSE_SESSION' };
-      case 'game.session.resumed':
-        return { type: 'RESUME_SESSION' };
-      case 'game.session.abandoned':
-        return {
-          type: 'ABANDON_SESSION' as const,
-          reason: (event.eventData as { reason?: string }).reason ?? '',
-        };
-      case 'game.session.completed':
-        return { type: 'ABANDON_SESSION' as const };
-      default:
-        return null;
-    }
+    return eventAdapterRegistry.toActionPayload(event.eventType, event.eventData);
   }
 }
