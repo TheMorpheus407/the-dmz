@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('$app/environment', () => ({
   browser: true,
@@ -6,16 +6,20 @@ vi.mock('$app/environment', () => ({
 }));
 
 const mockConsoleDebug = vi.fn();
-vi.stubGlobal('console', {
-  debug: mockConsoleDebug,
-  warn: vi.fn(),
-  error: vi.fn(),
-});
 
 describe('analytics', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    vi.stubGlobal('console', {
+      debug: mockConsoleDebug,
+      warn: vi.fn(),
+      error: vi.fn(),
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   describe('initAnalytics', () => {
