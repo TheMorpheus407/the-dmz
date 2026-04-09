@@ -4,15 +4,10 @@ import ErrorState from '$lib/ui/components/ErrorState.svelte';
 import type { CategorizedApiError } from '$lib/api/types';
 
 import { render } from '../helpers/render';
+import { createTestNetworkError } from '../fixtures/errors';
 
 describe('ErrorState', () => {
-  const baseError: CategorizedApiError = {
-    category: 'network',
-    code: 'NETWORK_ERROR',
-    message: 'Network request failed',
-    status: 0,
-    retryable: true,
-  };
+  const baseError = createTestNetworkError();
 
   it('renders default title and message when no error provided', () => {
     const { getByText } = render(ErrorState, {
