@@ -62,17 +62,28 @@ This manifest is the single source of truth for:
 
 ### Tracked M1 Endpoints
 
-| Path                           | Method | Auth Required |
-| ------------------------------ | ------ | ------------- |
-| `/api/v1/auth/register`        | POST   | No            |
-| `/api/v1/auth/login`           | POST   | No            |
-| `/api/v1/auth/refresh`         | POST   | No            |
-| `/api/v1/auth/logout`          | DELETE | Yes           |
-| `/api/v1/auth/me`              | GET    | Yes           |
-| `/api/v1/auth/profile`         | PATCH  | Yes           |
-| `/api/v1/health/authenticated` | GET    | Yes           |
-| `/health`                      | GET    | No            |
-| `/ready`                       | GET    | No            |
+| Path                                                                | Method | Auth Required |
+| ------------------------------------------------------------------- | ------ | ------------- |
+| `/api/v1/auth/register`                                             | POST   | No            |
+| `/api/v1/auth/login`                                                | POST   | No            |
+| `/api/v1/auth/refresh`                                              | POST   | No            |
+| `/api/v1/auth/logout`                                               | DELETE | Yes           |
+| `/api/v1/auth/me`                                                   | GET    | Yes           |
+| `/api/v1/auth/profile`                                              | PATCH  | Yes           |
+| `/api/v1/health/authenticated`                                      | GET    | Yes           |
+| `/health`                                                           | GET    | No            |
+| `/ready`                                                            | GET    | No            |
+| `/game/session`                                                     | POST   | Yes           |
+| `/game/session`                                                     | GET    | Yes           |
+| `/game/sessions/:sessionId/incidents`                               | GET    | Yes           |
+| `/game/sessions/:sessionId/incidents/active`                        | GET    | Yes           |
+| `/game/sessions/:sessionId/incidents/:incidentId`                   | GET    | Yes           |
+| `/game/sessions/:sessionId/incidents/:incidentId/available-actions` | GET    | Yes           |
+| `/game/sessions/:sessionId/incidents/:incidentId/status`            | POST   | Yes           |
+| `/game/sessions/:sessionId/incidents/:incidentId/actions`           | POST   | Yes           |
+| `/game/sessions/:sessionId/incidents/:incidentId/resolve`           | POST   | Yes           |
+| `/game/sessions/:sessionId/incidents/:incidentId/review`            | GET    | Yes           |
+| `/game/sessions/:sessionId/incidents/stats`                         | GET    | Yes           |
 
 ## Updating M1 API Contracts
 

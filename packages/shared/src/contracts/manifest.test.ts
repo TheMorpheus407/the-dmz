@@ -134,4 +134,212 @@ describe('M1 API Contract Manifest', () => {
       expect(readyEndpoint?.requiresAuth).toBe(false);
     });
   });
+
+  describe('game session endpoints', () => {
+    const gameSessionEndpoints = [
+      { path: '/game/session', method: 'POST' as const },
+      { path: '/game/session', method: 'GET' as const },
+    ];
+
+    it('should include all game session endpoints in manifest', () => {
+      const manifestPaths = m1ApiContractManifest.endpoints.map((e) => e.path);
+      expect(manifestPaths).toContain('/game/session');
+    });
+
+    it('should have correct HTTP methods for game session endpoints', () => {
+      const postSessionEndpoint = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/session' && e.method === 'POST',
+      );
+      expect(postSessionEndpoint).toBeDefined();
+      expect(postSessionEndpoint?.method).toBe('POST');
+
+      const getSessionEndpoint = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/session' && e.method === 'GET',
+      );
+      expect(getSessionEndpoint).toBeDefined();
+      expect(getSessionEndpoint?.method).toBe('GET');
+    });
+
+    it('should require auth for all game session endpoints', () => {
+      for (const endpoint of gameSessionEndpoints) {
+        const manifestEndpoint = m1ApiContractManifest.endpoints.find(
+          (e) => e.path === endpoint.path && e.method === endpoint.method,
+        );
+        expect(manifestEndpoint?.requiresAuth).toBe(true);
+      }
+    });
+
+    it('should have response schema references for game session endpoints', () => {
+      const postSessionEndpoint = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/session' && e.method === 'POST',
+      );
+      expect(postSessionEndpoint?.responseSchemaRef).toBe('gameSessionBootstrapResponseSchema');
+
+      const getSessionEndpoint = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/session' && e.method === 'GET',
+      );
+      expect(getSessionEndpoint?.responseSchemaRef).toBe('gameSessionBootstrapResponseSchema');
+    });
+
+    it('should use success response envelope for game session endpoints', () => {
+      const postSessionEndpoint = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/session' && e.method === 'POST',
+      );
+      expect(postSessionEndpoint?.responseEnvelope).toBe('success');
+
+      const getSessionEndpoint = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/session' && e.method === 'GET',
+      );
+      expect(getSessionEndpoint?.responseEnvelope).toBe('success');
+    });
+  });
+
+  describe('incident endpoints', () => {
+    const incidentEndpoints = [
+      { path: '/game/sessions/:sessionId/incidents', method: 'GET' as const },
+      { path: '/game/sessions/:sessionId/incidents/active', method: 'GET' as const },
+      { path: '/game/sessions/:sessionId/incidents/:incidentId', method: 'GET' as const },
+      {
+        path: '/game/sessions/:sessionId/incidents/:incidentId/available-actions',
+        method: 'GET' as const,
+      },
+      {
+        path: '/game/sessions/:sessionId/incidents/:incidentId/status',
+        method: 'POST' as const,
+      },
+      {
+        path: '/game/sessions/:sessionId/incidents/:incidentId/actions',
+        method: 'POST' as const,
+      },
+      {
+        path: '/game/sessions/:sessionId/incidents/:incidentId/resolve',
+        method: 'POST' as const,
+      },
+      {
+        path: '/game/sessions/:sessionId/incidents/:incidentId/review',
+        method: 'GET' as const,
+      },
+      { path: '/game/sessions/:sessionId/incidents/stats', method: 'GET' as const },
+    ];
+
+    it('should include all incident endpoints in manifest', () => {
+      const manifestPaths = m1ApiContractManifest.endpoints.map((e) => e.path);
+      expect(manifestPaths).toContain('/game/sessions/:sessionId/incidents');
+      expect(manifestPaths).toContain('/game/sessions/:sessionId/incidents/active');
+      expect(manifestPaths).toContain('/game/sessions/:sessionId/incidents/:incidentId');
+      expect(manifestPaths).toContain(
+        '/game/sessions/:sessionId/incidents/:incidentId/available-actions',
+      );
+      expect(manifestPaths).toContain('/game/sessions/:sessionId/incidents/:incidentId/status');
+      expect(manifestPaths).toContain('/game/sessions/:sessionId/incidents/:incidentId/actions');
+      expect(manifestPaths).toContain('/game/sessions/:sessionId/incidents/:incidentId/resolve');
+      expect(manifestPaths).toContain('/game/sessions/:sessionId/incidents/:incidentId/review');
+      expect(manifestPaths).toContain('/game/sessions/:sessionId/incidents/stats');
+    });
+
+    it('should have correct HTTP methods for incident endpoints', () => {
+      const listIncidents = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents',
+      );
+      expect(listIncidents?.method).toBe('GET');
+
+      const updateStatus = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/:incidentId/status',
+      );
+      expect(updateStatus?.method).toBe('POST');
+
+      const addAction = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/:incidentId/actions',
+      );
+      expect(addAction?.method).toBe('POST');
+
+      const resolveIncident = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/:incidentId/resolve',
+      );
+      expect(resolveIncident?.method).toBe('POST');
+    });
+
+    it('should require auth for all incident endpoints', () => {
+      for (const endpoint of incidentEndpoints) {
+        const manifestEndpoint = m1ApiContractManifest.endpoints.find(
+          (e) => e.path === endpoint.path && e.method === endpoint.method,
+        );
+        expect(manifestEndpoint?.requiresAuth).toBe(true);
+      }
+    });
+
+    it('should have response schema references for incident endpoints', () => {
+      const listIncidents = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents',
+      );
+      expect(listIncidents?.responseSchemaRef).toBe('incidentListResponseSchema');
+
+      const activeIncidents = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/active',
+      );
+      expect(activeIncidents?.responseSchemaRef).toBe('incidentListResponseSchema');
+
+      const singleIncident = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/:incidentId',
+      );
+      expect(singleIncident?.responseSchemaRef).toBe('incidentSingleResponseSchema');
+
+      const availableActions = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/:incidentId/available-actions',
+      );
+      expect(availableActions?.responseSchemaRef).toBe('availableActionsResponseSchema');
+
+      const updateStatus = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/:incidentId/status',
+      );
+      expect(updateStatus?.responseSchemaRef).toBe('incidentStatusUpdateResponseSchema');
+
+      const addAction = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/:incidentId/actions',
+      );
+      expect(addAction?.responseSchemaRef).toBe('incidentResponseActionResponseSchema');
+
+      const resolveIncident = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/:incidentId/resolve',
+      );
+      expect(resolveIncident?.responseSchemaRef).toBe('incidentResolveResponseSchema');
+
+      const review = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/:incidentId/review',
+      );
+      expect(review?.responseSchemaRef).toBe('postIncidentReviewResponseSchema');
+
+      const stats = m1ApiContractManifest.endpoints.find(
+        (e) => e.path === '/game/sessions/:sessionId/incidents/stats',
+      );
+      expect(stats?.responseSchemaRef).toBe('incidentStatsResponseSchema');
+    });
+
+    it('should use success response envelope for all incident endpoints', () => {
+      for (const endpoint of incidentEndpoints) {
+        const manifestEndpoint = m1ApiContractManifest.endpoints.find(
+          (e) => e.path === endpoint.path && e.method === endpoint.method,
+        );
+        expect(manifestEndpoint?.responseEnvelope).toBe('success');
+      }
+    });
+  });
+
+  describe('game endpoints completeness', () => {
+    it('should have at least 11 game endpoints in the manifest', () => {
+      const gameEndpoints = m1ApiContractManifest.endpoints.filter((e) =>
+        e.path.startsWith('/game/'),
+      );
+      expect(gameEndpoints.length).toBeGreaterThanOrEqual(11);
+    });
+
+    it('should have game session and incident endpoints covering all HTTP methods', () => {
+      const gameEndpoints = m1ApiContractManifest.endpoints.filter((e) =>
+        e.path.startsWith('/game/'),
+      );
+      const methods = new Set(gameEndpoints.map((e) => e.method));
+      expect(methods.has('GET')).toBe(true);
+      expect(methods.has('POST')).toBe(true);
+    });
+  });
 });
