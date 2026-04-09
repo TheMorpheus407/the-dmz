@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('$app/environment', () => ({
   browser: true,
@@ -10,13 +10,7 @@ const mockLocalStorage = {
   removeItem: vi.fn(),
 };
 
-vi.stubGlobal('localStorage', mockLocalStorage);
-
 const mockMatchMedia = vi.fn();
-
-vi.stubGlobal('window', {
-  matchMedia: mockMatchMedia,
-});
 
 import { loadPersistedSettings, persistSettings } from './persistence';
 import { initialSettingsState } from './defaults';
@@ -28,6 +22,14 @@ describe('persistence', () => {
     vi.clearAllMocks();
     mockLocalStorage.getItem.mockReturnValue(null);
     mockMatchMedia.mockReturnValue({ matches: false });
+    vi.stubGlobal('localStorage', mockLocalStorage);
+    vi.stubGlobal('window', {
+      matchMedia: mockMatchMedia,
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   describe('loadPersistedSettings', () => {

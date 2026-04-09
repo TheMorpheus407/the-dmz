@@ -4,19 +4,18 @@ vi.mock('$app/environment', () => ({
   browser: true,
 }));
 
-vi.stubGlobal('document', {
-  documentElement: {
-    classList: {
-      add: vi.fn(),
-      remove: vi.fn(),
-      contains: vi.fn(),
-    },
-  },
-});
-
 describe('crt-effects', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    vi.stubGlobal('document', {
+      documentElement: {
+        classList: {
+          add: vi.fn(),
+          remove: vi.fn(),
+          contains: vi.fn(),
+        },
+      },
+    });
     vi.mocked(document.documentElement.classList.contains).mockReturnValue(false);
     vi.mocked(document.documentElement.classList.add).mockClear();
     vi.mocked(document.documentElement.classList.remove).mockClear();
@@ -24,6 +23,7 @@ describe('crt-effects', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllGlobals();
   });
 
   describe('triggerFlicker', () => {

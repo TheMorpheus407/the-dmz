@@ -1,16 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { get } from 'svelte/store';
-
-import {
-  sessionStore,
-  isAuthenticated,
-  isAnonymous,
-  isExpired,
-  currentUser,
-  userRole,
-  isAdmin,
-  isPlayer,
-} from './session';
 
 vi.mock('$lib/api/auth', () => ({
   login: vi.fn(),
@@ -37,14 +26,16 @@ const mockDocumentElement = {
   },
 };
 
-vi.stubGlobal('window', {
-  matchMedia: vi.fn().mockReturnValue({ matches: false }),
-});
-
-vi.stubGlobal('document', {
-  documentElement: mockDocumentElement,
-  cookie: '',
-});
+import {
+  sessionStore,
+  isAuthenticated,
+  isAnonymous,
+  isExpired,
+  currentUser,
+  userRole,
+  isAdmin,
+  isPlayer,
+} from './session';
 
 const { login, register, logout, getCurrentUser } = await import('$lib/api/auth');
 const { apiClient } = await import('$lib/api/client');
@@ -53,8 +44,19 @@ describe('sessionStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDocumentElement.dataset = {};
-    document.cookie = '';
+    vi.stubGlobal('window', {
+      matchMedia: vi.fn().mockReturnValue({ matches: false }),
+    });
+    vi.stubGlobal('document', {
+      documentElement: mockDocumentElement,
+      cookie: '',
+    });
     sessionStore.clear();
+    document.cookie = '';
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   describe('initial state', () => {

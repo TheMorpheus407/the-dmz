@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { get } from 'svelte/store';
 
 import {
@@ -30,22 +30,25 @@ vi.mock('$app/environment', () => ({
   browser: true,
 }));
 
-vi.stubGlobal('localStorage', mockLocalStorage);
-vi.stubGlobal('document', {
-  documentElement: mockDocumentElement,
-  addEventListener: mockDocumentElement.addEventListener,
-  removeEventListener: mockDocumentElement.removeEventListener,
-});
-vi.stubGlobal('window', {
-  matchMedia: mockMatchMedia,
-});
-
 describe('themeStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLocalStorage.getItem.mockReturnValue(null);
     mockDocumentElement.dataset = {};
     mockMatchMedia.mockReturnValue({ matches: false });
+    vi.stubGlobal('localStorage', mockLocalStorage);
+    vi.stubGlobal('document', {
+      documentElement: mockDocumentElement,
+      addEventListener: mockDocumentElement.addEventListener,
+      removeEventListener: mockDocumentElement.removeEventListener,
+    });
+    vi.stubGlobal('window', {
+      matchMedia: mockMatchMedia,
+    });
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   describe('initial state', () => {
