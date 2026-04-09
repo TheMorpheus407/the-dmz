@@ -865,8 +865,8 @@ class RedisTcpClient implements RedisRateLimitClient {
   }
 }
 
-let redisClient: RedisRateLimitClient | null = null;
-let invalidRedisUrl: string | null = null;
+export let redisClient: RedisRateLimitClient | null = null;
+export let invalidRedisUrl: string | null = null;
 
 const buildRedisClient = (config: AppConfig): RedisRateLimitClient =>
   new RedisTcpClient(config.REDIS_URL);
@@ -903,6 +903,11 @@ export const closeRedisClient = async (): Promise<void> => {
   redisClient = null;
 
   await client.quit();
+};
+
+export const resetRedisClient = (): void => {
+  redisClient = null;
+  invalidRedisUrl = null;
 };
 
 export async function checkRedisHealth(

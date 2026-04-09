@@ -14,8 +14,8 @@ export type DB = DatabaseClient;
 export type DatabaseClient = PostgresJsDatabase<typeof schema>;
 export type DatabasePool = Sql;
 
-const pools = new Map<string, DatabasePool>();
-const clients = new Map<string, DatabaseClient>();
+export const pools = new Map<string, DatabasePool>();
+export const clients = new Map<string, DatabaseClient>();
 
 const getConfigKey = (config: AppConfig): string => config.DATABASE_URL;
 
@@ -53,6 +53,11 @@ export const closeDatabase = async (): Promise<void> => {
     await pool.end({ timeout: 5 });
   }
 
+  pools.clear();
+  clients.clear();
+};
+
+export const resetDatabasePools = (): void => {
   pools.clear();
   clients.clear();
 };
