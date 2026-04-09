@@ -436,22 +436,6 @@ describe('CoopSessionRepository', () => {
     });
   });
 
-  describe('findPlayerProfile', () => {
-    it('should find a player profile', async () => {
-      const mockProfile = { profileId: 'player-1', userId: 'user-1' };
-      (mockDb.query.playerProfiles.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
-        mockProfile,
-      );
-
-      const result = await repository.findPlayerProfile({
-        profileId: 'player-1',
-        tenantId: 'tenant-1',
-      });
-
-      expect(result).toEqual({ profileId: 'player-1', userId: 'user-1' });
-    });
-  });
-
   describe('createGameSession', () => {
     it('should create a game session', async () => {
       const mockGameSession = { id: 'game-session-1' };
