@@ -1,18 +1,12 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 
 import ErrorToast from '$lib/ui/components/ErrorToast.svelte';
-import type { CategorizedApiError } from '$lib/api/types';
 
 import { render } from '../helpers/render';
+import { createTestNetworkError } from '../fixtures/errors';
 
 describe('ErrorToast', () => {
-  const baseError: CategorizedApiError = {
-    category: 'network',
-    code: 'NETWORK_ERROR',
-    message: 'Network request failed',
-    status: 0,
-    retryable: true,
-  };
+  const baseError = createTestNetworkError();
 
   beforeEach(() => {
     vi.useFakeTimers();

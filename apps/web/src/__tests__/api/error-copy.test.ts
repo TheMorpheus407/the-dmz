@@ -8,14 +8,10 @@ import {
 } from '$lib/api/error-copy';
 import type { CategorizedApiError } from '$lib/api/types';
 
+import { createTestAuthError } from '../fixtures/errors';
+
 describe('error-copy', () => {
-  const baseError: CategorizedApiError = {
-    category: 'authentication',
-    code: 'AUTH_TOKEN_EXPIRED',
-    message: 'Token expired',
-    status: 401,
-    retryable: false,
-  };
+  const baseError = createTestAuthError();
 
   describe('getErrorCopy', () => {
     it('returns game surface copy for game route', () => {

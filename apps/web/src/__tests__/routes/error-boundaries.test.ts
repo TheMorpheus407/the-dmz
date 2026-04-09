@@ -2,7 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 import { render } from '@testing-library/svelte';
 
 import ErrorState from '$lib/ui/components/ErrorState.svelte';
-import type { CategorizedApiError } from '$lib/api/types';
+
+import { createTestServerError } from '../fixtures/errors';
 
 vi.mock('$app/navigation', () => ({
   goto: vi.fn(),
@@ -10,13 +11,10 @@ vi.mock('$app/navigation', () => ({
 
 describe('Game Error Boundary', () => {
   it('renders error state with game surface', () => {
-    const error: CategorizedApiError = {
-      category: 'server',
+    const error = createTestServerError({
       code: 'ROUTE_ERROR',
       message: 'System failure',
-      status: 500,
-      retryable: false,
-    };
+    });
 
     const { container } = render(ErrorState, {
       props: {
@@ -85,14 +83,11 @@ describe('Admin Error Boundary', () => {
   });
 
   it('shows request ID field when error has requestId', () => {
-    const error: CategorizedApiError = {
-      category: 'server',
+    const error = createTestServerError({
       code: 'ROUTE_ERROR',
       message: 'An unexpected error occurred',
-      status: 500,
-      retryable: false,
       requestId: 'ERR-12345',
-    };
+    });
 
     const { getByText } = render(ErrorState, {
       props: {

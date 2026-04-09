@@ -4,15 +4,10 @@ import ErrorPanel from '$lib/ui/components/ErrorPanel.svelte';
 import type { CategorizedApiError } from '$lib/api/types';
 
 import { render } from '../helpers/render';
+import { createTestAuthError } from '../fixtures/errors';
 
 describe('ErrorPanel', () => {
-  const baseError: CategorizedApiError = {
-    category: 'authentication',
-    code: 'AUTH_TOKEN_EXPIRED',
-    message: 'Token expired',
-    status: 401,
-    retryable: false,
-  };
+  const baseError = createTestAuthError();
 
   it('renders error title and message for game surface', () => {
     const { getByText } = render(ErrorPanel, {
