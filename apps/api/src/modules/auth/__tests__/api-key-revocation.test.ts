@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { CredentialStatus } from '@the-dmz/shared/auth/api-key-contract';
 import { ErrorCodes } from '@the-dmz/shared/constants/error-codes';
+import { createTestApiKey } from '@the-dmz/shared/testing';
 
 const mockMapDbToResponse = vi.fn();
 
@@ -24,31 +25,8 @@ const mockTenantId = 'test-tenant';
 const mockKeyId = 'test-key-id';
 const mockRevokedBy = 'test-user';
 
-const buildMockKey = (overrides: Partial<ReturnType<typeof buildMockKey>> = {}) => ({
-  id: 'test-id',
-  keyId: mockKeyId,
-  tenantId: mockTenantId,
-  name: 'Test Key',
-  type: 'api_key',
-  ownerType: 'service',
-  ownerId: null,
-  serviceAccountId: null,
-  secretHash: 'hashed-secret',
-  previousSecretHash: null,
-  scopes: [],
-  status: CredentialStatus.ACTIVE,
-  expiresAt: null,
-  rotationGracePeriodDays: '7',
-  rotationGraceEndsAt: null,
-  lastUsedAt: null,
-  createdBy: 'test-user',
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  revokedAt: null,
-  revokedBy: null,
-  revocationReason: null,
-  ...overrides,
-});
+const buildMockKey = (overrides = {}) =>
+  createTestApiKey({ keyId: mockKeyId, tenantId: mockTenantId, ...overrides });
 
 describe('api-key-revocation', () => {
   beforeEach(() => {

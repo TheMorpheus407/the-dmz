@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
 import {
+  createTestApiKey,
   createTestChapter,
   createTestEmailTemplate,
   createTestPermission,
@@ -828,5 +829,213 @@ describe('createTestEmailTemplate', () => {
     expect(template.tenantId).toBe(SEED_TENANT_IDS.acmeCorp);
     expect(template.name).toBe('Test Email');
     expect(template.isActive).toBe(true);
+  });
+});
+
+const EXPECTED_API_KEY_FIELDS = [
+  'id',
+  'keyId',
+  'tenantId',
+  'name',
+  'type',
+  'ownerType',
+  'ownerId',
+  'serviceAccountId',
+  'secretHash',
+  'previousSecretHash',
+  'scopes',
+  'status',
+  'expiresAt',
+  'rotationGracePeriodDays',
+  'rotationGraceEndsAt',
+  'lastUsedAt',
+  'createdBy',
+  'createdAt',
+  'updatedAt',
+  'revokedAt',
+  'revokedBy',
+  'revocationReason',
+  'metadata',
+  'ipAllowlist',
+  'refererRestrictions',
+  'rateLimitRequestsPerWindow',
+  'rateLimitWindowMs',
+] as const;
+
+describe('createTestApiKey', () => {
+  it('returns an object with all required DbApiKey fields', () => {
+    const key = createTestApiKey();
+
+    for (const field of EXPECTED_API_KEY_FIELDS) {
+      expect(key).toHaveProperty(field);
+    }
+  });
+
+  it('uses deterministic defaults for an active key', () => {
+    const key = createTestApiKey();
+
+    expect(key.id).toBe('test-id');
+    expect(key.keyId).toBe('test-key-id');
+    expect(key.tenantId).toBe('test-tenant');
+    expect(key.name).toBe('Test Key');
+    expect(key.type).toBe('api_key');
+    expect(key.ownerType).toBe('service');
+    expect(key.ownerId).toBe(null);
+    expect(key.serviceAccountId).toBe(null);
+    expect(key.secretHash).toBe('hashed-secret');
+    expect(key.previousSecretHash).toBe(null);
+    expect(key.scopes).toEqual([]);
+    expect(key.status).toBe('active');
+    expect(key.expiresAt).toBe(null);
+    expect(key.rotationGracePeriodDays).toBe('7');
+    expect(key.rotationGraceEndsAt).toBe(null);
+    expect(key.lastUsedAt).toBe(null);
+    expect(key.createdBy).toBe('test-user');
+    expect(key.revokedAt).toBe(null);
+    expect(key.revokedBy).toBe(null);
+    expect(key.revocationReason).toBe(null);
+    expect(key.metadata).toBe(null);
+    expect(key.ipAllowlist).toBe(null);
+    expect(key.refererRestrictions).toBe(null);
+    expect(key.rateLimitRequestsPerWindow).toBe(null);
+    expect(key.rateLimitWindowMs).toBe(null);
+  });
+
+  it('returns Date instances for createdAt and updatedAt', () => {
+    const key = createTestApiKey();
+
+    expect(key.createdAt).toBeInstanceOf(Date);
+    expect(key.updatedAt).toBeInstanceOf(Date);
+  });
+
+  it('accepts overrides for all fields', () => {
+    const customKey = {
+      id: 'custom-id',
+      keyId: 'custom-key-id',
+      tenantId: 'custom-tenant',
+      name: 'Custom Key',
+      type: 'pat',
+      ownerType: 'user',
+      ownerId: 'owner-123',
+      serviceAccountId: 'sa-456',
+      secretHash: 'custom-hash',
+      previousSecretHash: 'old-hash',
+      scopes: [{ resource: 'users', actions: ['read', 'write'] }],
+      status: 'rotating',
+      expiresAt: new Date('2027-01-01'),
+      rotationGracePeriodDays: '14',
+      rotationGraceEndsAt: new Date('2027-01-15'),
+      lastUsedAt: new Date(),
+      createdBy: 'custom-creator',
+      createdAt: new Date('2025-01-01'),
+      updatedAt: new Date('2025-06-01'),
+      revokedAt: null,
+      revokedBy: null,
+      revocationReason: null,
+      metadata: { env: 'test' },
+      ipAllowlist: ['192.168.1.0/24'],
+      refererRestrictions: ['https://example.com'],
+      rateLimitRequestsPerWindow: 100,
+      rateLimitWindowMs: 60000,
+    };
+
+    const key = createTestApiKey(customKey);
+
+    expect(key).toEqual(customKey);
+  });
+
+  it('merges partial overrides with defaults', () => {
+    const key = createTestApiKey({ name: 'Partial Override Key', status: 'revoked' });
+
+    expect(key.name).toBe('Partial Override Key');
+    expect(key.status).toBe('revoked');
+    expect(key.id).toBe('test-id');
+    expect(key.keyId).toBe('test-key-id');
+    expect(key.tenantId).toBe('test-tenant');
+    expect(key.type).toBe('api_key');
+    expect(key.ownerType).toBe('service');
+    expect(key.scopes).toEqual([]);
+  });
+
+  it('produces a revoked key when status is revoked', () => {
+    const revokedAt = new Date();
+    const key = createTestApiKey({
+      status: 'revoked',
+      revokedAt,
+      revokedBy: 'admin-user',
+      revocationReason: 'Security incident',
+    });
+
+    expect(key.status).toBe('revoked');
+    expect(key.revokedAt).toBe(revokedAt);
+    expect(key.revokedBy).toBe('admin-user');
+    expect(key.revocationReason).toBe('Security incident');
+  });
+
+  it('produces an expired key when status is expired', () => {
+    const expiresAt = new Date('2020-01-01');
+    const key = createTestApiKey({
+      status: 'expired',
+      expiresAt,
+    });
+
+    expect(key.status).toBe('expired');
+    expect(key.expiresAt).toBe(expiresAt);
+  });
+
+  it('produces a rotating key with previous secret hash', () => {
+    const rotationGraceEndsAt = new Date('2027-01-15');
+    const key = createTestApiKey({
+      status: 'rotating',
+      secretHash: 'new-secret-hash',
+      previousSecretHash: 'old-secret-hash',
+      rotationGraceEndsAt,
+    });
+
+    expect(key.status).toBe('rotating');
+    expect(key.secretHash).toBe('new-secret-hash');
+    expect(key.previousSecretHash).toBe('old-secret-hash');
+    expect(key.rotationGraceEndsAt).toBe(rotationGraceEndsAt);
+  });
+
+  it('allows setting ipAllowlist as an array', () => {
+    const ipAllowlist = ['10.0.0.0/8', '172.16.0.0/12'];
+    const key = createTestApiKey({ ipAllowlist });
+
+    expect(key.ipAllowlist).toEqual(ipAllowlist);
+  });
+
+  it('allows setting refererRestrictions as an array', () => {
+    const refererRestrictions = ['https://app.example.com', 'https://admin.example.com'];
+    const key = createTestApiKey({ refererRestrictions });
+
+    expect(key.refererRestrictions).toEqual(refererRestrictions);
+  });
+
+  it('allows setting metadata as an object', () => {
+    const metadata = { version: '1.0', environment: 'test' };
+    const key = createTestApiKey({ metadata });
+
+    expect(key.metadata).toEqual(metadata);
+  });
+
+  it('allows setting scopes as an array of objects', () => {
+    const scopes = [
+      { resource: 'users', actions: ['read', 'write'] },
+      { resource: 'files', actions: ['read'] },
+    ];
+    const key = createTestApiKey({ scopes });
+
+    expect(key.scopes).toEqual(scopes);
+  });
+
+  it('allows setting rate limit fields', () => {
+    const key = createTestApiKey({
+      rateLimitRequestsPerWindow: 1000,
+      rateLimitWindowMs: 60000,
+    });
+
+    expect(key.rateLimitRequestsPerWindow).toBe(1000);
+    expect(key.rateLimitWindowMs).toBe(60000);
   });
 });

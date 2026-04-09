@@ -2,6 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 
 import { CredentialStatus } from '@the-dmz/shared/auth/api-key-contract';
 import { ErrorCodes } from '@the-dmz/shared/constants/error-codes';
+import { createTestApiKey } from '@the-dmz/shared/testing';
 
 const mockUpdateApiKeyStatus = vi.fn();
 const mockUpdateApiKeyStatusWithLastUsed = vi.fn();
@@ -25,42 +26,11 @@ vi.mock('argon2', () => ({
 
 import { validateApiKey } from '../api-key-validation.js';
 
-import type { DbApiKey } from '../api-key-repo.js';
-
 const mockDb: Record<string, unknown> = {};
 const mockKeyId = 'test-key-id';
 const mockSecret = 'test-secret';
 
-const buildMockKey = (overrides: Partial<DbApiKey> = {}): DbApiKey => ({
-  id: 'test-id',
-  keyId: mockKeyId,
-  tenantId: 'test-tenant',
-  name: 'Test Key',
-  type: 'api_key',
-  ownerType: 'service',
-  ownerId: null,
-  serviceAccountId: null,
-  secretHash: 'hashed-secret',
-  previousSecretHash: null,
-  scopes: [],
-  status: CredentialStatus.ACTIVE,
-  expiresAt: null,
-  rotationGracePeriodDays: '7',
-  rotationGraceEndsAt: null,
-  lastUsedAt: null,
-  createdBy: 'test-user',
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  revokedAt: null,
-  revokedBy: null,
-  revocationReason: null,
-  metadata: null,
-  ipAllowlist: null,
-  refererRestrictions: null,
-  rateLimitRequestsPerWindow: null,
-  rateLimitWindowMs: null,
-  ...overrides,
-});
+const buildMockKey = (overrides = {}) => createTestApiKey({ keyId: mockKeyId, ...overrides });
 
 describe('api-key-validation', () => {
   beforeEach(() => {

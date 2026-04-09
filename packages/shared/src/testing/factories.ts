@@ -1,4 +1,39 @@
+import {
+  CredentialStatus as CredentialStatusValue,
+  CredentialType as CredentialTypeValue,
+} from '../auth/api-key-contract.js';
+import type { CredentialStatus, CredentialType } from '../auth/api-key-contract.js';
 import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
+
+export type TestApiKey = {
+  id: string;
+  keyId: string;
+  tenantId: string;
+  name: string;
+  type: CredentialType;
+  ownerType: string;
+  ownerId: string | null;
+  serviceAccountId: string | null;
+  secretHash: string;
+  previousSecretHash: string | null;
+  scopes: unknown[];
+  status: CredentialStatus;
+  expiresAt: Date | null;
+  rotationGracePeriodDays: string;
+  rotationGraceEndsAt: Date | null;
+  lastUsedAt: Date | null;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+  revokedAt: Date | null;
+  revokedBy: string | null;
+  revocationReason: string | null;
+  metadata: unknown;
+  ipAllowlist: unknown;
+  refererRestrictions: unknown;
+  rateLimitRequestsPerWindow: unknown;
+  rateLimitWindowMs: unknown;
+};
 
 /**
  * Shape of a tenant row for seeding. Matches the Drizzle `tenants` table
@@ -478,3 +513,34 @@ export const SEED_PROFILES: readonly ProfileSeed[] = [
   buildProfile('inactiveCo', 'manager'),
   buildProfile('inactiveCo', 'learner'),
 ] as const;
+
+export const createTestApiKey = (overrides: Partial<TestApiKey> = {}): TestApiKey => ({
+  id: 'test-id',
+  keyId: 'test-key-id',
+  tenantId: 'test-tenant',
+  name: 'Test Key',
+  type: CredentialTypeValue.API_KEY,
+  ownerType: 'service',
+  ownerId: null,
+  serviceAccountId: null,
+  secretHash: 'hashed-secret',
+  previousSecretHash: null,
+  scopes: [],
+  status: CredentialStatusValue.ACTIVE,
+  expiresAt: null,
+  rotationGracePeriodDays: '7',
+  rotationGraceEndsAt: null,
+  lastUsedAt: null,
+  createdBy: 'test-user',
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  revokedAt: null,
+  revokedBy: null,
+  revocationReason: null,
+  metadata: null,
+  ipAllowlist: null,
+  refererRestrictions: null,
+  rateLimitRequestsPerWindow: null,
+  rateLimitWindowMs: null,
+  ...overrides,
+});
