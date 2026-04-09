@@ -15,8 +15,7 @@ import type {
   SafetyValidationResult,
 } from './ai-pipeline.types.js';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value);
+import { isRecord } from '../../shared/utils/type-guards.js';
 
 const collectStrings = (
   value: unknown,

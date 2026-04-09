@@ -6,6 +6,8 @@ import {
 
 import type { GeneratablePromptTemplateCategory } from './ai-pipeline.types.js';
 
+import { isRecord } from '../../shared/utils/type-guards.js';
+
 const factionDomainMap: Record<string, string> = {
   'Sovereign Compact': 'compact',
   'Nexion Industries': 'nexion',
@@ -19,9 +21,6 @@ const bodyUrlRegex = /https?:\/\/[^\s)"'<>]+/gi;
 const defaultFallbackJustification = 'Review the request details carefully.';
 const defaultFallbackCallToAction =
   'Use your standard verification process before approving this request.';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value);
 
 const readString = (value: unknown): string | undefined =>
   typeof value === 'string' && value.trim().length > 0 ? value : undefined;

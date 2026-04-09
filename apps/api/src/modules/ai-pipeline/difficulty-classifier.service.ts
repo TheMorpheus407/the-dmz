@@ -7,8 +7,7 @@ import type {
   UsageMetrics,
 } from './ai-pipeline.types.js';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value);
+import { isRecord } from '../../shared/utils/type-guards.js';
 
 const clampDifficulty = (value: number): number => Math.min(5, Math.max(1, Math.round(value)));
 

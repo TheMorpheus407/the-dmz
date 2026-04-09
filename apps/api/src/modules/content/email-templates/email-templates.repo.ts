@@ -3,11 +3,9 @@ import { and, eq, isNull, or } from 'drizzle-orm';
 import { type DB } from '../../../shared/database/connection.js';
 import { emailTemplates, type EmailTemplate } from '../../../db/schema/content/index.js';
 import { assertCreated } from '../../../shared/utils/db-utils.js';
+import { isRecord } from '../../../shared/utils/type-guards.js';
 
 export type { EmailTemplate };
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
 
 const hasGeneratedContentMetadata = (metadata: unknown): boolean =>
   isRecord(metadata) && Object.hasOwn(metadata, 'generatedContent');

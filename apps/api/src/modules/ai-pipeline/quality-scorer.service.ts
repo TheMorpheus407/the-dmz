@@ -4,10 +4,9 @@ import type {
   QualityScoreResult,
 } from './ai-pipeline.types.js';
 
-const clamp = (value: number, min = 0, max = 1): number => Math.min(max, Math.max(min, value));
+import { isRecord } from '../../shared/utils/type-guards.js';
 
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value);
+const clamp = (value: number, min = 0, max = 1): number => Math.min(max, Math.max(min, value));
 
 const getSignalType = (signal: unknown): string | undefined => {
   if (!isRecord(signal) || typeof signal['type'] !== 'string') {

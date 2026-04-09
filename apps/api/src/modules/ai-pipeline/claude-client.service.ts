@@ -7,6 +7,8 @@ import type {
   ClaudeModelAlias,
 } from './ai-pipeline.types.js';
 
+import { isRecord } from '../../shared/utils/type-guards.js';
+
 export interface ClaudeTransportRequest {
   model: string;
   maxTokens: number;
@@ -42,9 +44,6 @@ const MODEL_PRICING_PER_MILLION_TOKENS: Array<{
   { matcher: /^claude-opus-4-6(?:-|$)/, inputUsd: 5, outputUsd: 25 },
 ];
 const MAX_CLAUDE_RETRIES = 3;
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value);
 
 const readString = (value: unknown): string | undefined => {
   if (typeof value === 'string') {

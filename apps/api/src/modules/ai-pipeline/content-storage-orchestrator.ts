@@ -8,6 +8,8 @@ import type {
   UsageMetrics,
 } from './ai-pipeline.types.js';
 
+import { isRecord } from '../../shared/utils/type-guards.js';
+
 type ResolvedRequestContext = Pick<
   ContentGenerationRequest,
   | 'faction'
@@ -34,9 +36,6 @@ export interface StorageOptions {
   fallbackApplied: boolean;
   usage: UsageMetrics;
 }
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value);
 
 const readString = (value: unknown): string | undefined =>
   typeof value === 'string' && value.trim().length > 0 ? value : undefined;

@@ -4,8 +4,9 @@ import { assertCategoryOutputSchema } from './output-parser.service.js';
 
 import type { PromptTemplateInput, PromptTemplateUpdate } from './ai-pipeline.types.js';
 
-export const isRecord = (value: unknown): value is Record<string, unknown> =>
-  !!value && typeof value === 'object' && !Array.isArray(value);
+import { isRecord } from '../../shared/utils/type-guards.js';
+
+export { isRecord };
 
 export const hasConfiguredOutputSchema = (value: unknown): value is Record<string, unknown> =>
   isRecord(value) && Object.keys(value).length > 0;
