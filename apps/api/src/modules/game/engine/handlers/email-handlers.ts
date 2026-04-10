@@ -290,7 +290,7 @@ function incrementDecisionAnalytics(
   }
 }
 
-interface EmailSubmittedCtx {
+export interface EmailSubmittedContext {
   events: DomainEvent[];
   state: GameState;
   emailId: string;
@@ -299,7 +299,7 @@ interface EmailSubmittedCtx {
   evaluationError?: boolean;
 }
 
-function pushEmailDecisionSubmittedEvent(ctx: EmailSubmittedCtx): void {
+function pushEmailDecisionSubmittedEvent(ctx: EmailSubmittedContext): void {
   ctx.events.push({
     eventId: crypto.randomUUID(),
     eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED,
@@ -327,7 +327,7 @@ function applyFactionImpact(
   }
 }
 
-interface DecisionEvaluatedCtx {
+export interface DecisionEvaluatedContext {
   events: DomainEvent[];
   state: GameState;
   emailId: string;
@@ -335,7 +335,7 @@ interface DecisionEvaluatedCtx {
   evaluation: DecisionEvaluationResult;
 }
 
-function pushDecisionEvaluatedEvent(ctx: DecisionEvaluatedCtx): void {
+function pushDecisionEvaluatedEvent(ctx: DecisionEvaluatedContext): void {
   ctx.events.push({
     eventId: crypto.randomUUID(),
     eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_EVALUATED,
@@ -355,7 +355,7 @@ function pushDecisionEvaluatedEvent(ctx: DecisionEvaluatedCtx): void {
   });
 }
 
-interface ResolveDecisionCtx {
+export interface ResolveDecisionContext {
   state: GameState;
   emailToDecide: EmailState;
   emailInstance: EmailInstance;
@@ -363,7 +363,7 @@ interface ResolveDecisionCtx {
   events: DomainEvent[];
 }
 
-function resolveAndApplyDecision(ctx: ResolveDecisionCtx): void {
+function resolveAndApplyDecision(ctx: ResolveDecisionContext): void {
   const { state, emailToDecide, emailInstance, action, events } = ctx;
   const previousTrustScore = state.trustScore;
   const previousFunds = state.funds;
