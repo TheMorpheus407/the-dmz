@@ -285,7 +285,7 @@ function calculateAndDeductOperatingCosts(
   return totalOpEx;
 }
 
-interface RevenueEventCtx {
+export interface RevenueEventContext {
   events: DomainEvent[];
   state: GameState;
   dayNumber: number;
@@ -293,7 +293,7 @@ interface RevenueEventCtx {
   clientCount: number;
 }
 
-function pushRevenueEvent(ctx: RevenueEventCtx): void {
+function pushRevenueEvent(ctx: RevenueEventContext): void {
   if (ctx.totalRevenue > 0) {
     ctx.events.push({
       eventId: crypto.randomUUID(),
