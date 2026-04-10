@@ -7,10 +7,7 @@ import { SEMANTIC_CONTRACTS } from '$lib/ui/primitive-contract';
 
 import { getAxe } from '../axe';
 import { render } from '../helpers/render';
-
-import type { Snippet } from 'svelte';
-
-const mockTabContent = (() => {}) as Snippet;
+import { mockTabContent, mockTwoTabs, createMockTabs } from '../fixtures/tabs';
 
 describe('Semantic Contract: Tabs', () => {
   it('should have required ARIA roles', () => {
@@ -30,10 +27,7 @@ describe('Semantic Contract: Tabs', () => {
   });
 
   it('should support keyboard navigation', () => {
-    const mockTabs = [
-      { id: 'tab1', label: 'Tab One', content: mockTabContent },
-      { id: 'tab2', label: 'Tab Two', content: mockTabContent },
-    ];
+    const mockTabs = mockTwoTabs;
 
     const { container } = render(Tabs, {
       props: { tabs: mockTabs, ariaLabel: 'Test tabs' },
@@ -48,7 +42,7 @@ describe('Semantic Contract: Tabs', () => {
   });
 
   it('should have tabpanel with proper ID linking', () => {
-    const mockTabs = [{ id: 'tab1', label: 'Tab One', content: mockTabContent }];
+    const mockTabs = createMockTabs({ count: 1 });
 
     const { container } = render(Tabs, {
       props: { tabs: mockTabs, ariaLabel: 'Test tabs' },
@@ -62,10 +56,7 @@ describe('Semantic Contract: Tabs', () => {
   });
 
   it('should have proper aria-selected on active tab', () => {
-    const mockTabs = [
-      { id: 'tab1', label: 'Tab One', content: mockTabContent },
-      { id: 'tab2', label: 'Tab Two', content: mockTabContent },
-    ];
+    const mockTabs = mockTwoTabs;
 
     const { container } = render(Tabs, {
       props: { tabs: mockTabs, ariaLabel: 'Test tabs' },
@@ -77,10 +68,7 @@ describe('Semantic Contract: Tabs', () => {
   });
 
   it('should have no accessibility violations', async () => {
-    const mockTabs = [
-      { id: 'tab1', label: 'Tab One', content: mockTabContent },
-      { id: 'tab2', label: 'Tab Two', content: mockTabContent },
-    ];
+    const mockTabs = mockTwoTabs;
 
     const { container } = render(Tabs, {
       props: { tabs: mockTabs, ariaLabel: 'Test tabs' },

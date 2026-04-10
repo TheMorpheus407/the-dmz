@@ -3,16 +3,9 @@ import { describe, expect, it } from 'vitest';
 import Tabs from '$lib/ui/components/Tabs.svelte';
 
 import { render } from '../helpers/render';
-
-import type { Snippet } from 'svelte';
+import { mockTabs } from '../fixtures/tabs';
 
 describe('Tabs', () => {
-  const mockTabs: Array<{ id: string; label: string; content: Snippet }> = [
-    { id: 'tab1', label: 'Tab One', content: (() => {}) as Snippet },
-    { id: 'tab2', label: 'Tab Two', content: (() => {}) as Snippet },
-    { id: 'tab3', label: 'Tab Three', content: (() => {}) as Snippet },
-  ];
-
   it('renders all tab labels', () => {
     const { getByText } = render(Tabs, {
       props: { tabs: mockTabs },
