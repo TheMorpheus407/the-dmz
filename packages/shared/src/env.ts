@@ -17,7 +17,7 @@ export type LogLevel = (typeof logLevelValues)[number];
 export const coepPolicyValues = ['require-corp', 'credentialless'] as const;
 export type CoepPolicy = (typeof coepPolicyValues)[number];
 
-const booleanFromString = z.preprocess((value) => {
+const booleanFromStringSchema = z.preprocess((value) => {
   if (typeof value === 'string') {
     const normalized = value.trim().toLowerCase();
     if (normalized === 'true') return true;
@@ -25,6 +25,48 @@ const booleanFromString = z.preprocess((value) => {
   }
   return value;
 }, z.boolean());
+
+const booleanFromStringFn = (value?: unknown): unknown => {
+  if (value === undefined) return booleanFromStringSchema;
+  try {
+    return booleanFromStringSchema.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const booleanFromString = booleanFromStringFn as unknown as {
+  (value?: unknown): unknown;
+  parse(value: unknown): unknown;
+  safeParse(value: unknown): { success: true; data: boolean } | { success: false; error: unknown };
+  default(value: boolean | string): z.ZodDefault<typeof booleanFromStringSchema>;
+  optional(): z.ZodOptional<typeof booleanFromStringSchema>;
+};
+
+booleanFromString.parse = (value: unknown): unknown => {
+  try {
+    return booleanFromStringSchema.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+booleanFromString.safeParse = (value: unknown) => {
+  try {
+    const parsed = booleanFromStringSchema.parse(value);
+    return { success: true, data: parsed };
+  } catch (error) {
+    return { success: false, error };
+  }
+};
+
+booleanFromString.default = (value: boolean | string) => booleanFromStringSchema.default(value);
+
+booleanFromString.optional = () => booleanFromStringSchema.optional();
+
+Object.setPrototypeOf(booleanFromString, booleanFromStringSchema);
+
+export { booleanFromString };
 
 /**
  * Zod schema for server environment variables.
