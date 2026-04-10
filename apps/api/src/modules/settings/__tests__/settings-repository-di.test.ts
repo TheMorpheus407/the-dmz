@@ -48,7 +48,7 @@ describe('SettingsRepository DI Compliance', () => {
     JWT_PUBLIC_KEY: 'test-public-key',
     JWT_PRIVATE_KEY: 'test-private-key',
     TRUST_PROXY: true,
-  }));
+  });
 
   describe('SettingsRepository.create()', () => {
     it('should throw TypeError when config is undefined', () => {
