@@ -392,8 +392,8 @@ export const registerAdminUserRoutes = async (fastify: FastifyInstance): Promise
           request.params.id,
           request.body.roleId,
           user.userId,
-          request.body.expiresAt ? new Date(request.body.expiresAt) : undefined,
           request.server.config,
+          request.body.expiresAt ? new Date(request.body.expiresAt) : undefined,
         );
 
         return reply.code(201).send({

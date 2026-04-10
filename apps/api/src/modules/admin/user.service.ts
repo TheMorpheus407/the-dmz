@@ -1,4 +1,4 @@
-import { type AppConfig, loadConfig } from '../../config.js';
+import { type AppConfig } from '../../config.js';
 import { createAuditLog } from '../audit/index.js';
 
 import { UserRepository } from './user.repository.js';
@@ -73,9 +73,12 @@ export const createUser = async (
   tenantId: string,
   input: CreateUserInput,
   _createdBy: string,
-  config: AppConfig = loadConfig(),
+  config: AppConfig,
   repository?: UserRepository,
 ): Promise<UserWithRoles> => {
+  if (!config) {
+    throw new TypeError('config is required');
+  }
   if (input.role && !VALID_ROLES.includes(input.role as (typeof VALID_ROLES)[number])) {
     throw new Error(
       `Invalid role. Valid roles are: ${VALID_ROLES.map((r) => r.replace('_', ' ')).join(', ')}`,
@@ -108,9 +111,12 @@ export const updateUser = async (
   userId: string,
   input: UpdateUserInput,
   _updatedBy: string,
-  config: AppConfig = loadConfig(),
+  config: AppConfig,
   repository?: UserRepository,
 ): Promise<UserWithRoles> => {
+  if (!config) {
+    throw new TypeError('config is required');
+  }
   const repo = repository ?? UserRepository.create(config);
 
   const existingUser = await repo.findUserByTenantAndId(tenantId, userId);
@@ -158,9 +164,12 @@ export const deleteUser = async (
   tenantId: string,
   userId: string,
   _deletedBy: string,
-  config: AppConfig = loadConfig(),
+  config: AppConfig,
   repository?: UserRepository,
 ): Promise<void> => {
+  if (!config) {
+    throw new TypeError('config is required');
+  }
   const repo = repository ?? UserRepository.create(config);
 
   const existingUser = await repo.findUserByTenantAndId(tenantId, userId);
@@ -185,9 +194,12 @@ export const deleteUser = async (
 export const getUserById = async (
   tenantId: string,
   userId: string,
-  config: AppConfig = loadConfig(),
+  config: AppConfig,
   repository?: UserRepository,
 ): Promise<UserWithRoles | null> => {
+  if (!config) {
+    throw new TypeError('config is required');
+  }
   const repo = repository ?? UserRepository.create(config);
 
   const user = await repo.findUserByTenantAndId(tenantId, userId);
@@ -219,9 +231,12 @@ export const getUserById = async (
 export const listUsers = async (
   tenantId: string,
   params: UserListParams,
-  config: AppConfig = loadConfig(),
+  config: AppConfig,
   repository?: UserRepository,
 ): Promise<PaginatedUsers> => {
+  if (!config) {
+    throw new TypeError('config is required');
+  }
   const repo = repository ?? UserRepository.create(config);
   return repo.listUsers(tenantId, params);
 };
@@ -231,10 +246,13 @@ export const assignUserRole = async (
   userId: string,
   roleId: string,
   _assignedBy: string,
+  config: AppConfig,
   expiresAt?: Date,
-  config: AppConfig = loadConfig(),
   repository?: UserRepository,
 ): Promise<void> => {
+  if (!config) {
+    throw new TypeError('config is required');
+  }
   const repo = repository ?? UserRepository.create(config);
 
   const targetUser = await repo.findUserByTenantAndId(tenantId, userId);
@@ -284,9 +302,12 @@ export const revokeUserRole = async (
   userId: string,
   roleId: string,
   _revokedBy: string,
-  config: AppConfig = loadConfig(),
+  config: AppConfig,
   repository?: UserRepository,
 ): Promise<void> => {
+  if (!config) {
+    throw new TypeError('config is required');
+  }
   const repo = repository ?? UserRepository.create(config);
 
   const assignment = await repo.findUserRoleAssignment(tenantId, userId, roleId);
@@ -334,9 +355,12 @@ export interface UserActivity {
 export const getUserActivity = async (
   tenantId: string,
   userId: string,
-  config: AppConfig = loadConfig(),
+  config: AppConfig,
   repository?: UserRepository,
 ): Promise<UserActivity | null> => {
+  if (!config) {
+    throw new TypeError('config is required');
+  }
   const repo = repository ?? UserRepository.create(config);
 
   const existingUser = await repo.findUserByTenantAndId(tenantId, userId);

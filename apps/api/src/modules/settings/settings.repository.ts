@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 
-import { type AppConfig, loadConfig } from '../../config.js';
+import { type AppConfig } from '../../config.js';
 import { getDatabaseClient, type DatabaseClient } from '../../shared/database/connection.js';
 import { userProfiles } from '../../db/schema/auth/user-profiles.js';
 
@@ -24,7 +24,10 @@ export class SettingsRepository {
     this.db = db;
   }
 
-  static create(config: AppConfig = loadConfig()): SettingsRepository {
+  static create(config: AppConfig): SettingsRepository {
+    if (!config) {
+      throw new TypeError('config is required');
+    }
     return new SettingsRepository(getDatabaseClient(config));
   }
 

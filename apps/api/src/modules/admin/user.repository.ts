@@ -1,6 +1,6 @@
 import { eq, and, desc, asc, sql, max } from 'drizzle-orm';
 
-import { type AppConfig, loadConfig } from '../../config.js';
+import { type AppConfig } from '../../config.js';
 import { getDatabaseClient, type DatabaseClient } from '../../shared/database/connection.js';
 import { auditLogs } from '../../db/schema/audit/index.js';
 import { sessions } from '../../db/schema/auth/sessions.js';
@@ -71,7 +71,10 @@ export class UserRepository {
     this.db = db;
   }
 
-  static create(config: AppConfig = loadConfig()): UserRepository {
+  static create(config: AppConfig): UserRepository {
+    if (!config) {
+      throw new TypeError('config is required');
+    }
     return new UserRepository(getDatabaseClient(config));
   }
 
