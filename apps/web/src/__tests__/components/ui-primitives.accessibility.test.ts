@@ -9,6 +9,7 @@ import LoadingState from '$lib/ui/components/LoadingState.svelte';
 
 import { getAxe } from '../axe';
 import { render } from '../helpers/render';
+import { mockTwoTabs } from '../fixtures/tabs';
 
 import type { Snippet } from 'svelte';
 
@@ -64,10 +65,7 @@ describe('UI Primitives Accessibility', () => {
 
   describe('Tabs a11y', () => {
     it('has correct ARIA roles', () => {
-      const mockTabs = [
-        { id: 'tab1', label: 'Tab One', content: (() => {}) as Snippet },
-        { id: 'tab2', label: 'Tab Two', content: (() => {}) as Snippet },
-      ];
+      const mockTabs = mockTwoTabs;
 
       const { container } = render(Tabs, {
         props: { tabs: mockTabs, ariaLabel: 'Test tabs' },
@@ -79,10 +77,7 @@ describe('UI Primitives Accessibility', () => {
     });
 
     it('has no WCAG violations', async () => {
-      const mockTabs = [
-        { id: 'tab1', label: 'Tab One', content: (() => {}) as Snippet },
-        { id: 'tab2', label: 'Tab Two', content: (() => {}) as Snippet },
-      ];
+      const mockTabs = mockTwoTabs;
 
       const { container } = render(Tabs, {
         props: { tabs: mockTabs },
