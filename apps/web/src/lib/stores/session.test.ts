@@ -8,10 +8,14 @@ vi.mock('$lib/api/auth', () => ({
   getCurrentUser: vi.fn(),
 }));
 
-vi.mock('$lib/api/client', () => ({
-  apiClient: {
-    setCsrfToken: vi.fn(),
+vi.mock('$lib/api/auth.service', () => ({
+  authService: {
+    setCsrfFromCurrentCookie: vi.fn(),
     clearCsrfToken: vi.fn(),
+    setCsrfToken: vi.fn(),
+    getCsrfToken: vi.fn(),
+    hasCsrfToken: vi.fn(),
+    extractCsrfFromCookie: vi.fn(),
   },
 }));
 
@@ -38,7 +42,7 @@ import {
 } from './session';
 
 const { login, register, logout, getCurrentUser } = await import('$lib/api/auth');
-const { apiClient } = await import('$lib/api/client');
+const { authService } = await import('$lib/api/auth.service');
 
 describe('sessionStore', () => {
   beforeEach(() => {
@@ -253,7 +257,7 @@ describe('sessionStore', () => {
       expect(state.status).toBe('anonymous');
     });
 
-    it('parses csrf-token from cookie correctly with equals signs', async () => {
+    it('calls authService.setCsrfFromCurrentCookie after successful login', async () => {
       const csrfToken = 'abc123==';
       document.cookie = `csrf-token=${csrfToken};other-cookie=value`;
 
@@ -289,46 +293,7 @@ describe('sessionStore', () => {
         password: 'valid pass 1234',
       });
 
-      expect(apiClient.setCsrfToken).toHaveBeenCalledWith(csrfToken);
-    });
-
-    it('parses csrf-token from cookie correctly with multiple equals signs', async () => {
-      const csrfToken = 'base64encoded===';
-      document.cookie = `other=value;csrf-token=${csrfToken};session=abc`;
-
-      vi.mocked(login).mockResolvedValue({
-        data: {
-          user: {
-            id: '123',
-            email: 'test@example.com',
-            displayName: 'Test User',
-            tenantId: '456',
-            role: 'player',
-            isActive: true,
-          },
-          accessToken: 'access-token',
-        },
-      });
-
-      vi.mocked(getCurrentUser).mockResolvedValue({
-        data: {
-          user: {
-            id: '123',
-            email: 'test@example.com',
-            displayName: 'Test User',
-            tenantId: '456',
-            role: 'player',
-            isActive: true,
-          },
-        },
-      });
-
-      await sessionStore.login({
-        email: 'test@example.com',
-        password: 'valid pass 1234',
-      });
-
-      expect(apiClient.setCsrfToken).toHaveBeenCalledWith(csrfToken);
+      expect(authService.setCsrfFromCurrentCookie).toHaveBeenCalled();
     });
   });
 
@@ -360,7 +325,7 @@ describe('sessionStore', () => {
       expect(state.user?.email).toBe('new@example.com');
     });
 
-    it('parses csrf-token from cookie correctly with equals signs', async () => {
+    it('calls authService.setCsrfFromCurrentCookie after successful registration', async () => {
       const csrfToken = 'xyz789==';
       document.cookie = `csrf-token=${csrfToken};other=value`;
 
@@ -397,7 +362,7 @@ describe('sessionStore', () => {
         displayName: 'New User',
       });
 
-      expect(apiClient.setCsrfToken).toHaveBeenCalledWith(csrfToken);
+      expect(authService.setCsrfFromCurrentCookie).toHaveBeenCalled();
     });
   });
 
@@ -424,6 +389,27 @@ describe('sessionStore', () => {
       expect(state.status).toBe('anonymous');
       expect(state.user).toBeNull();
       expect(logout).toHaveBeenCalled();
+    });
+
+    it('calls authService.clearCsrfToken during logout', async () => {
+      vi.mocked(logout).mockResolvedValue({});
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'test@example.com',
+            displayName: 'Test User',
+            tenantId: '456',
+            role: 'player',
+            isActive: true,
+          },
+        },
+      });
+
+      await sessionStore.bootstrap();
+      await sessionStore.logout();
+
+      expect(authService.clearCsrfToken).toHaveBeenCalled();
     });
   });
 

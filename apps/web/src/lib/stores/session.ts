@@ -8,7 +8,7 @@ import {
   updatePreferences,
   getMfaStatus,
 } from '$lib/api/auth';
-import { apiClient } from '$lib/api/client';
+import { authService } from '$lib/api/auth.service';
 import type { CategorizedApiError } from '$lib/api/types';
 import type { LoginInput, RegisterInput } from '@the-dmz/shared/schemas';
 import { logger } from '$lib/logger';
@@ -216,19 +216,7 @@ function createSessionStore() {
       }
 
       if (result.data) {
-        const cookies = document.cookie.split(';');
-        for (const cookie of cookies) {
-          const trimmed = cookie.trim();
-          const idx = trimmed.indexOf('=');
-          if (idx !== -1) {
-            const name = trimmed.substring(0, idx);
-            const value = trimmed.substring(idx + 1);
-            if (name === 'csrf-token' && value) {
-              apiClient.setCsrfToken(value);
-              break;
-            }
-          }
-        }
+        authService.setCsrfFromCurrentCookie();
 
         const meResult = await getCurrentUser();
         let effectivePreferences: unknown;
@@ -284,19 +272,7 @@ function createSessionStore() {
       }
 
       if (result.data) {
-        const cookies = document.cookie.split(';');
-        for (const cookie of cookies) {
-          const trimmed = cookie.trim();
-          const idx = trimmed.indexOf('=');
-          if (idx !== -1) {
-            const name = trimmed.substring(0, idx);
-            const value = trimmed.substring(idx + 1);
-            if (name === 'csrf-token' && value) {
-              apiClient.setCsrfToken(value);
-              break;
-            }
-          }
-        }
+        authService.setCsrfFromCurrentCookie();
 
         const meResult = await getCurrentUser();
         let effectivePreferences: unknown;
@@ -342,7 +318,7 @@ function createSessionStore() {
     },
 
     async logout(): Promise<void> {
-      apiClient.clearCsrfToken();
+      authService.clearCsrfToken();
       await apiLogout();
       themeStore.clearPendingSync();
       themeStore.init();
