@@ -28,23 +28,9 @@ const DEFAULT_CONFIG: BreachServiceConfig = {
 
 export class BreachService {
   private config: BreachServiceConfig;
-  private breachStates: Map<string, BreachState> = new Map();
 
   constructor(config: Partial<BreachServiceConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
-  }
-
-  public getBreachState(sessionId: string): BreachState {
-    let state = this.breachStates.get(sessionId);
-    if (!state) {
-      state = createInitialBreachState();
-      this.breachStates.set(sessionId, state);
-    }
-    return state;
-  }
-
-  public setBreachState(sessionId: string, state: BreachState): void {
-    this.breachStates.set(sessionId, state);
   }
 
   public evaluateBreachTrigger(
@@ -113,15 +99,13 @@ export class BreachService {
   }
 
   public applyBreach(
-    sessionId: string,
+    currentState: BreachState,
     result: BreachResult,
     currentDay: number,
     totalLifetimeEarnings: number,
   ): BreachState {
-    const state = this.getBreachState(sessionId);
-
     const newState: BreachState = {
-      ...state,
+      ...currentState,
       hasActiveBreach: result.breachOccurred,
       currentSeverity: result.severity,
       ransomAmount: result.ransomAmount,
@@ -136,117 +120,112 @@ export class BreachService {
       reputationImpactDaysRemaining: POST_BREACH_EFFECTS_DEFAULT.reputationImpactDays,
       toolsRequireReverification: result.severity === SEVERITY_LEVEL_GAME_OVER,
       intelligenceRevealed: result.breachOccurred
-        ? [...state.intelligenceRevealed, `breach_${result.triggerType}`]
-        : state.intelligenceRevealed,
+        ? [...currentState.intelligenceRevealed, `breach_${result.triggerType}`]
+        : currentState.intelligenceRevealed,
     };
 
-    this.setBreachState(sessionId, newState);
     return newState;
   }
 
   public processRansomPayment(
-    sessionId: string,
+    currentState: BreachState,
     currentFunds: number,
   ): { success: boolean; outcome: 'paid' | 'game_over'; remainingFunds: number } {
-    const state = this.getBreachState(sessionId);
-
-    if (!state.ransomAmount || !state.currentSeverity) {
+    if (!currentState.ransomAmount || !currentState.currentSeverity) {
       return { success: false, outcome: 'paid', remainingFunds: currentFunds };
     }
 
-    const canPayResult = canPayRansom(currentFunds, state.ransomAmount);
-    const severityConfig = BREACH_SEVERITY_CONFIG[state.currentSeverity];
+    const canPayResult = canPayRansom(currentFunds, currentState.ransomAmount);
+    const severityConfig = BREACH_SEVERITY_CONFIG[currentState.currentSeverity];
     const canCauseGameOver = this.config.enableGameOverOnSevere && severityConfig.canCauseGameOver;
 
     const outcome = determineBreachOutcome(canPayResult, canCauseGameOver);
 
     if (outcome === 'paid') {
-      const remainingFunds = currentFunds - state.ransomAmount;
+      const remainingFunds = currentFunds - currentState.ransomAmount;
       return { success: true, outcome: 'paid', remainingFunds };
     }
 
     return { success: false, outcome: 'game_over', remainingFunds: currentFunds };
   }
 
-  public advanceRecovery(sessionId: string): {
+  public advanceRecovery(currentState: BreachState): {
     completed: boolean;
     narrativeMessage: string | null;
+    newState: BreachState;
   } {
-    const state = this.getBreachState(sessionId);
-
-    if (!state.recoveryDaysRemaining || state.recoveryDaysRemaining <= 0) {
-      return { completed: false, narrativeMessage: null };
+    if (!currentState.recoveryDaysRemaining || currentState.recoveryDaysRemaining <= 0) {
+      return { completed: false, narrativeMessage: null, newState: currentState };
     }
 
-    const newRecoveryDays = state.recoveryDaysRemaining - 1;
+    const newRecoveryDays = currentState.recoveryDaysRemaining - 1;
 
     const newState: BreachState = {
-      ...state,
+      ...currentState,
       recoveryDaysRemaining: newRecoveryDays,
+      hasActiveBreach: newRecoveryDays > 0,
     };
 
-    this.setBreachState(sessionId, newState);
-
     if (newRecoveryDays <= 0) {
-      return { completed: true, narrativeMessage: RECOVERY_NARRATIVE_MESSAGES[7]! };
+      return { completed: true, narrativeMessage: RECOVERY_NARRATIVE_MESSAGES[7]!, newState };
     }
 
     const narrativeKey = Math.min(7, Math.max(1, 7 - newRecoveryDays));
     return {
       completed: false,
       narrativeMessage: RECOVERY_NARRATIVE_MESSAGES[narrativeKey] ?? null,
+      newState,
     };
   }
 
-  public getPostBreachEffectsStatus(sessionId: string): {
+  public getPostBreachEffectsStatus(currentState: BreachState): {
     revenueDepression: number | null;
     increasedScrutiny: number | null;
     reputationImpact: number | null;
     hasIntelligenceRevealed: boolean;
   } {
-    const state = this.getBreachState(sessionId);
-
     return {
-      revenueDepression: state.revenueDepressionDaysRemaining,
-      increasedScrutiny: state.increasedScrutinyDaysRemaining,
-      reputationImpact: state.reputationImpactDaysRemaining,
-      hasIntelligenceRevealed: state.intelligenceRevealed.length > 0,
+      revenueDepression: currentState.revenueDepressionDaysRemaining,
+      increasedScrutiny: currentState.increasedScrutinyDaysRemaining,
+      reputationImpact: currentState.reputationImpactDaysRemaining,
+      hasIntelligenceRevealed: currentState.intelligenceRevealed.length > 0,
     };
   }
 
-  public decayPostBreachEffects(sessionId: string): BreachState {
-    const state = this.getBreachState(sessionId);
-
-    if (!state.postBreachEffectsActive) {
-      return state;
+  public decayPostBreachEffects(currentState: BreachState): BreachState {
+    if (!currentState.postBreachEffectsActive) {
+      return currentState;
     }
 
+    const newRevenueDepression =
+      currentState.revenueDepressionDaysRemaining !== null
+        ? Math.max(0, currentState.revenueDepressionDaysRemaining - 1)
+        : null;
+    const newIncreasedScrutiny =
+      currentState.increasedScrutinyDaysRemaining !== null
+        ? Math.max(0, currentState.increasedScrutinyDaysRemaining - 1)
+        : null;
+    const newReputationImpact =
+      currentState.reputationImpactDaysRemaining !== null
+        ? Math.max(0, currentState.reputationImpactDaysRemaining - 1)
+        : null;
+
     const newState: BreachState = {
-      ...state,
-      revenueDepressionDaysRemaining:
-        state.revenueDepressionDaysRemaining !== null
-          ? Math.max(0, state.revenueDepressionDaysRemaining - 1)
-          : null,
-      increasedScrutinyDaysRemaining:
-        state.increasedScrutinyDaysRemaining !== null
-          ? Math.max(0, state.increasedScrutinyDaysRemaining - 1)
-          : null,
-      reputationImpactDaysRemaining:
-        state.reputationImpactDaysRemaining !== null
-          ? Math.max(0, state.reputationImpactDaysRemaining - 1)
-          : null,
+      ...currentState,
+      revenueDepressionDaysRemaining: newRevenueDepression,
+      increasedScrutinyDaysRemaining: newIncreasedScrutiny,
+      reputationImpactDaysRemaining: newReputationImpact,
       postBreachEffectsActive:
-        state.revenueDepressionDaysRemaining !== null ||
-        state.increasedScrutinyDaysRemaining !== null ||
-        state.reputationImpactDaysRemaining !== null,
+        (newRevenueDepression !== null && newRevenueDepression > 0) ||
+        (newIncreasedScrutiny !== null && newIncreasedScrutiny > 0) ||
+        (newReputationImpact !== null && newReputationImpact > 0),
     };
 
-    this.setBreachState(sessionId, newState);
     return newState;
   }
 
-  public clearBreachState(sessionId: string): void {
-    this.breachStates.delete(sessionId);
+  public clearBreachState(_currentState?: BreachState): BreachState {
+    return createInitialBreachState();
   }
 }
 

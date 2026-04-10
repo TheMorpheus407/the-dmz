@@ -304,7 +304,7 @@ describe('Event to Action Payload Mapping via Registry', () => {
       const event = createMockStoredEvent(GAME_EVENT_TYPES.BREACH_OCCURRED, { day: 6 });
       const result = registry.toActionPayload(event.eventType, event.eventData);
 
-      expect(result).toEqual({ type: 'PROCESS_THREATS', dayNumber: 6 });
+      expect(result).toEqual({ type: 'TRIGGER_BREACH', triggerType: '', severity: 1 });
     });
   });
 
@@ -489,8 +489,9 @@ describe('All Adapters - Simultaneous Registration', () => {
       dayNumber: 5,
     });
     expect(registry.toActionPayload(GAME_EVENT_TYPES.BREACH_OCCURRED, { day: 6 })).toEqual({
-      type: 'PROCESS_THREATS',
-      dayNumber: 6,
+      type: 'TRIGGER_BREACH',
+      triggerType: '',
+      severity: 1,
     });
     expect(
       registry.toActionPayload(GAME_EVENT_TYPES.INCIDENT_RESOLVED, {

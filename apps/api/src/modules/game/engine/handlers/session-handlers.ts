@@ -10,6 +10,7 @@ import {
 
 import { canTransitionMacroState, isActionAllowedInPhase } from '../state-machine.js';
 import { GAME_ENGINE_EVENTS } from '../events/shared-types.js';
+import { breachService } from '../../breach/index.js';
 
 import type { DomainEvent } from './handler-utils.js';
 
@@ -74,6 +75,10 @@ export function handleAdvanceDay(
   }
   state.currentDay++;
   state.currentPhase = DAY_PHASES.PHASE_DAY_START;
+
+  if (state.breachState.postBreachEffectsActive) {
+    state.breachState = breachService.decayPostBreachEffects(state.breachState);
+  }
 
   const deferredEmails = state.inbox.filter((e) => e.status === 'deferred');
   const processedEmails = state.inbox.filter((e) => e.status !== 'deferred');

@@ -8,6 +8,7 @@ import {
   canPayRansom,
   determineBreachOutcome,
   BREACH_SEVERITY_CONFIG,
+  type BreachState,
 } from '@the-dmz/shared/game';
 
 import { BreachService } from '../breach.service.js';
@@ -192,7 +193,7 @@ describe('BreachService', () => {
 
   describe('processRansomPayment', () => {
     it('should process successful payment', () => {
-      breachService.setBreachState('session-1', {
+      const currentState: BreachState = {
         hasActiveBreach: true,
         currentSeverity: 3,
         ransomAmount: 100,
@@ -207,16 +208,16 @@ describe('BreachService', () => {
         reputationImpactDaysRemaining: 30,
         toolsRequireReverification: false,
         intelligenceRevealed: ['test'],
-      });
+      };
 
-      const result = breachService.processRansomPayment('session-1', 200);
+      const result = breachService.processRansomPayment(currentState, 200);
       expect(result.success).toBe(true);
       expect(result.outcome).toBe('paid');
       expect(result.remainingFunds).toBe(100);
     });
 
     it('should return game_over when cannot pay', () => {
-      breachService.setBreachState('session-1', {
+      const currentState: BreachState = {
         hasActiveBreach: true,
         currentSeverity: 4,
         ransomAmount: 500,
@@ -231,9 +232,9 @@ describe('BreachService', () => {
         reputationImpactDaysRemaining: 30,
         toolsRequireReverification: true,
         intelligenceRevealed: ['test'],
-      });
+      };
 
-      const result = breachService.processRansomPayment('session-1', 100);
+      const result = breachService.processRansomPayment(currentState, 100);
       expect(result.success).toBe(false);
       expect(result.outcome).toBe('game_over');
     });
@@ -241,7 +242,7 @@ describe('BreachService', () => {
 
   describe('advanceRecovery', () => {
     it('should advance recovery days', () => {
-      breachService.setBreachState('session-1', {
+      const currentState: BreachState = {
         hasActiveBreach: true,
         currentSeverity: 3,
         ransomAmount: 100,
@@ -256,18 +257,16 @@ describe('BreachService', () => {
         reputationImpactDaysRemaining: 30,
         toolsRequireReverification: false,
         intelligenceRevealed: [],
-      });
+      };
 
-      const result = breachService.advanceRecovery('session-1');
+      const result = breachService.advanceRecovery(currentState);
       expect(result.completed).toBe(false);
       expect(result.narrativeMessage).toBeTruthy();
-
-      const state = breachService.getBreachState('session-1');
-      expect(state.recoveryDaysRemaining).toBe(4);
+      expect(result.newState.recoveryDaysRemaining).toBe(4);
     });
 
     it('should complete recovery when last day', () => {
-      breachService.setBreachState('session-1', {
+      const currentState: BreachState = {
         hasActiveBreach: true,
         currentSeverity: 3,
         ransomAmount: null,
@@ -282,16 +281,16 @@ describe('BreachService', () => {
         reputationImpactDaysRemaining: 30,
         toolsRequireReverification: false,
         intelligenceRevealed: [],
-      });
+      };
 
-      const result = breachService.advanceRecovery('session-1');
+      const result = breachService.advanceRecovery(currentState);
       expect(result.completed).toBe(true);
     });
   });
 
   describe('getPostBreachEffectsStatus', () => {
     it('should return current post-breach effects', () => {
-      breachService.setBreachState('session-1', {
+      const currentState: BreachState = {
         hasActiveBreach: true,
         currentSeverity: 3,
         ransomAmount: null,
@@ -306,9 +305,9 @@ describe('BreachService', () => {
         reputationImpactDaysRemaining: 20,
         toolsRequireReverification: false,
         intelligenceRevealed: ['attack_ttp_1'],
-      });
+      };
 
-      const status = breachService.getPostBreachEffectsStatus('session-1');
+      const status = breachService.getPostBreachEffectsStatus(currentState);
       expect(status.revenueDepression).toBe(25);
       expect(status.increasedScrutiny).toBe(10);
       expect(status.reputationImpact).toBe(20);
@@ -318,7 +317,7 @@ describe('BreachService', () => {
 
   describe('decayPostBreachEffects', () => {
     it('should decay post-breach effects', () => {
-      breachService.setBreachState('session-1', {
+      const currentState: BreachState = {
         hasActiveBreach: false,
         currentSeverity: null,
         ransomAmount: null,
@@ -333,16 +332,16 @@ describe('BreachService', () => {
         reputationImpactDaysRemaining: 10,
         toolsRequireReverification: false,
         intelligenceRevealed: [],
-      });
+      };
 
-      const newState = breachService.decayPostBreachEffects('session-1');
+      const newState = breachService.decayPostBreachEffects(currentState);
       expect(newState.revenueDepressionDaysRemaining).toBe(4);
       expect(newState.increasedScrutinyDaysRemaining).toBe(2);
       expect(newState.reputationImpactDaysRemaining).toBe(9);
     });
 
     it('should not go below zero', () => {
-      breachService.setBreachState('session-1', {
+      const currentState: BreachState = {
         hasActiveBreach: false,
         currentSeverity: null,
         ransomAmount: null,
@@ -357,9 +356,9 @@ describe('BreachService', () => {
         reputationImpactDaysRemaining: 0,
         toolsRequireReverification: false,
         intelligenceRevealed: [],
-      });
+      };
 
-      const newState = breachService.decayPostBreachEffects('session-1');
+      const newState = breachService.decayPostBreachEffects(currentState);
       expect(newState.revenueDepressionDaysRemaining).toBe(0);
       expect(newState.increasedScrutinyDaysRemaining).toBe(0);
       expect(newState.reputationImpactDaysRemaining).toBe(0);

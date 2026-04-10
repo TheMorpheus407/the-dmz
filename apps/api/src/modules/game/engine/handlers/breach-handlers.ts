@@ -78,7 +78,7 @@ export function handleTriggerBreach(
   state.trustScore = Math.max(0, state.trustScore + breachResult.trustPenalty);
 
   const breachState = breachService.applyBreach(
-    state.sessionId,
+    state.breachState,
     breachResult,
     state.currentDay,
     totalLifetimeEarnings,
@@ -206,15 +206,18 @@ export function handleAdvanceRecovery(
     throw new Error('No recovery to advance');
   }
 
-  const newRecoveryDays = breachState.recoveryDaysRemaining - 1;
-  state.breachState = {
-    ...breachState,
-    recoveryDaysRemaining: newRecoveryDays,
-  };
+  const result = breachService.advanceRecovery(breachState);
 
-  if (newRecoveryDays <= 0) {
+  if (result.completed) {
     state.currentMacroState = SESSION_MACRO_STATES.SESSION_ACTIVE;
     state.currentPhase = DAY_PHASES.PHASE_RESOURCE_MANAGEMENT;
+    state.breachState = {
+      ...result.newState,
+      postBreachEffectsActive: true,
+      revenueDepressionDaysRemaining: 30,
+      increasedScrutinyDaysRemaining: 14,
+      reputationImpactDaysRemaining: 30,
+    };
 
     events.push({
       eventId: crypto.randomUUID(),
@@ -236,14 +239,16 @@ export function handleAdvanceRecovery(
       },
     });
   } else {
+    state.breachState = result.newState;
+
     events.push({
       eventId: crypto.randomUUID(),
       eventType: GAME_ENGINE_EVENTS.DAY_STARTED,
       timestamp: state.updatedAt,
       payload: {
         day: state.currentDay,
-        recoveryDaysRemaining: newRecoveryDays,
-        narrativeMessage: `Recovery day ${breachState.recoveryDaysRemaining - newRecoveryDays} complete.`,
+        recoveryDaysRemaining: result.newState.recoveryDaysRemaining,
+        narrativeMessage: result.narrativeMessage ?? undefined,
       },
     });
   }

@@ -12,6 +12,10 @@ import type {
   PauseSessionPayload,
   ResumeSessionPayload,
   AbandonSessionPayload,
+  TriggerBreachPayload,
+  PayRansomPayload,
+  RefuseRansomPayload,
+  AdvanceRecoveryPayload,
 } from '../types/game-state.js';
 import type { DecisionType } from '../types/game-engine.js';
 
@@ -160,9 +164,39 @@ export const createBreachOccurredAdapter = (): EventAdapter => ({
   eventType: 'game.breach.occurred',
   toActionPayload: (eventData) =>
     ({
-      type: 'PROCESS_THREATS',
-      dayNumber: (eventData as { day?: number }).day ?? 1,
-    }) as ProcessThreatsPayload,
+      type: 'TRIGGER_BREACH',
+      triggerType: (eventData as { triggerType?: string }).triggerType ?? '',
+      severity: (eventData as { severity?: number }).severity ?? 1,
+    }) as TriggerBreachPayload,
+});
+
+export const createBreachRansomPaidAdapter = (): EventAdapter => ({
+  eventType: 'game.breach.ransom_paid',
+  toActionPayload: (eventData) =>
+    ({
+      type: 'PAY_RANSOM',
+      amount: (eventData as { amount?: number }).amount ?? 0,
+    }) as PayRansomPayload,
+});
+
+export const createBreachRansomRefusedAdapter = (): EventAdapter => ({
+  eventType: 'game.breach.ransom_refused',
+  toActionPayload: () => ({ type: 'REFUSE_RANSOM' }) as RefuseRansomPayload,
+});
+
+export const createBreachRecoveryStartedAdapter = (): EventAdapter => ({
+  eventType: 'game.breach.recovery_started',
+  toActionPayload: () => ({ type: 'ADVANCE_RECOVERY' }) as AdvanceRecoveryPayload,
+});
+
+export const createBreachRecoveryCompletedAdapter = (): EventAdapter => ({
+  eventType: 'game.breach.recovery_completed',
+  toActionPayload: () => ({ type: 'ADVANCE_RECOVERY' }) as AdvanceRecoveryPayload,
+});
+
+export const createBreachPostEffectsStartedAdapter = (): EventAdapter => ({
+  eventType: 'game.breach.post_effects_started',
+  toActionPayload: () => ({ type: 'ADVANCE_RECOVERY' }) as AdvanceRecoveryPayload,
 });
 
 export const createIncidentResolvedAdapter = (): EventAdapter => ({

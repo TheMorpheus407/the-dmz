@@ -586,6 +586,72 @@ describe('reduce - ADVANCE_DAY', () => {
       deferredEmailsCarried: 1,
     });
   });
+
+  it('should decay post-breach effects when postBreachEffectsActive is true', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_DAY_END,
+      currentDay: 5,
+      breachState: {
+        hasActiveBreach: false,
+        currentSeverity: 3,
+        ransomAmount: null,
+        ransomDeadline: null,
+        recoveryDaysRemaining: null,
+        recoveryStartDay: null,
+        totalLifetimeEarningsAtBreach: null,
+        lastBreachDay: 3,
+        postBreachEffectsActive: true,
+        revenueDepressionDaysRemaining: 5,
+        increasedScrutinyDaysRemaining: 3,
+        reputationImpactDaysRemaining: 10,
+        toolsRequireReverification: false,
+        intelligenceRevealed: [],
+      },
+    });
+
+    const action = { type: 'ADVANCE_DAY' as const };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.currentDay).toBe(6);
+    expect(result.newState.breachState.revenueDepressionDaysRemaining).toBe(4);
+    expect(result.newState.breachState.increasedScrutinyDaysRemaining).toBe(2);
+    expect(result.newState.breachState.reputationImpactDaysRemaining).toBe(9);
+  });
+
+  it('should set postBreachEffectsActive to false when all effect days reach zero', () => {
+    const state = createTestState({
+      currentPhase: DAY_PHASES.PHASE_DAY_END,
+      currentDay: 5,
+      breachState: {
+        hasActiveBreach: false,
+        currentSeverity: 3,
+        ransomAmount: null,
+        ransomDeadline: null,
+        recoveryDaysRemaining: null,
+        recoveryStartDay: null,
+        totalLifetimeEarningsAtBreach: null,
+        lastBreachDay: 3,
+        postBreachEffectsActive: true,
+        revenueDepressionDaysRemaining: 1,
+        increasedScrutinyDaysRemaining: 1,
+        reputationImpactDaysRemaining: 1,
+        toolsRequireReverification: false,
+        intelligenceRevealed: [],
+      },
+    });
+
+    const action = { type: 'ADVANCE_DAY' as const };
+
+    const result = reduce(state, action);
+
+    expect(result.success).toBe(true);
+    expect(result.newState.breachState.revenueDepressionDaysRemaining).toBe(0);
+    expect(result.newState.breachState.increasedScrutinyDaysRemaining).toBe(0);
+    expect(result.newState.breachState.reputationImpactDaysRemaining).toBe(0);
+    expect(result.newState.breachState.postBreachEffectsActive).toBe(false);
+  });
 });
 
 describe('reduce - PAUSE_SESSION', () => {
@@ -1792,6 +1858,73 @@ describe('Breach Reducer Actions', () => {
       expect(result.events).toHaveLength(2);
       expect(result.events[0]?.eventType).toBe('game.breach.recovery_completed');
       expect(result.events[1]?.eventType).toBe('game.breach.post_effects_started');
+    });
+
+    it('should set hasActiveBreach to false when recovery completes', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_RECOVERY,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY,
+        currentDay: 10,
+        breachState: {
+          hasActiveBreach: true,
+          currentSeverity: 3,
+          ransomAmount: null,
+          ransomDeadline: null,
+          recoveryDaysRemaining: 1,
+          recoveryStartDay: 3,
+          totalLifetimeEarningsAtBreach: 2000,
+          lastBreachDay: 3,
+          postBreachEffectsActive: false,
+          revenueDepressionDaysRemaining: null,
+          increasedScrutinyDaysRemaining: null,
+          reputationImpactDaysRemaining: null,
+          toolsRequireReverification: false,
+          intelligenceRevealed: [],
+        },
+      });
+
+      const action = {
+        type: 'ADVANCE_RECOVERY' as const,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(true);
+      expect(result.newState.breachState.hasActiveBreach).toBe(false);
+    });
+
+    it('should keep hasActiveBreach true while recovery is in progress', () => {
+      const state = createTestState({
+        currentPhase: DAY_PHASES.PHASE_RECOVERY,
+        currentMacroState: SESSION_MACRO_STATES.SESSION_BREACH_RECOVERY,
+        currentDay: 10,
+        breachState: {
+          hasActiveBreach: true,
+          currentSeverity: 3,
+          ransomAmount: null,
+          ransomDeadline: null,
+          recoveryDaysRemaining: 3,
+          recoveryStartDay: 3,
+          totalLifetimeEarningsAtBreach: 2000,
+          lastBreachDay: 3,
+          postBreachEffectsActive: false,
+          revenueDepressionDaysRemaining: null,
+          increasedScrutinyDaysRemaining: null,
+          reputationImpactDaysRemaining: null,
+          toolsRequireReverification: false,
+          intelligenceRevealed: [],
+        },
+      });
+
+      const action = {
+        type: 'ADVANCE_RECOVERY' as const,
+      };
+
+      const result = reduce(state, action);
+
+      expect(result.success).toBe(true);
+      expect(result.newState.breachState.hasActiveBreach).toBe(true);
+      expect(result.newState.breachState.recoveryDaysRemaining).toBe(2);
     });
   });
 });
