@@ -12,26 +12,21 @@ if (SENTRY_DSN) {
 
 loadFrontendConfig();
 
-const CSP_FRAME_ANCESTORS = process.env['CSP_FRAME_ANCESTORS'] ?? 'none';
-const CSP_CONNECT_SRC = process.env['CSP_CONNECT_SRC'] ?? '';
-const CSP_IMG_SRC = process.env['CSP_IMG_SRC'] ?? '';
-const COEP_POLICY = process.env['COEP_POLICY'] ?? 'require-corp';
-
 const buildSecurityHeaders = () => {
   const config = loadFrontendConfig();
 
   const frameAncestorsOrigins =
-    CSP_FRAME_ANCESTORS === 'none' || CSP_FRAME_ANCESTORS === ''
+    config.CSP_FRAME_ANCESTORS === 'none' || config.CSP_FRAME_ANCESTORS === ''
       ? []
-      : CSP_FRAME_ANCESTORS.split(',').map((o) => o.trim());
+      : config.CSP_FRAME_ANCESTORS.split(',').map((o) => o.trim());
 
   const policy = buildSecurityHeadersPolicy({
     environment: config.PUBLIC_ENVIRONMENT,
     corsOrigins: [],
-    additionalConnectSrc: CSP_CONNECT_SRC,
-    additionalImgSrc: CSP_IMG_SRC,
+    additionalConnectSrc: config.CSP_CONNECT_SRC,
+    additionalImgSrc: config.CSP_IMG_SRC,
     frameAncestorsOrigins,
-    coepPolicy: COEP_POLICY as 'require-corp' | 'credentialless',
+    coepPolicy: config.COEP_POLICY,
   });
 
   const headers = new Headers();
@@ -70,7 +65,7 @@ const securityHeadersCache = new Map<string, ReturnType<typeof buildSecurityHead
 
 const getSecurityHeaders = (): Headers => {
   const config = loadFrontendConfig();
-  const envKey = `${config.PUBLIC_ENVIRONMENT}-${CSP_FRAME_ANCESTORS}-${COEP_POLICY}`;
+  const envKey = `${config.PUBLIC_ENVIRONMENT}-${config.CSP_FRAME_ANCESTORS}-${config.COEP_POLICY}`;
 
   if (!securityHeadersCache.has(envKey)) {
     securityHeadersCache.set(envKey, buildSecurityHeaders());

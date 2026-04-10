@@ -1,8 +1,11 @@
 import { verifyJWT } from '../auth/index.js';
-import { buildChannelName, type WebSocketGateway,
+import {
+  buildChannelName,
+  type WebSocketGateway,
   type WebSocketAuthResult,
   type JWTAuthPayload,
-  type WSConnection } from '../notification/websocket/index.js';
+  type WSConnection,
+} from '../notification/websocket/index.js';
 
 import { sendMessage, type SendMessageResult } from './chat.service.js';
 
