@@ -1,9 +1,21 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
+
+vi.mock('../../audit/index.js', () => ({
+  createAuditLog: vi.fn(() => Promise.resolve(undefined)),
+}));
 
 import * as userService from '../user.service.js';
 
 import type { AppConfig } from '../../../config.js';
 import type { UserRepository } from '../user.repository.js';
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+afterEach(() => {
+  vi.resetModules();
+});
 
 const createMockConfig = (): AppConfig => ({
   NODE_ENV: 'test',
