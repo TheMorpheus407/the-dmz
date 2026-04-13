@@ -7,16 +7,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const OPENAPI_OUTPUT_DIR = join(__dirname, '..', 'openapi');
 const OPENAPI_OUTPUT_FILE = join(OPENAPI_OUTPUT_DIR, 'openapi.v1.json');
 
-const ENCRYPTION_KEY = 'openapi-encryption-key-minimum-32ch';
-
-process.env['JWT_SECRET'] = process.env['JWT_SECRET'] ?? 'openapi-generation-secret';
-process.env['TOKEN_HASH_SALT'] = process.env['TOKEN_HASH_SALT'] ?? 'openapi-salt';
-process.env['JWT_PRIVATE_KEY_ENCRYPTION_KEY'] =
-  process.env['JWT_PRIVATE_KEY_ENCRYPTION_KEY'] ?? ENCRYPTION_KEY;
-process.env['DATABASE_URL'] =
-  process.env['DATABASE_URL'] ?? 'postgresql://dmz:dmz_dev@localhost:5432/dmz_dev';
-process.env['REDIS_URL'] = process.env['REDIS_URL'] ?? 'redis://localhost:6379';
-
 function formatJsonWithInlineArrays(obj: unknown, indent: number = 0): string {
   const spaces = ' '.repeat(indent);
   const nextSpaces = ' '.repeat(indent + 2);

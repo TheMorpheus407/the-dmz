@@ -7,16 +7,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const OPENAPI_OUTPUT_DIR = join(__dirname, '..', 'openapi');
 const OPENAPI_OUTPUT_FILE = join(OPENAPI_OUTPUT_DIR, 'openapi.v1.json');
 
-const ENCRYPTION_KEY = 'openapi-encryption-key-minimum-32ch';
-
-process.env['JWT_SECRET'] = process.env['JWT_SECRET'] ?? 'openapi-generation-secret';
-process.env['TOKEN_HASH_SALT'] = process.env['TOKEN_HASH_SALT'] ?? 'openapi-salt';
-process.env['JWT_PRIVATE_KEY_ENCRYPTION_KEY'] =
-  process.env['JWT_PRIVATE_KEY_ENCRYPTION_KEY'] ?? ENCRYPTION_KEY;
-process.env['DATABASE_URL'] =
-  process.env['DATABASE_URL'] ?? 'postgresql://dmz:dmz_dev@localhost:5432/dmz_dev';
-process.env['REDIS_URL'] = process.env['REDIS_URL'] ?? 'redis://localhost:6379';
-
 interface OpenAPISpec {
   openapi: string;
   info: { title: string; version: string };
@@ -118,7 +108,7 @@ function checkErrorResponses(spec: OpenAPISpec): string[] {
             if (errorCodeProp?.enum) {
               for (const code of REQUIRED_ERROR_CODES) {
                 if (!errorCodeProp.enum.includes(code)) {
-                  continue;
+                  errors.push(`Required error code missing from enum: ${code}`);
                 }
               }
             }
