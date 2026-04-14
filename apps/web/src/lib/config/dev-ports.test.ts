@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   DEFAULT_API_PORT,
@@ -108,7 +108,7 @@ describe('resolveApiProxyTarget', () => {
     expect(target).toBe('https://example.test');
   });
 
-  it('rejects VITE_API_URL with invalid protocol', () => {
+  it('rejects VITE_API_URL with invalid protocol and logs warning', () => {
     const invalidProtocols = [
       'ftp://example.test',
       'file://example.test',
@@ -117,16 +117,21 @@ describe('resolveApiProxyTarget', () => {
     ];
 
     for (const url of invalidProtocols) {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const target = resolveApiProxyTarget({
         VITE_API_URL: url,
         API_PORT: '3001',
       });
 
       expect(target).toBe('http://localhost:3001');
+      expect(warnSpy).toHaveBeenCalledWith(
+        `[WARN] VITE_API_URL is set to "${url}" but is not a valid http/https URL. Falling back to localhost.`,
+      );
+      warnSpy.mockRestore();
     }
   });
 
-  it('rejects VITE_API_URL that is not a valid URL', () => {
+  it('rejects VITE_API_URL that is not a valid URL and logs warning', () => {
     const invalidUrls = [
       'not-a-url',
       'localhost:3001',
@@ -136,22 +141,32 @@ describe('resolveApiProxyTarget', () => {
     ];
 
     for (const url of invalidUrls) {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const target = resolveApiProxyTarget({
         VITE_API_URL: url,
         API_PORT: '3001',
       });
 
       expect(target).toBe('http://localhost:3001');
+      expect(warnSpy).toHaveBeenCalledWith(
+        `[WARN] VITE_API_URL is set to "${url}" but is not a valid http/https URL. Falling back to localhost.`,
+      );
+      warnSpy.mockRestore();
     }
   });
 
-  it('falls back to http://localhost:{apiPort} when VITE_API_URL is invalid', () => {
+  it('falls back to http://localhost:{apiPort} when VITE_API_URL is invalid and logs warning', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const target = resolveApiProxyTarget({
       VITE_API_URL: 'ftp://invalid.test',
       API_PORT: '4567',
     });
 
     expect(target).toBe('http://localhost:4567');
+    expect(warnSpy).toHaveBeenCalledWith(
+      '[WARN] VITE_API_URL is set to "ftp://invalid.test" but is not a valid http/https URL. Falling back to localhost.',
+    );
+    warnSpy.mockRestore();
   });
 
   it('falls back correctly when VITE_API_URL is empty string after trim', () => {

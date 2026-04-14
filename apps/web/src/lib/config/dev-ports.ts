@@ -54,12 +54,12 @@ export const resolveWebDevPorts = (
 });
 
 const isValidUrl = (value: string): boolean => {
+  if (!value.includes('://')) {
+    return false;
+  }
   try {
     const url = new URL(value);
     if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-      return false;
-    }
-    if (!value.includes('://')) {
       return false;
     }
     return true;
@@ -70,10 +70,17 @@ const isValidUrl = (value: string): boolean => {
 
 export const resolveApiProxyTarget = (env: NodeJS.ProcessEnv = process.env): string => {
   const configuredTarget = env['VITE_API_URL'];
+  const hasEnvVar = configuredTarget !== undefined;
+
   if (typeof configuredTarget === 'string' && configuredTarget.trim().length > 0) {
     const trimmed = configuredTarget.trim();
     if (isValidUrl(trimmed)) {
       return trimmed;
+    }
+    if (hasEnvVar) {
+      console.warn(
+        `[WARN] VITE_API_URL is set to "${trimmed}" but is not a valid http/https URL. Falling back to localhost.`,
+      );
     }
   }
 
