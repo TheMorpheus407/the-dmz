@@ -298,6 +298,10 @@ export const registerWebauthnCredential = async (
   await storeChallenge(redis, user.tenantId, challengeId, challenge);
   await deleteChallenge(redis, user.tenantId, challengeId);
 
+  // TODO: CRITICAL — integrate @simplewebauthn/server verifyRegistrationResponse()
+  // The current implementation stores the credential without verifying the attestation.
+  // The API contract must be extended to pass the full WebAuthn registration response.
+
   const db = getDatabaseClient(config);
 
   const existing = await db
@@ -347,6 +351,22 @@ export const verifyWebauthnAssertion = async (
     throw new AppError({
       code: ErrorCodes.AUTH_WEBAUTHN_CREDENTIAL_NOT_FOUND,
       message: 'Credential not found',
+      statusCode: 400,
+    });
+  }
+
+  // TODO: CRITICAL — integrate @simplewebauthn/server verifyAuthenticationResponse()
+  // The current implementation does NOT verify the authenticator's cryptographic signature.
+  // The API contract must be extended to pass the full WebAuthn assertion response
+  // (authenticatorData, clientDataJSON, signature) from the client.
+  // See: https://simplewebauthn.dev/docs/packages/server#2-verify-authentication-response
+
+  // Enforce counter monotonicity to prevent replay attacks
+  if (data.counter <= (credential.counter ?? 0)) {
+    await recordFailedMfaAttempt(config, user);
+    throw new AppError({
+      code: ErrorCodes.AUTH_WEBAUTHN_CREDENTIAL_NOT_FOUND,
+      message: 'Invalid authenticator counter (possible replay attack)',
       statusCode: 400,
     });
   }
