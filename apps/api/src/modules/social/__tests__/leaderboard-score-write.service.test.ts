@@ -7,10 +7,10 @@ import {
 } from '../leaderboard-score.service.js';
 import { getDatabaseClient } from '../../../shared/database/connection.js';
 import { getRedisClient } from '../../../shared/database/redis.js';
+import { createMockDb, createMockRedis } from '../../../__tests__/helpers/index.js';
 
 import type { AppConfig } from '../../../config.js';
 import type { DatabaseClient } from '../../../shared/database/connection.js';
-import type { RedisRateLimitClient } from '../../../shared/database/redis.js';
 
 vi.mock('../../../shared/database/connection.js', () => ({
   getDatabaseClient: vi.fn(),
@@ -32,75 +32,14 @@ const mockMetrics = {
   resourceEfficiency: 90,
 };
 
-const createMockDb = () => {
-  const mockQueryResults: Map<string, unknown> = new Map();
-  const mockInsertResults: Map<string, unknown[]> = new Map();
-
-  const mockDb = {
-    query: {
-      leaderboards: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('leaderboards.findFirst') ?? null;
-        }),
-        findMany: vi.fn().mockResolvedValue([]),
-      },
-      leaderboardEntries: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('leaderboardEntries.findFirst') ?? null;
-        }),
-        findMany: vi.fn().mockResolvedValue([]),
-      },
-      enterpriseLeaderboards: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('enterpriseLeaderboards.findFirst') ?? null;
-        }),
-        findMany: vi.fn().mockResolvedValue([]),
-      },
-      leaderboardScores: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('leaderboardScores.findFirst') ?? null;
-        }),
-        findMany: vi.fn().mockResolvedValue([]),
-      },
-      playerProfiles: {
-        findMany: vi.fn().mockResolvedValue([]),
-      },
-    },
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    orderBy: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    offset: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockImplementation(async () => {
-      return mockInsertResults.get('returning') ?? [];
-    }),
-  };
-
-  const setQueryResult = (key: string, result: unknown) => {
-    mockQueryResults.set(key, result);
-  };
-
-  const setInsertResult = (result: unknown[]) => {
-    mockInsertResults.set('returning', result);
-  };
-
-  return { mockDb, setQueryResult, setInsertResult, mockQueryResults, mockInsertResults };
+const setupMockDb = () => {
+  const mock = createMockDb();
+  const { setInsertResult } = mock;
+  return { mockDb: mock.mockDb, setQueryResult: mock.setQueryResult, setInsertResult };
 };
 
-const createMockRedis = () => {
-  const mockRedis = {
-    zadd: vi.fn().mockResolvedValue(1),
-    zrevrange: vi.fn().mockImplementation(async () => {
-      return [];
-    }),
-  } as unknown as RedisRateLimitClient;
-
-  return { mockRedis };
+const setupMockRedis = () => {
+  return createMockRedis();
 };
 
 describe('leaderboard-score service - buildLeaderboardKey', () => {
@@ -126,13 +65,13 @@ describe('leaderboard-score service - updatePlayerScore', () => {
   });
 
   it('should insert new player entry when no existing entry', async () => {
-    const { mockDb, setQueryResult, setInsertResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult, setInsertResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('leaderboards.findFirst', {
+    setQueryResult('leaderboards', 'findFirst', {
       leaderboardId: 'lb-1',
       scope: 'global',
       seasonId: 'season-1',
@@ -140,7 +79,7 @@ describe('leaderboard-score service - updatePlayerScore', () => {
       timeFrame: 'seasonal',
       isActive: true,
     });
-    setQueryResult('leaderboardEntries.findFirst', null);
+    setQueryResult('leaderboardEntries', 'findFirst', null);
     setInsertResult([{ entryId: 'entry-1' }]);
 
     const result = await updatePlayerScore(
@@ -154,13 +93,13 @@ describe('leaderboard-score service - updatePlayerScore', () => {
   });
 
   it('should update existing player entry', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('leaderboards.findFirst', {
+    setQueryResult('leaderboards', 'findFirst', {
       leaderboardId: 'lb-1',
       scope: 'global',
       seasonId: 'season-1',
@@ -168,7 +107,7 @@ describe('leaderboard-score service - updatePlayerScore', () => {
       timeFrame: 'seasonal',
       isActive: true,
     });
-    setQueryResult('leaderboardEntries.findFirst', {
+    setQueryResult('leaderboardEntries', 'findFirst', {
       entryId: 'entry-existing',
       playerId: 'player-1',
       score: 100,
@@ -188,13 +127,13 @@ describe('leaderboard-score service - updatePlayerScore', () => {
   });
 
   it('should continue to next category when leaderboard not found', async () => {
-    const { mockDb, setQueryResult, setInsertResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult, setInsertResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('leaderboards.findFirst', null);
+    setQueryResult('leaderboards', 'findFirst', null);
     setInsertResult([{ entryId: 'entry-1' }]);
 
     const result = await updatePlayerScore(
@@ -208,13 +147,13 @@ describe('leaderboard-score service - updatePlayerScore', () => {
   });
 
   it('should call Redis zadd and zrevrange when redis available', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('leaderboards.findFirst', {
+    setQueryResult('leaderboards', 'findFirst', {
       leaderboardId: 'lb-1',
       scope: 'global',
       seasonId: 'season-1',
@@ -222,7 +161,7 @@ describe('leaderboard-score service - updatePlayerScore', () => {
       timeFrame: 'seasonal',
       isActive: true,
     });
-    setQueryResult('leaderboardEntries.findFirst', null);
+    setQueryResult('leaderboardEntries', 'findFirst', null);
 
     mockRedis.zrevrange = vi.fn().mockResolvedValue([
       { member: 'player-1', score: 150 },
@@ -242,13 +181,13 @@ describe('leaderboard-score service - updatePlayerScore', () => {
   });
 
   it('should return rank from Redis when player found in zrevrange', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('leaderboards.findFirst', {
+    setQueryResult('leaderboards', 'findFirst', {
       leaderboardId: 'lb-1',
       scope: 'global',
       seasonId: 'season-1',
@@ -256,7 +195,7 @@ describe('leaderboard-score service - updatePlayerScore', () => {
       timeFrame: 'seasonal',
       isActive: true,
     });
-    setQueryResult('leaderboardEntries.findFirst', null);
+    setQueryResult('leaderboardEntries', 'findFirst', null);
 
     mockRedis.zrevrange = vi.fn().mockResolvedValue([
       { member: 'player-2', score: 200 },
@@ -276,12 +215,12 @@ describe('leaderboard-score service - updatePlayerScore', () => {
   });
 
   it('should return success:true when no Redis available', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(null);
 
-    setQueryResult('leaderboards.findFirst', {
+    setQueryResult('leaderboards', 'findFirst', {
       leaderboardId: 'lb-1',
       scope: 'global',
       seasonId: 'season-1',
@@ -289,7 +228,7 @@ describe('leaderboard-score service - updatePlayerScore', () => {
       timeFrame: 'seasonal',
       isActive: true,
     });
-    setQueryResult('leaderboardEntries.findFirst', null);
+    setQueryResult('leaderboardEntries', 'findFirst', null);
 
     const result = await updatePlayerScore(
       mockConfig,
@@ -303,13 +242,13 @@ describe('leaderboard-score service - updatePlayerScore', () => {
   });
 
   it('should use default seasonId and timeFrame when not provided', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('leaderboards.findFirst', {
+    setQueryResult('leaderboards', 'findFirst', {
       leaderboardId: 'lb-1',
       scope: 'global',
       seasonId: 'season-1',
@@ -317,7 +256,7 @@ describe('leaderboard-score service - updatePlayerScore', () => {
       timeFrame: 'seasonal',
       isActive: true,
     });
-    setQueryResult('leaderboardEntries.findFirst', null);
+    setQueryResult('leaderboardEntries', 'findFirst', null);
 
     const result = await updatePlayerScore(mockConfig, 'tenant-123', {
       playerId: 'player-1',
@@ -328,13 +267,13 @@ describe('leaderboard-score service - updatePlayerScore', () => {
   });
 
   it('should include riskyApprovalRate in score calculation', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('leaderboards.findFirst', {
+    setQueryResult('leaderboards', 'findFirst', {
       leaderboardId: 'lb-1',
       scope: 'global',
       seasonId: 'season-1',
@@ -342,7 +281,7 @@ describe('leaderboard-score service - updatePlayerScore', () => {
       timeFrame: 'seasonal',
       isActive: true,
     });
-    setQueryResult('leaderboardEntries.findFirst', null);
+    setQueryResult('leaderboardEntries', 'findFirst', null);
 
     const result = await updatePlayerScore(
       mockConfig,
@@ -361,13 +300,13 @@ describe('leaderboard-score service - updateEnterprisePlayerScore', () => {
   });
 
   it('should return error when enterprise leaderboard not found', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', null);
+    setQueryResult('enterpriseLeaderboards', 'findFirst', null);
 
     const result = await updateEnterprisePlayerScore(mockConfig, 'tenant-123', {
       playerId: 'player-1',
@@ -379,20 +318,20 @@ describe('leaderboard-score service - updateEnterprisePlayerScore', () => {
   });
 
   it('should insert new entry with departmentId and corporationId', async () => {
-    const { mockDb, setQueryResult, setInsertResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult, setInsertResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       scope: 'tenant',
       leaderboardType: 'composite',
       currentSeasonId: 'season-1',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findFirst', null);
+    setQueryResult('leaderboardScores', 'findFirst', null);
     setInsertResult([{ id: 'score-1' }]);
 
     const result = await updateEnterprisePlayerScore(
@@ -407,20 +346,20 @@ describe('leaderboard-score service - updateEnterprisePlayerScore', () => {
   });
 
   it('should update existing entry preserving departmentId and corporationId', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       scope: 'tenant',
       leaderboardType: 'composite',
       currentSeasonId: 'season-1',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findFirst', {
+    setQueryResult('leaderboardScores', 'findFirst', {
       id: 'score-existing',
       playerId: 'player-1',
       departmentId: 'old-dept',
@@ -439,20 +378,20 @@ describe('leaderboard-score service - updateEnterprisePlayerScore', () => {
   });
 
   it('should use default leaderboardType when not provided', async () => {
-    const { mockDb, setQueryResult, setInsertResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult, setInsertResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       scope: 'tenant',
       leaderboardType: 'composite',
       currentSeasonId: 'season-1',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findFirst', null);
+    setQueryResult('leaderboardScores', 'findFirst', null);
     setInsertResult([{ id: 'score-1' }]);
 
     const result = await updateEnterprisePlayerScore(mockConfig, 'tenant-123', {
@@ -465,20 +404,20 @@ describe('leaderboard-score service - updateEnterprisePlayerScore', () => {
   });
 
   it('should perform Redis operations when redis available', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       scope: 'tenant',
       leaderboardType: 'composite',
       currentSeasonId: 'season-1',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findFirst', null);
+    setQueryResult('leaderboardScores', 'findFirst', null);
 
     mockRedis.zrevrange = vi.fn().mockResolvedValue([{ member: 'player-1', score: 150 }]);
 
@@ -493,20 +432,20 @@ describe('leaderboard-score service - updateEnterprisePlayerScore', () => {
   });
 
   it('should update rank via database after Redis operation', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
-    const { mockRedis } = createMockRedis();
+    const { mockDb, setQueryResult } = setupMockDb();
+    const { mockRedis } = setupMockRedis();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(mockRedis);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       scope: 'tenant',
       leaderboardType: 'composite',
       currentSeasonId: 'season-1',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findFirst', {
+    setQueryResult('leaderboardScores', 'findFirst', {
       id: 'score-existing',
       playerId: 'player-1',
     });
@@ -523,19 +462,19 @@ describe('leaderboard-score service - updateEnterprisePlayerScore', () => {
   });
 
   it('should return success when no Redis available', async () => {
-    const { mockDb, setQueryResult, setInsertResult } = createMockDb();
+    const { mockDb, setQueryResult, setInsertResult } = setupMockDb();
 
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
     vi.mocked(getRedisClient).mockReturnValue(null);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       scope: 'tenant',
       leaderboardType: 'composite',
       currentSeasonId: 'season-1',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findFirst', null);
+    setQueryResult('leaderboardScores', 'findFirst', null);
     setInsertResult([{ id: 'score-1' }]);
 
     const result = await updateEnterprisePlayerScore(mockConfig, 'tenant-123', {

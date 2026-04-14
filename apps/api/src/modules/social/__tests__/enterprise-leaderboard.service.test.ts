@@ -10,6 +10,7 @@ import {
   updatePrivacyLevel,
 } from '../enterprise-leaderboard.service.js';
 import { getDatabaseClient } from '../../../shared/database/connection.js';
+import { createMockDb } from '../../../__tests__/helpers/index.js';
 
 import type { AppConfig } from '../../../config.js';
 import type { DatabaseClient } from '../../../shared/database/connection.js';
@@ -29,57 +30,10 @@ const mockConfig = {
   seasonId: 'season-123',
 } as unknown as AppConfig;
 
-const createMockDb = () => {
-  const mockQueryResults: Map<string, unknown> = new Map();
-
-  const mockDb = {
-    query: {
-      enterpriseLeaderboards: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('enterpriseLeaderboards.findFirst') ?? null;
-        }),
-        findMany: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('enterpriseLeaderboards.findMany') ?? [];
-        }),
-      },
-      leaderboardScores: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('leaderboardScores.findFirst') ?? null;
-        }),
-        findMany: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('leaderboardScores.findMany') ?? [];
-        }),
-      },
-      playerProfiles: {
-        findMany: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('playerProfiles.findMany') ?? [];
-        }),
-      },
-      featureFlags: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('featureFlags.findFirst') ?? null;
-        }),
-        findMany: vi.fn().mockImplementation(async () => {
-          return mockQueryResults.get('featureFlags.findMany') ?? [];
-        }),
-      },
-    },
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    orderBy: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    offset: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockImplementation(async () => []),
-  };
-
-  const setQueryResult = (key: string, result: unknown) => {
-    mockQueryResults.set(key, result);
-  };
-
-  return { mockDb, setQueryResult, mockQueryResults };
+const setupMockDb = () => {
+  const mock = createMockDb();
+  const { setQueryResult } = mock;
+  return { mockDb: mock.mockDb, setQueryResult };
 };
 
 describe('enterprise-leaderboard service - listEnterpriseLeaderboards', () => {
@@ -89,7 +43,7 @@ describe('enterprise-leaderboard service - listEnterpriseLeaderboards', () => {
 
   it('should return error when flag disabled', async () => {
     mockEvaluateFlag.mockResolvedValue(false);
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await listEnterpriseLeaderboards(mockConfig, 'tenant-123');
@@ -100,7 +54,7 @@ describe('enterprise-leaderboard service - listEnterpriseLeaderboards', () => {
 
   it('should return enterprise leaderboards successfully', async () => {
     mockEvaluateFlag.mockResolvedValue(true);
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const mockLeaderboards = [
@@ -113,7 +67,7 @@ describe('enterprise-leaderboard service - listEnterpriseLeaderboards', () => {
         isActive: true,
       },
     ];
-    setQueryResult('enterpriseLeaderboards.findMany', mockLeaderboards);
+    setQueryResult('enterpriseLeaderboards', 'findMany', mockLeaderboards);
 
     const result = await listEnterpriseLeaderboards(mockConfig, 'tenant-123');
 
@@ -122,10 +76,10 @@ describe('enterprise-leaderboard service - listEnterpriseLeaderboards', () => {
   });
 
   it('should filter by scope', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findMany', []);
+    setQueryResult('enterpriseLeaderboards', 'findMany', []);
 
     await listEnterpriseLeaderboards(mockConfig, 'tenant-123', { scope: 'department' });
 
@@ -133,10 +87,10 @@ describe('enterprise-leaderboard service - listEnterpriseLeaderboards', () => {
   });
 
   it('should filter by departmentId', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findMany', []);
+    setQueryResult('enterpriseLeaderboards', 'findMany', []);
 
     await listEnterpriseLeaderboards(mockConfig, 'tenant-123', { departmentId: 'dept-1' });
 
@@ -144,10 +98,10 @@ describe('enterprise-leaderboard service - listEnterpriseLeaderboards', () => {
   });
 
   it('should filter by corporationId', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findMany', []);
+    setQueryResult('enterpriseLeaderboards', 'findMany', []);
 
     await listEnterpriseLeaderboards(mockConfig, 'tenant-123', { corporationId: 'corp-1' });
 
@@ -162,7 +116,7 @@ describe('enterprise-leaderboard service - getEnterpriseLeaderboardEntries', () 
 
   it('should return error when flag disabled', async () => {
     mockEvaluateFlag.mockResolvedValue(false);
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await getEnterpriseLeaderboardEntries(mockConfig, 'tenant-123', 'elb-1');
@@ -173,10 +127,10 @@ describe('enterprise-leaderboard service - getEnterpriseLeaderboardEntries', () 
 
   it('should return error when leaderboard not found', async () => {
     mockEvaluateFlag.mockResolvedValue(true);
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', null);
+    setQueryResult('enterpriseLeaderboards', 'findFirst', null);
 
     const result = await getEnterpriseLeaderboardEntries(mockConfig, 'tenant-123', 'non-existent');
 
@@ -185,10 +139,10 @@ describe('enterprise-leaderboard service - getEnterpriseLeaderboardEntries', () 
   });
 
   it('should return entries with player mapping and privacy filtering', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       scope: 'tenant',
       privacyLevel: 'full_name',
@@ -211,7 +165,7 @@ describe('enterprise-leaderboard service - getEnterpriseLeaderboardEntries', () 
         updatedAt: new Date(),
       },
     ];
-    setQueryResult('leaderboardScores.findMany', mockScores);
+    setQueryResult('leaderboardScores', 'findMany', mockScores);
 
     const mockPlayers = [
       {
@@ -221,7 +175,7 @@ describe('enterprise-leaderboard service - getEnterpriseLeaderboardEntries', () 
         privacyMode: 'public',
       },
     ];
-    setQueryResult('playerProfiles.findMany', mockPlayers);
+    setQueryResult('playerProfiles', 'findMany', mockPlayers);
 
     const result = await getEnterpriseLeaderboardEntries(mockConfig, 'tenant-123', 'elb-1');
 
@@ -231,17 +185,17 @@ describe('enterprise-leaderboard service - getEnterpriseLeaderboardEntries', () 
   });
 
   it('should apply pagination', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       scope: 'tenant',
       privacyLevel: 'full_name',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findMany', []);
-    setQueryResult('playerProfiles.findMany', []);
+    setQueryResult('leaderboardScores', 'findMany', []);
+    setQueryResult('playerProfiles', 'findMany', []);
 
     const result = await getEnterpriseLeaderboardEntries(mockConfig, 'tenant-123', 'elb-1', {
       limit: 10,
@@ -252,17 +206,17 @@ describe('enterprise-leaderboard service - getEnterpriseLeaderboardEntries', () 
   });
 
   it('should filter by departmentId', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       scope: 'tenant',
       privacyLevel: 'full_name',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findMany', []);
-    setQueryResult('playerProfiles.findMany', []);
+    setQueryResult('leaderboardScores', 'findMany', []);
+    setQueryResult('playerProfiles', 'findMany', []);
 
     const result = await getEnterpriseLeaderboardEntries(mockConfig, 'tenant-123', 'elb-1', {
       departmentId: 'dept-1',
@@ -279,7 +233,7 @@ describe('enterprise-leaderboard service - getPlayerEnterprisePosition', () => {
 
   it('should return error when flag disabled', async () => {
     mockEvaluateFlag.mockResolvedValue(false);
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await getPlayerEnterprisePosition(mockConfig, 'tenant-123', 'player-1', 'elb-1');
@@ -290,10 +244,10 @@ describe('enterprise-leaderboard service - getPlayerEnterprisePosition', () => {
 
   it('should return error when player not found', async () => {
     mockEvaluateFlag.mockResolvedValue(true);
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('leaderboardScores.findFirst', null);
+    setQueryResult('leaderboardScores', 'findFirst', null);
 
     const result = await getPlayerEnterprisePosition(mockConfig, 'tenant-123', 'player-1', 'elb-1');
 
@@ -302,10 +256,10 @@ describe('enterprise-leaderboard service - getPlayerEnterprisePosition', () => {
   });
 
   it('should return rank and score when found', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('leaderboardScores.findFirst', {
+    setQueryResult('leaderboardScores', 'findFirst', {
       playerId: 'player-1',
       score: 150,
       rank: 3,
@@ -326,7 +280,7 @@ describe('enterprise-leaderboard service - getDepartmentLeaderboard', () => {
 
   it('should return error when flag disabled', async () => {
     mockEvaluateFlag.mockResolvedValue(false);
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await getDepartmentLeaderboard(mockConfig, 'tenant-123', 'dept-1');
@@ -337,10 +291,10 @@ describe('enterprise-leaderboard service - getDepartmentLeaderboard', () => {
 
   it('should return error when department leaderboard not found', async () => {
     mockEvaluateFlag.mockResolvedValue(true);
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', null);
+    setQueryResult('enterpriseLeaderboards', 'findFirst', null);
 
     const result = await getDepartmentLeaderboard(mockConfig, 'tenant-123', 'dept-1');
 
@@ -349,18 +303,18 @@ describe('enterprise-leaderboard service - getDepartmentLeaderboard', () => {
   });
 
   it('should delegate to getEnterpriseLeaderboardEntries', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-dept',
       scope: 'department',
       orgUnitId: 'dept-1',
       privacyLevel: 'full_name',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findMany', []);
-    setQueryResult('playerProfiles.findMany', []);
+    setQueryResult('leaderboardScores', 'findMany', []);
+    setQueryResult('playerProfiles', 'findMany', []);
 
     const result = await getDepartmentLeaderboard(mockConfig, 'tenant-123', 'dept-1');
 
@@ -375,7 +329,7 @@ describe('enterprise-leaderboard service - getCorporationLeaderboard', () => {
 
   it('should return error when flag disabled', async () => {
     mockEvaluateFlag.mockResolvedValue(false);
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await getCorporationLeaderboard(mockConfig, 'tenant-123', 'corp-1');
@@ -386,10 +340,10 @@ describe('enterprise-leaderboard service - getCorporationLeaderboard', () => {
 
   it('should return error when corporation leaderboard not found', async () => {
     mockEvaluateFlag.mockResolvedValue(true);
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', null);
+    setQueryResult('enterpriseLeaderboards', 'findFirst', null);
 
     const result = await getCorporationLeaderboard(mockConfig, 'tenant-123', 'corp-1');
 
@@ -399,18 +353,18 @@ describe('enterprise-leaderboard service - getCorporationLeaderboard', () => {
 
   it('should delegate to getEnterpriseLeaderboardEntries', async () => {
     mockEvaluateFlag.mockResolvedValue(true);
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-corp',
       scope: 'corporation',
       corporationId: 'corp-1',
       privacyLevel: 'full_name',
       isActive: true,
     });
-    setQueryResult('leaderboardScores.findMany', []);
-    setQueryResult('playerProfiles.findMany', []);
+    setQueryResult('leaderboardScores', 'findMany', []);
+    setQueryResult('playerProfiles', 'findMany', []);
 
     const result = await getCorporationLeaderboard(mockConfig, 'tenant-123', 'corp-1');
 
@@ -425,7 +379,7 @@ describe('enterprise-leaderboard service - getTeamSummary', () => {
 
   it('should return error when flag disabled', async () => {
     mockEvaluateFlag.mockResolvedValue(false);
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await getTeamSummary(mockConfig, 'tenant-123', 'team-1', 'elb-1');
@@ -440,10 +394,10 @@ describe('enterprise-leaderboard service - getTeamSummary', () => {
 
   it('should return empty summary when no entries', async () => {
     mockEvaluateFlag.mockResolvedValue(true);
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('leaderboardScores.findMany', []);
+    setQueryResult('leaderboardScores', 'findMany', []);
 
     const result = await getTeamSummary(mockConfig, 'tenant-123', 'team-1', 'elb-1');
 
@@ -455,7 +409,7 @@ describe('enterprise-leaderboard service - getTeamSummary', () => {
   });
 
   it('should calculate average score correctly', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const mockEntries = [
@@ -463,7 +417,7 @@ describe('enterprise-leaderboard service - getTeamSummary', () => {
       { id: 'score-2', score: 200, rank: 2 },
       { id: 'score-3', score: 300, rank: 3 },
     ];
-    setQueryResult('leaderboardScores.findMany', mockEntries);
+    setQueryResult('leaderboardScores', 'findMany', mockEntries);
 
     const result = await getTeamSummary(mockConfig, 'tenant-123', 'team-1', 'elb-1');
 
@@ -473,7 +427,7 @@ describe('enterprise-leaderboard service - getTeamSummary', () => {
   });
 
   it('should limit top performers to 5', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const mockEntries = [
@@ -485,7 +439,7 @@ describe('enterprise-leaderboard service - getTeamSummary', () => {
       { id: 'score-6', score: 50, rank: 6 },
       { id: 'score-7', score: 40, rank: 7 },
     ];
-    setQueryResult('leaderboardScores.findMany', mockEntries);
+    setQueryResult('leaderboardScores', 'findMany', mockEntries);
 
     const result = await getTeamSummary(mockConfig, 'tenant-123', 'team-1', 'elb-1');
 
@@ -500,10 +454,10 @@ describe('enterprise-leaderboard service - updatePrivacyLevel', () => {
   });
 
   it('should return error when leaderboard not found', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', null);
+    setQueryResult('enterpriseLeaderboards', 'findFirst', null);
 
     const result = await updatePrivacyLevel(mockConfig, 'tenant-123', 'non-existent', 'pseudonym');
 
@@ -512,10 +466,10 @@ describe('enterprise-leaderboard service - updatePrivacyLevel', () => {
   });
 
   it('should return error when tenant mismatch', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', null);
+    setQueryResult('enterpriseLeaderboards', 'findFirst', null);
 
     const result = await updatePrivacyLevel(mockConfig, 'tenant-123', 'elb-1', 'pseudonym');
 
@@ -524,10 +478,10 @@ describe('enterprise-leaderboard service - updatePrivacyLevel', () => {
   });
 
   it('should update privacy level successfully', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('enterpriseLeaderboards.findFirst', {
+    setQueryResult('enterpriseLeaderboards', 'findFirst', {
       id: 'elb-1',
       tenantId: 'tenant-123',
     });

@@ -6,6 +6,7 @@ import {
   ENDORSEMENT_TAG_SEEDS,
 } from '../endorsement.service.js';
 import { getDatabaseClient } from '../../../shared/database/connection.js';
+import { createMockDb } from '../../../__tests__/helpers/index.js';
 
 import type { AppConfig } from '../../../config.js';
 import type { DatabaseClient } from '../../../shared/database/connection.js';
@@ -19,57 +20,10 @@ const mockConfig = {
   seasonId: 'season-123',
 } as unknown as AppConfig;
 
-const createMockDb = () => {
-  const mockQueryResults: Map<string, unknown> = new Map();
-  const mockInsertResults: Map<string, unknown[]> = new Map();
-
-  const mockDb = {
-    query: {
-      endorsementTags: {
-        findMany: vi.fn().mockResolvedValue([]),
-        findFirst: vi.fn().mockResolvedValue(null),
-      },
-      endorsements: {
-        findMany: vi.fn().mockResolvedValue([]),
-        findFirst: vi.fn().mockImplementation(async () => {
-          const key = 'endorsements.findFirst';
-          const result = mockQueryResults.get(key);
-          return result ?? null;
-        }),
-      },
-      endorsementDecay: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          const result = mockQueryResults.get('endorsementDecay.findFirst');
-          return result ?? null;
-        }),
-      },
-    },
-    select: vi.fn().mockReturnThis(),
-    from: vi.fn().mockReturnThis(),
-    innerJoin: vi.fn().mockReturnThis(),
-    where: vi.fn().mockReturnThis(),
-    orderBy: vi.fn().mockReturnThis(),
-    limit: vi.fn().mockReturnThis(),
-    offset: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockImplementation(async () => {
-      const result = mockInsertResults.get('endorsements.insert') ?? [];
-      return result;
-    }),
-  };
-
-  const setQueryResult = (key: string, result: unknown) => {
-    mockQueryResults.set(key, result);
-  };
-
-  const setInsertResult = (key: string, result: unknown[]) => {
-    mockInsertResults.set(key, result);
-  };
-
-  return { mockDb, setQueryResult, setInsertResult, mockQueryResults, mockInsertResults };
+const setupMockDb = () => {
+  const mock = createMockDb();
+  const { setInsertResult } = mock;
+  return { mockDb: mock.mockDb, setQueryResult: mock.setQueryResult, setInsertResult };
 };
 
 describe('endorsement service - constants', () => {
@@ -88,10 +42,10 @@ describe('endorsement service - submitEndorsement validation', () => {
   });
 
   it('should reject self-endorsement', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('endorsements.findFirst', null);
+    setQueryResult('endorsements', 'findFirst', null);
 
     const result = await submitEndorsement(mockConfig, 'tenant-123', 'player-1', {
       sessionId: 'session-1',
@@ -104,7 +58,7 @@ describe('endorsement service - submitEndorsement validation', () => {
   });
 
   it('should reject empty tag array', async () => {
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await submitEndorsement(mockConfig, 'tenant-123', 'player-1', {
@@ -118,7 +72,7 @@ describe('endorsement service - submitEndorsement validation', () => {
   });
 
   it('should reject more than 3 tags', async () => {
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await submitEndorsement(mockConfig, 'tenant-123', 'player-1', {
@@ -132,7 +86,7 @@ describe('endorsement service - submitEndorsement validation', () => {
   });
 
   it('should reject when daily endorsement limit is reached', async () => {
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     mockDb.query.endorsements.findFirst = vi.fn().mockResolvedValue(null);
@@ -159,10 +113,10 @@ describe('endorsement service - submitEndorsement validation', () => {
   });
 
   it('should reject duplicate endorsement for same session and player', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('endorsements.findFirst', { id: 'existing-endorsement' });
+    setQueryResult('endorsements', 'findFirst', { id: 'existing-endorsement' });
 
     const result = await submitEndorsement(mockConfig, 'tenant-123', 'player-1', {
       sessionId: 'session-1',
@@ -175,7 +129,7 @@ describe('endorsement service - submitEndorsement validation', () => {
   });
 
   it('should reject duplicate tag endorsement for same session', async () => {
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     let callCount = 0;
@@ -196,12 +150,12 @@ describe('endorsement service - submitEndorsement validation', () => {
   });
 
   it('should successfully create endorsement with valid data', async () => {
-    const { mockDb, setInsertResult } = createMockDb();
+    const { mockDb, setInsertResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     mockDb.query.endorsements.findFirst = vi.fn().mockResolvedValue(null);
 
-    setInsertResult('endorsements.insert', [
+    setInsertResult([
       {
         id: 'new-endorsement-1',
         sessionId: 'session-1',
@@ -225,12 +179,12 @@ describe('endorsement service - submitEndorsement validation', () => {
   });
 
   it('should allow up to 3 tags in a single endorsement', async () => {
-    const { mockDb, setInsertResult } = createMockDb();
+    const { mockDb, setInsertResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     mockDb.query.endorsements.findFirst = vi.fn().mockResolvedValue(null);
 
-    setInsertResult('endorsements.insert', [
+    setInsertResult([
       {
         id: 'new-endorsement-1',
         sessionId: 'session-1',
@@ -259,10 +213,10 @@ describe('endorsement service - calculateDecayedImpact', () => {
   });
 
   it('should return 0 when decay record not found', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('endorsementDecay.findFirst', null);
+    setQueryResult('endorsementDecay', 'findFirst', null);
 
     const result = await calculateDecayedImpact(mockConfig, 'non-existent-id');
 
@@ -270,10 +224,10 @@ describe('endorsement service - calculateDecayedImpact', () => {
   });
 
   it('should return 0 when endorsement is already decayed', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('endorsementDecay.findFirst', {
+    setQueryResult('endorsementDecay', 'findFirst', {
       id: 'decay-1',
       endorsementId: 'endorsement-1',
       reputationImpact: 10,
@@ -288,13 +242,13 @@ describe('endorsement service - calculateDecayedImpact', () => {
   });
 
   it('should return 0 when endorsement is older than decay period', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const oldDate = new Date();
     oldDate.setDate(oldDate.getDate() - 100);
 
-    setQueryResult('endorsementDecay.findFirst', {
+    setQueryResult('endorsementDecay', 'findFirst', {
       id: 'decay-1',
       endorsementId: 'endorsement-1',
       reputationImpact: 10,
@@ -309,10 +263,10 @@ describe('endorsement service - calculateDecayedImpact', () => {
   });
 
   it('should apply decay factor for fresh endorsement', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('endorsementDecay.findFirst', {
+    setQueryResult('endorsementDecay', 'findFirst', {
       id: 'decay-1',
       endorsementId: 'endorsement-1',
       reputationImpact: 10,

@@ -10,6 +10,7 @@ import {
 } from '../consent.service.js';
 import { CONSENT_FEATURE_MAP } from '../../../db/schema/social/player-consent.js';
 import { getDatabaseClient } from '../../../shared/database/connection.js';
+import { createMockDb } from '../../../__tests__/helpers/index.js';
 
 import type { AppConfig } from '../../../config.js';
 import type { DatabaseClient } from '../../../shared/database/connection.js';
@@ -23,54 +24,10 @@ const mockConfig = {
   seasonId: 'season-123',
 } as unknown as AppConfig;
 
-const createMockDb = () => {
-  const mockQueryResults: Map<string, unknown> = new Map();
-  const mockInsertResults: Map<string, unknown[]> = new Map();
-  const mockUpdateResults: Map<string, unknown[]> = new Map();
-
-  const mockDb = {
-    query: {
-      playerConsents: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          const key = 'playerConsents.findFirst';
-          return mockQueryResults.get(key) ?? null;
-        }),
-        findMany: vi.fn().mockImplementation(async () => {
-          const key = 'playerConsents.findMany';
-          return mockQueryResults.get(key) ?? [];
-        }),
-      },
-      tenantPrivacySettings: {
-        findFirst: vi.fn().mockImplementation(async () => {
-          const key = 'tenantPrivacySettings.findFirst';
-          return mockQueryResults.get(key) ?? null;
-        }),
-      },
-    },
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    set: vi.fn().mockReturnThis(),
-    values: vi.fn().mockReturnThis(),
-    returning: vi.fn().mockImplementation(async () => {
-      const key = 'insert.returning';
-      return mockUpdateResults.get(key) ?? [];
-    }),
-    where: vi.fn().mockReturnThis(),
-  };
-
-  const setQueryResult = (key: string, result: unknown) => {
-    mockQueryResults.set(key, result);
-  };
-
-  const setInsertResult = (key: string, result: unknown[]) => {
-    mockInsertResults.set(key, result);
-  };
-
-  const setUpdateResult = (key: string, result: unknown[]) => {
-    mockUpdateResults.set(key, result);
-  };
-
-  return { mockDb, setQueryResult, setInsertResult, setUpdateResult, mockQueryResults };
+const setupMockDb = () => {
+  const mock = createMockDb();
+  const { setUpdateResult } = mock;
+  return { mockDb: mock.mockDb, setQueryResult: mock.setQueryResult, setUpdateResult };
 };
 
 describe('consent service - constants', () => {
@@ -132,7 +89,7 @@ describe('consent service - grantConsent validation', () => {
   });
 
   it('should reject invalid consent type', async () => {
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await grantConsent(mockConfig, 'tenant-123', {
@@ -145,12 +102,12 @@ describe('consent service - grantConsent validation', () => {
   });
 
   it('should create new consent record when none exists', async () => {
-    const { mockDb, setQueryResult, setUpdateResult } = createMockDb();
+    const { mockDb, setQueryResult, setUpdateResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('playerConsents.findFirst', null);
+    setQueryResult('playerConsents', 'findFirst', null);
 
-    setUpdateResult('insert.returning', [
+    setUpdateResult([
       {
         id: 'consent-1',
         playerId: 'player-1',
@@ -173,10 +130,10 @@ describe('consent service - grantConsent validation', () => {
   });
 
   it('should reject when consent already granted', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('playerConsents.findFirst', {
+    setQueryResult('playerConsents', 'findFirst', {
       id: 'consent-1',
       playerId: 'player-1',
       tenantId: 'tenant-123',
@@ -196,10 +153,10 @@ describe('consent service - grantConsent validation', () => {
   });
 
   it('should re-grant previously revoked consent', async () => {
-    const { mockDb, setQueryResult, setUpdateResult } = createMockDb();
+    const { mockDb, setQueryResult, setUpdateResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('playerConsents.findFirst', {
+    setQueryResult('playerConsents', 'findFirst', {
       id: 'consent-1',
       playerId: 'player-1',
       tenantId: 'tenant-123',
@@ -209,7 +166,7 @@ describe('consent service - grantConsent validation', () => {
       revokedAt: new Date(),
     });
 
-    setUpdateResult('insert.returning', [
+    setUpdateResult([
       {
         id: 'consent-1',
         playerId: 'player-1',
@@ -238,7 +195,7 @@ describe('consent service - revokeConsent validation', () => {
   });
 
   it('should reject invalid consent type', async () => {
-    const { mockDb } = createMockDb();
+    const { mockDb } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
     const result = await revokeConsent(mockConfig, 'tenant-123', {
@@ -251,10 +208,10 @@ describe('consent service - revokeConsent validation', () => {
   });
 
   it('should return error when consent record not found', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('playerConsents.findFirst', null);
+    setQueryResult('playerConsents', 'findFirst', null);
 
     const result = await revokeConsent(mockConfig, 'tenant-123', {
       playerId: 'player-1',
@@ -266,10 +223,10 @@ describe('consent service - revokeConsent validation', () => {
   });
 
   it('should return error when consent already revoked', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('playerConsents.findFirst', {
+    setQueryResult('playerConsents', 'findFirst', {
       id: 'consent-1',
       playerId: 'player-1',
       tenantId: 'tenant-123',
@@ -289,10 +246,10 @@ describe('consent service - revokeConsent validation', () => {
   });
 
   it('should successfully revoke consent', async () => {
-    const { mockDb, setQueryResult, setUpdateResult } = createMockDb();
+    const { mockDb, setQueryResult, setUpdateResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('playerConsents.findFirst', {
+    setQueryResult('playerConsents', 'findFirst', {
       id: 'consent-1',
       playerId: 'player-1',
       tenantId: 'tenant-123',
@@ -302,7 +259,7 @@ describe('consent service - revokeConsent validation', () => {
       revokedAt: null,
     });
 
-    setUpdateResult('insert.returning', [
+    setUpdateResult([
       {
         id: 'consent-1',
         playerId: 'player-1',
@@ -331,14 +288,14 @@ describe('consent service - checkConsent', () => {
   });
 
   it('should return hasConsent false when no consent record exists', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('tenantPrivacySettings.findFirst', {
+    setQueryResult('tenantPrivacySettings', 'findFirst', {
       tenantId: 'tenant-123',
       requireConsentForSocialFeatures: true,
     });
-    setQueryResult('playerConsents.findFirst', null);
+    setQueryResult('playerConsents', 'findFirst', null);
 
     const result = await checkConsent(mockConfig, 'tenant-123', 'player-1', 'social_features');
 
@@ -347,14 +304,14 @@ describe('consent service - checkConsent', () => {
   });
 
   it('should return hasConsent true when valid consent exists', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('tenantPrivacySettings.findFirst', {
+    setQueryResult('tenantPrivacySettings', 'findFirst', {
       tenantId: 'tenant-123',
       requireConsentForSocialFeatures: true,
     });
-    setQueryResult('playerConsents.findFirst', {
+    setQueryResult('playerConsents', 'findFirst', {
       id: 'consent-1',
       playerId: 'player-1',
       tenantId: 'tenant-123',
@@ -371,14 +328,14 @@ describe('consent service - checkConsent', () => {
   });
 
   it('should return hasConsent false when consent is revoked', async () => {
-    const { mockDb, setQueryResult } = createMockDb();
+    const { mockDb, setQueryResult } = setupMockDb();
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb as unknown as DatabaseClient);
 
-    setQueryResult('tenantPrivacySettings.findFirst', {
+    setQueryResult('tenantPrivacySettings', 'findFirst', {
       tenantId: 'tenant-123',
       requireConsentForSocialFeatures: true,
     });
-    setQueryResult('playerConsents.findFirst', {
+    setQueryResult('playerConsents', 'findFirst', {
       id: 'consent-1',
       playerId: 'player-1',
       tenantId: 'tenant-123',

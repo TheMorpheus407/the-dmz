@@ -6,49 +6,20 @@ vi.mock('../../../shared/database/connection.js', () => ({
 
 import { getDatabaseClient } from '../../../shared/database/connection.js';
 import { SocialRelationshipRepository } from '../social-relationship.repository.js';
+import { createMockDb } from '../../../__tests__/helpers/index.js';
 
 import type { DatabaseClient } from '../../../shared/database/connection.js';
 
 describe('SocialRelationshipRepository', () => {
   let mockDb: DatabaseClient;
   let repository: SocialRelationshipRepository;
-
-  const createMockDb = (): DatabaseClient => {
-    const mockQueryResults: Record<string, unknown> = {};
-
-    return {
-      query: {
-        socialRelationships: {
-          findFirst: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResults.findFirst)),
-          findMany: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResults.findMany)),
-        },
-      },
-      insert: vi.fn().mockImplementation(() => ({
-        values: vi.fn().mockImplementation(() => ({
-          returning: vi.fn().mockImplementation(() => Promise.resolve([mockQueryResults.insert])),
-        })),
-      })),
-      update: vi.fn().mockImplementation(() => ({
-        set: vi.fn().mockImplementation(() => ({
-          where: vi.fn().mockImplementation(() => ({
-            returning: vi.fn().mockImplementation(() => Promise.resolve([mockQueryResults.update])),
-          })),
-        })),
-      })),
-      delete: vi.fn().mockImplementation(() => ({
-        where: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResults.delete)),
-      })),
-      select: vi.fn().mockImplementation(() => ({
-        from: vi.fn().mockImplementation(() => ({
-          where: vi.fn().mockImplementation(() => Promise.resolve(mockQueryResults.select)),
-        })),
-      })),
-    } as unknown as DatabaseClient;
-  };
+  let setQueryResult: (table: string, method: 'findFirst' | 'findMany', result: unknown) => void;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockDb = createMockDb();
+    const mock = createMockDb();
+    mockDb = mock.mockDb;
+    setQueryResult = mock.setQueryResult;
     vi.mocked(getDatabaseClient).mockReturnValue(mockDb);
     repository = new SocialRelationshipRepository(mockDb);
   });
@@ -68,7 +39,7 @@ describe('SocialRelationshipRepository', () => {
         },
       ];
 
-      mockDb.query.socialRelationships.findMany = vi.fn().mockResolvedValue(mockRelationships);
+      setQueryResult('socialRelationships', 'findMany', mockRelationships);
 
       const result = await repository.findRelationshipsForPlayer({
         tenantId: 'tenant-1',
@@ -80,7 +51,7 @@ describe('SocialRelationshipRepository', () => {
     });
 
     it('returns empty array when no relationships found', async () => {
-      mockDb.query.socialRelationships.findMany = vi.fn().mockResolvedValue([]);
+      setQueryResult('socialRelationships', 'findMany', []);
 
       const result = await repository.findRelationshipsForPlayer({
         tenantId: 'tenant-1',
@@ -104,7 +75,7 @@ describe('SocialRelationshipRepository', () => {
         updatedAt: new Date(),
       };
 
-      mockDb.query.socialRelationships.findFirst = vi.fn().mockResolvedValue(mockRelationship);
+      setQueryResult('socialRelationships', 'findFirst', mockRelationship);
 
       const result = await repository.findRelationshipBetweenPlayers({
         tenantId: 'tenant-1',
@@ -116,7 +87,7 @@ describe('SocialRelationshipRepository', () => {
     });
 
     it('returns undefined when not found', async () => {
-      mockDb.query.socialRelationships.findFirst = vi.fn().mockResolvedValue(undefined);
+      setQueryResult('socialRelationships', 'findFirst', undefined);
 
       const result = await repository.findRelationshipBetweenPlayers({
         tenantId: 'tenant-1',
@@ -141,7 +112,7 @@ describe('SocialRelationshipRepository', () => {
         updatedAt: new Date(),
       };
 
-      mockDb.query.socialRelationships.findFirst = vi.fn().mockResolvedValue(mockRequest);
+      setQueryResult('socialRelationships', 'findFirst', mockRequest);
 
       const result = await repository.findPendingFriendRequest({
         tenantId: 'tenant-1',
@@ -153,7 +124,7 @@ describe('SocialRelationshipRepository', () => {
     });
 
     it('returns undefined when not found', async () => {
-      mockDb.query.socialRelationships.findFirst = vi.fn().mockResolvedValue(undefined);
+      setQueryResult('socialRelationships', 'findFirst', undefined);
 
       const result = await repository.findPendingFriendRequest({
         tenantId: 'tenant-1',
@@ -178,7 +149,7 @@ describe('SocialRelationshipRepository', () => {
         updatedAt: new Date(),
       };
 
-      mockDb.query.socialRelationships.findFirst = vi.fn().mockResolvedValue(mockRequest);
+      setQueryResult('socialRelationships', 'findFirst', mockRequest);
 
       const result = await repository.findFriendRequestBetweenPlayers({
         tenantId: 'tenant-1',
@@ -203,7 +174,7 @@ describe('SocialRelationshipRepository', () => {
         updatedAt: new Date(),
       };
 
-      mockDb.query.socialRelationships.findFirst = vi.fn().mockResolvedValue(mockBlock);
+      setQueryResult('socialRelationships', 'findFirst', mockBlock);
 
       const result = await repository.findBlockBetweenPlayers({
         tenantId: 'tenant-1',
@@ -228,7 +199,7 @@ describe('SocialRelationshipRepository', () => {
         updatedAt: new Date(),
       };
 
-      mockDb.query.socialRelationships.findFirst = vi.fn().mockResolvedValue(mockRelationship);
+      setQueryResult('socialRelationships', 'findFirst', mockRelationship);
 
       const result = await repository.findExistingRelationship({
         tenantId: 'tenant-1',
@@ -254,7 +225,7 @@ describe('SocialRelationshipRepository', () => {
         updatedAt: new Date(),
       };
 
-      mockDb.query.socialRelationships.findFirst = vi.fn().mockResolvedValue(mockMute);
+      setQueryResult('socialRelationships', 'findFirst', mockMute);
 
       const result = await repository.findMuteRelationship({
         tenantId: 'tenant-1',
@@ -282,7 +253,7 @@ describe('SocialRelationshipRepository', () => {
         },
       ];
 
-      mockDb.query.socialRelationships.findMany = vi.fn().mockResolvedValue(mockRelationships);
+      setQueryResult('socialRelationships', 'findMany', mockRelationships);
 
       const result = await repository.findFriendship({
         tenantId: 'tenant-1',
@@ -309,7 +280,7 @@ describe('SocialRelationshipRepository', () => {
         },
       ];
 
-      mockDb.query.socialRelationships.findMany = vi.fn().mockResolvedValue(mockRequests);
+      setQueryResult('socialRelationships', 'findMany', mockRequests);
 
       const result = await repository.findFriendRequestsForPlayer({
         tenantId: 'tenant-1',
@@ -334,7 +305,7 @@ describe('SocialRelationshipRepository', () => {
         },
       ];
 
-      mockDb.query.socialRelationships.findMany = vi.fn().mockResolvedValue(mockRequests);
+      setQueryResult('socialRelationships', 'findMany', mockRequests);
 
       const result = await repository.findFriendRequestsForPlayer({
         tenantId: 'tenant-1',
@@ -361,7 +332,7 @@ describe('SocialRelationshipRepository', () => {
         },
       ];
 
-      mockDb.query.socialRelationships.findMany = vi.fn().mockResolvedValue(mockBlocks);
+      setQueryResult('socialRelationships', 'findMany', mockBlocks);
 
       const result = await repository.findBlockedPlayers({
         tenantId: 'tenant-1',
@@ -387,7 +358,7 @@ describe('SocialRelationshipRepository', () => {
         },
       ];
 
-      mockDb.query.socialRelationships.findMany = vi.fn().mockResolvedValue(mockMutes);
+      setQueryResult('socialRelationships', 'findMany', mockMutes);
 
       const result = await repository.findMutedPlayers({
         tenantId: 'tenant-1',
