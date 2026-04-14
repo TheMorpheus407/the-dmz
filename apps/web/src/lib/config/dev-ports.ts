@@ -53,10 +53,28 @@ export const resolveWebDevPorts = (
   ),
 });
 
+const isValidUrl = (value: string): boolean => {
+  try {
+    const url = new URL(value);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return false;
+    }
+    if (!value.includes('://')) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const resolveApiProxyTarget = (env: NodeJS.ProcessEnv = process.env): string => {
   const configuredTarget = env['VITE_API_URL'];
   if (typeof configuredTarget === 'string' && configuredTarget.trim().length > 0) {
-    return configuredTarget.trim();
+    const trimmed = configuredTarget.trim();
+    if (isValidUrl(trimmed)) {
+      return trimmed;
+    }
   }
 
   const { apiPort } = resolveWebDevPorts(env);

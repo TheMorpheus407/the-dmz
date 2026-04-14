@@ -1,11 +1,15 @@
 import { meResponseSchema, type MeResponse } from '@the-dmz/shared/schemas';
+import { resolveApiProxyTarget } from '$lib/config/dev-ports.js';
 
 interface FetchOptions {
   fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 }
 
-export async function getServerUser(event: FetchOptions): Promise<MeResponse['user'] | null> {
-  const baseUrl = process.env['VITE_API_URL'] || 'http://localhost:3001';
+export async function getServerUser(
+  event: FetchOptions,
+  env: NodeJS.ProcessEnv = process.env,
+): Promise<MeResponse['user'] | null> {
+  const baseUrl = resolveApiProxyTarget(env);
 
   try {
     const response = await event.fetch(`${baseUrl}/api/v1/auth/me`, {

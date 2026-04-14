@@ -91,4 +91,84 @@ describe('resolveApiProxyTarget', () => {
 
     expect(target).toBe('http://localhost:3200');
   });
+
+  it('accepts http:// URLs', () => {
+    const target = resolveApiProxyTarget({
+      VITE_API_URL: 'http://example.test',
+    });
+
+    expect(target).toBe('http://example.test');
+  });
+
+  it('accepts https:// URLs', () => {
+    const target = resolveApiProxyTarget({
+      VITE_API_URL: 'https://example.test',
+    });
+
+    expect(target).toBe('https://example.test');
+  });
+
+  it('rejects VITE_API_URL with invalid protocol', () => {
+    const invalidProtocols = [
+      'ftp://example.test',
+      'file://example.test',
+      'javascript:alert(1)',
+      'data:text/html,<script>alert(1)</script>',
+    ];
+
+    for (const url of invalidProtocols) {
+      const target = resolveApiProxyTarget({
+        VITE_API_URL: url,
+        API_PORT: '3001',
+      });
+
+      expect(target).toBe('http://localhost:3001');
+    }
+  });
+
+  it('rejects VITE_API_URL that is not a valid URL', () => {
+    const invalidUrls = [
+      'not-a-url',
+      'localhost:3001',
+      'example.test',
+      'http:/example.test',
+      'http://',
+    ];
+
+    for (const url of invalidUrls) {
+      const target = resolveApiProxyTarget({
+        VITE_API_URL: url,
+        API_PORT: '3001',
+      });
+
+      expect(target).toBe('http://localhost:3001');
+    }
+  });
+
+  it('falls back to http://localhost:{apiPort} when VITE_API_URL is invalid', () => {
+    const target = resolveApiProxyTarget({
+      VITE_API_URL: 'ftp://invalid.test',
+      API_PORT: '4567',
+    });
+
+    expect(target).toBe('http://localhost:4567');
+  });
+
+  it('falls back correctly when VITE_API_URL is empty string after trim', () => {
+    const target = resolveApiProxyTarget({
+      VITE_API_URL: '',
+      API_PORT: '3001',
+    });
+
+    expect(target).toBe('http://localhost:3001');
+  });
+
+  it('falls back correctly when VITE_API_URL is whitespace-only', () => {
+    const target = resolveApiProxyTarget({
+      VITE_API_URL: '   \t\n',
+      API_PORT: '3001',
+    });
+
+    expect(target).toBe('http://localhost:3001');
+  });
 });
