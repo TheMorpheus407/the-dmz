@@ -35,11 +35,11 @@ export const incidentSchema = z.object({
   incidentId: z.string().uuid(),
   sessionId: z.string().uuid(),
   attackId: z.string().uuid().nullable().optional(),
-  timestamp: z.string().or(z.date()),
+  timestamp: z.string(),
   day: z.number(),
   detectionSource: z.enum(DETECTION_SOURCES),
   classification: z.enum(INCIDENT_CLASSIFICATIONS),
-  severity: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
+  severity: z.number().int().min(1).max(4),
   affectedAssets: z.array(z.string()),
   evidence: incidentEvidenceSchema,
   status: z.enum(INCIDENT_STATUSES),
@@ -48,10 +48,10 @@ export const incidentSchema = z.object({
   outcome: z.string().optional(),
   rootCause: z.string().optional(),
   lessonsLearned: z.string().optional(),
-  resolvedAt: z.string().or(z.date()).optional(),
+  resolvedAt: z.string().optional(),
   resolutionDays: z.number().nullable().optional(),
-  createdAt: z.string().or(z.date()).optional(),
-  updatedAt: z.string().or(z.date()).optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
 });
 
 export const incidentListResponseSchema = z.object({
