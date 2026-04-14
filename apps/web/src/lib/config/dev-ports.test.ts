@@ -186,4 +186,47 @@ describe('resolveApiProxyTarget', () => {
 
     expect(target).toBe('http://localhost:3001');
   });
+
+  it('rejects port 0 as invalid', () => {
+    expect(() =>
+      resolveWebDevPorts({
+        API_PORT: '0',
+      }),
+    ).toThrow(/Invalid API_PORT value/);
+  });
+
+  it('accepts port 65535 as valid maximum', () => {
+    const ports = resolveWebDevPorts({
+      API_PORT: '65535',
+    });
+
+    expect(ports).toEqual({
+      webPort: DEFAULT_WEB_PORT,
+      apiPort: 65535,
+    });
+  });
+
+  it('rejects port 65536 as out of range', () => {
+    expect(() =>
+      resolveWebDevPorts({
+        API_PORT: '65536',
+      }),
+    ).toThrow(/Invalid API_PORT value/);
+  });
+
+  it('accepts valid URL with explicit port', () => {
+    const target = resolveApiProxyTarget({
+      VITE_API_URL: 'http://example.test:8080',
+    });
+
+    expect(target).toBe('http://example.test:8080');
+  });
+
+  it('accepts https URL with custom port', () => {
+    const target = resolveApiProxyTarget({
+      VITE_API_URL: 'https://api.example.test:8443',
+    });
+
+    expect(target).toBe('https://api.example.test:8443');
+  });
 });

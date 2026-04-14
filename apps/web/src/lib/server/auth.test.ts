@@ -202,4 +202,41 @@ describe('getServerUser', () => {
 
     expect(result).toBeNull();
   });
+
+  it('returns user data when response has extra fields in user object', async () => {
+    const env = {
+      VITE_API_URL: 'https://api.example.test',
+    };
+    vi.mocked(resolveApiProxyTarget).mockReturnValue('https://api.example.test');
+
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        data: {
+          user: {
+            id: '12345678-1234-1234-1234-123456789012',
+            email: 'test@example.com',
+            displayName: 'Test User',
+            tenantId: '12345678-1234-1234-1234-123456789013',
+            role: 'player',
+            isActive: true,
+            extraField: 'should be stripped',
+            anotherExtra: 42,
+          },
+        },
+      }),
+    });
+
+    const event = { fetch: mockFetch };
+    const result = await getServerUser(event, env);
+
+    expect(result).toEqual({
+      id: '12345678-1234-1234-1234-123456789012',
+      email: 'test@example.com',
+      displayName: 'Test User',
+      tenantId: '12345678-1234-1234-1234-123456789013',
+      role: 'player',
+      isActive: true,
+    });
+  });
 });
