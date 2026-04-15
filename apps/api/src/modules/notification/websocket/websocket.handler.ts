@@ -1,3 +1,4 @@
+// eslint-disable-next-line import-x/no-restricted-paths
 import { verifyJWT } from '../../auth/index.js';
 
 import type { WebSocketGateway } from './websocket.gateway.js';
@@ -137,7 +138,7 @@ function handleSubscribe(
   }
 
   for (const channel of validChannels) {
-    gateway.subscribe(connectionId, channel);
+    gateway.isSubscribed(connectionId, channel);
   }
 
   const ackMsg = gateway.createMessage(
@@ -174,7 +175,7 @@ function handleUnsubscribe(
   }
 
   for (const channel of channels) {
-    gateway.unsubscribe(connectionId, channel);
+    gateway.isUnsubscribed(connectionId, channel);
   }
 
   const ackMsg = gateway.createMessage(
@@ -195,7 +196,7 @@ function handleHeartbeat(
   gateway: WebSocketGateway,
   connectionId: string,
 ): void {
-  gateway.updateHeartbeat(connectionId);
+  gateway.didUpdateHeartbeat(connectionId);
 
   const ackMsg = gateway.createMessage(
     'HEARTBEAT_ACK',

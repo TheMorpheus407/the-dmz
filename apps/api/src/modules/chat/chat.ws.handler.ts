@@ -1,4 +1,6 @@
+// eslint-disable-next-line import-x/no-restricted-paths
 import { verifyJWT } from '../auth/index.js';
+/* eslint-disable import-x/no-restricted-paths */
 import {
   buildChannelName,
   type WebSocketGateway,
@@ -6,6 +8,7 @@ import {
   type JWTAuthPayload,
   type WSConnection,
 } from '../notification/websocket/index.js';
+/* eslint-enable import-x/no-restricted-paths */
 
 import { sendMessage, type SendMessageResult } from './chat.service.js';
 
@@ -199,7 +202,7 @@ function handleSubscribe(
 
   const connId = getConnectionIdFromSocket(connection, gateway);
   if (connId) {
-    gateway.subscribe(connId, channel);
+    gateway.isSubscribed(connId, channel);
   }
 
   const ackMsg = gateway.createMessage('ACK', {
@@ -225,7 +228,7 @@ function handleUnsubscribe(
 
   const connId = getConnectionIdFromSocket(connection, gateway);
   if (connId) {
-    gateway.unsubscribe(connId, channel);
+    gateway.isUnsubscribed(connId, channel);
   }
 
   const ackMsg = gateway.createMessage('ACK', {

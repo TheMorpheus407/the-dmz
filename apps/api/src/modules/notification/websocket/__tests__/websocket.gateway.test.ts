@@ -71,8 +71,8 @@ describe('WebSocketGateway', () => {
       };
 
       const connectionInfo = gateway.registerConnection(mockSocket, authPayload);
-      gateway.subscribe(connectionInfo.connectionId, 'session:abc');
-      gateway.subscribe(connectionInfo.connectionId, 'notifications:user-123');
+      gateway.isSubscribed(connectionInfo.connectionId, 'session:abc');
+      gateway.isSubscribed(connectionInfo.connectionId, 'notifications:user-123');
 
       gateway.removeConnection(connectionInfo.connectionId);
 
@@ -81,8 +81,8 @@ describe('WebSocketGateway', () => {
     });
   });
 
-  describe('subscribe/unsubscribe', () => {
-    it('should subscribe to channels', () => {
+  describe('isSubscribed', () => {
+    it('should return true when successfully subscribing to a channel', () => {
       const mockSocket = {
         readyState: 1,
         send: vi.fn(),
@@ -95,13 +95,20 @@ describe('WebSocketGateway', () => {
         tenantId: 'tenant-456',
       });
 
-      const result = gateway.subscribe(connectionInfo.connectionId, 'session:abc');
+      const result = gateway.isSubscribed(connectionInfo.connectionId, 'session:abc');
 
       expect(result).toBe(true);
       expect(connectionInfo.subscriptions.has('session:abc')).toBe(true);
     });
 
-    it('should unsubscribe from channels', () => {
+    it('should return false when connection does not exist', () => {
+      const result = gateway.isSubscribed('non-existent-connection', 'session:abc');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('isUnsubscribed', () => {
+    it('should return true when successfully unsubscribing from a channel', () => {
       const mockSocket = {
         readyState: 1,
         send: vi.fn(),
@@ -114,11 +121,62 @@ describe('WebSocketGateway', () => {
         tenantId: 'tenant-456',
       });
 
-      gateway.subscribe(connectionInfo.connectionId, 'session:abc');
-      const result = gateway.unsubscribe(connectionInfo.connectionId, 'session:abc');
+      gateway.isSubscribed(connectionInfo.connectionId, 'session:abc');
+      const result = gateway.isUnsubscribed(connectionInfo.connectionId, 'session:abc');
 
       expect(result).toBe(true);
       expect(connectionInfo.subscriptions.has('session:abc')).toBe(false);
+    });
+
+    it('should return false when connection does not exist', () => {
+      const result = gateway.isUnsubscribed('non-existent-connection', 'session:abc');
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('didSendToConnection', () => {
+    it('should return true and send message to open connection', () => {
+      const mockSocket = {
+        readyState: 1,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      const connectionInfo = gateway.registerConnection(mockSocket, {
+        userId: 'user-123',
+        tenantId: 'tenant-456',
+      });
+
+      const message = gateway.createMessage('NOTIFICATION', { message: 'test' });
+      const result = gateway.didSendToConnection(connectionInfo.connectionId, message);
+
+      expect(result).toBe(true);
+      expect(mockSocket.send).toHaveBeenCalled();
+    });
+
+    it('should return false when connection does not exist', () => {
+      const message = gateway.createMessage('NOTIFICATION', { message: 'test' });
+      const result = gateway.didSendToConnection('non-existent-connection', message);
+      expect(result).toBe(false);
+    });
+
+    it('should return false when socket is not open', () => {
+      const mockSocket = {
+        readyState: 3,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      const connectionInfo = gateway.registerConnection(mockSocket, {
+        userId: 'user-123',
+        tenantId: 'tenant-456',
+      });
+
+      const message = gateway.createMessage('NOTIFICATION', { message: 'test' });
+      const result = gateway.didSendToConnection(connectionInfo.connectionId, message);
+      expect(result).toBe(false);
     });
   });
 
@@ -182,8 +240,8 @@ describe('WebSocketGateway', () => {
         tenantId: 'tenant-1',
       });
 
-      gateway.subscribe(conn1.connectionId, 'session:abc');
-      gateway.subscribe(conn2.connectionId, 'session:abc');
+      gateway.isSubscribed(conn1.connectionId, 'session:abc');
+      gateway.isSubscribed(conn2.connectionId, 'session:abc');
 
       const message = gateway.createMessage('GAME_STATE', { state: 'playing' });
       const sentCount = gateway.broadcastToChannel('session:abc', message);
@@ -250,14 +308,14 @@ describe('WebSocketGateway', () => {
       });
 
       const initialHeartbeat = connectionInfo.lastHeartbeat;
-      gateway.updateHeartbeat(connectionInfo.connectionId);
+      gateway.didUpdateHeartbeat(connectionInfo.connectionId);
 
       const updatedConnection = gateway.getConnection(connectionInfo.connectionId);
       expect(updatedConnection?.lastHeartbeat).toBeGreaterThanOrEqual(initialHeartbeat);
     });
 
     it('should return false for unknown connections', () => {
-      const result = gateway.updateHeartbeat('unknown-connection');
+      const result = gateway.didUpdateHeartbeat('unknown-connection');
       expect(result).toBe(false);
     });
   });

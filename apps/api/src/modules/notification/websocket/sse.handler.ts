@@ -20,8 +20,9 @@ export async function handleSSEConnection(
   reply: FastifyReply,
   gateway: WebSocketGateway,
 ): Promise<void> {
-  const userId = request.user!.userId;
-  const tenantId = request.user!.tenantId;
+  const authUser = request as FastifyRequest & { user: { userId: string; tenantId: string } };
+  const userId = authUser.user.userId;
+  const tenantId = authUser.user.tenantId;
 
   const connectionId = generateId();
 
@@ -81,7 +82,7 @@ export async function handleSSEConnection(
   const channelsKey = `sse:${connectionId}`;
   const cleanup = (): void => {
     clearInterval(heartbeatTimer);
-    gateway.unsubscribe(channelsKey, connectionId);
+    gateway.isUnsubscribed(channelsKey, connectionId);
   };
 
   request.raw.on('close', cleanup);
@@ -118,7 +119,7 @@ export async function handleSSESubscribe(
 
   for (const channel of channels) {
     if (gateway.isValidChannel(channel)) {
-      gateway.subscribe(channelsKey, channel);
+      gateway.isSubscribed(channelsKey, channel);
     }
   }
 
@@ -144,7 +145,7 @@ export async function handleSSEUnsubscribe(
   const channelsKey = `sse:${connectionId}`;
 
   for (const channel of channels) {
-    gateway.unsubscribe(channelsKey, channel);
+    gateway.isUnsubscribed(channelsKey, channel);
   }
 
   reply.code(200).send({

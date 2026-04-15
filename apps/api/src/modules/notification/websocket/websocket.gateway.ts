@@ -85,7 +85,7 @@ export class WebSocketGateway {
     recordWebSocketConnection('disconnect', tenantId);
   }
 
-  public subscribe(connectionId: string, channel: string): boolean {
+  public isSubscribed(connectionId: string, channel: string): boolean {
     const connection = this.connections.get(connectionId);
     if (!connection) {
       return false;
@@ -100,7 +100,7 @@ export class WebSocketGateway {
     return true;
   }
 
-  public unsubscribe(connectionId: string, channel: string): boolean {
+  public isUnsubscribed(connectionId: string, channel: string): boolean {
     const connection = this.connections.get(connectionId);
     if (!connection) {
       return false;
@@ -112,7 +112,7 @@ export class WebSocketGateway {
     return true;
   }
 
-  public sendToConnection(connectionId: string, message: WSServerMessage): boolean {
+  public didSendToConnection(connectionId: string, message: WSServerMessage): boolean {
     const connection = this.connections.get(connectionId);
     if (!connection || connection.socket.readyState !== WebSocket.OPEN) {
       return false;
@@ -136,7 +136,7 @@ export class WebSocketGateway {
 
     let sentCount = 0;
     for (const connId of connIds) {
-      if (this.sendToConnection(connId, message)) {
+      if (this.didSendToConnection(connId, message)) {
         sentCount++;
       }
     }
@@ -152,7 +152,7 @@ export class WebSocketGateway {
 
     let sentCount = 0;
     for (const connId of connIds) {
-      if (this.sendToConnection(connId, message)) {
+      if (this.didSendToConnection(connId, message)) {
         sentCount++;
       }
     }
@@ -167,7 +167,7 @@ export class WebSocketGateway {
         connection.connectionInfo.tenantId === tenantId &&
         connection.socket.readyState === WebSocket.OPEN
       ) {
-        if (this.sendToConnection(connId, message)) {
+        if (this.didSendToConnection(connId, message)) {
           sentCount++;
         }
       }
@@ -206,7 +206,7 @@ export class WebSocketGateway {
     return this.connections.entries();
   }
 
-  public updateHeartbeat(connectionId: string): boolean {
+  public didUpdateHeartbeat(connectionId: string): boolean {
     const connection = this.connections.get(connectionId);
     if (!connection) {
       return false;

@@ -6,14 +6,14 @@ const WEBSOCKET_GATEWAY_METHODS = [
   'getAllConnections',
   'registerConnection',
   'removeConnection',
-  'subscribe',
-  'unsubscribe',
-  'sendToConnection',
+  'isSubscribed',
+  'isUnsubscribed',
+  'didSendToConnection',
   'sendToUser',
   'broadcastToChannel',
   'broadcastToTenant',
   'getActiveConnections',
-  'updateHeartbeat',
+  'didUpdateHeartbeat',
   'getNextSequence',
   'createMessage',
   'parseChannel',
@@ -77,25 +77,25 @@ describe('createMockWsGateway', () => {
       expect(typeof result[Symbol.iterator]).toBe('function');
     });
 
-    it('subscribe returns true', async () => {
+    it('isSubscribed returns true', async () => {
       const { createMockWsGateway } = await import('./index.js');
       const { wsGateway } = createMockWsGateway();
 
-      expect(wsGateway.subscribe('conn-id', 'channel:id')).toBe(true);
+      expect(wsGateway.isSubscribed('conn-id', 'channel:id')).toBe(true);
     });
 
-    it('unsubscribe returns true', async () => {
+    it('isUnsubscribed returns true', async () => {
       const { createMockWsGateway } = await import('./index.js');
       const { wsGateway } = createMockWsGateway();
 
-      expect(wsGateway.unsubscribe('conn-id', 'channel:id')).toBe(true);
+      expect(wsGateway.isUnsubscribed('conn-id', 'channel:id')).toBe(true);
     });
 
-    it('sendToConnection returns true', async () => {
+    it('didSendToConnection returns true', async () => {
       const { createMockWsGateway } = await import('./index.js');
       const { wsGateway } = createMockWsGateway();
 
-      expect(wsGateway.sendToConnection('conn-id', { type: 'TEST', payload: {} })).toBe(true);
+      expect(wsGateway.didSendToConnection('conn-id', { type: 'TEST', payload: {} })).toBe(true);
     });
 
     it('sendToUser returns 0', async () => {
@@ -126,11 +126,11 @@ describe('createMockWsGateway', () => {
       expect(wsGateway.getActiveConnections('user-id')).toEqual([]);
     });
 
-    it('updateHeartbeat returns true', async () => {
+    it('didUpdateHeartbeat returns true', async () => {
       const { createMockWsGateway } = await import('./index.js');
       const { wsGateway } = createMockWsGateway();
 
-      expect(wsGateway.updateHeartbeat('conn-id')).toBe(true);
+      expect(wsGateway.didUpdateHeartbeat('conn-id')).toBe(true);
     });
 
     it('getNextSequence returns 1', async () => {
