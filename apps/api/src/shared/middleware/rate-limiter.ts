@@ -426,7 +426,11 @@ export const createRateLimitStore = (state: StoreState): FastifyRateLimitStoreCt
 
 const RATE_LIMIT_REDIS_UNAVAILABLE_ERROR = 'RATE_LIMIT_REDIS_UNAVAILABLE';
 
-let lastRedisUnavailableErrorMs = 0;
+export let lastRedisUnavailableErrorMs = 0;
+
+export const setLastRedisUnavailableErrorMsForTest = (timestamp: number): void => {
+  lastRedisUnavailableErrorMs = timestamp;
+};
 
 const rateLimitErrorResponse = (
   _request: FastifyRequest,
