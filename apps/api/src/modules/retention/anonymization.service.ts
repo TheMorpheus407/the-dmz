@@ -281,17 +281,18 @@ export class AnonymizationService {
       if (fieldsAnonymized.includes(field)) {
         continue;
       }
-
-      if (this.hasField(data, field)) {
-        const value = this.getFieldValue(data, field);
-        if (value && typeof value === 'object') {
-          const nested = value as Record<string, unknown>;
-          for (const rule of this.config.rules) {
-            if (this.hasField(nested, rule.field)) {
-              this.applyRule(nested, rule);
-              fieldsAnonymized.push(`${field}.${rule.field}`);
-            }
-          }
+      if (!this.hasField(data, field)) {
+        continue;
+      }
+      const value = this.getFieldValue(data, field);
+      if (!value || typeof value !== 'object') {
+        continue;
+      }
+      const nested = value as Record<string, unknown>;
+      for (const rule of this.config.rules) {
+        if (this.hasField(nested, rule.field)) {
+          this.applyRule(nested, rule);
+          fieldsAnonymized.push(`${field}.${rule.field}`);
         }
       }
     }
@@ -326,7 +327,7 @@ export class AnonymizationService {
     }
   }
 
-  public removeRule(field: string): boolean {
+  public didRemoveRule(field: string): boolean {
     const index = this.config.rules.findIndex((r) => r.field === field);
     if (index >= 0) {
       this.config.rules.splice(index, 1);

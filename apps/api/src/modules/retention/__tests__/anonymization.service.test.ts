@@ -207,16 +207,16 @@ describe('AnonymizationService', () => {
     });
   });
 
-  describe('removeRule', () => {
+  describe('didRemoveRule', () => {
     it('should remove existing rule', () => {
-      service.removeRule('email');
+      service.didRemoveRule('email');
       const rules = service.getRules();
 
       expect(rules.some((r) => r.field === 'email')).toBe(false);
     });
 
     it('should return false for non-existent rule', () => {
-      const result = service.removeRule('nonExistent');
+      const result = service.didRemoveRule('nonExistent');
       expect(result).toBe(false);
     });
   });
