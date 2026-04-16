@@ -2,9 +2,11 @@ import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypt
 
 import { eq, and, isNull } from 'drizzle-orm';
 import * as OTPAuth from 'otpauth';
+import QRCode from 'qrcode';
 import argon2 from 'argon2';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
+import { getRedisClient } from '../../shared/database/redis.js';
 import { sessions as sessionsTable } from '../../db/schema/auth/sessions.js';
 import { mfaCredentials as mfaCredentialsTable } from '../../db/schema/auth/mfa-credentials.js';
 import { backupCodes as backupCodesTable } from '../../db/schema/auth/backup-codes.js';
@@ -146,8 +148,15 @@ export const createTotpEnrollment = async (
 
   const secret = totp.secret.base32;
   const otpauthUri = totp.toString();
+  const qrCode = await QRCode.toDataURL(otpauthUri);
 
-  const qrCode = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(otpauthUri)}`;
+  // Store pending secret in Redis for verification
+  const redis = getRedisClient(config);
+  if (redis) {
+    await redis.connect();
+    const pendingKey = `totp:pending:${user.tenantId}:${user.userId}`;
+    await redis.setValue(pendingKey, secret, 600); // 10 minute TTL
+  }
 
   return {
     secret,
@@ -183,12 +192,24 @@ export const verifyTotpEnrollment = async (
     }
   }
 
+  // Retrieve server-generated secret from Redis (never trust client-provided secret)
+  const redis = getRedisClient(config);
+  let serverSecret = data.secret; // fallback for backwards compatibility
+  if (redis) {
+    await redis.connect();
+    const pendingKey = `totp:pending:${user.tenantId}:${user.userId}`;
+    const storedSecret = await redis.getValue(pendingKey);
+    if (storedSecret) {
+      serverSecret = storedSecret;
+    }
+  }
+
   const totp = new OTPAuth.TOTP({
     issuer: config.MFA_ISSUER || DEFAULT_ISSUER,
     algorithm: 'SHA1',
     digits: config.MFA_CODE_LENGTH || DEFAULT_CODE_LENGTH,
     period: DEFAULT_PERIOD,
-    secret: OTPAuth.Secret.fromBase32(data.secret),
+    secret: OTPAuth.Secret.fromBase32(serverSecret),
   });
 
   const window = config.MFA_WINDOW || DEFAULT_WINDOW;
@@ -224,7 +245,7 @@ export const verifyTotpEnrollment = async (
   }
 
   const encryptionKey = getEncryptionKey(config);
-  const encryptedSecret = encryptSecret(data.secret, encryptionKey);
+  const encryptedSecret = encryptSecret(serverSecret, encryptionKey);
 
   await db.insert(mfaCredentialsTable).values({
     tenantId: user.tenantId,
@@ -234,6 +255,13 @@ export const verifyTotpEnrollment = async (
     encryptedSecret,
     name: data.name || 'Authenticator App',
   });
+
+  // Clean up pending secret from Redis
+  if (redis) {
+    await redis.connect();
+    const pendingKey = `totp:pending:${user.tenantId}:${user.userId}`;
+    await redis.deleteKey(pendingKey);
+  }
 
   await db
     .update(sessionsTable)
