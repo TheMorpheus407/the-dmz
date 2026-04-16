@@ -11,13 +11,7 @@ import { mutePlayer, unmutePlayer, listMutedPlayers } from './social-relationshi
 
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance } from 'fastify';
-
-interface AuthenticatedUser {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  role: string;
-}
+import type { AuthenticatedUser } from '../auth/index.js';
 
 export async function muteRoutes(fastify: FastifyInstance, config: AppConfig): Promise<void> {
   fastify.post<{ Params: { playerId: string } }>(

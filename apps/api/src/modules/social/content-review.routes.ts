@@ -17,13 +17,7 @@ import { checkRateLimit } from './rate-limit.service.js';
 
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance } from 'fastify';
-
-interface AuthenticatedUser {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  role: string;
-}
+import type { AuthenticatedUser } from '../auth/index.js';
 
 interface ModeratorUser extends AuthenticatedUser {
   role: 'moderator' | 'admin';

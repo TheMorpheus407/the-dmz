@@ -18,13 +18,7 @@ import {
 
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance } from 'fastify';
-
-interface AuthenticatedUser {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  role: string;
-}
+import type { AuthenticatedUser } from '../auth/index.js';
 
 const friendRequestSchema = z.object({
   playerId: z.string().uuid(),

@@ -18,13 +18,7 @@ import {
 
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance } from 'fastify';
-
-interface AuthenticatedUser {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  role: string;
-}
+import type { AuthenticatedUser } from '../auth/index.js';
 
 const coopSessionStatusSchema = z.enum(['lobby', 'active', 'paused', 'completed', 'abandoned']);
 const coopRoleSchema = z.enum(['triage_lead', 'verification_lead']);

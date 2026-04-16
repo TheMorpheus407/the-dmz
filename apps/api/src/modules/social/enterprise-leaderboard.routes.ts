@@ -18,13 +18,7 @@ import {
 
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance } from 'fastify';
-
-interface AuthenticatedUser {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  role: string;
-}
+import type { AuthenticatedUser } from '../auth/index.js';
 
 export const enterpriseScopeSchema = z.enum(['department', 'tenant', 'corporation']);
 export const privacyLevelSchema = z.enum(['full_name', 'pseudonym', 'anonymous_aggregate']);

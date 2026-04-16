@@ -61,8 +61,8 @@ const buildModuleBoundaryZones = () => {
         target: path.join(modulesRoot, target),
         from: path.join(modulesRoot, from),
         except: [
-          path.join(modulesRoot, target, 'index.ts'),
-          path.join(modulesRoot, target, 'index.js'),
+          path.join(modulesRoot, from, 'index.ts'),
+          path.join(modulesRoot, from, 'index.js'),
         ],
       });
     }
@@ -368,6 +368,31 @@ export default [
     rules: {
       ...securityRules,
       ...nodeRules,
+    },
+  },
+  {
+    files: ['apps/api/src/**/*.routes.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+        projectService: true,
+        tsconfigRootDir: rootDir,
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSInterfaceDeclaration[id.name="AuthenticatedUser"]',
+          message:
+            'AuthenticatedUser interface must be imported from ../auth/auth.types.js. Do not define it locally.',
+        },
+      ],
     },
   },
   {
