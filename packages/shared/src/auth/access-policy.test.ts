@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   ActorType,
@@ -14,6 +14,8 @@ import {
   evaluateRouteGroupPolicy,
   adminRoles,
   allRoles,
+  getApiPolicyForEndpoint,
+  ApiScope,
 } from './access-policy.js';
 
 describe('Access Policy Constants', () => {
@@ -300,6 +302,156 @@ describe('evaluateRouteGroupPolicy', () => {
         tenantStatus: 'suspended',
       });
       expect(result.allowed).toBe(false);
+    });
+  });
+});
+
+describe('getApiPolicyForEndpoint', () => {
+  describe('exact match behavior', () => {
+    it('returns policy for /api/v1/auth/me', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/auth/me');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.AUTH_ME);
+    });
+
+    it('returns policy for /api/v1/auth/login', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/auth/login');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.AUTH_LOGIN);
+    });
+
+    it('returns policy for /api/v1/auth/logout', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/auth/logout');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.AUTH_LOGOUT);
+    });
+
+    it('returns policy for /api/v1/auth/refresh', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/auth/refresh');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.AUTH_REFRESH);
+    });
+
+    it('returns policy for /api/v1/auth/register', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/auth/register');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.AUTH_REGISTER);
+    });
+
+    it('returns policy for /api/v1/profile', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/profile');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.PROFILE_READ);
+      expect(policy?.scopes).toContain(ApiScope.PROFILE_WRITE);
+    });
+
+    it('returns policy for /api/v1/games', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/games');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.GAME_READ);
+      expect(policy?.scopes).toContain(ApiScope.GAME_WRITE);
+    });
+
+    it('returns policy for /api/v1/admin/games', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/admin/games');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.GAME_ADMIN_READ);
+      expect(policy?.scopes).toContain(ApiScope.GAME_ADMIN_WRITE);
+      expect(policy?.requiredRoles).toEqual(adminRoles);
+    });
+
+    it('returns policy for /api/v1/admin/tenants', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/admin/tenants');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.ADMIN_TENANT_READ);
+      expect(policy?.scopes).toContain(ApiScope.ADMIN_TENANT_WRITE);
+      expect(policy?.requiredRoles).toEqual(adminRoles);
+    });
+
+    it('returns policy for /api/v1/admin/users', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/admin/users');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.ADMIN_USER_READ);
+      expect(policy?.scopes).toContain(ApiScope.ADMIN_USER_WRITE);
+      expect(policy?.requiredRoles).toEqual(adminRoles);
+    });
+  });
+
+  describe('unprotected endpoint behavior', () => {
+    it('returns policy object for unprotected endpoint /api/v1/auth/login (not undefined)', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/auth/login');
+      expect(policy).toBeDefined();
+      expect(policy?.allowedTenantStatuses).toHaveLength(0);
+      expect(policy?.requiredRoles).toHaveLength(0);
+    });
+
+    it('returns policy object for unprotected endpoint /api/v1/auth/register', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/auth/register');
+      expect(policy).toBeDefined();
+      expect(policy?.allowedTenantStatuses).toHaveLength(0);
+    });
+  });
+
+  describe('unknown endpoint behavior', () => {
+    it('returns undefined for /api/v1/unknown/route', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/unknown/route');
+      expect(policy).toBeUndefined();
+    });
+
+    it('returns undefined for completely unrelated path', () => {
+      const policy = getApiPolicyForEndpoint('/some/random/path');
+      expect(policy).toBeUndefined();
+    });
+
+    it('returns undefined for /api/v2/auth/me (different version)', () => {
+      const policy = getApiPolicyForEndpoint('/api/v2/auth/me');
+      expect(policy).toBeUndefined();
+    });
+
+    it('returns undefined for /api/v1/auth/me/extra (trailing segment)', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/auth/me/extra');
+      expect(policy).toBeUndefined();
+    });
+  });
+
+  describe('wildcard pattern matching', () => {
+    beforeEach(() => {
+      Object.defineProperty(apiEndpointPolicyMatrix, '/api/v1/admin/*', {
+        value: {
+          scopes: [ApiScope.ADMIN_TENANT_READ],
+          requiredRoles: adminRoles,
+          allowedTenantStatuses: [AccessPolicyTenantStatus.ACTIVE],
+        },
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      });
+    });
+
+    afterEach(() => {
+      delete (apiEndpointPolicyMatrix as Record<string, unknown>)['/api/v1/admin/*'];
+    });
+
+    it('matches wildcard pattern for /api/v1/admin/analytics', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/admin/analytics');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.ADMIN_TENANT_READ);
+    });
+
+    it('matches wildcard pattern for /api/v1/admin/settings', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/admin/settings');
+      expect(policy).toBeDefined();
+      expect(policy?.scopes).toContain(ApiScope.ADMIN_TENANT_READ);
+    });
+
+    it('does not match wildcard pattern for /api/v1/profile (non-admin)', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/profile');
+      expect(policy?.scopes).toContain(ApiScope.PROFILE_READ);
+    });
+
+    it('does not match wildcard pattern for /api/v1/games (non-admin)', () => {
+      const policy = getApiPolicyForEndpoint('/api/v1/games');
+      expect(policy?.scopes).toContain(ApiScope.GAME_READ);
     });
   });
 });
