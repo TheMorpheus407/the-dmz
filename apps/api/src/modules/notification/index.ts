@@ -4,6 +4,8 @@ export { handleAuthSecurityEvent, notificationEventHandlers } from './notificati
 
 export { registerNotificationRoutes } from './notification.routes.js';
 
+export * from './websocket/index.js';
+
 export type {
   NotificationSendOptions,
   NotificationDeliveryResult,

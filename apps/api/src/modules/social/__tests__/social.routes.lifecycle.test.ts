@@ -9,10 +9,7 @@ import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
 import { tenants } from '../../../shared/database/schema/tenants.js';
-// eslint-disable-next-line import-x/no-restricted-paths
-import { getRefreshCookieName } from '../../auth/cookies.js';
-// eslint-disable-next-line import-x/no-restricted-paths
-import { csrfCookieName } from '../../auth/csrf.js';
+import { getRefreshCookieName, csrfCookieName } from '../../auth/index.js';
 import {
   createDualTenantFixture,
   type DualTenantFixture,

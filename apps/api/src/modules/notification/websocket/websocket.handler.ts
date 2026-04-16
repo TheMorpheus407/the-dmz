@@ -1,4 +1,3 @@
-// eslint-disable-next-line import-x/no-restricted-paths
 import { verifyJWT } from '../../auth/index.js';
 
 import type { WebSocketGateway } from './websocket.gateway.js';

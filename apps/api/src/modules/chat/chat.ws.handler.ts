@@ -1,14 +1,11 @@
-// eslint-disable-next-line import-x/no-restricted-paths
 import { verifyJWT } from '../auth/index.js';
-/* eslint-disable import-x/no-restricted-paths */
 import {
   buildChannelName,
   type WebSocketGateway,
   type WebSocketAuthResult,
   type JWTAuthPayload,
   type WSConnection,
-} from '../notification/websocket/index.js';
-/* eslint-enable import-x/no-restricted-paths */
+} from '../notification/index.js';
 
 import { sendMessage, type SendMessageResult } from './chat.service.js';
 

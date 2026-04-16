@@ -5,7 +5,6 @@ import { getDatabaseClient } from '../../shared/database/connection.js';
 import { tenants } from '../../shared/database/schema/tenants.js';
 import { users } from '../../shared/database/schema/users.js';
 import { auditLogs } from '../../db/schema/audit/index.js';
-// eslint-disable-next-line import-x/no-restricted-paths
 import { getSessionMetrics } from '../auth/index.js';
 
 export interface TenantFeatureFlags {

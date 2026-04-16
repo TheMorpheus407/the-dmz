@@ -1,7 +1,6 @@
 import { AuthSecurityEventType } from '@the-dmz/shared/contracts';
 
-// eslint-disable-next-line import-x/no-restricted-paths
-import { AUTH_EVENTS } from '../auth/auth.events.js';
+import { AUTH_EVENTS } from '../auth/index.js';
 
 import { notificationService } from './notification.service.js';
 

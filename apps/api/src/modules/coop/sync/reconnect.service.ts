@@ -5,8 +5,7 @@ import { coopSession } from '../../../db/schema/multiplayer/index.js';
 import { gameEvents } from '../../../db/schema/game/index.js';
 
 import type { AppConfig } from '../../../config.js';
-// eslint-disable-next-line import-x/no-restricted-paths
-import type { CoopEventMessage, WebSocketGateway } from '../../notification/websocket/index.js';
+import type { CoopEventMessage, WebSocketGateway } from '../../notification/index.js';
 
 export interface ReconnectResult {
   currentSeq: number;
