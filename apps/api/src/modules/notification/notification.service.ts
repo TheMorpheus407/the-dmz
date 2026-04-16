@@ -19,7 +19,7 @@ import type {
 class DedupeStore {
   private store = new Map<string, DedupeEntry>();
 
-  check(userId: string, eventType: AuthSecurityEventType, dedupeWindowMs: number): boolean {
+  isDuplicate(userId: string, eventType: AuthSecurityEventType, dedupeWindowMs: number): boolean {
     const key = `${userId}:${eventType}`;
     const entry = this.store.get(key);
 
@@ -50,7 +50,7 @@ class DedupeStore {
 class ThrottleStore {
   private store = new Map<string, ThrottleEntry>();
 
-  check(
+  isThrottled(
     userId: string,
     eventType: AuthSecurityEventType,
     throttleLimit: number,
@@ -169,7 +169,12 @@ export class NotificationService {
 
     if (!mandatoryNotification) {
       if (
-        this.throttleStore.check(options.userId, options.eventType, throttleLimit, throttleWindowMs)
+        this.throttleStore.isThrottled(
+          options.userId,
+          options.eventType,
+          throttleLimit,
+          throttleWindowMs,
+        )
       ) {
         const logEntry: DeliveryLogEntry = {
           id: randomUUID(),
@@ -191,7 +196,7 @@ export class NotificationService {
         };
       }
 
-      if (this.dedupeStore.check(options.userId, options.eventType, dedupeWindowMs)) {
+      if (this.dedupeStore.isDuplicate(options.userId, options.eventType, dedupeWindowMs)) {
         const logEntry: DeliveryLogEntry = {
           id: randomUUID(),
           tenantId: options.tenantId,
