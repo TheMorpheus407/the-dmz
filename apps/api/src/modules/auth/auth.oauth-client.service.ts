@@ -22,6 +22,12 @@ import {
   updateOAuthClientLastUsed,
   deleteOAuthClient as deleteOAuthClientInRepo,
 } from './auth.repo.js';
+import {
+  OAuthClientExpiredError,
+  OAuthClientRevokedError,
+  OAuthInsufficientScopeError,
+  OAuthInvalidClientError,
+} from './auth.errors.js';
 import { hashPassword } from './auth-crypto.js';
 import { signJWT, verifyJWT } from './jwt-keys.service.js';
 
@@ -173,6 +179,40 @@ export const deleteOAuthClient = async (
   await deleteOAuthClientInRepo(db, clientId, tenantId);
 };
 
+const validateClientNotRevoked = (client: { revokedAt: Date | null }): void => {
+  if (client.revokedAt) {
+    throw new OAuthClientRevokedError();
+  }
+};
+
+const validateClientNotExpired = (client: { expiresAt: Date | null }): void => {
+  if (client.expiresAt && new Date() > client.expiresAt) {
+    throw new OAuthClientExpiredError();
+  }
+};
+
+const validateClientCredentials = async (
+  client: {
+    secretHash: string;
+    previousSecretHash: string | null;
+    rotationGraceEndsAt: Date | null;
+  },
+  clientSecret: string,
+): Promise<void> => {
+  const isValid = await argon2.verify(client.secretHash, clientSecret);
+  if (isValid) return;
+
+  if (client.rotationGraceEndsAt && client.rotationGraceEndsAt < new Date()) {
+    throw new OAuthInvalidClientError();
+  }
+  const previousValid = client.previousSecretHash
+    ? await argon2.verify(client.previousSecretHash, clientSecret)
+    : false;
+  if (!previousValid) {
+    throw new OAuthInvalidClientError();
+  }
+};
+
 export const issueClientCredentialsToken = async (
   config: AppConfig,
   data: {
@@ -187,29 +227,12 @@ export const issueClientCredentialsToken = async (
   const client = await findOAuthClientByClientId(db, data.clientId, data.tenantId);
 
   if (!client) {
-    throw new Error('Invalid client credentials');
+    throw new OAuthInvalidClientError();
   }
 
-  if (client.revokedAt) {
-    throw new Error('OAuth client has been revoked');
-  }
-
-  if (client.expiresAt && new Date() > client.expiresAt) {
-    throw new Error('OAuth client has expired');
-  }
-
-  const isValid = await argon2.verify(client.secretHash, data.clientSecret);
-  if (!isValid) {
-    if (client.rotationGraceEndsAt && client.rotationGraceEndsAt < new Date()) {
-      throw new Error('Invalid client credentials');
-    }
-    const previousValid = client.previousSecretHash
-      ? await argon2.verify(client.previousSecretHash, data.clientSecret)
-      : false;
-    if (!previousValid) {
-      throw new Error('Invalid client credentials');
-    }
-  }
+  validateClientNotRevoked(client);
+  validateClientNotExpired(client);
+  await validateClientCredentials(client, data.clientSecret);
 
   const allowedScopes = client.scopes.split(' ');
   let requestedScopes: string[];
@@ -219,7 +242,7 @@ export const issueClientCredentialsToken = async (
     if (
       !isValidScopeCombination(requestedScopes, allowedScopes as unknown as readonly OAuthScope[])
     ) {
-      throw new Error('Invalid scope');
+      throw new OAuthInsufficientScopeError(data.scope, allowedScopes.join(' '));
     }
   } else {
     requestedScopes = allowedScopes;
@@ -287,7 +310,13 @@ export const verifyOAuthToken = async (
       tenantId: jwtPayload.tenantId,
       scopes: jwtPayload.scopes,
     };
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message === 'Invalid token payload') {
+      throw error;
+    }
+    if (error instanceof Error && error.message === 'Invalid token type') {
+      throw error;
+    }
     throw new Error('Invalid or expired token');
   }
 };
