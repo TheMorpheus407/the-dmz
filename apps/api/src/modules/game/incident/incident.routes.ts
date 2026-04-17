@@ -1,4 +1,5 @@
 import { type IncidentStatus, type ResponseAction } from '@the-dmz/shared/game';
+import { ErrorCodes } from '@the-dmz/shared/constants';
 
 import { tenantContext } from '../../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../../shared/middleware/tenant-status-guard.js';
@@ -100,7 +101,7 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
         return reply.status(404).send({
           success: false,
           error: {
-            code: 'INCIDENT_NOT_FOUND',
+            code: ErrorCodes.GAME_INCIDENT_NOT_FOUND,
             message: 'Incident not found',
             details: {},
           },
@@ -138,7 +139,7 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
         return reply.status(404).send({
           success: false,
           error: {
-            code: 'INCIDENT_NOT_FOUND',
+            code: ErrorCodes.GAME_INCIDENT_NOT_FOUND,
             message: 'Incident not found',
             details: {},
           },
@@ -186,7 +187,7 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
         return reply.status(404).send({
           success: false,
           error: {
-            code: 'INCIDENT_NOT_FOUND',
+            code: ErrorCodes.GAME_INCIDENT_NOT_FOUND,
             message: 'Incident not found',
             details: {},
           },
@@ -269,7 +270,7 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
         return reply.status(404).send({
           success: false,
           error: {
-            code: 'INCIDENT_NOT_FOUND',
+            code: ErrorCodes.GAME_INCIDENT_NOT_FOUND,
             message: 'Incident not found',
             details: {},
           },
@@ -353,7 +354,7 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
         return reply.status(404).send({
           success: false,
           error: {
-            code: 'INCIDENT_NOT_FOUND',
+            code: ErrorCodes.GAME_INCIDENT_NOT_FOUND,
             message: 'Incident not found',
             details: {},
           },
@@ -403,7 +404,7 @@ export const registerIncidentRoutes = async (fastify: FastifyInstance): Promise<
         return reply.status(404).send({
           success: false,
           error: {
-            code: 'INCIDENT_NOT_FOUND',
+            code: ErrorCodes.GAME_INCIDENT_NOT_FOUND,
             message: 'Incident not found',
             details: {},
           },

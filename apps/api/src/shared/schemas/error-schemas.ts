@@ -34,6 +34,7 @@ export const ErrorCodeEnum = [
   'TENANT_NOT_FOUND',
   'TENANT_INACTIVE',
   'RESOURCE_NOT_FOUND',
+  'GAME_INCIDENT_NOT_FOUND',
 ] as const;
 
 export const errorResponseSchemas = {
@@ -155,7 +156,13 @@ export const errorResponseSchemas = {
         properties: {
           code: {
             type: 'string',
-            enum: ['NOT_FOUND', 'RESOURCE_NOT_FOUND', 'TENANT_NOT_FOUND', 'GAME_NOT_FOUND'],
+            enum: [
+              'NOT_FOUND',
+              'RESOURCE_NOT_FOUND',
+              'TENANT_NOT_FOUND',
+              'GAME_NOT_FOUND',
+              'GAME_INCIDENT_NOT_FOUND',
+            ],
           },
           message: { type: 'string' },
           details: { type: 'object' },
