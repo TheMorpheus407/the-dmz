@@ -488,7 +488,7 @@ export function calculateIncidentSeverity(
 
   const score = difficultyScore + detectionScore + coverageScore;
 
-  if (score >= 2.21) return 4;
+  if (score >= 2.2) return 4;
   if (score >= 1.61) return 3;
   if (score >= 0.5) return 2;
   return 1;
