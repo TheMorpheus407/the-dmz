@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+
 import js from '@eslint/js';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
@@ -232,6 +233,10 @@ const typeAwareRules = {
 
 export default [
   {
+    name: 'default',
+    linterOptions: {
+      reportUnusedDisableDirectives: 'error',
+    },
     ignores: [
       '**/dist/**',
       '**/build/**',
