@@ -261,6 +261,71 @@ export const findMorpheusMessages = async (
     .where(and(...conditions));
 };
 
+const THREAT_LEVELS = ['low', 'guarded', 'elevated', 'high', 'severe'] as const;
+
+const matchesTriggerType = (message: MorpheusMessage, triggerType?: string): boolean => {
+  if (!triggerType) return true;
+  if (message.triggerType === triggerType || message.triggerType === 'general') return true;
+  return false;
+};
+
+const matchesDayRange = (message: MorpheusMessage, day?: number): boolean => {
+  if (day === undefined) return true;
+  if (message.minDay !== null && day < message.minDay) return false;
+  if (message.maxDay !== null && day > message.maxDay) return false;
+  return true;
+};
+
+const matchesTrustScore = (message: MorpheusMessage, trustScore?: number): boolean => {
+  if (trustScore === undefined) return true;
+  if (message.minTrustScore !== null && trustScore < message.minTrustScore) return false;
+  if (message.maxTrustScore !== null && trustScore > message.maxTrustScore) return false;
+  return true;
+};
+
+const matchesThreatLevel = (message: MorpheusMessage, threatLevel?: string): boolean => {
+  if (!threatLevel) return true;
+  if (message.minThreatLevel !== null) {
+    const messageLevel = THREAT_LEVELS.indexOf(
+      message.minThreatLevel as (typeof THREAT_LEVELS)[number],
+    );
+    const contextLevel = THREAT_LEVELS.indexOf(threatLevel as (typeof THREAT_LEVELS)[number]);
+    if (contextLevel < messageLevel) return false;
+  }
+  if (message.maxThreatLevel !== null) {
+    const messageLevel = THREAT_LEVELS.indexOf(
+      message.maxThreatLevel as (typeof THREAT_LEVELS)[number],
+    );
+    const contextLevel = THREAT_LEVELS.indexOf(threatLevel as (typeof THREAT_LEVELS)[number]);
+    if (contextLevel > messageLevel) return false;
+  }
+  return true;
+};
+
+const matchesFactionKey = (message: MorpheusMessage, factionKey?: string): boolean => {
+  if (!factionKey) return true;
+  if (message.factionKey !== null && message.factionKey !== factionKey) return false;
+  return true;
+};
+
+const matchesMessageContext = (
+  message: MorpheusMessage,
+  context: {
+    triggerType?: string;
+    day?: number;
+    trustScore?: number;
+    threatLevel?: string;
+    factionKey?: string;
+  },
+): boolean => {
+  if (!matchesTriggerType(message, context.triggerType)) return false;
+  if (!matchesDayRange(message, context.day)) return false;
+  if (!matchesTrustScore(message, context.trustScore)) return false;
+  if (!matchesThreatLevel(message, context.threatLevel)) return false;
+  if (!matchesFactionKey(message, context.factionKey)) return false;
+  return true;
+};
+
 export const findMorpheusMessagesForContext = async (
   db: DB,
   tenantId: string,
@@ -273,66 +338,7 @@ export const findMorpheusMessagesForContext = async (
   },
 ): Promise<MorpheusMessage[]> => {
   const messages = await findMorpheusMessages(db, tenantId, { isActive: true });
-
-  return messages.filter((msg) => {
-    if (
-      context.triggerType &&
-      msg.triggerType !== context.triggerType &&
-      msg.triggerType !== 'general'
-    ) {
-      return false;
-    }
-
-    if (msg.minDay !== null && context.day !== undefined && context.day < msg.minDay) {
-      return false;
-    }
-    if (msg.maxDay !== null && context.day !== undefined && context.day > msg.maxDay) {
-      return false;
-    }
-
-    if (
-      msg.minTrustScore !== null &&
-      context.trustScore !== undefined &&
-      context.trustScore < msg.minTrustScore
-    ) {
-      return false;
-    }
-    if (
-      msg.maxTrustScore !== null &&
-      context.trustScore !== undefined &&
-      context.trustScore > msg.maxTrustScore
-    ) {
-      return false;
-    }
-
-    if (msg.minThreatLevel !== null && context.threatLevel !== undefined) {
-      const threatLevels = ['low', 'guarded', 'elevated', 'high', 'severe'];
-      const msgLevel = threatLevels.indexOf(msg.minThreatLevel ?? '');
-      const contextLevel = threatLevels.indexOf(context.threatLevel);
-      if (contextLevel < msgLevel) {
-        return false;
-      }
-    }
-
-    if (msg.maxThreatLevel !== null && context.threatLevel !== undefined) {
-      const threatLevels = ['low', 'guarded', 'elevated', 'high', 'severe'];
-      const msgLevel = threatLevels.indexOf(msg.maxThreatLevel ?? '');
-      const contextLevel = threatLevels.indexOf(context.threatLevel);
-      if (contextLevel > msgLevel) {
-        return false;
-      }
-    }
-
-    if (
-      msg.factionKey !== null &&
-      context.factionKey !== undefined &&
-      msg.factionKey !== context.factionKey
-    ) {
-      return false;
-    }
-
-    return true;
-  });
+  return messages.filter((message) => matchesMessageContext(message, context));
 };
 
 export const findPlayerNarrativeState = async (
