@@ -149,8 +149,8 @@ export const buildApp = async (
     requestIdHeader: 'x-request-id',
     genReqId: (request) => resolveRequestId(request.headers['x-request-id']) ?? generateId(),
     bodyLimit: config.MAX_BODY_SIZE,
-    onProtoPoisoning: 'ignore',
-    onConstructorPoisoning: 'ignore',
+    onProtoPoisoning: 'error',
+    onConstructorPoisoning: 'error',
   });
 
   app.decorate('config', config);
