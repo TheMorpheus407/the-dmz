@@ -369,9 +369,9 @@ function resolveAndApplyDecision(ctx: ResolveDecisionContext): void {
   const previousFunds = state.funds;
   const previousXP = state.playerXP;
 
-  let evaluation;
+  let decisionEvaluation;
   try {
-    evaluation = resolveDecision({
+    decisionEvaluation = resolveDecision({
       email: emailInstance,
       decision: action.decision,
       markedIndicators: emailToDecide.indicators,
@@ -392,24 +392,24 @@ function resolveAndApplyDecision(ctx: ResolveDecisionContext): void {
   }
 
   state.trustScore = clampTrustScore(
-    Math.max(0, Math.min(500, state.trustScore + evaluation.trustImpact)),
+    Math.max(0, Math.min(500, state.trustScore + decisionEvaluation.trustImpact)),
   );
-  state.funds = Math.max(0, state.funds + evaluation.fundsImpact);
+  state.funds = Math.max(0, state.funds + decisionEvaluation.fundsImpact);
 
-  const xpAwarded = awardXPForDecision(evaluation.isCorrect, emailInstance.difficulty ?? 3);
+  const xpAwarded = awardXPForDecision(decisionEvaluation.isCorrect, emailInstance.difficulty ?? 3);
   processLevelUp(state, previousXP, xpAwarded, events);
 
-  applyFactionImpact(state, emailInstance, evaluation.factionImpact);
+  applyFactionImpact(state, emailInstance, decisionEvaluation.factionImpact);
 
   pushTrustChangeEvent(events, state, {
     previousTrustScore,
-    evaluation,
+    evaluation: decisionEvaluation,
     emailId: action.emailId,
     decision: action.decision,
   });
   pushFundsChangeEvent(events, state, {
     previousFunds,
-    evaluation,
+    evaluation: decisionEvaluation,
     emailId: action.emailId,
     decision: action.decision,
   });
@@ -419,7 +419,7 @@ function resolveAndApplyDecision(ctx: ResolveDecisionContext): void {
     state,
     emailId: action.emailId,
     decision: action.decision,
-    evaluation,
+    evaluation: decisionEvaluation,
   });
 
   incrementDecisionAnalytics(state, action.decision);
