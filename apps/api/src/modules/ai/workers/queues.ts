@@ -57,23 +57,9 @@ export const DEFAULT_JOB_OPTIONS = {
 
 export const DEFAULT_CONCURRENCY = 5;
 
-export const EXPONENTIAL_BACKOFF_DELAYS = [
-  30 * 1000,
-  2 * 60 * 1000,
-  10 * 60 * 1000,
-  30 * 60 * 1000,
-  2 * 60 * 60 * 1000,
-] as const;
+export { EXPONENTIAL_BACKOFF_DELAYS, RETRY_STRATEGY } from '../../../shared/queue/retry.js';
 
 export const MAX_JOB_ATTEMPTS = 10;
-
-export const RETRY_STRATEGY = (attempt: number): number => {
-  const index = Math.min(attempt - 1, EXPONENTIAL_BACKOFF_DELAYS.length - 1);
-  return (
-    EXPONENTIAL_BACKOFF_DELAYS[index] ??
-    EXPONENTIAL_BACKOFF_DELAYS[EXPONENTIAL_BACKOFF_DELAYS.length - 1]!
-  );
-};
 
 export function createJobIdempotencyKey(jobType: JobType, data: AiGenerationJobData): string {
   const base = `${jobType}:${data.tenantId}`;
@@ -96,11 +82,4 @@ export function createJobIdempotencyKey(jobType: JobType, data: AiGenerationJobD
   }
 }
 
-export function getQueueConfig(redisUrl: string) {
-  return {
-    connection: {
-      host: new URL(redisUrl).hostname,
-      port: parseInt(new URL(redisUrl).port, 10) || 6379,
-    },
-  };
-}
+export { getQueueConfig } from '../../../shared/queue/retry.js';
