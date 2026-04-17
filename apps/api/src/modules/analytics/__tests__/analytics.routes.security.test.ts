@@ -130,6 +130,39 @@ const registerUser = async (
   return response.json() as { accessToken: string; user: { id: string; tenantId: string } };
 };
 
+const analyticsEndpoints = [
+  {
+    method: 'POST' as const,
+    url: '/api/v1/analytics/phishing',
+    hasInvalidToken: true,
+    hasTargetTenantId: true,
+  },
+  {
+    method: 'POST' as const,
+    url: '/api/v1/analytics/scoring',
+    hasInvalidToken: true,
+    hasTargetTenantId: false,
+  },
+  {
+    method: 'POST' as const,
+    url: '/api/v1/analytics/trends',
+    hasInvalidToken: true,
+    hasTargetTenantId: false,
+  },
+  {
+    method: 'GET' as const,
+    url: '/api/v1/analytics/health',
+    hasInvalidToken: true,
+    hasTargetTenantId: false,
+  },
+  {
+    method: 'GET' as const,
+    url: '/api/v1/analytics/metrics',
+    hasInvalidToken: true,
+    hasTargetTenantId: false,
+  },
+] as const;
+
 describe('analytics routes security', () => {
   let app: FastifyInstance | undefined;
   let testConfig: AppConfig | undefined;
@@ -169,95 +202,126 @@ describe('analytics routes security', () => {
     testConfig = undefined;
   });
 
+  describe.each(analyticsEndpoints)(
+    'analytics security ($method $url)',
+    ({ method, url, hasInvalidToken, hasTargetTenantId }) => {
+      it('returns 401 without authorization header', async () => {
+        if (!app) {
+          throw new Error('App was not initialized');
+        }
+
+        const response = await app.inject({
+          method,
+          url,
+          payload: method === 'POST' ? {} : undefined,
+        });
+
+        expect(response.statusCode).toBe(401);
+        expect(response.json()).toEqual(
+          expect.objectContaining({
+            success: false,
+            error: expect.objectContaining({
+              code: 'AUTH_UNAUTHORIZED',
+            }),
+          }),
+        );
+      });
+
+      if (hasInvalidToken) {
+        it('returns 401 with invalid bearer token', async () => {
+          if (!app) {
+            throw new Error('App was not initialized');
+          }
+
+          const response = await app.inject({
+            method,
+            url,
+            headers: {
+              authorization: 'Bearer invalid-token',
+            },
+            payload: method === 'POST' ? {} : undefined,
+          });
+
+          expect(response.statusCode).toBe(401);
+          expect(response.json()).toEqual(
+            expect.objectContaining({
+              success: false,
+              error: expect.objectContaining({
+                code: 'AUTH_INVALID_TOKEN',
+              }),
+            }),
+          );
+        });
+      }
+
+      it('returns 403 when user lacks analytics:read permission', async () => {
+        if (!app) {
+          throw new Error('App was not initialized');
+        }
+
+        const { accessToken } = await registerUser(app);
+
+        const response = await app.inject({
+          method,
+          url,
+          headers: {
+            authorization: `Bearer ${accessToken}`,
+          },
+          payload: method === 'POST' ? {} : undefined,
+        });
+
+        expect(response.statusCode).toBe(403);
+        expect(response.json()).toEqual(
+          expect.objectContaining({
+            success: false,
+            error: expect.objectContaining({
+              code: 'AUTH_INSUFFICIENT_PERMS',
+            }),
+          }),
+        );
+      });
+
+      if (hasTargetTenantId) {
+        it('returns 403 when non-super-admin tries to use targetTenantId', async () => {
+          if (!app) {
+            throw new Error('App was not initialized');
+          }
+          if (!testConfig) {
+            throw new Error('Test config was not initialized');
+          }
+
+          const { accessToken, user } = await registerUser(app);
+          await seedTenantAuthModel(testConfig, user.tenantId, [
+            { userId: user.id, role: 'player' },
+          ]);
+
+          const otherTenantId = randomUUID();
+
+          const response = await app.inject({
+            method,
+            url: `${url}?targetTenantId=${otherTenantId}`,
+            headers: {
+              authorization: `Bearer ${accessToken}`,
+            },
+            payload: method === 'POST' ? {} : undefined,
+          });
+
+          expect(response.statusCode).toBe(403);
+          expect(response.json()).toEqual(
+            expect.objectContaining({
+              success: false,
+              error: expect.objectContaining({
+                code: 'AUTH_FORBIDDEN',
+                message: 'Target tenant override not permitted',
+              }),
+            }),
+          );
+        });
+      }
+    },
+  );
+
   describe('POST /api/v1/analytics/phishing', () => {
-    it('returns 401 without authorization header', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const response = await app.inject({
-        method: 'POST',
-        url: '/api/v1/analytics/phishing',
-        payload: {},
-      });
-
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_UNAUTHORIZED',
-          }),
-        }),
-      );
-    });
-
-    it('returns 401 with invalid bearer token', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const response = await app.inject({
-        method: 'POST',
-        url: '/api/v1/analytics/phishing',
-        headers: {
-          authorization: 'Bearer invalid-token',
-        },
-        payload: {},
-      });
-
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_INVALID_TOKEN',
-          }),
-        }),
-      );
-    });
-
-    it('returns 403 when user lacks analytics:read permission', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-      if (!testConfig) {
-        throw new Error('Test config was not initialized');
-      }
-
-      const { accessToken } = await registerUser(app);
-
-      phishingMetricsServiceMock.computeAggregatedMetrics.mockResolvedValue({
-        clickRate: 0,
-        reportRate: 0,
-        falsePositiveRate: 0,
-        meanTimeToReportSeconds: null,
-        meanTimeToDecisionSeconds: null,
-        suspiciousIndicatorFlaggingRate: 0,
-        period: { start: new Date().toISOString(), end: new Date().toISOString() },
-        sampleSize: 0,
-      });
-
-      const response = await app.inject({
-        method: 'POST',
-        url: '/api/v1/analytics/phishing',
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-        payload: {},
-      });
-
-      expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_INSUFFICIENT_PERMS',
-          }),
-        }),
-      );
-    });
-
     it('returns 200 with valid authentication and analytics:read permission', async () => {
       if (!app) {
         throw new Error('App was not initialized');
@@ -297,95 +361,9 @@ describe('analytics routes security', () => {
         }),
       );
     });
-
-    it('returns 403 when non-super-admin tries to use targetTenantId', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-      if (!testConfig) {
-        throw new Error('Test config was not initialized');
-      }
-
-      const { accessToken, user } = await registerUser(app);
-      await seedTenantAuthModel(testConfig, user.tenantId, [{ userId: user.id, role: 'player' }]);
-
-      const otherTenantId = randomUUID();
-
-      const response = await app.inject({
-        method: 'POST',
-        url: `/api/v1/analytics/phishing?targetTenantId=${otherTenantId}`,
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-        payload: {},
-      });
-
-      expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_FORBIDDEN',
-            message: 'Target tenant override not permitted',
-          }),
-        }),
-      );
-    });
   });
 
   describe('POST /api/v1/analytics/scoring', () => {
-    it('returns 401 without authorization header', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const response = await app.inject({
-        method: 'POST',
-        url: '/api/v1/analytics/scoring',
-        payload: {},
-      });
-
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_UNAUTHORIZED',
-          }),
-        }),
-      );
-    });
-
-    it('returns 403 when user lacks analytics:read permission', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-      if (!testConfig) {
-        throw new Error('Test config was not initialized');
-      }
-
-      const { accessToken } = await registerUser(app);
-
-      const response = await app.inject({
-        method: 'POST',
-        url: '/api/v1/analytics/scoring',
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-        payload: {},
-      });
-
-      expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_INSUFFICIENT_PERMS',
-          }),
-        }),
-      );
-    });
-
     it('returns 200 with valid authentication and analytics:read permission', async () => {
       if (!app) {
         throw new Error('App was not initialized');
@@ -413,58 +391,6 @@ describe('analytics routes security', () => {
   });
 
   describe('POST /api/v1/analytics/trends', () => {
-    it('returns 401 without authorization header', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const response = await app.inject({
-        method: 'POST',
-        url: '/api/v1/analytics/trends',
-        payload: {},
-      });
-
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_UNAUTHORIZED',
-          }),
-        }),
-      );
-    });
-
-    it('returns 403 when user lacks analytics:read permission', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-      if (!testConfig) {
-        throw new Error('Test config was not initialized');
-      }
-
-      const { accessToken } = await registerUser(app);
-
-      const response = await app.inject({
-        method: 'POST',
-        url: '/api/v1/analytics/trends',
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-        payload: {},
-      });
-
-      expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_INSUFFICIENT_PERMS',
-          }),
-        }),
-      );
-    });
-
     it('returns 200 with valid authentication and analytics:read permission', async () => {
       if (!app) {
         throw new Error('App was not initialized');
@@ -498,77 +424,6 @@ describe('analytics routes security', () => {
   });
 
   describe('GET /api/v1/analytics/health', () => {
-    it('returns 401 without authorization header', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/analytics/health',
-      });
-
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_UNAUTHORIZED',
-          }),
-        }),
-      );
-    });
-
-    it('returns 401 with invalid bearer token', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/analytics/health',
-        headers: {
-          authorization: 'Bearer invalid-token',
-        },
-      });
-
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_INVALID_TOKEN',
-          }),
-        }),
-      );
-    });
-
-    it('returns 403 when user lacks analytics:read permission', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const { accessToken } = await registerUser(app);
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/analytics/health',
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_INSUFFICIENT_PERMS',
-          }),
-        }),
-      );
-    });
-
     it('returns 200 with valid authentication and analytics:read permission', async () => {
       if (!app) {
         throw new Error('App was not initialized');
@@ -598,77 +453,6 @@ describe('analytics routes security', () => {
   });
 
   describe('GET /api/v1/analytics/metrics', () => {
-    it('returns 401 without authorization header', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/analytics/metrics',
-      });
-
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_UNAUTHORIZED',
-          }),
-        }),
-      );
-    });
-
-    it('returns 401 with invalid bearer token', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/analytics/metrics',
-        headers: {
-          authorization: 'Bearer invalid-token',
-        },
-      });
-
-      expect(response.statusCode).toBe(401);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_INVALID_TOKEN',
-          }),
-        }),
-      );
-    });
-
-    it('returns 403 when user lacks analytics:read permission', async () => {
-      if (!app) {
-        throw new Error('App was not initialized');
-      }
-
-      const { accessToken } = await registerUser(app);
-
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/analytics/metrics',
-        headers: {
-          authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual(
-        expect.objectContaining({
-          success: false,
-          error: expect.objectContaining({
-            code: 'AUTH_INSUFFICIENT_PERMS',
-          }),
-        }),
-      );
-    });
-
     it('returns 200 with valid authentication and analytics:read permission', async () => {
       if (!app) {
         throw new Error('App was not initialized');
