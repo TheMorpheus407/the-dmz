@@ -14,17 +14,28 @@ import {
   getDatabasePool,
 } from '../../../shared/database/connection.js';
 
-const adminDatabaseUrl = 'postgresql://dmz:dmz_dev@localhost:5432/postgres';
+const deriveAdminDatabaseUrl = (baseUrl: string): string => {
+  const url = new URL(baseUrl);
+  url.pathname = '/postgres';
+  return url.toString();
+};
+
+const initialConfig = createTestConfig();
+const adminDatabaseUrl = deriveAdminDatabaseUrl(initialConfig.DATABASE_URL);
 const migrationsFolder = fileURLToPath(
   new URL('../../../shared/database/migrations', import.meta.url),
 );
 
 let testConfig = createTestConfig();
 
-const createIsolatedTestConfig = (base: AppConfig, databaseName: string): AppConfig => ({
-  ...base,
-  DATABASE_URL: `postgresql://dmz:dmz_dev@localhost:5432/${databaseName}`,
-});
+const createIsolatedTestConfig = (base: AppConfig, databaseName: string): AppConfig => {
+  const baseUrl = new URL(base.DATABASE_URL);
+  baseUrl.pathname = `/${databaseName}`;
+  return {
+    ...base,
+    DATABASE_URL: baseUrl.toString(),
+  };
+};
 
 const createIsolatedDatabase = async (config: AppConfig): Promise<() => Promise<void>> => {
   const databaseName = new URL(config.DATABASE_URL).pathname.replace(/^\//, '');
@@ -51,7 +62,6 @@ const createIsolatedDatabase = async (config: AppConfig): Promise<() => Promise<
   }
 };
 
-let testConfig: AppConfig;
 let cleanupDatabase: (() => Promise<void>) | undefined;
 
 beforeEach(async () => {
