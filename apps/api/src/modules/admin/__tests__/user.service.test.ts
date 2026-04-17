@@ -8,8 +8,14 @@ import {
   getDatabasePool,
   getDatabaseClient,
 } from '../../../shared/database/connection.js';
-import { tenants, users, roles } from '../../../shared/database/schema/index.js';
+import { users, roles } from '../../../shared/database/schema/index.js';
 import * as userService from '../user.service.js';
+
+import {
+  createAdminUser,
+  createTestTenantWithAdmin,
+  createTestUser,
+} from './user.service.fixtures.js';
 
 const createTestConfig = (): AppConfig => {
   const base = loadConfig();
@@ -57,39 +63,19 @@ describe('user-service', () => {
   describe('createUser', () => {
     it('should create a new user', async () => {
       const db = getDatabaseClient(testConfig);
-
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'tenant_admin',
-          isActive: true,
-        })
-        .returning();
+      const { tenant, adminUser } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant',
+        adminEmail: 'admin@test.com',
+      });
 
       const result = await userService.createUser(
-        tenant!.tenantId,
+        tenant.tenantId,
         {
           email: 'newuser@test.com',
           displayName: 'New User',
           role: 'learner',
         },
-        adminUser!.userId,
+        adminUser.userId,
         testConfig,
       );
 
@@ -101,31 +87,20 @@ describe('user-service', () => {
 
     it('should throw error when email already exists', async () => {
       const db = getDatabaseClient(testConfig);
+      const { tenant } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-dup',
+      });
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-dup',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      await db.insert(users).values({
-        tenantId: tenant!.tenantId,
+      await createTestUser(db, {
+        tenantId: tenant.tenantId,
         email: 'existing@test.com',
         displayName: 'Existing User',
-        passwordHash: 'hash',
         role: 'learner',
-        isActive: true,
       });
 
       await expect(
         userService.createUser(
-          tenant!.tenantId,
+          tenant.tenantId,
           {
             email: 'existing@test.com',
             displayName: 'Another User',
@@ -140,51 +115,26 @@ describe('user-service', () => {
   describe('updateUser', () => {
     it('should update user details', async () => {
       const db = getDatabaseClient(testConfig);
+      const { tenant, adminUser } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-update',
+        adminEmail: 'admin@test.com',
+      });
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-update',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'tenant_admin',
-          isActive: true,
-        })
-        .returning();
-
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'target@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'learner',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'target@test.com',
+        displayName: 'Target User',
+        role: 'learner',
+      });
 
       const result = await userService.updateUser(
-        tenant!.tenantId,
-        targetUser!.userId,
+        tenant.tenantId,
+        targetUser.userId,
         {
           displayName: 'Updated Name',
           email: 'updated@test.com',
         },
-        adminUser!.userId,
+        adminUser.userId,
         testConfig,
       );
 
@@ -194,48 +144,23 @@ describe('user-service', () => {
 
     it('should deactivate user', async () => {
       const db = getDatabaseClient(testConfig);
+      const { tenant, adminUser } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-deactivate',
+        adminEmail: 'admin@test.com',
+      });
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-deactivate',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'tenant_admin',
-          isActive: true,
-        })
-        .returning();
-
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'target@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'learner',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'target@test.com',
+        displayName: 'Target User',
+        role: 'learner',
+      });
 
       const result = await userService.updateUser(
-        tenant!.tenantId,
-        targetUser!.userId,
+        tenant.tenantId,
+        targetUser.userId,
         { isActive: false },
-        adminUser!.userId,
+        adminUser.userId,
         testConfig,
       );
 
@@ -246,54 +171,29 @@ describe('user-service', () => {
   describe('deleteUser', () => {
     it('should delete user', async () => {
       const db = getDatabaseClient(testConfig);
+      const { tenant, adminUser } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-delete',
+        adminEmail: 'admin@test.com',
+      });
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-delete',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'tenant_admin',
-          isActive: true,
-        })
-        .returning();
-
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'target@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'learner',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'target@test.com',
+        displayName: 'Target User',
+        role: 'learner',
+      });
 
       await userService.deleteUser(
-        tenant!.tenantId,
-        targetUser!.userId,
-        adminUser!.userId,
+        tenant.tenantId,
+        targetUser.userId,
+        adminUser.userId,
         testConfig,
       );
 
       const deleted = await db
         .select()
         .from(users)
-        .where(eq(users.userId, targetUser!.userId))
+        .where(eq(users.userId, targetUser.userId))
         .limit(1);
 
       expect(deleted).toHaveLength(0);
@@ -301,77 +201,27 @@ describe('user-service', () => {
 
     it('should throw error when trying to delete own account', async () => {
       const db = getDatabaseClient(testConfig);
-
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-self-delete',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'tenant_admin',
-          isActive: true,
-        })
-        .returning();
+      const { tenant, adminUser } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-self-delete',
+        adminEmail: 'admin@test.com',
+      });
 
       await expect(
-        userService.deleteUser(tenant!.tenantId, adminUser!.userId, adminUser!.userId, testConfig),
+        userService.deleteUser(tenant.tenantId, adminUser.userId, adminUser.userId, testConfig),
       ).rejects.toThrow('Cannot delete the last tenant admin');
     });
 
     it('should throw SelfDeleteError when deleting yourself as non-last admin', async () => {
       const db = getDatabaseClient(testConfig);
+      const { tenant, adminUser } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-self-delete-nonadmin',
+        adminEmail: 'admin@test.com',
+      });
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-self-delete-nonadmin',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'tenant_admin',
-          isActive: true,
-        })
-        .returning();
-
-      const [_otherAdmin] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'other@test.com',
-          displayName: 'Other Admin',
-          passwordHash: 'hash',
-          role: 'tenant_admin',
-          isActive: true,
-        })
-        .returning();
+      await createAdminUser(db, tenant.tenantId, 'other@test.com', 'Other Admin');
 
       await expect(
-        userService.deleteUser(tenant!.tenantId, adminUser!.userId, adminUser!.userId, testConfig),
+        userService.deleteUser(tenant.tenantId, adminUser.userId, adminUser.userId, testConfig),
       ).rejects.toThrow('Cannot delete your own account');
     });
   });
@@ -379,55 +229,30 @@ describe('user-service', () => {
   describe('getUserById', () => {
     it('should return user with role assignments', async () => {
       const db = getDatabaseClient(testConfig);
+      const { tenant } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-get',
+      });
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-get',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'target@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'learner',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'target@test.com',
+        displayName: 'Target User',
+        role: 'learner',
+      });
 
       const [_role] = await db
         .insert(roles)
         .values({
-          tenantId: tenant!.tenantId,
+          tenantId: tenant.tenantId,
           name: 'manager',
           description: 'Manager role',
           isSystem: true,
         })
         .returning();
 
-      await db.insert(users).values({
-        tenantId: tenant!.tenantId,
-        email: 'admin@test.com',
-        displayName: 'Admin User',
-        passwordHash: 'hash',
-        role: 'tenant_admin',
-        isActive: true,
-      });
+      await createAdminUser(db, tenant.tenantId, 'admin@test.com', 'Admin User');
 
-      const result = await userService.getUserById(
-        tenant!.tenantId,
-        targetUser!.userId,
-        testConfig,
-      );
+      const result = await userService.getUserById(tenant.tenantId, targetUser.userId, testConfig);
 
       expect(result).not.toBeNull();
       expect(result!.email).toBe('target@test.com');
@@ -436,21 +261,12 @@ describe('user-service', () => {
 
     it('should return null for non-existent user', async () => {
       const db = getDatabaseClient(testConfig);
-
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-notfound',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const { tenant } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-notfound',
+      });
 
       const result = await userService.getUserById(
-        tenant!.tenantId,
+        tenant.tenantId,
         '00000000-0000-0000-0000-000000000999',
         testConfig,
       );
@@ -462,32 +278,21 @@ describe('user-service', () => {
   describe('listUsers', () => {
     it('should return paginated list of users', async () => {
       const db = getDatabaseClient(testConfig);
-
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-list',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const { tenant } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-list',
+      });
 
       for (let i = 0; i < 25; i++) {
-        await db.insert(users).values({
-          tenantId: tenant!.tenantId,
+        await createTestUser(db, {
+          tenantId: tenant.tenantId,
           email: `user${i}@test.com`,
           displayName: `User ${i}`,
-          passwordHash: 'hash',
           role: 'learner',
-          isActive: true,
         });
       }
 
       const result = await userService.listUsers(
-        tenant!.tenantId,
+        tenant.tenantId,
         { page: 1, limit: 10 },
         testConfig,
       );
@@ -500,38 +305,25 @@ describe('user-service', () => {
 
     it('should filter users by search term', async () => {
       const db = getDatabaseClient(testConfig);
+      const { tenant } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-search',
+      });
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-search',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      await db.insert(users).values({
-        tenantId: tenant!.tenantId,
+      await createTestUser(db, {
+        tenantId: tenant.tenantId,
         email: 'john.doe@test.com',
         displayName: 'John Doe',
-        passwordHash: 'hash',
         role: 'learner',
-        isActive: true,
       });
 
-      await db.insert(users).values({
-        tenantId: tenant!.tenantId,
+      await createTestUser(db, {
+        tenantId: tenant.tenantId,
         email: 'jane.smith@test.com',
         displayName: 'Jane Smith',
-        passwordHash: 'hash',
         role: 'manager',
-        isActive: true,
       });
 
-      const result = await userService.listUsers(tenant!.tenantId, { search: 'john' }, testConfig);
+      const result = await userService.listUsers(tenant.tenantId, { search: 'john' }, testConfig);
 
       expect(result.users).toHaveLength(1);
       expect(result.users[0]!.displayName).toBe('John Doe');
@@ -539,38 +331,25 @@ describe('user-service', () => {
 
     it('should filter users by role', async () => {
       const db = getDatabaseClient(testConfig);
+      const { tenant } = await createTestTenantWithAdmin(db, {
+        tenantSlug: 'test-tenant-role-filter',
+      });
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-role-filter',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
-
-      await db.insert(users).values({
-        tenantId: tenant!.tenantId,
+      await createTestUser(db, {
+        tenantId: tenant.tenantId,
         email: 'learner@test.com',
         displayName: 'Learner User',
-        passwordHash: 'hash',
         role: 'learner',
-        isActive: true,
       });
 
-      await db.insert(users).values({
-        tenantId: tenant!.tenantId,
+      await createTestUser(db, {
+        tenantId: tenant.tenantId,
         email: 'manager@test.com',
         displayName: 'Manager User',
-        passwordHash: 'hash',
         role: 'manager',
-        isActive: true,
       });
 
-      const result = await userService.listUsers(tenant!.tenantId, { role: 'manager' }, testConfig);
+      const result = await userService.listUsers(tenant.tenantId, { role: 'manager' }, testConfig);
 
       expect(result.users).toHaveLength(1);
       expect(result.users[0]!.role).toBe('manager');
