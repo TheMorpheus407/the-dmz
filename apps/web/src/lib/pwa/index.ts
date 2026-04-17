@@ -14,6 +14,7 @@ export {
   getCurrentSubscription,
   isSubscribed,
   showLocalNotification,
+  getStoredSubscriptions,
 } from './push';
 
 export interface PWAState {
