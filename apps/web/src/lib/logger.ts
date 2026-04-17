@@ -18,6 +18,34 @@ const LOG_LEVEL_PRIORITY: Record<LogLevel, number> = {
 
 const MINIMUM_PROD_LEVEL: LogLevel = 'warn';
 
+const SENSITIVE_FIELDS = ['password', 'token', 'authorization', 'apiKey', 'apikey', 'secret'];
+
+function redactSensitive(obj: unknown): unknown {
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
+
+  if (typeof obj !== 'object') {
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item) => redactSensitive(item));
+  }
+
+  const redacted: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    if (SENSITIVE_FIELDS.includes(key.toLowerCase())) {
+      redacted[key] = '[REDACTED]';
+    } else if (typeof value === 'object' && value !== null) {
+      redacted[key] = redactSensitive(value);
+    } else {
+      redacted[key] = value;
+    }
+  }
+  return redacted;
+}
+
 function shouldLog(level: LogLevel, currentLevel: LogLevel): boolean {
   if (dev) {
     return LOG_LEVEL_PRIORITY[level] >= LOG_LEVEL_PRIORITY[currentLevel];
@@ -32,7 +60,8 @@ function formatMessage(
 ): string {
   const prefix = `[${level.toUpperCase()}]`;
   if (context) {
-    return `${prefix} ${message} ${JSON.stringify(context)}`;
+    const redactedContext = redactSensitive(context);
+    return `${prefix} ${message} ${JSON.stringify(redactedContext)}`;
   }
   return `${prefix} ${message}`;
 }
