@@ -8,7 +8,7 @@ import {
   getDatabaseClient,
 } from '../../../shared/database/connection.js';
 import { ensureTenantColumns } from '../../../__tests__/helpers/db.js';
-import { tenants, users } from '../../../shared/database/schema/index.js';
+import { createTestTenant, createTestUser } from '../../../__tests__/helpers/fixtures.js';
 import { playerProfiles } from '../../../db/schema/analytics/index.js';
 import * as trainerService from '../trainer.service.js';
 
@@ -73,39 +73,25 @@ describe('trainer-service', () => {
     it('should calculate competency distribution from player profiles', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      const userId = '00000000-0000-0000-0000-000000000001';
-      await db
-        .insert(users)
-        .values({
-          userId,
-          tenantId,
-          email: 'test@example.com',
-          displayName: 'Test User',
-          passwordHash: 'hash',
-          role: 'learner',
-          isActive: true,
-        })
-        .execute();
+      const user = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'test@example.com',
+        displayName: 'Test User',
+        role: 'learner',
+      });
 
       await db
         .insert(playerProfiles)
         .values({
-          userId,
-          tenantId,
+          userId: user.userId,
+          tenantId: tenant.tenantId,
           competencyScores: {
             phishing_detection: {
               score: 85,
@@ -123,7 +109,7 @@ describe('trainer-service', () => {
         .execute();
 
       const result = await trainerService.getCompetencyDistribution(
-        tenantId,
+        tenant.tenantId,
         undefined,
         testConfig,
       );
@@ -142,39 +128,25 @@ describe('trainer-service', () => {
     it('should filter by date range', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      const userId = '00000000-0000-0000-0000-000000000001';
-      await db
-        .insert(users)
-        .values({
-          userId,
-          tenantId,
-          email: 'test@example.com',
-          displayName: 'Test User',
-          passwordHash: 'hash',
-          role: 'learner',
-          isActive: true,
-        })
-        .execute();
+      const user = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'test@example.com',
+        displayName: 'Test User',
+        role: 'learner',
+      });
 
       await db
         .insert(playerProfiles)
         .values({
-          userId,
-          tenantId,
+          userId: user.userId,
+          tenantId: tenant.tenantId,
           competencyScores: {
             phishing_detection: {
               score: 85,
@@ -187,7 +159,7 @@ describe('trainer-service', () => {
         .execute();
 
       const result = await trainerService.getCompetencyDistribution(
-        tenantId,
+        tenant.tenantId,
         { startDate: new Date('2024-06-01'), endDate: new Date('2024-12-31') },
         testConfig,
       );
@@ -211,53 +183,33 @@ describe('trainer-service', () => {
     it('should return learners below threshold for a domain', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
+      const user1 = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'user1@example.com',
+        displayName: 'User One',
+        role: 'learner',
+      });
 
-      const userId1 = '00000000-0000-0000-0000-000000000001';
-      const userId2 = '00000000-0000-0000-0000-000000000002';
-
-      await db
-        .insert(users)
-        .values([
-          {
-            userId: userId1,
-            tenantId,
-            email: 'user1@example.com',
-            displayName: 'User One',
-            passwordHash: 'hash',
-            role: 'learner',
-            isActive: true,
-          },
-          {
-            userId: userId2,
-            tenantId,
-            email: 'user2@example.com',
-            displayName: 'User Two',
-            passwordHash: 'hash',
-            role: 'learner',
-            isActive: true,
-          },
-        ])
-        .execute();
+      const user2 = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'user2@example.com',
+        displayName: 'User Two',
+        role: 'learner',
+      });
 
       await db
         .insert(playerProfiles)
         .values([
           {
-            userId: userId1,
-            tenantId,
+            userId: user1.userId,
+            tenantId: tenant.tenantId,
             competencyScores: {
               phishing_detection: {
                 score: 30,
@@ -267,8 +219,8 @@ describe('trainer-service', () => {
             },
           },
           {
-            userId: userId2,
-            tenantId,
+            userId: user2.userId,
+            tenantId: tenant.tenantId,
             competencyScores: {
               phishing_detection: {
                 score: 80,
@@ -281,7 +233,7 @@ describe('trainer-service', () => {
         .execute();
 
       const result = await trainerService.getLearnersByDomain(
-        tenantId,
+        tenant.tenantId,
         'phishing_detection',
         50,
         testConfig,
@@ -295,39 +247,25 @@ describe('trainer-service', () => {
     it('should return empty array when all learners are above threshold', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      const userId = '00000000-0000-0000-0000-000000000001';
-      await db
-        .insert(users)
-        .values({
-          userId,
-          tenantId,
-          email: 'user@example.com',
-          displayName: 'User',
-          passwordHash: 'hash',
-          role: 'learner',
-          isActive: true,
-        })
-        .execute();
+      const user = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'user@example.com',
+        displayName: 'User',
+        role: 'learner',
+      });
 
       await db
         .insert(playerProfiles)
         .values({
-          userId,
-          tenantId,
+          userId: user.userId,
+          tenantId: tenant.tenantId,
           competencyScores: {
             phishing_detection: {
               score: 85,
@@ -339,7 +277,7 @@ describe('trainer-service', () => {
         .execute();
 
       const result = await trainerService.getLearnersByDomain(
-        tenantId,
+        tenant.tenantId,
         'phishing_detection',
         50,
         testConfig,
@@ -363,39 +301,25 @@ describe('trainer-service', () => {
     it('should return complete dashboard data', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      const userId = '00000000-0000-0000-0000-000000000001';
-      await db
-        .insert(users)
-        .values({
-          userId,
-          tenantId,
-          email: 'test@example.com',
-          displayName: 'Test User',
-          passwordHash: 'hash',
-          role: 'learner',
-          isActive: true,
-        })
-        .execute();
+      const user = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'test@example.com',
+        displayName: 'Test User',
+        role: 'learner',
+      });
 
       await db
         .insert(playerProfiles)
         .values({
-          userId,
-          tenantId,
+          userId: user.userId,
+          tenantId: tenant.tenantId,
           competencyScores: {
             phishing_detection: {
               score: 75,
@@ -406,7 +330,11 @@ describe('trainer-service', () => {
         })
         .execute();
 
-      const result = await trainerService.getTrainerDashboardData(tenantId, undefined, testConfig);
+      const result = await trainerService.getTrainerDashboardData(
+        tenant.tenantId,
+        undefined,
+        testConfig,
+      );
 
       expect(result.totalLearners).toBe(1);
       expect(result.competencies).toHaveLength(7);

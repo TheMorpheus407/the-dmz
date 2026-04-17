@@ -15,6 +15,7 @@ import {
   userRoles,
   users,
 } from '../../../shared/database/schema/index.js';
+import { createTestTenant } from '../../../__tests__/helpers/fixtures.js';
 import * as tenantProvisioningService from '../tenant-provisioning.service.js';
 
 const createTestConfig = (): AppConfig => {
@@ -287,24 +288,18 @@ describe('tenant-provisioning-service', () => {
     it('should create all 5 default roles', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-roles',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-roles',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
 
-      const createdRoles = await db
-        .select()
-        .from(roles)
-        .where(eq(roles.tenantId, tenant!.tenantId));
+      const createdRoles = await db.select().from(roles).where(eq(roles.tenantId, tenant.tenantId));
 
       expect(createdRoles).toHaveLength(5);
 
@@ -319,25 +314,19 @@ describe('tenant-provisioning-service', () => {
     it('should be idempotent - calling twice does not error', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-roles-idempotent',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-roles-idempotent',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
 
-      const createdRoles = await db
-        .select()
-        .from(roles)
-        .where(eq(roles.tenantId, tenant!.tenantId));
+      const createdRoles = await db.select().from(roles).where(eq(roles.tenantId, tenant.tenantId));
 
       expect(createdRoles).toHaveLength(5);
     });
@@ -345,24 +334,21 @@ describe('tenant-provisioning-service', () => {
     it('should update existing roles on re-call', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-roles-update',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-roles-update',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
 
       const [updatedRole] = await db
         .select()
         .from(roles)
-        .where(and(eq(roles.tenantId, tenant!.tenantId), eq(roles.name, 'tenant_admin')))
+        .where(and(eq(roles.tenantId, tenant.tenantId), eq(roles.name, 'tenant_admin')))
         .limit(1);
 
       expect(updatedRole.description).toBe('Full tenant administrative access');
@@ -374,22 +360,19 @@ describe('tenant-provisioning-service', () => {
     it('should create initial admin user with tenant_admin role', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-admin',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-admin',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
 
       const result = await tenantProvisioningService.createInitialAdmin(
-        tenant!.tenantId,
+        tenant.tenantId,
         'admin@test.com',
         'Test Admin',
         testConfig,
@@ -415,22 +398,19 @@ describe('tenant-provisioning-service', () => {
     it('should create user-role association', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-admin-role-assoc',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-admin-role-assoc',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
 
       const result = await tenantProvisioningService.createInitialAdmin(
-        tenant!.tenantId,
+        tenant.tenantId,
         'admin@test.com',
         'Test Admin',
         testConfig,
@@ -439,7 +419,7 @@ describe('tenant-provisioning-service', () => {
       const [role] = await db
         .select()
         .from(roles)
-        .where(and(eq(roles.tenantId, tenant!.tenantId), eq(roles.name, 'tenant_admin')))
+        .where(and(eq(roles.tenantId, tenant.tenantId), eq(roles.name, 'tenant_admin')))
         .limit(1);
 
       const userRole = await db
@@ -454,21 +434,18 @@ describe('tenant-provisioning-service', () => {
     it('should throw error when tenant_admin role does not exist', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-no-role',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-no-role',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
       await expect(
         tenantProvisioningService.createInitialAdmin(
-          tenant!.tenantId,
+          tenant.tenantId,
           'admin@test.com',
           'Test Admin',
           testConfig,
@@ -481,22 +458,19 @@ describe('tenant-provisioning-service', () => {
     it('should assign permissions to all default roles', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-perms',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-perms',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
-      await tenantProvisioningService.assignPermissionsToRoles(tenant!.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
+      await tenantProvisioningService.assignPermissionsToRoles(tenant.tenantId, testConfig);
 
-      const roleRows = await db.select().from(roles).where(eq(roles.tenantId, tenant!.tenantId));
+      const roleRows = await db.select().from(roles).where(eq(roles.tenantId, tenant.tenantId));
 
       for (const role of roleRows) {
         const rolePerms = await db
@@ -511,20 +485,17 @@ describe('tenant-provisioning-service', () => {
     it('should create base permissions if they do not exist', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-base-perms',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-base-perms',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
-      await tenantProvisioningService.assignPermissionsToRoles(tenant!.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
+      await tenantProvisioningService.assignPermissionsToRoles(tenant.tenantId, testConfig);
 
       const perms = await db.select().from(permissions);
       expect(perms.length).toBeGreaterThan(0);
@@ -533,23 +504,20 @@ describe('tenant-provisioning-service', () => {
     it('should be idempotent - calling twice does not error', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-perms-idempotent',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-perms-idempotent',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
-      await tenantProvisioningService.assignPermissionsToRoles(tenant!.tenantId, testConfig);
-      await tenantProvisioningService.assignPermissionsToRoles(tenant!.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
+      await tenantProvisioningService.assignPermissionsToRoles(tenant.tenantId, testConfig);
+      await tenantProvisioningService.assignPermissionsToRoles(tenant.tenantId, testConfig);
 
-      const roleRows = await db.select().from(roles).where(eq(roles.tenantId, tenant!.tenantId));
+      const roleRows = await db.select().from(roles).where(eq(roles.tenantId, tenant.tenantId));
 
       for (const role of roleRows) {
         const rolePerms = await db
@@ -564,20 +532,17 @@ describe('tenant-provisioning-service', () => {
     it('should assign super_admin the most permissions', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-super-admin-perms',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-super-admin-perms',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.createDefaultRoles(tenant!.tenantId, testConfig);
-      await tenantProvisioningService.assignPermissionsToRoles(tenant!.tenantId, testConfig);
+      await tenantProvisioningService.createDefaultRoles(tenant.tenantId, testConfig);
+      await tenantProvisioningService.assignPermissionsToRoles(tenant.tenantId, testConfig);
 
       const [superAdminRole] = await db
         .select()
@@ -621,20 +586,17 @@ describe('tenant-provisioning-service', () => {
     it('should complete full tenant initialization flow', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-init',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-init',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
       const result = await tenantProvisioningService.initializeTenant(
-        tenant!.tenantId,
+        tenant.tenantId,
         'admin@test.com',
         'Test Admin',
         testConfig,
@@ -646,7 +608,7 @@ describe('tenant-provisioning-service', () => {
       const updatedTenant = await db
         .select()
         .from(tenants)
-        .where(eq(tenants.tenantId, tenant!.tenantId))
+        .where(eq(tenants.tenantId, tenant.tenantId))
         .limit(1);
 
       expect(updatedTenant[0]!.provisioningStatus).toBe('ready');
@@ -659,10 +621,7 @@ describe('tenant-provisioning-service', () => {
 
       expect(createdUser[0]!.email).toBe('admin@test.com');
 
-      const createdRoles = await db
-        .select()
-        .from(roles)
-        .where(eq(roles.tenantId, tenant!.tenantId));
+      const createdRoles = await db.select().from(roles).where(eq(roles.tenantId, tenant.tenantId));
 
       expect(createdRoles).toHaveLength(5);
     });
@@ -681,21 +640,18 @@ describe('tenant-provisioning-service', () => {
     it('should throw error when tenant is already provisioned', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-already-provisioned',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-already-provisioned',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
       await expect(
         tenantProvisioningService.initializeTenant(
-          tenant!.tenantId,
+          tenant.tenantId,
           'admin@test.com',
           'Test Admin',
           testConfig,
@@ -706,20 +662,17 @@ describe('tenant-provisioning-service', () => {
     it('should set provisioning status to ready after successful initialization', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-init-success',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-init-success',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
       const result = await tenantProvisioningService.initializeTenant(
-        tenant!.tenantId,
+        tenant.tenantId,
         'admin@test.com',
         'Test Admin',
         testConfig,
@@ -731,7 +684,7 @@ describe('tenant-provisioning-service', () => {
       const updatedTenant = await db
         .select()
         .from(tenants)
-        .where(eq(tenants.tenantId, tenant!.tenantId))
+        .where(eq(tenants.tenantId, tenant.tenantId))
         .limit(1);
 
       expect(updatedTenant[0]!.provisioningStatus).toBe('ready');
@@ -742,24 +695,21 @@ describe('tenant-provisioning-service', () => {
     it('should return correct provisioning status', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-status',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'provisioning',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-status',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'provisioning',
+        isActive: true,
+      });
 
       const result = await tenantProvisioningService.getTenantProvisioningStatus(
-        tenant!.tenantId,
+        tenant.tenantId,
         testConfig,
       );
 
-      expect(result.tenantId).toBe(tenant!.tenantId);
+      expect(result.tenantId).toBe(tenant.tenantId);
       expect(result.name).toBe('Test Tenant');
       expect(result.slug).toBe('test-tenant-status');
       expect(result.provisioningStatus).toBe('provisioning');
@@ -777,20 +727,17 @@ describe('tenant-provisioning-service', () => {
     it('should return ready status for provisioned tenant', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-status-ready',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-status-ready',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
       const result = await tenantProvisioningService.getTenantProvisioningStatus(
-        tenant!.tenantId,
+        tenant.tenantId,
         testConfig,
       );
 
@@ -803,19 +750,16 @@ describe('tenant-provisioning-service', () => {
     it('should return true for ready tenant', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-ready',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-ready',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
-      const result = await tenantProvisioningService.isTenantReady(tenant!.tenantId, testConfig);
+      const result = await tenantProvisioningService.isTenantReady(tenant.tenantId, testConfig);
 
       expect(result).toBe(true);
     });
@@ -823,19 +767,16 @@ describe('tenant-provisioning-service', () => {
     it('should return false for pending tenant', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-pending',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-pending',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      const result = await tenantProvisioningService.isTenantReady(tenant!.tenantId, testConfig);
+      const result = await tenantProvisioningService.isTenantReady(tenant.tenantId, testConfig);
 
       expect(result).toBe(false);
     });
@@ -843,19 +784,16 @@ describe('tenant-provisioning-service', () => {
     it('should return false for provisioning tenant', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-provisioning',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'provisioning',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-provisioning',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'provisioning',
+        isActive: true,
+      });
 
-      const result = await tenantProvisioningService.isTenantReady(tenant!.tenantId, testConfig);
+      const result = await tenantProvisioningService.isTenantReady(tenant.tenantId, testConfig);
 
       expect(result).toBe(false);
     });
@@ -863,19 +801,16 @@ describe('tenant-provisioning-service', () => {
     it('should return false for failed tenant', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-failed',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'failed',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-failed',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'failed',
+        isActive: true,
+      });
 
-      const result = await tenantProvisioningService.isTenantReady(tenant!.tenantId, testConfig);
+      const result = await tenantProvisioningService.isTenantReady(tenant.tenantId, testConfig);
 
       expect(result).toBe(false);
     });
@@ -894,24 +829,18 @@ describe('tenant-provisioning-service', () => {
     it('should create roles and assign permissions', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-seed',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-seed',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.seedTenantAuthModel(testConfig, tenant!.tenantId);
+      await tenantProvisioningService.seedTenantAuthModel(testConfig, tenant.tenantId);
 
-      const createdRoles = await db
-        .select()
-        .from(roles)
-        .where(eq(roles.tenantId, tenant!.tenantId));
+      const createdRoles = await db.select().from(roles).where(eq(roles.tenantId, tenant.tenantId));
 
       expect(createdRoles).toHaveLength(5);
 
@@ -928,25 +857,19 @@ describe('tenant-provisioning-service', () => {
     it('should be idempotent - calling twice does not error', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-seed-idempotent',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'pending',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-seed-idempotent',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'pending',
+        isActive: true,
+      });
 
-      await tenantProvisioningService.seedTenantAuthModel(testConfig, tenant!.tenantId);
-      await tenantProvisioningService.seedTenantAuthModel(testConfig, tenant!.tenantId);
+      await tenantProvisioningService.seedTenantAuthModel(testConfig, tenant.tenantId);
+      await tenantProvisioningService.seedTenantAuthModel(testConfig, tenant.tenantId);
 
-      const createdRoles = await db
-        .select()
-        .from(roles)
-        .where(eq(roles.tenantId, tenant!.tenantId));
+      const createdRoles = await db.select().from(roles).where(eq(roles.tenantId, tenant.tenantId));
 
       expect(createdRoles).toHaveLength(5);
     });

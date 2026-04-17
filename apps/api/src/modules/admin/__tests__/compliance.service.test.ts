@@ -9,7 +9,7 @@ import {
   getDatabaseClient,
 } from '../../../shared/database/connection.js';
 import { ensureTenantColumns } from '../../../__tests__/helpers/db.js';
-import { tenants, users } from '../../../shared/database/schema/index.js';
+import { createTestTenant, createTestUser } from '../../../__tests__/helpers/fixtures.js';
 import { playerProfiles } from '../../../db/schema/analytics/index.js';
 import * as complianceService from '../compliance.service.js';
 import { frameworkRequirements } from '../../../db/schema/compliance/index.js';
@@ -63,26 +63,19 @@ describe('compliance-service', () => {
     it('should initialize framework requirements for all 8 frameworks', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      await complianceService.initializeFrameworkRequirements(tenantId, testConfig);
+      await complianceService.initializeFrameworkRequirements(tenant.tenantId, testConfig);
 
       const requirements = await db
         .select()
         .from(frameworkRequirements)
-        .where(eq(frameworkRequirements.tenantId, tenantId))
+        .where(eq(frameworkRequirements.tenantId, tenant.tenantId))
         .execute();
 
       expect(requirements.length).toBeGreaterThan(0);
@@ -91,27 +84,20 @@ describe('compliance-service', () => {
     it('should not duplicate requirements on multiple calls', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      await complianceService.initializeFrameworkRequirements(tenantId, testConfig);
-      await complianceService.initializeFrameworkRequirements(tenantId, testConfig);
+      await complianceService.initializeFrameworkRequirements(tenant.tenantId, testConfig);
+      await complianceService.initializeFrameworkRequirements(tenant.tenantId, testConfig);
 
       const requirements = await db
         .select()
         .from(frameworkRequirements)
-        .where(eq(frameworkRequirements.tenantId, tenantId))
+        .where(eq(frameworkRequirements.tenantId, tenant.tenantId))
         .execute();
 
       const uniqueRequirements = new Set(requirements.map((r) => r.requirementId));
@@ -123,30 +109,23 @@ describe('compliance-service', () => {
     it('should create a compliance snapshot for a framework', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      await complianceService.initializeFrameworkRequirements(tenantId, testConfig);
+      await complianceService.initializeFrameworkRequirements(tenant.tenantId, testConfig);
 
       const result = await complianceService.calculateComplianceSnapshot(
-        tenantId,
+        tenant.tenantId,
         'nist_800_50',
         'test-user',
         testConfig,
       );
 
-      expect(result.tenantId).toBe(tenantId);
+      expect(result.tenantId).toBe(tenant.tenantId);
       expect(result.frameworkId).toBe('nist_800_50');
       expect(result.status).toBe('not_started');
       expect(result.completionPercentage).toBe(0);
@@ -155,24 +134,17 @@ describe('compliance-service', () => {
     it('should update existing snapshot on recalculation', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      await complianceService.initializeFrameworkRequirements(tenantId, testConfig);
+      await complianceService.initializeFrameworkRequirements(tenant.tenantId, testConfig);
 
       const firstResult = await complianceService.calculateComplianceSnapshot(
-        tenantId,
+        tenant.tenantId,
         'nist_800_50',
         'test-user',
         testConfig,
@@ -180,7 +152,7 @@ describe('compliance-service', () => {
       const firstId = firstResult.id;
 
       const secondResult = await complianceService.calculateComplianceSnapshot(
-        tenantId,
+        tenant.tenantId,
         'nist_800_50',
         'test-user',
         testConfig,
@@ -192,39 +164,25 @@ describe('compliance-service', () => {
     it('should calculate completion based on player profiles', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      const userId = '00000000-0000-0000-0000-000000000001';
-      await db
-        .insert(users)
-        .values({
-          userId,
-          tenantId,
-          email: 'test@example.com',
-          displayName: 'Test User',
-          passwordHash: 'hash',
-          role: 'learner',
-          isActive: true,
-        })
-        .execute();
+      const user = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'test@example.com',
+        displayName: 'Test User',
+        role: 'learner',
+      });
 
       await db
         .insert(playerProfiles)
         .values({
-          userId,
-          tenantId,
+          userId: user.userId,
+          tenantId: tenant.tenantId,
           competencyScores: {
             phishing_detection: {
               score: 85,
@@ -235,10 +193,10 @@ describe('compliance-service', () => {
         })
         .execute();
 
-      await complianceService.initializeFrameworkRequirements(tenantId, testConfig);
+      await complianceService.initializeFrameworkRequirements(tenant.tenantId, testConfig);
 
       const result = await complianceService.calculateComplianceSnapshot(
-        tenantId,
+        tenant.tenantId,
         'nist_800_50',
         'test-user',
         testConfig,
@@ -252,22 +210,15 @@ describe('compliance-service', () => {
     it('should calculate snapshots for all frameworks', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
-
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
       const results = await complianceService.calculateAllComplianceSnapshots(
-        tenantId,
+        tenant.tenantId,
         'test-user',
         testConfig,
       );
@@ -290,23 +241,20 @@ describe('compliance-service', () => {
     it('should return summary with calculated data', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
+      await complianceService.calculateAllComplianceSnapshots(
+        tenant.tenantId,
+        'test-user',
+        testConfig,
+      );
 
-      await complianceService.calculateAllComplianceSnapshots(tenantId, 'test-user', testConfig);
-
-      const result = await complianceService.getComplianceSummary(tenantId, testConfig);
+      const result = await complianceService.getComplianceSummary(tenant.tenantId, testConfig);
 
       expect(result.summaries).toHaveLength(8);
       expect(result.totalFrameworks).toBe(8);
@@ -329,29 +277,22 @@ describe('compliance-service', () => {
     it('should return detail with requirements', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
-
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
       await complianceService.calculateComplianceSnapshot(
-        tenantId,
+        tenant.tenantId,
         'nist_800_50',
         'test-user',
         testConfig,
       );
 
       const result = await complianceService.getComplianceDetail(
-        tenantId,
+        tenant.tenantId,
         'nist_800_50',
         testConfig,
       );
@@ -366,24 +307,17 @@ describe('compliance-service', () => {
     it('should return requirements for a framework', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const tenantId = '00000000-0000-0000-0000-000000000001';
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        dataRegion: 'eu',
+        planId: 'free',
+      });
 
-      await db
-        .insert(tenants)
-        .values({
-          tenantId,
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          status: 'active',
-          dataRegion: 'eu',
-          planId: 'free',
-        })
-        .execute();
-
-      await complianceService.initializeFrameworkRequirements(tenantId, testConfig);
+      await complianceService.initializeFrameworkRequirements(tenant.tenantId, testConfig);
 
       const result = await complianceService.getFrameworkRequirements(
-        tenantId,
+        tenant.tenantId,
         'nist_800_50',
         testConfig,
       );

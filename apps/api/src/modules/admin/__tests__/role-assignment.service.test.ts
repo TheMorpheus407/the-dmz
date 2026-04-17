@@ -13,9 +13,8 @@ import {
   roles,
   rolePermissions,
   userRoles,
-  users,
-  tenants,
 } from '../../../shared/database/schema/index.js';
+import { createTestTenant, createTestUser } from '../../../__tests__/helpers/fixtures.js';
 import * as roleAssignmentService from '../role-assignment.service.js';
 
 const createTestConfig = (): AppConfig => {
@@ -65,46 +64,35 @@ describe('role-assignment-service', () => {
     it('should assign a role to a user', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'admin',
-          isActive: true,
-        })
-        .returning();
+      const adminUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'admin@test.com',
+        displayName: 'Admin User',
+        role: 'admin',
+        isActive: true,
+      });
 
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'user@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'user',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'user@test.com',
+        displayName: 'Target User',
+        role: 'user',
+        isActive: true,
+      });
 
       const [role] = await db
         .insert(roles)
         .values({
-          tenantId: tenant!.tenantId,
+          tenantId: tenant.tenantId,
           name: 'manager',
           description: 'Manager role',
           isSystem: true,
@@ -112,64 +100,53 @@ describe('role-assignment-service', () => {
         .returning();
 
       const result = await roleAssignmentService.assignRole(
-        tenant!.tenantId,
+        tenant.tenantId,
         {
-          userId: targetUser!.userId,
+          userId: targetUser.userId,
           roleId: role!.id,
-          assignedBy: adminUser!.userId,
+          assignedBy: adminUser.userId,
         },
         testConfig,
       );
 
-      expect(result.userId).toBe(targetUser!.userId);
+      expect(result.userId).toBe(targetUser.userId);
       expect(result.roleId).toBe(role!.id);
-      expect(result.tenantId).toBe(tenant!.tenantId);
-      expect(result.assignedBy).toBe(adminUser!.userId);
+      expect(result.tenantId).toBe(tenant.tenantId);
+      expect(result.assignedBy).toBe(adminUser.userId);
     });
 
     it('should assign a role with expiration date', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-exp',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-exp',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin2@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'admin',
-          isActive: true,
-        })
-        .returning();
+      const adminUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'admin2@test.com',
+        displayName: 'Admin User',
+        role: 'admin',
+        isActive: true,
+      });
 
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'user2@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'user',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'user2@test.com',
+        displayName: 'Target User',
+        role: 'user',
+        isActive: true,
+      });
 
       const [role] = await db
         .insert(roles)
         .values({
-          tenantId: tenant!.tenantId,
+          tenantId: tenant.tenantId,
           name: 'trainer',
           description: 'Trainer role',
           isSystem: true,
@@ -179,12 +156,12 @@ describe('role-assignment-service', () => {
       const expiresAt = new Date('2025-12-31T23:59:59Z');
 
       const result = await roleAssignmentService.assignRole(
-        tenant!.tenantId,
+        tenant.tenantId,
         {
-          userId: targetUser!.userId,
+          userId: targetUser.userId,
           roleId: role!.id,
           expiresAt,
-          assignedBy: adminUser!.userId,
+          assignedBy: adminUser.userId,
         },
         testConfig,
       );
@@ -195,46 +172,35 @@ describe('role-assignment-service', () => {
     it('should assign a role with scope', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-scope',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-scope',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin3@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'admin',
-          isActive: true,
-        })
-        .returning();
+      const adminUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'admin3@test.com',
+        displayName: 'Admin User',
+        role: 'admin',
+        isActive: true,
+      });
 
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'user3@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'user',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'user3@test.com',
+        displayName: 'Target User',
+        role: 'user',
+        isActive: true,
+      });
 
       const [role] = await db
         .insert(roles)
         .values({
-          tenantId: tenant!.tenantId,
+          tenantId: tenant.tenantId,
           name: 'manager',
           description: 'Manager role',
           isSystem: true,
@@ -242,12 +208,12 @@ describe('role-assignment-service', () => {
         .returning();
 
       const result = await roleAssignmentService.assignRole(
-        tenant!.tenantId,
+        tenant.tenantId,
         {
-          userId: targetUser!.userId,
+          userId: targetUser.userId,
           roleId: role!.id,
           scope: 'engineering',
-          assignedBy: adminUser!.userId,
+          assignedBy: adminUser.userId,
         },
         testConfig,
       );
@@ -258,46 +224,35 @@ describe('role-assignment-service', () => {
     it('should throw error when user already has role', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-dup',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-dup',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin4@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'admin',
-          isActive: true,
-        })
-        .returning();
+      const adminUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'admin4@test.com',
+        displayName: 'Admin User',
+        role: 'admin',
+        isActive: true,
+      });
 
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'user4@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'user',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'user4@test.com',
+        displayName: 'Target User',
+        role: 'user',
+        isActive: true,
+      });
 
       const [role] = await db
         .insert(roles)
         .values({
-          tenantId: tenant!.tenantId,
+          tenantId: tenant.tenantId,
           name: 'manager',
           description: 'Manager role',
           isSystem: true,
@@ -305,22 +260,22 @@ describe('role-assignment-service', () => {
         .returning();
 
       await roleAssignmentService.assignRole(
-        tenant!.tenantId,
+        tenant.tenantId,
         {
-          userId: targetUser!.userId,
+          userId: targetUser.userId,
           roleId: role!.id,
-          assignedBy: adminUser!.userId,
+          assignedBy: adminUser.userId,
         },
         testConfig,
       );
 
       await expect(
         roleAssignmentService.assignRole(
-          tenant!.tenantId,
+          tenant.tenantId,
           {
-            userId: targetUser!.userId,
+            userId: targetUser.userId,
             roleId: role!.id,
-            assignedBy: adminUser!.userId,
+            assignedBy: adminUser.userId,
           },
           testConfig,
         ),
@@ -332,46 +287,35 @@ describe('role-assignment-service', () => {
     it('should revoke a role from a user', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-revoke',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-revoke',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
-      const [adminUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'admin5@test.com',
-          displayName: 'Admin User',
-          passwordHash: 'hash',
-          role: 'admin',
-          isActive: true,
-        })
-        .returning();
+      const adminUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'admin5@test.com',
+        displayName: 'Admin User',
+        role: 'admin',
+        isActive: true,
+      });
 
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'user5@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'user',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'user5@test.com',
+        displayName: 'Target User',
+        role: 'user',
+        isActive: true,
+      });
 
       const [role] = await db
         .insert(roles)
         .values({
-          tenantId: tenant!.tenantId,
+          tenantId: tenant.tenantId,
           name: 'manager',
           description: 'Manager role',
           isSystem: true,
@@ -379,18 +323,18 @@ describe('role-assignment-service', () => {
         .returning();
 
       await roleAssignmentService.assignRole(
-        tenant!.tenantId,
+        tenant.tenantId,
         {
-          userId: targetUser!.userId,
+          userId: targetUser.userId,
           roleId: role!.id,
-          assignedBy: adminUser!.userId,
+          assignedBy: adminUser.userId,
         },
         testConfig,
       );
 
       await roleAssignmentService.revokeRole(
-        tenant!.tenantId,
-        targetUser!.userId,
+        tenant.tenantId,
+        targetUser.userId,
         role!.id,
         testConfig,
       );
@@ -398,7 +342,7 @@ describe('role-assignment-service', () => {
       const assignments = await db
         .select()
         .from(userRoles)
-        .where(eq(userRoles.userId, targetUser!.userId));
+        .where(eq(userRoles.userId, targetUser.userId));
 
       expect(assignments).toHaveLength(0);
     });
@@ -408,29 +352,22 @@ describe('role-assignment-service', () => {
     it('should return effective permissions for a user', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Test Tenant',
-          slug: 'test-tenant-perms',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Test Tenant',
+        slug: 'test-tenant-perms',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
-      const [targetUser] = await db
-        .insert(users)
-        .values({
-          tenantId: tenant!.tenantId,
-          email: 'user6@test.com',
-          displayName: 'Target User',
-          passwordHash: 'hash',
-          role: 'user',
-          isActive: true,
-        })
-        .returning();
+      const targetUser = await createTestUser(db, {
+        tenantId: tenant.tenantId,
+        email: 'user6@test.com',
+        displayName: 'Target User',
+        role: 'user',
+        isActive: true,
+      });
 
       const [perm] = await db
         .insert(permissions)
@@ -443,7 +380,7 @@ describe('role-assignment-service', () => {
       const [role] = await db
         .insert(roles)
         .values({
-          tenantId: tenant!.tenantId,
+          tenantId: tenant.tenantId,
           name: 'manager',
           description: 'Manager role',
           isSystem: true,
@@ -456,18 +393,18 @@ describe('role-assignment-service', () => {
       });
 
       await db.insert(userRoles).values({
-        tenantId: tenant!.tenantId,
-        userId: targetUser!.userId,
+        tenantId: tenant.tenantId,
+        userId: targetUser.userId,
         roleId: role!.id,
       });
 
       const result = await roleAssignmentService.getUserEffectivePermissions(
-        tenant!.tenantId,
-        targetUser!.userId,
+        tenant.tenantId,
+        targetUser.userId,
         testConfig,
       );
 
-      expect(result.userId).toBe(targetUser!.userId);
+      expect(result.userId).toBe(targetUser.userId);
       expect(result.permissions).toContain('users:read');
       expect(result.roles).toHaveLength(1);
     });
@@ -477,20 +414,17 @@ describe('role-assignment-service', () => {
     it('should return true for enterprise plan', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Enterprise Tenant',
-          slug: 'enterprise-tenant',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Enterprise Tenant',
+        slug: 'enterprise-tenant',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
       const isEntitled = await roleAssignmentService.checkPlanEntitlement(
-        tenant!.tenantId,
+        tenant.tenantId,
         testConfig,
       );
 
@@ -500,20 +434,17 @@ describe('role-assignment-service', () => {
     it('should return true for government plan', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Government Tenant',
-          slug: 'government-tenant',
-          tier: 'government',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Government Tenant',
+        slug: 'government-tenant',
+        tier: 'government',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
       const isEntitled = await roleAssignmentService.checkPlanEntitlement(
-        tenant!.tenantId,
+        tenant.tenantId,
         testConfig,
       );
 
@@ -523,20 +454,17 @@ describe('role-assignment-service', () => {
     it('should return false for starter plan', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Starter Tenant',
-          slug: 'starter-tenant',
-          tier: 'starter',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Starter Tenant',
+        slug: 'starter-tenant',
+        tier: 'starter',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
       const isEntitled = await roleAssignmentService.checkPlanEntitlement(
-        tenant!.tenantId,
+        tenant.tenantId,
         testConfig,
       );
 
@@ -548,17 +476,14 @@ describe('role-assignment-service', () => {
     it('should create a custom role with permissions', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Enterprise Tenant',
-          slug: 'enterprise-tenant-custom',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Enterprise Tenant',
+        slug: 'enterprise-tenant-custom',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
       const [perm1] = await db
         .insert(permissions)
@@ -577,7 +502,7 @@ describe('role-assignment-service', () => {
         .returning();
 
       const result = await roleAssignmentService.createCustomRole(
-        tenant!.tenantId,
+        tenant.tenantId,
         'custom_manager',
         'Custom Manager Role',
         [perm1!.id, perm2!.id],
@@ -592,20 +517,17 @@ describe('role-assignment-service', () => {
     it('should throw error when role name already exists', async () => {
       const db = getDatabaseClient(testConfig);
 
-      const [tenant] = await db
-        .insert(tenants)
-        .values({
-          name: 'Enterprise Tenant',
-          slug: 'enterprise-tenant-dup',
-          tier: 'enterprise',
-          status: 'active',
-          provisioningStatus: 'ready',
-          isActive: true,
-        })
-        .returning();
+      const tenant = await createTestTenant(db, {
+        name: 'Enterprise Tenant',
+        slug: 'enterprise-tenant-dup',
+        tier: 'enterprise',
+        status: 'active',
+        provisioningStatus: 'ready',
+        isActive: true,
+      });
 
       await db.insert(roles).values({
-        tenantId: tenant!.tenantId,
+        tenantId: tenant.tenantId,
         name: 'existing_role',
         description: 'Existing role',
         isSystem: false,
@@ -613,7 +535,7 @@ describe('role-assignment-service', () => {
 
       await expect(
         roleAssignmentService.createCustomRole(
-          tenant!.tenantId,
+          tenant.tenantId,
           'existing_role',
           'Another role',
           [],
