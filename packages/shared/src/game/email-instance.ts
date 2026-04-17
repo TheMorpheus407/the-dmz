@@ -135,10 +135,12 @@ export type EmailTechnique =
   | 'insider_threat';
 
 export const EMAIL_STATUS = {
-  NEW: 'new',
+  PENDING: 'pending',
   OPENED: 'opened',
-  PENDING_VERIFICATION: 'pending_verification',
-  DECIDED: 'decided',
+  FLAGGED: 'flagged',
+  REQUEST_VERIFICATION: 'request_verification',
+  APPROVED: 'approved',
+  DENIED: 'denied',
   DEFERRED: 'deferred',
 } as const;
 

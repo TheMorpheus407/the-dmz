@@ -205,4 +205,122 @@ describe('gameStateSchema', () => {
     const result = gameStateSchema.safeParse(invalidGameState);
     expect(result.success).toBe(false);
   });
+
+  it('should accept a game state with inbox emails having all valid email statuses', () => {
+    const emailStatuses = [
+      'pending',
+      'opened',
+      'flagged',
+      'request_verification',
+      'approved',
+      'denied',
+      'deferred',
+    ] as const;
+
+    for (const status of emailStatuses) {
+      const gameState = {
+        sessionId: '550e8400-e29b-41d4-a716-446655440000',
+        userId: '550e8400-e29b-41d4-a716-446655440001',
+        tenantId: '550e8400-e29b-41d4-a716-446655440002',
+        seed: 12345,
+        currentDay: 1,
+        currentMacroState: 'SESSION_INIT',
+        currentPhase: 'PHASE_DAY_START',
+        funds: 1000,
+        trustScore: 50,
+        intelFragments: 0,
+        playerLevel: 1,
+        playerXP: 0,
+        threatTier: 'low',
+        facilityTier: 'outpost',
+        inbox: [
+          {
+            emailId: '550e8400-e29b-41d4-a716-446655440003',
+            status,
+            indicators: [],
+            verificationRequested: false,
+            timeSpentMs: 0,
+          },
+        ],
+        incidents: [],
+        narrativeState: {
+          currentChapter: 1,
+          activeTriggers: [],
+          completedEvents: [],
+        },
+        factionRelations: {},
+        blacklist: [],
+        whitelist: [],
+        analyticsState: {
+          totalEmailsProcessed: 0,
+          totalDecisions: 0,
+          approvals: 0,
+          denials: 0,
+          flags: 0,
+          verificationsRequested: 0,
+          incidentsTriggered: 0,
+          breaches: 0,
+        },
+        sequenceNumber: 0,
+        createdAt: '2024-01-01T00:00:00.000Z',
+        updatedAt: '2024-01-01T00:00:00.000Z',
+      };
+
+      const result = gameStateSchema.safeParse(gameState);
+      expect(result.success, `Expected email status '${status}' to be valid`).toBe(true);
+    }
+  });
+
+  it('should reject a game state with inbox emails having invalid email status', () => {
+    const invalidGameState = {
+      sessionId: '550e8400-e29b-41d4-a716-446655440000',
+      userId: '550e8400-e29b-41d4-a716-446655440001',
+      tenantId: '550e8400-e29b-41d4-a716-446655440002',
+      seed: 12345,
+      currentDay: 1,
+      currentMacroState: 'SESSION_INIT',
+      currentPhase: 'PHASE_DAY_START',
+      funds: 1000,
+      trustScore: 50,
+      intelFragments: 0,
+      playerLevel: 1,
+      playerXP: 0,
+      threatTier: 'low',
+      facilityTier: 'outpost',
+      inbox: [
+        {
+          emailId: '550e8400-e29b-41d4-a716-446655440003',
+          status: 'invalid_status',
+          indicators: [],
+          verificationRequested: false,
+          timeSpentMs: 0,
+        },
+      ],
+      incidents: [],
+      narrativeState: {
+        currentChapter: 1,
+        activeTriggers: [],
+        completedEvents: [],
+      },
+      factionRelations: {},
+      blacklist: [],
+      whitelist: [],
+      analyticsState: {
+        totalEmailsProcessed: 0,
+        totalDecisions: 0,
+        approvals: 0,
+        denials: 0,
+        flags: 0,
+        verificationsRequested: 0,
+        incidentsTriggered: 0,
+        breaches: 0,
+      },
+      sequenceNumber: 0,
+      createdAt: '2024-01-01T00:00:00.000Z',
+      updatedAt: '2024-01-01T00:00:00.000Z',
+    };
+
+    const result = gameStateSchema.safeParse(invalidGameState);
+    expect(result.success).toBe(false);
+  });
 });

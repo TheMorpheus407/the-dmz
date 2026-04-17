@@ -30,6 +30,7 @@ export const gameFacilityTierSchema = z.enum(
 
 export const emailStatusSchema = z.enum([
   'pending',
+  'opened',
   'flagged',
   'request_verification',
   'approved',

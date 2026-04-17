@@ -5,7 +5,7 @@ import type {
   GameThreatTier,
   FacilityTierLevel,
 } from './game-engine.js';
-import type { EmailInstance, VerificationPacket } from '../game/email-instance.js';
+import type { EmailInstance, EmailStatus, VerificationPacket } from '../game/email-instance.js';
 import type { GeneratedAttack } from '../game/threat-catalog.js';
 import type { BreachState } from '../game/breach.js';
 import type { CoopContext } from '../game/coop-scaling.js';
@@ -47,14 +47,7 @@ export interface GameState {
 
 export interface EmailState {
   emailId: string;
-  status:
-    | 'pending'
-    | 'opened'
-    | 'flagged'
-    | 'request_verification'
-    | 'approved'
-    | 'denied'
-    | 'deferred';
+  status: EmailStatus;
   indicators: string[];
   verificationRequested: boolean;
   timeSpentMs: number;
