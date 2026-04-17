@@ -130,13 +130,15 @@ export async function clearOldEvents(
   const allEvents = await db.getAllFromIndex('events', 'by-timestamp');
   const oldEvents = allEvents.filter((event) => event.timestamp < cutoff);
 
+  let deletedCount = 0;
   for (const event of oldEvents) {
     if (event.synced) {
       await db.delete('events', event.id);
+      deletedCount++;
     }
   }
 
-  return oldEvents.length;
+  return deletedCount;
 }
 
 export async function deleteEvent(id: string): Promise<void> {

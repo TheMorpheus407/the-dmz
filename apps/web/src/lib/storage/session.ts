@@ -13,7 +13,7 @@ export interface SessionSnapshot {
   checksum: string;
 }
 
-function computeChecksum(data: unknown): string {
+export function computeChecksum(data: unknown): string {
   const jsonString = JSON.stringify(data);
   let hash = 0;
   for (let i = 0; i < jsonString.length; i++) {
