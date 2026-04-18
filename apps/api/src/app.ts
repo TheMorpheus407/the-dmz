@@ -53,6 +53,7 @@ import {
   registerPhishingSimulationTemplateRoutes,
   registerPhishingSimulationTeachableMomentRoutes,
   registerCertificateEventHandlers,
+  unregisterCertificateEventHandlers,
 } from './modules/admin/index.js';
 import { registerAuditRoutes, registerAuditHook } from './modules/audit/index.js';
 import { ltiPlugin } from './modules/lti/index.js';
@@ -194,7 +195,10 @@ export const buildApp = async (
   }
 
   if (app.eventBus) {
-    registerCertificateEventHandlers(app.eventBus);
+    const certificateEventHandler = registerCertificateEventHandlers(app.eventBus);
+    app.addHook('onClose', async () => {
+      unregisterCertificateEventHandlers(app.eventBus, certificateEventHandler);
+    });
   }
 
   app.register(createMetricsPlugin);

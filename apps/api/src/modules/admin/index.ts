@@ -14,6 +14,7 @@ export { registerCertificateRoutes } from './certificate.routes.js';
 export {
   createCertificateEventHandler,
   registerCertificateEventHandlers,
+  unregisterCertificateEventHandlers,
   type CertificateGenerationConfig,
 } from './certificate.events.js';
 export { registerComplianceRoutes } from './compliance.routes.js';

@@ -50,6 +50,8 @@ export class AnalyticsService {
   private batchTimer: NodeJS.Timeout | null = null;
   private isProcessing = false;
   private subscribed = false;
+  private subscribedEventTypes: string[] = [];
+  private subscribedHandler: EventHandler | null = null;
 
   public constructor(fastify: FastifyInstance, config: Partial<AnalyticsConfig> = {}) {
     this.fastify = fastify;
@@ -95,6 +97,10 @@ export class AnalyticsService {
       );
       await this.processBatch();
     }
+
+    if (this.subscribed) {
+      this.unsubscribeFromEvents();
+    }
   }
 
   public subscribeToEvents(eventBus: {
@@ -136,8 +142,33 @@ export class AnalyticsService {
       eventBus.subscribe(eventType, handler);
     });
 
+    this.subscribedEventTypes = eventTypes;
+    this.subscribedHandler = handler;
     this.subscribed = true;
     this.fastify.log.info({ patterns: eventTypes }, 'Analytics subscribed to event bus');
+  }
+
+  public unsubscribeFromEvents(eventBus?: {
+    unsubscribe: (eventType: string, handler: EventHandler) => void;
+  }): void {
+    if (!this.subscribed || !this.subscribedHandler) {
+      return;
+    }
+
+    const bus = eventBus ?? this.fastify.eventBus;
+
+    this.subscribedEventTypes.forEach((eventType) => {
+      bus.unsubscribe(eventType, this.subscribedHandler!);
+    });
+
+    this.subscribedEventTypes = [];
+    this.subscribedHandler = null;
+    this.subscribed = false;
+    this.fastify.log.info('Analytics unsubscribed from event bus');
+  }
+
+  public isSubscribed(): boolean {
+    return this.subscribed;
   }
 
   private async handleIncomingEvent(event: DomainEvent): Promise<void> {

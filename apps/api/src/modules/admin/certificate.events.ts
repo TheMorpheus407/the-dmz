@@ -88,9 +88,22 @@ export const registerCertificateEventHandlers = (
     subscribe: (eventType: string, handler: (event: DomainEvent) => void | Promise<void>) => void;
   },
   config?: Partial<CertificateGenerationConfig>,
-): void => {
+): ((event: DomainEvent<SessionCompletedPayload>) => Promise<void>) => {
   const handler = createCertificateEventHandler(config);
   eventBus.subscribe(
+    SESSION_COMPLETED_EVENT,
+    handler as (event: DomainEvent) => void | Promise<void>,
+  );
+  return handler;
+};
+
+export const unregisterCertificateEventHandlers = (
+  eventBus: {
+    unsubscribe: (eventType: string, handler: (event: DomainEvent) => void | Promise<void>) => void;
+  },
+  handler: (event: DomainEvent) => void | Promise<void>,
+): void => {
+  eventBus.unsubscribe(
     SESSION_COMPLETED_EVENT,
     handler as (event: DomainEvent) => void | Promise<void>,
   );

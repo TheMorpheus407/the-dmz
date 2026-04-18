@@ -21,6 +21,12 @@ async function registerAchievementPlugin(
     fastify.eventBus.subscribe(eventType, handler);
   }
 
+  fastify.addHook('onClose', async () => {
+    for (const { eventType, handler } of eventHandlers) {
+      fastify.eventBus.unsubscribe(eventType, handler);
+    }
+  });
+
   const routesModule = await import('./achievement.routes.js');
   void routesModule.registerAchievementRoutes(fastify, _config, achievementService);
 }
