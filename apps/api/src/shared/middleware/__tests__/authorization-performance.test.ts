@@ -7,6 +7,14 @@ import {
   ABAC_PERFORMANCE_TARGET_MS,
 } from '../authorization-metrics.js';
 
+const createSeededRandom = (seed: number) => {
+  let currentSeed = seed;
+  return () => {
+    currentSeed = (currentSeed * 1664525 + 1013904223) % 4294967296;
+    return currentSeed / 4294967296;
+  };
+};
+
 describe('authorization performance contract', () => {
   const ITERATIONS = 1000;
   const PERFORMANCE_SAMPLE_SIZE = 100;
@@ -21,8 +29,9 @@ describe('authorization performance contract', () => {
 
   describe('P99 latency under 10ms (BRD FR-ENT-015)', () => {
     it('meets P99 target with cached evaluations', () => {
+      const random = createSeededRandom(12345);
       for (let i = 0; i < ITERATIONS; i++) {
-        const latency = Math.random() * 8 + 1;
+        const latency = random() * 8 + 1;
         recordAuthorizationEvaluation(latency, true);
       }
 
@@ -31,9 +40,10 @@ describe('authorization performance contract', () => {
     });
 
     it('meets P99 target with mixed cache hits and misses', () => {
+      const random = createSeededRandom(23456);
       for (let i = 0; i < ITERATIONS; i++) {
         const isCacheHit = i % 2 === 0;
-        const latency = isCacheHit ? Math.random() * 5 + 1 : Math.random() * 8 + 2;
+        const latency = isCacheHit ? random() * 5 + 1 : random() * 8 + 2;
         recordAuthorizationEvaluation(latency, isCacheHit);
       }
 
@@ -57,8 +67,9 @@ describe('authorization performance contract', () => {
     });
 
     it('verifies metrics expose P50/P95/P99 visibility', () => {
+      const random = createSeededRandom(34567);
       for (let i = 0; i < PERFORMANCE_SAMPLE_SIZE; i++) {
-        recordAuthorizationEvaluation(Math.random() * 15, i % 3 === 0);
+        recordAuthorizationEvaluation(random() * 15, i % 3 === 0);
       }
 
       const metrics = getAuthorizationMetrics();
@@ -88,8 +99,9 @@ describe('authorization performance contract', () => {
 
   describe('performance regression detection', () => {
     it('detects performance regression when P99 exceeds target', () => {
+      const random = createSeededRandom(45678);
       for (let i = 0; i < 100; i++) {
-        const latency = i < 95 ? Math.random() * 8 + 1 : Math.random() * 20 + 10;
+        const latency = i < 95 ? random() * 8 + 1 : random() * 20 + 10;
         recordAuthorizationEvaluation(latency, false);
       }
 
@@ -100,8 +112,9 @@ describe('authorization performance contract', () => {
     });
 
     it('passes with typical cached performance', () => {
+      const random = createSeededRandom(56789);
       for (let i = 0; i < 100; i++) {
-        const latency = Math.random() * 8 + 1;
+        const latency = random() * 8 + 1;
         recordAuthorizationEvaluation(latency, true);
       }
 
