@@ -178,7 +178,7 @@ services:
   # Monitoring stack (issue #182 — Monitoring and Observability)
   # -------------------------------------------------------------------------
   prometheus:
-    image: prom/prometheus:v2.48.0
+    image: prom/prometheus:v3.11.2
     profiles: ['monitoring']
     ports:
       - '9090:9090'
@@ -199,7 +199,7 @@ services:
       retries: 3
 
   alertmanager:
-    image: prom/alertmanager:v0.26.0
+    image: prom/alertmanager:v0.32.0
     profiles: ['monitoring']
     ports:
       - '9093:9093'
@@ -213,7 +213,7 @@ services:
       - prometheus
 
   grafana:
-    image: grafana/grafana:10.2.2
+    image: grafana/grafana:13.0.1
     profiles: ['monitoring']
     ports:
       - '3000:3000'
@@ -228,7 +228,7 @@ services:
       - prometheus
 
   redis-exporter:
-    image: oliver006/redis_exporter:v1.54.0
+    image: oliver006/redis_exporter:v1.82.0
     profiles: ['monitoring']
     ports:
       - '9121:9121'
@@ -238,7 +238,7 @@ services:
       - redis
 
   postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:v0.15.0
+    image: prometheuscommunity/postgres-exporter:v0.19.1
     profiles: ['monitoring']
     ports:
       - '9187:9187'
