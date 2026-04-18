@@ -5,56 +5,55 @@ import {
   createEmailTemplateRecord,
   listEmailTemplates,
   listFallbackEmailTemplates,
+  type EmailTemplateInput,
 } from './email-templates/index.js';
-import { createDocumentTemplateRecord } from './documents/index.js';
-import { createScenarioRecord } from './scenarios/index.js';
+import { createDocumentTemplateRecord, type DocumentTemplateInput } from './documents/index.js';
+import { createScenarioRecord, type ScenarioInput } from './scenarios/index.js';
 
 import type { FastifyPluginAsync } from 'fastify';
 
-type ContentGatewayService = {
-  createEmailTemplate: (
-    tenantId: Parameters<typeof createEmailTemplateRecord>[1],
-    input: Parameters<typeof createEmailTemplateRecord>[2],
-  ) => Promise<{ id: string }>;
-  listEmailTemplates: (
-    tenantId: Parameters<typeof listEmailTemplates>[1],
-    filters?: Parameters<typeof listEmailTemplates>[2],
-  ) => Promise<
-    Array<{
-      id: string;
-      name: string;
-      subject: string;
-      body: string;
-      fromName?: string | null;
-      fromEmail?: string | null;
-      replyTo?: string | null;
-      metadata?: Record<string, unknown>;
-    }>
-  >;
-  listFallbackEmailTemplates: (
-    tenantId: Parameters<typeof listFallbackEmailTemplates>[1],
-    filters?: Parameters<typeof listFallbackEmailTemplates>[2],
-  ) => Promise<
-    Array<{
-      id: string;
-      name: string;
-      subject: string;
-      body: string;
-      fromName?: string | null;
-      fromEmail?: string | null;
-      replyTo?: string | null;
-      metadata?: Record<string, unknown>;
-    }>
-  >;
-  createDocumentTemplate: (
-    tenantId: Parameters<typeof createDocumentTemplateRecord>[1],
-    input: Parameters<typeof createDocumentTemplateRecord>[2],
-  ) => Promise<{ id: string }>;
-  createScenario: (
-    tenantId: Parameters<typeof createScenarioRecord>[1],
-    input: Parameters<typeof createScenarioRecord>[2],
-  ) => Promise<{ id: string }>;
-};
+interface EmailTemplateOutput {
+  id: string;
+  name: string;
+  subject: string;
+  body: string;
+  fromName?: string | null;
+  fromEmail?: string | null;
+  replyTo?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+interface ContentGatewayService {
+  createEmailTemplate(tenantId: string, input: EmailTemplateInput): Promise<{ id: string }>;
+  listEmailTemplates(
+    tenantId: string,
+    filters?: {
+      contentType?: string;
+      difficulty?: number;
+      faction?: string;
+      attackType?: string;
+      threatLevel?: string;
+      season?: number;
+      chapter?: number;
+      isActive?: boolean;
+    },
+  ): Promise<EmailTemplateOutput[]>;
+  listFallbackEmailTemplates(
+    tenantId: string,
+    filters?: {
+      contentType?: string;
+      difficulty?: number;
+      faction?: string;
+      attackType?: string;
+      threatLevel?: string;
+      season?: number;
+      chapter?: number;
+      isActive?: boolean;
+    },
+  ): Promise<EmailTemplateOutput[]>;
+  createDocumentTemplate(tenantId: string, input: DocumentTemplateInput): Promise<{ id: string }>;
+  createScenario(tenantId: string, input: ScenarioInput): Promise<{ id: string }>;
+}
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -89,10 +88,6 @@ const mapEmailTemplateGatewayRecord = (
 });
 
 const contentPluginImpl: FastifyPluginAsync = async (fastify) => {
-  if (!fastify.eventBus) {
-    throw new Error('eventBus plugin is required for content module');
-  }
-
   fastify.decorate('content', {
     service: {
       createEmailTemplate: (tenantId, input) =>
