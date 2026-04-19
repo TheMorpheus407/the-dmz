@@ -52,10 +52,15 @@ const buildModuleBoundaryZones = () => {
     .filter((entry) => entry.isDirectory() && !nonModuleDirs.has(entry.name))
     .map((entry) => entry.name);
 
+  const sharedServiceModules = new Set(['notification', 'auth', 'feature-flags', 'game']);
+
   const zones = [];
   for (const target of moduleNames) {
     for (const from of moduleNames) {
       if (from === target) {
+        continue;
+      }
+      if (sharedServiceModules.has(target) || sharedServiceModules.has(from)) {
         continue;
       }
       zones.push({
