@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { act } from '@testing-library/svelte';
 
 import ActiveThreatsList from '$lib/game/components/ActiveThreatsList.svelte';
 import type { ActiveThreat } from '$lib/game/components/threat-monitor';
@@ -86,7 +87,7 @@ describe('ActiveThreatsList', () => {
       threatHeader.click();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const details = container.querySelector('.active-threats-list__threat-details');
     expect(details).toBeTruthy();
@@ -108,7 +109,7 @@ describe('ActiveThreatsList', () => {
       threatHeader.click();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const details = container.querySelector('.active-threats-list__threat-details');
     expect(details).toBeTruthy();
@@ -118,7 +119,7 @@ describe('ActiveThreatsList', () => {
       viewDetailsBtn.click();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     expect(onViewThreatDetails).toHaveBeenCalledWith('threat-1');
   });
@@ -134,13 +135,13 @@ describe('ActiveThreatsList', () => {
     expect(threatHeaders.length).toBe(2);
 
     threatHeaders[0]?.click();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const details = container.querySelector('.active-threats-list__threat-details');
     expect(details?.textContent).toContain('ACTIVE');
 
     threatHeaders[1]?.click();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const allDetails = container.querySelectorAll('.active-threats-list__threat-details');
     expect(allDetails[1]?.textContent).toContain('MONITORING');
@@ -170,7 +171,7 @@ describe('ActiveThreatsList', () => {
       threatHeader.click();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const details = container.querySelector('.active-threats-list__threat-details');
     expect(details?.textContent).toContain('Emails intercepted: 3');
@@ -187,13 +188,13 @@ describe('ActiveThreatsList', () => {
     ) as NodeListOf<HTMLButtonElement>;
 
     threatHeaders[0]?.click();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const details0 = container.querySelector('.active-threats-list__threat-details');
     expect(details0).toBeTruthy();
 
     threatHeaders[1]?.click();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const allDetails = container.querySelectorAll('.active-threats-list__threat-details');
     expect(allDetails.length).toBe(2);
@@ -211,7 +212,7 @@ describe('ActiveThreatsList', () => {
       threatHeader.click();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const details = container.querySelector('.active-threats-list__threat-details');
     expect(details?.textContent).toContain('Detected: Day 13');

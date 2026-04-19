@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { act } from '@testing-library/svelte';
 
 import SecurityToolsGrid from '$lib/game/components/SecurityToolsGrid.svelte';
 import type { SecurityTool } from '$lib/game/components/threat-monitor';
@@ -109,7 +110,7 @@ describe('SecurityToolsGrid', () => {
       buyButton.click();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     expect(onPurchaseTool).toHaveBeenCalledWith('siem-1');
   });

@@ -119,7 +119,9 @@ describe('sessionStore', () => {
 
       const bootstrapPromise = sessionStore.bootstrap();
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      vi.useFakeTimers();
+      vi.advanceTimersByTime(10);
+      vi.useRealTimers();
 
       const state = get(sessionStore);
       expect(state.status).toBe('authenticating');
@@ -201,7 +203,9 @@ describe('sessionStore', () => {
         password: 'valid pass 1234',
       });
 
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      vi.useFakeTimers();
+      vi.advanceTimersByTime(10);
+      vi.useRealTimers();
 
       const state = get(sessionStore);
       expect(state.status).toBe('authenticating');

@@ -314,7 +314,9 @@ describe('gestures', () => {
 
       handler.onTouchStart({} as unknown as TouchEvent);
 
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      vi.useFakeTimers();
+      vi.advanceTimersByTime(600);
+      vi.useRealTimers();
 
       expect(onLongPress).toHaveBeenCalled();
     });

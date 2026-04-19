@@ -111,6 +111,8 @@ describe('syncStore', () => {
     });
 
     it('updates isLoading derived', async () => {
+      vi.useFakeTimers();
+
       vi.mocked(bootstrapGameSession).mockImplementation(
         () =>
           new Promise((resolve) =>
@@ -138,8 +140,10 @@ describe('syncStore', () => {
 
       const promise = syncStore.bootstrap();
       expect(get(isLoading)).toBe(true);
+      vi.advanceTimersByTime(10);
       await promise;
       expect(get(isLoading)).toBe(false);
+      vi.useRealTimers();
     });
   });
 

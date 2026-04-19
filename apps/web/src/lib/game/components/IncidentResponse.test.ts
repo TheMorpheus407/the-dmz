@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { act } from '@testing-library/svelte';
 
 import IncidentResponseView from '$lib/game/components/IncidentResponseView.svelte';
 import type { IncidentResponseData } from '$lib/game/components/incident-response';
@@ -171,7 +172,7 @@ describe('IncidentResponseView', () => {
 
     const firstHeader = evidenceHeaders[0] as HTMLButtonElement;
     firstHeader.click();
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const details = container.querySelector('.incident-response__evidence-details');
     expect(details?.textContent).toContain('RAW LOG DATA');
@@ -188,7 +189,7 @@ describe('IncidentResponseView', () => {
       filterSelect.dispatchEvent(new Event('change'));
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const evidenceItems = container.querySelectorAll('.incident-response__evidence-item');
     expect(evidenceItems.length).toBeGreaterThanOrEqual(1);
@@ -205,7 +206,7 @@ describe('IncidentResponseView', () => {
       searchInput.dispatchEvent(new Event('input'));
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const evidenceItems = container.querySelectorAll('.incident-response__evidence-item');
     expect(evidenceItems.length).toBeGreaterThanOrEqual(1);
@@ -264,7 +265,7 @@ describe('IncidentResponseView', () => {
       (isolateButton as HTMLButtonElement).click();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     expect(onExecuteContainment).toHaveBeenCalled();
   });
@@ -286,7 +287,7 @@ describe('IncidentResponseView', () => {
       (restoreButton as HTMLButtonElement).click();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     expect(onExecuteRecovery).toHaveBeenCalled();
   });
@@ -308,7 +309,7 @@ describe('IncidentResponseView', () => {
       closeButton.click();
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     expect(onClose).toHaveBeenCalled();
   });
@@ -343,7 +344,7 @@ describe('IncidentResponseView', () => {
       searchInput.dispatchEvent(new Event('input'));
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     expect(container.textContent).toContain('No evidence entries found');
   });

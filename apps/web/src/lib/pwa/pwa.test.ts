@@ -127,6 +127,7 @@ describe('pwa/index', () => {
 
   describe('initializePWA', () => {
     it('should register service worker at /sw.js path', async () => {
+      vi.useFakeTimers();
       const { mockNavigator } = createMockServiceWorker();
       const originalNavigator = global.navigator;
       Object.defineProperty(global, 'navigator', {
@@ -146,10 +147,12 @@ describe('pwa/index', () => {
           writable: true,
           configurable: true,
         });
+        vi.useRealTimers();
       }
     });
 
     it('should set installed state to true after successful registration', async () => {
+      vi.useFakeTimers();
       const { mockNavigator } = createMockServiceWorker();
       const originalNavigator = global.navigator;
       Object.defineProperty(global, 'navigator', {
@@ -169,6 +172,7 @@ describe('pwa/index', () => {
           writable: true,
           configurable: true,
         });
+        vi.useRealTimers();
       }
     });
 
@@ -197,6 +201,7 @@ describe('pwa/index', () => {
     });
 
     it('should set updateAvailable to true when updatefound event fires and controller exists', async () => {
+      vi.useFakeTimers();
       const { mockSW, mockNavigator } = createMockServiceWorker();
       const originalNavigator = global.navigator;
       Object.defineProperty(global, 'navigator', {
@@ -217,6 +222,7 @@ describe('pwa/index', () => {
           writable: true,
           configurable: true,
         });
+        vi.useRealTimers();
       }
     });
   });

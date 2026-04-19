@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent } from '@testing-library/svelte';
+import { act, fireEvent } from '@testing-library/svelte';
 
 import DaySummaryPanel from '$lib/game/components/DaySummaryPanel.svelte';
 import type { DaySummaryData } from '$lib/game/components/day-summary';
@@ -267,7 +267,7 @@ describe('DaySummaryPanel', () => {
       fireEvent.click(button);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     expect(container.textContent).toContain('Confirm Day Advance');
 
@@ -278,7 +278,7 @@ describe('DaySummaryPanel', () => {
       fireEvent.click(cancelButton);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
     expect(onadvanceDay).not.toHaveBeenCalled();
 
     const advanceButton2 = container.querySelector('button');
@@ -286,7 +286,7 @@ describe('DaySummaryPanel', () => {
       fireEvent.click(advanceButton2);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await act();
 
     const confirmButton = Array.from(container.querySelectorAll('button')).find(
       (btn) => btn.textContent === 'Confirm Advance',
@@ -295,7 +295,7 @@ describe('DaySummaryPanel', () => {
       fireEvent.click(confirmButton);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await act();
     expect(onadvanceDay).toHaveBeenCalled();
   });
 
