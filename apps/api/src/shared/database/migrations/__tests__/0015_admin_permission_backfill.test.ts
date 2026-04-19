@@ -6,10 +6,11 @@ import { fileURLToPath } from 'node:url';
 import postgres from 'postgres';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { ADMIN_DATABASE_URL } from '@the-dmz/shared/testing';
+
 const migrationsDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const migrationPath = resolve(migrationsDir, '0016_admin_permission_backfill.sql');
 const migrationSql = readFileSync(migrationPath, 'utf8');
-const adminDatabaseUrl = 'postgresql://dmz:dmz_dev@localhost:5432/postgres';
 
 const readMigrationStatements = (fileName: string): string[] =>
   readFileSync(resolve(migrationsDir, fileName), 'utf8')
@@ -23,6 +24,10 @@ const runMigrationFile = async (sql: postgres.Sql, fileName: string): Promise<vo
   }
 };
 
+function quotePostgresIdentifier(name: string): string {
+  return `"${name.replace(/"/g, '""')}"`;
+}
+
 describe('0015_admin_permission_backfill migration', () => {
   let databaseName: string;
   let adminPool: postgres.Sql | undefined;
@@ -30,9 +35,10 @@ describe('0015_admin_permission_backfill migration', () => {
 
   beforeEach(async () => {
     databaseName = `dmz_t_m0015_${randomUUID().replace(/-/g, '_')}`;
-    adminPool = postgres(adminDatabaseUrl, { max: 1 });
-    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
-    await adminPool.unsafe(`CREATE DATABASE "${databaseName}"`);
+    adminPool = postgres(ADMIN_DATABASE_URL, { max: 1 });
+    const quotedDbName = quotePostgresIdentifier(databaseName);
+    await adminPool.unsafe(`DROP DATABASE IF EXISTS ${quotedDbName}`);
+    await adminPool.unsafe(`CREATE DATABASE ${quotedDbName}`);
     databasePool = postgres(`postgresql://dmz:dmz_dev@localhost:5432/${databaseName}`, { max: 1 });
   });
 
@@ -42,13 +48,16 @@ describe('0015_admin_permission_backfill migration', () => {
     }
 
     if (adminPool) {
-      await adminPool.unsafe(`
+      await adminPool.unsafe(
+        `
         SELECT pg_terminate_backend(pid)
         FROM pg_stat_activity
-        WHERE datname = '${databaseName}'
+        WHERE datname = $1
           AND pid <> pg_backend_pid()
-      `);
-      await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
+      `,
+        [databaseName],
+      );
+      await adminPool.unsafe(`DROP DATABASE IF EXISTS ${quotePostgresIdentifier(databaseName)}`);
       await adminPool.end({ timeout: 5 });
     }
   });

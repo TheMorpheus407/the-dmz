@@ -2,62 +2,21 @@ import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'node:url';
 
 import { sql } from 'drizzle-orm';
-import postgres from 'postgres';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createIsolatedDatabase, createIsolatedTestConfig } from '@the-dmz/shared/testing';
+
 import { buildApp } from '../../../app.js';
-import { loadConfig, type AppConfig } from '../../../config.js';
+import { type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../../../shared/database/connection.js';
 import { seedDatabase, seedTenantAuthModel } from '../../../shared/database/seed.js';
 
 import type { FastifyInstance } from 'fastify';
 
-const createTestConfig = (): AppConfig => {
-  const base = loadConfig();
-  return {
-    ...base,
-    NODE_ENV: 'test',
-    LOG_LEVEL: 'silent',
-    DATABASE_URL: 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test',
-    RATE_LIMIT_MAX: 10000,
-  };
-};
-
-const createIsolatedTestConfig = (databaseName: string): AppConfig => ({
-  ...createTestConfig(),
-  DATABASE_URL: `postgresql://dmz:dmz_dev@localhost:5432/${databaseName}`,
-});
-
-const adminDatabaseUrl = 'postgresql://dmz:dmz_dev@localhost:5432/postgres';
 const migrationsFolder = fileURLToPath(
   new URL('../../../shared/database/migrations', import.meta.url),
 );
-
-const createIsolatedDatabase = async (config: AppConfig): Promise<() => Promise<void>> => {
-  const databaseName = new URL(config.DATABASE_URL).pathname.replace(/^\//, '');
-  const adminPool = postgres(adminDatabaseUrl, { max: 1 });
-
-  const cleanup = async (): Promise<void> => {
-    await adminPool.unsafe(`
-      SELECT pg_terminate_backend(pid)
-      FROM pg_stat_activity
-      WHERE datname = '${databaseName}'
-        AND pid <> pg_backend_pid()
-    `);
-    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
-    await adminPool.end({ timeout: 5 });
-  };
-
-  try {
-    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
-    await adminPool.unsafe(`CREATE DATABASE "${databaseName}"`);
-    return cleanup;
-  } catch (error) {
-    await adminPool.end({ timeout: 5 });
-    throw error;
-  }
-};
 
 const registerUser = async (
   app: FastifyInstance,

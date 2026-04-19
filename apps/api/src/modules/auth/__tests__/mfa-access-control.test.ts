@@ -3,10 +3,13 @@ import { fileURLToPath } from 'node:url';
 
 import { eq, sql } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { createTestConfig } from '@the-dmz/shared/testing';
+import {
+  createIsolatedDatabase,
+  createIsolatedTestConfig,
+  createTestConfig,
+} from '@the-dmz/shared/testing';
 
 import { buildApp } from '../../../app.js';
 import { type AppConfig } from '../../../config.js';
@@ -19,42 +22,9 @@ import { csrfCookieName } from '../csrf.js';
 
 import type { FastifyInstance } from 'fastify';
 
-const adminDatabaseUrl = 'postgresql://dmz:dmz_dev@localhost:5432/postgres';
 const migrationsFolder = fileURLToPath(
   new URL('../../../shared/database/migrations', import.meta.url),
 );
-
-let testConfig = createTestConfig();
-
-const createIsolatedTestConfig = (base: AppConfig, databaseName: string): AppConfig => ({
-  ...base,
-  DATABASE_URL: `postgresql://dmz:dmz_dev@localhost:5432/${databaseName}`,
-});
-
-const createIsolatedDatabase = async (config: AppConfig): Promise<() => Promise<void>> => {
-  const databaseName = new URL(config.DATABASE_URL).pathname.replace(/^\//, '');
-  const adminPool = postgres(adminDatabaseUrl, { max: 1 });
-
-  const cleanup = async (): Promise<void> => {
-    await adminPool.unsafe(`
-      SELECT pg_terminate_backend(pid)
-      FROM pg_stat_activity
-      WHERE datname = '${databaseName}'
-        AND pid <> pg_backend_pid()
-    `);
-    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
-    await adminPool.end({ timeout: 5 });
-  };
-
-  try {
-    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
-    await adminPool.unsafe(`CREATE DATABASE "${databaseName}"`);
-    return cleanup;
-  } catch (error) {
-    await adminPool.end({ timeout: 5 });
-    throw error;
-  }
-};
 
 let testConfig: AppConfig;
 let app: FastifyInstance;
@@ -68,7 +38,7 @@ const resetTestData = async (): Promise<void> => {
 describe('MFA Access Control - Super Admin Step-up Flow', () => {
   beforeAll(async () => {
     const databaseName = `dmz_t_mfa_access_${randomUUID().replace(/-/g, '_')}`;
-    testConfig = createIsolatedTestConfig(testConfig, databaseName);
+    testConfig = createIsolatedTestConfig(createTestConfig(), databaseName);
     cleanupDatabase = await createIsolatedDatabase(testConfig);
 
     const db = getDatabaseClient(testConfig);

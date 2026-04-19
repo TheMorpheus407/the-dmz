@@ -3,59 +3,22 @@ import { fileURLToPath } from 'node:url';
 
 import { and, eq } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import postgres from 'postgres';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from '@the-dmz/shared/testing';
+import {
+  SEED_PROFILE_IDS,
+  SEED_TENANT_IDS,
+  SEED_USER_IDS,
+  createIsolatedDatabase,
+  createIsolatedTestConfig,
+} from '@the-dmz/shared/testing';
 
-import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabaseClient } from '../connection.js';
 import { permissions, rolePermissions, roles, tenants, users } from '../schema/index.js';
 import { userProfiles } from '../schema/auth/user-profiles.js';
 import { seedDatabase } from '../seed.js';
 
-const adminDatabaseUrl = 'postgresql://dmz:dmz_dev@localhost:5432/postgres';
 const migrationsFolder = fileURLToPath(new URL('../migrations', import.meta.url));
-
-const createTestConfig = (): AppConfig => {
-  const base = loadConfig();
-  return {
-    ...base,
-    NODE_ENV: 'test',
-    LOG_LEVEL: 'silent',
-    DATABASE_URL: 'postgresql://dmz:dmz_dev@localhost:5432/dmz_test',
-  };
-};
-
-const createIsolatedTestConfig = (databaseName: string): AppConfig => ({
-  ...createTestConfig(),
-  DATABASE_URL: `postgresql://dmz:dmz_dev@localhost:5432/${databaseName}`,
-});
-
-const createIsolatedDatabase = async (config: AppConfig): Promise<() => Promise<void>> => {
-  const databaseName = new URL(config.DATABASE_URL).pathname.replace(/^\//, '');
-  const adminPool = postgres(adminDatabaseUrl, { max: 1 });
-
-  const cleanup = async (): Promise<void> => {
-    await adminPool.unsafe(`
-      SELECT pg_terminate_backend(pid)
-      FROM pg_stat_activity
-      WHERE datname = '${databaseName}'
-        AND pid <> pg_backend_pid()
-    `);
-    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
-    await adminPool.end({ timeout: 5 });
-  };
-
-  try {
-    await adminPool.unsafe(`DROP DATABASE IF EXISTS "${databaseName}"`);
-    await adminPool.unsafe(`CREATE DATABASE "${databaseName}"`);
-    return cleanup;
-  } catch (error) {
-    await adminPool.end({ timeout: 5 });
-    throw error;
-  }
-};
 
 let testConfig: AppConfig;
 let cleanupDatabase: (() => Promise<void>) | undefined;
