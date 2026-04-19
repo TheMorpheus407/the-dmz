@@ -22,6 +22,8 @@ import {
   WebhookSignatureInvalidError,
   WebhookSignatureExpiredError,
   WebhookCircuitBreakerOpenError,
+  WebhookSubscriptionInvalidStatusError,
+  WebhookDeliveryMaxRetriesExceededError,
 } from '../webhook.errors.js';
 import { webhookRepo } from '../webhook.repo.js';
 
@@ -946,5 +948,160 @@ describe('WebhookPolicy Schema Tests', () => {
 
     const result = webhookTestResultBaseSchema.safeParse(invalidResult);
     expect(result.success).toBe(false);
+  });
+});
+
+describe('processDelivery error paths', () => {
+  let service: WebhookService;
+  const mockRepo = vi.mocked(webhookRepo);
+  const mockTenantId = randomUUID();
+  const mockSubscriptionId = randomUUID();
+  const mockDeliveryId = randomUUID();
+  const fixedDate = new Date('2026-03-10T00:00:00.000Z');
+
+  const buildSubscriptionDb = (
+    overrides: Partial<WebhookSubscriptionDb> = {},
+  ): WebhookSubscriptionDb => ({
+    id: mockSubscriptionId,
+    tenantId: mockTenantId,
+    name: 'Test Webhook',
+    targetUrl: 'https://example.com/webhook',
+    eventTypes: JSON.stringify(['auth.user.created']),
+    status: 'active',
+    secretHash: 'hashed-secret',
+    filters: null,
+    ipAllowlist: null,
+    createdAt: fixedDate,
+    updatedAt: fixedDate,
+    disabledAt: null,
+    testPendingAt: null,
+    failureDisabledAt: null,
+    ...overrides,
+  });
+
+  const buildCircuitBreakerDb = (
+    overrides: Partial<WebhookCircuitBreakerDb> = {},
+  ): WebhookCircuitBreakerDb => ({
+    id: randomUUID(),
+    subscriptionId: mockSubscriptionId,
+    totalRequests: 0,
+    failedRequests: 0,
+    consecutiveFailures: 0,
+    isOpen: false,
+    openedAt: null,
+    closedAt: null,
+    lastCheckedAt: fixedDate,
+    createdAt: fixedDate,
+    updatedAt: fixedDate,
+    ...overrides,
+  });
+
+  beforeAll(() => {
+    service = new WebhookService();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe('circuit breaker open', () => {
+    it('throws WebhookCircuitBreakerOpenError when circuit breaker is open', async () => {
+      const mockBreaker = buildCircuitBreakerDb({ isOpen: true });
+
+      mockRepo.getOrCreateCircuitBreaker.mockResolvedValue(mockBreaker);
+
+      await expect(
+        service.processDelivery(
+          mockDeliveryId,
+          mockSubscriptionId,
+          mockTenantId,
+          'https://example.com/webhook',
+          { eventId: randomUUID() },
+          randomUUID(),
+          'auth.user.created',
+          1,
+          3,
+        ),
+      ).rejects.toThrow(WebhookCircuitBreakerOpenError);
+    });
+  });
+
+  describe('subscription invalid status', () => {
+    it('throws WebhookSubscriptionInvalidStatusError when subscription is null', async () => {
+      const mockBreaker = buildCircuitBreakerDb({ isOpen: false });
+
+      mockRepo.getOrCreateCircuitBreaker.mockResolvedValue(mockBreaker);
+      mockRepo.getSubscriptionById.mockResolvedValue(undefined);
+
+      await expect(
+        service.processDelivery(
+          mockDeliveryId,
+          mockSubscriptionId,
+          mockTenantId,
+          'https://example.com/webhook',
+          { eventId: randomUUID() },
+          randomUUID(),
+          'auth.user.created',
+          1,
+          3,
+        ),
+      ).rejects.toThrow(WebhookSubscriptionInvalidStatusError);
+    });
+
+    it('throws WebhookSubscriptionInvalidStatusError when subscription status is not active', async () => {
+      const mockBreaker = buildCircuitBreakerDb({ isOpen: false });
+      const mockSubscription = buildSubscriptionDb({ status: 'disabled' });
+
+      mockRepo.getOrCreateCircuitBreaker.mockResolvedValue(mockBreaker);
+      mockRepo.getSubscriptionById.mockResolvedValue(mockSubscription);
+
+      await expect(
+        service.processDelivery(
+          mockDeliveryId,
+          mockSubscriptionId,
+          mockTenantId,
+          'https://example.com/webhook',
+          { eventId: randomUUID() },
+          randomUUID(),
+          'auth.user.created',
+          1,
+          3,
+        ),
+      ).rejects.toThrow(WebhookSubscriptionInvalidStatusError);
+    });
+  });
+
+  describe('max retries exceeded', () => {
+    it('throws WebhookDeliveryMaxRetriesExceededError when delivery fails after max attempts', async () => {
+      const mockBreaker = buildCircuitBreakerDb({ isOpen: false });
+      const mockSubscription = buildSubscriptionDb({ status: 'active' });
+
+      mockRepo.getOrCreateCircuitBreaker.mockResolvedValue(mockBreaker);
+      mockRepo.getSubscriptionById.mockResolvedValue(mockSubscription);
+      mockRepo.updateDelivery.mockResolvedValue({} as WebhookDeliveryDb);
+      mockRepo.updateCircuitBreaker.mockResolvedValue(mockBreaker);
+
+      const fetchMock = vi
+        .spyOn(global, 'fetch')
+        .mockResolvedValueOnce(
+          new Response('Server Error', { status: 500, statusText: 'Internal Server Error' }),
+        );
+
+      await expect(
+        service.processDelivery(
+          mockDeliveryId,
+          mockSubscriptionId,
+          mockTenantId,
+          'https://example.com/webhook',
+          { eventId: randomUUID() },
+          randomUUID(),
+          'auth.user.created',
+          3,
+          3,
+        ),
+      ).rejects.toThrow(WebhookDeliveryMaxRetriesExceededError);
+
+      fetchMock.mockRestore();
+    });
   });
 });
