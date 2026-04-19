@@ -10,10 +10,22 @@ export class SafetyRejectionError extends Error {
   }
 }
 
+export interface InvalidGeneratedOutputErrorTelemetry {
+  requestId: string;
+  tenantId: string;
+  category: string;
+  failureCategory?: string;
+  attempt?: number;
+  maxAttempts?: number;
+}
+
 export class InvalidGeneratedOutputError extends Error {
-  public constructor(message: string) {
+  public readonly telemetry: InvalidGeneratedOutputErrorTelemetry;
+
+  public constructor(message: string, telemetry: InvalidGeneratedOutputErrorTelemetry) {
     super(message);
     this.name = 'InvalidGeneratedOutputError';
+    this.telemetry = telemetry;
   }
 }
 

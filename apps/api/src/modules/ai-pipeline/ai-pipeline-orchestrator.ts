@@ -97,9 +97,9 @@ const resolveFallbackEmailContent = async (
         category: request.category,
         error: error instanceof Error ? error.message : String(error),
       },
-      'Failed to inspect curated fallback email templates; using built-in fallback',
+      'Failed to inspect curated fallback email templates; rethrowing error',
     );
-    return buildHandcraftedFallback(request.category, request);
+    throw error;
   }
 
   const orderedTemplates = [...fallbackTemplates].sort((left, right) =>
@@ -152,7 +152,16 @@ const resolveFallbackEmailContent = async (
     }
   }
 
-  return buildHandcraftedFallback(request.category, request);
+  const error = new Error('All fallback templates failed; cannot generate fallback content');
+  logger.warn(
+    {
+      tenantId,
+      category: request.category,
+      error: error.message,
+    },
+    'All fallback templates failed; rethrowing error',
+  );
+  throw error;
 };
 
 const maybeEmitLowPoolEvent = async (params: {
@@ -321,6 +330,7 @@ export const createAiPipelineOrchestrator = (
     let attemptedModel: string | undefined;
     let lastValidationError: unknown;
     let usage: UsageMetrics = {};
+    let lastAttemptNumber = 0;
 
     try {
       const template = await options.promptTemplateRepository.getActiveForGeneration(
@@ -375,6 +385,7 @@ export const createAiPipelineOrchestrator = (
 
       for (let attemptIndex = 0; attemptIndex < maxGenerationAttempts; attemptIndex += 1) {
         const attemptNumber = attemptIndex + 1;
+        lastAttemptNumber = attemptNumber;
         const attemptPrompt =
           attemptIndex === 0 || lastValidationError === undefined
             ? prompt
@@ -435,6 +446,14 @@ export const createAiPipelineOrchestrator = (
               ? error
               : new InvalidGeneratedOutputError(
                   error instanceof Error ? error.message : String(error),
+                  {
+                    requestId,
+                    tenantId,
+                    category: normalizedRequest.category,
+                    ...(failureCategory !== undefined && { failureCategory }),
+                    attempt: attemptNumber,
+                    maxAttempts: maxGenerationAttempts,
+                  },
                 );
 
           failureCategory = buildGenerationFailureCategory(validationError);
@@ -483,7 +502,14 @@ export const createAiPipelineOrchestrator = (
       }
 
       if (!content) {
-        throw new InvalidGeneratedOutputError('Claude generation returned no valid content');
+        throw new InvalidGeneratedOutputError('Claude generation returned no valid content', {
+          requestId,
+          tenantId,
+          category: normalizedRequest.category,
+          ...(failureCategory !== undefined && { failureCategory }),
+          attempt: maxGenerationAttempts,
+          maxAttempts: maxGenerationAttempts,
+        });
       }
     } catch (error) {
       fallbackApplied = true;
@@ -516,7 +542,17 @@ export const createAiPipelineOrchestrator = (
     }
 
     if (!content) {
-      throw new Error('AI pipeline did not produce content');
+      throw new InvalidGeneratedOutputError(
+        'AI pipeline did not produce content after all retries and fallback',
+        {
+          requestId,
+          tenantId,
+          category: normalizedRequest.category,
+          ...(failureCategory !== undefined && { failureCategory }),
+          attempt: lastAttemptNumber,
+          maxAttempts: lastAttemptNumber,
+        },
+      );
     }
 
     content = sanitizeEmailContentForCategory(normalizedRequest.category, content);

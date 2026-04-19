@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { createAiPipelineService } from '../ai-pipeline.service.js';
 import { getDefaultOutputSchema } from '../output-parser.service.js';
+import { InvalidGeneratedOutputError } from '../ai-pipeline-errors.js';
 
 import type {
   AiPipelineLogger,
@@ -876,6 +877,195 @@ describe('ai-pipeline.service', () => {
         eventType: 'ai.generation.completed',
       }),
     );
+  });
+
+  it('throws InvalidGeneratedOutputError when all generation retries exhausted due to safety rejection and fallback fails', async () => {
+    const repository = createRepository();
+    vi.mocked(repository.getActiveForGeneration).mockResolvedValue(emailTemplate);
+    const contentGateway = createContentGateway();
+    vi.mocked(contentGateway.listFallbackEmailTemplates).mockResolvedValue([]);
+    const eventBus = createEventBus();
+    const unsafeGeneratedEmail = {
+      ...generatedEmail,
+      body: {
+        ...generatedEmail.body,
+        justification: 'Please coordinate with Microsoft support before shift end.',
+      },
+    };
+    const claudeClient: ClaudeClient = {
+      complete: vi
+        .fn()
+        .mockResolvedValueOnce({
+          text: JSON.stringify(unsafeGeneratedEmail),
+          model: 'claude-sonnet-4-6',
+          inputTokens: 90,
+          outputTokens: 150,
+          latencyMs: 20,
+        })
+        .mockResolvedValueOnce({
+          text: JSON.stringify(unsafeGeneratedEmail),
+          model: 'claude-sonnet-4-6',
+          inputTokens: 92,
+          outputTokens: 145,
+          latencyMs: 19,
+        })
+        .mockResolvedValueOnce({
+          text: JSON.stringify(unsafeGeneratedEmail),
+          model: 'claude-sonnet-4-6',
+          inputTokens: 88,
+          outputTokens: 142,
+          latencyMs: 17,
+        })
+        .mockResolvedValueOnce({
+          text: JSON.stringify(unsafeGeneratedEmail),
+          model: 'claude-sonnet-4-6',
+          inputTokens: 91,
+          outputTokens: 148,
+          latencyMs: 18,
+        }),
+    };
+
+    const service = createAiPipelineService({
+      config: createTestConfig(),
+      eventBus,
+      logger,
+      promptTemplateRepository: repository,
+      contentGateway,
+      claudeClient,
+      generateId: () => 'req-safety-rejection',
+    });
+
+    try {
+      await service.generateEmail(emailTemplate.tenantId, 'user-1', {
+        category: 'email_phishing',
+        faction: 'Nexion Industries',
+        attackType: 'spear_phishing',
+        threatLevel: 'HIGH',
+      });
+      expect.fail('Expected error to be thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidGeneratedOutputError);
+      expect((error as InvalidGeneratedOutputError).telemetry).toMatchObject({
+        requestId: 'req-safety-rejection',
+        tenantId: emailTemplate.tenantId,
+        category: 'email_phishing',
+        failureCategory: 'safety_rejection',
+        attempt: 4,
+        maxAttempts: 4,
+      });
+    }
+
+    expect(claudeClient.complete).toHaveBeenCalledTimes(4);
+
+    const generationLogs = vi
+      .mocked(repository.recordGenerationLog)
+      .mock.calls.map(([entry]) => entry);
+    expect(generationLogs).toHaveLength(5);
+    generationLogs.slice(0, 4).forEach((log, index) => {
+      expect(log).toMatchObject({
+        status: 'REJECTED',
+        requestId: 'req-safety-rejection',
+        generationParams: expect.objectContaining({
+          attempt: index + 1,
+          maxAttempts: 4,
+          failureCategory: 'safety_rejection',
+          fallbackApplied: false,
+          retryScheduled: index < 3,
+        }),
+      });
+    });
+    expect(contentGateway.listFallbackEmailTemplates).toHaveBeenCalled();
+  });
+
+  it('throws InvalidGeneratedOutputError when all generation retries exhausted due to invalid JSON output and fallback fails', async () => {
+    const repository = createRepository();
+    vi.mocked(repository.getActiveForGeneration).mockResolvedValue(emailTemplate);
+    const contentGateway = createContentGateway();
+    vi.mocked(contentGateway.listFallbackEmailTemplates).mockResolvedValue([]);
+    const eventBus = createEventBus();
+    const claudeClient: ClaudeClient = {
+      complete: vi
+        .fn()
+        .mockResolvedValueOnce({
+          text: 'This is not valid JSON {',
+          model: 'claude-sonnet-4-6',
+          inputTokens: 50,
+          outputTokens: 10,
+          latencyMs: 15,
+        })
+        .mockResolvedValueOnce({
+          text: 'Still not JSON [',
+          model: 'claude-sonnet-4-6',
+          inputTokens: 52,
+          outputTokens: 8,
+          latencyMs: 12,
+        })
+        .mockResolvedValueOnce({
+          text: 'Neither is this',
+          model: 'claude-sonnet-4-6',
+          inputTokens: 48,
+          outputTokens: 12,
+          latencyMs: 14,
+        })
+        .mockResolvedValueOnce({
+          text: 'Complete garbage',
+          model: 'claude-sonnet-4-6',
+          inputTokens: 51,
+          outputTokens: 9,
+          latencyMs: 13,
+        }),
+    };
+
+    const service = createAiPipelineService({
+      config: createTestConfig(),
+      eventBus,
+      logger,
+      promptTemplateRepository: repository,
+      contentGateway,
+      claudeClient,
+      generateId: () => 'req-parse-fail',
+    });
+
+    try {
+      await service.generateEmail(emailTemplate.tenantId, 'user-1', {
+        category: 'email_phishing',
+        faction: 'Nexion Industries',
+        attackType: 'spear_phishing',
+        threatLevel: 'HIGH',
+      });
+      expect.fail('Expected error to be thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidGeneratedOutputError);
+      expect((error as InvalidGeneratedOutputError).telemetry).toMatchObject({
+        requestId: 'req-parse-fail',
+        tenantId: emailTemplate.tenantId,
+        category: 'email_phishing',
+        failureCategory: 'invalid_output',
+        attempt: 4,
+        maxAttempts: 4,
+      });
+    }
+
+    expect(claudeClient.complete).toHaveBeenCalledTimes(4);
+
+    const generationLogs = vi
+      .mocked(repository.recordGenerationLog)
+      .mock.calls.map(([entry]) => entry);
+    expect(generationLogs).toHaveLength(5);
+    generationLogs.slice(0, 4).forEach((log, index) => {
+      expect(log).toMatchObject({
+        status: 'REJECTED',
+        requestId: 'req-parse-fail',
+        generationParams: expect.objectContaining({
+          attempt: index + 1,
+          maxAttempts: 4,
+          failureCategory: 'invalid_output',
+          fallbackApplied: false,
+          retryScheduled: index < 3,
+        }),
+      });
+    });
+    expect(contentGateway.listFallbackEmailTemplates).toHaveBeenCalled();
   });
 
   it('falls back immediately when the stored prompt template schema does not match the category contract', async () => {
