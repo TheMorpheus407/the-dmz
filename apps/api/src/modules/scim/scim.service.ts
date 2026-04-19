@@ -22,7 +22,7 @@ import type {
   SCIMBulkResponse,
 } from './scim.types.js';
 
-const SCIM_ERRORS = {
+export const SCIM_ERRORS = {
   INVALID_REQUEST: 'SCIM_INVALID_REQUEST',
   USER_NOT_FOUND: 'SCIM_USER_NOT_FOUND',
   USER_ALREADY_EXISTS: 'SCIM_USER_ALREADY_EXISTS',
