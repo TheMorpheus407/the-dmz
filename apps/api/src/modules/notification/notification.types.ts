@@ -49,3 +49,17 @@ export interface ThrottleEntry {
   count: number;
   windowStart: Date;
 }
+
+export interface DeliveryLogEntry {
+  id: string;
+  tenantId: string;
+  userId: string;
+  eventType: string;
+  channel: NotificationDeliveryChannel;
+  status: NotificationDeliveryStatus;
+  sentAt?: Date;
+  suppressedReason?: string;
+  failureReason?: string;
+  templateCategory: NotificationTemplateCategory;
+  correlationId?: string;
+}

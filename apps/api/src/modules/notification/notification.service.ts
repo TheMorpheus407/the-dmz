@@ -1,118 +1,25 @@
-import { randomUUID } from 'crypto';
-
 import {
-  type AuthSecurityEventType,
   NotificationDeliveryChannel,
   NotificationDeliveryStatus,
-  type NotificationTemplateCategory,
   AUTH_SECURITY_EVENT_CONTRACT_MAP,
   isMandatoryNotification,
 } from '@the-dmz/shared/contracts';
 
-import type {
-  NotificationSendOptions,
-  NotificationDeliveryResult,
-  DedupeEntry,
-  ThrottleEntry,
-} from './notification.types.js';
+import { DedupeStore } from './dedupe.store.js';
+import { ThrottleStore } from './throttle.store.js';
+import { DeliveryLogger } from './delivery-logger.js';
 
-class DedupeStore {
-  private store = new Map<string, DedupeEntry>();
-
-  isDuplicate(userId: string, eventType: AuthSecurityEventType, dedupeWindowMs: number): boolean {
-    const key = `${userId}:${eventType}`;
-    const entry = this.store.get(key);
-
-    if (!entry) {
-      return false;
-    }
-
-    const now = new Date();
-    const timeSinceLastSent = now.getTime() - entry.lastSentAt.getTime();
-
-    return timeSinceLastSent < dedupeWindowMs;
-  }
-
-  record(userId: string, eventType: AuthSecurityEventType): void {
-    const key = `${userId}:${eventType}`;
-    this.store.set(key, {
-      userId,
-      eventType,
-      lastSentAt: new Date(),
-    });
-  }
-
-  clear(): void {
-    this.store.clear();
-  }
-}
-
-class ThrottleStore {
-  private store = new Map<string, ThrottleEntry>();
-
-  isThrottled(
-    userId: string,
-    eventType: AuthSecurityEventType,
-    throttleLimit: number,
-    throttleWindowMs: number,
-  ): boolean {
-    const key = `${userId}:${eventType}`;
-    const entry = this.store.get(key);
-
-    if (!entry) {
-      this.store.set(key, {
-        userId,
-        eventType,
-        count: 1,
-        windowStart: new Date(),
-      });
-      return false;
-    }
-
-    const now = new Date();
-    const timeSinceWindowStart = now.getTime() - entry.windowStart.getTime();
-
-    if (timeSinceWindowStart >= throttleWindowMs) {
-      entry.count = 1;
-      entry.windowStart = now;
-      return false;
-    }
-
-    if (entry.count >= throttleLimit) {
-      return true;
-    }
-
-    entry.count++;
-    return false;
-  }
-
-  clear(): void {
-    this.store.clear();
-  }
-}
-
-interface DeliveryLogEntry {
-  id: string;
-  tenantId: string;
-  userId: string;
-  eventType: string;
-  channel: NotificationDeliveryChannel;
-  status: NotificationDeliveryStatus;
-  sentAt?: Date;
-  suppressedReason?: string;
-  failureReason?: string;
-  templateCategory: NotificationTemplateCategory;
-  correlationId?: string;
-}
+import type { NotificationSendOptions, NotificationDeliveryResult } from './notification.types.js';
 
 export class NotificationService {
   private dedupeStore: DedupeStore;
   private throttleStore: ThrottleStore;
-  private deliveryLog: DeliveryLogEntry[] = [];
+  private deliveryLogger: DeliveryLogger;
 
   constructor() {
     this.dedupeStore = new DedupeStore();
     this.throttleStore = new ThrottleStore();
+    this.deliveryLogger = new DeliveryLogger();
   }
 
   async sendSecurityNotification(
@@ -176,8 +83,7 @@ export class NotificationService {
           throttleWindowMs,
         )
       ) {
-        const logEntry: DeliveryLogEntry = {
-          id: randomUUID(),
+        this.deliveryLogger.log({
           tenantId: options.tenantId,
           userId: options.userId,
           eventType: options.eventType,
@@ -186,8 +92,7 @@ export class NotificationService {
           suppressedReason: 'rate_limit',
           templateCategory: contract.templateCategory,
           ...(options.correlationId !== undefined && { correlationId: options.correlationId }),
-        };
-        this.deliveryLog.push(logEntry);
+        });
 
         return {
           success: true,
@@ -197,8 +102,7 @@ export class NotificationService {
       }
 
       if (this.dedupeStore.isDuplicate(options.userId, options.eventType, dedupeWindowMs)) {
-        const logEntry: DeliveryLogEntry = {
-          id: randomUUID(),
+        this.deliveryLogger.log({
           tenantId: options.tenantId,
           userId: options.userId,
           eventType: options.eventType,
@@ -207,8 +111,7 @@ export class NotificationService {
           suppressedReason: 'dedupe',
           templateCategory: contract.templateCategory,
           ...(options.correlationId !== undefined && { correlationId: options.correlationId }),
-        };
-        this.deliveryLog.push(logEntry);
+        });
 
         return {
           success: true,
@@ -223,8 +126,7 @@ export class NotificationService {
 
       this.dedupeStore.record(options.userId, options.eventType);
 
-      const logEntry: DeliveryLogEntry = {
-        id: randomUUID(),
+      this.deliveryLogger.log({
         tenantId: options.tenantId,
         userId: options.userId,
         eventType: options.eventType,
@@ -233,8 +135,7 @@ export class NotificationService {
         sentAt: new Date(),
         templateCategory: contract.templateCategory,
         ...(options.correlationId !== undefined && { correlationId: options.correlationId }),
-      };
-      this.deliveryLog.push(logEntry);
+      });
 
       return {
         success: true,
@@ -244,8 +145,7 @@ export class NotificationService {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-      const logEntry: DeliveryLogEntry = {
-        id: randomUUID(),
+      this.deliveryLogger.log({
         tenantId: options.tenantId,
         userId: options.userId,
         eventType: options.eventType,
@@ -254,8 +154,7 @@ export class NotificationService {
         failureReason: errorMessage,
         templateCategory: contract.templateCategory,
         ...(options.correlationId !== undefined && { correlationId: options.correlationId }),
-      };
-      this.deliveryLog.push(logEntry);
+      });
 
       return {
         success: false,
@@ -273,12 +172,12 @@ export class NotificationService {
     return Promise.resolve();
   }
 
-  getDeliveryLog(): ReadonlyArray<DeliveryLogEntry> {
-    return this.deliveryLog;
+  getDeliveryLog() {
+    return this.deliveryLogger.getLog();
   }
 
   clearDeliveryLog(): void {
-    this.deliveryLog = [];
+    this.deliveryLogger.clear();
   }
 
   clearDedupeStore(): void {
