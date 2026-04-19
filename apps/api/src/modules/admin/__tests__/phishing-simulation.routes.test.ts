@@ -1,6 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { type FastifyInstance } from 'fastify';
 
+import { createTestId } from '@the-dmz/shared/testing';
+
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
 import { closeDatabase, getDatabasePool } from '../../../shared/database/connection.js';
@@ -51,7 +53,7 @@ const resetTestData = async (): Promise<void> => {
 const registerUser = async (
   app: FastifyInstance,
 ): Promise<{ accessToken: string; user: { id: string; tenantId: string } }> => {
-  const unique = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const unique = createTestId();
   const response = await app.inject({
     method: 'POST',
     url: '/api/v1/auth/register',

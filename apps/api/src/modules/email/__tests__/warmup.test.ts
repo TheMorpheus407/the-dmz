@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
+import { createTestId } from '@the-dmz/shared/testing';
+
 import {
   calculateVolumeForDay,
   calculateNextVolume,
@@ -101,7 +103,7 @@ describe('warmupService', () => {
 
   describe('advanceDay', () => {
     it('should advance to next day and increase volume', async () => {
-      const testId = 'advance-' + Math.random().toString(36).substring(7);
+      const testId = createTestId('advance');
       await warmupService.startWarmup(testId, 'tenant-1');
       const advanced = await warmupService.advanceDay(testId);
 
@@ -112,7 +114,7 @@ describe('warmupService', () => {
 
   describe('pauseWarmup', () => {
     it('should pause the warmup', async () => {
-      const testId = 'pause-' + Math.random().toString(36).substring(7);
+      const testId = createTestId('pause');
       await warmupService.startWarmup(testId, 'tenant-1');
       const paused = await warmupService.pauseWarmup(testId, 'Testing pause');
 
@@ -123,7 +125,7 @@ describe('warmupService', () => {
 
   describe('resumeWarmup', () => {
     it('should resume a paused warmup', async () => {
-      const testId = 'resume-' + Math.random().toString(36).substring(7);
+      const testId = createTestId('resume');
       await warmupService.startWarmup(testId, 'tenant-1');
       await warmupService.pauseWarmup(testId);
       const resumed = await warmupService.resumeWarmup(testId);
@@ -135,7 +137,7 @@ describe('warmupService', () => {
 
   describe('getAllowedVolume', () => {
     it('should return current allowed volume', async () => {
-      const testId = 'allowed-' + Math.random().toString(36).substring(7);
+      const testId = createTestId('allowed');
       const schedule = await warmupService.startWarmup(testId, 'tenant-1');
       const allowed = warmupService.getAllowedVolume(schedule);
       expect(allowed).toBe(50);
@@ -144,19 +146,19 @@ describe('warmupService', () => {
 
   describe('canSend', () => {
     it('should allow sending within volume limit', async () => {
-      const testId = 'cansend1-' + Math.random().toString(36).substring(7);
+      const testId = createTestId('cansend1');
       const schedule = await warmupService.startWarmup(testId, 'tenant-1');
       expect(warmupService.canSend(schedule, 30)).toBe(true);
     });
 
     it('should deny sending above volume limit', async () => {
-      const testId = 'cansend2-' + Math.random().toString(36).substring(7);
+      const testId = createTestId('cansend2');
       const schedule = await warmupService.startWarmup(testId, 'tenant-1');
       expect(warmupService.canSend(schedule, 100)).toBe(false);
     });
 
     it('should deny sending when paused', async () => {
-      const testId = 'cansend3-' + Math.random().toString(36).substring(7);
+      const testId = createTestId('cansend3');
       await warmupService.startWarmup(testId, 'tenant-1');
       await warmupService.pauseWarmup(testId);
       const pausedSchedule = await warmupService.getSchedule(testId);

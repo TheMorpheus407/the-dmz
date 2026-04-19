@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 
+import { createTestId } from '@the-dmz/shared/testing';
+
 import { quotaService, PlanTier } from '../quota.service.js';
 
 describe('quotaService', () => {
@@ -60,7 +62,7 @@ describe('quotaService', () => {
 
   describe('consumeQuota', () => {
     it('should consume quota when sending', async () => {
-      const testIntId = 'consume1-' + Math.random().toString(36).substring(7);
+      const testIntId = createTestId('consume1');
       await quotaService.initialize(tenantId, testIntId, PlanTier.STARTER);
 
       const result = await quotaService.consumeQuota(tenantId, testIntId, 1);
@@ -95,7 +97,7 @@ describe('quotaService', () => {
 
   describe('rate limiting', () => {
     it('should enforce minutely rate limit', async () => {
-      const testIntId = 'ratelimit1-' + Math.random().toString(36).substring(7);
+      const testIntId = createTestId('ratelimit1');
       await quotaService.initialize(tenantId, testIntId, PlanTier.STARTER);
 
       for (let i = 0; i < 10; i++) {

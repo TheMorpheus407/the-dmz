@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import { describe, expect, it, beforeEach, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 
-import { createTestConfig } from '@the-dmz/shared/testing';
+import { createTestConfig, createTestId } from '@the-dmz/shared/testing';
 
 import { type AppConfig } from '../../../config.js';
 import { getDatabasePool, getDatabaseClient } from '../../../shared/database/connection.js';
@@ -62,7 +62,7 @@ describe('tenant status gating', () => {
   });
 
   describe('preAuthTenantStatusGuard', () => {
-    const testUniqueId = `preauth_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const testUniqueId = createTestId('preauth');
 
     it('allows request when tenant is active', async () => {
       const db = getDatabaseClient(testConfig);
@@ -183,7 +183,7 @@ describe('tenant status gating', () => {
 
   describe('tenantStatusGuard', () => {
     it('allows request when tenant is active', async () => {
-      const testUniqueId = `active_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const testUniqueId = createTestId('active');
       const tenantId = randomUUID();
       const pool = getDatabasePool(testConfig);
       await pool`
@@ -220,7 +220,7 @@ describe('tenant status gating', () => {
     });
 
     it('blocks request when tenant is suspended', async () => {
-      const testUniqueId = `suspended_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const testUniqueId = createTestId('suspended');
       const tenantId = randomUUID();
       const pool = getDatabasePool(testConfig);
       await pool`
@@ -290,7 +290,7 @@ describe('tenant status gating', () => {
   });
 
   describe('invalidateTenantSessions', () => {
-    const testUniqueId = `invalidate_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const testUniqueId = createTestId('invalidate');
 
     it('deletes all sessions for a tenant', async () => {
       const db = getDatabaseClient(testConfig);

@@ -4,6 +4,7 @@ import {
   buildTestTenant as sharedBuildTestTenant,
   createTestTenant as sharedCreateTestTenant,
   createTestUser as sharedCreateTestUser,
+  createTestId,
   type TenantSeed,
   type TestTenant,
   type UserSeed,
@@ -34,7 +35,7 @@ export interface DualTenantFixture {
 }
 
 export const createDualTenantFixture = (prefix?: string): DualTenantFixture => {
-  const uniquePrefix = prefix ?? `test_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const uniquePrefix = prefix ?? createTestId();
   const tenantAId = randomUUID();
   const tenantBId = randomUUID();
 

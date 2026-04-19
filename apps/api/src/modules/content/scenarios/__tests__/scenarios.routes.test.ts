@@ -5,7 +5,11 @@ import { sql } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { createIsolatedDatabase, createIsolatedTestConfig } from '@the-dmz/shared/testing';
+import {
+  createIsolatedDatabase,
+  createIsolatedTestConfig,
+  createTestId,
+} from '@the-dmz/shared/testing';
 
 import { buildApp } from '../../../app.js';
 import { type AppConfig } from '../../../config.js';
@@ -22,7 +26,7 @@ const registerUser = async (
   app: FastifyInstance,
   email?: string,
 ): Promise<{ accessToken: string; user: { id: string; tenantId: string } }> => {
-  const unique = email ?? `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const unique = email ?? createTestId();
   const response = await app.inject({
     method: 'POST',
     url: '/api/v1/auth/register',
