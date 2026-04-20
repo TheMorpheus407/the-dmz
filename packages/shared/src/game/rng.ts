@@ -41,17 +41,17 @@ export const rng: RNG = {
 
     const random = (): number => {
       if (counter % 2 === 0) {
-        const r = mulberry32(s0)();
+        const randomValue = mulberry32(s0)();
         s0 = Math.imul(s0 ^ (s0 >>> 15), s0 | 1);
         s0 = ((s0 + Math.imul(s0 ^ (s0 >>> 7), s0 | 61)) ^ (s0 >>> 14)) >>> 0;
         counter++;
-        return r;
+        return randomValue;
       } else {
-        const r = mulberry32(s1)();
+        const randomValue = mulberry32(s1)();
         s1 = Math.imul(s1 ^ (s1 >>> 15), s1 | 1);
         s1 = ((s1 + Math.imul(s1 ^ (s1 >>> 7), s1 | 61)) ^ (s1 >>> 14)) >>> 0;
         counter++;
-        return r;
+        return randomValue;
       }
     };
 

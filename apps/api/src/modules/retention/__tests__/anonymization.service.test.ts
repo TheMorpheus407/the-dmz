@@ -16,13 +16,13 @@ describe('AnonymizationService', () => {
   describe('constructor', () => {
     it('should use provided salt', () => {
       const customSalt = 'my-custom-salt';
-      const s = new AnonymizationService({}, customSalt);
-      expect(s).toBeDefined();
+      const service = new AnonymizationService({}, customSalt);
+      expect(service).toBeDefined();
     });
 
     it('should use default salt when none provided', () => {
-      const s = new AnonymizationService();
-      expect(s).toBeDefined();
+      const service = new AnonymizationService();
+      expect(service).toBeDefined();
     });
 
     it('should apply custom config', () => {
@@ -30,8 +30,8 @@ describe('AnonymizationService', () => {
         defaultMethod: 'hash',
         rules: [{ field: 'customField', method: 'redact' }],
       };
-      const s = new AnonymizationService(config);
-      const rules = s.getRules();
+      const service = new AnonymizationService(config);
+      const rules = service.getRules();
       expect(rules.some((r) => r.field === 'customField')).toBe(true);
     });
   });

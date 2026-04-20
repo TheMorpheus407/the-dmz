@@ -342,16 +342,16 @@ export class PlayerProfileService {
   private calculateLinearRegressionSlope(points: { x: number; y: number }[]): number {
     if (points.length < 2) return 0;
 
-    const n = points.length;
+    const pointCount = points.length;
     const sumX = points.reduce((sum, p) => sum + p.x, 0);
     const sumY = points.reduce((sum, p) => sum + p.y, 0);
     const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
     const sumX2 = points.reduce((sum, p) => sum + p.x * p.x, 0);
 
-    const denominator = n * sumX2 - sumX * sumX;
+    const denominator = pointCount * sumX2 - sumX * sumX;
     if (denominator === 0) return 0;
 
-    return (n * sumXY - sumX * sumY) / denominator;
+    return (pointCount * sumXY - sumX * sumY) / denominator;
   }
 
   private calculateRecommendedFocus(

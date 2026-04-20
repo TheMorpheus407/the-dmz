@@ -58,13 +58,13 @@ export const WHITE_LABEL_STORAGE_KEY = 'dmz-whitelabel-config';
 export function validateContrastRatio(color1: string, color2: string): number {
   const getLuminance = (hex: string): number => {
     const rgb = parseInt(hex.replace('#', ''), 16);
-    const r = ((rgb >> 16) & 0xff) / 255;
-    const g = ((rgb >> 8) & 0xff) / 255;
-    const b = (rgb & 0xff) / 255;
+    const red = ((rgb >> 16) & 0xff) / 255;
+    const green = ((rgb >> 8) & 0xff) / 255;
+    const blue = (rgb & 0xff) / 255;
 
     const toLinear = (c: number) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
 
-    return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    return 0.2126 * toLinear(red) + 0.7152 * toLinear(green) + 0.0722 * toLinear(blue);
   };
 
   const l1 = getLuminance(color1);

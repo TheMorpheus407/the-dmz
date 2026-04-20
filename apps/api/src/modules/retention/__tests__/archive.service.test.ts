@@ -5,13 +5,13 @@ import { ArchiveService } from '../archive.service.js';
 describe('ArchiveService', () => {
   describe('constructor', () => {
     it('should set compression level', () => {
-      const s = new ArchiveService(9);
-      expect(s).toBeDefined();
+      const service = new ArchiveService(9);
+      expect(service).toBeDefined();
     });
 
     it('should use default compression level when not specified', () => {
-      const s = new ArchiveService();
-      expect(s).toBeDefined();
+      const service = new ArchiveService();
+      expect(service).toBeDefined();
     });
   });
 

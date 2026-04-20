@@ -90,9 +90,9 @@ describe('AuthService', () => {
         const trimmed = c.trim();
         const idx = trimmed.indexOf('=');
         if (idx !== -1) {
-          const k = trimmed.substring(0, idx);
-          const v = trimmed.substring(idx + 1);
-          mockCookieStore.set(k, v);
+          const key = trimmed.substring(0, idx);
+          const value = trimmed.substring(idx + 1);
+          mockCookieStore.set(key, value);
         }
       });
 

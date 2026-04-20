@@ -24,8 +24,8 @@ describe('password policy service', () => {
     it('should return not compromised for a unique password', async () => {
       const provider = new HaveIBeenPwnedProvider();
       const result = await provider.checkPassword('ThisIsAVeryUniquePassword12345!@#$%');
-      const r = result as { compromised: boolean };
-      expect(r.compromised).toBe(false);
+      const typedResult = result as { compromised: boolean };
+      expect(typedResult.compromised).toBe(false);
     });
   });
 
@@ -33,9 +33,9 @@ describe('password policy service', () => {
     it('should always return not compromised', async () => {
       const provider = new NoOpCompromisedCredentialProvider();
       const result = await provider.checkPassword('any-password');
-      const r = result as { compromised: boolean; provider: string };
-      expect(r.compromised).toBe(false);
-      expect(r.provider).toBe('noop');
+      const typedResult = result as { compromised: boolean; provider: string };
+      expect(typedResult.compromised).toBe(false);
+      expect(typedResult.provider).toBe('noop');
     });
   });
 
