@@ -105,9 +105,11 @@ export class AiGenerationScheduler {
   async cancelRepeatableJobs(tenantId: string): Promise<number> {
     const repeatableJobs = await this.queue.getRepeatableJobs();
     let cancelled = 0;
+    const expectedSuffix = `:scheduled-batch-${tenantId}`;
 
     for (const job of repeatableJobs) {
-      if (job.key.includes(tenantId)) {
+      const jobKeyWithoutTimestamp = job.key.replace(/:(\d+)$/, '');
+      if (jobKeyWithoutTimestamp.endsWith(expectedSuffix)) {
         await this.queue.removeRepeatableByKey(job.key);
         cancelled++;
       }
