@@ -1,5 +1,3 @@
-import { eq, and, desc } from 'drizzle-orm';
-
 import {
   REGULATORY_FRAMEWORKS,
   type RegulatoryFramework,
@@ -7,11 +5,17 @@ import {
 } from '@the-dmz/shared';
 
 import { loadConfig, type AppConfig } from '../../config.js';
-import { getDatabaseClient } from '../../shared/database/connection.js';
-import { complianceSnapshots, frameworkRequirements } from '../../db/schema/compliance/index.js';
-import { playerProfiles } from '../../db/schema/analytics/index.js';
-import { certificates } from '../../shared/database/schema/training/index.js';
 import { createAuditLog } from '../audit/index.js';
+
+import {
+  determineStatus,
+  calculateCompetencyCompletion,
+  calculateCertificateCompletion,
+  calculateFrameworkCompletion,
+  aggregateDashboardData,
+  type SnapshotForAggregation,
+} from './compliance.calculator.js';
+import { ComplianceRepository } from './compliance.repository.js';
 
 export type ComplianceStatus = 'compliant' | 'non_compliant' | 'in_progress' | 'not_started';
 
@@ -220,92 +224,20 @@ const DEFAULT_REQUIREMENTS: Record<
   ],
 };
 
-function determineStatus(completionPercentage: number): ComplianceStatus {
-  if (completionPercentage >= 100) return 'compliant';
-  if (completionPercentage > 0) return 'in_progress';
-  return 'not_started';
-}
-
-function calculateCompetencyCompletion(
-  profiles: Array<{ competencyScores: Record<string, { score: number; evidenceCount: number }> }>,
-  minScore: number,
-): number {
-  if (profiles.length === 0) return 0;
-
-  const completedCount = profiles.filter((profile) => {
-    const scores = profile.competencyScores as Record<
-      string,
-      { score: number; evidenceCount: number }
-    >;
-    for (const domain of Object.values(scores)) {
-      if (domain.evidenceCount > 0 && domain.score >= minScore) {
-        return true;
-      }
-    }
-    return false;
-  }).length;
-
-  return (completedCount / profiles.length) * 100;
-}
-
-function calculateCertificateCompletion(
-  certs: Array<{ frameworkId: string }>,
-  frameworkId: string,
-): number {
-  const frameworkCerts = certs.filter((c) => c.frameworkId === frameworkId);
-  return frameworkCerts.length > 0 ? 100 : 0;
-}
-
 export const initializeFrameworkRequirements = async (
   tenantId: string,
   config: AppConfig = loadConfig(),
 ): Promise<void> => {
-  const db = getDatabaseClient(config);
+  const repository = ComplianceRepository.create(config);
 
   for (const frameworkId of REGULATORY_FRAMEWORKS) {
-    const existing = await db
-      .select()
-      .from(frameworkRequirements)
-      .where(
-        and(
-          eq(frameworkRequirements.tenantId, tenantId),
-          eq(frameworkRequirements.frameworkId, frameworkId),
-        ),
-      )
-      .limit(1)
-      .execute();
-
+    const existing = await repository.findRequirements(tenantId, frameworkId);
     if (existing.length > 0) continue;
 
     const defaultReqs = DEFAULT_REQUIREMENTS[frameworkId];
     if (!defaultReqs) continue;
 
-    for (const req of defaultReqs) {
-      await db
-        .insert(frameworkRequirements)
-        .values({
-          tenantId,
-          frameworkId,
-          requirementId: req.requirementId,
-          requirementName: req.requirementName,
-          description: req.description,
-          category: req.category,
-          isRequired: 1,
-          minCompetencyScore: req.minCompetencyScore,
-          requiredTrainingModules: [],
-          status: 'not_started',
-          completionPercentage: 0,
-          metadata: {},
-        })
-        .onConflictDoNothing({
-          target: [
-            frameworkRequirements.tenantId,
-            frameworkRequirements.frameworkId,
-            frameworkRequirements.requirementId,
-          ],
-        })
-        .execute();
-    }
+    await repository.insertRequirements(tenantId, frameworkId, defaultReqs);
   }
 };
 
@@ -315,106 +247,66 @@ export const calculateComplianceSnapshot = async (
   userId: string = 'system',
   config: AppConfig = loadConfig(),
 ): Promise<ComplianceSnapshotData> => {
-  const db = getDatabaseClient(config);
+  const repository = ComplianceRepository.create(config);
 
-  const profiles = await db
-    .select({ competencyScores: playerProfiles.competencyScores })
-    .from(playerProfiles)
-    .where(eq(playerProfiles.tenantId, tenantId))
-    .execute();
+  const profiles = await repository.findProfiles(tenantId);
 
-  const certs = await db
-    .select({ frameworkId: certificates.frameworkId })
-    .from(certificates)
-    .where(eq(certificates.tenantId, tenantId))
-    .execute();
+  const certs = await repository.findCertificates(tenantId);
 
-  const requirements = await db
-    .select()
-    .from(frameworkRequirements)
-    .where(
-      and(
-        eq(frameworkRequirements.tenantId, tenantId),
-        eq(frameworkRequirements.frameworkId, frameworkId),
-      ),
-    )
-    .execute();
+  const requirements = await repository.findRequirements(tenantId, frameworkId);
 
-  let totalCompletion = 0;
-  let requirementsCompleted = 0;
+  const requirementsInput = requirements.map((r) => ({
+    id: r.id,
+    minCompetencyScore: r.minCompetencyScore,
+  }));
+
+  const profilesWithScores = profiles.map((p) => ({
+    competencyScores: p.competencyScores as Record<
+      string,
+      { score: number; evidenceCount: number }
+    >,
+  }));
+
+  const certsInput = certs.map((c) => ({ frameworkId: c.frameworkId }));
+
+  const { completionPercentage, requirementsCompleted, status } = calculateFrameworkCompletion(
+    requirementsInput,
+    profilesWithScores,
+    certsInput,
+    frameworkId,
+  );
 
   for (const req of requirements) {
-    const profilesWithScores = profiles.map((p) => ({
+    const reqProfiles = profiles.map((p) => ({
       competencyScores: p.competencyScores as Record<
         string,
         { score: number; evidenceCount: number }
       >,
     }));
-    const competencyCompletion = calculateCompetencyCompletion(
-      profilesWithScores,
-      req.minCompetencyScore,
-    );
-    const certificateCompletion = calculateCertificateCompletion(certs, frameworkId);
-
+    const competencyCompletion = calculateCompetencyCompletion(reqProfiles, req.minCompetencyScore);
+    const certificateCompletion = calculateCertificateCompletion(certsInput, frameworkId);
     const reqCompletion = Math.max(competencyCompletion, certificateCompletion);
     const reqStatus = determineStatus(reqCompletion);
 
-    await db
-      .update(frameworkRequirements)
-      .set({
-        status: reqStatus,
-        completionPercentage: reqCompletion,
-        lastAssessedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(frameworkRequirements.id, req.id))
-      .execute();
-
-    totalCompletion += reqCompletion;
-    if (reqStatus === 'compliant') {
-      requirementsCompleted++;
-    }
+    await repository.updateRequirements(req.id, reqStatus, reqCompletion, new Date());
   }
-
-  const completionPercentage = requirements.length > 0 ? totalCompletion / requirements.length : 0;
-  const status = determineStatus(completionPercentage);
 
   const validityYears = getFrameworkValidityYears(frameworkId);
   const now = new Date();
   const nextAssessmentDue = new Date(now);
   nextAssessmentDue.setFullYear(nextAssessmentDue.getFullYear() + validityYears);
 
-  const [snapshot] = await db
-    .insert(complianceSnapshots)
-    .values({
-      tenantId,
-      frameworkId,
-      status,
-      completionPercentage,
-      lastAssessedAt: now,
-      nextAssessmentDue,
-      requirements: { total: requirements.length, completed: requirementsCompleted },
-      metadata: {},
-      snapshotDate: now,
-    })
-    .onConflictDoUpdate({
-      target: [complianceSnapshots.tenantId, complianceSnapshots.frameworkId],
-      set: {
-        status,
-        completionPercentage,
-        lastAssessedAt: now,
-        nextAssessmentDue,
-        requirements: { total: requirements.length, completed: requirementsCompleted },
-        snapshotDate: now,
-        updatedAt: new Date(),
-      },
-    })
-    .returning()
-    .execute();
-
-  if (!snapshot) {
-    throw new Error('Failed to create or update compliance snapshot');
-  }
+  const snapshot = await repository.upsertSnapshot({
+    tenantId,
+    frameworkId,
+    status,
+    completionPercentage,
+    lastAssessedAt: now,
+    nextAssessmentDue,
+    requirements: { total: requirements.length, completed: requirementsCompleted },
+    metadata: {},
+    snapshotDate: now,
+  });
 
   await createAuditLog(
     {
@@ -469,81 +361,16 @@ export const getComplianceSummary = async (
   tenantId: string,
   config: AppConfig = loadConfig(),
 ): Promise<ComplianceDashboardData> => {
-  const db = getDatabaseClient(config);
+  const repository = ComplianceRepository.create(config);
 
-  const snapshots = await db
-    .select()
-    .from(complianceSnapshots)
-    .where(eq(complianceSnapshots.tenantId, tenantId))
-    .orderBy(desc(complianceSnapshots.frameworkId))
-    .execute();
+  const snapshots = await repository.findSnapshots(tenantId);
 
-  const summaries: ComplianceSummary[] = [];
-  let compliantCount = 0;
-  let inProgressCount = 0;
-  let nonCompliantCount = 0;
-  let notStartedCount = 0;
+  const dashboardData = aggregateDashboardData(
+    snapshots as SnapshotForAggregation[],
+    REGULATORY_FRAMEWORKS.length,
+  );
 
-  for (const snapshot of snapshots) {
-    const requirements = await db
-      .select({ id: frameworkRequirements.id })
-      .from(frameworkRequirements)
-      .where(
-        and(
-          eq(frameworkRequirements.tenantId, tenantId),
-          eq(frameworkRequirements.frameworkId, snapshot.frameworkId),
-        ),
-      )
-      .execute();
-
-    const completedReqs = await db
-      .select({ id: frameworkRequirements.id })
-      .from(frameworkRequirements)
-      .where(
-        and(
-          eq(frameworkRequirements.tenantId, tenantId),
-          eq(frameworkRequirements.frameworkId, snapshot.frameworkId),
-          eq(frameworkRequirements.status, 'compliant'),
-        ),
-      )
-      .execute();
-
-    const summary: ComplianceSummary = {
-      frameworkId: snapshot.frameworkId as RegulatoryFramework,
-      status: snapshot.status as ComplianceStatus,
-      completionPercentage: snapshot.completionPercentage,
-      lastAssessedAt: snapshot.lastAssessedAt ? new Date(snapshot.lastAssessedAt) : null,
-      nextAssessmentDue: snapshot.nextAssessmentDue ? new Date(snapshot.nextAssessmentDue) : null,
-      requirementsCount: requirements.length,
-      requirementsCompleted: completedReqs.length,
-    };
-
-    summaries.push(summary);
-
-    switch (snapshot.status) {
-      case 'compliant':
-        compliantCount++;
-        break;
-      case 'in_progress':
-        inProgressCount++;
-        break;
-      case 'non_compliant':
-        nonCompliantCount++;
-        break;
-      case 'not_started':
-        notStartedCount++;
-        break;
-    }
-  }
-
-  return {
-    summaries,
-    totalFrameworks: REGULATORY_FRAMEWORKS.length,
-    compliantCount,
-    inProgressCount,
-    nonCompliantCount,
-    notStartedCount,
-  };
+  return dashboardData;
 };
 
 export const getComplianceDetail = async (
@@ -551,34 +378,14 @@ export const getComplianceDetail = async (
   frameworkId: RegulatoryFramework,
   config: AppConfig = loadConfig(),
 ): Promise<ComplianceDetail | null> => {
-  const db = getDatabaseClient(config);
+  const repository = ComplianceRepository.create(config);
 
-  const [snapshot] = await db
-    .select()
-    .from(complianceSnapshots)
-    .where(
-      and(
-        eq(complianceSnapshots.tenantId, tenantId),
-        eq(complianceSnapshots.frameworkId, frameworkId),
-      ),
-    )
-    .limit(1)
-    .execute();
-
+  const snapshot = await repository.findSnapshotByFramework(tenantId, frameworkId);
   if (!snapshot) return null;
 
-  const requirements = await db
-    .select()
-    .from(frameworkRequirements)
-    .where(
-      and(
-        eq(frameworkRequirements.tenantId, tenantId),
-        eq(frameworkRequirements.frameworkId, frameworkId),
-      ),
-    )
-    .execute();
-
-  const completedReqs = requirements.filter((r) => r.status === 'compliant');
+  const requirementsCount = await repository.countRequirements(tenantId, frameworkId);
+  const requirementsCompleted = await repository.countCompliantRequirements(tenantId, frameworkId);
+  const requirements = await repository.findRequirements(tenantId, frameworkId);
 
   return {
     frameworkId: snapshot.frameworkId as RegulatoryFramework,
@@ -586,26 +393,9 @@ export const getComplianceDetail = async (
     completionPercentage: snapshot.completionPercentage,
     lastAssessedAt: snapshot.lastAssessedAt ? new Date(snapshot.lastAssessedAt) : null,
     nextAssessmentDue: snapshot.nextAssessmentDue ? new Date(snapshot.nextAssessmentDue) : null,
-    requirementsCount: requirements.length,
-    requirementsCompleted: completedReqs.length,
-    requirements: requirements.map((r) => ({
-      id: r.id,
-      tenantId: r.tenantId,
-      frameworkId: r.frameworkId as RegulatoryFramework,
-      requirementId: r.requirementId,
-      requirementName: r.requirementName,
-      description: r.description,
-      category: r.category,
-      isRequired: r.isRequired === 1,
-      minCompetencyScore: r.minCompetencyScore,
-      requiredTrainingModules: r.requiredTrainingModules as string[],
-      status: r.status as ComplianceStatus,
-      completionPercentage: r.completionPercentage,
-      lastAssessedAt: r.lastAssessedAt ? new Date(r.lastAssessedAt) : null,
-      metadata: r.metadata as Record<string, unknown>,
-      createdAt: new Date(r.createdAt),
-      updatedAt: new Date(r.updatedAt),
-    })),
+    requirementsCount,
+    requirementsCompleted,
+    requirements: requirements.map((r) => ComplianceRepository.mapRequirementRowToDto(r)),
     metadata: snapshot.metadata as Record<string, unknown>,
   };
 };
@@ -615,35 +405,9 @@ export const getFrameworkRequirements = async (
   frameworkId: RegulatoryFramework,
   config: AppConfig = loadConfig(),
 ): Promise<FrameworkRequirementData[]> => {
-  const db = getDatabaseClient(config);
+  const repository = ComplianceRepository.create(config);
 
-  const requirements = await db
-    .select()
-    .from(frameworkRequirements)
-    .where(
-      and(
-        eq(frameworkRequirements.tenantId, tenantId),
-        eq(frameworkRequirements.frameworkId, frameworkId),
-      ),
-    )
-    .execute();
+  const requirements = await repository.findRequirements(tenantId, frameworkId);
 
-  return requirements.map((r) => ({
-    id: r.id,
-    tenantId: r.tenantId,
-    frameworkId: r.frameworkId as RegulatoryFramework,
-    requirementId: r.requirementId,
-    requirementName: r.requirementName,
-    description: r.description,
-    category: r.category,
-    isRequired: r.isRequired === 1,
-    minCompetencyScore: r.minCompetencyScore,
-    requiredTrainingModules: r.requiredTrainingModules as string[],
-    status: r.status as ComplianceStatus,
-    completionPercentage: r.completionPercentage,
-    lastAssessedAt: r.lastAssessedAt ? new Date(r.lastAssessedAt) : null,
-    metadata: r.metadata as Record<string, unknown>,
-    createdAt: new Date(r.createdAt),
-    updatedAt: new Date(r.updatedAt),
-  }));
+  return requirements.map((r) => ComplianceRepository.mapRequirementRowToDto(r));
 };

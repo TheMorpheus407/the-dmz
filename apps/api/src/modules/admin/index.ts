@@ -52,6 +52,7 @@ export {
   getFrameworkRequirements,
   calculateComplianceSnapshot,
   calculateAllComplianceSnapshots,
+  initializeFrameworkRequirements,
   type ComplianceStatus,
   type ComplianceSnapshotData,
   type FrameworkRequirementData,
@@ -59,6 +60,22 @@ export {
   type ComplianceDetail,
   type ComplianceDashboardData,
 } from './compliance.service.js';
+
+export {
+  ComplianceRepository,
+  type ComplianceSnapshotRow,
+  type FrameworkRequirementRow,
+  type DefaultRequirement,
+  type UpsertSnapshotInput,
+} from './compliance.repository.js';
+
+export {
+  determineStatus,
+  calculateCompetencyCompletion,
+  calculateCertificateCompletion,
+  calculateFrameworkCompletion,
+  aggregateDashboardData,
+} from './compliance.calculator.js';
 
 export {
   createCampaign,
