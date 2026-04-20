@@ -349,28 +349,30 @@ describe('ErrorCodes and AppError', () => {
 });
 
 describe('Global Error Handler Integration', () => {
-  const app = buildApp(testConfig);
-
-  app.get('/test-app-error', async () => {
-    throw new AppError({
-      code: ErrorCodes.VALIDATION_FAILED,
-      message: 'Test validation error',
-      statusCode: 400,
-      details: { field: 'test' },
-    });
-  });
-
-  app.get('/test-zod-error', async () => {
-    const { z } = await import('zod');
-    const schema = z.object({ name: z.string() });
-    schema.parse({ name: 123 });
-  });
-
-  app.get('/test-unhandled-error', async () => {
-    throw new Error('Unexpected error');
-  });
+  let app: Awaited<ReturnType<typeof buildApp>>;
 
   beforeAll(async () => {
+    app = await buildApp(testConfig);
+
+    app.get('/test-app-error', async () => {
+      throw new AppError({
+        code: ErrorCodes.VALIDATION_FAILED,
+        message: 'Test validation error',
+        statusCode: 400,
+        details: { field: 'test' },
+      });
+    });
+
+    app.get('/test-zod-error', async () => {
+      const { z } = await import('zod');
+      const schema = z.object({ name: z.string() });
+      schema.parse({ name: 123 });
+    });
+
+    app.get('/test-unhandled-error', async () => {
+      throw new Error('Unexpected error');
+    });
+
     await app.ready();
   });
 
