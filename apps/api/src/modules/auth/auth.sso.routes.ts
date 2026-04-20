@@ -1067,8 +1067,8 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
           redirectUri,
           stateData.pkceCodeVerifier || '',
         );
-      } catch (err) {
-        const ssoError = err as SSOError;
+      } catch (error) {
+        const ssoError = error as SSOError;
         const eventBus = fastify.eventBus;
         eventBus.publish(
           createSSOLoginFailedEvent({
@@ -1481,8 +1481,8 @@ export const registerSSORoutes = async (fastify: FastifyInstance): Promise<void>
             refresh_token: refreshedTokens.refreshToken || refresh_token,
             id_token: refreshedTokens.idToken,
           };
-        } catch (err) {
-          const ssoError = err as SSOError;
+        } catch (error) {
+          const ssoError = error as SSOError;
           throw new SSOError({
             message: ssoError.message || 'Token refresh failed',
             code: ErrorCodes.SSO_TOKEN_INVALID,

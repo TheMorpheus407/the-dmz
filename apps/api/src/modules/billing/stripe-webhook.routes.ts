@@ -69,10 +69,10 @@ export async function stripeWebhookRoutes(fastify: FastifyInstance): Promise<voi
       let event: Stripe.Event;
       try {
         event = await constructStripeEvent(request, stripe, config.STRIPE_WEBHOOK_SECRET!);
-      } catch (err) {
-        const error = err as Error;
-        request.log.warn({ err: error.message }, 'Stripe webhook signature verification failed');
-        return reply.status(401).send({ error: error.message });
+      } catch (error) {
+        const err = error as Error;
+        request.log.warn({ err: err.message }, 'Stripe webhook signature verification failed');
+        return reply.status(401).send({ error: err.message });
       }
 
       const parsedData = stripeWebhookDataObjectSchema.safeParse(event.data.object);

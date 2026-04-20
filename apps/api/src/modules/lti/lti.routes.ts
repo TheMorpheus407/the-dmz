@@ -206,8 +206,8 @@ export async function registerLtiRoutes(
     let verifiedJwt;
     try {
       verifiedJwt = await verifyLtiJwt(config, platform, tokens.id_token);
-    } catch (err) {
-      request.log.error({ err }, 'JWT verification failed');
+    } catch (error) {
+      request.log.error({ error }, 'JWT verification failed');
       throw new AppError({
         code: ErrorCodes.AUTH_UNAUTHORIZED,
         message: 'JWT verification failed',

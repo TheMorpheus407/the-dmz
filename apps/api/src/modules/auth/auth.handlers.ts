@@ -446,9 +446,9 @@ export async function handleOAuthToken(
     );
 
     return tokenResponse;
-  } catch (err) {
-    if (err instanceof AuthError) {
-      throw err;
+  } catch (error) {
+    if (error instanceof AuthError) {
+      throw error;
     }
     throw new AuthError({
       message: 'Invalid client credentials',
