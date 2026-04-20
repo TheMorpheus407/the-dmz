@@ -167,9 +167,11 @@ export const emailService = {
   },
 
   async validateIntegration(
-    _tenantId: string,
+    tenantId: string,
     request: EmailValidationRequest,
   ): Promise<EmailValidationResult> {
+    await this.getIntegration(tenantId, request.integrationId);
+
     const posture = {
       spf: {
         status: request.runSpfCheck
