@@ -92,10 +92,10 @@ describe('event-queue', () => {
     expect(MAX_QUEUE_SIZE).toBe(100);
   });
 
-  it('should export validateSnapshot function', async () => {
-    const { validateSnapshot } = await import('$lib/storage/session');
-    expect(validateSnapshot).toBeDefined();
-    expect(typeof validateSnapshot).toBe('function');
+  it('should export isSnapshotValid function', async () => {
+    const { isSnapshotValid } = await import('$lib/storage/session');
+    expect(isSnapshotValid).toBeDefined();
+    expect(typeof isSnapshotValid).toBe('function');
   });
 
   it('should export clearStaleSnapshots function', async () => {
@@ -116,7 +116,7 @@ describe('session validation', () => {
   });
 
   it('should validate snapshot with correct schema version and checksum', async () => {
-    const { validateSnapshot } = await import('$lib/storage/session');
+    const { isSnapshotValid } = await import('$lib/storage/session');
 
     const snapshot = {
       id: 'test-id',
@@ -126,11 +126,11 @@ describe('session validation', () => {
       checksum: '-32c5f2ea',
     };
 
-    expect(validateSnapshot(snapshot)).toBe(true);
+    expect(isSnapshotValid(snapshot)).toBe(true);
   });
 
   it('should reject snapshot with wrong schema version', async () => {
-    const { validateSnapshot } = await import('$lib/storage/session');
+    const { isSnapshotValid } = await import('$lib/storage/session');
 
     const snapshot = {
       id: 'test-id',
@@ -140,11 +140,11 @@ describe('session validation', () => {
       checksum: '-32c5f2ea',
     };
 
-    expect(validateSnapshot(snapshot)).toBe(false);
+    expect(isSnapshotValid(snapshot)).toBe(false);
   });
 
   it('should reject snapshot with wrong checksum', async () => {
-    const { validateSnapshot } = await import('$lib/storage/session');
+    const { isSnapshotValid } = await import('$lib/storage/session');
 
     const snapshot = {
       id: 'test-id',
@@ -154,7 +154,7 @@ describe('session validation', () => {
       checksum: 'wrong-checksum',
     };
 
-    expect(validateSnapshot(snapshot)).toBe(false);
+    expect(isSnapshotValid(snapshot)).toBe(false);
   });
 });
 

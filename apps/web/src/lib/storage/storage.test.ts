@@ -538,7 +538,7 @@ describe('storage/session', () => {
   });
 
   it('should validate snapshot with correct schema version and checksum', async () => {
-    const { validateSnapshot, computeChecksum } = await import('$lib/storage/session');
+    const { isSnapshotValid, computeChecksum } = await import('$lib/storage/session');
 
     const state = { test: 'data' };
     const snapshot = {
@@ -549,11 +549,11 @@ describe('storage/session', () => {
       checksum: computeChecksum(state),
     };
 
-    expect(validateSnapshot(snapshot)).toBe(true);
+    expect(isSnapshotValid(snapshot)).toBe(true);
   });
 
   it('should reject snapshot with wrong schema version', async () => {
-    const { validateSnapshot, computeChecksum } = await import('$lib/storage/session');
+    const { isSnapshotValid, computeChecksum } = await import('$lib/storage/session');
 
     const state = { test: 'data' };
     const snapshot = {
@@ -564,11 +564,11 @@ describe('storage/session', () => {
       checksum: computeChecksum(state),
     };
 
-    expect(validateSnapshot(snapshot)).toBe(false);
+    expect(isSnapshotValid(snapshot)).toBe(false);
   });
 
   it('should reject snapshot with wrong checksum', async () => {
-    const { validateSnapshot } = await import('$lib/storage/session');
+    const { isSnapshotValid } = await import('$lib/storage/session');
 
     const snapshot = {
       id: 'test-id',
@@ -578,13 +578,13 @@ describe('storage/session', () => {
       checksum: 'wrong-checksum',
     };
 
-    expect(validateSnapshot(snapshot)).toBe(false);
+    expect(isSnapshotValid(snapshot)).toBe(false);
   });
 
-  it('should export validateSnapshot function', async () => {
-    const { validateSnapshot } = await import('$lib/storage/session');
-    expect(validateSnapshot).toBeDefined();
-    expect(typeof validateSnapshot).toBe('function');
+  it('should export isSnapshotValid function', async () => {
+    const { isSnapshotValid } = await import('$lib/storage/session');
+    expect(isSnapshotValid).toBeDefined();
+    expect(typeof isSnapshotValid).toBe('function');
   });
 
   it('should export clearStaleSnapshots function', async () => {

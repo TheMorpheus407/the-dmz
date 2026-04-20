@@ -388,4 +388,54 @@ describe('offline engine', () => {
       expect(result.threatChange).toBe(expectedThreatChange);
     });
   });
+
+  describe('isGameOver', () => {
+    it('should return false when trust and funds are positive', async () => {
+      const { createOfflineEngine } = await import('$lib/game/services/offline-engine');
+      const engine = createOfflineEngine({ emailsPerDay: 0 });
+      await engine.initialize();
+
+      expect(engine.isGameOver()).toBe(false);
+    });
+
+    it('should return true when trust reaches zero', async () => {
+      const { createOfflineEngine } = await import('$lib/game/services/offline-engine');
+      const engine = createOfflineEngine({ emailsPerDay: 0 });
+      await engine.initialize();
+
+      engine.getState().player.trust = 0;
+
+      expect(engine.isGameOver()).toBe(true);
+    });
+
+    it('should return true when trust goes negative', async () => {
+      const { createOfflineEngine } = await import('$lib/game/services/offline-engine');
+      const engine = createOfflineEngine({ emailsPerDay: 0 });
+      await engine.initialize();
+
+      engine.getState().player.trust = -10;
+
+      expect(engine.isGameOver()).toBe(true);
+    });
+
+    it('should return true when funds reach zero', async () => {
+      const { createOfflineEngine } = await import('$lib/game/services/offline-engine');
+      const engine = createOfflineEngine({ emailsPerDay: 0 });
+      await engine.initialize();
+
+      engine.getState().player.funds = 0;
+
+      expect(engine.isGameOver()).toBe(true);
+    });
+
+    it('should return true when funds go negative', async () => {
+      const { createOfflineEngine } = await import('$lib/game/services/offline-engine');
+      const engine = createOfflineEngine({ emailsPerDay: 0 });
+      await engine.initialize();
+
+      engine.getState().player.funds = -100;
+
+      expect(engine.isGameOver()).toBe(true);
+    });
+  });
 });

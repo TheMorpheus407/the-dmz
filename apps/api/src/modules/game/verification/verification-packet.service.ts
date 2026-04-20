@@ -204,7 +204,7 @@ function weightedRandom<T>(random: RNGInstance, options: T[], weights: number[])
   return options[options.length - 1]!;
 }
 
-export function validatePacketDeterminism(params: AssemblePacketParams): boolean {
+export function isPacketDeterministic(params: AssemblePacketParams): boolean {
   const packet1 = assembleVerificationPacket(params);
   const packet2 = assembleVerificationPacket(params);
 

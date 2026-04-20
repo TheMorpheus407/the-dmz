@@ -116,7 +116,7 @@ function calculateIndicatorDensity(text: string, wordCount: number): number {
   return (indicatorCount / wordCount) * 100;
 }
 
-function detectSpoofedHeaders(headers?: Record<string, string>): boolean {
+function hasSpoofedHeaders(headers?: Record<string, string>): boolean {
   if (!headers) return false;
 
   const fromHeader = headers['from'] || headers['From'];
@@ -224,7 +224,7 @@ function assessImpersonationQuality(
   return Math.round(score * 100) / 100;
 }
 
-function detectVerificationHooks(text: string): boolean {
+function hasVerificationHooks(text: string): boolean {
   const lowerText = text.toLowerCase();
 
   for (const hook of VERIFICATION_HOOKS) {
@@ -285,22 +285,20 @@ export function extractFeatures(email: RawEmail): EmailFeatures {
   const wordCount = countWords(fullText);
 
   const indicatorCount = Math.round(calculateIndicatorDensity(fullText, wordCount) * 100) / 100;
-  const hasSpoofedHeaders = detectSpoofedHeaders(email.headers);
   const impersonationQuality = assessImpersonationQuality(
     email.fromName,
     email.fromEmail,
     email.subject,
   );
-  const hasVerificationHooks = detectVerificationHooks(fullText);
   const emotionalManipulationLevel = assessEmotionalManipulation(email.body);
   const grammarComplexity = assessGrammarComplexity(email.body);
 
   return {
     indicatorCount,
     wordCount,
-    hasSpoofedHeaders,
+    hasSpoofedHeaders: hasSpoofedHeaders(email.headers),
     impersonationQuality,
-    hasVerificationHooks,
+    hasVerificationHooks: hasVerificationHooks(fullText),
     emotionalManipulationLevel,
     grammarComplexity,
   };

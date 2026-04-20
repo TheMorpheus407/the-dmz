@@ -50,7 +50,7 @@ function detectConnectionType(): string | undefined {
   return nav.connection.effectiveType;
 }
 
-function detectIsMobile(): boolean {
+function isMobile(): boolean {
   if (!browser) return false;
 
   const userAgent =
@@ -61,7 +61,7 @@ function detectIsMobile(): boolean {
   );
 }
 
-function detectIsLowEndDevice(): boolean {
+function isLowEndDevice(): boolean {
   if (!browser) return false;
 
   const canvas = document.createElement('canvas');
@@ -138,18 +138,18 @@ export function detectDevicePerformance(): DevicePerformanceInfo {
   const hardwareConcurrency = detectHardwareConcurrency();
   const deviceMemory = detectDeviceMemory();
   const connectionEffectiveType = detectConnectionType();
-  const isMobile = detectIsMobile();
-  const isLowEndDevice = detectIsLowEndDevice();
+  const mobile = isMobile();
+  const lowEndDevice = isLowEndDevice();
 
-  const tier = calculateTier(hardwareConcurrency, deviceMemory, connectionEffectiveType, isMobile);
+  const tier = calculateTier(hardwareConcurrency, deviceMemory, connectionEffectiveType, mobile);
 
   return {
     tier,
     hardwareConcurrency,
     deviceMemory,
     connectionEffectiveType,
-    isMobile,
-    isLowEndDevice,
+    isMobile: mobile,
+    isLowEndDevice: lowEndDevice,
   };
 }
 

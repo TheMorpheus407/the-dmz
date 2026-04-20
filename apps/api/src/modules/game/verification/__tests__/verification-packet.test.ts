@@ -10,7 +10,7 @@ import {
 import { reduce } from '../../engine/reducer.js';
 import {
   assembleVerificationPacket,
-  validatePacketDeterminism,
+  isPacketDeterministic,
 } from '../verification-packet.service.js';
 
 const createTestState = (overrides?: Partial<GameState>): GameState => {
@@ -133,7 +133,7 @@ describe('Verification Packet Assembly', () => {
       sessionId: 'session-deterministic',
     };
 
-    const isDeterministic = validatePacketDeterminism(params);
+    const isDeterministic = isPacketDeterministic(params);
     expect(isDeterministic).toBe(true);
   });
 

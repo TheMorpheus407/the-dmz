@@ -24,7 +24,7 @@ export function computeChecksum(data: unknown): string {
   return hash.toString(16);
 }
 
-export function validateSnapshot(snapshot: SessionSnapshot): boolean {
+export function isSnapshotValid(snapshot: SessionSnapshot): boolean {
   if (snapshot.schemaVersion !== SCHEMA_VERSION) {
     logger.warn(
       `[Session] Invalid snapshot: schema version mismatch (expected ${SCHEMA_VERSION}, got ${snapshot.schemaVersion})`,
@@ -75,7 +75,7 @@ function createSessionSnapshotManager(): SessionSnapshotManager {
   }
 
   async function getLatestSessionSnapshot(): Promise<SessionSnapshot | null> {
-    if (currentSnapshot && validateSnapshot(currentSnapshot)) {
+    if (currentSnapshot && isSnapshotValid(currentSnapshot)) {
       return currentSnapshot;
     }
 
@@ -90,7 +90,7 @@ function createSessionSnapshotManager(): SessionSnapshotManager {
 
     for (let i = snapshots.length - 1; i >= 0; i--) {
       const snapshot = snapshots[i] as SessionSnapshot;
-      if (validateSnapshot(snapshot)) {
+      if (isSnapshotValid(snapshot)) {
         currentSnapshot = snapshot;
         return snapshot;
       }

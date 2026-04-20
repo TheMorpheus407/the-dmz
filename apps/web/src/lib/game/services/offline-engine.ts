@@ -253,7 +253,7 @@ export class OfflineGameEngine {
     return this.isInitialized;
   }
 
-  checkGameOver(): boolean {
+  isGameOver(): boolean {
     return this.state.player.trust <= 0 || this.state.player.funds <= 0;
   }
 
