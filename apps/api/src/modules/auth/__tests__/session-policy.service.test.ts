@@ -1,12 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import {
   SessionOutcome,
   SessionRevocationReason,
-  type TenantSessionPolicy,
   defaultTenantSessionPolicy,
   SessionBindingMode,
-  ConcurrentSessionStrategy,
   SESSION_POLICY_DEFAULTS,
 } from '@the-dmz/shared/auth/session-policy.js';
 import { Role } from '@the-dmz/shared/auth';
@@ -40,6 +38,17 @@ const TEST_CONSTANTS = {
   IDLE_TIMEOUT_MINUTES: SESSION_POLICY_DEFAULTS.IDLE_TIMEOUT_MINUTES,
   ABSOLUTE_TIMEOUT_MINUTES: SESSION_POLICY_DEFAULTS.ABSOLUTE_TIMEOUT_MINUTES,
 };
+
+const FIXED_NOW = new Date('2024-01-01T12:00:00Z');
+
+beforeEach(() => {
+  vi.useFakeTimers();
+  vi.setSystemTime(FIXED_NOW);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe('session-policy.service', () => {
   describe('roleBasedSessionPolicies', () => {
@@ -106,20 +115,22 @@ describe('session-policy.service', () => {
 
   describe('canRefreshSession', () => {
     it('should return true for refreshable role within duration', () => {
-      const sessionCreatedAt = new Date(Date.now() - TEST_CONSTANTS.ONE_HOUR_MS);
+      const sessionCreatedAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.ONE_HOUR_MS);
       const result = canRefreshSession(sessionCreatedAt, Role.LEARNER);
       expect(result).toBe(true);
     });
 
     it('should return false for non-refreshable role (super_admin)', () => {
-      const sessionCreatedAt = new Date();
+      const sessionCreatedAt = new Date(FIXED_NOW.getTime());
       const result = canRefreshSession(sessionCreatedAt, Role.SUPER_ADMIN);
       expect(result).toBe(false);
     });
 
     it('should return false for session exceeding max duration', () => {
       const sessionCreatedAt = new Date(
-        Date.now() - TEST_CONSTANTS.DEFAULT_SESSION_DURATION_MS - TEST_CONSTANTS.ONE_HOUR_MS,
+        FIXED_NOW.getTime() -
+          TEST_CONSTANTS.DEFAULT_SESSION_DURATION_MS -
+          TEST_CONSTANTS.ONE_HOUR_MS,
       );
       const result = canRefreshSession(sessionCreatedAt, Role.LEARNER);
       expect(result).toBe(false);
@@ -127,10 +138,28 @@ describe('session-policy.service', () => {
 
     it('should return false for unknown role exceeding default duration', () => {
       const sessionCreatedAt = new Date(
-        Date.now() - TEST_CONSTANTS.DEFAULT_SESSION_DURATION_MS - TEST_CONSTANTS.ONE_HOUR_MS,
+        FIXED_NOW.getTime() -
+          TEST_CONSTANTS.DEFAULT_SESSION_DURATION_MS -
+          TEST_CONSTANTS.ONE_HOUR_MS,
       );
       const result = canRefreshSession(sessionCreatedAt, 'unknown_role');
       expect(result).toBe(false);
+    });
+
+    it('should return false for session at exact max duration boundary', () => {
+      const sessionCreatedAt = new Date(
+        FIXED_NOW.getTime() - TEST_CONSTANTS.DEFAULT_SESSION_DURATION_MS,
+      );
+      const result = canRefreshSession(sessionCreatedAt, Role.LEARNER);
+      expect(result).toBe(false);
+    });
+
+    it('should return true for session 1ms before max duration boundary', () => {
+      const sessionCreatedAt = new Date(
+        FIXED_NOW.getTime() - TEST_CONSTANTS.DEFAULT_SESSION_DURATION_MS + 1,
+      );
+      const result = canRefreshSession(sessionCreatedAt, Role.LEARNER);
+      expect(result).toBe(true);
     });
   });
 
@@ -205,8 +234,8 @@ describe('session-policy.service', () => {
 
   describe('evaluateSessionTimeouts', () => {
     it('should return active for fresh session within timeouts', () => {
-      const sessionCreatedAt = new Date(Date.now() - TEST_CONSTANTS.THIRTY_MINUTES_MS);
-      const lastActiveAt = new Date(Date.now() - TEST_CONSTANTS.FIVE_MINUTES_MS);
+      const sessionCreatedAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.THIRTY_MINUTES_MS);
+      const lastActiveAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.FIVE_MINUTES_MS);
 
       const result = evaluateSessionTimeouts(
         sessionCreatedAt,
@@ -221,8 +250,8 @@ describe('session-policy.service', () => {
     });
 
     it('should return expired with idle timeout when idle too long', () => {
-      const sessionCreatedAt = new Date(Date.now() - TEST_CONSTANTS.ONE_HOUR_MS);
-      const lastActiveAt = new Date(Date.now() - TEST_CONSTANTS.FORTY_FIVE_MINUTES_MS);
+      const sessionCreatedAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.ONE_HOUR_MS);
+      const lastActiveAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.FORTY_FIVE_MINUTES_MS);
 
       const policy = { ...defaultTenantSessionPolicy, idleTimeoutMinutes: 30 };
 
@@ -235,8 +264,8 @@ describe('session-policy.service', () => {
     });
 
     it('should return expired with absolute timeout when session too old', () => {
-      const sessionCreatedAt = new Date(Date.now() - TEST_CONSTANTS.TWENTY_FIVE_HOURS_MS);
-      const lastActiveAt = new Date();
+      const sessionCreatedAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.TWENTY_FIVE_HOURS_MS);
+      const lastActiveAt = new Date(FIXED_NOW.getTime());
 
       const policy = {
         ...defaultTenantSessionPolicy,
@@ -250,6 +279,29 @@ describe('session-policy.service', () => {
       expect(result.reason).toBe(SessionRevocationReason.ABSOLUTE_TIMEOUT);
       expect(result.absoluteTimeoutExpired).toBe(true);
     });
+
+    it('should return active at exact idle timeout boundary', () => {
+      const policy = { ...defaultTenantSessionPolicy, idleTimeoutMinutes: 30 };
+      const sessionCreatedAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.ONE_HOUR_MS);
+      const lastActiveAt = new Date(FIXED_NOW.getTime() - 30 * 60 * 1000);
+
+      const result = evaluateSessionTimeouts(sessionCreatedAt, lastActiveAt, policy);
+
+      expect(result.allowed).toBe(true);
+      expect(result.outcome).toBe(SessionOutcome.ACTIVE);
+      expect(result.reason).toBeUndefined();
+    });
+
+    it('should return active at exact idle timeout boundary - 1ms before', () => {
+      const policy = { ...defaultTenantSessionPolicy, idleTimeoutMinutes: 30 };
+      const sessionCreatedAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.ONE_HOUR_MS);
+      const lastActiveAt = new Date(FIXED_NOW.getTime() - 30 * 60 * 1000 + 1);
+
+      const result = evaluateSessionTimeouts(sessionCreatedAt, lastActiveAt, policy);
+
+      expect(result.allowed).toBe(true);
+      expect(result.outcome).toBe(SessionOutcome.ACTIVE);
+    });
   });
 
   describe('evaluateConcurrentSessions', () => {
@@ -261,12 +313,44 @@ describe('session-policy.service', () => {
       expect(result.maxSessions).toBe(TEST_CONSTANTS.MAX_CONCURRENT_SESSIONS);
     });
 
+    it('should allow session when currentSessionCount is zero', () => {
+      const result = evaluateConcurrentSessions(0, defaultTenantSessionPolicy);
+
+      expect(result.allowed).toBe(true);
+      expect(result.currentSessionCount).toBe(0);
+    });
+
     it('should deny session when at limit', () => {
       const result = evaluateConcurrentSessions(5, defaultTenantSessionPolicy);
 
       expect(result.allowed).toBe(false);
       expect(result.outcome).toBe(SessionOutcome.POLICY_DENIED);
       expect(result.reason).toBe(SessionRevocationReason.CONCURRENT_SESSION);
+    });
+
+    it('should deny all sessions when maxConcurrentSessionsPerUser is 0', () => {
+      const policy = { ...defaultTenantSessionPolicy, maxConcurrentSessionsPerUser: 0 };
+
+      const result = evaluateConcurrentSessions(0, policy);
+
+      expect(result.allowed).toBe(false);
+      expect(result.outcome).toBe(SessionOutcome.POLICY_DENIED);
+      expect(result.reason).toBe(SessionRevocationReason.CONCURRENT_SESSION);
+    });
+
+    it('should allow exactly at limit boundary', () => {
+      const policy = { ...defaultTenantSessionPolicy, maxConcurrentSessionsPerUser: 3 };
+      const result = evaluateConcurrentSessions(2, policy);
+
+      expect(result.allowed).toBe(true);
+    });
+
+    it('should deny at limit boundary (current equals max)', () => {
+      const policy = { ...defaultTenantSessionPolicy, maxConcurrentSessionsPerUser: 3 };
+      const result = evaluateConcurrentSessions(3, policy);
+
+      expect(result.allowed).toBe(false);
+      expect(result.outcome).toBe(SessionOutcome.POLICY_DENIED);
     });
 
     it('should allow unlimited sessions when maxConcurrentSessionsPerUser is null', () => {
