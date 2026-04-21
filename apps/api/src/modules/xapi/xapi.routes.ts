@@ -277,20 +277,20 @@ export async function registerXapiRoutes(app: FastifyInstance, config: AppConfig
       const configs = await listLrsConfigs(config, tenantId);
 
       return {
-        configs: configs.map((cfg) => ({
-          id: cfg.id,
-          tenantId: cfg.tenantId,
-          name: cfg.name,
-          endpoint: cfg.endpoint,
-          authKeyId: cfg.authKeyId,
-          version: cfg.version,
-          enabled: cfg.enabled,
-          batchingEnabled: cfg.batchingEnabled,
-          batchSize: cfg.batchSize,
-          retryMaxAttempts: cfg.retryMaxAttempts,
-          retryBaseDelayMs: cfg.retryBaseDelayMs,
-          createdAt: cfg.createdAt.toISOString(),
-          updatedAt: cfg.updatedAt.toISOString(),
+        configs: configs.map((lrsConfig) => ({
+          id: lrsConfig.id,
+          tenantId: lrsConfig.tenantId,
+          name: lrsConfig.name,
+          endpoint: lrsConfig.endpoint,
+          authKeyId: lrsConfig.authKeyId,
+          version: lrsConfig.version,
+          enabled: lrsConfig.enabled,
+          batchingEnabled: lrsConfig.batchingEnabled,
+          batchSize: lrsConfig.batchSize,
+          retryMaxAttempts: lrsConfig.retryMaxAttempts,
+          retryBaseDelayMs: lrsConfig.retryBaseDelayMs,
+          createdAt: lrsConfig.createdAt.toISOString(),
+          updatedAt: lrsConfig.updatedAt.toISOString(),
         })),
       };
     },
