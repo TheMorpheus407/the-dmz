@@ -49,7 +49,7 @@
     "test:password-policy-contract": "vitest run --config vitest.password-policy-contract.config.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.24.0",
+    "@anthropic-ai/sdk": "^0.82.0",
     "@fastify/cookie": "^11.0.2",
     "@fastify/cors": "^11.2.0",
     "@fastify/helmet": "^13.0.2",
