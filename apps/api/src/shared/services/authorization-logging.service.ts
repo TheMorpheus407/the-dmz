@@ -4,7 +4,7 @@ import {
   type PermissionEvaluator,
 } from '@the-dmz/shared';
 
-import type { FastifyRequest } from 'fastify';
+import type { HttpRequest } from './http-request.js';
 
 export type DenialReason = AuthorizationDenialLog['denialReason'];
 
@@ -12,6 +12,12 @@ export interface AuthorizationLoggingOptions {
   includeUserId: boolean;
   includeTenantId: boolean;
   redactSensitiveData: boolean;
+}
+
+export interface InsufficientPermissionsParams {
+  requiredPermissions: string[];
+  grantedPermissions: string[];
+  evaluator: PermissionEvaluator;
 }
 
 const defaultOptions: AuthorizationLoggingOptions = {
@@ -29,7 +35,7 @@ const shouldRedactInProduction = (
 };
 
 export const logAuthorizationDenial = (
-  request: FastifyRequest,
+  request: HttpRequest,
   reason: DenialReason,
   options?: Partial<AuthorizationLoggingOptions>,
 ): void => {
@@ -82,10 +88,8 @@ export const logAuthorizationDenial = (
 };
 
 export const logInsufficientPermissions = (
-  request: FastifyRequest,
-  requiredPermissions: string[],
-  grantedPermissions: string[],
-  evaluator: PermissionEvaluator,
+  request: HttpRequest,
+  params: InsufficientPermissionsParams,
   options?: Partial<AuthorizationLoggingOptions>,
 ): void => {
   const config = request.server.config;
@@ -116,11 +120,11 @@ export const logInsufficientPermissions = (
       denialReason: 'insufficient_permissions',
       requiredPermissions: shouldRedactInProduction(nodeEnv, opts.redactSensitiveData)
         ? undefined
-        : requiredPermissions,
+        : params.requiredPermissions,
       grantedPermissions: shouldRedactInProduction(nodeEnv, opts.redactSensitiveData)
         ? undefined
-        : grantedPermissions,
-      evaluator,
+        : params.grantedPermissions,
+      evaluator: params.evaluator,
       timestamp: new Date().toISOString(),
     },
     'Authorization denied: insufficient permissions',
@@ -128,7 +132,7 @@ export const logInsufficientPermissions = (
 };
 
 export const logMissingPermissionDeclaration = (
-  request: FastifyRequest,
+  request: HttpRequest,
   _options?: Partial<AuthorizationLoggingOptions>,
 ): void => {
   const route = request.routeOptions?.url ?? request.url;
@@ -147,7 +151,7 @@ export const logMissingPermissionDeclaration = (
 };
 
 export const logNoRoles = (
-  request: FastifyRequest,
+  request: HttpRequest,
   options?: Partial<AuthorizationLoggingOptions>,
 ): void => {
   const config = request.server.config;
