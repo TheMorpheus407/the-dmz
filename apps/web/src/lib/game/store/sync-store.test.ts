@@ -1,18 +1,45 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { get } from 'svelte/store';
 
-vi.mock('$lib/api/game', () => ({
-  bootstrapGameSession: vi.fn(),
-  getGameSession: vi.fn(),
-}));
+import type { GameSessionBootstrap } from '@the-dmz/shared/schemas';
+import type { CategorizedApiError } from '$lib/api/types';
+import type { GameSessionRepositoryInterface } from '$lib/game/repositories/game-session.repository';
 
-import { bootstrapGameSession, getGameSession } from '$lib/api/game';
+import { createSyncStore, isLoading, hasError } from './sync-store';
 
-import { syncStore, isLoading, hasError } from './sync-store';
+const mockBootstrapSession: GameSessionBootstrap = {
+  schemaVersion: 1,
+  tenantId: 'tenant-1',
+  sessionId: 'session-1',
+  userId: 'user-1',
+  day: 1,
+  funds: 1000,
+  clientCount: 5,
+  threatLevel: 'low',
+  facilityLoadout: {
+    defenseLevel: 1,
+    serverLevel: 1,
+    networkLevel: 1,
+  },
+  createdAt: '2026-01-01T00:00:00.000Z',
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
+function createMockRepository(overrides?: Partial<GameSessionRepositoryInterface>) {
+  return {
+    bootstrap: vi.fn().mockResolvedValue({ data: mockBootstrapSession }),
+    fetchState: vi.fn().mockResolvedValue({ data: mockBootstrapSession }),
+    ...overrides,
+  } as GameSessionRepositoryInterface;
+}
 
 describe('syncStore', () => {
+  let mockRepository: GameSessionRepositoryInterface;
+  let syncStore: ReturnType<typeof createSyncStore>;
+
   beforeEach(() => {
-    syncStore.reset();
+    mockRepository = createMockRepository();
+    syncStore = createSyncStore(mockRepository);
     vi.clearAllMocks();
   });
 
@@ -36,30 +63,10 @@ describe('syncStore', () => {
 
   describe('bootstrap', () => {
     it('loads session from server', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({
-        data: {
-          schemaVersion: 1,
-          tenantId: 'tenant-1',
-          sessionId: 'session-1',
-          userId: 'user-1',
-          day: 1,
-          funds: 1000,
-          clientCount: 5,
-          threatLevel: 'low',
-          facilityLoadout: {
-            defenseLevel: 1,
-            serverLevel: 1,
-            networkLevel: 1,
-          },
-          createdAt: '2026-01-01T00:00:00.000Z',
-          updatedAt: '2026-01-01T00:00:00.000Z',
-        },
-      });
-
       const result = await syncStore.bootstrap();
 
       expect(result.error).toBeUndefined();
-      expect(bootstrapGameSession).toHaveBeenCalled();
+      expect(mockRepository.bootstrap).toHaveBeenCalled();
 
       const state = get(syncStore);
       expect(state.isInitialized).toBe(true);
@@ -67,15 +74,14 @@ describe('syncStore', () => {
     });
 
     it('handles bootstrap errors', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({
-        error: {
-          category: 'server' as const,
-          code: 'UNKNOWN_ERROR',
-          message: 'Failed',
-          status: 500,
-          retryable: false,
-        },
-      });
+      const errorResponse: CategorizedApiError = {
+        category: 'server',
+        code: 'UNKNOWN_ERROR',
+        message: 'Failed',
+        status: 500,
+        retryable: false,
+      };
+      mockRepository.bootstrap = vi.fn().mockResolvedValue({ error: errorResponse });
 
       const result = await syncStore.bootstrap();
 
@@ -87,23 +93,9 @@ describe('syncStore', () => {
 
     it('sets isLoading during bootstrap', async () => {
       let loadingDuringCall = false;
-      vi.mocked(bootstrapGameSession).mockImplementation(() => {
+      mockRepository.bootstrap = vi.fn().mockImplementation(async () => {
         loadingDuringCall = get(syncStore).isLoading;
-        return Promise.resolve({
-          data: {
-            schemaVersion: 1,
-            tenantId: 'tenant-1',
-            sessionId: 'session-1',
-            userId: 'user-1',
-            day: 1,
-            funds: 1000,
-            clientCount: 5,
-            threatLevel: 'low',
-            facilityLoadout: { defenseLevel: 1, serverLevel: 1, networkLevel: 1 },
-            createdAt: '2026-01-01T00:00:00.000Z',
-            updatedAt: '2026-01-01T00:00:00.000Z',
-          },
-        });
+        return { data: mockBootstrapSession };
       });
 
       await syncStore.bootstrap();
@@ -113,30 +105,12 @@ describe('syncStore', () => {
     it('updates isLoading derived', async () => {
       vi.useFakeTimers();
 
-      vi.mocked(bootstrapGameSession).mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(
-              () =>
-                resolve({
-                  data: {
-                    schemaVersion: 1,
-                    tenantId: 'tenant-1',
-                    sessionId: 'session-1',
-                    userId: 'user-1',
-                    day: 1,
-                    funds: 1000,
-                    clientCount: 5,
-                    threatLevel: 'low',
-                    facilityLoadout: { defenseLevel: 1, serverLevel: 1, networkLevel: 1 },
-                    createdAt: '2026-01-01T00:00:00.000Z',
-                    updatedAt: '2026-01-01T00:00:00.000Z',
-                  },
-                }),
-              10,
-            ),
-          ),
-      );
+      mockRepository.bootstrap = vi
+        .fn()
+        .mockImplementation(
+          () =>
+            new Promise((resolve) => setTimeout(() => resolve({ data: mockBootstrapSession }), 10)),
+        );
 
       const promise = syncStore.bootstrap();
       expect(get(isLoading)).toBe(true);
@@ -149,41 +123,24 @@ describe('syncStore', () => {
 
   describe('fetchState', () => {
     it('fetches state from server', async () => {
-      vi.mocked(getGameSession).mockResolvedValue({
-        data: {
-          schemaVersion: 1,
-          tenantId: 'tenant-1',
-          sessionId: 'session-1',
-          userId: 'user-1',
-          day: 5,
-          funds: 2000,
-          clientCount: 10,
-          threatLevel: 'elevated' as const,
-          facilityLoadout: { defenseLevel: 1, serverLevel: 1, networkLevel: 1 },
-          createdAt: '2026-01-01T00:00:00.000Z',
-          updatedAt: '2026-01-01T00:00:00.000Z',
-        },
-      });
-
       const result = await syncStore.fetchState();
 
       expect(result.error).toBeUndefined();
-      expect(getGameSession).toHaveBeenCalled();
+      expect(mockRepository.fetchState).toHaveBeenCalled();
 
       const state = get(syncStore);
       expect(state.lastSyncAt).not.toBeNull();
     });
 
     it('handles fetch errors', async () => {
-      vi.mocked(getGameSession).mockResolvedValue({
-        error: {
-          category: 'server' as const,
-          code: 'NOT_FOUND',
-          message: 'Not found',
-          status: 404,
-          retryable: false,
-        },
-      });
+      const errorResponse: CategorizedApiError = {
+        category: 'server',
+        code: 'NOT_FOUND',
+        message: 'Not found',
+        status: 404,
+        retryable: false,
+      };
+      mockRepository.fetchState = vi.fn().mockResolvedValue({ error: errorResponse });
 
       const result = await syncStore.fetchState();
 
@@ -194,23 +151,9 @@ describe('syncStore', () => {
 
     it('sets isLoading during fetch', async () => {
       let loadingDuringCall = false;
-      vi.mocked(getGameSession).mockImplementation(() => {
+      mockRepository.fetchState = vi.fn().mockImplementation(async () => {
         loadingDuringCall = get(syncStore).isLoading;
-        return Promise.resolve({
-          data: {
-            schemaVersion: 1,
-            tenantId: 'tenant-1',
-            sessionId: 'session-1',
-            userId: 'user-1',
-            day: 1,
-            funds: 1000,
-            clientCount: 5,
-            threatLevel: 'low' as const,
-            facilityLoadout: { defenseLevel: 1, serverLevel: 1, networkLevel: 1 },
-            createdAt: '2026-01-01T00:00:00.000Z',
-            updatedAt: '2026-01-01T00:00:00.000Z',
-          },
-        });
+        return { data: mockBootstrapSession };
       });
 
       await syncStore.fetchState();
@@ -238,46 +181,14 @@ describe('syncStore', () => {
 
   describe('rollback', () => {
     it('calls fetchState', async () => {
-      vi.mocked(getGameSession).mockResolvedValue({
-        data: {
-          schemaVersion: 1,
-          tenantId: 'tenant-1',
-          sessionId: 'session-1',
-          userId: 'user-1',
-          day: 1,
-          funds: 1000,
-          clientCount: 5,
-          threatLevel: 'low' as const,
-          facilityLoadout: { defenseLevel: 1, serverLevel: 1, networkLevel: 1 },
-          createdAt: '2026-01-01T00:00:00.000Z',
-          updatedAt: '2026-01-01T00:00:00.000Z',
-        },
-      });
-
       await syncStore.rollback();
 
-      expect(getGameSession).toHaveBeenCalled();
+      expect(mockRepository.fetchState).toHaveBeenCalled();
     });
   });
 
   describe('reset', () => {
     it('clears state', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({
-        data: {
-          schemaVersion: 1,
-          tenantId: 'tenant-1',
-          sessionId: 'session-1',
-          userId: 'user-1',
-          day: 1,
-          funds: 1000,
-          clientCount: 5,
-          threatLevel: 'low',
-          facilityLoadout: { defenseLevel: 1, serverLevel: 1, networkLevel: 1 },
-          createdAt: '2026-01-01T00:00:00.000Z',
-          updatedAt: '2026-01-01T00:00:00.000Z',
-        },
-      });
-
       await syncStore.bootstrap();
       syncStore.reset();
 
@@ -289,15 +200,14 @@ describe('syncStore', () => {
     });
 
     it('resets hasError derived', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({
-        error: {
-          category: 'server' as const,
-          code: 'UNKNOWN_ERROR',
-          message: 'Failed',
-          status: 500,
-          retryable: false,
-        },
-      });
+      const errorResponse: CategorizedApiError = {
+        category: 'server',
+        code: 'UNKNOWN_ERROR',
+        message: 'Failed',
+        status: 500,
+        retryable: false,
+      };
+      mockRepository.bootstrap = vi.fn().mockResolvedValue({ error: errorResponse });
 
       await syncStore.bootstrap();
       expect(get(hasError)).toBe(true);
@@ -309,22 +219,6 @@ describe('syncStore', () => {
 
   describe('get', () => {
     it('returns current state', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({
-        data: {
-          schemaVersion: 1,
-          tenantId: 'tenant-1',
-          sessionId: 'session-1',
-          userId: 'user-1',
-          day: 1,
-          funds: 1000,
-          clientCount: 5,
-          threatLevel: 'low',
-          facilityLoadout: { defenseLevel: 1, serverLevel: 1, networkLevel: 1 },
-          createdAt: '2026-01-01T00:00:00.000Z',
-          updatedAt: '2026-01-01T00:00:00.000Z',
-        },
-      });
-
       await syncStore.bootstrap();
 
       const result = syncStore.get();

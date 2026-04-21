@@ -1,16 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { get } from 'svelte/store';
 
-vi.mock('$lib/api/game', () => ({
-  bootstrapGameSession: vi.fn(),
-  getGameSession: vi.fn(),
-}));
-
 import type { GameSessionBootstrap } from '@the-dmz/shared/schemas';
-import { bootstrapGameSession } from '$lib/api/game';
+import type { CategorizedApiError } from '$lib/api/types';
+import type { GameSessionRepositoryInterface } from '$lib/game/repositories/game-session.repository';
 
 import {
-  gameStore,
+  createGameStore,
   currentPhase,
   currentDay,
   selectedEmail,
@@ -43,9 +39,21 @@ const mockBootstrapSession: GameSessionBootstrap = {
   updatedAt: '2026-01-01T00:00:00.000Z',
 };
 
+function createMockRepository(overrides?: Partial<GameSessionRepositoryInterface>) {
+  return {
+    bootstrap: vi.fn().mockResolvedValue({ data: mockBootstrapSession }),
+    fetchState: vi.fn().mockResolvedValue({ data: mockBootstrapSession }),
+    ...overrides,
+  } as GameSessionRepositoryInterface;
+}
+
 describe('gameStore', () => {
+  let mockRepository: GameSessionRepositoryInterface;
+  let gameStore: ReturnType<typeof createGameStore>;
+
   beforeEach(() => {
-    gameStore.reset();
+    mockRepository = createMockRepository();
+    gameStore = createGameStore(mockRepository);
     vi.clearAllMocks();
   });
 
@@ -66,12 +74,10 @@ describe('gameStore', () => {
 
   describe('bootstrap', () => {
     it('should load session from server on bootstrap', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({ data: mockBootstrapSession });
-
       const result = await gameStore.bootstrap();
 
       expect(result.error).toBeUndefined();
-      expect(bootstrapGameSession).toHaveBeenCalled();
+      expect(mockRepository.bootstrap).toHaveBeenCalled();
 
       const state = get(gameStore);
       expect(state.isInitialized).toBe(true);
@@ -80,15 +86,14 @@ describe('gameStore', () => {
     });
 
     it('should handle bootstrap errors', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({
-        error: {
-          category: 'server',
-          code: 'UNKNOWN_ERROR',
-          message: 'Failed',
-          status: 500,
-          retryable: false,
-        },
-      });
+      const errorResponse: CategorizedApiError = {
+        category: 'server',
+        code: 'UNKNOWN_ERROR',
+        message: 'Failed',
+        status: 500,
+        retryable: false,
+      };
+      mockRepository.bootstrap = vi.fn().mockResolvedValue({ error: errorResponse });
 
       const result = await gameStore.bootstrap();
 
@@ -100,9 +105,9 @@ describe('gameStore', () => {
 
     it('should set isLoading during bootstrap', async () => {
       let loadingDuringCall = false;
-      vi.mocked(bootstrapGameSession).mockImplementation(() => {
+      mockRepository.bootstrap = vi.fn().mockImplementation(async () => {
         loadingDuringCall = get(gameStore).isLoading;
-        return Promise.resolve({ data: mockBootstrapSession });
+        return { data: mockBootstrapSession };
       });
 
       await gameStore.bootstrap();
@@ -112,7 +117,6 @@ describe('gameStore', () => {
 
   describe('phase management', () => {
     it('should update phase', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({ data: mockBootstrapSession });
       await gameStore.bootstrap();
 
       gameStore.setPhase('EMAIL_TRIAGE');
@@ -235,7 +239,6 @@ describe('gameStore', () => {
 
   describe('player resources', () => {
     it('should update player resources', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({ data: mockBootstrapSession });
       await gameStore.bootstrap();
 
       gameStore.updatePlayer({ trust: 150, funds: 2000 });
@@ -257,7 +260,6 @@ describe('gameStore', () => {
 
   describe('facility management', () => {
     it('should update facility', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({ data: mockBootstrapSession });
       await gameStore.bootstrap();
 
       gameStore.updateFacility({ rackSpace: 20, power: 150 });
@@ -271,7 +273,6 @@ describe('gameStore', () => {
 
   describe('threat management', () => {
     it('should update threat level', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({ data: mockBootstrapSession });
       await gameStore.bootstrap();
 
       gameStore.updateThreat({ level: 'high', activeIncidents: 2 });
@@ -285,7 +286,6 @@ describe('gameStore', () => {
 
   describe('day advancement', () => {
     it('should advance day and reset decisions', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({ data: mockBootstrapSession });
       await gameStore.bootstrap();
 
       gameStore.addDecision({
@@ -390,7 +390,6 @@ describe('gameStore', () => {
 
   describe('reset', () => {
     it('should reset to initial state', async () => {
-      vi.mocked(bootstrapGameSession).mockResolvedValue({ data: mockBootstrapSession });
       await gameStore.bootstrap();
 
       gameStore.updatePlayer({ trust: 200 });

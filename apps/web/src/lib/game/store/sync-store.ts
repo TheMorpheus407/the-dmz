@@ -1,7 +1,8 @@
 import { writable, derived, get } from 'svelte/store';
 
 import type { CategorizedApiError } from '$lib/api/types';
-import { bootstrapGameSession, getGameSession } from '$lib/api/game';
+import type { GameSessionRepositoryInterface } from '$lib/game/repositories/game-session.repository';
+import { GameSessionRepository } from '$lib/game/repositories/game-session.repository';
 
 export interface SyncState {
   isLoading: boolean;
@@ -17,7 +18,7 @@ const initialState: SyncState = {
   lastSyncAt: null,
 };
 
-function createSyncStore() {
+function createSyncStore(repository: GameSessionRepositoryInterface) {
   const { subscribe, set, update } = writable<SyncState>(initialState);
 
   return {
@@ -30,7 +31,7 @@ function createSyncStore() {
     async bootstrap(): Promise<{ error?: CategorizedApiError }> {
       update((state) => ({ ...state, isLoading: true, error: null }));
 
-      const result = await bootstrapGameSession();
+      const result = await repository.bootstrap();
 
       if (result.error) {
         update((state) => ({ ...state, isLoading: false, error: result.error ?? null }));
@@ -49,7 +50,7 @@ function createSyncStore() {
     async fetchState(): Promise<{ error?: CategorizedApiError }> {
       update((state) => ({ ...state, isLoading: true, error: null }));
 
-      const result = await getGameSession();
+      const result = await repository.fetchState();
 
       if (result.error) {
         update((state) => ({ ...state, isLoading: false, error: result.error ?? null }));
@@ -82,7 +83,11 @@ function createSyncStore() {
   };
 }
 
-export const syncStore = createSyncStore();
+const defaultRepository = new GameSessionRepository();
+
+export const syncStore = createSyncStore(defaultRepository);
+
+export { createSyncStore };
 
 export const isLoading = derived(syncStore, ($sync) => $sync.isLoading);
 

@@ -3,9 +3,10 @@ import { writable, get } from 'svelte/store';
 import type { GameSessionBootstrap } from '@the-dmz/shared/schemas';
 import type { GamePhase } from '$lib/game/state/state-machine';
 import type { CategorizedApiError } from '$lib/api/types';
-import { bootstrapGameSession, getGameSession } from '$lib/api/game';
 import type { QueuedAction, GameAction } from '$lib/game/services/action-queue';
 import type { GameEvent } from '$lib/game/state/events';
+import type { GameSessionRepositoryInterface } from '$lib/game/repositories/game-session.repository';
+import { GameSessionRepository } from '$lib/game/repositories/game-session.repository';
 
 import { sessionStore, currentPhase, currentDay } from './session-store';
 import { playerStore, playerResources } from './player-store';
@@ -86,7 +87,7 @@ export interface GameStore extends Readable<GameStoreState> {
   reset(): void;
 }
 
-function createGameStore(): GameStore {
+function createGameStore(repository: GameSessionRepositoryInterface): GameStore {
   const gameWritable = writable<GameStoreState>({
     isLoading: false,
     isInitialized: false,
@@ -137,7 +138,7 @@ function createGameStore(): GameStore {
     async bootstrap(): Promise<{ error?: CategorizedApiError }> {
       syncStore.optimisticUpdate((state) => ({ ...state, isLoading: true, error: null }));
 
-      const result = await bootstrapGameSession();
+      const result = await repository.bootstrap();
 
       if (result.error) {
         syncStore.optimisticUpdate((state) => ({
@@ -166,7 +167,7 @@ function createGameStore(): GameStore {
     async fetchState(): Promise<{ error?: CategorizedApiError }> {
       syncStore.optimisticUpdate((state) => ({ ...state, isLoading: true, error: null }));
 
-      const result = await getGameSession();
+      const result = await repository.fetchState();
 
       if (result.error) {
         syncStore.optimisticUpdate((state) => ({
@@ -322,7 +323,11 @@ function createGameStore(): GameStore {
   };
 }
 
-export const gameStore = createGameStore();
+const defaultRepository = new GameSessionRepository();
+
+export const gameStore = createGameStore(defaultRepository);
+
+export { createGameStore };
 
 export {
   currentPhase,
