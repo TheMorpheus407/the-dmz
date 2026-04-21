@@ -561,4 +561,78 @@ describe('validateFrontendEnvConsistency', () => {
     expect(result.ok).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
+
+  describe('VITE_VAPID_PUBLIC_KEY validation', () => {
+    const validVapidKey =
+      'BCkxsq6tldax_bSYVbF8W4jC4eVI6JkJCEKLJi3J-J-UEl2eWZQ8V-nlqFKkBAt0wnS3b0P8Czo0VBQqJ5tTqLw';
+
+    it('accepts valid base64url-encoded VAPID public key', () => {
+      const config = parseFrontendEnv({
+        ...validFrontendEnv,
+        VITE_VAPID_PUBLIC_KEY: validVapidKey,
+      });
+
+      expect(config.VITE_VAPID_PUBLIC_KEY).toBe(validVapidKey);
+    });
+
+    it('accepts empty string for VITE_VAPID_PUBLIC_KEY (optional)', () => {
+      const config = parseFrontendEnv({
+        ...validFrontendEnv,
+        VITE_VAPID_PUBLIC_KEY: '',
+      });
+
+      expect(config.VITE_VAPID_PUBLIC_KEY).toBe('');
+    });
+
+    it('defaults VITE_VAPID_PUBLIC_KEY to empty string when not provided', () => {
+      const config = parseFrontendEnv(validFrontendEnv);
+
+      expect(config.VITE_VAPID_PUBLIC_KEY).toBe('');
+    });
+
+    it('rejects VAPID public key with invalid base64 characters', () => {
+      expect(() =>
+        parseFrontendEnv({
+          ...validFrontendEnv,
+          VITE_VAPID_PUBLIC_KEY: 'not-valid-base64!!!',
+        }),
+      ).toThrow(/Invalid frontend environment configuration/);
+    });
+
+    it('rejects VAPID public key with base64 padding characters', () => {
+      expect(() =>
+        parseFrontendEnv({
+          ...validFrontendEnv,
+          VITE_VAPID_PUBLIC_KEY: 'BCkxsq6tldax_bSYVbF8W4jC4eVI6JkJCEKLJi3J==',
+        }),
+      ).toThrow(/Invalid frontend environment configuration/);
+    });
+
+    it('rejects VAPID public key with embedded whitespace characters', () => {
+      expect(() =>
+        parseFrontendEnv({
+          ...validFrontendEnv,
+          VITE_VAPID_PUBLIC_KEY: 'BCkxsq6t ldax_bSY',
+        }),
+      ).toThrow(/Invalid frontend environment configuration/);
+    });
+
+    it('rejects VAPID public key with single = character in the middle', () => {
+      expect(() =>
+        parseFrontendEnv({
+          ...validFrontendEnv,
+          VITE_VAPID_PUBLIC_KEY: 'BCkxsq6tlda=x_bSYVbF8W4jC4eVI6JkJCEKLJi3J',
+        }),
+      ).toThrow(/Invalid frontend environment configuration/);
+    });
+
+    it('rejects VAPID public key containing / character (not valid base64url)', () => {
+      expect(() =>
+        parseFrontendEnv({
+          ...validFrontendEnv,
+          VITE_VAPID_PUBLIC_KEY: 'BCkxsq6tldax_bSY/VbF8W4jC4eVI6JkJCEKLJi3J',
+        }),
+      ).toThrow(/Invalid frontend environment configuration/);
+    });
+  });
 });

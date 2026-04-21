@@ -220,6 +220,15 @@ export type BackendEnv = z.infer<typeof backendEnvSchema>;
  * Validated when the client application loads so the app fails fast with
  * actionable error messages if required variables are misconfigured.
  */
+const base64urlNoPaddingRegex = /^[A-Za-z0-9_-]+$/;
+
+const vapidPublicKeySchema = z
+  .string()
+  .default('')
+  .refine((val) => val === '' || base64urlNoPaddingRegex.test(val), {
+    message: 'VITE_VAPID_PUBLIC_KEY must be a valid base64url-encoded string without padding',
+  });
+
 export const frontendEnvSchema = z.object({
   PUBLIC_API_BASE_URL: z.string().min(1).default('/api/v1'),
   PUBLIC_ENVIRONMENT: z.enum(nodeEnvValues).default('development'),
@@ -228,6 +237,7 @@ export const frontendEnvSchema = z.object({
   CSP_IMG_SRC: z.string().optional().default(''),
   COEP_POLICY: z.enum(coepPolicyValues).default('require-corp'),
   PUBLIC_SENTRY_DSN: z.string().url().optional(),
+  VITE_VAPID_PUBLIC_KEY: vapidPublicKeySchema,
 });
 
 export type FrontendEnv = z.infer<typeof frontendEnvSchema>;

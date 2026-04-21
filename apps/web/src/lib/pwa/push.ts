@@ -1,6 +1,7 @@
 import { generateId } from '$lib/utils/id';
 import { getDB } from '$lib/storage/idb';
 import { logger } from '$lib/logger';
+import { parseFrontendEnv } from '@the-dmz/shared';
 
 import { browser } from '$app/environment';
 
@@ -128,7 +129,7 @@ export async function getStoredSubscriptions(): Promise<PushSubscriptionData[]> 
 
 function getVapidPublicKey(): string {
   const env = import.meta.env as Record<string, string | undefined>;
-  return env['VITE_VAPID_PUBLIC_KEY'] || '';
+  return parseFrontendEnv(env).VITE_VAPID_PUBLIC_KEY;
 }
 
 function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
