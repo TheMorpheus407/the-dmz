@@ -5,7 +5,7 @@ import { coopSession } from '../../../db/schema/multiplayer/index.js';
 import { gameEvents } from '../../../db/schema/game/index.js';
 
 import type { AppConfig } from '../../../config.js';
-import type { CoopEventMessage, WebSocketGateway } from '../../notification/index.js';
+import type { CoopEventMessage, WebSocketGatewayInterface } from '../../notification/index.js';
 
 export interface ReconnectResult {
   currentSeq: number;
@@ -16,7 +16,7 @@ export interface ReconnectResult {
 
 export async function handleReconnect(
   config: AppConfig,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
   connectionId: string,
   tenantId: string,
   sessionId: string,

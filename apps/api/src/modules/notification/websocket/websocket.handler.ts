@@ -1,12 +1,15 @@
 import { verifyJWT } from '../../auth/index.js';
 
-import type { WebSocketGateway } from './websocket.gateway.js';
+import type {
+  WebSocketGatewayInterface,
+  WSClientMessage,
+  WebSocketAuthResult,
+} from './websocket.types.js';
 import type { FastifyRequest } from 'fastify';
 import type { WebSocket as WSConnection } from 'ws';
-import type { WSClientMessage, WebSocketAuthResult } from './websocket.types.js';
 
 export interface WebSocketHandlerOptions {
-  gateway?: WebSocketGateway;
+  gateway?: WebSocketGatewayInterface;
 }
 
 export async function handleWebSocketConnection(
@@ -62,7 +65,7 @@ export async function handleWebSocketConnection(
 async function handleMessage(
   data: Buffer | string,
   connection: WSConnection,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
   connectionId: string,
 ): Promise<void> {
   let message: WSClientMessage;
@@ -108,7 +111,7 @@ async function handleMessage(
 function handleSubscribe(
   message: WSClientMessage,
   connection: WSConnection,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
   connectionId: string,
 ): void {
   const channels = message.channels ?? (message.channel ? [message.channel] : []);
@@ -156,7 +159,7 @@ function handleSubscribe(
 function handleUnsubscribe(
   message: WSClientMessage,
   connection: WSConnection,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
   connectionId: string,
 ): void {
   const channels = message.channels ?? (message.channel ? [message.channel] : []);
@@ -192,7 +195,7 @@ function handleUnsubscribe(
 function handleHeartbeat(
   message: WSClientMessage,
   connection: WSConnection,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
   connectionId: string,
 ): void {
   gateway.didUpdateHeartbeat(connectionId);

@@ -7,7 +7,12 @@ import {
 } from '../../../shared/metrics/hooks.js';
 
 import type { WebSocket as WSConnection } from 'ws';
-import type { JWTAuthPayload, WSConnectionInfo, WSServerMessage } from './websocket.types.js';
+import type {
+  JWTAuthPayload,
+  WebSocketGatewayInterface,
+  WSConnectionInfo,
+  WSServerMessage,
+} from './websocket.types.js';
 
 const HEARTBEAT_INTERVAL_MS = 30_000;
 const CONNECTION_TIMEOUT_MS = 60_000;
@@ -18,7 +23,7 @@ interface WebSocketConnection {
   heartbeatTimer: NodeJS.Timeout | null;
 }
 
-export class WebSocketGateway {
+export class WebSocketGateway implements WebSocketGatewayInterface {
   private connections = new Map<string, WebSocketConnection>();
   private userConnections = new Map<string, Set<string>>();
   private channelSubscriptions = new Map<string, Set<string>>();
@@ -202,8 +207,19 @@ export class WebSocketGateway {
     return connection ? { ...connection.connectionInfo } : null;
   }
 
-  public getAllConnections(): IterableIterator<[string, WebSocketConnection]> {
-    return this.connections.entries();
+  public getAllConnections(): IterableIterator<[string, WSConnectionInfo]> {
+    return Array.from(this.connections.entries())
+      .map(([id, conn]): [string, WSConnectionInfo] => [id, { ...conn.connectionInfo }])
+      .values();
+  }
+
+  public findConnectionIdBySocket(socket: WSConnection): string | undefined {
+    for (const [connId, connection] of this.connections) {
+      if (connection.socket === socket) {
+        return connId;
+      }
+    }
+    return undefined;
   }
 
   public didUpdateHeartbeat(connectionId: string): boolean {

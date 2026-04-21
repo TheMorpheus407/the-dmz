@@ -1,4 +1,7 @@
-import { buildChannelName, type WebSocketGateway } from '../notification/websocket/index.js';
+import {
+  buildChannelName,
+  type WebSocketGatewayInterface,
+} from '../notification/websocket/index.js';
 
 import type { IEventBus, DomainEvent } from '../../shared/events/event-types.js';
 import type {
@@ -7,7 +10,10 @@ import type {
   ChatChannelCreatedPayload,
 } from './chat.events.js';
 
-export function createChatBroadcastHandler(eventBus: IEventBus, gateway?: WebSocketGateway): void {
+export function createChatBroadcastHandler(
+  eventBus: IEventBus,
+  gateway?: WebSocketGatewayInterface,
+): void {
   const wsGateway = gateway;
   eventBus.subscribe<ChatMessageSentPayload>('chat.message.sent', (event) =>
     handleMessageSent(event, wsGateway),
@@ -20,7 +26,10 @@ export function createChatBroadcastHandler(eventBus: IEventBus, gateway?: WebSoc
   );
 }
 
-export function removeChatBroadcastHandler(eventBus: IEventBus, gateway?: WebSocketGateway): void {
+export function removeChatBroadcastHandler(
+  eventBus: IEventBus,
+  gateway?: WebSocketGatewayInterface,
+): void {
   const wsGateway = gateway;
   eventBus.unsubscribe<ChatMessageSentPayload>('chat.message.sent', (event) =>
     handleMessageSent(event, wsGateway),
@@ -35,7 +44,7 @@ export function removeChatBroadcastHandler(eventBus: IEventBus, gateway?: WebSoc
 
 async function handleMessageSent(
   event: DomainEvent<ChatMessageSentPayload>,
-  gateway?: WebSocketGateway,
+  gateway?: WebSocketGatewayInterface,
 ): Promise<void> {
   const payload = event.payload;
   const wsChannel = buildChannelName('chat', payload.channelId);
@@ -54,7 +63,7 @@ async function handleMessageSent(
 
 async function handleMessageDeleted(
   event: DomainEvent<ChatMessageDeletedPayload>,
-  gateway?: WebSocketGateway,
+  gateway?: WebSocketGatewayInterface,
 ): Promise<void> {
   const payload = event.payload;
   const wsChannel = buildChannelName('chat', payload.channelId);
@@ -70,7 +79,7 @@ async function handleMessageDeleted(
 
 async function handleChannelCreated(
   _event: DomainEvent<ChatChannelCreatedPayload>,
-  _gateway?: WebSocketGateway,
+  _gateway?: WebSocketGatewayInterface,
 ): Promise<void> {
   // Future: notify clients about new channel availability
 }

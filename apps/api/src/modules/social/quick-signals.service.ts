@@ -13,7 +13,7 @@ import {
 import { evaluateFlag } from '../feature-flags/index.js';
 import {
   buildChannelName,
-  type WebSocketGateway,
+  type WebSocketGatewayInterface,
   type WSServerMessage,
 } from '../notification/websocket/index.js';
 
@@ -118,7 +118,7 @@ export async function sendSignal(
   playerId: string,
   input: SignalSendInput,
   redisClient?: RedisRateLimitClient,
-  gateway?: WebSocketGateway,
+  gateway?: WebSocketGatewayInterface,
 ): Promise<SignalSendResult> {
   const quickSignalsEnabled = await evaluateFlag(config, tenantId, 'social.quick_signals_enabled');
   if (!quickSignalsEnabled) {

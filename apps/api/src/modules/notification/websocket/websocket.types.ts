@@ -1,3 +1,5 @@
+import type { WebSocket as WSConnection } from 'ws';
+
 export type WSMessageType =
   | 'GAME_STATE'
   | 'NOTIFICATION'
@@ -139,3 +141,28 @@ export type CoopWSServerMessage =
   | CoopStateSnapshotMessage
   | CoopEventMessage
   | CoopResyncMessage;
+
+export interface WebSocketGatewayInterface {
+  registerConnection(socket: WSConnection, authPayload: JWTAuthPayload): WSConnectionInfo;
+  removeConnection(connectionId: string): void;
+  isSubscribed(connectionId: string, channel: string): boolean;
+  isUnsubscribed(connectionId: string, channel: string): boolean;
+  didSendToConnection(connectionId: string, message: WSServerMessage): boolean;
+  sendToUser(userId: string, message: WSServerMessage): number;
+  broadcastToChannel(channel: string, message: WSServerMessage): number;
+  broadcastToTenant(tenantId: string, message: WSServerMessage): number;
+  getActiveConnections(userId: string): WSConnectionInfo[];
+  getConnectionCount(): number;
+  getConnection(connectionId: string): WSConnectionInfo | null;
+  getAllConnections(): IterableIterator<[string, WSConnectionInfo]>;
+  findConnectionIdBySocket(socket: WSConnection): string | undefined;
+  didUpdateHeartbeat(connectionId: string): boolean;
+  getNextSequence(): number;
+  createMessage(
+    type: WSServerMessage['type'],
+    payload: Record<string, unknown>,
+    ackFor?: number,
+  ): WSServerMessage;
+  parseChannel(channel: string): { type: string; id: string } | null;
+  isValidChannel(channel: string): boolean;
+}

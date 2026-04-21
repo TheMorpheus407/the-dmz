@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import type { WebSocketGateway, WSConnection } from '../../notification/websocket/index.js';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import type {
+  WebSocketGatewayInterface,
+  WSConnection,
+} from '../../notification/websocket/index.js';
 
 describe('chat.ws.handler', () => {
   describe('gateway parameter handling', () => {
@@ -33,7 +38,7 @@ describe('chat.ws.handler', () => {
         registerConnection: vi.fn().mockReturnValue({ connectionId: 'conn-1' }),
         removeConnection: vi.fn(),
         createMessage: vi.fn().mockReturnValue({ type: 'NOTIFICATION', payload: {} }),
-      } as unknown as WebSocketGateway;
+      } as unknown as WebSocketGatewayInterface;
 
       const mockRequest = {
         query: { token: 'invalid-token' },
@@ -60,7 +65,7 @@ describe('chat.ws.handler', () => {
         registerConnection: vi.fn().mockReturnValue({ connectionId: 'conn-1' }),
         removeConnection: vi.fn(),
         createMessage: vi.fn().mockReturnValue({ type: 'NOTIFICATION', payload: {} }),
-      } as unknown as WebSocketGateway;
+      } as unknown as WebSocketGatewayInterface;
 
       const { chatWebSocketHandler } = await import('../chat.ws.handler.js');
       const mockRequest = {
@@ -85,7 +90,7 @@ describe('chat.ws.handler', () => {
         registerConnection: vi.fn().mockReturnValue({ connectionId: 'conn-1' }),
         removeConnection: vi.fn(),
         createMessage: vi.fn().mockReturnValue({ type: 'NOTIFICATION', payload: {} }),
-      } as unknown as WebSocketGateway;
+      } as unknown as WebSocketGatewayInterface;
 
       const { chatWebSocketHandler } = await import('../chat.ws.handler.js');
       const mockRequest = {

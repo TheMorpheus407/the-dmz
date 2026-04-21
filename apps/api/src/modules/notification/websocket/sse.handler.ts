@@ -2,8 +2,7 @@ import { generateId } from '../../../shared/utils/id.js';
 import { SSE_SECURITY_HEADERS } from '../../../shared/middleware/security-headers-config.js';
 
 import type { FastifyRequest, FastifyReply } from 'fastify';
-import type { WSServerMessage } from './websocket.types.js';
-import type { WebSocketGateway } from './websocket.gateway.js';
+import type { WSServerMessage, WebSocketGatewayInterface } from './websocket.types.js';
 
 interface SSEResponse {
   connectionId: string;
@@ -18,7 +17,7 @@ const SSE_KEEPALIVE_INTERVAL = 30_000;
 export async function handleSSEConnection(
   request: FastifyRequest,
   reply: FastifyReply,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
 ): Promise<void> {
   const authUser = request as FastifyRequest & { user: { userId: string; tenantId: string } };
   const userId = authUser.user.userId;
@@ -105,7 +104,7 @@ export async function handleSSEConnection(
 export async function handleSSESubscribe(
   request: FastifyRequest,
   reply: FastifyReply,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
 ): Promise<void> {
   const body = request.body as { connectionId?: string; channels?: string[] };
   const { connectionId, channels } = body;
@@ -132,7 +131,7 @@ export async function handleSSESubscribe(
 export async function handleSSEUnsubscribe(
   request: FastifyRequest,
   reply: FastifyReply,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
 ): Promise<void> {
   const body = request.body as { connectionId?: string; channels?: string[] };
   const { connectionId, channels } = body;

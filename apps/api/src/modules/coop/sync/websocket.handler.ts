@@ -1,5 +1,5 @@
 import {
-  type WebSocketGateway,
+  type WebSocketGatewayInterface,
   type CoopWSClientMessage,
   type CoopWSServerMessage,
   type WSServerMessage,
@@ -13,7 +13,7 @@ import type { IEventBus } from '../../../shared/events/event-types.js';
 import type { FastifyRequest } from 'fastify';
 
 export interface CoopWebSocketHandlerOptions {
-  gateway?: WebSocketGateway;
+  gateway?: WebSocketGatewayInterface;
   config: AppConfig;
   eventBus: IEventBus;
 }
@@ -43,7 +43,7 @@ export async function handleCoopWebSocketConnection(
 async function handleCoopMessage(
   data: Buffer | string,
   connection: WSConnection,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
   config: AppConfig,
   eventBus: IEventBus,
 ): Promise<void> {
@@ -74,7 +74,7 @@ async function handleCoopMessage(
 async function handleActionSubmit(
   message: CoopWSClientMessage & { type: 'ACTION_SUBMIT' },
   connection: WSConnection,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
   config: AppConfig,
   eventBus: IEventBus,
 ): Promise<void> {

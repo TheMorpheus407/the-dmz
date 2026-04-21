@@ -319,4 +319,151 @@ describe('WebSocketGateway', () => {
       expect(result).toBe(false);
     });
   });
+
+  describe('getAllConnections', () => {
+    it('should return all connections as WSConnectionInfo objects', () => {
+      const mockSocket1 = {
+        readyState: 1,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      const mockSocket2 = {
+        readyState: 1,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      const conn1 = gateway.registerConnection(mockSocket1, {
+        userId: 'user-1',
+        tenantId: 'tenant-1',
+      });
+      const conn2 = gateway.registerConnection(mockSocket2, {
+        userId: 'user-2',
+        tenantId: 'tenant-2',
+      });
+
+      const connections = Array.from(gateway.getAllConnections());
+
+      expect(connections).toHaveLength(2);
+      const [id1, info1] = connections.find(([id]) => id === conn1.connectionId) ?? [];
+      expect(id1).toBe(conn1.connectionId);
+      expect(info1.userId).toBe('user-1');
+      expect(info1.tenantId).toBe('tenant-1');
+      expect(info1.connectionId).toBe(conn1.connectionId);
+      expect(info1.subscriptions).toBeInstanceOf(Set);
+
+      const [, info2] = connections.find(([id]) => id === conn2.connectionId) ?? [];
+      expect(info2.userId).toBe('user-2');
+      expect(info2.tenantId).toBe('tenant-2');
+    });
+
+    it('should return empty iterator when no connections exist', () => {
+      const connections = Array.from(gateway.getAllConnections());
+      expect(connections).toHaveLength(0);
+    });
+
+    it('should not expose internal socket object in returned connections', () => {
+      const mockSocket = {
+        readyState: 1,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      gateway.registerConnection(mockSocket, { userId: 'user-1', tenantId: 'tenant-1' });
+
+      const connections = Array.from(gateway.getAllConnections());
+      const [, info] = connections[0];
+
+      expect(info).not.toHaveProperty('socket');
+      expect(info).not.toHaveProperty('heartbeatTimer');
+      expect(info).toHaveProperty('connectionId');
+      expect(info).toHaveProperty('userId');
+      expect(info).toHaveProperty('tenantId');
+    });
+  });
+
+  describe('findConnectionIdBySocket', () => {
+    it('should return connection id for existing socket', () => {
+      const mockSocket = {
+        readyState: 1,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      const connectionInfo = gateway.registerConnection(mockSocket, {
+        userId: 'user-123',
+        tenantId: 'tenant-456',
+      });
+
+      const result = gateway.findConnectionIdBySocket(mockSocket);
+
+      expect(result).toBe(connectionInfo.connectionId);
+    });
+
+    it('should return undefined for socket that is not registered', () => {
+      const mockSocket = {
+        readyState: 1,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      const result = gateway.findConnectionIdBySocket(mockSocket);
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should return undefined after connection is removed', () => {
+      const mockSocket = {
+        readyState: 1,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      const connectionInfo = gateway.registerConnection(mockSocket, {
+        userId: 'user-123',
+        tenantId: 'tenant-456',
+      });
+
+      gateway.removeConnection(connectionInfo.connectionId);
+
+      const result = gateway.findConnectionIdBySocket(mockSocket);
+
+      expect(result).toBeUndefined();
+    });
+
+    it('should return correct id when multiple connections exist', () => {
+      const mockSocket1 = {
+        readyState: 1,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      const mockSocket2 = {
+        readyState: 1,
+        send: vi.fn(),
+        close: vi.fn(),
+        on: vi.fn(),
+      } as unknown as WebSocket;
+
+      const conn1 = gateway.registerConnection(mockSocket1, {
+        userId: 'user-1',
+        tenantId: 'tenant-1',
+      });
+      gateway.registerConnection(mockSocket2, {
+        userId: 'user-2',
+        tenantId: 'tenant-2',
+      });
+
+      expect(gateway.findConnectionIdBySocket(mockSocket1)).toBe(conn1.connectionId);
+      expect(gateway.findConnectionIdBySocket(mockSocket2)).not.toBe(conn1.connectionId);
+    });
+  });
 });

@@ -1,7 +1,7 @@
 import { verifyJWT } from '../auth/index.js';
 import {
   buildChannelName,
-  type WebSocketGateway,
+  type WebSocketGatewayInterface,
   type WebSocketAuthResult,
   type JWTAuthPayload,
   type WSConnection,
@@ -29,7 +29,7 @@ export async function chatWebSocketHandler(
   request: FastifyRequest,
   config: AppConfig,
   eventBus?: IEventBus,
-  gateway?: WebSocketGateway,
+  gateway?: WebSocketGatewayInterface,
 ): Promise<void> {
   if (!gateway) {
     connection.close(4001, 'Gateway not available');
@@ -131,7 +131,7 @@ async function handleChatMessage(
   tenantId: string,
   userId: string,
   eventBus: IEventBus | undefined,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
 ): Promise<void> {
   let message: Record<string, unknown>;
 
@@ -177,7 +177,7 @@ async function handleChatMessage(
 function handleSubscribe(
   message: Record<string, unknown>,
   connection: WSConnection,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
 ): void {
   const channel = message['channel'] as string | undefined;
 
@@ -211,7 +211,7 @@ function handleSubscribe(
 function handleUnsubscribe(
   message: Record<string, unknown>,
   connection: WSConnection,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
 ): void {
   const channel = message['channel'] as string | undefined;
 
@@ -238,7 +238,7 @@ function handleTyping(
   message: Record<string, unknown>,
   connection: WSConnection,
   userId: string,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
 ): void {
   const channelId = message['channelId'] as string | undefined;
 
@@ -282,7 +282,7 @@ async function handleSend(
   tenantId: string,
   userId: string,
   eventBus: IEventBus | undefined,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
 ): Promise<void> {
   const channelId = message['channelId'] as string | undefined;
   const content = message['content'] as string | undefined;
@@ -347,14 +347,9 @@ async function handleSend(
 
 function getConnectionIdFromSocket(
   connection: WSConnection,
-  gateway: WebSocketGateway,
+  gateway: WebSocketGatewayInterface,
 ): string | undefined {
-  for (const [connId, connectionItem] of gateway.getAllConnections()) {
-    if (connectionItem.socket === connection) {
-      return connId;
-    }
-  }
-  return undefined;
+  return gateway.findConnectionIdBySocket(connection);
 }
 
 function clearTypingTimer(key: string): void {
