@@ -1,3 +1,5 @@
+import { getOutcome, getCompetencyTags, getThreatTier } from '../../shared/utils/payload.js';
+
 import type { DomainEvent } from '../../shared/events/event-types.js';
 
 interface BehavioralMetrics {
@@ -12,10 +14,6 @@ interface BehavioralMetrics {
   correctDataHandlingDecisions: number;
   totalDataHandlingDecisions: number;
   reportTimes: number[];
-}
-
-function getPayloadField(payload: Record<string, unknown>, field: string): unknown {
-  return payload[field];
 }
 
 export class BehavioralMetricsService {
@@ -49,8 +47,8 @@ export class BehavioralMetricsService {
     }
 
     if (event.eventType === 'game.email.received') {
-      const emailId = getPayloadField(payload, 'email_id') as string | undefined;
-      const isPhishing = getPayloadField(payload, 'is_phishing') as boolean | undefined;
+      const emailId = payload?.['email_id'] as string | undefined;
+      const isPhishing = payload?.['is_phishing'] as boolean | undefined;
 
       if (emailId && isPhishing) {
         this.emailReceiveTimes.set(emailId, event.timestamp);
@@ -64,14 +62,10 @@ export class BehavioralMetricsService {
     ) {
       update.totalDecisions = currentMetrics.totalDecisions + 1;
 
-      const outcome = getPayloadField(payload, 'outcome') as
-        | 'correct'
-        | 'partial'
-        | 'incorrect'
-        | undefined;
-      const competencyTags = getPayloadField(payload, 'competency_tags') as string[] | undefined;
-      const threatTier = getPayloadField(payload, 'threat_tier') as string | undefined;
-      const emailId = getPayloadField(payload, 'email_id') as string | undefined;
+      const outcome = getOutcome(payload);
+      const competencyTags = getCompetencyTags(payload);
+      const threatTier = getThreatTier(payload);
+      const emailId = payload?.['email_id'] as string | undefined;
 
       if (competencyTags?.includes('phishing_detection')) {
         const isRisky = threatTier === 'high' || threatTier === 'severe';
@@ -118,11 +112,7 @@ export class BehavioralMetricsService {
     }
 
     if (event.eventType === 'game.verification.result') {
-      const outcome = getPayloadField(payload, 'outcome') as
-        | 'correct'
-        | 'partial'
-        | 'incorrect'
-        | undefined;
+      const outcome = getOutcome(payload);
 
       update.verificationActions = currentMetrics.verificationActions + 1;
 

@@ -1,4 +1,7 @@
-import { COMPETENCY_DOMAINS, type CompetencyDomain } from '@the-dmz/shared';
+import { COMPETENCY_DOMAINS } from '@the-dmz/shared';
+import type { CompetencyDomain } from '@the-dmz/shared';
+
+import { getPayloadField } from '../../shared/utils/payload.js';
 
 import type { PlayerProfile } from '../../db/schema/analytics/index.js';
 import type { DomainEvent } from '../../shared/events/event-types.js';
@@ -25,10 +28,6 @@ interface EvidencePoint {
   timestamp: string;
   score: number;
   domain: string;
-}
-
-function getPayloadField(payload: Record<string, unknown>, field: string): unknown {
-  return payload[field];
 }
 
 export class PlayerProfileService {

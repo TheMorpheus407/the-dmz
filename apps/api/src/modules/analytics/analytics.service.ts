@@ -1,5 +1,6 @@
 import { generateId } from '../../shared/utils/id.js';
 import { analyticsEvents, deadLetterQueue } from '../../db/schema/analytics/index.js';
+import { getPayloadField } from '../../shared/utils/payload.js';
 
 import { DEFAULT_ANALYTICS_CONFIG } from './analytics.types.js';
 import { CircuitBreaker } from './circuit-breaker.js';
@@ -34,10 +35,6 @@ interface QueuedEvent {
   attempts: number;
   lastAttempt: Date;
   error?: string;
-}
-
-function getPayloadField(payload: Record<string, unknown>, field: string): unknown {
-  return payload[field];
 }
 
 export class AnalyticsService {
