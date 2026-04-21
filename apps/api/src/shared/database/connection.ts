@@ -62,6 +62,67 @@ export const resetDatabasePools = (): void => {
   clients.clear();
 };
 
+export class DatabaseConnectionManager {
+  private readonly pools: Map<string, DatabasePool> = new Map();
+  private readonly clients: Map<string, DatabaseClient> = new Map();
+  private readonly defaultConfig: AppConfig;
+
+  constructor(config: AppConfig) {
+    this.defaultConfig = config;
+  }
+
+  private getConfigKey(config: AppConfig): string {
+    return config.DATABASE_URL;
+  }
+
+  private createDatabasePool(config: AppConfig): DatabasePool {
+    return postgres(config.DATABASE_URL, {
+      max: config.DATABASE_POOL_MAX,
+      idle_timeout: config.DATABASE_POOL_IDLE_TIMEOUT,
+      connect_timeout: config.DATABASE_POOL_CONNECT_TIMEOUT,
+      ssl: config.DATABASE_SSL ? 'require' : false,
+    });
+  }
+
+  getPool(config: AppConfig = this.defaultConfig): DatabasePool {
+    const key = this.getConfigKey(config);
+
+    if (!this.pools.has(key)) {
+      this.pools.set(key, this.createDatabasePool(config));
+    }
+
+    return this.pools.get(key)!;
+  }
+
+  getClient(config: AppConfig = this.defaultConfig): DatabaseClient {
+    const key = this.getConfigKey(config);
+
+    if (!this.clients.has(key)) {
+      const sql = this.getPool(config);
+      this.clients.set(key, drizzle(sql, { schema }));
+    }
+
+    return this.clients.get(key)!;
+  }
+
+  async close(): Promise<void> {
+    for (const pool of this.pools.values()) {
+      await pool.end({ timeout: 5 });
+    }
+    this.pools.clear();
+    this.clients.clear();
+  }
+
+  reset(): void {
+    this.pools.clear();
+    this.clients.clear();
+  }
+}
+
+export const createConnectionManager = (config: AppConfig): DatabaseConnectionManager => {
+  return new DatabaseConnectionManager(config);
+};
+
 export async function checkDatabaseHealth(
   config: AppConfig = loadConfig(),
 ): Promise<DependencyHealth> {
