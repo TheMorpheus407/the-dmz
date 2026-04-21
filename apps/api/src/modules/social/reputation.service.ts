@@ -59,12 +59,36 @@ export interface ReputationHistoryEntry {
   createdAt: Date;
 }
 
-const FEATURE_GATE_MINIMUMS: Record<string, number> = {
-  join_guilds: 100,
-  create_guild: 500,
-  competitive_ranked: 800,
-  moderate_forums: 600,
-};
+interface FeatureGateThresholds {
+  join_guilds: number;
+  create_guild: number;
+  competitive_ranked: number;
+  moderate_forums: number;
+}
+
+function getFeatureGateDefaults(): FeatureGateThresholds {
+  return {
+    join_guilds: 100,
+    create_guild: 500,
+    competitive_ranked: 800,
+    moderate_forums: 600,
+  };
+}
+
+function getFeatureGateMinimum(config: AppConfig, feature: string): number | undefined {
+  switch (feature) {
+    case 'join_guilds':
+      return config.FEATURE_GATE_JOIN_GUILDS;
+    case 'create_guild':
+      return config.FEATURE_GATE_CREATE_GUILD;
+    case 'competitive_ranked':
+      return config.FEATURE_GATE_COMPETITIVE_RANKED;
+    case 'moderate_forums':
+      return config.FEATURE_GATE_MODERATE_FORUMS;
+    default:
+      return undefined;
+  }
+}
 
 export function computeReputationScore(
   endorsementScore: number,
@@ -84,8 +108,14 @@ export function getReputationTier(score: number): ReputationTier {
   return 'bronze';
 }
 
-export function canAccessFeature(tier: ReputationTier, feature: string): boolean {
-  const minimum = FEATURE_GATE_MINIMUMS[feature];
+export function canAccessFeature(
+  config: AppConfig,
+  tier: ReputationTier,
+  feature: string,
+): boolean {
+  const defaults = getFeatureGateDefaults();
+  const minimum =
+    getFeatureGateMinimum(config, feature) ?? defaults[feature as keyof FeatureGateThresholds];
   if (minimum === undefined) return true;
   return getReputationTierScore(tier) >= minimum;
 }

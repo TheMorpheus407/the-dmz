@@ -75,28 +75,142 @@ describe('reputation service - getReputationTier', () => {
 });
 
 describe('reputation service - canAccessFeature', () => {
-  it('should allow join_guilds at 100+ rep', () => {
-    expect(canAccessFeature('bronze', 'join_guilds')).toBe(false);
-    expect(canAccessFeature('silver', 'join_guilds')).toBe(true);
+  const createMockConfig = (
+    overrides: Partial<{
+      FEATURE_GATE_JOIN_GUILDS: number;
+      FEATURE_GATE_CREATE_GUILD: number;
+      FEATURE_GATE_COMPETITIVE_RANKED: number;
+      FEATURE_GATE_MODERATE_FORUMS: number;
+    }> = {},
+  ) => ({
+    NODE_ENV: 'test' as const,
+    PORT: 3001,
+    API_PORT: undefined,
+    API_HOST: '0.0.0.0',
+    API_VERSION: '0.0.0',
+    MAX_BODY_SIZE: 1_048_576,
+    RATE_LIMIT_MAX: 100,
+    RATE_LIMIT_WINDOW_MS: 60_000,
+    RATE_LIMIT_STRICT_MODE: false,
+    DATABASE_URL: 'postgres://localhost:5432/the_dmz',
+    DATABASE_POOL_MIN: 2,
+    DATABASE_POOL_MAX: 10,
+    DATABASE_POOL_IDLE_TIMEOUT: 10,
+    DATABASE_POOL_CONNECT_TIMEOUT: 30,
+    DATABASE_SSL: false,
+    REDIS_URL: 'redis://localhost:6379',
+    LOG_LEVEL: 'info' as const,
+    JWT_SECRET: 'dev-test-jwt-secret',
+    JWT_EXPIRES_IN: '7d',
+    JWT_ISSUER: 'https://the-dmz.local',
+    JWT_AUDIENCE: 'the-dmz-api',
+    TOKEN_HASH_SALT: 'token-hash-dev-test-salt',
+    ENABLE_SWAGGER: true,
+    CORS_ORIGINS: 'http://localhost:5173',
+    CORS_ORIGINS_LIST: ['http://localhost:5173'],
+    CSP_FRAME_ANCESTORS: 'none',
+    CSP_CONNECT_SRC: '',
+    CSP_IMG_SRC: '',
+    COEP_POLICY: 'require-corp' as const,
+    TENANT_HEADER_NAME: 'x-tenant-id',
+    TENANT_FALLBACK_ENABLED: true,
+    TENANT_FALLBACK_SLUG: 'default',
+    TENANT_RESOLVER_ENABLED: false,
+    WEBAUTHN_RP_ID: 'localhost',
+    WEBAUTHN_RP_NAME: 'The DMZ',
+    MFA_ISSUER: 'The DMZ',
+    MFA_CODE_LENGTH: 6,
+    MFA_WINDOW: 1,
+    MFA_BACKUP_CODES: 10,
+    MFA_MAX_ATTEMPTS: 10,
+    ABAC_CACHE_TTL_SECONDS: 30,
+    ABAC_SLOW_EVALUATION_THRESHOLD_MS: 10,
+    JWT_PRIVATE_KEY_ENCRYPTION_KEY: 'dev-test-encryption-key-32-chars!',
+    ANTHROPIC_API_KEY: undefined,
+    ANTHROPIC_API_URL: 'https://api.anthropic.com',
+    AI_GENERATION_MODEL: 'sonnet',
+    AI_CLASSIFICATION_MODEL: 'haiku',
+    AI_MAX_RETRIES: 3,
+    AI_RETRY_DELAY_MS: 1000,
+    BULLMQ_CONCURRENCY: 5,
+    BULLMQ_MAX_ATTEMPTS: 10,
+    AI_POOL_MIN_PER_TIER: 20,
+    AI_POOL_TARGET_PER_TIER: 50,
+    AI_BATCH_SIZE: 10,
+    AI_GENERATION_SCHEDULE_CRON: '0 3 * * *',
+    XAPI_ENCRYPTION_KEY: undefined,
+    STRIPE_WEBHOOK_SECRET: undefined,
+    SENTRY_DSN: undefined,
+    FEATURE_GATE_JOIN_GUILDS: 100,
+    FEATURE_GATE_CREATE_GUILD: 500,
+    FEATURE_GATE_COMPETITIVE_RANKED: 800,
+    FEATURE_GATE_MODERATE_FORUMS: 600,
+    ...overrides,
   });
 
-  it('should allow create_guild at 500+ rep', () => {
-    expect(canAccessFeature('gold', 'create_guild')).toBe(false);
-    expect(canAccessFeature('platinum', 'create_guild')).toBe(true);
+  it('should accept config as first parameter and read thresholds from config', () => {
+    const config = createMockConfig({
+      FEATURE_GATE_JOIN_GUILDS: 150,
+      FEATURE_GATE_CREATE_GUILD: 600,
+      FEATURE_GATE_COMPETITIVE_RANKED: 900,
+      FEATURE_GATE_MODERATE_FORUMS: 700,
+    });
+    expect(canAccessFeature(config, 'bronze', 'join_guilds')).toBe(false);
+    expect(canAccessFeature(config, 'silver', 'join_guilds')).toBe(true);
+    expect(canAccessFeature(config, 'gold', 'create_guild')).toBe(false);
+    expect(canAccessFeature(config, 'platinum', 'create_guild')).toBe(true);
+    expect(canAccessFeature(config, 'platinum', 'competitive_ranked')).toBe(false);
+    expect(canAccessFeature(config, 'diamond', 'competitive_ranked')).toBe(true);
+    expect(canAccessFeature(config, 'gold', 'moderate_forums')).toBe(false);
+    expect(canAccessFeature(config, 'platinum', 'moderate_forums')).toBe(true);
   });
 
-  it('should allow competitive_ranked at 800+ rep', () => {
-    expect(canAccessFeature('platinum', 'competitive_ranked')).toBe(false);
-    expect(canAccessFeature('diamond', 'competitive_ranked')).toBe(true);
+  it('should use default thresholds when config has default values', () => {
+    const config = createMockConfig();
+    expect(canAccessFeature(config, 'bronze', 'join_guilds')).toBe(false);
+    expect(canAccessFeature(config, 'silver', 'join_guilds')).toBe(true);
+    expect(canAccessFeature(config, 'gold', 'create_guild')).toBe(false);
+    expect(canAccessFeature(config, 'platinum', 'create_guild')).toBe(true);
+    expect(canAccessFeature(config, 'platinum', 'competitive_ranked')).toBe(false);
+    expect(canAccessFeature(config, 'diamond', 'competitive_ranked')).toBe(true);
+    expect(canAccessFeature(config, 'gold', 'moderate_forums')).toBe(false);
+    expect(canAccessFeature(config, 'platinum', 'moderate_forums')).toBe(true);
   });
 
-  it('should allow moderate_forums at 600+ rep', () => {
-    expect(canAccessFeature('gold', 'moderate_forums')).toBe(false);
-    expect(canAccessFeature('platinum', 'moderate_forums')).toBe(true);
+  it('should allow join_guilds at config-defined threshold', () => {
+    const config = createMockConfig({ FEATURE_GATE_JOIN_GUILDS: 50 });
+    expect(canAccessFeature(config, 'bronze', 'join_guilds')).toBe(true);
   });
 
-  it('should allow unknown features without restriction', () => {
-    expect(canAccessFeature('bronze', 'unknown_feature')).toBe(true);
+  it('should allow create_guild at config-defined threshold', () => {
+    const config = createMockConfig({ FEATURE_GATE_CREATE_GUILD: 400 });
+    expect(canAccessFeature(config, 'gold', 'create_guild')).toBe(true);
+  });
+
+  it('should allow competitive_ranked at config-defined threshold', () => {
+    const config = createMockConfig({ FEATURE_GATE_COMPETITIVE_RANKED: 750 });
+    expect(canAccessFeature(config, 'platinum', 'competitive_ranked')).toBe(true);
+  });
+
+  it('should allow moderate_forums at config-defined threshold', () => {
+    const config = createMockConfig({ FEATURE_GATE_MODERATE_FORUMS: 550 });
+    expect(canAccessFeature(config, 'gold', 'moderate_forums')).toBe(true);
+  });
+
+  it('should allow unknown features without restriction regardless of config', () => {
+    const config = createMockConfig();
+    expect(canAccessFeature(config, 'bronze', 'unknown_feature')).toBe(true);
+    expect(canAccessFeature(config, 'diamond', 'another_unknown')).toBe(true);
+  });
+
+  it('should allow zero threshold features to all tiers', () => {
+    const config = createMockConfig({ FEATURE_GATE_JOIN_GUILDS: 0 });
+    expect(canAccessFeature(config, 'bronze', 'join_guilds')).toBe(true);
+  });
+
+  it('should deny features when tier score is below threshold', () => {
+    const config = createMockConfig({ FEATURE_GATE_JOIN_GUILDS: 1000 });
+    expect(canAccessFeature(config, 'diamond', 'join_guilds')).toBe(false);
   });
 });
 
