@@ -170,11 +170,11 @@ const baseRules = {
   'import-x/no-cycle': 'error',
   'import-x/no-duplicates': 'error',
   'import-x/order': importOrderRule,
-  complexity: ['warn', { max: 15 }],
-  'max-depth': ['warn', { max: 4 }],
-  'max-params': ['warn', { max: 4 }],
-  'max-statements': ['warn', { max: 20 }],
-  'max-lines': ['warn', { max: 500, skipBlankLines: true, skipComments: true }],
+  complexity: ['error', { max: 15 }],
+  'max-depth': ['error', { max: 4 }],
+  'max-params': ['error', { max: 4 }],
+  'max-statements': ['error', { max: 20 }],
+  'max-lines': ['error', { max: 500, skipBlankLines: true, skipComments: true }],
 
   ...(allBoundaryZones.length > 0
     ? {
@@ -229,7 +229,7 @@ const typeAwareRules = {
       caughtErrorsIgnorePattern: '^_',
     },
   ],
-  '@typescript-eslint/max-params': ['warn', { max: 4 }],
+  '@typescript-eslint/max-params': ['error', { max: 4 }],
   'no-unused-vars': 'off',
   'no-undef': 'off',
   'no-redeclare': 'off',
