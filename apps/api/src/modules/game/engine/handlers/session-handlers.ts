@@ -1,6 +1,7 @@
 import {
   SESSION_MACRO_STATES,
   DAY_PHASES,
+  GAME_ACTIONS,
   type GameState,
   type PauseSessionPayload,
   type ResumeSessionPayload,
@@ -70,7 +71,7 @@ export function handleAdvanceDay(
   _action: AdvanceDayPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('ADVANCE_DAY', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.ADVANCE_DAY, state.currentPhase)) {
     throw new Error('ADVANCE_DAY not allowed in current phase');
   }
   state.currentDay++;

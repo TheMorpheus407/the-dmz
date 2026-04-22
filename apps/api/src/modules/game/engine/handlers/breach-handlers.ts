@@ -1,6 +1,7 @@
 import {
   SESSION_MACRO_STATES,
   DAY_PHASES,
+  GAME_ACTIONS,
   type GameState,
   type BreachTriggerType,
   type ResolveIncidentPayload,
@@ -23,7 +24,7 @@ export function handleResolveIncident(
   action: ResolveIncidentPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('RESOLVE_INCIDENT', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.RESOLVE_INCIDENT, state.currentPhase)) {
     throw new Error('RESOLVE_INCIDENT not allowed in current phase');
   }
   const incident = state.incidents.find((i) => i.incidentId === action.incidentId);
@@ -45,7 +46,7 @@ export function handleTriggerBreach(
   action: TriggerBreachPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('PROCESS_THREATS', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.PROCESS_THREATS, state.currentPhase)) {
     throw new Error('TRIGGER_BREACH only allowed during threat processing');
   }
 
@@ -116,7 +117,7 @@ export function handlePayRansom(
   _action: PayRansomPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('PAY_RANSOM', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.PAY_RANSOM, state.currentPhase)) {
     throw new Error('PAY_RANSOM only allowed in RANSOM phase');
   }
   const breachState = state.breachState;
@@ -156,7 +157,7 @@ export function handleRefuseRansom(
   _action: RefuseRansomPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('REFUSE_RANSOM', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.REFUSE_RANSOM, state.currentPhase)) {
     throw new Error('REFUSE_RANSOM only allowed in RANSOM phase');
   }
 
@@ -197,7 +198,7 @@ export function handleAdvanceRecovery(
   _action: AdvanceRecoveryPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('ADVANCE_RECOVERY', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.ADVANCE_RECOVERY, state.currentPhase)) {
     throw new Error('ADVANCE_RECOVERY only allowed in RECOVERY phase');
   }
 

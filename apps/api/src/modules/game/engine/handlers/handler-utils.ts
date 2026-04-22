@@ -1,4 +1,9 @@
-import type { GameState, UpgradeType, UpgradeDefinition } from '@the-dmz/shared';
+import {
+  GAME_ACTIONS,
+  type GameState,
+  type UpgradeType,
+  type UpgradeDefinition,
+} from '@the-dmz/shared';
 
 import { isActionAllowedInPhase } from '../state-machine.js';
 
@@ -143,7 +148,7 @@ export function validateUpgradePurchase(
   upgradeDef: UpgradeDefinition,
   upgradeType: UpgradeType,
 ): void {
-  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.ADJUST_RESOURCE, state.currentPhase)) {
     throw new Error('PURCHASE_FACILITY_UPGRADE not allowed in current phase');
   }
 

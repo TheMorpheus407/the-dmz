@@ -112,7 +112,7 @@ export function handleMarkIndicator(
   action: MarkIndicatorPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('MARK_INDICATOR', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.MARK_INDICATOR, state.currentPhase)) {
     throw new Error('MARK_INDICATOR not allowed in current phase');
   }
   const targetEmail = state.inbox.find((e) => e.emailId === action.emailId);
@@ -134,7 +134,7 @@ export function handleRequestVerification(
   action: RequestVerificationPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('REQUEST_VERIFICATION', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.REQUEST_VERIFICATION, state.currentPhase)) {
     throw new Error('REQUEST_VERIFICATION not allowed in current phase');
   }
   const emailToVerify = state.inbox.find((e) => e.emailId === action.emailId);

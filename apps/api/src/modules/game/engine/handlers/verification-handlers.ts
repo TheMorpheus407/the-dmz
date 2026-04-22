@@ -1,4 +1,4 @@
-import type { GameState, FlagDiscrepancyPayload } from '@the-dmz/shared';
+import { GAME_ACTIONS, type GameState, type FlagDiscrepancyPayload } from '@the-dmz/shared';
 
 import { isActionAllowedInPhase } from './handler-utils.js';
 
@@ -9,7 +9,7 @@ export function handleFlagDiscrepancy(
   action: FlagDiscrepancyPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('FLAG_DISCREPANCY', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.FLAG_DISCREPANCY, state.currentPhase)) {
     throw new Error('FLAG_DISCREPANCY not allowed in current phase');
   }
   const packet = state.verificationPackets?.[action.emailId];

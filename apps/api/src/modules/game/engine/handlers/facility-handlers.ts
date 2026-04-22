@@ -8,6 +8,7 @@ import type {
   UpgradeFacilityTierPayload,
   PurchaseFacilityUpgradePayload,
 } from '@the-dmz/shared';
+import { GAME_ACTIONS } from '@the-dmz/shared';
 
 import { UPGRADE_CATALOG } from './upgrade-catalog.js';
 import {
@@ -27,7 +28,7 @@ export function handlePurchaseUpgrade(
   action: PurchaseUpgradePayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('PURCHASE_UPGRADE', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.PURCHASE_UPGRADE, state.currentPhase)) {
     throw new Error('PURCHASE_UPGRADE not allowed in current phase');
   }
   events.push({
@@ -43,7 +44,7 @@ export function handleAdjustResource(
   action: AdjustResourcePayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.ADJUST_RESOURCE, state.currentPhase)) {
     throw new Error('ADJUST_RESOURCE not allowed in current phase');
   }
   events.push({
@@ -140,7 +141,7 @@ export function handleOnboardClient(
   action: OnboardClientPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.ADJUST_RESOURCE, state.currentPhase)) {
     throw new Error('ONBOARD_CLIENT not allowed in current phase');
   }
   const facility = state.facility;
@@ -155,7 +156,7 @@ export function handleEvictClient(
   action: EvictClientPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.ADJUST_RESOURCE, state.currentPhase)) {
     throw new Error('EVICT_CLIENT not allowed in current phase');
   }
   const facility = state.facility;
@@ -316,7 +317,7 @@ export function handleProcessFacilityTick(
   action: ProcessFacilityTickPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.ADJUST_RESOURCE, state.currentPhase)) {
     throw new Error('PROCESS_FACILITY_TICK not allowed in current phase');
   }
   state.currentDay = action.dayNumber;
@@ -363,7 +364,7 @@ export function handleUpgradeFacilityTier(
   action: UpgradeFacilityTierPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('ADJUST_RESOURCE', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.ADJUST_RESOURCE, state.currentPhase)) {
     throw new Error('UPGRADE_FACILITY_TIER not allowed in current phase');
   }
   const tierUpgrades: Record<

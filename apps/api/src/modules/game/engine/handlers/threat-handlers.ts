@@ -1,4 +1,4 @@
-import type { GameState, ProcessThreatsPayload } from '@the-dmz/shared';
+import { GAME_ACTIONS, type GameState, type ProcessThreatsPayload } from '@the-dmz/shared';
 
 import { GAME_ENGINE_EVENTS } from '../events/shared-types.js';
 import { ThreatEngineService } from '../../threat-engine/index.js';
@@ -14,7 +14,7 @@ export function handleProcessThreats(
   action: ProcessThreatsPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase('PROCESS_THREATS', state.currentPhase)) {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.PROCESS_THREATS, state.currentPhase)) {
     throw new Error('PROCESS_THREATS not allowed in current phase');
   }
 
