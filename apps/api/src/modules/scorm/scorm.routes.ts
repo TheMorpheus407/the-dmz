@@ -153,9 +153,14 @@ export async function registerScormRoutes(app: FastifyInstance, config: AppConfi
       preHandler: [authGuard, tenantContext],
     },
     async (request, reply) => {
+      const tenantId = request.tenantContext?.tenantId;
+      if (!tenantId) {
+        throw new Error('Tenant context not found');
+      }
+
       const { packageId, userId } = request.body as z.infer<typeof createRegistrationSchema>;
 
-      const registration = await createScormRegistration(config, packageId, userId);
+      const registration = await createScormRegistration(config, packageId, userId, tenantId);
 
       reply.code(201);
       return {

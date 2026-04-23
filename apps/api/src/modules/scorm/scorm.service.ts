@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+
 import { createHash } from 'crypto';
 
 import { XMLBuilder } from 'fast-xml-parser';
@@ -19,6 +21,7 @@ import {
   type ScormPackage,
   type ScormRegistration,
 } from '../../db/schema/lrs/index.js';
+import { notFound } from '../../shared/middleware/app-error.js';
 
 import type { AppConfig } from '../../config.js';
 
@@ -590,12 +593,13 @@ export async function createScormRegistration(
   config: AppConfig,
   packageId: string,
   userId: string,
+  tenantId: string,
 ): Promise<ScormRegistration> {
   const db = getDatabaseClient(config);
 
-  const pkg = await getScormPackage(config, packageId, '');
+  const pkg = await getScormPackage(config, packageId, tenantId);
   if (!pkg) {
-    throw new Error('Package not found');
+    throw notFound('Package not found');
   }
 
   const regId = `reg_${Date.now()}_${Math.random().toString(36).substring(7)}`;
