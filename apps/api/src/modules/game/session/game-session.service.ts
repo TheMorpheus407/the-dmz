@@ -1,6 +1,6 @@
 import { generateSeed, type GameThreatTier } from '@the-dmz/shared/game';
 
-import { getDatabaseClient } from '../../../shared/database/connection.js';
+import { type DB } from '../../../shared/database/connection.js';
 import { recordGameSession } from '../../../shared/metrics/hooks.js';
 
 import {
@@ -9,8 +9,6 @@ import {
   type GameSessionData,
   type GameSession,
 } from './game-session.repo.js';
-
-import type { AppConfig } from '../../../config.js';
 
 export type AuthenticatedUser = {
   userId: string;
@@ -38,11 +36,9 @@ export type GameSessionBootstrapData = {
 };
 
 export const bootstrapGameSession = async (
-  config: AppConfig,
+  db: DB,
   user: AuthenticatedUser,
 ): Promise<{ session: GameSessionBootstrapData; isNew: boolean }> => {
-  const db = getDatabaseClient(config);
-
   const existingSession = await findActiveGameSession(db, user.userId, user.tenantId);
 
   if (existingSession) {
@@ -76,11 +72,9 @@ export const bootstrapGameSession = async (
 };
 
 export const getGameSession = async (
-  config: AppConfig,
+  db: DB,
   user: AuthenticatedUser,
 ): Promise<GameSessionBootstrapData | null> => {
-  const db = getDatabaseClient(config);
-
   const session = await findActiveGameSession(db, user.userId, user.tenantId);
 
   if (!session) {
@@ -91,16 +85,16 @@ export const getGameSession = async (
 };
 
 export const ensureGameSession = async (
-  config: AppConfig,
+  db: DB,
   user: AuthenticatedUser,
 ): Promise<GameSessionBootstrapData> => {
-  const existingSession = await getGameSession(config, user);
+  const existingSession = await getGameSession(db, user);
 
   if (existingSession) {
     return existingSession;
   }
 
-  const { session } = await bootstrapGameSession(config, user);
+  const { session } = await bootstrapGameSession(db, user);
   return session;
 };
 

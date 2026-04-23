@@ -41,7 +41,7 @@ export const registerGameSessionRoutes = async (fastify: FastifyInstance): Promi
     async (request, _reply) => {
       const user = request.user as AuthenticatedUser;
 
-      const { session, isNew } = await gameSessionService.bootstrapGameSession(config, user);
+      const { session, isNew } = await gameSessionService.bootstrapGameSession(fastify.db, user);
 
       if (isNew) {
         const eventBus = fastify.eventBus;
@@ -93,7 +93,7 @@ export const registerGameSessionRoutes = async (fastify: FastifyInstance): Promi
     async (request, reply) => {
       const user = request.user as AuthenticatedUser;
 
-      const session = await gameSessionService.getGameSession(config, user);
+      const session = await gameSessionService.getGameSession(fastify.db, user);
 
       if (!session) {
         return reply.status(404).send({
