@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { partyStatuses } from '../../../db/schema/multiplayer/index.js';
+
 const INVITE_CODE_CHARS = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
 const INVITE_CODE_LENGTH = 8;
 const INVITE_CODE_TTL_MS = 60 * 60 * 1000;
@@ -71,8 +73,6 @@ describe('party service - invite code validation', () => {
 });
 
 describe('party service - party statuses', () => {
-  const partyStatuses = ['forming', 'ready', 'in_session', 'disbanded'] as const;
-
   it('should have four party statuses', () => {
     expect(partyStatuses).toHaveLength(4);
   });
@@ -91,6 +91,13 @@ describe('party service - party statuses', () => {
 
   it('should include disbanded status', () => {
     expect(partyStatuses).toContain('disbanded');
+  });
+
+  it('should have correct order: [forming, ready, in_session, disbanded]', () => {
+    expect(partyStatuses[0]).toBe('forming');
+    expect(partyStatuses[1]).toBe('ready');
+    expect(partyStatuses[2]).toBe('in_session');
+    expect(partyStatuses[3]).toBe('disbanded');
   });
 });
 
@@ -234,41 +241,50 @@ describe('party service - launch constraints', () => {
 });
 
 describe('party service - status transitions', () => {
-  const partyStatuses = ['forming', 'ready', 'in_session', 'disbanded'] as const;
+  const STATUS_FORMING = partyStatuses[0];
+  const STATUS_READY = partyStatuses[1];
+  const STATUS_IN_SESSION = partyStatuses[2];
+  const STATUS_DISBANDED = partyStatuses[3];
 
   function isValidStatusTransition(current: string, next: string): boolean {
     const validTransitions: Record<string, string[]> = {
-      forming: ['ready', 'disbanded'],
-      ready: ['forming', 'in_session', 'disbanded'],
-      in_session: ['disbanded'],
-      disbanded: [],
+      [STATUS_FORMING]: [STATUS_READY, STATUS_DISBANDED],
+      [STATUS_READY]: [STATUS_FORMING, STATUS_IN_SESSION, STATUS_DISBANDED],
+      [STATUS_IN_SESSION]: [STATUS_DISBANDED],
+      [STATUS_DISBANDED]: [],
     };
     return validTransitions[current]?.includes(next) ?? false;
   }
 
   it('forming can transition to ready', () => {
-    expect(isValidStatusTransition('forming', 'ready')).toBe(true);
+    expect(isValidStatusTransition(STATUS_FORMING, STATUS_READY)).toBe(true);
   });
 
   it('forming can transition to disbanded', () => {
-    expect(isValidStatusTransition('forming', 'disbanded')).toBe(true);
+    expect(isValidStatusTransition(STATUS_FORMING, STATUS_DISBANDED)).toBe(true);
   });
 
   it('ready can transition to in_session', () => {
-    expect(isValidStatusTransition('ready', 'in_session')).toBe(true);
+    expect(isValidStatusTransition(STATUS_READY, STATUS_IN_SESSION)).toBe(true);
   });
 
   it('ready can transition back to forming', () => {
-    expect(isValidStatusTransition('ready', 'forming')).toBe(true);
+    expect(isValidStatusTransition(STATUS_READY, STATUS_FORMING)).toBe(true);
   });
 
   it('in_session cannot transition to forming', () => {
-    expect(isValidStatusTransition('in_session', 'forming')).toBe(false);
+    expect(isValidStatusTransition(STATUS_IN_SESSION, STATUS_FORMING)).toBe(false);
   });
 
   it('disbanded cannot transition to any status', () => {
     for (const status of partyStatuses) {
-      expect(isValidStatusTransition('disbanded', status)).toBe(false);
+      expect(isValidStatusTransition(STATUS_DISBANDED, status)).toBe(false);
     }
+  });
+
+  it('returns false for invalid status strings', () => {
+    expect(isValidStatusTransition('invalid_status', STATUS_READY)).toBe(false);
+    expect(isValidStatusTransition(STATUS_FORMING, 'invalid_status')).toBe(false);
+    expect(isValidStatusTransition('invalid_current', 'invalid_next')).toBe(false);
   });
 });

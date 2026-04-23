@@ -4,6 +4,7 @@ import { getDatabaseClient } from '../../shared/database/connection.js';
 import {
   party,
   partyMember,
+  partyStatuses,
   type Party,
   type PartyStatus,
   type Difficulty,
@@ -21,6 +22,11 @@ import { getOrCreatePartyChannel } from '../chat/index.js';
 import { createInviteCode, isInviteCodeValid } from './invite-code.js';
 
 import type { AppConfig } from '../../config.js';
+
+const STATUS_FORMING = partyStatuses[0];
+const STATUS_READY = partyStatuses[1];
+const STATUS_IN_SESSION = partyStatuses[2];
+const STATUS_DISBANDED = partyStatuses[3];
 
 export interface PartyMemberResult {
   partyMemberId: string;
@@ -157,7 +163,7 @@ export async function createParty(
     .values({
       tenantId,
       leaderId,
-      status: 'forming',
+      status: STATUS_FORMING,
       difficulty: input.difficulty ?? 'standard',
       ...(input.preferredRole !== undefined && { preferredRole: input.preferredRole }),
       inviteCode: invite.code,
@@ -219,7 +225,7 @@ export async function joinPartyByInviteCode(
     where: and(
       eq(party.inviteCode, input.inviteCode),
       eq(party.tenantId, tenantId),
-      eq(party.status, 'forming'),
+      eq(party.status, STATUS_FORMING),
     ),
   });
 
@@ -284,7 +290,7 @@ export async function leaveParty(
     return { success: false, error: 'Party not found' };
   }
 
-  if (targetParty.status === 'in_session') {
+  if (targetParty.status === STATUS_IN_SESSION) {
     return { success: false, error: 'Cannot leave party in session' };
   }
 
@@ -339,7 +345,7 @@ export async function toggleReadyStatus(
     return { success: false, error: 'Party not found' };
   }
 
-  if (targetParty.status === 'disbanded') {
+  if (targetParty.status === STATUS_DISBANDED) {
     return { success: false, error: 'Party has been disbanded' };
   }
 
@@ -364,15 +370,15 @@ export async function toggleReadyStatus(
 
   const allReady = allMembers.length >= MIN_PARTY_SIZE && allMembers.every((m) => m.readyStatus);
 
-  if (allReady && targetParty.status === 'forming') {
+  if (allReady && targetParty.status === STATUS_FORMING) {
     await db
       .update(party)
-      .set({ status: 'ready', updatedAt: new Date() })
+      .set({ status: STATUS_READY, updatedAt: new Date() })
       .where(eq(party.partyId, partyId));
-  } else if (!allReady && targetParty.status === 'ready') {
+  } else if (!allReady && targetParty.status === STATUS_READY) {
     await db
       .update(party)
-      .set({ status: 'forming', updatedAt: new Date() })
+      .set({ status: STATUS_FORMING, updatedAt: new Date() })
       .where(eq(party.partyId, partyId));
   }
 
@@ -456,11 +462,11 @@ export async function launchParty(
     return { success: false, error: 'Only the party leader can launch' };
   }
 
-  if (targetParty.status === 'in_session') {
+  if (targetParty.status === STATUS_IN_SESSION) {
     return { success: false, error: 'Party is already in session' };
   }
 
-  if (targetParty.status === 'disbanded') {
+  if (targetParty.status === STATUS_DISBANDED) {
     return { success: false, error: 'Party has been disbanded' };
   }
 
@@ -479,7 +485,7 @@ export async function launchParty(
 
   await db
     .update(party)
-    .set({ status: 'in_session', updatedAt: new Date() })
+    .set({ status: STATUS_IN_SESSION, updatedAt: new Date() })
     .where(eq(party.partyId, partyId));
 
   const partyWithMembers = await getPartyWithMembers(config, tenantId, partyId);
@@ -558,13 +564,13 @@ export async function disbandParty(
     return { success: false, error: 'Only the party leader can disband' };
   }
 
-  if (targetParty.status === 'in_session') {
+  if (targetParty.status === STATUS_IN_SESSION) {
     return { success: false, error: 'Cannot disband party in session' };
   }
 
   await db
     .update(party)
-    .set({ status: 'disbanded', updatedAt: new Date() })
+    .set({ status: STATUS_DISBANDED, updatedAt: new Date() })
     .where(eq(party.partyId, partyId));
 
   await deleteCachedParty(config, tenantId, partyId);
@@ -602,7 +608,7 @@ export async function regenerateInviteCode(
     return { success: false, error: 'Only the party leader can regenerate invite code' };
   }
 
-  if (targetParty.status !== 'forming') {
+  if (targetParty.status !== STATUS_FORMING) {
     return {
       success: false,
       error: 'Cannot regenerate invite code for party not in forming status',
