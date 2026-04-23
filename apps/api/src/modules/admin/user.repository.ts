@@ -5,6 +5,7 @@ import { getDatabaseClient, type DatabaseClient } from '../../shared/database/co
 import { auditLogs } from '../../db/schema/audit/index.js';
 import { sessions } from '../../db/schema/auth/sessions.js';
 import { roles, users, userRoles } from '../../shared/database/schema/index.js';
+import { DEFAULT_PAGINATION_LIMIT, MAX_PAGINATION_LIMIT } from '@the-dmz/shared/utils';
 
 import type { UserListParams } from './user.service.js';
 
@@ -193,9 +194,10 @@ export class UserRepository {
     totalPages: number;
   }> {
     const page = Math.max(1, params.page ?? 1);
-    const DEFAULT_PAGE_SIZE = 20;
-    const MAX_PAGE_SIZE = 100;
-    const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, params.limit ?? DEFAULT_PAGE_SIZE));
+    const limit = Math.min(
+      MAX_PAGINATION_LIMIT,
+      Math.max(1, params.limit ?? DEFAULT_PAGINATION_LIMIT),
+    );
     const offset = (page - 1) * limit;
 
     const conditions = [eq(users.tenantId, tenantId)];

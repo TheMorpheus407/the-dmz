@@ -3,6 +3,7 @@ import { randomUUID } from 'crypto';
 import { eq, and, desc } from 'drizzle-orm';
 
 import { ErrorCodes } from '@the-dmz/shared/constants/error-codes';
+import { DEFAULT_PAGINATION_LIMIT } from '@the-dmz/shared/utils';
 
 import { createAppError } from '../../shared/middleware/error-handler.js';
 import { serviceAccounts } from '../../db/schema/auth/service-accounts.js';
@@ -113,7 +114,7 @@ async function listServiceAccounts(
     status?: ServiceAccountStatus;
   },
 ): Promise<{ accounts: ServiceAccountResponse[]; total: number; cursor?: string }> {
-  const limit = options?.limit ?? 20;
+  const limit = options?.limit ?? DEFAULT_PAGINATION_LIMIT;
 
   const conditions = [eq(serviceAccounts.tenantId, tenantId)];
 

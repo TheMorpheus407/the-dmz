@@ -60,7 +60,7 @@ describe('cursor pagination schemas', () => {
   it('parses valid cursor pagination params with defaults', () => {
     const result = cursorPaginationSchema.parse({});
     expect(result.cursor).toBeUndefined();
-    expect(result.limit).toBe(20);
+    expect(result.limit).toBe(25);
   });
 
   it('parses cursor pagination params with values', () => {

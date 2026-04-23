@@ -14,6 +14,7 @@ import {
   type CreateApiKeyInput,
 } from '@the-dmz/shared/auth/api-key-contract';
 import { ErrorCodes } from '@the-dmz/shared/constants/error-codes';
+import { DEFAULT_PAGINATION_LIMIT } from '@the-dmz/shared/utils';
 
 import { apiKeys } from '../../db/schema/auth/api-keys.js';
 import { createAppError } from '../../shared/middleware/error-handler.js';
@@ -193,7 +194,7 @@ export async function listApiKeys(
     status?: CredentialStatus;
   },
 ): Promise<ApiKeyListResponse> {
-  const limit = options?.limit ?? 20;
+  const limit = options?.limit ?? DEFAULT_PAGINATION_LIMIT;
 
   const conditions = [eq(apiKeys.tenantId, tenantId)];
 

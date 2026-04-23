@@ -1,6 +1,7 @@
 import { eq, and, or } from 'drizzle-orm';
 
 import { SessionRevocationReason } from '@the-dmz/shared/auth/session-policy.js';
+import { DEFAULT_PAGINATION_LIMIT } from '@the-dmz/shared/utils';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { users } from '../../shared/database/schema/users.js';
@@ -139,7 +140,7 @@ export const listTenantSessions = async (
   input: ListTenantSessionsInput,
 ): Promise<ListTenantSessionsResult> => {
   const db = getDatabaseClient(config);
-  const limit = input.limit ?? 20;
+  const limit = input.limit ?? DEFAULT_PAGINATION_LIMIT;
 
   const repoInput: {
     tenantId: string;

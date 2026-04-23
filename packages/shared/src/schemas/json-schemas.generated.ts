@@ -1962,7 +1962,7 @@ export const cursorPaginationJsonSchema = {
       type: 'integer',
       minimum: 1,
       maximum: 100,
-      default: 20,
+      default: 25,
     },
   },
   additionalProperties: false,
