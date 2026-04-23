@@ -110,6 +110,7 @@ export const ErrorCodes = {
   SSO_VALIDATION_FAILED: 'SSO_VALIDATION_FAILED',
   SSO_ACTIVATION_BLOCKED: 'SSO_ACTIVATION_BLOCKED',
   SSO_METADATA_UNREACHABLE: 'SSO_METADATA_UNREACHABLE',
+  INVALID_RESPONSE: 'INVALID_RESPONSE',
   SSO_DISCOVERY_FAILED: 'SSO_DISCOVERY_FAILED',
   SSO_JWKS_UNREACHABLE: 'SSO_JWKS_UNREACHABLE',
   SSO_CERTIFICATE_EXPIRED: 'SSO_CERTIFICATE_EXPIRED',
@@ -684,6 +685,11 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.NETWORK,
     retryable: true,
     messageKey: 'errors.sso.metadataUnreachable',
+  },
+  [ErrorCodes.INVALID_RESPONSE]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.server.invalidResponse',
   },
   [ErrorCodes.SSO_DISCOVERY_FAILED]: {
     category: ErrorCodeCategory.NETWORK,

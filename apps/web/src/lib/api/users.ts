@@ -1,4 +1,5 @@
 import { apiClient } from './client.js';
+import { createInvalidResponseError } from './errors.js';
 
 import type { CategorizedApiError } from './types.js';
 
@@ -107,15 +108,7 @@ export async function listUsers(params: UserListParams = {}): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -132,15 +125,7 @@ export async function getUser(userId: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -157,15 +142,7 @@ export async function createUser(input: CreateUserInput): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -188,15 +165,7 @@ export async function updateUser(
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -277,15 +246,7 @@ export async function getUserActivity(userId: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };

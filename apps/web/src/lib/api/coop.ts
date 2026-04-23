@@ -9,6 +9,7 @@ import {
 } from '@the-dmz/shared/schemas';
 
 import { apiClient } from './client.js';
+import { createInvalidResponseError } from './errors.js';
 
 import type { CategorizedApiError } from './types.js';
 
@@ -46,28 +47,12 @@ export async function getCoopSession(
   if (result.data) {
     const validation = coopSessionBootstrapSchema.safeParse(result.data.data);
     if (!validation.success) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid co-op session response from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('Invalid co-op session response from server') };
     }
     return { data: result.data.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function createCoopSession(): Promise<{
@@ -84,27 +69,13 @@ export async function createCoopSession(): Promise<{
     const validation = coopSessionBootstrapSchema.safeParse(result.data.data);
     if (!validation.success) {
       return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid co-op session creation response from server',
-          status: 500,
-          retryable: false,
-        },
+        error: createInvalidResponseError('Invalid co-op session creation response from server'),
       };
     }
     return { data: result.data.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function assignCoopRoles(
@@ -123,27 +94,13 @@ export async function assignCoopRoles(
     const validation = coopSessionBootstrapSchema.safeParse(result.data.data);
     if (!validation.success) {
       return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid co-op role assignment response from server',
-          status: 500,
-          retryable: false,
-        },
+        error: createInvalidResponseError('Invalid co-op role assignment response from server'),
       };
     }
     return { data: result.data.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function submitProposal(
@@ -162,28 +119,12 @@ export async function submitProposal(
   if (result.data) {
     const validation = coopDecisionProposalSchema.safeParse(result.data.data);
     if (!validation.success) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid proposal response from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('Invalid proposal response from server') };
     }
     return { data: result.data.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function confirmProposal(
@@ -202,28 +143,12 @@ export async function confirmProposal(
   if (result.data) {
     const validation = coopDecisionProposalSchema.safeParse(result.data.data);
     if (!validation.success) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid confirm response from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('Invalid confirm response from server') };
     }
     return { data: result.data.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function overrideProposal(
@@ -242,28 +167,12 @@ export async function overrideProposal(
   if (result.data) {
     const validation = coopDecisionProposalSchema.safeParse(result.data.data);
     if (!validation.success) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid override response from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('Invalid override response from server') };
     }
     return { data: result.data.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function advanceCoopDay(
@@ -281,28 +190,12 @@ export async function advanceCoopDay(
   if (result.data) {
     const validation = coopSessionBootstrapSchema.safeParse(result.data.data);
     if (!validation.success) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid advance day response from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('Invalid advance day response from server') };
     }
     return { data: result.data.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function endCoopSession(sessionId: string): Promise<{ error?: CategorizedApiError }> {
@@ -343,25 +236,11 @@ export async function rotateAuthority(
     const validation = coopSessionBootstrapSchema.safeParse(result.data.data);
     if (!validation.success) {
       return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid authority rotation response from server',
-          status: 500,
-          retryable: false,
-        },
+        error: createInvalidResponseError('Invalid authority rotation response from server'),
       };
     }
     return { data: result.data.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }

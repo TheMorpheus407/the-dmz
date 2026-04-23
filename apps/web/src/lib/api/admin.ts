@@ -1,4 +1,5 @@
 import { apiClient } from './client.js';
+import { createInvalidResponseError } from './errors.js';
 
 import type { CategorizedApiError } from './types.js';
 
@@ -73,15 +74,7 @@ export async function getDashboard(): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -179,15 +172,7 @@ export async function getTrainerDashboard(dateRange?: {
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -214,15 +199,7 @@ export async function getTrainerCompetencies(dateRange?: {
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -249,15 +226,7 @@ export async function getTrainerErrors(dateRange?: {
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -274,15 +243,7 @@ export async function getTrainerCampaigns(): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -304,15 +265,7 @@ export async function getTrainerLearners(
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -389,15 +342,7 @@ export async function getComplianceSummary(): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -414,15 +359,7 @@ export async function getComplianceDetail(frameworkId: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -441,15 +378,7 @@ export async function getFrameworkRequirements(frameworkId: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -470,15 +399,7 @@ export async function calculateCompliance(frameworkId?: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -547,15 +468,7 @@ export async function getSAMLProviders(): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data.providers };
@@ -572,15 +485,7 @@ export async function getSAMLProvider(id: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -597,15 +502,7 @@ export async function createSAMLProvider(provider: CreateSAMLProviderRequest): P
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -625,15 +522,7 @@ export async function updateSAMLProvider(
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -650,15 +539,7 @@ export async function deleteSAMLProvider(id: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data.success };
@@ -675,15 +556,7 @@ export async function testSAMLConnection(id: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -744,15 +617,7 @@ export async function getSCIMTokens(): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data.tokens };
@@ -773,15 +638,7 @@ export async function createSCIMToken(request: {
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -798,15 +655,7 @@ export async function revokeSCIMToken(id: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data.success };
@@ -828,15 +677,7 @@ export async function rotateSCIMToken(
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -853,15 +694,7 @@ export async function testSCIMConnection(id: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -881,15 +714,7 @@ export async function testSCIMProvisioning(id: string): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -906,15 +731,7 @@ export async function getSCIMSyncStatus(): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -950,15 +767,7 @@ export async function getSCIMGroupMappings(): Promise<{
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data };
@@ -981,15 +790,7 @@ export async function updateSCIMGroupRole(
   }
 
   if (!result.data) {
-    return {
-      error: {
-        category: 'server',
-        code: 'INVALID_RESPONSE',
-        message: 'Invalid response from server',
-        status: 500,
-        retryable: false,
-      },
-    };
+    return { error: createInvalidResponseError() };
   }
 
   return { data: result.data.success };

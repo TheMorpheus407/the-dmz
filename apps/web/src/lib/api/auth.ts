@@ -14,6 +14,7 @@ import {
 import type { ThemeName, EffectState } from '$lib/stores/theme';
 
 import { apiClient } from './client.js';
+import { createInvalidResponseError } from './errors.js';
 
 import type { CategorizedApiError } from './types.js';
 
@@ -44,29 +45,13 @@ export async function login(
 
   if (result.data) {
     if (!result.data.user || !result.data.accessToken) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'No data received from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('No data received from server') };
     }
 
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export interface UpdatePreferencesInput {
@@ -99,15 +84,7 @@ export async function updatePreferences(
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function register(
@@ -121,28 +98,12 @@ export async function register(
 
   if (result.data) {
     if (!result.data.user || !result.data.accessToken) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid register response from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('Invalid register response from server') };
     }
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function refresh(): Promise<{ data?: RefreshResponse; error?: CategorizedApiError }> {
@@ -158,28 +119,12 @@ export async function refresh(): Promise<{ data?: RefreshResponse; error?: Categ
 
   if (result.data) {
     if (!result.data.accessToken) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid refresh response from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('Invalid refresh response from server') };
     }
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function logout(): Promise<{ data?: LogoutResponse; error?: CategorizedApiError }> {
@@ -196,28 +141,12 @@ export async function logout(): Promise<{ data?: LogoutResponse; error?: Categor
   if (result.data) {
     const validation = logoutResponseSchema.safeParse(result.data);
     if (!validation.success) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid logout response from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('Invalid logout response from server') };
     }
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function getCurrentUser(): Promise<{
@@ -233,28 +162,12 @@ export async function getCurrentUser(): Promise<{
   if (result.data) {
     const validation = meResponseSchema.safeParse(result.data);
     if (!validation.success) {
-      return {
-        error: {
-          category: 'server',
-          code: 'INVALID_RESPONSE',
-          message: 'Invalid me response from server',
-          status: 500,
-          retryable: false,
-        },
-      };
+      return { error: createInvalidResponseError('Invalid me response from server') };
     }
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export type WebauthnChallengeRequest = {
@@ -275,15 +188,7 @@ export async function getMfaStatus(): Promise<{
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function createWebauthnChallenge(request: WebauthnChallengeRequest): Promise<{
@@ -303,15 +208,7 @@ export async function createWebauthnChallenge(request: WebauthnChallengeRequest)
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export type WebauthnRegistrationRequest = {
@@ -346,15 +243,7 @@ export async function registerWebauthnCredential(request: WebauthnRegistrationRe
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export type WebauthnVerificationRequest = {
@@ -390,15 +279,7 @@ export async function verifyWebauthnAssertion(request: WebauthnVerificationReque
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function listWebauthnCredentials(): Promise<{
@@ -417,15 +298,7 @@ export async function listWebauthnCredentials(): Promise<{
     return { data: result.data };
   }
 
-  return {
-    error: {
-      category: 'server',
-      code: 'INVALID_RESPONSE',
-      message: 'No data received from server',
-      status: 500,
-      retryable: false,
-    },
-  };
+  return { error: createInvalidResponseError('No data received from server') };
 }
 
 export async function deleteWebauthnCredential(
