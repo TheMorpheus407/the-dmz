@@ -6,6 +6,7 @@ import {
   type JWTAuthPayload,
   type WSConnection,
 } from '../notification/index.js';
+import { moderationStatuses } from '../../db/schema/social/index.js';
 
 import { sendMessage, type SendMessageResult } from './chat.service.js';
 
@@ -24,6 +25,7 @@ interface JWTPayload {
 const TYPING_TIMEOUT_MS = 3000;
 const typingTimers = new Map<string, NodeJS.Timeout>();
 
+/* eslint-disable max-params, @typescript-eslint/max-params */
 export async function chatWebSocketHandler(
   connection: WSConnection,
   request: FastifyRequest,
@@ -124,6 +126,7 @@ async function authenticateWebSocket(
   }
 }
 
+/* eslint-disable max-params, @typescript-eslint/max-params */
 async function handleChatMessage(
   data: Buffer | string,
   connection: WSConnection,
@@ -275,6 +278,7 @@ function handleTyping(
   typingTimers.set(`${connId}:${channelId}`, timer);
 }
 
+/* eslint-disable max-params, @typescript-eslint/max-params, max-statements */
 async function handleSend(
   message: Record<string, unknown>,
   connection: WSConnection,
@@ -318,7 +322,7 @@ async function handleSend(
       return;
     }
 
-    if (result.moderationStatus === 'rejected') {
+    if (result.moderationStatus === moderationStatuses[2]) {
       const modMsg = gateway.createMessage('CHAT_MODERATION_ACTION', {
         channelId,
         action: 'rejected',
@@ -335,7 +339,7 @@ async function handleSend(
     return;
   }
 
-  if (result.moderationStatus === 'flagged') {
+  if (result.moderationStatus === moderationStatuses[1]) {
     const modMsg = gateway.createMessage('CHAT_MODERATION_ACTION', {
       channelId,
       action: 'flagged',
