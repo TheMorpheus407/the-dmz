@@ -4,6 +4,7 @@ import {
   type GameState,
   type EmailState,
   type EmailInstance,
+  type DayPhase,
   type AckDayStartPayload,
   type LoadInboxPayload,
   type OpenEmailPayload,
@@ -363,33 +364,77 @@ export interface ResolveDecisionContext {
   events: DomainEvent[];
 }
 
-function resolveAndApplyDecision(ctx: ResolveDecisionContext): void {
-  const { state, emailToDecide, emailInstance, action, events } = ctx;
+interface TryResolveDecisionOptions {
+  decision: SubmitDecisionPayload['decision'];
+  markedIndicators: string[];
+  timeSpentMs: number;
+  currentPhase: DayPhase;
+}
+
+function tryResolveDecision(
+  emailInstance: EmailInstance,
+  options: TryResolveDecisionOptions,
+): DecisionEvaluationResult | null {
+  try {
+    return resolveDecision({
+      email: emailInstance,
+      decision: options.decision,
+      markedIndicators: options.markedIndicators,
+      timeSpentMs: options.timeSpentMs,
+      currentPhase: options.currentPhase,
+    });
+  } catch {
+    return null;
+  }
+}
+
+interface HandleEvaluationErrorContext {
+  events: DomainEvent[];
+  state: GameState;
+}
+
+interface HandleEvaluationErrorParams {
+  emailId: string;
+  decision: SubmitDecisionPayload['decision'];
+  timeSpentMs: number;
+}
+
+function handleEvaluationError(
+  ctx: HandleEvaluationErrorContext,
+  params: HandleEvaluationErrorParams,
+): void {
+  pushEmailDecisionSubmittedEvent({
+    events: ctx.events,
+    state: ctx.state,
+    emailId: params.emailId,
+    decision: params.decision,
+    timeSpentMs: params.timeSpentMs,
+    evaluationError: true,
+  });
+  incrementDecisionAnalytics(ctx.state, params.decision);
+}
+
+interface ApplyTrustAndFundsContext {
+  state: GameState;
+  events: DomainEvent[];
+}
+
+interface ApplyTrustAndFundsParams {
+  emailInstance: EmailInstance;
+  decision: SubmitDecisionPayload['decision'];
+  decisionEvaluation: DecisionEvaluationResult;
+  emailId: string;
+}
+
+function applyTrustAndFunds(
+  ctx: ApplyTrustAndFundsContext,
+  params: ApplyTrustAndFundsParams,
+): void {
+  const { state, events } = ctx;
+  const { emailInstance, decision, decisionEvaluation, emailId } = params;
   const previousTrustScore = state.trustScore;
   const previousFunds = state.funds;
   const previousXP = state.playerXP;
-
-  let decisionEvaluation;
-  try {
-    decisionEvaluation = resolveDecision({
-      email: emailInstance,
-      decision: action.decision,
-      markedIndicators: emailToDecide.indicators,
-      timeSpentMs: action.timeSpentMs,
-      currentPhase: state.currentPhase,
-    });
-  } catch {
-    pushEmailDecisionSubmittedEvent({
-      events,
-      state,
-      emailId: action.emailId,
-      decision: action.decision,
-      timeSpentMs: action.timeSpentMs,
-      evaluationError: true,
-    });
-    incrementDecisionAnalytics(state, action.decision);
-    return;
-  }
 
   state.trustScore = clampTrustScore(
     Math.max(0, Math.min(500, state.trustScore + decisionEvaluation.trustImpact)),
@@ -404,23 +449,47 @@ function resolveAndApplyDecision(ctx: ResolveDecisionContext): void {
   pushTrustChangeEvent(events, state, {
     previousTrustScore,
     evaluation: decisionEvaluation,
-    emailId: action.emailId,
-    decision: action.decision,
+    emailId,
+    decision,
   });
   pushFundsChangeEvent(events, state, {
     previousFunds,
     evaluation: decisionEvaluation,
-    emailId: action.emailId,
-    decision: action.decision,
+    emailId,
+    decision,
   });
 
   pushDecisionEvaluatedEvent({
     events,
     state,
-    emailId: action.emailId,
-    decision: action.decision,
+    emailId,
+    decision,
     evaluation: decisionEvaluation,
   });
+}
+
+function resolveAndApplyDecision(ctx: ResolveDecisionContext): void {
+  const { state, emailToDecide, emailInstance, action, events } = ctx;
+
+  const decisionEvaluation = tryResolveDecision(emailInstance, {
+    decision: action.decision,
+    markedIndicators: emailToDecide.indicators,
+    timeSpentMs: action.timeSpentMs,
+    currentPhase: state.currentPhase,
+  });
+
+  if (!decisionEvaluation) {
+    handleEvaluationError(
+      { events, state },
+      { emailId: action.emailId, decision: action.decision, timeSpentMs: action.timeSpentMs },
+    );
+    return;
+  }
+
+  applyTrustAndFunds(
+    { state, events },
+    { emailInstance, decision: action.decision, decisionEvaluation, emailId: action.emailId },
+  );
 
   incrementDecisionAnalytics(state, action.decision);
 }
@@ -430,34 +499,22 @@ export function handleSubmitDecision(
   action: SubmitDecisionPayload,
   events: DomainEvent[],
 ): void {
-  if (!isActionAllowedInPhase(GAME_ACTIONS.SUBMIT_DECISION, state.currentPhase)) {
-    throw new Error('SUBMIT_DECISION not allowed in current phase');
-  }
-  const emailToDecide = state.inbox.find((e) => e.emailId === action.emailId);
+  assertDecisionPhase(state);
+
+  const emailToDecide = findEmailForDecision(state.inbox, action.emailId);
   if (!emailToDecide) {
     return;
   }
 
-  const statusMap: Record<string, EmailState['status']> = {
-    approve: 'approved',
-    deny: 'denied',
-    flag: 'flagged',
-    request_verification: 'request_verification',
-    defer: 'deferred',
-  };
-  emailToDecide.status = statusMap[action.decision] ?? 'pending';
+  emailToDecide.status = mapDecisionToStatus(action.decision);
   emailToDecide.timeSpentMs = action.timeSpentMs;
 
   const emailInstance = state.emailInstances[action.emailId];
   if (!emailInstance) {
-    pushEmailDecisionSubmittedEvent({
-      events,
-      state,
-      emailId: action.emailId,
-      decision: action.decision,
-      timeSpentMs: action.timeSpentMs,
-    });
-    incrementDecisionAnalytics(state, action.decision);
+    handleEvaluationError(
+      { events, state },
+      { emailId: action.emailId, decision: action.decision, timeSpentMs: action.timeSpentMs },
+    );
     return;
   }
 
@@ -468,4 +525,27 @@ export function handleSubmitDecision(
     action,
     events,
   });
+}
+
+export function assertDecisionPhase(state: GameState): void {
+  if (!isActionAllowedInPhase(GAME_ACTIONS.SUBMIT_DECISION, state.currentPhase)) {
+    throw new Error('SUBMIT_DECISION not allowed in current phase');
+  }
+}
+
+export function findEmailForDecision(inbox: EmailState[], emailId: string): EmailState | undefined {
+  return inbox.find((e) => e.emailId === emailId);
+}
+
+export function mapDecisionToStatus(
+  decision: SubmitDecisionPayload['decision'],
+): EmailState['status'] {
+  const statusMap: Record<string, EmailState['status']> = {
+    approve: 'approved',
+    deny: 'denied',
+    flag: 'flagged',
+    request_verification: 'request_verification',
+    defer: 'deferred',
+  };
+  return statusMap[decision] ?? 'pending';
 }
