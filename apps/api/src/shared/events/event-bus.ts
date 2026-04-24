@@ -1,5 +1,7 @@
 import { EventEmitter } from 'node:events';
 
+import { isValidGameEventType } from '@the-dmz/shared';
+
 import { toIsoString } from '../utils/date.js';
 import { generateId } from '../utils/id.js';
 
@@ -7,11 +9,13 @@ import type { DomainEvent, EventHandler, EventBus } from './event-types.js';
 
 interface EventBusLogger {
   error: (...args: unknown[]) => void;
+  warn?: (...args: unknown[]) => void;
 }
 
 interface EventBusOptions {
   logger?: EventBusLogger;
   maxListeners?: number;
+  validateEventTypes?: boolean;
 }
 
 type AnyDomainEvent = DomainEvent<unknown>;
@@ -20,22 +24,38 @@ type WrappedEventHandler = (event: AnyDomainEvent) => void;
 
 const NOOP_LOGGER: EventBusLogger = {
   error: () => undefined,
+  warn: () => undefined,
 };
 
 export class DefaultEventBus implements EventBus {
   private readonly emitter = new EventEmitter();
   private readonly logger: EventBusLogger;
   private readonly wrappedHandlers = new Map<string, Map<AnyEventHandler, WrappedEventHandler>>();
+  private readonly validateEventTypes: boolean;
 
   public constructor(options: EventBusOptions = {}) {
-    this.logger = options.logger ?? NOOP_LOGGER;
+    this.logger = { ...NOOP_LOGGER, ...options.logger };
     this.emitter.setMaxListeners(options.maxListeners ?? 100);
+    this.validateEventTypes = options.validateEventTypes ?? false;
 
     // Ensure reserved "error" events never throw when no subscribers are present.
     this.emitter.on('error', () => undefined);
   }
 
   public publish<T>(event: DomainEvent<T>): void {
+    if (this.validateEventTypes) {
+      if (!isValidGameEventType(event.eventType)) {
+        const error = new Error(`Unknown event type: ${event.eventType}`);
+        this.logger.warn?.(
+          {
+            eventType: event.eventType,
+            message: 'Unknown event type',
+          },
+          error.message,
+        );
+        throw error;
+      }
+    }
     this.emitter.emit(event.eventType, event as AnyDomainEvent);
   }
 

@@ -1,7 +1,35 @@
+/* eslint-disable max-lines */
+import { GAME_EVENT_TYPE_ARRAY } from '@the-dmz/shared';
 import type { EventOwnershipManifest } from '@the-dmz/shared/contracts';
+
+const GAME_EVENT_METADATA = [
+  'eventId',
+  'eventType',
+  'timestamp',
+  'correlationId',
+  'tenantId',
+  'userId',
+  'source',
+  'version',
+] as const;
+
+const createGameEventEntry = (eventType: string) => ({
+  eventType,
+  owningModule: 'game',
+  version: 1,
+  requiredMetadata: [...GAME_EVENT_METADATA],
+});
+
+const gameEventEntries = GAME_EVENT_TYPE_ARRAY.filter(
+  (eventType) =>
+    eventType.startsWith('game.') ||
+    eventType.startsWith('threat.') ||
+    eventType.startsWith('incident.'),
+).map(createGameEventEntry);
 
 export const EVENT_OWNERSHIP_MANIFEST: EventOwnershipManifest = {
   events: [
+    ...gameEventEntries,
     {
       eventType: 'auth.user.created',
       owningModule: 'auth',
@@ -80,21 +108,6 @@ export const EVENT_OWNERSHIP_MANIFEST: EventOwnershipManifest = {
     {
       eventType: 'auth.login.failed',
       owningModule: 'auth',
-      version: 1,
-      requiredMetadata: [
-        'eventId',
-        'eventType',
-        'timestamp',
-        'correlationId',
-        'tenantId',
-        'userId',
-        'source',
-        'version',
-      ],
-    },
-    {
-      eventType: 'game.session.started',
-      owningModule: 'game',
       version: 1,
       requiredMetadata: [
         'eventId',

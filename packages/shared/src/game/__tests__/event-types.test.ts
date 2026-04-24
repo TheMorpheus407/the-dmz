@@ -8,8 +8,8 @@ import {
 } from '../event-types.js';
 
 describe('GAME_EVENT_TYPES', () => {
-  it('should have 46 event types', () => {
-    expect(GAME_EVENT_TYPE_ARRAY).toHaveLength(46);
+  it('should have 70 event types', () => {
+    expect(GAME_EVENT_TYPE_ARRAY).toHaveLength(70);
   });
 
   it('should contain game.session.started', () => {

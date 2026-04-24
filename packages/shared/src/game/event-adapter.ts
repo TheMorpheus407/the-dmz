@@ -1,3 +1,5 @@
+import { GAME_EVENT_TYPES } from './event-types.js';
+
 import type { GameEventType } from './event-types.js';
 import type {
   GameActionPayload,
@@ -48,32 +50,32 @@ export class EventAdapterRegistry {
 }
 
 export const createSessionStartedAdapter = (): EventAdapter => ({
-  eventType: 'game.session.started',
+  eventType: GAME_EVENT_TYPES.SESSION_STARTED,
   toActionPayload: () => ({ type: 'ACK_DAY_START' }) as AckDayStartPayload,
 });
 
 export const createDayStartedAdapter = (): EventAdapter => ({
-  eventType: 'game.day.started',
+  eventType: GAME_EVENT_TYPES.DAY_STARTED,
   toActionPayload: () => ({ type: 'ACK_DAY_START' }) as AckDayStartPayload,
 });
 
 export const createDayEndedAdapter = (): EventAdapter => ({
-  eventType: 'game.day.ended',
+  eventType: GAME_EVENT_TYPES.DAY_ENDED,
   toActionPayload: () => ({ type: 'ADVANCE_DAY' }) as AdvanceDayPayload,
 });
 
 export const createSessionPausedAdapter = (): EventAdapter => ({
-  eventType: 'game.session.paused',
+  eventType: GAME_EVENT_TYPES.SESSION_PAUSED,
   toActionPayload: () => ({ type: 'PAUSE_SESSION' }) as PauseSessionPayload,
 });
 
 export const createSessionResumedAdapter = (): EventAdapter => ({
-  eventType: 'game.session.resumed',
+  eventType: GAME_EVENT_TYPES.SESSION_RESUMED,
   toActionPayload: () => ({ type: 'RESUME_SESSION' }) as ResumeSessionPayload,
 });
 
 export const createSessionAbandonedAdapter = (): EventAdapter => ({
-  eventType: 'game.session.abandoned',
+  eventType: GAME_EVENT_TYPES.SESSION_ABANDONED,
   toActionPayload: (eventData) =>
     ({
       type: 'ABANDON_SESSION',
@@ -82,12 +84,12 @@ export const createSessionAbandonedAdapter = (): EventAdapter => ({
 });
 
 export const createSessionCompletedAdapter = (): EventAdapter => ({
-  eventType: 'game.session.completed',
+  eventType: GAME_EVENT_TYPES.SESSION_COMPLETED,
   toActionPayload: () => ({ type: 'ABANDON_SESSION' }) as AbandonSessionPayload,
 });
 
 export const createEmailOpenedAdapter = (): EventAdapter => ({
-  eventType: 'game.email.opened',
+  eventType: GAME_EVENT_TYPES.EMAIL_OPENED,
   toActionPayload: (eventData) =>
     ({
       type: 'OPEN_EMAIL',
@@ -96,7 +98,7 @@ export const createEmailOpenedAdapter = (): EventAdapter => ({
 });
 
 export const createEmailIndicatorMarkedAdapter = (): EventAdapter => ({
-  eventType: 'game.email.indicator_marked',
+  eventType: GAME_EVENT_TYPES.EMAIL_INDICATOR_MARKED,
   toActionPayload: (eventData) => ({
     type: 'MARK_INDICATOR',
     emailId: (eventData as { emailId?: string }).emailId ?? '',
@@ -105,7 +107,7 @@ export const createEmailIndicatorMarkedAdapter = (): EventAdapter => ({
 });
 
 export const createEmailVerificationRequestedAdapter = (): EventAdapter => ({
-  eventType: 'game.email.verification_requested',
+  eventType: GAME_EVENT_TYPES.EMAIL_VERIFICATION_REQUESTED,
   toActionPayload: (eventData) =>
     ({
       type: 'REQUEST_VERIFICATION',
@@ -114,7 +116,7 @@ export const createEmailVerificationRequestedAdapter = (): EventAdapter => ({
 });
 
 export const createEmailDecisionSubmittedAdapter = (): EventAdapter => ({
-  eventType: 'game.email.decision_submitted',
+  eventType: GAME_EVENT_TYPES.EMAIL_DECISION_SUBMITTED,
   toActionPayload: (eventData) =>
     ({
       type: 'SUBMIT_DECISION',
@@ -125,7 +127,7 @@ export const createEmailDecisionSubmittedAdapter = (): EventAdapter => ({
 });
 
 export const createEmailDecisionResolvedAdapter = (): EventAdapter => ({
-  eventType: 'game.email.decision_resolved',
+  eventType: GAME_EVENT_TYPES.EMAIL_DECISION_RESOLVED,
   toActionPayload: (eventData) =>
     ({
       type: 'CLOSE_VERIFICATION',
@@ -134,7 +136,7 @@ export const createEmailDecisionResolvedAdapter = (): EventAdapter => ({
 });
 
 export const createConsequencesAppliedAdapter = (): EventAdapter => ({
-  eventType: 'game.consequences.applied',
+  eventType: GAME_EVENT_TYPES.CONSEQUENCES_APPLIED,
   toActionPayload: (eventData) =>
     ({
       type: 'APPLY_CONSEQUENCES',
@@ -143,7 +145,7 @@ export const createConsequencesAppliedAdapter = (): EventAdapter => ({
 });
 
 export const createThreatsGeneratedAdapter = (): EventAdapter => ({
-  eventType: 'game.threats.generated',
+  eventType: GAME_EVENT_TYPES.THREATS_GENERATED,
   toActionPayload: (eventData) =>
     ({
       type: 'PROCESS_THREATS',
@@ -152,7 +154,7 @@ export const createThreatsGeneratedAdapter = (): EventAdapter => ({
 });
 
 export const createIncidentCreatedAdapter = (): EventAdapter => ({
-  eventType: 'game.incident.created',
+  eventType: GAME_EVENT_TYPES.INCIDENT_CREATED,
   toActionPayload: (eventData) =>
     ({
       type: 'PROCESS_THREATS',
@@ -161,7 +163,7 @@ export const createIncidentCreatedAdapter = (): EventAdapter => ({
 });
 
 export const createBreachOccurredAdapter = (): EventAdapter => ({
-  eventType: 'game.breach.occurred',
+  eventType: GAME_EVENT_TYPES.BREACH_OCCURRED,
   toActionPayload: (eventData) =>
     ({
       type: 'TRIGGER_BREACH',
@@ -171,7 +173,7 @@ export const createBreachOccurredAdapter = (): EventAdapter => ({
 });
 
 export const createBreachRansomPaidAdapter = (): EventAdapter => ({
-  eventType: 'game.breach.ransom_paid',
+  eventType: GAME_EVENT_TYPES.BREACH_RANSOM_PAID,
   toActionPayload: (eventData) =>
     ({
       type: 'PAY_RANSOM',
@@ -180,27 +182,27 @@ export const createBreachRansomPaidAdapter = (): EventAdapter => ({
 });
 
 export const createBreachRansomRefusedAdapter = (): EventAdapter => ({
-  eventType: 'game.breach.ransom_refused',
+  eventType: GAME_EVENT_TYPES.BREACH_RANSOM_REFUSED,
   toActionPayload: () => ({ type: 'REFUSE_RANSOM' }) as RefuseRansomPayload,
 });
 
 export const createBreachRecoveryStartedAdapter = (): EventAdapter => ({
-  eventType: 'game.breach.recovery_started',
+  eventType: GAME_EVENT_TYPES.BREACH_RECOVERY_STARTED,
   toActionPayload: () => ({ type: 'ADVANCE_RECOVERY' }) as AdvanceRecoveryPayload,
 });
 
 export const createBreachRecoveryCompletedAdapter = (): EventAdapter => ({
-  eventType: 'game.breach.recovery_completed',
+  eventType: GAME_EVENT_TYPES.BREACH_RECOVERY_COMPLETED,
   toActionPayload: () => ({ type: 'ADVANCE_RECOVERY' }) as AdvanceRecoveryPayload,
 });
 
 export const createBreachPostEffectsStartedAdapter = (): EventAdapter => ({
-  eventType: 'game.breach.post_effects_started',
+  eventType: GAME_EVENT_TYPES.BREACH_POST_EFFECTS_STARTED,
   toActionPayload: () => ({ type: 'ADVANCE_RECOVERY' }) as AdvanceRecoveryPayload,
 });
 
 export const createIncidentResolvedAdapter = (): EventAdapter => ({
-  eventType: 'game.incident.resolved',
+  eventType: GAME_EVENT_TYPES.INCIDENT_RESOLVED,
   toActionPayload: (eventData) => ({
     type: 'RESOLVE_INCIDENT',
     incidentId: (eventData as { incidentId?: string }).incidentId ?? '',
@@ -209,7 +211,7 @@ export const createIncidentResolvedAdapter = (): EventAdapter => ({
 });
 
 export const createUpgradePurchasedAdapter = (): EventAdapter => ({
-  eventType: 'game.upgrade.purchased',
+  eventType: GAME_EVENT_TYPES.UPGRADE_PURCHASED,
   toActionPayload: (eventData) => ({
     type: 'PURCHASE_UPGRADE',
     upgradeId: (eventData as { upgradeId?: string }).upgradeId ?? '',
@@ -217,7 +219,7 @@ export const createUpgradePurchasedAdapter = (): EventAdapter => ({
 });
 
 export const createResourceAdjustedAdapter = (): EventAdapter => ({
-  eventType: 'game.resource.adjusted',
+  eventType: GAME_EVENT_TYPES.RESOURCE_ADJUSTED,
   toActionPayload: (eventData) => ({
     type: 'ADJUST_RESOURCE',
     resourceId: (eventData as { resourceId?: string }).resourceId ?? '',
@@ -226,6 +228,6 @@ export const createResourceAdjustedAdapter = (): EventAdapter => ({
 });
 
 export const createGameOverAdapter = (): EventAdapter => ({
-  eventType: 'game.session.game_over',
+  eventType: GAME_EVENT_TYPES.GAME_OVER,
   toActionPayload: () => ({ type: 'ACK_DAY_START' }) as AckDayStartPayload,
 });
