@@ -11,6 +11,8 @@ export const cursorPaginationSchema = z
   })
   .strict();
 
+export type CursorPaginationInput = z.infer<typeof cursorPaginationSchema>;
+
 export const cursorPaginationMetaSchema = z
   .object({
     hasMore: z.boolean(),
