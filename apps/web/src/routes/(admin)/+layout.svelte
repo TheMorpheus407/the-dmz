@@ -3,12 +3,14 @@
 
   import { themeStore, getRouteDefaultTheme, STORAGE_KEY } from '$lib/stores/theme';
   import { breadcrumbs } from '$lib/stores/breadcrumbs';
+  import { sessionStore } from '$lib/stores/session';
   import { ADMIN_NAV_ITEMS, isActiveAdminNavItem, type AdminNavItem } from '$lib/config/admin-nav';
   import Drawer from '$lib/ui/components/Drawer.svelte';
   import Button from '$lib/ui/components/Button.svelte';
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
 
   import { navigating, page } from '$app/stores';
+  import { goto } from '$app/navigation';
 
   interface Props {
     children?: Snippet;
@@ -64,6 +66,11 @@
   function isActive(item: AdminNavItem): boolean {
     return isActiveAdminNavItem(item.href, currentPath);
   }
+
+  async function handleLogout() {
+    await sessionStore.logout();
+    await goto('/login', { replaceState: true });
+  }
 </script>
 
 <section class="surface surface-admin" data-surface="admin">
@@ -82,7 +89,7 @@
         >
           {currentTheme === 'admin-light' ? '🌙' : '☀️'}
         </Button>
-        <Button variant="ghost" size="sm">Logout</Button>
+        <Button variant="ghost" size="sm" onclick={handleLogout}>Logout</Button>
       </div>
     </header>
 

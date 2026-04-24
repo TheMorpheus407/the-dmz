@@ -4,6 +4,7 @@
   import { logger } from '$lib/logger';
   import { themeStore, STORAGE_KEY } from '$lib/stores/theme';
   import { settingsStore, effectiveVirtualization } from '$lib/stores/settings';
+  import { sessionStore } from '$lib/stores/session';
   import Drawer from '$lib/ui/components/Drawer.svelte';
   import Button from '$lib/ui/components/Button.svelte';
   import LoadingState from '$lib/ui/components/LoadingState.svelte';
@@ -39,6 +40,7 @@
 
   import { navigating } from '$app/stores';
   import { browser } from '$app/environment';
+  import { goto } from '$app/navigation';
 
   interface Props {
     children?: Snippet;
@@ -264,6 +266,11 @@
     }
   }
 
+  async function handleLogout() {
+    await sessionStore.logout();
+    await goto('/login', { replaceState: true });
+  }
+
   const tabletPanelGesture = createTouchPanHandler((direction) => {
     if (direction === 'next' && activePanel === 'inbox') {
       activePanel = 'document';
@@ -314,14 +321,7 @@
     onCancel: handleCancel,
   });
 
-  onMount(() => {
-    initPerformanceMonitoring();
-    themeStore.init();
-    soundStore.init();
-    settingsStore.init();
-
-    void loadAnalytics();
-
+  function initThemeEffects() {
     const systemPrefs = themeStore.getSystemPreferences();
 
     if (systemPrefs.prefersReducedMotion) {
@@ -351,6 +351,17 @@
         settingsStore.updatePerformance({ reduceAnimations: true });
       }
     }
+  }
+
+  onMount(() => {
+    initPerformanceMonitoring();
+    themeStore.init();
+    soundStore.init();
+    settingsStore.init();
+
+    void loadAnalytics();
+
+    initThemeEffects();
 
     let prevColorBlindMode = 'none';
     const settingsUnsub = settingsStore.subscribe((settings) => {
@@ -418,6 +429,7 @@
           <Button variant="ghost" size="sm" onclick={() => (soundControlsOpen = true)}>
             Sound
           </Button>
+          <Button variant="ghost" size="sm" onclick={handleLogout}>Logout</Button>
         </div>
       </header>
 
