@@ -7,7 +7,7 @@ import type {
   AuthDomainEvent,
 } from '../auth.events.js';
 
-interface BaseJWTSigningKeyEventParams {
+interface JWTSigningKeyEventParams {
   source: string;
   correlationId: string;
   tenantId: string;
@@ -15,7 +15,7 @@ interface BaseJWTSigningKeyEventParams {
 }
 
 export const createJWTSigningKeyCreatedEvent = (
-  params: BaseJWTSigningKeyEventParams & { payload: JWTSigningKeyCreatedPayload },
+  params: JWTSigningKeyEventParams & { payload: JWTSigningKeyCreatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.JWT_SIGNING_KEY_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -31,7 +31,7 @@ export const createJWTSigningKeyCreatedEvent = (
 };
 
 export const createJWTSigningKeyRotatedEvent = (
-  params: BaseJWTSigningKeyEventParams & { payload: JWTSigningKeyRotatedPayload },
+  params: JWTSigningKeyEventParams & { payload: JWTSigningKeyRotatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.JWT_SIGNING_KEY_ROTATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -47,7 +47,7 @@ export const createJWTSigningKeyRotatedEvent = (
 };
 
 export const createJWTSigningKeyRevokedEvent = (
-  params: BaseJWTSigningKeyEventParams & { payload: JWTSigningKeyRevokedPayload },
+  params: JWTSigningKeyEventParams & { payload: JWTSigningKeyRevokedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.JWT_SIGNING_KEY_REVOKED> => {
   return {
     eventId: crypto.randomUUID(),

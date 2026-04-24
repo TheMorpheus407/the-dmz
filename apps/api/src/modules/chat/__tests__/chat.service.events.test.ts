@@ -54,14 +54,14 @@ import {
 import { sendMessage, deleteMessage, createChannel } from '../chat.service.js';
 
 import type { AppConfig } from '../../../config.js';
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 
 const mockConfig = {} as AppConfig;
 const mockTenantId = 'test-tenant-id';
 const mockPlayerId = 'test-player-id';
 
 describe('chat.service event bus integration', () => {
-  let mockEventBus: IEventBus;
+  let mockEventBus: EventBus;
   let mockRepository: {
     findChannel: ReturnType<typeof vi.fn>;
     findChannels: ReturnType<typeof vi.fn>;
@@ -79,7 +79,7 @@ describe('chat.service event bus integration', () => {
 
     mockEventBus = {
       publish: vi.fn(),
-    } as unknown as IEventBus;
+    } as unknown as EventBus;
 
     mockRepository = {
       findChannel: vi.fn(),

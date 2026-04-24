@@ -130,7 +130,7 @@ export type AuthzDomainEvent<T extends AuthzEventType = AuthzEventType> = Domain
   AuthzEventPayloadMap[T]
 >;
 
-interface BaseAuthzEventParams {
+interface AuthzEventParams {
   source: string;
   correlationId: string;
   tenantId: string;
@@ -139,7 +139,7 @@ interface BaseAuthzEventParams {
 }
 
 export const createAuthzRoleCreatedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzRoleCreatedPayload },
+  params: AuthzEventParams & { payload: AuthzRoleCreatedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.ROLE_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -155,7 +155,7 @@ export const createAuthzRoleCreatedEvent = (
 };
 
 export const createAuthzRoleUpdatedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzRoleUpdatedPayload },
+  params: AuthzEventParams & { payload: AuthzRoleUpdatedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.ROLE_UPDATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -171,7 +171,7 @@ export const createAuthzRoleUpdatedEvent = (
 };
 
 export const createAuthzRoleDeletedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzRoleDeletedPayload },
+  params: AuthzEventParams & { payload: AuthzRoleDeletedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.ROLE_DELETED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -187,7 +187,7 @@ export const createAuthzRoleDeletedEvent = (
 };
 
 export const createAuthzRoleAssignedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzRoleAssignedPayload },
+  params: AuthzEventParams & { payload: AuthzRoleAssignedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.ROLE_ASSIGNED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -203,7 +203,7 @@ export const createAuthzRoleAssignedEvent = (
 };
 
 export const createAuthzRoleRevokedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzRoleRevokedPayload },
+  params: AuthzEventParams & { payload: AuthzRoleRevokedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.ROLE_REVOKED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -219,7 +219,7 @@ export const createAuthzRoleRevokedEvent = (
 };
 
 export const createAuthzPermissionCreatedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzPermissionCreatedPayload },
+  params: AuthzEventParams & { payload: AuthzPermissionCreatedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.PERMISSION_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -235,7 +235,7 @@ export const createAuthzPermissionCreatedEvent = (
 };
 
 export const createAuthzPermissionUpdatedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzPermissionUpdatedPayload },
+  params: AuthzEventParams & { payload: AuthzPermissionUpdatedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.PERMISSION_UPDATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -251,7 +251,7 @@ export const createAuthzPermissionUpdatedEvent = (
 };
 
 export const createAuthzPermissionDeletedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzPermissionDeletedPayload },
+  params: AuthzEventParams & { payload: AuthzPermissionDeletedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.PERMISSION_DELETED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -267,7 +267,7 @@ export const createAuthzPermissionDeletedEvent = (
 };
 
 export const createAuthzRolePermissionGrantedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzRolePermissionGrantedPayload },
+  params: AuthzEventParams & { payload: AuthzRolePermissionGrantedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.ROLE_PERMISSION_GRANTED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -283,7 +283,7 @@ export const createAuthzRolePermissionGrantedEvent = (
 };
 
 export const createAuthzRolePermissionRevokedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzRolePermissionRevokedPayload },
+  params: AuthzEventParams & { payload: AuthzRolePermissionRevokedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.ROLE_PERMISSION_REVOKED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -299,7 +299,7 @@ export const createAuthzRolePermissionRevokedEvent = (
 };
 
 export const createAuthzPolicyCreatedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzPolicyCreatedPayload },
+  params: AuthzEventParams & { payload: AuthzPolicyCreatedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.POLICY_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -315,7 +315,7 @@ export const createAuthzPolicyCreatedEvent = (
 };
 
 export const createAuthzPolicyUpdatedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzPolicyUpdatedPayload },
+  params: AuthzEventParams & { payload: AuthzPolicyUpdatedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.POLICY_UPDATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -331,7 +331,7 @@ export const createAuthzPolicyUpdatedEvent = (
 };
 
 export const createAuthzPolicyDeletedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzPolicyDeletedPayload },
+  params: AuthzEventParams & { payload: AuthzPolicyDeletedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.POLICY_DELETED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -347,7 +347,7 @@ export const createAuthzPolicyDeletedEvent = (
 };
 
 export const createAuthzTenantAttributeChangedEvent = (
-  params: BaseAuthzEventParams & { payload: AuthzTenantAttributeChangedPayload },
+  params: AuthzEventParams & { payload: AuthzTenantAttributeChangedPayload },
 ): AuthzDomainEvent<typeof AUTHZ_EVENTS.TENANT_ATTRIBUTE_CHANGED> => {
   return {
     eventId: crypto.randomUUID(),

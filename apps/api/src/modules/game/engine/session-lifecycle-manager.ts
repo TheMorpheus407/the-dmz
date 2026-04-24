@@ -11,7 +11,7 @@ import {
 import { canTransitionMacroState } from './state-machine.js';
 import { type GameEventMapper } from './game-event-mapper.js';
 
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 
 export interface SessionTransitionResult {
   success: boolean;
@@ -23,7 +23,7 @@ export interface SessionTransitionResult {
 export class SessionLifecycleManager {
   constructor(
     private readonly eventMapper: GameEventMapper,
-    private readonly eventBus?: IEventBus,
+    private readonly eventBus?: EventBus,
   ) {}
 
   public pauseSession(state: GameState): SessionTransitionResult {

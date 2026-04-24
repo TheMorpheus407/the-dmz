@@ -10,12 +10,12 @@ import type {
   AuthSessionRevokedUserAllPayload,
   AuthSessionRevokedTenantAllPayload,
   AuthSessionRevocationDeniedPayload,
-  BaseAuthEventParams,
+  AuthEventParams,
   AuthDomainEvent,
 } from '../auth.events.js';
 
 export const createAuthSessionCreatedEvent = (
-  params: BaseAuthEventParams & { payload: AuthSessionCreatedPayload },
+  params: AuthEventParams & { payload: AuthSessionCreatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -31,7 +31,7 @@ export const createAuthSessionCreatedEvent = (
 };
 
 export const createAuthSessionRevokedEvent = (
-  params: BaseAuthEventParams & { payload: AuthSessionRevokedPayload },
+  params: AuthEventParams & { payload: AuthSessionRevokedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOKED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -47,7 +47,7 @@ export const createAuthSessionRevokedEvent = (
 };
 
 export const createAuthSessionRevokedFederatedEvent = (
-  params: BaseAuthEventParams & { payload: AuthSessionRevokedFederatedPayload },
+  params: AuthEventParams & { payload: AuthSessionRevokedFederatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOKED_FEDERATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -63,7 +63,7 @@ export const createAuthSessionRevokedFederatedEvent = (
 };
 
 export const createAuthSessionRevocationFailedEvent = (
-  params: BaseAuthEventParams & { payload: AuthSessionRevocationFailedPayload },
+  params: AuthEventParams & { payload: AuthSessionRevocationFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOCATION_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -79,7 +79,7 @@ export const createAuthSessionRevocationFailedEvent = (
 };
 
 export const createAuthSessionRevocationIgnoredEvent = (
-  params: BaseAuthEventParams & { payload: AuthSessionRevocationIgnoredPayload },
+  params: AuthEventParams & { payload: AuthSessionRevocationIgnoredPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOCATION_IGNORED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -95,7 +95,7 @@ export const createAuthSessionRevocationIgnoredEvent = (
 };
 
 export const createAuthSessionRevokedAdminEvent = (
-  params: BaseAuthEventParams & { payload: AuthSessionRevokedAdminPayload },
+  params: AuthEventParams & { payload: AuthSessionRevokedAdminPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOKED_ADMIN> => {
   return {
     eventId: crypto.randomUUID(),
@@ -111,7 +111,7 @@ export const createAuthSessionRevokedAdminEvent = (
 };
 
 export const createAuthSessionRevokedUserAllEvent = (
-  params: BaseAuthEventParams & { payload: AuthSessionRevokedUserAllPayload },
+  params: AuthEventParams & { payload: AuthSessionRevokedUserAllPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOKED_USER_ALL> => {
   return {
     eventId: crypto.randomUUID(),
@@ -127,7 +127,7 @@ export const createAuthSessionRevokedUserAllEvent = (
 };
 
 export const createAuthSessionRevokedTenantAllEvent = (
-  params: BaseAuthEventParams & { payload: AuthSessionRevokedTenantAllPayload },
+  params: AuthEventParams & { payload: AuthSessionRevokedTenantAllPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOKED_TENANT_ALL> => {
   return {
     eventId: crypto.randomUUID(),
@@ -143,7 +143,7 @@ export const createAuthSessionRevokedTenantAllEvent = (
 };
 
 export const createAuthSessionRevocationDeniedEvent = (
-  params: BaseAuthEventParams & { payload: AuthSessionRevocationDeniedPayload },
+  params: AuthEventParams & { payload: AuthSessionRevocationDeniedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SESSION_REVOCATION_DENIED> => {
   return {
     eventId: crypto.randomUUID(),

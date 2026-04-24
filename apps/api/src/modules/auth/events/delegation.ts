@@ -5,12 +5,12 @@ import type {
   AuthDelegationRoleUpdatedPayload,
   AuthDelegationRoleAssignedPayload,
   AuthDelegationDeniedPayload,
-  BaseAuthEventParams,
+  AuthEventParams,
   AuthDomainEvent,
 } from '../auth.events.js';
 
 export const createAuthDelegationRoleCreatedEvent = (
-  params: BaseAuthEventParams & { payload: AuthDelegationRoleCreatedPayload },
+  params: AuthEventParams & { payload: AuthDelegationRoleCreatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.DELEGATION_ROLE_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -26,7 +26,7 @@ export const createAuthDelegationRoleCreatedEvent = (
 };
 
 export const createAuthDelegationRoleUpdatedEvent = (
-  params: BaseAuthEventParams & { payload: AuthDelegationRoleUpdatedPayload },
+  params: AuthEventParams & { payload: AuthDelegationRoleUpdatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.DELEGATION_ROLE_UPDATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -42,7 +42,7 @@ export const createAuthDelegationRoleUpdatedEvent = (
 };
 
 export const createAuthDelegationRoleAssignedEvent = (
-  params: BaseAuthEventParams & { payload: AuthDelegationRoleAssignedPayload },
+  params: AuthEventParams & { payload: AuthDelegationRoleAssignedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.DELEGATION_ROLE_ASSIGNED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -58,7 +58,7 @@ export const createAuthDelegationRoleAssignedEvent = (
 };
 
 export const createAuthDelegationDeniedEvent = (
-  params: BaseAuthEventParams & { payload: AuthDelegationDeniedPayload },
+  params: AuthEventParams & { payload: AuthDelegationDeniedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.DELEGATION_DENIED> => {
   return {
     eventId: crypto.randomUUID(),

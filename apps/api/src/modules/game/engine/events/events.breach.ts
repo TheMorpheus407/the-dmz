@@ -1,6 +1,6 @@
 import {
   GAME_ENGINE_EVENTS,
-  type BaseGameEngineEventParams,
+  type GameEngineEventParams,
   type GameEngineDomainEvent,
   type BreachOccurredPayload,
   type IncidentCreatedPayload,
@@ -16,7 +16,7 @@ export type {
 } from './shared-types.js';
 
 export const createBreachOccurredEvent = (
-  params: BaseGameEngineEventParams & { payload: BreachOccurredPayload },
+  params: GameEngineEventParams & { payload: BreachOccurredPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.BREACH_OCCURRED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -32,7 +32,7 @@ export const createBreachOccurredEvent = (
 };
 
 export const createIncidentCreatedEvent = (
-  params: BaseGameEngineEventParams & { payload: IncidentCreatedPayload },
+  params: GameEngineEventParams & { payload: IncidentCreatedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.INCIDENT_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -48,7 +48,7 @@ export const createIncidentCreatedEvent = (
 };
 
 export const createIncidentResolvedEvent = (
-  params: BaseGameEngineEventParams & { payload: IncidentResolvedPayload },
+  params: GameEngineEventParams & { payload: IncidentResolvedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.INCIDENT_RESOLVED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -64,7 +64,7 @@ export const createIncidentResolvedEvent = (
 };
 
 export const createIncidentResponseActionTakenEvent = (
-  params: BaseGameEngineEventParams & { payload: IncidentResponseActionTakenPayload },
+  params: GameEngineEventParams & { payload: IncidentResponseActionTakenPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.INCIDENT_RESPONSE_ACTION_TAKEN> => {
   return {
     eventId: crypto.randomUUID(),

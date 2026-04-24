@@ -21,7 +21,7 @@ vi.mock('../../../shared/middleware/tenant-status-guard.js', () => ({
 }));
 
 import { loadConfig, type AppConfig } from '../../../config.js';
-import { EventBus } from '../../../shared/events/index.js';
+import { DefaultEventBus } from '../../../shared/events/index.js';
 import { aiPipelinePlugin } from '../ai-pipeline.plugin.js';
 import { getDefaultOutputSchema } from '../output-parser.service.js';
 
@@ -108,7 +108,7 @@ describe('ai-pipeline.plugin integration', () => {
 
   it('handles end-to-end email generation through the registered plugin', async () => {
     const app = fastify({ logger: false });
-    const eventBus = new EventBus();
+    const eventBus = new DefaultEventBus();
     const publishSpy = vi.spyOn(eventBus, 'publish');
     const promptTemplateRepository: PromptTemplateRepository = {
       list: vi.fn().mockResolvedValue([generationTemplate]),

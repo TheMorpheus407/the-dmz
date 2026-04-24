@@ -17,7 +17,7 @@ import { validateAndApplyAction } from '../sync.service.js';
 import { buildCoopChannelName } from '../websocket.handler.js';
 
 import type { AppConfig } from '../../../../config.js';
-import type { IEventBus } from '../../../../shared/events/event-types.js';
+import type { EventBus } from '../../../../shared/events/event-types.js';
 
 const mockConfig = {
   DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
@@ -26,7 +26,7 @@ const mockConfig = {
   LOG_LEVEL: 'silent',
 } as unknown as AppConfig;
 
-const mockEventBus: IEventBus = {
+const mockEventBus: EventBus = {
   publish: vi.fn(),
   subscribe: vi.fn(),
   unsubscribe: vi.fn(),

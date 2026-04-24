@@ -16,7 +16,7 @@ import {
 } from './permission-matrix.js';
 import { createPermissionDeniedEvent } from './permission.enforcer.js';
 
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 import type { AppConfig } from '../../../config.js';
 
 export interface RoleConfigResult {
@@ -67,7 +67,7 @@ export async function setSessionRoleConfig(
   tenantId: string,
   sessionId: string,
   newConfig: PermissionMatrixConfig,
-  _eventBus?: IEventBus,
+  _eventBus?: EventBus,
 ): Promise<RoleConfigResult> {
   const db = getDatabaseClient(config);
 
@@ -97,7 +97,7 @@ export async function overrideSessionRoleConfig(
   sessionId: string,
   playerId: string,
   override: RoleConfigOverrideInput,
-  eventBus?: IEventBus,
+  eventBus?: EventBus,
 ): Promise<RoleConfigResult> {
   const currentResult = await getSessionRoleConfig(config, tenantId, sessionId);
 

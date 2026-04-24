@@ -25,7 +25,7 @@ import type {
   AuthDomainEvent,
 } from '../auth.events.js';
 
-interface BaseSSOEventParams {
+interface SSOEventParams {
   source: string;
   correlationId: string;
   tenantId: string;
@@ -33,7 +33,7 @@ interface BaseSSOEventParams {
 }
 
 export const createSSOLoginInitiatedEvent = (
-  params: BaseSSOEventParams & { payload: SSOLoginInitiatedPayload },
+  params: SSOEventParams & { payload: SSOLoginInitiatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGIN_INITIATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -49,7 +49,7 @@ export const createSSOLoginInitiatedEvent = (
 };
 
 export const createSSOLoginSuccessEvent = (
-  params: BaseSSOEventParams & { payload: SSOLoginSuccessPayload },
+  params: SSOEventParams & { payload: SSOLoginSuccessPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGIN_SUCCESS> => {
   return {
     eventId: crypto.randomUUID(),
@@ -65,7 +65,7 @@ export const createSSOLoginSuccessEvent = (
 };
 
 export const createSSOLoginFailedEvent = (
-  params: BaseSSOEventParams & { payload: SSOLoginFailedPayload },
+  params: SSOEventParams & { payload: SSOLoginFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGIN_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -81,7 +81,7 @@ export const createSSOLoginFailedEvent = (
 };
 
 export const createSSOAssertionValidatedEvent = (
-  params: BaseSSOEventParams & { payload: SSOAssertionValidatedPayload },
+  params: SSOEventParams & { payload: SSOAssertionValidatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ASSERTION_VALIDATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -97,7 +97,7 @@ export const createSSOAssertionValidatedEvent = (
 };
 
 export const createSSOAssertionFailedEvent = (
-  params: BaseSSOEventParams & { payload: SSOAssertionFailedPayload },
+  params: SSOEventParams & { payload: SSOAssertionFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ASSERTION_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -113,7 +113,7 @@ export const createSSOAssertionFailedEvent = (
 };
 
 export const createSSOTokenExchangedEvent = (
-  params: BaseSSOEventParams & { payload: SSOTokenExchangedPayload },
+  params: SSOEventParams & { payload: SSOTokenExchangedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_TOKEN_EXCHANGED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -129,7 +129,7 @@ export const createSSOTokenExchangedEvent = (
 };
 
 export const createSSOAccountLinkedEvent = (
-  params: BaseSSOEventParams & { payload: SSOAccountLinkedPayload },
+  params: SSOEventParams & { payload: SSOAccountLinkedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ACCOUNT_LINKED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -145,7 +145,7 @@ export const createSSOAccountLinkedEvent = (
 };
 
 export const createSSOAccountLinkingFailedEvent = (
-  params: BaseSSOEventParams & { payload: SSOAccountLinkingFailedPayload },
+  params: SSOEventParams & { payload: SSOAccountLinkingFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ACCOUNT_LINKING_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -161,7 +161,7 @@ export const createSSOAccountLinkingFailedEvent = (
 };
 
 export const createSSOJitProvisionedEvent = (
-  params: BaseSSOEventParams & { payload: SSOJitProvisionedPayload },
+  params: SSOEventParams & { payload: SSOJitProvisionedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_JIT_PROVISIONED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -177,7 +177,7 @@ export const createSSOJitProvisionedEvent = (
 };
 
 export const createSSOJitDeniedEvent = (
-  params: BaseSSOEventParams & { payload: SSOJitDeniedPayload },
+  params: SSOEventParams & { payload: SSOJitDeniedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_JIT_DENIED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -193,7 +193,7 @@ export const createSSOJitDeniedEvent = (
 };
 
 export const createSSOMetadataRefreshedEvent = (
-  params: BaseSSOEventParams & { payload: SSOMetadataRefreshedPayload },
+  params: SSOEventParams & { payload: SSOMetadataRefreshedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_METADATA_REFRESHED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -209,7 +209,7 @@ export const createSSOMetadataRefreshedEvent = (
 };
 
 export const createSSOMetadataFailedEvent = (
-  params: BaseSSOEventParams & { payload: SSOMetadataFailedPayload },
+  params: SSOEventParams & { payload: SSOMetadataFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_METADATA_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -225,7 +225,7 @@ export const createSSOMetadataFailedEvent = (
 };
 
 export const createSSOValidationStartedEvent = (
-  params: BaseSSOEventParams & { payload: SSOValidationStartedPayload },
+  params: SSOEventParams & { payload: SSOValidationStartedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_VALIDATION_STARTED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -241,7 +241,7 @@ export const createSSOValidationStartedEvent = (
 };
 
 export const createSSOValidationCompletedEvent = (
-  params: BaseSSOEventParams & { payload: SSOValidationCompletedPayload },
+  params: SSOEventParams & { payload: SSOValidationCompletedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_VALIDATION_COMPLETED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -257,7 +257,7 @@ export const createSSOValidationCompletedEvent = (
 };
 
 export const createSSOValidationFailedEvent = (
-  params: BaseSSOEventParams & { payload: SSOValidationFailedPayload },
+  params: SSOEventParams & { payload: SSOValidationFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_VALIDATION_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -273,7 +273,7 @@ export const createSSOValidationFailedEvent = (
 };
 
 export const createSSOActivationSucceededEvent = (
-  params: BaseSSOEventParams & { payload: SSOActivationSucceededPayload },
+  params: SSOEventParams & { payload: SSOActivationSucceededPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ACTIVATION_SUCCEEDED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -289,7 +289,7 @@ export const createSSOActivationSucceededEvent = (
 };
 
 export const createSSOActivationFailedEvent = (
-  params: BaseSSOEventParams & { payload: SSOActivationFailedPayload },
+  params: SSOEventParams & { payload: SSOActivationFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_ACTIVATION_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -305,7 +305,7 @@ export const createSSOActivationFailedEvent = (
 };
 
 export const createSSODeactivationSucceededEvent = (
-  params: BaseSSOEventParams & { payload: SSODeactivationSucceededPayload },
+  params: SSOEventParams & { payload: SSODeactivationSucceededPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_DEACTIVATION_SUCCEEDED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -321,7 +321,7 @@ export const createSSODeactivationSucceededEvent = (
 };
 
 export const createSSOLogoutInitiatedEvent = (
-  params: BaseSSOEventParams & { payload: SSOLogoutInitiatedPayload },
+  params: SSOEventParams & { payload: SSOLogoutInitiatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGOUT_INITIATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -337,7 +337,7 @@ export const createSSOLogoutInitiatedEvent = (
 };
 
 export const createSSOLogoutProcessedEvent = (
-  params: BaseSSOEventParams & { payload: SSOLogoutProcessedPayload },
+  params: SSOEventParams & { payload: SSOLogoutProcessedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGOUT_PROCESSED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -353,7 +353,7 @@ export const createSSOLogoutProcessedEvent = (
 };
 
 export const createSSOLogoutFailedEvent = (
-  params: BaseSSOEventParams & { payload: SSOLogoutFailedPayload },
+  params: SSOEventParams & { payload: SSOLogoutFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SSO_LOGOUT_FAILED> => {
   return {
     eventId: crypto.randomUUID(),

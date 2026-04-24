@@ -6,7 +6,7 @@ import {
   createHumanReviewRequiredEvent,
 } from './ai-pipeline.events.js';
 
-import type { IEventBus } from '../../shared/events/event-types.js';
+import type { EventBus } from '../../shared/events/event-types.js';
 import type {
   GenerationFailureCategory,
   HumanReviewStatus,
@@ -178,7 +178,7 @@ export const createAnalyticsEventPayload = (
   },
 });
 
-export const createEventPublishingOrchestrator = (eventBus: IEventBus) => {
+export const createEventPublishingOrchestrator = (eventBus: EventBus) => {
   const publishSafetyCheckCompletedEvent = (input: SafetyCheckEventInput): void => {
     eventBus.publish(
       createSafetyCheckCompletedEvent(createSafetyCheckCompletedEventPayload(input)),

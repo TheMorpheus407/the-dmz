@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { EventBus, createDomainEvent } from '../event-bus.js';
+import { DefaultEventBus, createDomainEvent } from '../event-bus.js';
 
 import type { DomainEvent } from '../event-types.js';
 
@@ -27,14 +27,14 @@ const flushPromises = async (): Promise<void> => {
 
 describe('EventBus', () => {
   it('does not throw when publishing with no subscribers', () => {
-    const bus = new EventBus();
+    const bus = new DefaultEventBus();
     const event = createTestEvent();
 
     expect(() => bus.publish(event)).not.toThrow();
   });
 
   it('invokes subscribed handlers for matching event type', () => {
-    const bus = new EventBus();
+    const bus = new DefaultEventBus();
     const event = createTestEvent();
     const handler = vi.fn();
 
@@ -46,7 +46,7 @@ describe('EventBus', () => {
   });
 
   it('invokes multiple handlers for the same event type', () => {
-    const bus = new EventBus();
+    const bus = new DefaultEventBus();
     const event = createTestEvent();
     const firstHandler = vi.fn();
     const secondHandler = vi.fn();
@@ -60,7 +60,7 @@ describe('EventBus', () => {
   });
 
   it('unsubscribes only the targeted handler', () => {
-    const bus = new EventBus();
+    const bus = new DefaultEventBus();
     const event = createTestEvent();
     const firstHandler = vi.fn();
     const secondHandler = vi.fn();
@@ -76,7 +76,7 @@ describe('EventBus', () => {
 
   it('catches and logs synchronous handler failures without blocking other handlers', () => {
     const logger = { error: vi.fn() };
-    const bus = new EventBus({ logger });
+    const bus = new DefaultEventBus({ logger });
     const event = createTestEvent();
     const failingHandler = vi.fn(() => {
       throw new Error('sync failure');
@@ -102,7 +102,7 @@ describe('EventBus', () => {
 
   it('catches and logs asynchronous handler failures without blocking other handlers', async () => {
     const logger = { error: vi.fn() };
-    const bus = new EventBus({ logger });
+    const bus = new DefaultEventBus({ logger });
     const event = createTestEvent();
     const failingHandler = vi.fn(async () => {
       throw new Error('async failure');

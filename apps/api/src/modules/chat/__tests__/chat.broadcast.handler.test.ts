@@ -9,7 +9,7 @@ import {
 } from '../chat.broadcast.handler.js';
 
 import type { WebSocketGatewayInterface } from '../../notification/websocket/index.js';
-import type { DomainEvent, IEventBus } from '../../../shared/events/event-types.js';
+import type { DomainEvent, EventBus } from '../../../shared/events/event-types.js';
 import type {
   ChatChannelCreatedPayload,
   ChatMessageDeletedPayload,
@@ -38,7 +38,7 @@ const mockWsGateway: WebSocketGatewayInterface = {
 };
 
 describe('chat-broadcast.handler', () => {
-  let mockEventBus: IEventBus;
+  let mockEventBus: EventBus;
   let subscribeMock: ReturnType<typeof vi.fn>;
   let unsubscribeMock: ReturnType<typeof vi.fn>;
 
@@ -50,7 +50,7 @@ describe('chat-broadcast.handler', () => {
       publish: vi.fn(),
       subscribe: subscribeMock,
       unsubscribe: unsubscribeMock,
-    } as unknown as IEventBus;
+    } as unknown as EventBus;
   });
 
   describe('createChatBroadcastHandler', () => {

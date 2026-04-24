@@ -6,13 +6,12 @@ import {
   unregisterCertificateEventHandlers,
 } from '../certificate.events.js';
 
-import type { DomainEvent } from '../../../shared/events/event-types.js';
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { DomainEvent, EventBus } from '../../../shared/events/event-types.js';
 
 const SESSION_COMPLETED_EVENT = 'game.session.completed';
 
 describe('certificate.events cleanup', () => {
-  let mockEventBus: IEventBus;
+  let mockEventBus: EventBus;
   let subscriptions: Map<string, Set<(event: DomainEvent) => void>>;
 
   beforeEach(() => {

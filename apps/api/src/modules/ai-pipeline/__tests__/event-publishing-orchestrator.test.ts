@@ -8,7 +8,7 @@ import {
   createAnalyticsEventPayload,
 } from '../event-publishing-orchestrator.js';
 
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 import type {
   GenerationFailureCategory,
   HumanReviewTrigger,
@@ -192,7 +192,7 @@ describe('event-publishing-orchestrator', () => {
   });
 
   describe('createEventPublishingOrchestrator', () => {
-    const createMockEventBus = (): IEventBus => ({
+    const createMockEventBus = (): EventBus => ({
       publish: vi.fn(),
       subscribe: vi.fn(),
       unsubscribe: vi.fn(),

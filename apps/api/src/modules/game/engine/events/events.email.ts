@@ -1,6 +1,6 @@
 import {
   GAME_ENGINE_EVENTS,
-  type BaseGameEngineEventParams,
+  type GameEngineEventParams,
   type GameEngineDomainEvent,
   type EmailReceivedPayload,
   type EmailOpenedPayload,
@@ -32,7 +32,7 @@ export type {
 } from './shared-types.js';
 
 export const createEmailReceivedEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailReceivedPayload },
+  params: GameEngineEventParams & { payload: EmailReceivedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_RECEIVED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -48,7 +48,7 @@ export const createEmailReceivedEvent = (
 };
 
 export const createEmailOpenedEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailOpenedPayload },
+  params: GameEngineEventParams & { payload: EmailOpenedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_OPENED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -64,7 +64,7 @@ export const createEmailOpenedEvent = (
 };
 
 export const createEmailIndicatorMarkedEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailIndicatorMarkedPayload },
+  params: GameEngineEventParams & { payload: EmailIndicatorMarkedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_INDICATOR_MARKED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -80,7 +80,7 @@ export const createEmailIndicatorMarkedEvent = (
 };
 
 export const createEmailHeaderViewedEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailHeaderViewedPayload },
+  params: GameEngineEventParams & { payload: EmailHeaderViewedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_HEADER_VIEWED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -96,7 +96,7 @@ export const createEmailHeaderViewedEvent = (
 };
 
 export const createEmailUrlHoveredEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailUrlHoveredPayload },
+  params: GameEngineEventParams & { payload: EmailUrlHoveredPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_URL_HOVERED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -112,7 +112,7 @@ export const createEmailUrlHoveredEvent = (
 };
 
 export const createEmailAttachmentPreviewedEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailAttachmentPreviewedPayload },
+  params: GameEngineEventParams & { payload: EmailAttachmentPreviewedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_ATTACHMENT_PREVIEWED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -128,7 +128,7 @@ export const createEmailAttachmentPreviewedEvent = (
 };
 
 export const createEmailVerificationRequestedEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailVerificationRequestedPayload },
+  params: GameEngineEventParams & { payload: EmailVerificationRequestedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_VERIFICATION_REQUESTED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -144,7 +144,7 @@ export const createEmailVerificationRequestedEvent = (
 };
 
 export const createEmailDecisionSubmittedEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailDecisionSubmittedPayload },
+  params: GameEngineEventParams & { payload: EmailDecisionSubmittedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -160,7 +160,7 @@ export const createEmailDecisionSubmittedEvent = (
 };
 
 export const createEmailDecisionResolvedEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailDecisionResolvedPayload },
+  params: GameEngineEventParams & { payload: EmailDecisionResolvedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_DECISION_RESOLVED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -176,7 +176,7 @@ export const createEmailDecisionResolvedEvent = (
 };
 
 export const createEmailDecisionEvaluatedEvent = (
-  params: BaseGameEngineEventParams & { payload: EmailDecisionEvaluatedPayload },
+  params: GameEngineEventParams & { payload: EmailDecisionEvaluatedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_DECISION_EVALUATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -192,7 +192,7 @@ export const createEmailDecisionEvaluatedEvent = (
 };
 
 export const createVerificationPacketGeneratedEvent = (
-  params: BaseGameEngineEventParams & { payload: VerificationPacketGeneratedPayload },
+  params: GameEngineEventParams & { payload: VerificationPacketGeneratedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.VERIFICATION_PACKET_GENERATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -208,7 +208,7 @@ export const createVerificationPacketGeneratedEvent = (
 };
 
 export const createInboxLoadedEvent = (
-  params: BaseGameEngineEventParams & { payload: InboxLoadedPayload },
+  params: GameEngineEventParams & { payload: InboxLoadedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.INBOX_LOADED> => {
   return {
     eventId: crypto.randomUUID(),

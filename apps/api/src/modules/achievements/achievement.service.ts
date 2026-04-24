@@ -24,7 +24,7 @@ import {
 } from './achievement.criteria-engine.js';
 
 import type { DatabaseClient } from '../../shared/database/connection.js';
-import type { DomainEvent, IEventBus } from '../../shared/events/event-types.js';
+import type { DomainEvent, EventBus } from '../../shared/events/event-types.js';
 
 interface PlayerAchievementRow {
   playerAchievement: PlayerAchievement;
@@ -53,7 +53,7 @@ export interface UnlockAchievementResult {
 export class AchievementService {
   constructor(
     private readonly db: DatabaseClient,
-    private readonly eventBus?: IEventBus,
+    private readonly eventBus?: EventBus,
   ) {}
 
   private async withTenantContext<T>(tenantId: string, fn: () => Promise<T>): Promise<T> {

@@ -58,7 +58,7 @@ export const GAME_ENGINE_EVENTS = {
 
 export type GameEngineEventType = (typeof GAME_ENGINE_EVENTS)[keyof typeof GAME_ENGINE_EVENTS];
 
-export interface BaseGameEngineEventParams {
+export interface GameEngineEventParams {
   source: string;
   correlationId: string;
   tenantId: string;

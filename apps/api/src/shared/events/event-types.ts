@@ -12,7 +12,7 @@ export interface DomainEvent<T = unknown> {
 
 export type EventHandler<T = unknown> = (event: DomainEvent<T>) => void | Promise<void>;
 
-export interface IEventBus {
+export interface EventBus {
   publish<T>(event: DomainEvent<T>): void;
   subscribe<T>(eventType: string, handler: EventHandler<T>): void;
   unsubscribe<T>(eventType: string, handler: EventHandler<T>): void;

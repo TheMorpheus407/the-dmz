@@ -720,7 +720,7 @@ export interface AuthApiKeyRejectedPayload {
   correlationId: string;
 }
 
-export interface BaseAuthEventParams {
+export interface AuthEventParams {
   source: string;
   correlationId: string;
   tenantId: string;

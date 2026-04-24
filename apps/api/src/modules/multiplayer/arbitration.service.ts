@@ -20,7 +20,7 @@ import {
 } from './arbitration.events.js';
 
 import type { AppConfig } from '../../config.js';
-import type { IEventBus } from '../../shared/events/event-types.js';
+import type { EventBus } from '../../shared/events/event-types.js';
 
 export type ProposalStatus =
   | 'proposed'
@@ -75,7 +75,7 @@ export async function submitArbitrationProposal(
   sessionId: string,
   playerId: string,
   input: SubmitArbitrationProposalInput,
-  eventBus: IEventBus,
+  eventBus: EventBus,
 ): Promise<ArbitrationResult> {
   const db = getDatabaseClient(config);
 
@@ -132,7 +132,7 @@ export async function authorityConfirmProposal(
   sessionId: string,
   playerId: string,
   input: AuthorityArbitrateInput,
-  eventBus: IEventBus,
+  eventBus: EventBus,
 ): Promise<ArbitrationResult> {
   const db = getDatabaseClient(config);
 
@@ -195,7 +195,7 @@ export async function authorityOverrideProposal(
   sessionId: string,
   playerId: string,
   input: AuthorityArbitrateInput,
-  eventBus: IEventBus,
+  eventBus: EventBus,
 ): Promise<ArbitrationResult> {
   const rationaleValidation = validateRationale(input.rationale);
   if (!rationaleValidation.valid) {
@@ -274,7 +274,7 @@ export async function expireProposal(
   sessionId: string,
   proposalId: string,
   reason: 'timeout' | 'session_ended',
-  eventBus: IEventBus,
+  eventBus: EventBus,
 ): Promise<ArbitrationResult> {
   const db = getDatabaseClient(config);
 
@@ -320,7 +320,7 @@ export async function markProposalConsensus(
   tenantId: string,
   sessionId: string,
   proposalId: string,
-  eventBus: IEventBus,
+  eventBus: EventBus,
 ): Promise<ArbitrationResult> {
   const db = getDatabaseClient(config);
 
@@ -390,7 +390,7 @@ export async function getPendingProposals(
 }
 
 function emitProposalCreated(
-  eventBus: IEventBus,
+  eventBus: EventBus,
   tenantId: string,
   userId: string,
   sessionId: string,
@@ -415,7 +415,7 @@ function emitProposalCreated(
 }
 
 function emitProposalConfirmed(
-  eventBus: IEventBus,
+  eventBus: EventBus,
   tenantId: string,
   userId: string,
   sessionId: string,
@@ -438,7 +438,7 @@ function emitProposalConfirmed(
 }
 
 function emitProposalOverridden(
-  eventBus: IEventBus,
+  eventBus: EventBus,
   tenantId: string,
   userId: string,
   sessionId: string,
@@ -464,7 +464,7 @@ function emitProposalOverridden(
 }
 
 function emitProposalExpired(
-  eventBus: IEventBus,
+  eventBus: EventBus,
   tenantId: string,
   sessionId: string,
   proposal: CoopDecisionProposal,
@@ -488,7 +488,7 @@ function emitProposalExpired(
 }
 
 function emitProposalConsensus(
-  eventBus: IEventBus,
+  eventBus: EventBus,
   tenantId: string,
   sessionId: string,
   proposal: CoopDecisionProposal,

@@ -18,7 +18,7 @@ import {
   type PermissionMatrixConfig,
 } from './permissions/index.js';
 
-import type { IEventBus } from '../../shared/events/event-types.js';
+import type { EventBus } from '../../shared/events/event-types.js';
 import type { DatabaseClient } from '../../shared/database/connection.js';
 import type { AppConfig } from '../../config.js';
 
@@ -77,7 +77,7 @@ export class CoopSessionService {
     config: AppConfig,
     repository: CoopSessionRepository,
     cache: CoopSessionCacheService,
-    eventBus: IEventBus | null,
+    eventBus: EventBus | null,
   ) {
     this.config = config;
     this.repository = repository;
@@ -848,7 +848,7 @@ export class CoopSessionService {
 export function createCoopSessionService(
   config: AppConfig,
   db: DatabaseClient,
-  eventBus: IEventBus | null,
+  eventBus: EventBus | null,
 ): CoopSessionService {
   const repository = new CoopSessionRepository(db);
   const cache = new CoopSessionCacheService(config);

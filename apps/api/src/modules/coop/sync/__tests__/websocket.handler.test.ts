@@ -4,7 +4,7 @@ import { handleCoopWebSocketConnection } from '../websocket.handler.js';
 
 import type { WSConnection } from 'ws';
 import type { AppConfig } from '../../../../config.js';
-import type { IEventBus } from '../../../../shared/events/event-types.js';
+import type { EventBus } from '../../../../shared/events/event-types.js';
 
 describe('coop/sync/websocket.handler', () => {
   describe('gateway parameter handling', () => {
@@ -16,7 +16,7 @@ describe('coop/sync/websocket.handler', () => {
       } as unknown as WSConnection;
 
       const mockConfig = { JWT_SECRET: 'test-secret' } as AppConfig;
-      const mockEventBus = { publish: vi.fn() } as unknown as IEventBus;
+      const mockEventBus = { publish: vi.fn() } as unknown as EventBus;
 
       await handleCoopWebSocketConnection(mockConnection, {} as any, {
         config: mockConfig,
@@ -38,7 +38,7 @@ describe('coop/sync/websocket.handler', () => {
       };
 
       const mockConfig = { JWT_SECRET: 'test-secret' } as AppConfig;
-      const mockEventBus = { publish: vi.fn() } as unknown as IEventBus;
+      const mockEventBus = { publish: vi.fn() } as unknown as EventBus;
 
       await handleCoopWebSocketConnection(mockConnection, {} as any, {
         gateway: mockGateway as any,

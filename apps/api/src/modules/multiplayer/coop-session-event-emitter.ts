@@ -17,7 +17,7 @@ import {
 } from './coop-session.events.js';
 
 import type { CoopRoleAssignmentResult } from './coop-session.repository.js';
-import type { IEventBus, DomainEvent } from '../../shared/events/event-types.js';
+import type { EventBus, DomainEvent } from '../../shared/events/event-types.js';
 
 export interface SessionData {
   sessionId: string;
@@ -30,9 +30,9 @@ export interface SessionData {
 }
 
 export class CoopSessionEventEmitter {
-  private readonly eventBus: IEventBus | null;
+  private readonly eventBus: EventBus | null;
 
-  public constructor(eventBus: IEventBus | null) {
+  public constructor(eventBus: EventBus | null) {
     this.eventBus = eventBus;
   }
 

@@ -33,7 +33,7 @@ import type { FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthenticatedUser } from './auth.types.js';
 import type { UpdateProfileData } from './auth.repo.js';
 import type { AppConfig } from '../../config.js';
-import type { EventBus } from '../../shared/events/event-bus.js';
+import type { EventBus } from '../../shared/events/event-types.js';
 
 export interface HandlerDeps {
   config: AppConfig;

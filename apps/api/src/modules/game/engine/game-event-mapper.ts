@@ -14,7 +14,7 @@ import {
   createBreachOccurredEvent,
 } from './engine.events.js';
 
-import type { IEventBus, DomainEvent } from '../../../shared/events/event-types.js';
+import type { EventBus, DomainEvent } from '../../../shared/events/event-types.js';
 
 export interface InternalGameEvent {
   eventId: string;
@@ -83,7 +83,7 @@ export class GameEventMapper {
       .filter(Boolean);
   }
 
-  public publishEvents(eventBus: IEventBus | undefined, events: unknown[]): void {
+  public publishEvents(eventBus: EventBus | undefined, events: unknown[]): void {
     if (!eventBus) {
       return;
     }

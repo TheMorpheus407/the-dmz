@@ -8,7 +8,7 @@ import { generateId } from '../../shared/utils/id.js';
 import { createAuthorityTokenRelinquishedEvent } from './arbitration.events.js';
 
 import type { AppConfig } from '../../config.js';
-import type { IEventBus } from '../../shared/events/event-types.js';
+import type { EventBus } from '../../shared/events/event-types.js';
 
 export type TokenRelinquishReason = 'self_proposal' | 'timer_rotation' | 'manual';
 
@@ -57,7 +57,7 @@ export async function relinquishTokenIfOwner(
   sessionId: string,
   proposingPlayerId: string,
   reason: TokenRelinquishReason,
-  eventBus: IEventBus,
+  eventBus: EventBus,
 ): Promise<{ tokenRelinquished: boolean; newAuthorityId: string | null }> {
   const db = getDatabaseClient(config);
 
@@ -122,7 +122,7 @@ export async function forceRelinquishToken(
   sessionId: string,
   currentAuthorityId: string,
   reason: TokenRelinquishReason,
-  eventBus: IEventBus,
+  eventBus: EventBus,
 ): Promise<{ success: boolean; error?: string }> {
   const db = getDatabaseClient(config);
 
@@ -182,7 +182,7 @@ export async function forceRelinquishToken(
 }
 
 function emitTokenRelinquished(
-  eventBus: IEventBus,
+  eventBus: EventBus,
   tenantId: string,
   userId: string,
   sessionId: string,

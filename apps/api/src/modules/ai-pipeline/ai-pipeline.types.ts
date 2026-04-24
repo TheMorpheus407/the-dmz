@@ -5,7 +5,7 @@ import {
 
 import type { AppConfig } from '../../config.js';
 import type { PromptTemplate } from '../../db/schema/ai/prompt-templates.js';
-import type { IEventBus } from '../../shared/events/event-types.js';
+import type { EventBus } from '../../shared/events/event-types.js';
 
 export const fictionalFactions = [
   'Sovereign Compact',
@@ -398,7 +398,7 @@ export interface AiPipelineService {
 
 export interface CreateAiPipelineServiceOptions {
   config: AppConfig;
-  eventBus: IEventBus;
+  eventBus: EventBus;
   logger?: AiPipelineLogger;
   promptTemplateRepository?: PromptTemplateRepository;
   contentGateway?: ContentGateway;

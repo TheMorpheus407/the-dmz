@@ -11,7 +11,7 @@ import { sendMessage, type SendMessageResult } from './chat.service.js';
 
 import type { FastifyRequest } from 'fastify';
 import type { AppConfig } from '../../config.js';
-import type { IEventBus } from '../../shared/events/event-types.js';
+import type { EventBus } from '../../shared/events/event-types.js';
 
 interface JWTPayload {
   sub: string;
@@ -28,7 +28,7 @@ export async function chatWebSocketHandler(
   connection: WSConnection,
   request: FastifyRequest,
   config: AppConfig,
-  eventBus?: IEventBus,
+  eventBus?: EventBus,
   gateway?: WebSocketGatewayInterface,
 ): Promise<void> {
   if (!gateway) {
@@ -130,7 +130,7 @@ async function handleChatMessage(
   config: AppConfig,
   tenantId: string,
   userId: string,
-  eventBus: IEventBus | undefined,
+  eventBus: EventBus | undefined,
   gateway: WebSocketGatewayInterface,
 ): Promise<void> {
   let message: Record<string, unknown>;
@@ -281,7 +281,7 @@ async function handleSend(
   config: AppConfig,
   tenantId: string,
   userId: string,
-  eventBus: IEventBus | undefined,
+  eventBus: EventBus | undefined,
   gateway: WebSocketGatewayInterface,
 ): Promise<void> {
   const channelId = message['channelId'] as string | undefined;

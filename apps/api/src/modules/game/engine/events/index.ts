@@ -1,7 +1,7 @@
 export {
   GAME_ENGINE_EVENTS,
   type GameEngineEventType,
-  type BaseGameEngineEventParams,
+  type GameEngineEventParams,
   type GameEngineDomainEvent,
   type GameEngineEventPayloadMap,
 } from './shared-types.js';

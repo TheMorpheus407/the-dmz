@@ -14,12 +14,12 @@ import type {
   AuthStepUpSucceededPayload,
   AuthStepUpFailedPayload,
   AuthAdaptiveMfaTriggeredPayload,
-  BaseAuthEventParams,
+  AuthEventParams,
   AuthDomainEvent,
 } from '../auth.events.js';
 
 export const createAuthMfaEnabledEvent = (
-  params: BaseAuthEventParams & { payload: AuthMfaEnabledPayload },
+  params: AuthEventParams & { payload: AuthMfaEnabledPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.MFA_ENABLED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -35,7 +35,7 @@ export const createAuthMfaEnabledEvent = (
 };
 
 export const createAuthMfaDisabledEvent = (
-  params: BaseAuthEventParams & { payload: AuthMfaDisabledPayload },
+  params: AuthEventParams & { payload: AuthMfaDisabledPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.MFA_DISABLED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -51,7 +51,7 @@ export const createAuthMfaDisabledEvent = (
 };
 
 export const createAuthMfaRecoveryCodesUsedEvent = (
-  params: BaseAuthEventParams & { payload: AuthMfaRecoveryCodesUsedPayload },
+  params: AuthEventParams & { payload: AuthMfaRecoveryCodesUsedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.MFA_RECOVERY_CODES_USED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -67,7 +67,7 @@ export const createAuthMfaRecoveryCodesUsedEvent = (
 };
 
 export const createAuthMfaPolicyUpdatedEvent = (
-  params: BaseAuthEventParams & { payload: AuthMfaPolicyUpdatedPayload },
+  params: AuthEventParams & { payload: AuthMfaPolicyUpdatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.MFA_POLICY_UPDATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -83,7 +83,7 @@ export const createAuthMfaPolicyUpdatedEvent = (
 };
 
 export const createAuthMfaChallengeRequiredEvent = (
-  params: BaseAuthEventParams & { payload: AuthMfaChallengeRequiredPayload },
+  params: AuthEventParams & { payload: AuthMfaChallengeRequiredPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.MFA_CHALLENGE_REQUIRED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -99,7 +99,7 @@ export const createAuthMfaChallengeRequiredEvent = (
 };
 
 export const createAuthMfaChallengeSucceededEvent = (
-  params: BaseAuthEventParams & { payload: AuthMfaChallengeSucceededPayload },
+  params: AuthEventParams & { payload: AuthMfaChallengeSucceededPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.MFA_CHALLENGE_SUCCEEDED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -115,7 +115,7 @@ export const createAuthMfaChallengeSucceededEvent = (
 };
 
 export const createAuthMfaChallengeFailedEvent = (
-  params: BaseAuthEventParams & { payload: AuthMfaChallengeFailedPayload },
+  params: AuthEventParams & { payload: AuthMfaChallengeFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.MFA_CHALLENGE_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -131,7 +131,7 @@ export const createAuthMfaChallengeFailedEvent = (
 };
 
 export const createAuthMfaEnrollmentDeferredEvent = (
-  params: BaseAuthEventParams & { payload: AuthMfaEnrollmentDeferredPayload },
+  params: AuthEventParams & { payload: AuthMfaEnrollmentDeferredPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.MFA_ENROLLMENT_DEFERRED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -147,7 +147,7 @@ export const createAuthMfaEnrollmentDeferredEvent = (
 };
 
 export const createAuthMfaEnrollmentExpiredEvent = (
-  params: BaseAuthEventParams & { payload: AuthMfaEnrollmentExpiredPayload },
+  params: AuthEventParams & { payload: AuthMfaEnrollmentExpiredPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.MFA_ENROLLMENT_EXPIRED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -163,7 +163,7 @@ export const createAuthMfaEnrollmentExpiredEvent = (
 };
 
 export const createAuthStepUpRequiredEvent = (
-  params: BaseAuthEventParams & { payload: AuthStepUpRequiredPayload },
+  params: AuthEventParams & { payload: AuthStepUpRequiredPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.STEP_UP_REQUIRED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -179,7 +179,7 @@ export const createAuthStepUpRequiredEvent = (
 };
 
 export const createAuthStepUpSucceededEvent = (
-  params: BaseAuthEventParams & { payload: AuthStepUpSucceededPayload },
+  params: AuthEventParams & { payload: AuthStepUpSucceededPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.STEP_UP_SUCCEEDED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -195,7 +195,7 @@ export const createAuthStepUpSucceededEvent = (
 };
 
 export const createAuthStepUpFailedEvent = (
-  params: BaseAuthEventParams & { payload: AuthStepUpFailedPayload },
+  params: AuthEventParams & { payload: AuthStepUpFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.STEP_UP_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -211,7 +211,7 @@ export const createAuthStepUpFailedEvent = (
 };
 
 export const createAuthAdaptiveMfaTriggeredEvent = (
-  params: BaseAuthEventParams & { payload: AuthAdaptiveMfaTriggeredPayload },
+  params: AuthEventParams & { payload: AuthAdaptiveMfaTriggeredPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.ADAPTIVE_MFA_TRIGGERED> => {
   return {
     eventId: crypto.randomUUID(),

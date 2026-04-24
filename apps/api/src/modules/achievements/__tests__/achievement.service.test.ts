@@ -4,7 +4,7 @@ import { AchievementService } from '../achievement.service.js';
 import { findActiveGameSession, updatePlayerXP } from '../../game/session/index.js';
 
 import type { DatabaseClient } from '../../../shared/database/connection.js';
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 
 vi.mock('../../../shared/database/connection.js', () => ({
   getDatabaseClient: vi.fn(),
@@ -33,7 +33,7 @@ describe('AchievementService', () => {
     return mockDb;
   };
 
-  const createMockEventBus = (): IEventBus => ({
+  const createMockEventBus = (): EventBus => ({
     publish: vi.fn().mockResolvedValue(undefined),
     subscribe: vi.fn(),
     unsubscribe: vi.fn(),

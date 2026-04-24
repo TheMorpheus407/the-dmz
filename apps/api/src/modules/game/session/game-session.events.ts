@@ -22,7 +22,7 @@ export type GameDomainEvent<T extends GameEventType = GameEventType> = DomainEve
   GameEventPayloadMap[T]
 >;
 
-interface BaseGameEventParams {
+interface GameEventParams {
   source: string;
   correlationId: string;
   tenantId: string;
@@ -31,7 +31,7 @@ interface BaseGameEventParams {
 }
 
 export const createGameSessionStartedEvent = (
-  params: BaseGameEventParams & { payload: GameSessionStartedPayload },
+  params: GameEventParams & { payload: GameSessionStartedPayload },
 ): GameDomainEvent<typeof GAME_EVENTS.SESSION_STARTED> => {
   return {
     eventId: crypto.randomUUID(),

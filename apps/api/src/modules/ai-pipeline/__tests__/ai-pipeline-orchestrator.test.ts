@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createAiPipelineOrchestrator } from '../ai-pipeline-orchestrator.js';
 import { MissingPromptTemplateError } from '../ai-pipeline-errors.js';
 
-import type { IEventBus } from '../../shared/events/event-types.js';
+import type { EventBus } from '../../shared/events/event-types.js';
 import type {
   PromptTemplateRepository,
   ContentGateway,
@@ -11,7 +11,7 @@ import type {
   PromptTemplate,
 } from '../ai-pipeline.types.js';
 
-const createMockEventBus = (): IEventBus => ({
+const createMockEventBus = (): EventBus => ({
   publish: vi.fn(),
 });
 

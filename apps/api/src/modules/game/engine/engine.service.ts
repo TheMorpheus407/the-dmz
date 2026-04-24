@@ -11,7 +11,7 @@ import { createSessionStartedEvent } from './engine.events.js';
 import { GameEventMapper } from './game-event-mapper.js';
 import { SessionLifecycleManager } from './session-lifecycle-manager.js';
 
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 import type { InternalGameEvent } from './game-event-mapper.js';
 
 export interface ProcessActionParams {
@@ -40,7 +40,7 @@ export class GameEngineService {
   private readonly eventMapper: GameEventMapper;
   private readonly sessionManager: SessionLifecycleManager;
 
-  constructor(private readonly eventBus: IEventBus) {
+  constructor(private readonly eventBus: EventBus) {
     this.eventMapper = new GameEventMapper();
     this.sessionManager = new SessionLifecycleManager(this.eventMapper, this.eventBus);
   }

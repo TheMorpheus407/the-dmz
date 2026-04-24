@@ -1,6 +1,6 @@
 import {
   GAME_ENGINE_EVENTS,
-  type BaseGameEngineEventParams,
+  type GameEngineEventParams,
   type GameEngineDomainEvent,
   type ThreatsGeneratedPayload,
   type ThreatAttackLaunchedPayload,
@@ -20,7 +20,7 @@ export type {
 } from './shared-types.js';
 
 export const createThreatsGeneratedEvent = (
-  params: BaseGameEngineEventParams & { payload: ThreatsGeneratedPayload },
+  params: GameEngineEventParams & { payload: ThreatsGeneratedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.THREATS_GENERATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -36,7 +36,7 @@ export const createThreatsGeneratedEvent = (
 };
 
 export const createThreatAttackLaunchedEvent = (
-  params: BaseGameEngineEventParams & { payload: ThreatAttackLaunchedPayload },
+  params: GameEngineEventParams & { payload: ThreatAttackLaunchedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.THREAT_ATTACK_LAUNCHED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -52,7 +52,7 @@ export const createThreatAttackLaunchedEvent = (
 };
 
 export const createThreatAttackMitigatedEvent = (
-  params: BaseGameEngineEventParams & { payload: ThreatAttackMitigatedPayload },
+  params: GameEngineEventParams & { payload: ThreatAttackMitigatedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.THREAT_ATTACK_MITIGATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -68,7 +68,7 @@ export const createThreatAttackMitigatedEvent = (
 };
 
 export const createThreatAttackSucceededEvent = (
-  params: BaseGameEngineEventParams & { payload: ThreatAttackSucceededPayload },
+  params: GameEngineEventParams & { payload: ThreatAttackSucceededPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.THREAT_ATTACK_SUCCEEDED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -84,7 +84,7 @@ export const createThreatAttackSucceededEvent = (
 };
 
 export const createThreatBreachOccurredEvent = (
-  params: BaseGameEngineEventParams & { payload: BreachOccurredPayload },
+  params: GameEngineEventParams & { payload: BreachOccurredPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.THREAT_BREACH_OCCURRED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -100,7 +100,7 @@ export const createThreatBreachOccurredEvent = (
 };
 
 export const createThreatLevelChangedEvent = (
-  params: BaseGameEngineEventParams & { payload: ThreatLevelChangedPayload },
+  params: GameEngineEventParams & { payload: ThreatLevelChangedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.THREAT_LEVEL_CHANGED> => {
   return {
     eventId: crypto.randomUUID(),

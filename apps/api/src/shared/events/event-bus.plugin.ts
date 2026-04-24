@@ -1,13 +1,13 @@
 import fp from 'fastify-plugin';
 
-import { EventBus } from './event-bus.js';
+import { DefaultEventBus } from './event-bus.js';
 
 import type { FastifyPluginAsync } from 'fastify';
 
 const eventBusPluginImpl: FastifyPluginAsync = async (fastify) => {
   fastify.decorate(
     'eventBus',
-    new EventBus({
+    new DefaultEventBus({
       logger: fastify.log,
     }),
   );

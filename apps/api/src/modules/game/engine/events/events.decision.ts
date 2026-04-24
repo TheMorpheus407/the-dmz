@@ -1,6 +1,6 @@
 import {
   GAME_ENGINE_EVENTS,
-  type BaseGameEngineEventParams,
+  type GameEngineEventParams,
   type GameEngineDomainEvent,
   type DecisionApprovedPayload,
   type DecisionDeniedPayload,
@@ -22,7 +22,7 @@ export type {
 } from './shared-types.js';
 
 export const createDecisionApprovedEvent = (
-  params: BaseGameEngineEventParams & { payload: DecisionApprovedPayload },
+  params: GameEngineEventParams & { payload: DecisionApprovedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.DECISION_APPROVED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -38,7 +38,7 @@ export const createDecisionApprovedEvent = (
 };
 
 export const createDecisionDeniedEvent = (
-  params: BaseGameEngineEventParams & { payload: DecisionDeniedPayload },
+  params: GameEngineEventParams & { payload: DecisionDeniedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.DECISION_DENIED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -54,7 +54,7 @@ export const createDecisionDeniedEvent = (
 };
 
 export const createDecisionFlaggedEvent = (
-  params: BaseGameEngineEventParams & { payload: DecisionFlaggedPayload },
+  params: GameEngineEventParams & { payload: DecisionFlaggedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.DECISION_FLAGGED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -70,7 +70,7 @@ export const createDecisionFlaggedEvent = (
 };
 
 export const createDecisionVerificationRequestedEvent = (
-  params: BaseGameEngineEventParams & { payload: DecisionVerificationRequestedPayload },
+  params: GameEngineEventParams & { payload: DecisionVerificationRequestedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.DECISION_VERIFICATION_REQUESTED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -86,7 +86,7 @@ export const createDecisionVerificationRequestedEvent = (
 };
 
 export const createVerificationPacketOpenedEvent = (
-  params: BaseGameEngineEventParams & { payload: VerificationPacketOpenedPayload },
+  params: GameEngineEventParams & { payload: VerificationPacketOpenedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.VERIFICATION_PACKET_OPENED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -102,7 +102,7 @@ export const createVerificationPacketOpenedEvent = (
 };
 
 export const createVerificationOutOfBandInitiatedEvent = (
-  params: BaseGameEngineEventParams & { payload: VerificationOutOfBandInitiatedPayload },
+  params: GameEngineEventParams & { payload: VerificationOutOfBandInitiatedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.VERIFICATION_OUT_OF_BAND_INITIATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -118,7 +118,7 @@ export const createVerificationOutOfBandInitiatedEvent = (
 };
 
 export const createVerificationResultEvent = (
-  params: BaseGameEngineEventParams & { payload: VerificationResultPayload },
+  params: GameEngineEventParams & { payload: VerificationResultPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.VERIFICATION_RESULT> => {
   return {
     eventId: crypto.randomUUID(),

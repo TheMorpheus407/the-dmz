@@ -30,7 +30,7 @@ import { PermissionDeniedError, checkPermission } from '../permissions/permissio
 import { createCoopSessionService, type CoopSessionService } from '../coop-session.service.js';
 
 import type { AppConfig } from '../../../config.js';
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 import type { DatabaseClient } from '../../../shared/database/connection.js';
 
 const mockConfig = {
@@ -47,7 +47,7 @@ const PLAYER_2_ID = 'player-2-profile';
 const SESSION_ID = 'session-1';
 const PARTY_ID = 'party-1';
 
-const createMockEventBus = (): IEventBus => ({
+const createMockEventBus = (): EventBus => ({
   publish: vi.fn(),
   subscribe: vi.fn(),
   unsubscribe: vi.fn(),
@@ -142,7 +142,7 @@ const setupMockDb = (
 
 describe('coop-session service', () => {
   let mockDb: DatabaseClient;
-  let mockEventBus: IEventBus;
+  let mockEventBus: EventBus;
   let service: CoopSessionService;
 
   beforeEach(() => {

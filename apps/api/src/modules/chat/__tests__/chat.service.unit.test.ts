@@ -75,7 +75,7 @@ import {
 } from '../chat.service.js';
 
 import type { AppConfig } from '../../../config.js';
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 import type {
   ChannelType,
   ChatMessage,
@@ -89,14 +89,14 @@ const mockPlayerId = 'test-player-id';
 const MAX_MESSAGE_LENGTH = 280;
 
 describe('ChatService', () => {
-  let mockEventBus: IEventBus;
+  let mockEventBus: EventBus;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
     mockEventBus = {
       publish: vi.fn(),
-    } as unknown as IEventBus;
+    } as unknown as EventBus;
 
     mockGetDatabaseClient.mockReturnValue({} as never);
     mockCheckRateLimit.mockResolvedValue({ allowed: true, current: 1, limit: 10 });

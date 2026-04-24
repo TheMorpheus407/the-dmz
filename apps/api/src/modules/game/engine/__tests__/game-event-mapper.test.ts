@@ -3,7 +3,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { GameEventMapper } from '../game-event-mapper.js';
 import { GAME_ENGINE_EVENTS } from '../engine.events.js';
 
-import type { IEventBus } from '../../../../shared/events/event-types.js';
+import type { EventBus } from '../../../../shared/events/event-types.js';
 
 describe('GameEventMapper - mapToDomainEvents', () => {
   let mapper: GameEventMapper;
@@ -219,7 +219,7 @@ describe('GameEventMapper - mapToDomainEvents', () => {
 });
 
 describe('GameEventMapper - publishEvents', () => {
-  let mockEventBus: IEventBus;
+  let mockEventBus: EventBus;
 
   beforeEach(() => {
     mockEventBus = {

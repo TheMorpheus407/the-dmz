@@ -9,13 +9,13 @@ import { validateAndApplyAction } from './sync.service.js';
 
 import type { WebSocket as WSConnection } from 'ws';
 import type { AppConfig } from '../../../config.js';
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 import type { FastifyRequest } from 'fastify';
 
 export interface CoopWebSocketHandlerOptions {
   gateway?: WebSocketGatewayInterface;
   config: AppConfig;
-  eventBus: IEventBus;
+  eventBus: EventBus;
 }
 
 export function buildCoopChannelName(sessionId: string, channelType: string): string {
@@ -45,7 +45,7 @@ async function handleCoopMessage(
   connection: WSConnection,
   gateway: WebSocketGatewayInterface,
   config: AppConfig,
-  eventBus: IEventBus,
+  eventBus: EventBus,
 ): Promise<void> {
   let message: CoopWSClientMessage;
 
@@ -76,7 +76,7 @@ async function handleActionSubmit(
   connection: WSConnection,
   gateway: WebSocketGatewayInterface,
   config: AppConfig,
-  eventBus: IEventBus,
+  eventBus: EventBus,
 ): Promise<void> {
   const { action, payload, seq, requestId } = message;
 

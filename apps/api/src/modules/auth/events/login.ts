@@ -8,12 +8,12 @@ import type {
   AuthAccountLockedPayload,
   AuthAccountUnlockedPayload,
   AuthNewDeviceSessionPayload,
-  BaseAuthEventParams,
+  AuthEventParams,
   AuthDomainEvent,
 } from '../auth.events.js';
 
 export const createAuthLoginFailedEvent = (
-  params: BaseAuthEventParams & { payload: AuthLoginFailedPayload },
+  params: AuthEventParams & { payload: AuthLoginFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.LOGIN_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -29,7 +29,7 @@ export const createAuthLoginFailedEvent = (
 };
 
 export const createAuthPasswordResetRequestedEvent = (
-  params: BaseAuthEventParams & { payload: AuthPasswordResetRequestedPayload },
+  params: AuthEventParams & { payload: AuthPasswordResetRequestedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.PASSWORD_RESET_REQUESTED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -45,7 +45,7 @@ export const createAuthPasswordResetRequestedEvent = (
 };
 
 export const createAuthPasswordResetCompletedEvent = (
-  params: BaseAuthEventParams & { payload: AuthPasswordResetCompletedPayload },
+  params: AuthEventParams & { payload: AuthPasswordResetCompletedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.PASSWORD_RESET_COMPLETED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -61,7 +61,7 @@ export const createAuthPasswordResetCompletedEvent = (
 };
 
 export const createAuthPasswordResetFailedEvent = (
-  params: BaseAuthEventParams & { payload: AuthPasswordResetFailedPayload },
+  params: AuthEventParams & { payload: AuthPasswordResetFailedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.PASSWORD_RESET_FAILED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -77,7 +77,7 @@ export const createAuthPasswordResetFailedEvent = (
 };
 
 export const createAuthAccountLockedEvent = (
-  params: BaseAuthEventParams & { payload: AuthAccountLockedPayload },
+  params: AuthEventParams & { payload: AuthAccountLockedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.ACCOUNT_LOCKED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -93,7 +93,7 @@ export const createAuthAccountLockedEvent = (
 };
 
 export const createAuthAccountUnlockedEvent = (
-  params: BaseAuthEventParams & { payload: AuthAccountUnlockedPayload },
+  params: AuthEventParams & { payload: AuthAccountUnlockedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.ACCOUNT_UNLOCKED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -109,7 +109,7 @@ export const createAuthAccountUnlockedEvent = (
 };
 
 export const createAuthNewDeviceSessionEvent = (
-  params: BaseAuthEventParams & { payload: AuthNewDeviceSessionPayload },
+  params: AuthEventParams & { payload: AuthNewDeviceSessionPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.NEW_DEVICE_SESSION> => {
   return {
     eventId: crypto.randomUUID(),

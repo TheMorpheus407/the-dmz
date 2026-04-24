@@ -8,7 +8,7 @@ import type {
   AuthDomainEvent,
 } from '../auth.events.js';
 
-interface BaseApiKeyEventParams {
+interface ApiKeyEventParams {
   source: string;
   correlationId: string;
   tenantId: string;
@@ -16,7 +16,7 @@ interface BaseApiKeyEventParams {
 }
 
 export const createAuthApiKeyCreatedEvent = (
-  params: BaseApiKeyEventParams & { payload: AuthApiKeyCreatedPayload },
+  params: ApiKeyEventParams & { payload: AuthApiKeyCreatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.API_KEY_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -32,7 +32,7 @@ export const createAuthApiKeyCreatedEvent = (
 };
 
 export const createAuthApiKeyRotatedEvent = (
-  params: BaseApiKeyEventParams & { payload: AuthApiKeyRotatedPayload },
+  params: ApiKeyEventParams & { payload: AuthApiKeyRotatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.API_KEY_ROTATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -48,7 +48,7 @@ export const createAuthApiKeyRotatedEvent = (
 };
 
 export const createAuthApiKeyRevokedEvent = (
-  params: BaseApiKeyEventParams & { payload: AuthApiKeyRevokedPayload },
+  params: ApiKeyEventParams & { payload: AuthApiKeyRevokedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.API_KEY_REVOKED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -64,7 +64,7 @@ export const createAuthApiKeyRevokedEvent = (
 };
 
 export const createAuthApiKeyRejectedEvent = (
-  params: BaseApiKeyEventParams & { payload: AuthApiKeyRejectedPayload },
+  params: ApiKeyEventParams & { payload: AuthApiKeyRejectedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.API_KEY_REJECTED> => {
   return {
     eventId: crypto.randomUUID(),

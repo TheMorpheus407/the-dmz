@@ -3,7 +3,7 @@ import {
   type WebSocketGatewayInterface,
 } from '../notification/websocket/index.js';
 
-import type { IEventBus, DomainEvent } from '../../shared/events/event-types.js';
+import type { EventBus, DomainEvent } from '../../shared/events/event-types.js';
 import type {
   ChatMessageSentPayload,
   ChatMessageDeletedPayload,
@@ -11,7 +11,7 @@ import type {
 } from './chat.events.js';
 
 export function createChatBroadcastHandler(
-  eventBus: IEventBus,
+  eventBus: EventBus,
   gateway?: WebSocketGatewayInterface,
 ): void {
   const wsGateway = gateway;
@@ -27,7 +27,7 @@ export function createChatBroadcastHandler(
 }
 
 export function removeChatBroadcastHandler(
-  eventBus: IEventBus,
+  eventBus: EventBus,
   gateway?: WebSocketGatewayInterface,
 ): void {
   const wsGateway = gateway;

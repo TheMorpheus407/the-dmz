@@ -18,7 +18,7 @@ import type {
   ChannelType,
 } from '../../db/schema/social/index.js';
 import type { AppConfig } from '../../config.js';
-import type { IEventBus } from '../../shared/events/event-types.js';
+import type { EventBus } from '../../shared/events/event-types.js';
 
 const MAX_MESSAGE_LENGTH = 280;
 
@@ -83,7 +83,7 @@ export async function sendMessage(
   playerId: string,
   input: SendMessageInput,
   redisClient?: RedisRateLimitClient,
-  eventBus?: IEventBus,
+  eventBus?: EventBus,
 ): Promise<SendMessageResult> {
   const chatEnabled = await requireChatEnabled(config, tenantId);
   if (!chatEnabled.enabled) {
@@ -224,7 +224,7 @@ export async function deleteMessage(
   playerId: string,
   channelId: string,
   messageId: string,
-  eventBus?: IEventBus,
+  eventBus?: EventBus,
 ): Promise<DeleteMessageResult> {
   const chatEnabled = await requireChatEnabled(config, tenantId);
   if (!chatEnabled.enabled) {
@@ -340,7 +340,7 @@ export async function createChannel(
   config: AppConfig,
   tenantId: string,
   input: CreateChannelInput,
-  eventBus?: IEventBus,
+  eventBus?: EventBus,
 ): Promise<CreateChannelResult> {
   const chatEnabled = await requireChatEnabled(config, tenantId);
   if (!chatEnabled.enabled) {
@@ -399,7 +399,7 @@ export async function getOrCreatePartyChannel(
   config: AppConfig,
   tenantId: string,
   partyId: string,
-  eventBus?: IEventBus,
+  eventBus?: EventBus,
 ): Promise<CreateChannelResult> {
   return createChannel(
     config,
@@ -417,7 +417,7 @@ export async function getOrCreateDirectChannel(
   tenantId: string,
   playerId1: string,
   playerId2: string,
-  eventBus?: IEventBus,
+  eventBus?: EventBus,
 ): Promise<CreateChannelResult> {
   const channelName = [playerId1, playerId2].sort().join('-');
 

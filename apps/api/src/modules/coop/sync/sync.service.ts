@@ -5,7 +5,7 @@ import { coopSession, coopRoleAssignment } from '../../../db/schema/multiplayer/
 import { appendEvent } from '../../game/event-store/index.js';
 
 import type { AppConfig } from '../../../config.js';
-import type { IEventBus } from '../../../shared/events/event-types.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
 
 export interface SyncActionInput {
   sessionId: string;
@@ -28,7 +28,7 @@ export interface SyncActionResult {
 
 export async function validateAndApplyAction(
   config: AppConfig,
-  _eventBus: IEventBus,
+  _eventBus: EventBus,
   input: SyncActionInput,
 ): Promise<SyncActionResult> {
   const db = getDatabaseClient(config);

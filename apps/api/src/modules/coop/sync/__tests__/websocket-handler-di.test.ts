@@ -4,7 +4,7 @@ import { handleCoopWebSocketConnection, buildCoopChannelName } from '../websocke
 
 import type { WSConnection } from 'ws';
 import type { AppConfig } from '../../../../config.js';
-import type { IEventBus } from '../../../../shared/events/event-types.js';
+import type { EventBus } from '../../../../shared/events/event-types.js';
 import type { WSServerMessage } from '../../../notification/websocket/index.js';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -34,8 +34,8 @@ describe('coop/sync/websocket.handler DI Compliance', () => {
     return { JWT_SECRET: 'test-secret' } as AppConfig;
   };
 
-  const createMockEventBus = (): IEventBus => {
-    return { publish: vi.fn() } as unknown as IEventBus;
+  const createMockEventBus = (): EventBus => {
+    return { publish: vi.fn() } as unknown as EventBus;
   };
 
   describe('WebSocketGatewayInterface compliance', () => {

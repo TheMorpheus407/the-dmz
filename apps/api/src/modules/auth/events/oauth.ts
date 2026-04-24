@@ -9,7 +9,7 @@ import type {
   AuthDomainEvent,
 } from '../auth.events.js';
 
-interface BaseOAuthEventParams {
+interface OAuthEventParams {
   source: string;
   correlationId: string;
   tenantId: string;
@@ -17,7 +17,7 @@ interface BaseOAuthEventParams {
 }
 
 export const createOAuthClientCreatedEvent = (
-  params: BaseOAuthEventParams & { payload: OAuthClientCreatedPayload },
+  params: OAuthEventParams & { payload: OAuthClientCreatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_CLIENT_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -33,7 +33,7 @@ export const createOAuthClientCreatedEvent = (
 };
 
 export const createOAuthClientRotatedEvent = (
-  params: BaseOAuthEventParams & { payload: OAuthClientRotatedPayload },
+  params: OAuthEventParams & { payload: OAuthClientRotatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_CLIENT_ROTATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -49,7 +49,7 @@ export const createOAuthClientRotatedEvent = (
 };
 
 export const createOAuthClientRevokedEvent = (
-  params: BaseOAuthEventParams & { payload: OAuthClientRevokedPayload },
+  params: OAuthEventParams & { payload: OAuthClientRevokedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_CLIENT_REVOKED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -65,7 +65,7 @@ export const createOAuthClientRevokedEvent = (
 };
 
 export const createOAuthTokenIssuedEvent = (
-  params: BaseOAuthEventParams & { payload: OAuthTokenIssuedPayload },
+  params: OAuthEventParams & { payload: OAuthTokenIssuedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_TOKEN_ISSUED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -81,7 +81,7 @@ export const createOAuthTokenIssuedEvent = (
 };
 
 export const createOAuthScopeDeniedEvent = (
-  params: BaseOAuthEventParams & { payload: OAuthScopeDeniedPayload },
+  params: OAuthEventParams & { payload: OAuthScopeDeniedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.OAUTH_SCOPE_DENIED> => {
   return {
     eventId: crypto.randomUUID(),

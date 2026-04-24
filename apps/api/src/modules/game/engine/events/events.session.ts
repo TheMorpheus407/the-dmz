@@ -1,6 +1,6 @@
 import {
   GAME_ENGINE_EVENTS,
-  type BaseGameEngineEventParams,
+  type GameEngineEventParams,
   type GameEngineDomainEvent,
   type SessionStartedPayload,
   type SessionEndedPayload,
@@ -28,7 +28,7 @@ export type {
 } from './shared-types.js';
 
 export const createSessionStartedEvent = (
-  params: BaseGameEngineEventParams & { payload: SessionStartedPayload },
+  params: GameEngineEventParams & { payload: SessionStartedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.SESSION_STARTED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -44,7 +44,7 @@ export const createSessionStartedEvent = (
 };
 
 export const createSessionEndedEvent = (
-  params: BaseGameEngineEventParams & { payload: SessionEndedPayload },
+  params: GameEngineEventParams & { payload: SessionEndedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.SESSION_ENDED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -60,7 +60,7 @@ export const createSessionEndedEvent = (
 };
 
 export const createSessionPausedEvent = (
-  params: BaseGameEngineEventParams & { payload: SessionPausedPayload },
+  params: GameEngineEventParams & { payload: SessionPausedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.SESSION_PAUSED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -76,7 +76,7 @@ export const createSessionPausedEvent = (
 };
 
 export const createSessionResumedEvent = (
-  params: BaseGameEngineEventParams & { payload: SessionResumedPayload },
+  params: GameEngineEventParams & { payload: SessionResumedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.SESSION_RESUMED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -92,7 +92,7 @@ export const createSessionResumedEvent = (
 };
 
 export const createSessionCompletedEvent = (
-  params: BaseGameEngineEventParams & { payload: SessionCompletedPayload },
+  params: GameEngineEventParams & { payload: SessionCompletedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.SESSION_COMPLETED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -108,7 +108,7 @@ export const createSessionCompletedEvent = (
 };
 
 export const createSessionAbandonedEvent = (
-  params: BaseGameEngineEventParams & { payload: SessionAbandonedPayload },
+  params: GameEngineEventParams & { payload: SessionAbandonedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.SESSION_ABANDONED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -124,7 +124,7 @@ export const createSessionAbandonedEvent = (
 };
 
 export const createSessionBreachRecoveryEvent = (
-  params: BaseGameEngineEventParams & { payload: SessionBreachRecoveryPayload },
+  params: GameEngineEventParams & { payload: SessionBreachRecoveryPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.SESSION_BREACH_RECOVERY> => {
   return {
     eventId: crypto.randomUUID(),
@@ -140,7 +140,7 @@ export const createSessionBreachRecoveryEvent = (
 };
 
 export const createDayStartedEvent = (
-  params: BaseGameEngineEventParams & { payload: DayStartedPayload },
+  params: GameEngineEventParams & { payload: DayStartedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.DAY_STARTED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -156,7 +156,7 @@ export const createDayStartedEvent = (
 };
 
 export const createDayPhaseChangedEvent = (
-  params: BaseGameEngineEventParams & { payload: DayPhaseChangedPayload },
+  params: GameEngineEventParams & { payload: DayPhaseChangedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.DAY_PHASE_CHANGED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -172,7 +172,7 @@ export const createDayPhaseChangedEvent = (
 };
 
 export const createDayEndedEvent = (
-  params: BaseGameEngineEventParams & { payload: DayEndedPayload },
+  params: GameEngineEventParams & { payload: DayEndedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.DAY_ENDED> => {
   return {
     eventId: crypto.randomUUID(),

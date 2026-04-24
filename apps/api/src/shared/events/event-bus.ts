@@ -3,7 +3,7 @@ import { EventEmitter } from 'node:events';
 import { toIsoString } from '../utils/date.js';
 import { generateId } from '../utils/id.js';
 
-import type { DomainEvent, EventHandler, IEventBus } from './event-types.js';
+import type { DomainEvent, EventHandler, EventBus } from './event-types.js';
 
 interface EventBusLogger {
   error: (...args: unknown[]) => void;
@@ -22,7 +22,7 @@ const NOOP_LOGGER: EventBusLogger = {
   error: () => undefined,
 };
 
-export class EventBus implements IEventBus {
+export class DefaultEventBus implements EventBus {
   private readonly emitter = new EventEmitter();
   private readonly logger: EventBusLogger;
   private readonly wrappedHandlers = new Map<string, Map<AnyEventHandler, WrappedEventHandler>>();

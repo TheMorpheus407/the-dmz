@@ -10,12 +10,12 @@ import type {
   SCIMGroupDeletedPayload,
   SCIMGroupMembershipChangedPayload,
   SCIMJitReconciliationPayload,
-  BaseAuthEventParams,
+  AuthEventParams,
   AuthDomainEvent,
 } from '../auth.events.js';
 
 export const createSCIMUserProvisionedEvent = (
-  params: BaseAuthEventParams & { payload: SCIMUserProvisionedPayload },
+  params: AuthEventParams & { payload: SCIMUserProvisionedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_USER_PROVISIONED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -31,7 +31,7 @@ export const createSCIMUserProvisionedEvent = (
 };
 
 export const createSCIMUserUpdatedEvent = (
-  params: BaseAuthEventParams & { payload: SCIMUserUpdatedPayload },
+  params: AuthEventParams & { payload: SCIMUserUpdatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_USER_UPDATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -47,7 +47,7 @@ export const createSCIMUserUpdatedEvent = (
 };
 
 export const createSCIMUserDeprovisionedEvent = (
-  params: BaseAuthEventParams & { payload: SCIMUserDeprovisionedPayload },
+  params: AuthEventParams & { payload: SCIMUserDeprovisionedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_USER_DEPROVISIONED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -63,7 +63,7 @@ export const createSCIMUserDeprovisionedEvent = (
 };
 
 export const createSCIMUserReactivatedEvent = (
-  params: BaseAuthEventParams & { payload: SCIMUserReactivatedPayload },
+  params: AuthEventParams & { payload: SCIMUserReactivatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_USER_REACTIVATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -79,7 +79,7 @@ export const createSCIMUserReactivatedEvent = (
 };
 
 export const createSCIMGroupProvisionedEvent = (
-  params: BaseAuthEventParams & { payload: SCIMGroupProvisionedPayload },
+  params: AuthEventParams & { payload: SCIMGroupProvisionedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_GROUP_PROVISIONED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -95,7 +95,7 @@ export const createSCIMGroupProvisionedEvent = (
 };
 
 export const createSCIMGroupUpdatedEvent = (
-  params: BaseAuthEventParams & { payload: SCIMGroupUpdatedPayload },
+  params: AuthEventParams & { payload: SCIMGroupUpdatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_GROUP_UPDATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -111,7 +111,7 @@ export const createSCIMGroupUpdatedEvent = (
 };
 
 export const createSCIMGroupDeletedEvent = (
-  params: BaseAuthEventParams & { payload: SCIMGroupDeletedPayload },
+  params: AuthEventParams & { payload: SCIMGroupDeletedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_GROUP_DELETED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -127,7 +127,7 @@ export const createSCIMGroupDeletedEvent = (
 };
 
 export const createSCIMGroupMembershipChangedEvent = (
-  params: BaseAuthEventParams & { payload: SCIMGroupMembershipChangedPayload },
+  params: AuthEventParams & { payload: SCIMGroupMembershipChangedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_GROUP_MEMBERSHIP_CHANGED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -143,7 +143,7 @@ export const createSCIMGroupMembershipChangedEvent = (
 };
 
 export const createSCIMJitReconciliationEvent = (
-  params: BaseAuthEventParams & { payload: SCIMJitReconciliationPayload },
+  params: AuthEventParams & { payload: SCIMJitReconciliationPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.SCIM_JIT_RECONCILIATION> => {
   return {
     eventId: crypto.randomUUID(),

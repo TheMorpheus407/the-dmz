@@ -7,7 +7,7 @@ import { GameEventMapper } from '../game-event-mapper.js';
 import { GAME_ENGINE_EVENTS } from '../engine.events.js';
 import { GameStateMachineError } from '../state-machine.js';
 
-import type { IEventBus } from '../../../../shared/events/event-types.js';
+import type { EventBus } from '../../../../shared/events/event-types.js';
 
 const mockedTransitionMacroState = vi.fn();
 const mockedTransitionPhase = vi.fn();
@@ -22,7 +22,7 @@ vi.mock('./reducer.js', async () => {
 });
 
 describe('SessionLifecycleManager', () => {
-  let mockEventBus: IEventBus;
+  let mockEventBus: EventBus;
   let eventMapper: GameEventMapper;
   let sessionManager: SessionLifecycleManager;
 

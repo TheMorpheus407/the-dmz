@@ -1,6 +1,6 @@
 import {
   GAME_ENGINE_EVENTS,
-  type BaseGameEngineEventParams,
+  type GameEngineEventParams,
   type GameEngineDomainEvent,
   type UpgradePurchasedPayload,
   type ResourceAdjustedPayload,
@@ -22,7 +22,7 @@ export type {
 } from './shared-types.js';
 
 export const createUpgradePurchasedEvent = (
-  params: BaseGameEngineEventParams & { payload: UpgradePurchasedPayload },
+  params: GameEngineEventParams & { payload: UpgradePurchasedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.UPGRADE_PURCHASED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -38,7 +38,7 @@ export const createUpgradePurchasedEvent = (
 };
 
 export const createResourceAdjustedEvent = (
-  params: BaseGameEngineEventParams & { payload: ResourceAdjustedPayload },
+  params: GameEngineEventParams & { payload: ResourceAdjustedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.RESOURCE_ADJUSTED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -54,7 +54,7 @@ export const createResourceAdjustedEvent = (
 };
 
 export const createCreditsChangedEvent = (
-  params: BaseGameEngineEventParams & { payload: CreditsChangedPayload },
+  params: GameEngineEventParams & { payload: CreditsChangedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.CREDITS_CHANGED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -70,7 +70,7 @@ export const createCreditsChangedEvent = (
 };
 
 export const createTrustChangedEvent = (
-  params: BaseGameEngineEventParams & { payload: TrustChangedPayload },
+  params: GameEngineEventParams & { payload: TrustChangedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.TRUST_CHANGED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -86,7 +86,7 @@ export const createTrustChangedEvent = (
 };
 
 export const createIntelChangedEvent = (
-  params: BaseGameEngineEventParams & { payload: IntelChangedPayload },
+  params: GameEngineEventParams & { payload: IntelChangedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.INTEL_CHANGED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -102,7 +102,7 @@ export const createIntelChangedEvent = (
 };
 
 export const createLevelUpEvent = (
-  params: BaseGameEngineEventParams & { payload: LevelUpPayload },
+  params: GameEngineEventParams & { payload: LevelUpPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.LEVEL_UP> => {
   return {
     eventId: crypto.randomUUID(),
@@ -118,7 +118,7 @@ export const createLevelUpEvent = (
 };
 
 export const createConsequencesAppliedEvent = (
-  params: BaseGameEngineEventParams & { payload: ConsequencesAppliedPayload },
+  params: GameEngineEventParams & { payload: ConsequencesAppliedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.CONSEQUENCES_APPLIED> => {
   return {
     eventId: crypto.randomUUID(),

@@ -4,12 +4,12 @@ import type {
   AuthUserCreatedPayload,
   AuthUserUpdatedPayload,
   AuthUserDeactivatedPayload,
-  BaseAuthEventParams,
+  AuthEventParams,
   AuthDomainEvent,
 } from '../auth.events.js';
 
 export const createAuthUserCreatedEvent = (
-  params: BaseAuthEventParams & { payload: AuthUserCreatedPayload },
+  params: AuthEventParams & { payload: AuthUserCreatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.USER_CREATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -25,7 +25,7 @@ export const createAuthUserCreatedEvent = (
 };
 
 export const createAuthUserUpdatedEvent = (
-  params: BaseAuthEventParams & { payload: AuthUserUpdatedPayload },
+  params: AuthEventParams & { payload: AuthUserUpdatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.USER_UPDATED> => {
   return {
     eventId: crypto.randomUUID(),
@@ -41,7 +41,7 @@ export const createAuthUserUpdatedEvent = (
 };
 
 export const createAuthUserDeactivatedEvent = (
-  params: BaseAuthEventParams & { payload: AuthUserDeactivatedPayload },
+  params: AuthEventParams & { payload: AuthUserDeactivatedPayload },
 ): AuthDomainEvent<typeof AUTH_EVENTS.USER_DEACTIVATED> => {
   return {
     eventId: crypto.randomUUID(),
