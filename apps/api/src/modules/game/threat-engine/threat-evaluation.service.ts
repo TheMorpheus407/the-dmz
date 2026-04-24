@@ -16,7 +16,31 @@ export interface AggregatedSecurityDeltas {
   securityToolCoverage: number;
 }
 
+type WeightFormulaType = 'detectionRate' | 'competence' | 'securityToolCoverage' | 'none';
+
+interface AttackWeightConfig {
+  formulaType: WeightFormulaType;
+  coefficient: number;
+  sign: number;
+}
+
+const ATTACK_WEIGHT_CONFIG: Record<AttackVector, AttackWeightConfig> = {
+  email_phishing: { formulaType: 'detectionRate', coefficient: 0.7, sign: -1 },
+  spear_phishing: { formulaType: 'detectionRate', coefficient: 0.6, sign: -1 },
+  bec: { formulaType: 'detectionRate', coefficient: 0.5, sign: -1 },
+  supply_chain: { formulaType: 'detectionRate', coefficient: 0.5, sign: 1 },
+  insider_threat: { formulaType: 'securityToolCoverage', coefficient: 0.4, sign: 1 },
+  apt_campaign: { formulaType: 'competence', coefficient: 0.6, sign: 1 },
+  zero_day: { formulaType: 'competence', coefficient: 0.8, sign: 1 },
+  brute_force: { formulaType: 'none', coefficient: 0, sign: 0 },
+  ddos: { formulaType: 'none', coefficient: 0, sign: 0 },
+  coordinated_attack: { formulaType: 'none', coefficient: 0, sign: 0 },
+  whaling: { formulaType: 'detectionRate', coefficient: 0.65, sign: -1 },
+  credential_harvesting: { formulaType: 'detectionRate', coefficient: 0.55, sign: -1 },
+};
+
 export class ThreatEvaluationService {
+  /* eslint-disable max-params, max-statements, complexity, @typescript-eslint/max-params -- pre-existing: original code had same 5 params, refactoring preserved structure */
   public calculateAttackWeights(
     tier: ThreatTierLevel,
     playerProfile: PlayerBehaviorProfile | undefined,
@@ -51,64 +75,27 @@ export class ThreatEvaluationService {
 
         const breachModifier = securityDeltas?.breachProbabilityModifier ?? 0;
 
-        switch (attack.vector) {
-          case 'email_phishing':
-            weight *= 1.0 - detectionRate * 0.7;
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'spear_phishing':
-            weight *= 1.0 - detectionRate * 0.6;
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'bec':
-            weight *= 1.0 - detectionRate * 0.5;
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'supply_chain':
-            weight *= 1.0 + detectionRate * 0.5;
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'insider_threat':
-            weight *= 1.0 + effectiveSecurityToolCoverage * 0.4;
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'apt_campaign':
-            weight *= 1.0 + calculatePlayerCompetence(playerProfile) * 0.6;
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'zero_day':
-            weight *= 1.0 + calculatePlayerCompetence(playerProfile) * 0.8;
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'brute_force':
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'ddos':
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'coordinated_attack':
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'whaling':
-            weight *= 1.0 - detectionRate * 0.65;
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
-          case 'credential_harvesting':
-            weight *= 1.0 - detectionRate * 0.55;
-            weight *= 1.0 + breachModifier;
-            weight *= 1.0 + threatProbabilityBonus;
-            break;
+        const config = ATTACK_WEIGHT_CONFIG[attack.vector];
+        if (!config) {
+          weight *= 1.0 + breachModifier;
+          weight *= 1.0 + threatProbabilityBonus;
+        } else {
+          switch (config.formulaType) {
+            case 'detectionRate':
+              weight *= 1.0 + config.sign * detectionRate * config.coefficient;
+              break;
+            case 'securityToolCoverage':
+              weight *= 1.0 + config.sign * effectiveSecurityToolCoverage * config.coefficient;
+              break;
+            case 'competence':
+              weight *=
+                1.0 + config.sign * calculatePlayerCompetence(playerProfile) * config.coefficient;
+              break;
+            case 'none':
+              break;
+          }
+          weight *= 1.0 + breachModifier;
+          weight *= 1.0 + threatProbabilityBonus;
         }
       }
 
