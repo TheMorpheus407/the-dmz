@@ -19,9 +19,9 @@ export async function handleSSEConnection(
   reply: FastifyReply,
   gateway: WebSocketGatewayInterface,
 ): Promise<void> {
-  const authUser = request as FastifyRequest & { user: { userId: string; tenantId: string } };
-  const userId = authUser.user.userId;
-  const tenantId = authUser.user.tenantId;
+  const {
+    user: { userId, tenantId },
+  } = request as FastifyRequest & { user: { userId: string; tenantId: string } };
 
   const connectionId = generateId();
 
@@ -46,8 +46,7 @@ export async function handleSSEConnection(
   }
 
   const query = request.query as Record<string, string>;
-  const lastEventId = parseInt(query['lastEventId'] ?? '0', 10);
-  sseResponse.sequence = lastEventId;
+  sseResponse.sequence = parseInt(query['lastEventId'] ?? '0', 10);
 
   const initialEvent = createSSEEvent(
     'connected',
@@ -60,12 +59,11 @@ export async function handleSSEConnection(
   );
   sendSSE(reply, initialEvent);
 
-  const clientSubscriptions = query['channels']?.split(',') ?? [];
-  for (const channel of clientSubscriptions) {
+  (query['channels']?.split(',') ?? []).forEach((channel) => {
     if (gateway.isValidChannel(channel)) {
       sseResponse.subscriptions.add(channel);
     }
-  }
+  });
 
   const heartbeatTimer = setInterval(() => {
     const heartbeatEvent = createSSEEvent(
@@ -87,6 +85,9 @@ export async function handleSSEConnection(
   request.raw.on('close', cleanup);
 
   const waitForMessages = async (): Promise<void> => {
+    if (reply.raw.writableEnded) {
+      throw new Error('SSE connection lost');
+    }
     while (!reply.sent || reply.raw.writableEnded === false) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -96,7 +97,8 @@ export async function handleSSEConnection(
     }
   };
 
-  waitForMessages().catch(() => {
+  waitForMessages().catch((error) => {
+    request.log.error({ error }, 'SSE waitForMessages failed');
     cleanup();
   });
 }
