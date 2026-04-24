@@ -29,12 +29,12 @@
   async function loadDetail() {
     loading = true;
     error = null;
-    const result = await getComplianceDetail(frameworkId);
+    const complianceDetailResult = await getComplianceDetail(frameworkId);
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      detail = result.data;
+    if (complianceDetailResult.error) {
+      error = complianceDetailResult.error.message;
+    } else if (complianceDetailResult.data) {
+      detail = complianceDetailResult.data;
     }
 
     loading = false;
@@ -43,12 +43,12 @@
   async function handleCalculate() {
     calculating = true;
     error = null;
-    const result = await calculateCompliance(frameworkId);
+    const calculateComplianceResult = await calculateCompliance(frameworkId);
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      detail = result.data as ComplianceDetail;
+    if (calculateComplianceResult.error) {
+      error = calculateComplianceResult.error.message;
+    } else if (calculateComplianceResult.data) {
+      detail = calculateComplianceResult.data as ComplianceDetail;
     }
 
     calculating = false;

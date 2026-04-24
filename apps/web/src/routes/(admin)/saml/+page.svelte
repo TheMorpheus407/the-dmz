@@ -34,12 +34,12 @@
     loading = true;
     error = null;
 
-    const result = await getSAMLProviders();
+    const samlProvidersResult = await getSAMLProviders();
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      providers = result.data;
+    if (samlProvidersResult.error) {
+      error = samlProvidersResult.error.message;
+    } else if (samlProvidersResult.data) {
+      providers = samlProvidersResult.data;
     }
     loading = false;
   }
@@ -104,12 +104,12 @@
       providerData.spCertificate = formSpCertificate;
     }
 
-    const result = await createSAMLProvider(providerData);
+    const createSamlProviderResult = await createSAMLProvider(providerData);
 
     formSubmitting = false;
 
-    if (result.error) {
-      formError = result.error.message;
+    if (createSamlProviderResult.error) {
+      formError = createSamlProviderResult.error.message;
     } else {
       showCreateModal = false;
       void loadProviders();
@@ -125,7 +125,7 @@
     formSubmitting = true;
     formError = null;
 
-    const result = await updateSAMLProvider(selectedProvider.id, {
+    const updateSamlProviderResult = await updateSAMLProvider(selectedProvider.id, {
       name: formName,
       metadataUrl: formMetadataUrl,
       idpCertificate: formIdpCertificate || null,
@@ -135,8 +135,8 @@
 
     formSubmitting = false;
 
-    if (result.error) {
-      formError = result.error.message;
+    if (updateSamlProviderResult.error) {
+      formError = updateSamlProviderResult.error.message;
     } else {
       showEditModal = false;
       void loadProviders();
@@ -146,10 +146,10 @@
   async function handleDelete() {
     if (!selectedProvider) return;
 
-    const result = await deleteSAMLProvider(selectedProvider.id);
+    const deleteSamlProviderResult = await deleteSAMLProvider(selectedProvider.id);
 
-    if (result.error) {
-      error = result.error.message;
+    if (deleteSamlProviderResult.error) {
+      error = deleteSamlProviderResult.error.message;
     } else {
       showDeleteModal = false;
       selectedProvider = null;
@@ -161,11 +161,11 @@
     testingId = provider.id;
     testResult = null;
 
-    const result = await testSAMLConnection(provider.id);
+    const testSamlConnectionResult = await testSAMLConnection(provider.id);
 
     testingId = null;
-    if (result.data) {
-      testResult = result.data;
+    if (testSamlConnectionResult.data) {
+      testResult = testSamlConnectionResult.data;
     }
   }
 </script>

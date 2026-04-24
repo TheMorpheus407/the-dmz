@@ -48,29 +48,29 @@
     loading = true;
     error = null;
 
-    const result = await getSCIMTokens();
+    const scimTokensResult = await getSCIMTokens();
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      tokens = result.data;
+    if (scimTokensResult.error) {
+      error = scimTokensResult.error.message;
+    } else if (scimTokensResult.data) {
+      tokens = scimTokensResult.data;
     }
     loading = false;
   }
 
   async function loadSyncStatus() {
-    const result = await getSCIMSyncStatus();
+    const scimSyncStatusResult = await getSCIMSyncStatus();
 
-    if (result.data) {
-      syncStatus = result.data;
+    if (scimSyncStatusResult.data) {
+      syncStatus = scimSyncStatusResult.data;
     }
   }
 
   async function loadGroupMappings() {
-    const result = await getSCIMGroupMappings();
+    const scimGroupMappingsResult = await getSCIMGroupMappings();
 
-    if (result.data) {
-      groupMappings = result.data;
+    if (scimGroupMappingsResult.data) {
+      groupMappings = scimGroupMappingsResult.data;
     }
   }
 
@@ -114,15 +114,15 @@
       request.expiresInDays = formExpiresInDays;
     }
 
-    const result = await createSCIMToken(request);
+    const createScimTokenResult = await createSCIMToken(request);
 
     formSubmitting = false;
 
-    if (result.error) {
-      formError = result.error.message;
-    } else if (result.data) {
+    if (createScimTokenResult.error) {
+      formError = createScimTokenResult.error.message;
+    } else if (createScimTokenResult.data) {
       showCreateModal = false;
-      openTokenModal(result.data);
+      openTokenModal(createScimTokenResult.data);
       void loadTokens();
     }
   }
@@ -130,10 +130,10 @@
   async function handleRevoke() {
     if (!selectedToken) return;
 
-    const result = await revokeSCIMToken(selectedToken.id);
+    const revokeScimTokenResult = await revokeSCIMToken(selectedToken.id);
 
-    if (result.error) {
-      error = result.error.message;
+    if (revokeScimTokenResult.error) {
+      error = revokeScimTokenResult.error.message;
     } else {
       selectedToken = null;
       showRevokeModal = false;
@@ -145,11 +145,11 @@
     testingId = token.id;
     testResult = null;
 
-    const result = await testSCIMConnection(token.id);
+    const testScimConnectionResult = await testSCIMConnection(token.id);
 
     testingId = null;
-    if (result.data) {
-      testResult = result.data;
+    if (testScimConnectionResult.data) {
+      testResult = testScimConnectionResult.data;
     }
   }
 
@@ -157,11 +157,11 @@
     provisioningTestId = token.id;
     testResult = null;
 
-    const result = await testSCIMProvisioning(token.id);
+    const testScimProvisioningResult = await testSCIMProvisioning(token.id);
 
     provisioningTestId = null;
-    if (result.data) {
-      testResult = result.data;
+    if (testScimProvisioningResult.data) {
+      testResult = testScimProvisioningResult.data;
     }
   }
 
@@ -183,13 +183,13 @@
   async function handleRotate() {
     if (!selectedToken) return;
 
-    const result = await rotateSCIMToken(selectedToken.id);
+    const rotateScimTokenResult = await rotateSCIMToken(selectedToken.id);
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
+    if (rotateScimTokenResult.error) {
+      error = rotateScimTokenResult.error.message;
+    } else if (rotateScimTokenResult.data) {
       showRotateModal = false;
-      openTokenModal(result.data);
+      openTokenModal(rotateScimTokenResult.data);
       void loadTokens();
     }
   }
@@ -203,10 +203,10 @@
   async function handleRoleMappingSave() {
     if (!roleMappingGroupId) return;
 
-    const result = await updateSCIMGroupRole(roleMappingGroupId, roleMappingRoleId);
+    const updateGroupRoleResult = await updateSCIMGroupRole(roleMappingGroupId, roleMappingRoleId);
 
-    if (result.error) {
-      error = result.error.message;
+    if (updateGroupRoleResult.error) {
+      error = updateGroupRoleResult.error.message;
     } else {
       showRoleMappingModal = false;
       void loadGroupMappings();

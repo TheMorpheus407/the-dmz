@@ -69,12 +69,12 @@
     selectedDomain = domain;
     if (domain) {
       learnersLoading = true;
-      const result = await getTrainerLearners(domain, 70);
-      if (result.error) {
-        error = result.error.message;
+      const trainerLearnersResult = await getTrainerLearners(domain, 70);
+      if (trainerLearnersResult.error) {
+        error = trainerLearnersResult.error.message;
         learners = [];
-      } else if (result.data) {
-        learners = result.data;
+      } else if (trainerLearnersResult.data) {
+        learners = trainerLearnersResult.data;
       }
       learnersLoading = false;
     } else {

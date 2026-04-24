@@ -163,12 +163,12 @@
   }
 
   onMount(async () => {
-    const result = await getOnboardingSteps();
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      onboardingStatus = result.data;
-      if (result.data.state.currentStep === 'not_started') {
+    const onboardingStepsResult = await getOnboardingSteps();
+    if (onboardingStepsResult.error) {
+      error = onboardingStepsResult.error.message;
+    } else if (onboardingStepsResult.data) {
+      onboardingStatus = onboardingStepsResult.data;
+      if (onboardingStepsResult.data.state.currentStep === 'not_started') {
         const startResult = await startOnboarding();
         if (startResult.error) {
           error = startResult.error.message;
@@ -184,13 +184,13 @@
   async function handleSaveOrgProfile(): Promise<void> {
     saving = true;
     error = null;
-    const result = await saveOrgProfile(orgProfile);
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      onboardingStatus = result.data;
+    const orgProfileSaveResult = await saveOrgProfile(orgProfile);
+    if (orgProfileSaveResult.error) {
+      error = orgProfileSaveResult.error.message;
+    } else if (orgProfileSaveResult.data) {
+      onboardingStatus = orgProfileSaveResult.data;
       updateSteps();
-      if (result.data.canProceed) {
+      if (orgProfileSaveResult.data.canProceed) {
         currentStepId = 'idp_config';
       }
     }
@@ -201,11 +201,11 @@
     testing = true;
     error = null;
     testResult = null;
-    const result = await testIdpConnection(idpConfig);
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      testResult = result.data;
+    const idpTestResult = await testIdpConnection(idpConfig);
+    if (idpTestResult.error) {
+      error = idpTestResult.error.message;
+    } else if (idpTestResult.data) {
+      testResult = idpTestResult.data;
     }
     testing = false;
   }
@@ -213,13 +213,13 @@
   async function handleSaveIdpConfig(): Promise<void> {
     saving = true;
     error = null;
-    const result = await saveIdpConfig(idpConfig);
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      onboardingStatus = result.data;
+    const idpConfigSaveResult = await saveIdpConfig(idpConfig);
+    if (idpConfigSaveResult.error) {
+      error = idpConfigSaveResult.error.message;
+    } else if (idpConfigSaveResult.data) {
+      onboardingStatus = idpConfigSaveResult.data;
       updateSteps();
-      if (result.data.canProceed) {
+      if (idpConfigSaveResult.data.canProceed) {
         currentStepId = 'scim_token';
       }
     }
@@ -229,11 +229,11 @@
   async function handleGenerateScimToken(): Promise<void> {
     saving = true;
     error = null;
-    const result = await generateScimToken(scimTokenName);
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      scimToken = result.data.token;
+    const scimTokenResult = await generateScimToken(scimTokenName);
+    if (scimTokenResult.error) {
+      error = scimTokenResult.error.message;
+    } else if (scimTokenResult.data) {
+      scimToken = scimTokenResult.data.token;
       scimTokenGenerated = true;
       const statusResult = await getOnboardingSteps();
       if (statusResult.data) {
@@ -251,7 +251,7 @@
   async function handleSaveCompliance(): Promise<void> {
     saving = true;
     error = null;
-    const result = await saveComplianceFrameworks({
+    const complianceSaveResult = await saveComplianceFrameworks({
       frameworks: selectedFrameworks,
       regulatoryRegion: regulatoryRegion ?? undefined,
       complianceCoordinatorContact:
@@ -259,12 +259,12 @@
           ? complianceCoordinator
           : undefined,
     });
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      onboardingStatus = result.data;
+    if (complianceSaveResult.error) {
+      error = complianceSaveResult.error.message;
+    } else if (complianceSaveResult.data) {
+      onboardingStatus = complianceSaveResult.data;
       updateSteps();
-      if (result.data.canProceed) {
+      if (complianceSaveResult.data.canProceed) {
         currentStepId = 'review';
       }
     }
@@ -274,11 +274,11 @@
   async function handleComplete(): Promise<void> {
     saving = true;
     error = null;
-    const result = await completeOnboarding();
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      onboardingStatus = result.data;
+    const completeOnboardingResult = await completeOnboarding();
+    if (completeOnboardingResult.error) {
+      error = completeOnboardingResult.error.message;
+    } else if (completeOnboardingResult.data) {
+      onboardingStatus = completeOnboardingResult.data;
       updateSteps();
     }
     saving = false;
@@ -287,11 +287,11 @@
   async function handleReset(): Promise<void> {
     saving = true;
     error = null;
-    const result = await resetOnboarding();
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      onboardingStatus = result.data;
+    const resetOnboardingResult = await resetOnboarding();
+    if (resetOnboardingResult.error) {
+      error = resetOnboardingResult.error.message;
+    } else if (resetOnboardingResult.data) {
+      onboardingStatus = resetOnboardingResult.data;
       scimToken = '';
       scimTokenGenerated = false;
       selectedFrameworks = [];

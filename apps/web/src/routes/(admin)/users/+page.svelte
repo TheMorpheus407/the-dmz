@@ -72,14 +72,14 @@
     if (dateFrom) params.createdAfter = new Date(dateFrom).toISOString();
     if (dateTo) params.createdBefore = new Date(dateTo).toISOString();
 
-    const result = await listUsers(params);
+    const usersListResult = await listUsers(params);
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      users = result.data.users;
-      total = result.data.total;
-      totalPages = result.data.totalPages;
+    if (usersListResult.error) {
+      error = usersListResult.error.message;
+    } else if (usersListResult.data) {
+      users = usersListResult.data.users;
+      total = usersListResult.data.total;
+      totalPages = usersListResult.data.totalPages;
     }
     loading = false;
   }

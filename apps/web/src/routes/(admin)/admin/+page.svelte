@@ -9,11 +9,11 @@
   let error = $state<string | null>(null);
 
   onMount(async () => {
-    const result = await getDashboard();
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      dashboardData = result.data;
+    const dashboardResult = await getDashboard();
+    if (dashboardResult.error) {
+      error = dashboardResult.error.message;
+    } else if (dashboardResult.data) {
+      dashboardData = dashboardResult.data;
     }
     loading = false;
   });

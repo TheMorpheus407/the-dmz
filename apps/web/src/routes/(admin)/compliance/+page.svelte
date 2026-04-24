@@ -25,12 +25,12 @@
   async function loadDashboard() {
     loading = true;
     error = null;
-    const result = await getComplianceSummary();
+    const complianceSummaryResult = await getComplianceSummary();
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      dashboardData = result.data;
+    if (complianceSummaryResult.error) {
+      error = complianceSummaryResult.error.message;
+    } else if (complianceSummaryResult.data) {
+      dashboardData = complianceSummaryResult.data;
     }
 
     loading = false;
@@ -39,12 +39,12 @@
   async function handleCalculateAll() {
     calculating = true;
     error = null;
-    const result = await calculateCompliance();
+    const calculateComplianceResult = await calculateCompliance();
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      dashboardData = result.data as ComplianceDashboardData;
+    if (calculateComplianceResult.error) {
+      error = calculateComplianceResult.error.message;
+    } else if (calculateComplianceResult.data) {
+      dashboardData = calculateComplianceResult.data as ComplianceDashboardData;
     }
 
     calculating = false;

@@ -27,18 +27,18 @@
     saving = true;
     error = null;
 
-    const result = await createUser({
+    const createUserResult = await createUser({
       email: form.email,
       displayName: form.displayName,
       role: form.role,
     });
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
+    if (createUserResult.error) {
+      error = createUserResult.error.message;
+    } else if (createUserResult.data) {
       success = true;
       setTimeout(() => {
-        void goto(`/admin/users/${result.data?.userId}`);
+        void goto(`/admin/users/${createUserResult.data?.userId}`);
       }, 1500);
     }
 

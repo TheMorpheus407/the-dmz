@@ -45,16 +45,16 @@
     loading = true;
     error = null;
 
-    const result = await getUser(userId);
+    const userResult = await getUser(userId);
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      user = result.data;
+    if (userResult.error) {
+      error = userResult.error.message;
+    } else if (userResult.data) {
+      user = userResult.data;
       editForm = {
-        displayName: result.data.displayName || '',
-        email: result.data.email,
-        isActive: result.data.isActive,
+        displayName: userResult.data.displayName || '',
+        email: userResult.data.email,
+        isActive: userResult.data.isActive,
       };
     }
     loading = false;
@@ -62,9 +62,9 @@
 
   async function loadActivity() {
     activityLoading = true;
-    const result = await getUserActivity(userId);
-    if (result.data) {
-      activity = result.data;
+    const userActivityResult = await getUserActivity(userId);
+    if (userActivityResult.data) {
+      activity = userActivityResult.data;
     }
     activityLoading = false;
   }
@@ -106,12 +106,12 @@
       updateData.displayName = editForm.displayName;
     }
 
-    const result = await updateUser(user.userId, updateData);
+    const updateUserResult = await updateUser(user.userId, updateData);
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      user = result.data;
+    if (updateUserResult.error) {
+      error = updateUserResult.error.message;
+    } else if (updateUserResult.data) {
+      user = updateUserResult.data;
       isEditing = false;
     }
     saving = false;
@@ -123,12 +123,12 @@
     saving = true;
     error = null;
 
-    const result = await updateUser(user.userId, { isActive: false });
+    const deactivateUserResult = await updateUser(user.userId, { isActive: false });
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      user = result.data;
+    if (deactivateUserResult.error) {
+      error = deactivateUserResult.error.message;
+    } else if (deactivateUserResult.data) {
+      user = deactivateUserResult.data;
       editForm.isActive = false;
     }
     saving = false;
@@ -140,12 +140,12 @@
     saving = true;
     error = null;
 
-    const result = await updateUser(user.userId, { isActive: true });
+    const activateUserResult = await updateUser(user.userId, { isActive: true });
 
-    if (result.error) {
-      error = result.error.message;
-    } else if (result.data) {
-      user = result.data;
+    if (activateUserResult.error) {
+      error = activateUserResult.error.message;
+    } else if (activateUserResult.data) {
+      user = activateUserResult.data;
       editForm.isActive = true;
     }
     saving = false;
@@ -162,10 +162,10 @@
     saving = true;
     error = null;
 
-    const result = await deleteUser(user.userId);
+    const deleteUserResult = await deleteUser(user.userId);
 
-    if (result.error) {
-      error = result.error.message;
+    if (deleteUserResult.error) {
+      error = deleteUserResult.error.message;
     } else {
       void goto('/admin/users');
     }
@@ -188,10 +188,10 @@
     saving = true;
     error = null;
 
-    const result = await assignUserRole(user.userId, { roleId: selectedRoleId });
+    const assignRoleResult = await assignUserRole(user.userId, { roleId: selectedRoleId });
 
-    if (result.error) {
-      error = result.error.message;
+    if (assignRoleResult.error) {
+      error = assignRoleResult.error.message;
     } else {
       await loadUser();
       await loadActivity();
@@ -206,10 +206,10 @@
     saving = true;
     error = null;
 
-    const result = await revokeUserRole(user.userId, roleId);
+    const revokeRoleResult = await revokeUserRole(user.userId, roleId);
 
-    if (result.error) {
-      error = result.error.message;
+    if (revokeRoleResult.error) {
+      error = revokeRoleResult.error.message;
     } else {
       await loadUser();
       await loadActivity();
