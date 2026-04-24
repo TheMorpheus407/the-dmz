@@ -1,6 +1,11 @@
 import { DAY_PHASES, type DayPhase } from '@the-dmz/shared/game';
 
 import { evaluateFlag } from '../feature-flags/index.js';
+import {
+  coopSessionStatuses,
+  type CoopRole,
+  type CoopSessionStatus,
+} from '../../db/schema/multiplayer/index.js';
 
 import { CoopSessionRepository, type CoopSessionWithRoles } from './coop-session.repository.js';
 import { CoopSessionCacheService, toCacheData } from './coop-session.cache-service.js';
@@ -13,10 +18,14 @@ import {
   type PermissionMatrixConfig,
 } from './permissions/index.js';
 
-import type { AppConfig } from '../../config.js';
-import type { DatabaseClient } from '../../shared/database/connection.js';
 import type { IEventBus } from '../../shared/events/event-types.js';
-import type { CoopRole, CoopSessionStatus } from '../../db/schema/multiplayer/index.js';
+import type { DatabaseClient } from '../../shared/database/connection.js';
+import type { AppConfig } from '../../config.js';
+
+const STATUS_LOBBY = coopSessionStatuses[0];
+const STATUS_ACTIVE = coopSessionStatuses[1];
+const STATUS_COMPLETED = coopSessionStatuses[3];
+const STATUS_ABANDONED = coopSessionStatuses[4];
 
 export interface CoopSessionResult {
   success: boolean;
@@ -225,7 +234,7 @@ export class CoopSessionService {
       return { success: false, error: 'Co-op session not found' };
     }
 
-    if (session.status !== 'lobby') {
+    if (session.status !== STATUS_LOBBY) {
       return { success: false, error: 'Can only assign roles in lobby status' };
     }
 
@@ -250,7 +259,7 @@ export class CoopSessionService {
 
     await this.repository.updateSession({
       sessionId,
-      updates: { status: 'active' },
+      updates: { status: STATUS_ACTIVE },
     });
 
     const sessionWithRoles = await this.getSessionWithRoles(tenantId, sessionId);
@@ -280,7 +289,7 @@ export class CoopSessionService {
       return { success: false, error: 'Co-op session not found' };
     }
 
-    if (session.status !== 'lobby') {
+    if (session.status !== STATUS_LOBBY) {
       return { success: false, error: 'Can only start a session that is in lobby status' };
     }
 
@@ -293,7 +302,7 @@ export class CoopSessionService {
       updates: {
         scenarioId: input.scenarioId,
         difficultyTier: input.difficultyTier,
-        status: 'active',
+        status: STATUS_ACTIVE,
       },
     });
 
@@ -329,7 +338,7 @@ export class CoopSessionService {
       return { success: false, error: 'Co-op session not found' };
     }
 
-    if (session.status !== 'lobby') {
+    if (session.status !== STATUS_LOBBY) {
       return { success: false, error: 'Can only submit role preference in lobby status' };
     }
 
@@ -424,7 +433,7 @@ export class CoopSessionService {
       return { success: false, error: 'Co-op session not found' };
     }
 
-    if (session.status !== 'active') {
+    if (session.status !== STATUS_ACTIVE) {
       return { success: false, error: 'Can only submit proposals in active session' };
     }
 
@@ -704,7 +713,7 @@ export class CoopSessionService {
       return { success: false, error: 'Only the authority can advance the day' };
     }
 
-    if (session.status !== 'active') {
+    if (session.status !== STATUS_ACTIVE) {
       return { success: false, error: 'Can only advance day in active session' };
     }
 
@@ -765,13 +774,13 @@ export class CoopSessionService {
       return { success: false, error: 'Only the authority can end the session' };
     }
 
-    if (session.status === 'completed' || session.status === 'abandoned') {
+    if (session.status === STATUS_COMPLETED || session.status === STATUS_ABANDONED) {
       return { success: false, error: 'Session is already terminated' };
     }
 
     await this.repository.updateSession({
       sessionId,
-      updates: { status: 'completed', completedAt: new Date() },
+      updates: { status: STATUS_COMPLETED, completedAt: new Date() },
     });
 
     const sessionWithRoles = await this.getSessionWithRoles(tenantId, sessionId);
@@ -784,7 +793,7 @@ export class CoopSessionService {
       tenantId,
       playerId,
       this.toSessionData(sessionWithRoles),
-      'completed',
+      STATUS_COMPLETED,
     );
 
     return { success: true, session: sessionWithRoles };
@@ -810,13 +819,13 @@ export class CoopSessionService {
       return { success: false, error: 'Player is not part of this co-op session' };
     }
 
-    if (session.status === 'completed' || session.status === 'abandoned') {
+    if (session.status === STATUS_COMPLETED || session.status === STATUS_ABANDONED) {
       return { success: false, error: 'Session is already terminated' };
     }
 
     await this.repository.updateSession({
       sessionId,
-      updates: { status: 'abandoned', completedAt: new Date() },
+      updates: { status: STATUS_ABANDONED, completedAt: new Date() },
     });
 
     const sessionWithRoles = await this.getSessionWithRoles(tenantId, sessionId);
@@ -829,7 +838,7 @@ export class CoopSessionService {
       tenantId,
       playerId,
       this.toSessionData(sessionWithRoles),
-      'abandoned',
+      STATUS_ABANDONED,
     );
 
     return { success: true, session: sessionWithRoles };

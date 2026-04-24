@@ -1,6 +1,7 @@
 import type { DayPhase } from '@the-dmz/shared/game';
 
 import { generateId } from '../../shared/utils/id.js';
+import { type CoopRole, type CoopSessionStatus } from '../../db/schema/multiplayer/index.js';
 
 import { createPermissionDeniedEvent } from './permissions/index.js';
 import {
@@ -15,9 +16,8 @@ import {
   createCoopSessionEndedEvent,
 } from './coop-session.events.js';
 
-import type { IEventBus, DomainEvent } from '../../shared/events/event-types.js';
-import type { CoopRole, CoopSessionStatus } from '../../db/schema/multiplayer/index.js';
 import type { CoopRoleAssignmentResult } from './coop-session.repository.js';
+import type { IEventBus, DomainEvent } from '../../shared/events/event-types.js';
 
 export interface SessionData {
   sessionId: string;
@@ -220,7 +220,7 @@ export class CoopSessionEventEmitter {
     tenantId: string,
     userId: string,
     session: SessionData,
-    status: 'completed' | 'abandoned',
+    status: CoopSessionStatus,
   ): void {
     const event = createCoopSessionEndedEvent({
       correlationId: generateId(),
@@ -230,7 +230,7 @@ export class CoopSessionEventEmitter {
         sessionId: session.sessionId,
         partyId: session.partyId,
         endedBy: userId,
-        status,
+        status: status as 'completed' | 'abandoned',
       },
     });
     this.publish(event);
