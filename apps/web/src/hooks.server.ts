@@ -1,8 +1,9 @@
 import { loadFrontendConfig } from '$lib/config/env.js';
 import { buildSecurityHeadersPolicy, buildCspHeaderValue } from '@the-dmz/shared';
 import { initSentry } from '$lib/sentry.js';
+import { logger } from '$lib/logger.js';
 
-import type { Handle } from '@sveltejs/kit';
+import type { Handle, HandleServerError } from '@sveltejs/kit';
 
 const SENTRY_DSN = process.env['PUBLIC_SENTRY_DSN'];
 
@@ -86,4 +87,35 @@ export const handle: Handle = async ({ event, resolve }) => {
   });
 
   return response;
+};
+
+export const handleError: HandleServerError = ({ error, event, status, message }) => {
+  const requestId = crypto.randomUUID();
+  const user = event.locals.user;
+
+  const errorContext: Record<string, unknown> = {
+    requestId,
+    status,
+    error,
+  };
+
+  if (user) {
+    errorContext['tenantId'] = user['tenantId'];
+    errorContext['userId'] = user['id'];
+  }
+
+  logger.error('SSR Error', errorContext);
+
+  const result: App.Error = {
+    requestId,
+    status,
+    message: error instanceof Error ? error.message : message,
+  };
+
+  if (user) {
+    result.tenantId = user.tenantId;
+    result.userId = user.id;
+  }
+
+  return result;
 };

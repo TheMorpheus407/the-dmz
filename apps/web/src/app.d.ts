@@ -11,7 +11,14 @@ declare global {
       } | null;
     }
     interface PageData {}
-    interface Error {}
+    interface Error {
+      requestId?: string;
+      tenantId?: string;
+      userId?: string;
+      code?: string;
+      status?: number;
+      message?: string;
+    }
     interface Platform {}
   }
 }

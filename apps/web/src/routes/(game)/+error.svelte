@@ -7,12 +7,21 @@
 
   const rawError = $derived($page.error);
 
+  interface AppError {
+    message?: string;
+    code?: string;
+    requestId?: string;
+  }
+
+  const appError = $derived(rawError as AppError | null);
+  const requestId = $derived(appError?.requestId);
+
   const errorForComponent = $derived.by((): CategorizedApiError | undefined => {
-    if (!rawError) return undefined;
+    if (!appError) return undefined;
     return {
       category: 'server',
-      code: 'ROUTE_ERROR',
-      message: rawError.message || 'System failure',
+      code: appError.code || 'ROUTE_ERROR',
+      message: appError.message || 'System failure',
       status: 500,
       retryable: false,
     };
@@ -25,6 +34,12 @@
   function handleGoToSafeRoute() {
     void goto('/');
   }
+
+  const errorMessage = $derived(
+    requestId
+      ? `${errorForComponent?.message || 'System failure'} (Reference: ${requestId})`
+      : errorForComponent?.message || 'System failure',
+  );
 </script>
 
 <div class="error-boundary">
@@ -32,6 +47,7 @@
     <ErrorState
       error={errorForComponent}
       surface="game"
+      message={errorMessage}
       onRetry={handleRetry}
       onAction={handleGoToSafeRoute}
       actionLabel="RETURN_TO_BASE"
