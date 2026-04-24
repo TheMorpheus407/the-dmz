@@ -139,63 +139,105 @@ export class CoopWebSocketClient {
   }
 
   private handleMessage(message: CoopWebSocketMessage): void {
-    if (message.type === 'SESSION_EVENT' || message.type === 'coop.session.created') {
-      const payload = message.payload as { eventType?: string; payload?: Record<string, unknown> };
+    if (message.type === 'ACK' && message.ackFor !== undefined) {
+      this.handleAck(message);
+      return;
+    }
+
+    const handler = this.messageHandlers[message.type];
+    if (handler) {
+      handler(message.payload, message);
+    }
+  }
+
+  private messageHandlers: Record<
+    string,
+    (payload: Record<string, unknown>, message: CoopWebSocketMessage) => void
+  > = {
+    SESSION_EVENT: (payload) => this.handleSessionEvent(payload),
+    'coop.session.created': (payload) => this.handleSessionCreated(payload),
+    ACTION_ACCEPTED: (payload, message) => this.handleActionAccepted(payload, message),
+    ACTION_REJECTED: (payload) => this.handleActionRejected(payload),
+    EVENT: (payload) => this.handleEvent(payload),
+    STATE_SNAPSHOT: (payload) => this.handleStateSnapshot(payload),
+    RESYNC: (payload) => this.handleResyncMessage(payload),
+  };
+
+  private handleSessionEvent(payload: Record<string, unknown>): void {
+    const typedPayload = payload as { eventType?: string; payload?: Record<string, unknown> };
+    this.options.onEvent({
+      type: typedPayload['eventType'] as string,
+      payload: (typedPayload['payload'] as Record<string, unknown>) ?? {},
+    });
+  }
+
+  private handleSessionCreated(payload: Record<string, unknown>): void {
+    this.handleSessionEvent(payload);
+  }
+
+  private handleActionAccepted(
+    payload: Record<string, unknown>,
+    message: CoopWebSocketMessage,
+  ): void {
+    const typedPayload = payload as { seq?: number; requestId?: string };
+    if (typedPayload.seq !== undefined) {
+      this.currentSeq = typedPayload.seq;
+      this.lastSyncedSeq = typedPayload.seq;
+    }
+    const resolve = this.pendingMessages.get(message.sequence);
+    if (resolve) {
+      resolve();
+      this.pendingMessages.delete(message.sequence);
+    }
+  }
+
+  private handleActionRejected(payload: Record<string, unknown>): void {
+    const typedPayload = payload as {
+      reason?: 'STALE_SEQ' | 'GAP_DETECTED';
+      currentSeq?: number;
+      requestId?: string;
+    };
+    if (typedPayload.reason && typedPayload.currentSeq !== undefined) {
+      this.currentSeq = typedPayload.currentSeq;
+      this.options.onActionRejected?.(typedPayload.reason, typedPayload.currentSeq);
+    }
+  }
+
+  private handleEvent(payload: Record<string, unknown>): void {
+    const typedPayload = payload as { seq?: number; event?: Record<string, unknown> };
+    if (typedPayload.seq !== undefined) {
+      this.currentSeq = typedPayload.seq;
+    }
+    if (typedPayload.event) {
       this.options.onEvent({
-        type: payload['eventType'] as string,
-        payload: (payload['payload'] as Record<string, unknown>) ?? {},
+        type: (typedPayload.event as { eventType?: string })['eventType'] as string,
+        payload: typedPayload.event,
       });
-    } else if (message.type === 'ACTION_ACCEPTED') {
-      const payload = message.payload as { seq?: number; requestId?: string };
-      if (payload.seq !== undefined) {
-        this.currentSeq = payload.seq;
-        this.lastSyncedSeq = payload.seq;
-      }
-      const resolve = this.pendingMessages.get(message.sequence);
-      if (resolve) {
-        resolve();
-        this.pendingMessages.delete(message.sequence);
-      }
-    } else if (message.type === 'ACTION_REJECTED') {
-      const payload = message.payload as {
-        reason?: 'STALE_SEQ' | 'GAP_DETECTED';
-        currentSeq?: number;
-        requestId?: string;
-      };
-      if (payload.reason && payload.currentSeq !== undefined) {
-        this.currentSeq = payload.currentSeq;
-        this.options.onActionRejected?.(payload.reason, payload.currentSeq);
-      }
-    } else if (message.type === 'EVENT') {
-      const payload = message.payload as { seq?: number; event?: Record<string, unknown> };
-      if (payload.seq !== undefined) {
-        this.currentSeq = payload.seq;
-      }
-      if (payload.event) {
-        this.options.onEvent({
-          type: (payload.event as { eventType?: string })['eventType'] as string,
-          payload: payload.event,
-        });
-      }
-    } else if (message.type === 'STATE_SNAPSHOT') {
-      const payload = message.payload as { seq?: number; state?: Record<string, unknown> };
-      if (payload.seq !== undefined) {
-        this.currentSeq = payload.seq;
-        this.lastSyncedSeq = payload.seq;
-      }
-      this.options.onResync?.(this.currentSeq);
-    } else if (message.type === 'RESYNC') {
-      const payload = message.payload as { currentSeq?: number };
-      if (payload.currentSeq !== undefined) {
-        this.currentSeq = payload.currentSeq;
-        this.options.onResync?.(payload.currentSeq);
-      }
-    } else if (message.type === 'ACK' && message.ackFor !== undefined) {
-      const resolve = this.pendingMessages.get(message.ackFor);
-      if (resolve) {
-        resolve();
-        this.pendingMessages.delete(message.ackFor);
-      }
+    }
+  }
+
+  private handleStateSnapshot(payload: Record<string, unknown>): void {
+    const typedPayload = payload as { seq?: number; state?: Record<string, unknown> };
+    if (typedPayload.seq !== undefined) {
+      this.currentSeq = typedPayload.seq;
+      this.lastSyncedSeq = typedPayload.seq;
+    }
+    this.options.onResync?.(this.currentSeq);
+  }
+
+  private handleResyncMessage(payload: Record<string, unknown>): void {
+    const typedPayload = payload as { currentSeq?: number };
+    if (typedPayload.currentSeq !== undefined) {
+      this.currentSeq = typedPayload.currentSeq;
+      this.options.onResync?.(typedPayload.currentSeq);
+    }
+  }
+
+  private handleAck(message: CoopWebSocketMessage): void {
+    const resolve = this.pendingMessages.get(message.ackFor!);
+    if (resolve) {
+      resolve();
+      this.pendingMessages.delete(message.ackFor!);
     }
   }
 
@@ -233,10 +275,9 @@ export class CoopWebSocketClient {
   sendAction(
     action: string,
     actionPayload: Record<string, unknown>,
-    sessionId: string,
-    tenantId: string,
-    playerId: string,
+    context: { sessionId: string; tenantId: string; playerId: string },
   ): Promise<{ accepted: boolean; reason?: string }> {
+    const { sessionId, tenantId, playerId } = context;
     return new Promise((resolve) => {
       if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
         resolve({ accepted: false, reason: 'Not connected' });

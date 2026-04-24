@@ -1,0 +1,3 @@
+feat(web): [medium] coop-websocket.ts handlemessage has 7-branch if/else-if chain suitable for 
+
+Closes #1736
