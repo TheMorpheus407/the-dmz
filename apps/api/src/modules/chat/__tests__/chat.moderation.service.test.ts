@@ -6,7 +6,7 @@ vi.mock('../../social/content-filter.service.js', () => ({
   checkContent: (...args: unknown[]) => mockCheckContent(...args),
 }));
 
-import { ChatModerationService } from '../chat-moderation.service.js';
+import { ChatModerationService } from '../chat.moderation.service.js';
 
 import type { AppConfig } from '../../../config.js';
 

@@ -8,7 +8,7 @@ import {
   createChatChannelCreatedEvent,
 } from './chat.events.js';
 import { ChatRepository } from './chat.repository.js';
-import { ChatModerationService } from './chat-moderation.service.js';
+import { ChatModerationService } from './chat.moderation.service.js';
 
 import type { RedisRateLimitClient } from '../../shared/database/redis.js';
 import type {

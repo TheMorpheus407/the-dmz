@@ -3,19 +3,39 @@ import { randomUUID } from 'crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { buildChannelName } from '../../notification/websocket/index.js';
-
-const mockWsGateway = {
-  createMessage: vi.fn(),
-  broadcastToChannel: vi.fn(),
-};
-
 import {
   createChatBroadcastHandler,
   removeChatBroadcastHandler,
-} from '../chat-broadcast.handler.js';
+} from '../chat.broadcast.handler.js';
 
-import type { IEventBus, DomainEvent } from '../../../shared/events/event-types.js';
-import type { ChatMessageSentPayload, ChatMessageDeletedPayload } from '../chat.events.js';
+import type { WebSocketGatewayInterface } from '../../notification/websocket/index.js';
+import type { DomainEvent, IEventBus } from '../../../shared/events/event-types.js';
+import type {
+  ChatChannelCreatedPayload,
+  ChatMessageDeletedPayload,
+  ChatMessageSentPayload,
+} from '../chat.events.js';
+
+const mockWsGateway: WebSocketGatewayInterface = {
+  createMessage: vi.fn(),
+  broadcastToChannel: vi.fn(),
+  registerConnection: vi.fn(),
+  removeConnection: vi.fn(),
+  isSubscribed: vi.fn(),
+  isUnsubscribed: vi.fn(),
+  didSendToConnection: vi.fn(),
+  sendToUser: vi.fn(),
+  broadcastToTenant: vi.fn(),
+  getActiveConnections: vi.fn(),
+  getConnectionCount: vi.fn(),
+  getConnection: vi.fn(),
+  getAllConnections: vi.fn(),
+  findConnectionIdBySocket: vi.fn(),
+  didUpdateHeartbeat: vi.fn(),
+  getNextSequence: vi.fn(),
+  parseChannel: vi.fn(),
+  isValidChannel: vi.fn(),
+};
 
 describe('chat-broadcast.handler', () => {
   let mockEventBus: IEventBus;
@@ -35,7 +55,7 @@ describe('chat-broadcast.handler', () => {
 
   describe('createChatBroadcastHandler', () => {
     it('subscribes to all three event types', () => {
-      createChatBroadcastHandler(mockEventBus, mockWsGateway as any);
+      createChatBroadcastHandler(mockEventBus, mockWsGateway);
 
       expect(subscribeMock).toHaveBeenCalledTimes(3);
       expect(subscribeMock).toHaveBeenCalledWith('chat.message.sent', expect.any(Function));
@@ -52,7 +72,7 @@ describe('chat-broadcast.handler', () => {
 
   describe('removeChatBroadcastHandler', () => {
     it('unsubscribes from all three event types', () => {
-      removeChatBroadcastHandler(mockEventBus, mockWsGateway as any);
+      removeChatBroadcastHandler(mockEventBus, mockWsGateway);
 
       expect(unsubscribeMock).toHaveBeenCalledTimes(3);
       expect(unsubscribeMock).toHaveBeenCalledWith('chat.message.sent', expect.any(Function));
@@ -69,7 +89,7 @@ describe('chat-broadcast.handler', () => {
 
   describe('handleMessageSent', () => {
     it('broadcasts to correct wsChannel', async () => {
-      createChatBroadcastHandler(mockEventBus, mockWsGateway as any);
+      createChatBroadcastHandler(mockEventBus, mockWsGateway);
 
       const sentHandler = subscribeMock.mock.calls.find(
         (call) => call[0] === 'chat.message.sent',
@@ -158,7 +178,7 @@ describe('chat-broadcast.handler', () => {
 
   describe('handleMessageDeleted', () => {
     it('broadcasts to correct wsChannel with deleted:true', async () => {
-      createChatBroadcastHandler(mockEventBus, mockWsGateway as any);
+      createChatBroadcastHandler(mockEventBus, mockWsGateway);
 
       const deletedHandler = subscribeMock.mock.calls.find(
         (call) => call[0] === 'chat.message.deleted',
@@ -202,7 +222,7 @@ describe('chat-broadcast.handler', () => {
 
   describe('handleChannelCreated', () => {
     it('does not throw when called', async () => {
-      createChatBroadcastHandler(mockEventBus, mockWsGateway as any);
+      createChatBroadcastHandler(mockEventBus, mockWsGateway);
 
       const createdHandler = subscribeMock.mock.calls.find(
         (call) => call[0] === 'chat.channel.created',

@@ -6,7 +6,7 @@ import { chatWebSocketHandler } from './chat.ws.handler.js';
 import {
   createChatBroadcastHandler,
   removeChatBroadcastHandler,
-} from './chat-broadcast.handler.js';
+} from './chat.broadcast.handler.js';
 
 import type { FastifyInstance } from 'fastify';
 import type { AppConfig } from '../../config.js';

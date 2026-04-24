@@ -27,7 +27,7 @@ vi.mock('../../social/rate-limit.service.js', () => ({
   checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
 }));
 
-vi.mock('../chat-moderation.service.js', () => ({
+vi.mock('../chat.moderation.service.js', () => ({
   ChatModerationService: vi.fn(function (this: unknown) {
     return {
       moderateChat: mockModerateChat,

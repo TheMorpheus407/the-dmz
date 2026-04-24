@@ -16,7 +16,7 @@ vi.mock('../../social/rate-limit.service.js', () => ({
   checkRateLimit: (...args: unknown[]) => mockCheckRateLimit(...args),
 }));
 
-vi.mock('../chat-moderation.service.js', () => ({
+vi.mock('../chat.moderation.service.js', () => ({
   ChatModerationService: vi.fn().mockImplementation(() => ({
     moderateChat: vi.fn().mockResolvedValue({
       moderationStatus: 'approved',
@@ -45,8 +45,7 @@ vi.mock('../chat.events.js', () => ({
   createChatChannelCreatedEvent: vi.fn().mockReturnValue({ eventType: 'chat.channel.created' }),
 }));
 
-import { ChatRepository } from '../chat.repository.js';
-import { ChatModerationService } from '../chat-moderation.service.js';
+import { ChatModerationService } from '../chat.moderation.service.js';
 import {
   createChatMessageSentEvent,
   createChatMessageDeletedEvent,
