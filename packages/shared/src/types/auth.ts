@@ -3,6 +3,8 @@ export type UserBase = {
   email: string;
   displayName: string;
   tenantId: string;
+  role: string;
+  isActive: boolean;
 };
 
 export type SessionBase = {

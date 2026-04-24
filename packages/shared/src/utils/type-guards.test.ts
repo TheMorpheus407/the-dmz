@@ -75,12 +75,79 @@ describe('isUserBase', () => {
       email: 'user@example.invalid',
       displayName: 'Test User',
       tenantId: 'tenant-1',
+      role: 'admin',
+      isActive: true,
     };
 
     expect(isUserBase(value)).toBe(true);
   });
 
+  it('accepts users with all field types', () => {
+    const value = {
+      id: '550e8400-e29b-41d4-a716-446655440000',
+      email: 'user@example.invalid',
+      displayName: 'Test User',
+      tenantId: '550e8400-e29b-41d4-a716-446655440001',
+      role: 'viewer',
+      isActive: false,
+    };
+
+    expect(isUserBase(value)).toBe(true);
+  });
+
+  it('rejects users missing role', () => {
+    const value = {
+      id: 'user-1',
+      email: 'user@example.invalid',
+      displayName: 'Test User',
+      tenantId: 'tenant-1',
+      isActive: true,
+    };
+
+    expect(isUserBase(value)).toBe(false);
+  });
+
+  it('rejects users missing isActive', () => {
+    const value = {
+      id: 'user-1',
+      email: 'user@example.invalid',
+      displayName: 'Test User',
+      tenantId: 'tenant-1',
+      role: 'admin',
+    };
+
+    expect(isUserBase(value)).toBe(false);
+  });
+
+  it('rejects users with invalid role', () => {
+    const value = {
+      id: 'user-1',
+      email: 'user@example.invalid',
+      displayName: 'Test User',
+      tenantId: 'tenant-1',
+      role: '',
+      isActive: true,
+    };
+
+    expect(isUserBase(value)).toBe(false);
+  });
+
+  it('rejects users with non-boolean isActive', () => {
+    const value = {
+      id: 'user-1',
+      email: 'user@example.invalid',
+      displayName: 'Test User',
+      tenantId: 'tenant-1',
+      role: 'admin',
+      isActive: 'yes',
+    };
+
+    expect(isUserBase(value)).toBe(false);
+  });
+
   it('rejects invalid users', () => {
-    expect(isUserBase({ id: '', email: '', displayName: '', tenantId: '' })).toBe(false);
+    expect(
+      isUserBase({ id: '', email: '', displayName: '', tenantId: '', role: '', isActive: false }),
+    ).toBe(false);
   });
 });

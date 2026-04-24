@@ -105,6 +105,8 @@ export const isUserBase = (value: unknown): value is UserBase => {
     isNonEmptyString(record['id']) &&
     isNonEmptyString(record['email']) &&
     isNonEmptyString(record['displayName']) &&
-    isNonEmptyString(record['tenantId'])
+    isNonEmptyString(record['tenantId']) &&
+    isNonEmptyString(record['role']) &&
+    isBoolean(record['isActive'])
   );
 };
