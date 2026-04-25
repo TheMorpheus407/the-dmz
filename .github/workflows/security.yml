@@ -75,7 +75,7 @@ jobs:
         continue-on-error: true
         run: |
           mkdir -p security-reports
-          npx license-checker --json --failOn 'GPL-3.0;GPL-3.0-only;GPL-3.0-or-later;AGPL-3.0;AGPL-3.0-only;AGPL-3.0-or-later' > security-reports/license-check.json 2>&1
+          pnpm exec license-checker --json --failOn 'GPL-3.0;GPL-3.0-only;GPL-3.0-or-later;AGPL-3.0;AGPL-3.0-only;AGPL-3.0-or-later' > security-reports/license-check.json 2>&1
       - name: Upload license compliance artifact
         if: always()
         uses: actions/upload-artifact@v4

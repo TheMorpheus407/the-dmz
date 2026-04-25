@@ -78,6 +78,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@commitlint/cli": "^20.4.1",
+    "license-checker": "^25.0.0",
     "@commitlint/config-conventional": "^20.4.1",
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.50.1",
