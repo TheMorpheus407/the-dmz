@@ -6,6 +6,7 @@ vi.mock('$lib/api/auth', () => ({
   register: vi.fn(),
   logout: vi.fn(),
   getCurrentUser: vi.fn(),
+  getMfaStatus: vi.fn(),
 }));
 
 vi.mock('$lib/api/auth.service', () => ({
@@ -30,6 +31,8 @@ const mockDocumentElement = {
   },
 };
 
+import { SessionStatus, UserRole } from '$lib/constants/session';
+
 import {
   sessionStore,
   isAuthenticated,
@@ -39,9 +42,14 @@ import {
   userRole,
   isAdmin,
   isPlayer,
+  isRevoked,
+  isPolicyDenied,
+  isMfaRequired,
+  isSuperAdmin,
+  isAuthenticating,
 } from './session';
 
-const { login, register, logout, getCurrentUser } = await import('$lib/api/auth');
+const { login, register, logout, getCurrentUser, getMfaStatus } = await import('$lib/api/auth');
 const { authService } = await import('$lib/api/auth.service');
 
 describe('sessionStore', () => {
@@ -469,6 +477,370 @@ describe('sessionStore', () => {
 
     it('isPlayer is true for admin role', () => {
       expect(get(isPlayer)).toBe(true);
+    });
+  });
+
+  describe('isAuthenticating', () => {
+    it('is true when status is authenticating', async () => {
+      vi.mocked(getCurrentUser).mockImplementation(() => new Promise(() => {}));
+
+      const bootstrapPromise = sessionStore.bootstrap();
+
+      vi.useFakeTimers();
+      vi.advanceTimersByTime(10);
+      vi.useRealTimers();
+
+      expect(get(isAuthenticating)).toBe(true);
+
+      bootstrapPromise.catch(() => {});
+    });
+  });
+
+  describe('isRevoked', () => {
+    it('is true when status is revoked', () => {
+      sessionStore.revoke();
+      expect(get(isRevoked)).toBe(true);
+    });
+
+    it('is false when status is anonymous', () => {
+      sessionStore.clear();
+      expect(get(isRevoked)).toBe(false);
+    });
+  });
+
+  describe('isPolicyDenied', () => {
+    it('is true when status is policy_denied', () => {
+      sessionStore.policyDeny();
+      expect(get(isPolicyDenied)).toBe(true);
+    });
+
+    it('is false when status is anonymous', () => {
+      sessionStore.clear();
+      expect(get(isPolicyDenied)).toBe(false);
+    });
+  });
+
+  describe('isMfaRequired', () => {
+    it('is true when status is mfa_required', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'super@example.com',
+            displayName: 'Super Admin',
+            tenantId: '456',
+            role: UserRole.SUPER_ADMIN,
+            isActive: true,
+          },
+        },
+      });
+
+      vi.mocked(getMfaStatus).mockResolvedValue({
+        data: {
+          mfaRequired: true,
+          mfaVerified: false,
+          method: null,
+          mfaVerifiedAt: null,
+          hasCredentials: false,
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      expect(get(isMfaRequired)).toBe(true);
+    });
+  });
+
+  describe('isSuperAdmin', () => {
+    it('is true when role is super-admin', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'super@example.com',
+            displayName: 'Super Admin',
+            tenantId: '456',
+            role: UserRole.SUPER_ADMIN,
+            isActive: true,
+          },
+        },
+      });
+
+      vi.mocked(getMfaStatus).mockResolvedValue({
+        data: {
+          mfaRequired: true,
+          mfaVerified: true,
+          method: null,
+          mfaVerifiedAt: null,
+          hasCredentials: false,
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      expect(get(isSuperAdmin)).toBe(true);
+    });
+
+    it('is false when role is admin', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'admin@example.com',
+            displayName: 'Admin User',
+            tenantId: '456',
+            role: 'admin',
+            isActive: true,
+          },
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      expect(get(isSuperAdmin)).toBe(false);
+    });
+  });
+
+  describe('revoke method', () => {
+    it('sets status to revoked and clears user', () => {
+      sessionStore.revoke();
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.REVOKED);
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe('policyDeny method', () => {
+    it('sets status to policy_denied and clears user', () => {
+      sessionStore.policyDeny();
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.POLICY_DENIED);
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe('bootstrap with AUTH_SESSION_REVOKED', () => {
+    it('sets status to revoked on AUTH_SESSION_REVOKED error', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        error: {
+          category: 'authentication' as const,
+          code: 'AUTH_SESSION_REVOKED',
+          message: 'Session revoked',
+          status: 401,
+          retryable: false,
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.REVOKED);
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe('bootstrap with authorization error', () => {
+    it('sets status to policy_denied on authorization error', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        error: {
+          category: 'authorization' as const,
+          code: 'POLICY_DENIED',
+          message: 'Policy denied',
+          status: 403,
+          retryable: false,
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.POLICY_DENIED);
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe('bootstrap with AUTH_SESSION_EXPIRED', () => {
+    it('sets status to expired on AUTH_SESSION_EXPIRED error', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        error: {
+          category: 'authentication' as const,
+          code: 'AUTH_SESSION_EXPIRED',
+          message: 'Session expired',
+          status: 401,
+          retryable: false,
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.EXPIRED);
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe('bootstrap with AUTH_TOKEN_EXPIRED', () => {
+    it('sets status to expired on AUTH_TOKEN_EXPIRED error', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        error: {
+          category: 'authentication' as const,
+          code: 'AUTH_TOKEN_EXPIRED',
+          message: 'Token expired',
+          status: 401,
+          retryable: false,
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.EXPIRED);
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe('bootstrap with other authentication error', () => {
+    it('sets status to anonymous on other authentication error codes', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        error: {
+          category: 'authentication' as const,
+          code: 'CREDENTIALS_INVALID',
+          message: 'Invalid credentials',
+          status: 401,
+          retryable: true,
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.ANONYMOUS);
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe('bootstrap with other error category', () => {
+    it('sets status to anonymous on server error category', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        error: {
+          category: 'server' as const,
+          code: 'INTERNAL_ERROR',
+          message: 'Internal server error',
+          status: 500,
+          retryable: false,
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.ANONYMOUS);
+      expect(state.user).toBeNull();
+    });
+  });
+
+  describe('session store uses SessionStatus constants', () => {
+    it('initial state uses SessionStatus.ANONYMOUS', () => {
+      sessionStore.clear();
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.ANONYMOUS);
+    });
+
+    it('expire sets status to SessionStatus.EXPIRED', () => {
+      sessionStore.expire();
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.EXPIRED);
+    });
+
+    it('clear sets status to SessionStatus.ANONYMOUS', () => {
+      sessionStore.expire();
+      sessionStore.clear();
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.ANONYMOUS);
+    });
+
+    it('logout sets status to SessionStatus.ANONYMOUS', async () => {
+      vi.mocked(logout).mockResolvedValue({});
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'test@example.com',
+            displayName: 'Test User',
+            tenantId: '456',
+            role: UserRole.PLAYER,
+            isActive: true,
+          },
+        },
+      });
+
+      await sessionStore.bootstrap();
+      await sessionStore.logout();
+
+      const state = get(sessionStore);
+      expect(state.status).toBe(SessionStatus.ANONYMOUS);
+    });
+  });
+
+  describe('session store uses UserRole constants', () => {
+    it('isAdmin uses UserRole.ADMIN constant', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'admin@example.com',
+            displayName: 'Admin User',
+            tenantId: '456',
+            role: UserRole.ADMIN,
+            isActive: true,
+          },
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      expect(get(isAdmin)).toBe(true);
+      expect(get(sessionStore).user?.role).toBe(UserRole.ADMIN);
+    });
+
+    it('isPlayer uses UserRole.PLAYER and UserRole.ADMIN constants', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '123',
+            email: 'player@example.com',
+            displayName: 'Player User',
+            tenantId: '456',
+            role: UserRole.PLAYER,
+            isActive: true,
+          },
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      expect(get(isPlayer)).toBe(true);
+      expect(get(sessionStore).user?.role).toBe(UserRole.PLAYER);
+    });
+
+    it('isPlayer returns true when role is UserRole.ADMIN', async () => {
+      vi.mocked(getCurrentUser).mockResolvedValue({
+        data: {
+          user: {
+            id: '456',
+            email: 'admin@example.com',
+            displayName: 'Admin User',
+            tenantId: '456',
+            role: UserRole.ADMIN,
+            isActive: true,
+          },
+        },
+      });
+
+      await sessionStore.bootstrap();
+
+      expect(get(isPlayer)).toBe(true);
+      expect(get(sessionStore).user?.role).toBe(UserRole.ADMIN);
     });
   });
 });
