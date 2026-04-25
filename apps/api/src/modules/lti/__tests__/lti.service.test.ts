@@ -43,6 +43,12 @@ import {
   extractLtiLaunchData,
   verifyLtiJwt,
   refreshJWKSet,
+  validateIssuer,
+  validateAudience,
+  validateExpiration,
+  validateIssuedAt,
+  validateNonce,
+  ValidationResult,
 } from '../lti.service.js';
 import { getDatabaseClient } from '../../../shared/database/connection.js';
 
@@ -1477,6 +1483,156 @@ describe('LTI Service', () => {
   });
 });
 
+describe('validateIssuer', () => {
+  it('should return valid: true when issuer matches platformUrl', () => {
+    const result = validateIssuer(
+      { iss: 'https://platform.example.edu' },
+      'https://platform.example.edu',
+    );
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return valid: false when issuer does not match', () => {
+    const result = validateIssuer(
+      { iss: 'https://wrong.example.edu' },
+      'https://platform.example.edu',
+    );
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Invalid issuer');
+  });
+
+  it('should return valid: false when issuer is missing', () => {
+    const result = validateIssuer({}, 'https://platform.example.edu');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Invalid issuer');
+  });
+});
+
+describe('validateAudience', () => {
+  it('should return valid: true when audience matches clientId', () => {
+    const result = validateAudience({ aud: 'client-123' }, 'client-123');
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return valid: true when audience is an array containing clientId', () => {
+    const result = validateAudience(
+      { aud: ['other-client', 'client-123', 'another'] },
+      'client-123',
+    );
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return valid: false when audience does not match', () => {
+    const result = validateAudience({ aud: 'wrong-client' }, 'client-123');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Invalid audience');
+  });
+
+  it('should return valid: false when audience is missing', () => {
+    const result = validateAudience({}, 'client-123');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('No audience claim');
+  });
+
+  it('should return valid: false when audience array does not contain clientId', () => {
+    const result = validateAudience({ aud: ['other-client', 'another'] }, 'client-123');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Invalid audience');
+  });
+});
+
+describe('validateExpiration', () => {
+  it('should return valid: true when token is not expired', () => {
+    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const result = validateExpiration({ exp: futureExp });
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return valid: false when token is expired', () => {
+    const pastExp = Math.floor(Date.now() / 1000) - 100;
+    const result = validateExpiration({ exp: pastExp });
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Token expired');
+  });
+
+  it('should return valid: false when exp is missing', () => {
+    const result = validateExpiration({});
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Token expired');
+  });
+});
+
+describe('validateIssuedAt', () => {
+  it('should return valid: true when iat is in the past (within 60s clock skew)', () => {
+    const now = Math.floor(Date.now() / 1000);
+    const result = validateIssuedAt({ iat: now });
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return valid: true when iat is slightly in the future (within 60s clock skew)', () => {
+    const nearFuture = Math.floor(Date.now() / 1000) + 30;
+    const result = validateIssuedAt({ iat: nearFuture });
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return valid: false when iat is too far in the future (>60s)', () => {
+    const farFuture = Math.floor(Date.now() / 1000) + 120;
+    const result = validateIssuedAt({ iat: farFuture });
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Token issued in the future');
+  });
+
+  it('should return valid: false when iat is missing', () => {
+    const result = validateIssuedAt({});
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Token issued in the future');
+  });
+});
+
+describe('validateNonce', () => {
+  it('should return valid: true when no expected nonce is provided', () => {
+    const result = validateNonce({ nonce: 'any-nonce' });
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return valid: true when nonce matches expected nonce', () => {
+    const result = validateNonce({ nonce: 'expected-nonce' }, 'expected-nonce');
+    expect(result.valid).toBe(true);
+    expect(result.error).toBeUndefined();
+  });
+
+  it('should return valid: false when nonce does not match expected nonce', () => {
+    const result = validateNonce({ nonce: 'wrong-nonce' }, 'expected-nonce');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Invalid nonce');
+  });
+
+  it('should return valid: true when expected nonce is provided but nonce is missing', () => {
+    const result = validateNonce({}, 'expected-nonce');
+    expect(result.valid).toBe(false);
+    expect(result.error).toBe('Invalid nonce');
+  });
+});
+
+describe('ValidationResult interface', () => {
+  it('should have valid and optional error properties', () => {
+    const validResult: ValidationResult = { valid: true };
+    expect(validResult.valid).toBe(true);
+    expect(validResult.error).toBeUndefined();
+
+    const invalidResult: ValidationResult = { valid: false, error: 'Some error' };
+    expect(invalidResult.valid).toBe(false);
+    expect(invalidResult.error).toBe('Some error');
+  });
+});
+
 describe('LTI Service exports', () => {
   it('exports all expected types and functions', async () => {
     const module = await import('../lti.service.js');
@@ -1522,6 +1678,11 @@ describe('LTI Service exports', () => {
     expect(typeof module.createState).toBe('function');
     expect(typeof module.validateAndConsumeState).toBe('function');
     expect(typeof module.cleanupExpiredStates).toBe('function');
+    expect(typeof module.validateIssuer).toBe('function');
+    expect(typeof module.validateAudience).toBe('function');
+    expect(typeof module.validateExpiration).toBe('function');
+    expect(typeof module.validateIssuedAt).toBe('function');
+    expect(typeof module.validateNonce).toBe('function');
   });
 });
 

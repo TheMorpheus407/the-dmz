@@ -758,6 +758,56 @@ export interface JwtVerificationResult {
   nonce?: string;
 }
 
+export interface ValidationResult {
+  valid: boolean;
+  error?: string;
+}
+
+export function validateIssuer(decoded: { iss?: string }, platformUrl: string): ValidationResult {
+  if (!decoded.iss || decoded.iss !== platformUrl) {
+    return { valid: false, error: 'Invalid issuer' };
+  }
+  return { valid: true };
+}
+
+export function validateAudience(
+  decoded: { aud?: string | string[] },
+  clientId: string,
+): ValidationResult {
+  if (!decoded.aud) {
+    return { valid: false, error: 'No audience claim' };
+  }
+  const audiences = Array.isArray(decoded.aud) ? decoded.aud : [decoded.aud];
+  if (!audiences.includes(clientId)) {
+    return { valid: false, error: 'Invalid audience' };
+  }
+  return { valid: true };
+}
+
+export function validateExpiration(decoded: { exp?: number }): ValidationResult {
+  if (!decoded.exp || decoded.exp < Date.now() / 1000) {
+    return { valid: false, error: 'Token expired' };
+  }
+  return { valid: true };
+}
+
+export function validateIssuedAt(decoded: { iat?: number }): ValidationResult {
+  if (!decoded.iat || decoded.iat > Date.now() / 1000 + 60) {
+    return { valid: false, error: 'Token issued in the future' };
+  }
+  return { valid: true };
+}
+
+export function validateNonce(
+  payload: Record<string, unknown>,
+  expectedNonce?: string,
+): ValidationResult {
+  if (expectedNonce && payload['nonce'] !== expectedNonce) {
+    return { valid: false, error: 'Invalid nonce' };
+  }
+  return { valid: true };
+}
+
 export async function verifyLtiJwt(
   config: AppConfig,
   platform: LtiPlatform,
@@ -777,38 +827,23 @@ export async function verifyLtiJwt(
 
   const decoded = decodeJwt(idToken);
 
-  if (!decoded.iss || decoded.iss !== platform.platformUrl) {
-    throw new Error('Invalid issuer');
-  }
+  const validationErrors: string[] = [];
+  if (!validateIssuer(decoded, platform.platformUrl).valid) validationErrors.push('Invalid issuer');
+  if (!validateAudience(decoded, platform.clientId).valid)
+    validationErrors.push('Invalid audience');
+  if (!validateExpiration(decoded).valid) validationErrors.push('Token expired');
+  if (!validateIssuedAt(decoded).valid) validationErrors.push('Token issued in the future');
+  if (!validateNonce(payload, expectedNonce).valid) validationErrors.push('Invalid nonce');
 
-  if (!decoded.aud) {
-    throw new Error('No audience claim');
-  }
-
-  const audiences = Array.isArray(decoded.aud) ? decoded.aud : [decoded.aud];
-  if (!audiences.includes(platform.clientId)) {
-    throw new Error('Invalid audience');
-  }
-
-  if (!decoded.exp || decoded.exp < Date.now() / 1000) {
-    throw new Error('Token expired');
-  }
-
-  if (!decoded.iat || decoded.iat > Date.now() / 1000 + 60) {
-    throw new Error('Token issued in the future');
-  }
-
-  if (expectedNonce && payload['nonce'] !== expectedNonce) {
-    throw new Error('Invalid nonce');
-  }
+  if (validationErrors.length > 0) throw new Error(validationErrors.join('; '));
 
   return {
     payload,
-    iss: decoded.iss,
-    aud: decoded.aud,
+    iss: decoded.iss!,
+    aud: decoded.aud!,
     sub: decoded.sub!,
-    exp: decoded.exp,
-    iat: decoded.iat,
+    exp: decoded.exp!,
+    iat: decoded.iat!,
     nonce: (payload['nonce'] as string | undefined) ?? '',
   };
 }

@@ -16,7 +16,11 @@ import {
   getVerbFromMapping,
   isCorrectDecisionVerb,
   isIncorrectDecisionVerb,
+  buildStatementFromRow,
+  buildStatusUpdate,
 } from '../xapi.service.js';
+
+import type { XapiStatement } from '../../../db/schema/lrs/index.js';
 
 describe('xAPI Statement Generation', () => {
   describe('generateStatementId', () => {
@@ -410,5 +414,205 @@ describe('Statement Emission Triggers', () => {
     expect(getVerbFromMapping(GAME_EVENT_TYPES.FACILITY_TIER_UPGRADED)?.id).toBe(
       'http://adlnet.gov/expapi/verbs/passed',
     );
+  });
+});
+
+describe('buildStatementFromRow', () => {
+  const createMockRow = (overrides: Partial<XapiStatement> = {}): XapiStatement =>
+    ({
+      id: 'stmt-id-1',
+      tenantId: 'tenant-1',
+      statementId: 'stmt-uuid-1',
+      statementVersion: '1.0.3',
+      actorMbox: 'mailto:test@example.com',
+      actorName: 'Test User',
+      verbId: 'http://adlnet.gov/expapi/verbs/completed',
+      verbDisplay: { 'en-US': 'completed' },
+      objectId: 'https://the-dmz.example.com/xapi/activities/test',
+      objectType: 'Activity',
+      objectName: null,
+      objectDescription: null,
+      resultScore: null,
+      resultSuccess: null,
+      resultCompletion: null,
+      resultDuration: null,
+      contextTenant: null,
+      contextSession: null,
+      contextCampaign: null,
+      contextCampaignSession: null,
+      contextExtensions: null,
+      storedAt: new Date('2024-01-15T10:30:00Z'),
+      sentAt: null,
+      lrsEndpoint: null,
+      lrsStatus: 'pending',
+      lrsError: null,
+      retryCount: 0,
+      archived: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...overrides,
+    }) as XapiStatement;
+
+  it('should build statement with required fields only', () => {
+    const row = createMockRow();
+    const result = buildStatementFromRow(row);
+
+    expect(result.id).toBe('stmt-uuid-1');
+    expect(result.actor).toEqual({
+      objectType: 'Agent',
+      mbox: 'mailto:test@example.com',
+      name: 'Test User',
+    });
+    expect(result.verb).toEqual({
+      id: 'http://adlnet.gov/expapi/verbs/completed',
+      display: { 'en-US': 'completed' },
+    });
+    expect(result.object).toEqual({
+      objectType: 'Activity',
+      id: 'https://the-dmz.example.com/xapi/activities/test',
+    });
+    expect(result.timestamp).toBe('2024-01-15T10:30:00.000Z');
+    expect(result.stored).toBe('2024-01-15T10:30:00.000Z');
+    expect(result.object.definition).toBeUndefined();
+    expect(result.result).toBeUndefined();
+  });
+
+  it('should include object.definition.name when objectName is present', () => {
+    const row = createMockRow({ objectName: 'Email Triage Training' });
+    const result = buildStatementFromRow(row);
+
+    expect(result.object.definition).toBeDefined();
+    expect(result.object.definition?.name).toEqual({ 'en-US': 'Email Triage Training' });
+  });
+
+  it('should include object.definition.description when objectDescription is present', () => {
+    const row = createMockRow({ objectDescription: 'Learn to identify phishing emails' });
+    const result = buildStatementFromRow(row);
+
+    expect(result.object.definition).toBeDefined();
+    expect(result.object.definition?.description).toEqual({
+      'en-US': 'Learn to identify phishing emails',
+    });
+  });
+
+  it('should include object.definition with both name and description when both are present', () => {
+    const row = createMockRow({
+      objectName: 'Email Triage Training',
+      objectDescription: 'Learn to identify phishing emails',
+    });
+    const result = buildStatementFromRow(row);
+
+    expect(result.object.definition?.name).toEqual({ 'en-US': 'Email Triage Training' });
+    expect(result.object.definition?.description).toEqual({
+      'en-US': 'Learn to identify phishing emails',
+    });
+  });
+
+  it('should include result.score when resultScore is present', () => {
+    const row = createMockRow({ resultScore: 85 });
+    const result = buildStatementFromRow(row);
+
+    expect(result.result).toBeDefined();
+    expect(result.result?.score).toEqual({
+      raw: 85,
+      min: 0,
+      max: 100,
+      scaled: 0.85,
+    });
+  });
+
+  it('should include result.success when resultSuccess is present', () => {
+    const row = createMockRow({ resultSuccess: true });
+    const result = buildStatementFromRow(row);
+
+    expect(result.result).toBeDefined();
+    expect(result.result?.success).toBe(true);
+  });
+
+  it('should include result.completion when resultCompletion is present along with resultScore', () => {
+    const row = createMockRow({ resultScore: 50, resultCompletion: true });
+    const result = buildStatementFromRow(row);
+
+    expect(result.result).toBeDefined();
+    expect(result.result?.completion).toBe(true);
+  });
+
+  it('should include result.duration when resultDuration is present along with resultScore', () => {
+    const row = createMockRow({ resultScore: 50, resultDuration: 120 });
+    const result = buildStatementFromRow(row);
+
+    expect(result.result).toBeDefined();
+    expect(result.result?.duration).toBe('PT2M');
+  });
+
+  it('should include result object when resultScore or resultSuccess is non-null', () => {
+    const rowWithScore = createMockRow({ resultScore: 50 });
+    expect(buildStatementFromRow(rowWithScore).result).toBeDefined();
+
+    const rowWithSuccess = createMockRow({ resultSuccess: false });
+    expect(buildStatementFromRow(rowWithSuccess).result).toBeDefined();
+  });
+
+  it('should not include result object when only resultCompletion is set', () => {
+    const row = createMockRow({ resultScore: null, resultSuccess: null, resultCompletion: true });
+    const result = buildStatementFromRow(row);
+
+    expect(result.result).toBeUndefined();
+  });
+
+  it('should not include result object when only resultDuration is set', () => {
+    const row = createMockRow({ resultScore: null, resultSuccess: null, resultDuration: 60 });
+    const result = buildStatementFromRow(row);
+
+    expect(result.result).toBeUndefined();
+  });
+
+  it('should not include result object when resultScore and resultSuccess are null', () => {
+    const row = createMockRow({
+      resultScore: null,
+      resultSuccess: null,
+      resultCompletion: null,
+      resultDuration: null,
+    });
+    const result = buildStatementFromRow(row);
+
+    expect(result.result).toBeUndefined();
+  });
+
+  it('should calculate scaled score correctly', () => {
+    const row = createMockRow({ resultScore: 0 });
+    expect(buildStatementFromRow(row).result?.score?.scaled).toBe(0);
+
+    const row100 = createMockRow({ resultScore: 100 });
+    expect(buildStatementFromRow(row100).result?.score?.scaled).toBe(1);
+  });
+});
+
+describe('buildStatusUpdate', () => {
+  it('should return updatedAt, lrsStatus=sent, and sentAt when success is true', () => {
+    const result = buildStatusUpdate({ success: true });
+
+    expect(result['updatedAt']).toBeInstanceOf(Date);
+    expect(result['lrsStatus']).toBe('sent');
+    expect(result['sentAt']).toBeInstanceOf(Date);
+    expect(result['lrsError']).toBeUndefined();
+    expect(result['retryCount']).toBeUndefined();
+  });
+
+  it('should return updatedAt, lrsStatus=failed, lrsError, and retryCount when success is false', () => {
+    const result = buildStatusUpdate({ success: false, error: 'Connection timeout' });
+
+    expect(result['updatedAt']).toBeInstanceOf(Date);
+    expect(result['lrsStatus']).toBe('failed');
+    expect(result['lrsError']).toBe('Connection timeout');
+    expect(result['retryCount']).toBeDefined();
+  });
+
+  it('should return updatedAt, lrsStatus=failed when success is false without error', () => {
+    const result = buildStatusUpdate({ success: false });
+
+    expect(result['updatedAt']).toBeInstanceOf(Date);
+    expect(result['lrsStatus']).toBe('failed');
+    expect(result['lrsError']).toBeUndefined();
   });
 });

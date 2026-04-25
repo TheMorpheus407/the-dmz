@@ -714,6 +714,80 @@ export async function sendStatementToLrs(
   };
 }
 
+export function buildStatementFromRow(row: XapiStatement): XapiStatementDoc {
+  const doc: XapiStatementDoc = {
+    id: row['statementId'],
+    actor: {
+      objectType: 'Agent',
+      mbox: row['actorMbox'],
+      name: row['actorName'],
+    },
+    verb: {
+      id: row['verbId'],
+      display: row['verbDisplay'] as Record<string, string>,
+    },
+    object: {
+      objectType: 'Activity',
+      id: row['objectId'],
+    },
+    timestamp: row['storedAt'].toISOString(),
+    stored: row['storedAt'].toISOString(),
+  };
+
+  if (row['objectName'] || row['objectDescription']) {
+    doc.object.definition = {};
+    if (row['objectName']) {
+      doc.object.definition['name'] = { 'en-US': row['objectName'] };
+    }
+    if (row['objectDescription']) {
+      doc.object.definition['description'] = { 'en-US': row['objectDescription'] };
+    }
+  }
+
+  if (row['resultScore'] !== null || row['resultSuccess'] !== null) {
+    doc.result = {};
+    if (row['resultScore'] !== null) {
+      doc.result.score = {
+        raw: row['resultScore'],
+        min: 0,
+        max: 100,
+        scaled: (row['resultScore'] ?? 0) / 100,
+      };
+    }
+    if (row['resultSuccess'] !== null) {
+      doc.result.success = row['resultSuccess'];
+    }
+    if (row['resultCompletion'] !== null) {
+      doc.result.completion = row['resultCompletion'];
+    }
+    if (row['resultDuration']) {
+      doc.result.duration = convertSecondsToIso8601(row['resultDuration']);
+    }
+  }
+
+  return doc;
+}
+
+export function buildStatusUpdate(result: {
+  success: boolean;
+  error?: string;
+}): Record<string, unknown> {
+  const updateValues: Record<string, unknown> = {
+    updatedAt: new Date(),
+  };
+
+  if (result.success) {
+    updateValues['lrsStatus'] = 'sent';
+    updateValues['sentAt'] = new Date();
+  } else {
+    updateValues['lrsStatus'] = 'failed';
+    updateValues['lrsError'] = result.error;
+    updateValues['retryCount'] = sql`${xapiStatements.retryCount} + 1`;
+  }
+
+  return updateValues;
+}
+
 export async function sendPendingStatements(
   config: AppConfig,
   tenantId: string,
@@ -748,75 +822,11 @@ export async function sendPendingStatements(
     return { sent: 0, failed: 0 };
   }
 
-  const stmtObjects: XapiStatementDoc[] = [];
-  for (const stmt of pendingStatements) {
-    const doc: XapiStatementDoc = {
-      id: stmt['statementId'],
-      actor: {
-        objectType: 'Agent',
-        mbox: stmt['actorMbox'],
-        name: stmt['actorName'],
-      },
-      verb: {
-        id: stmt['verbId'],
-        display: stmt['verbDisplay'] as Record<string, string>,
-      },
-      object: {
-        objectType: 'Activity',
-        id: stmt['objectId'],
-      },
-      timestamp: stmt['storedAt'].toISOString(),
-      stored: stmt['storedAt'].toISOString(),
-    };
-
-    if (stmt['objectName'] || stmt['objectDescription']) {
-      doc.object.definition = {};
-      if (stmt['objectName']) {
-        doc.object.definition['name'] = { 'en-US': stmt['objectName'] };
-      }
-      if (stmt['objectDescription']) {
-        doc.object.definition['description'] = { 'en-US': stmt['objectDescription'] };
-      }
-    }
-
-    if (stmt['resultScore'] !== null || stmt['resultSuccess'] !== null) {
-      doc.result = {};
-      if (stmt['resultScore'] !== null) {
-        doc.result.score = {
-          raw: stmt['resultScore'],
-          min: 0,
-          max: 100,
-          scaled: (stmt['resultScore'] ?? 0) / 100,
-        };
-      }
-      if (stmt['resultSuccess'] !== null) {
-        doc.result.success = stmt['resultSuccess'];
-      }
-      if (stmt['resultCompletion'] !== null) {
-        doc.result.completion = stmt['resultCompletion'];
-      }
-      if (stmt['resultDuration']) {
-        doc.result.duration = convertSecondsToIso8601(stmt['resultDuration']);
-      }
-    }
-
-    stmtObjects.push(doc);
-  }
+  const stmtObjects: XapiStatementDoc[] = pendingStatements.map(buildStatementFromRow);
 
   const result = await sendStatementToLrs(lrsConfig, stmtObjects);
 
-  const updateValues: Record<string, unknown> = {
-    updatedAt: new Date(),
-  };
-
-  if (result.success) {
-    updateValues['lrsStatus'] = 'sent';
-    updateValues['sentAt'] = new Date();
-  } else {
-    updateValues['lrsStatus'] = 'failed';
-    updateValues['lrsError'] = result.error;
-    updateValues['retryCount'] = sql`${xapiStatements.retryCount} + 1`;
-  }
+  const updateValues = buildStatusUpdate(result);
 
   await db
     .update(xapiStatements)
