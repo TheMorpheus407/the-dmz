@@ -1,15 +1,8 @@
 import { loadFrontendConfig } from '$lib/config/env.js';
 import { buildSecurityHeadersPolicy, buildCspHeaderValue } from '@the-dmz/shared';
-import { initSentry } from '$lib/sentry.js';
 import { logger } from '$lib/logger.js';
 
 import type { Handle, HandleServerError } from '@sveltejs/kit';
-
-const SENTRY_DSN = process.env['PUBLIC_SENTRY_DSN'];
-
-if (SENTRY_DSN) {
-  initSentry();
-}
 
 loadFrontendConfig();
 
