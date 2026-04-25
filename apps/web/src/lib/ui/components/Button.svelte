@@ -1,5 +1,4 @@
 <script lang="ts">
-  /* eslint-disable prefer-const */
   import type { Snippet } from 'svelte';
 
   type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'admin';

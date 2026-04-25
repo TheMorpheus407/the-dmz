@@ -1,5 +1,4 @@
 <script lang="ts">
-  /* eslint-disable prefer-const */
   type Variant = 'spinner' | 'dots' | 'skeleton';
   type Size = 'sm' | 'md' | 'lg';
 

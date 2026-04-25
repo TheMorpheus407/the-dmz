@@ -7,14 +7,10 @@
     onClose?: () => void;
   }
 
-  // Svelte 5: $props() requires let for reactivity
-  // eslint-disable-next-line prefer-const
   let { contextState, onSelect, onClose }: Props = $props();
 
   let focusedIndex = $state(-1);
   let menuRef = $state<HTMLDivElement | null>(null);
-  // Svelte 5: $derived creates reactive derived values
-  // eslint-disable-next-line prefer-const
   let menuItems = $derived(contextState.sections.flatMap((s) => s.items));
 
   function handleKeyDown(event: KeyboardEvent) {

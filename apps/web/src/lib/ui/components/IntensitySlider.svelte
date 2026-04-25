@@ -1,5 +1,4 @@
 <script lang="ts">
-  /* eslint-disable prefer-const */
   interface Props {
     label: string;
     value: number;

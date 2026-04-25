@@ -1,5 +1,4 @@
 <script lang="ts">
-  /* eslint-disable prefer-const */
   import { onMount, tick } from 'svelte';
 
   import type { Snippet } from 'svelte';

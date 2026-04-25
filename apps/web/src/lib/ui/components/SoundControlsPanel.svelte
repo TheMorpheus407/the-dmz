@@ -1,5 +1,4 @@
 <script lang="ts">
-  /* eslint-disable prefer-const */
   import Button from '$lib/ui/components/Button.svelte';
   import IntensitySlider from '$lib/ui/components/IntensitySlider.svelte';
   import { soundStore } from '$lib/stores/sound';

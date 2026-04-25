@@ -432,6 +432,7 @@ export default [
       ...svelteA11yRules,
       ...svelteRunesRules,
       'svelte/no-navigation-without-resolve': 'off',
+      'prefer-const': 'off',
     },
   },
   {

@@ -5,7 +5,6 @@
     children?: Snippet;
   }
 
-  // eslint-disable-next-line prefer-const
   let { children }: Props = $props();
 </script>
 
