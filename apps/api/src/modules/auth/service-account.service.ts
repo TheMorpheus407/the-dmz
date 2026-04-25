@@ -1,7 +1,14 @@
+/* eslint-disable max-lines */
 import { randomUUID } from 'crypto';
 
 import { eq, and, desc } from 'drizzle-orm';
 
+import {
+  SERVICE_ACCOUNT_STATUS_ACTIVE,
+  SERVICE_ACCOUNT_STATUS_DELETED,
+  SERVICE_ACCOUNT_STATUS_DISABLED,
+  type ServiceAccountStatus,
+} from '@the-dmz/shared/constants/auth';
 import { ErrorCodes } from '@the-dmz/shared/constants/error-codes';
 import { DEFAULT_PAGINATION_LIMIT } from '@the-dmz/shared/utils';
 
@@ -13,8 +20,6 @@ import { roles } from '../../db/schema/auth/roles.js';
 import { createAuditLog } from '../audit/index.js';
 
 import type { DB } from '../../shared/database/connection.js';
-
-export type ServiceAccountStatus = 'active' | 'disabled' | 'deleted';
 
 export interface CreateServiceAccountInput {
   name: string;
@@ -80,7 +85,7 @@ async function createServiceAccount(
       description: input.description ?? null,
       ownerId: input.ownerId ?? null,
       metadata: input.metadata ?? null,
-      status: 'active',
+      status: SERVICE_ACCOUNT_STATUS_ACTIVE as string,
       createdBy,
     })
     .returning();
@@ -119,7 +124,7 @@ async function listServiceAccounts(
   const conditions = [eq(serviceAccounts.tenantId, tenantId)];
 
   if (options?.status) {
-    conditions.push(eq(serviceAccounts.status, options.status));
+    conditions.push(eq(serviceAccounts.status, options.status as string));
   }
 
   const accounts = await db
@@ -173,6 +178,7 @@ async function getServiceAccountByIdForAdmin(
   return account ? mapDbToResponse(account) : null;
 }
 
+// eslint-disable-next-line @typescript-eslint/max-params, max-params
 async function updateServiceAccount(
   db: DB,
   serviceId: string,
@@ -241,14 +247,14 @@ async function disableServiceAccount(
     throw createAppError(ErrorCodes.NOT_FOUND, 'Service account not found');
   }
 
-  if (account.status === 'disabled') {
+  if (account.status === SERVICE_ACCOUNT_STATUS_DISABLED) {
     return mapDbToResponse(account);
   }
 
   const [updated] = await db
     .update(serviceAccounts)
     .set({
-      status: 'disabled',
+      status: SERVICE_ACCOUNT_STATUS_DISABLED as string,
       disabledAt: new Date(),
       updatedAt: new Date(),
     })
@@ -287,14 +293,14 @@ async function enableServiceAccount(
     throw createAppError(ErrorCodes.NOT_FOUND, 'Service account not found');
   }
 
-  if (account.status === 'active') {
+  if (account.status === SERVICE_ACCOUNT_STATUS_ACTIVE) {
     return mapDbToResponse(account);
   }
 
   const [updated] = await db
     .update(serviceAccounts)
     .set({
-      status: 'active',
+      status: SERVICE_ACCOUNT_STATUS_ACTIVE as string,
       disabledAt: null,
       updatedAt: new Date(),
     })
@@ -336,7 +342,7 @@ async function deleteServiceAccount(
   await db
     .update(serviceAccounts)
     .set({
-      status: 'deleted',
+      status: SERVICE_ACCOUNT_STATUS_DELETED as string,
       updatedAt: new Date(),
     })
     .where(and(eq(serviceAccounts.id, account.id), eq(serviceAccounts.tenantId, tenantId)));
@@ -416,6 +422,7 @@ async function assignRoleToServiceAccount(
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/max-params, max-params
 async function revokeRoleFromServiceAccount(
   db: DB,
   serviceId: string,
@@ -574,6 +581,7 @@ function mapDbToResponse(account: DbServiceAccount): ServiceAccountResponse {
     tenantId: account.tenantId,
     name: account.name,
     description: account.description,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     status: account.status as ServiceAccountStatus,
     ownerId: account.ownerId,
     metadata:

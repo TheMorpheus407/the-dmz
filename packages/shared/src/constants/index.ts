@@ -1,3 +1,4 @@
+export * from './auth.js';
 export * from './competency.js';
 export * from './config.js';
 export * from './error-codes.js';
