@@ -522,7 +522,7 @@ describe('incident-schemas', () => {
       expect(() => incidentStatsSchema.parse(input)).not.toThrow();
     });
 
-    it('should accept negative values', () => {
+    it('should reject negative count values', () => {
       const input = {
         total: -1,
         open: 0,
@@ -533,7 +533,33 @@ describe('incident-schemas', () => {
         closed: 0,
         avgResolutionDays: 0,
       };
-      expect(() => incidentStatsSchema.parse(input)).not.toThrow();
+      expect(() => incidentStatsSchema.parse(input)).toThrow();
+    });
+
+    it('should reject negative values for all count fields', () => {
+      const fields = [
+        'total',
+        'open',
+        'investigating',
+        'contained',
+        'eradicated',
+        'recovered',
+        'closed',
+      ] as const;
+      for (const field of fields) {
+        const input = {
+          total: 0,
+          open: 0,
+          investigating: 0,
+          contained: 0,
+          eradicated: 0,
+          recovered: 0,
+          closed: 0,
+          avgResolutionDays: 0,
+          [field]: -1,
+        };
+        expect(() => incidentStatsSchema.parse(input)).toThrow();
+      }
     });
   });
 });
