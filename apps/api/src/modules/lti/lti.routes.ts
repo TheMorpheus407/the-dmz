@@ -176,19 +176,29 @@ export async function registerLtiRoutes(
 
     const codeVerifier = stateValidation.codeVerifier;
 
-    const authTokenResponse = await fetch(platform.authTokenUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: targetLinkUri,
-        client_id: platform.clientId,
-        code_verifier: codeVerifier,
-      } as Record<string, string>),
-    });
+    let authTokenResponse: Response;
+    try {
+      authTokenResponse = await fetch(platform.authTokenUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: targetLinkUri,
+          client_id: platform.clientId,
+          code_verifier: codeVerifier,
+        } as Record<string, string>),
+      });
+    } catch (error) {
+      request.log.error({ error }, 'Network error during token exchange');
+      throw new AppError({
+        code: ErrorCodes.AUTH_UNAUTHORIZED,
+        message: 'Failed to connect to LTI platform',
+        statusCode: 503,
+      });
+    }
 
     if (!authTokenResponse.ok) {
       throw new AppError({
