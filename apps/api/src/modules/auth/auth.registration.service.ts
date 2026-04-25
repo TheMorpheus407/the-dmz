@@ -10,7 +10,7 @@ import {
   validatePasswordAgainstPolicy,
   screenPasswordForCompromise,
   REFRESH_TOKEN_EXPIRY_DAYS,
-} from './auth-crypto.js';
+} from './auth.crypto.js';
 import { resolveTenantId } from './auth.utils.js';
 
 import type { AppConfig } from '../../config.js';

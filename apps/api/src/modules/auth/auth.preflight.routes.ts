@@ -143,13 +143,13 @@ export async function preflightRoutes(fastify: FastifyInstance) {
         const { baseUrl, bearerToken, dryRunEmail } = request.body;
         const userId = user.userId;
 
-        const result = await runSCIMValidation(
+        const result = await runSCIMValidation({
           baseUrl,
           bearerToken,
-          user.tenantId,
+          tenantId: user.tenantId,
           dryRunEmail,
-          userId,
-        );
+          executedBy: userId,
+        });
 
         return reply.send({
           success: true,

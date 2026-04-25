@@ -4,7 +4,7 @@ export {
   createConfigurationError,
   createInternalError,
   createActivationBlockedError,
-} from './preflight/preflight-errors.js';
+} from './preflight/preflight.errors.js';
 
 export {
   getValidationPreflight,
@@ -14,4 +14,4 @@ export {
   getActivationGate,
   activateSSO,
   getValidationSummary,
-} from './preflight/preflight-orchestrator.js';
+} from './preflight/preflight.orchestrator.js';

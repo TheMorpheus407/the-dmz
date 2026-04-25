@@ -28,7 +28,7 @@ import {
   OAuthInsufficientScopeError,
   OAuthInvalidClientError,
 } from './auth.errors.js';
-import { hashPassword } from './auth-crypto.js';
+import { hashPassword } from './auth.crypto.js';
 import { signJWT, verifyJWT } from './jwt-keys.service.js';
 
 import type { AppConfig } from '../../config.js';

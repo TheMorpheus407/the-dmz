@@ -20,7 +20,7 @@ import {
   generateTokens,
   verifyPassword,
   REFRESH_TOKEN_EXPIRY_DAYS,
-} from './auth-crypto.js';
+} from './auth.crypto.js';
 import { resolveTenantId } from './auth.utils.js';
 import { InvalidCredentialsError, SessionConcurrentLimitError } from './auth.errors.js';
 
@@ -34,34 +34,24 @@ export interface LoginOptions {
   deviceFingerprint?: string;
 }
 
-export const login = async (
-  config: AppConfig,
-  data: {
-    email: string;
-    password: string;
-  },
-  options?: LoginOptions,
-): Promise<AuthResponse> => {
-  const db = getDatabaseClient(config);
-
-  const tenantId = await resolveTenantId(
-    config,
-    options?.tenantId ? { tenantId: options.tenantId } : undefined,
-  );
-
-  const userWithHash = await findUserByEmail(db, data.email, tenantId);
+async function validateUserAndTenant(
+  db: ReturnType<typeof getDatabaseClient>,
+  email: string,
+  tenantId: string,
+  password: string,
+): Promise<{
+  user: Awaited<ReturnType<typeof findUserByEmail>>;
+  tenant: { tenantId: string; status: string; settings: Record<string, unknown> } | undefined;
+}> {
+  const userWithHash = await findUserByEmail(db, email, tenantId);
 
   if (!userWithHash) {
     throw new InvalidCredentialsError();
   }
 
-  const isValid = await verifyPassword(data.password, userWithHash.passwordHash);
+  const isValid = await verifyPassword(password, userWithHash.passwordHash);
 
-  if (!isValid) {
-    throw new InvalidCredentialsError();
-  }
-
-  if (!userWithHash.isActive) {
+  if (!isValid || !userWithHash.isActive) {
     throw new InvalidCredentialsError();
   }
 
@@ -85,16 +75,16 @@ export const login = async (
     });
   }
 
-  const sessionPolicy = resolveTenantSessionPolicy(
-    tenant?.settings as Record<string, unknown> | undefined,
-  );
+  return { user: userWithHash, tenant: tenant ?? undefined };
+}
 
-  const activeSessionCount = await countActiveUserSessions(
-    db,
-    userWithHash.id,
-    userWithHash.tenantId,
-  );
-
+async function handleConcurrentSessionLimit(
+  db: ReturnType<typeof getDatabaseClient>,
+  userId: string,
+  tenantId: string,
+  sessionPolicy: ReturnType<typeof resolveTenantSessionPolicy>,
+): Promise<void> {
+  const activeSessionCount = await countActiveUserSessions(db, userId, tenantId);
   const concurrentEval = evaluateConcurrentSessions(activeSessionCount, sessionPolicy);
 
   if (!concurrentEval.allowed) {
@@ -104,10 +94,56 @@ export const login = async (
         concurrentEval.currentSessionCount,
       );
     }
-
     const keepCount = (sessionPolicy.maxConcurrentSessionsPerUser ?? 1) - 1;
-    await deleteOldestUserSessions(db, userWithHash.id, userWithHash.tenantId, keepCount);
+    await deleteOldestUserSessions(db, userId, tenantId, keepCount);
   }
+}
+
+interface SessionDataParams {
+  userId: string;
+  tenantId: string;
+  tokenHash: string;
+  expiresAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+function buildSessionData(params: SessionDataParams) {
+  const { userId, tenantId, tokenHash, expiresAt, ipAddress, userAgent } = params;
+  return {
+    userId,
+    tenantId,
+    tokenHash,
+    expiresAt,
+    ...(ipAddress && { ipAddress }),
+    ...(userAgent && { userAgent }),
+  };
+}
+
+export const login = async (
+  config: AppConfig,
+  data: {
+    email: string;
+    password: string;
+  },
+  options?: LoginOptions,
+): Promise<AuthResponse> => {
+  const db = getDatabaseClient(config);
+
+  const tenantId = await resolveTenantId(
+    config,
+    options?.tenantId ? { tenantId: options.tenantId } : undefined,
+  );
+
+  const { user: userWithHash, tenant } = await validateUserAndTenant(
+    db,
+    data.email,
+    tenantId,
+    data.password,
+  );
+  const sessionPolicy = resolveTenantSessionPolicy(tenant?.settings);
+
+  await handleConcurrentSessionLimit(db, userWithHash.id, userWithHash.tenantId, sessionPolicy);
 
   const refreshToken = randomUUID();
   const refreshTokenHash = await hashToken(refreshToken, config.TOKEN_HASH_SALT);
@@ -115,29 +151,16 @@ export const login = async (
   const refreshTokenExpiry = new Date();
   refreshTokenExpiry.setDate(refreshTokenExpiry.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
 
-  const sessionData: {
-    userId: string;
-    tenantId: string;
-    tokenHash: string;
-    expiresAt: Date;
-    ipAddress?: string;
-    userAgent?: string;
-  } = {
+  const sessionData = buildSessionData({
     userId: userWithHash.id,
     tenantId: userWithHash.tenantId,
     tokenHash: refreshTokenHash,
     expiresAt: refreshTokenExpiry,
-  };
-
-  if (options?.ipAddress) {
-    sessionData.ipAddress = options.ipAddress;
-  }
-  if (options?.userAgent) {
-    sessionData.userAgent = options.userAgent;
-  }
+    ipAddress: options?.ipAddress,
+    userAgent: options?.userAgent,
+  });
 
   const session = await createSession(db, sessionData);
-
   const tokens = await generateTokens(config, userWithHash, session.id, refreshToken);
 
   const user = {
@@ -149,9 +172,5 @@ export const login = async (
     isActive: userWithHash.isActive,
   };
 
-  return {
-    user,
-    sessionId: session.id,
-    ...tokens,
-  };
+  return { user, sessionId: session.id, ...tokens };
 };

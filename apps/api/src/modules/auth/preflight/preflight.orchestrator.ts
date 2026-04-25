@@ -16,21 +16,27 @@ import {
   VALIDATION_WARNING_THRESHOLD_SECONDS,
 } from '@the-dmz/shared/auth';
 
-import { ssoConnections, ssoValidations } from '../../../db/schema/auth/sso-connections.js';
+import {
+  ssoConnections,
+  ssoValidations,
+  type SsoConnection,
+} from '../../../db/schema/auth/sso-connections.js';
 import { getDatabaseClient } from '../../../shared/database/connection.js';
 
-import { oidcValidator } from './oidc-validator.js';
-import { samlValidator } from './saml-validator.js';
-import { scimValidator } from './scim-validator.js';
+import { oidcValidator } from './oidc.validator.js';
+import { samlValidator } from './saml.validator.js';
+import { scimValidator } from './scim.validator.js';
 import {
   SSOValidationError,
   createProviderNotFoundError,
   createConfigurationError,
   createInternalError,
   createActivationBlockedError,
-} from './preflight-errors.js';
+} from './preflight.errors.js';
 
 const db = getDatabaseClient();
+
+type SSOConnectionRecord = SsoConnection;
 
 const getSupportedChecks = (validationType: SSOValidationType): SSOValidationCheckType[] => {
   if (validationType === 'saml') {
@@ -85,30 +91,10 @@ export const getValidationPreflight = async (
   };
 };
 
-export const runOIDCValidation = async (
-  providerId: string,
-  tenantId: string,
-  testClaims?: { email?: string; groups?: string[] },
-  executedBy?: string,
-): Promise<SSOValidationResult> => {
-  void testClaims;
-  const correlationId = crypto.randomUUID();
-  const result = await db
-    .select()
-    .from(ssoConnections)
-    .where(and(eq(ssoConnections.id, providerId), eq(ssoConnections.tenantId, tenantId)))
-    .limit(1);
-
-  if (result.length === 0 || !result[0]) {
-    throw createProviderNotFoundError(correlationId);
-  }
-
-  const connection = result[0];
-
-  if (!connection.metadataUrl && !connection.clientId) {
-    throw createConfigurationError('OIDC provider not configured', correlationId);
-  }
-
+async function runOIDCChecks(
+  connection: SSOConnectionRecord,
+  correlationId: string,
+): Promise<{ checks: SSOValidationCheckResult[]; overallStatus: ValidationStatus }> {
   const checks: SSOValidationCheckResult[] = [];
   let overallStatus: ValidationStatus = 'ok';
 
@@ -144,6 +130,34 @@ export const runOIDCValidation = async (
     overallStatus = 'warning';
   }
 
+  return { checks, overallStatus };
+}
+
+export const runOIDCValidation = async (
+  providerId: string,
+  tenantId: string,
+  testClaims?: { email?: string; groups?: string[] },
+  executedBy?: string,
+): Promise<SSOValidationResult> => {
+  void testClaims;
+  const correlationId = crypto.randomUUID();
+  const result = await db
+    .select()
+    .from(ssoConnections)
+    .where(and(eq(ssoConnections.id, providerId), eq(ssoConnections.tenantId, tenantId)))
+    .limit(1);
+
+  if (result.length === 0 || !result[0]) {
+    throw createProviderNotFoundError(correlationId);
+  }
+
+  const connection = result[0];
+
+  if (!connection.metadataUrl && !connection.clientId) {
+    throw createConfigurationError('OIDC provider not configured', correlationId);
+  }
+
+  const { checks, overallStatus } = await runOIDCChecks(connection, correlationId);
   const now = new Date();
   const expiresAt = new Date(now.getTime() + DEFAULT_VALIDATION_FRESHNESS_SECONDS * 1000);
 
@@ -191,28 +205,10 @@ export const runOIDCValidation = async (
   };
 };
 
-export const runSAMLValidation = async (
-  providerId: string,
-  tenantId: string,
-  executedBy?: string,
-): Promise<SSOValidationResult> => {
-  const correlationId = crypto.randomUUID();
-  const result = await db
-    .select()
-    .from(ssoConnections)
-    .where(and(eq(ssoConnections.id, providerId), eq(ssoConnections.tenantId, tenantId)))
-    .limit(1);
-
-  if (result.length === 0 || !result[0]) {
-    throw createProviderNotFoundError(correlationId);
-  }
-
-  const connection = result[0];
-
-  if (!connection.metadataUrl) {
-    throw createConfigurationError('SAML provider metadata URL not configured', correlationId);
-  }
-
+async function runSAMLChecks(
+  connection: SsoConnection,
+  correlationId: string,
+): Promise<{ checks: SSOValidationCheckResult[]; overallStatus: ValidationStatus }> {
   const checks: SSOValidationCheckResult[] = [];
   let overallStatus: ValidationStatus = 'ok';
 
@@ -237,6 +233,32 @@ export const runSAMLValidation = async (
     }
   }
 
+  return { checks, overallStatus };
+}
+
+export const runSAMLValidation = async (
+  providerId: string,
+  tenantId: string,
+  executedBy?: string,
+): Promise<SSOValidationResult> => {
+  const correlationId = crypto.randomUUID();
+  const result = await db
+    .select()
+    .from(ssoConnections)
+    .where(and(eq(ssoConnections.id, providerId), eq(ssoConnections.tenantId, tenantId)))
+    .limit(1);
+
+  if (result.length === 0 || !result[0]) {
+    throw createProviderNotFoundError(correlationId);
+  }
+
+  const connection = result[0];
+
+  if (!connection.metadataUrl) {
+    throw createConfigurationError('SAML provider metadata URL not configured', correlationId);
+  }
+
+  const { checks, overallStatus } = await runSAMLChecks(connection, correlationId);
   const now = new Date();
   const expiresAt = new Date(now.getTime() + DEFAULT_VALIDATION_FRESHNESS_SECONDS * 1000);
 
@@ -284,24 +306,26 @@ export const runSAMLValidation = async (
   };
 };
 
-export const runSCIMValidation = async (
+interface SCIMValidationParams {
+  baseUrl: string;
+  bearerToken: string;
+  tenantId: string;
+  dryRunEmail?: string;
+  executedBy?: string;
+}
+
+async function runSCIMChecks(
   baseUrl: string,
   bearerToken: string,
-  tenantId: string,
-  _dryRunEmail?: string,
-  executedBy?: string,
-): Promise<SSOValidationResult> => {
-  const correlationId = crypto.randomUUID();
-
+  correlationId: string,
+): Promise<{ checks: SSOValidationCheckResult[]; overallStatus: ValidationStatus }> {
   const checks: SSOValidationCheckResult[] = [];
   let overallStatus: ValidationStatus = 'ok';
   let hasFailed = false;
 
   const urlCheck = await scimValidator.validateBaseUrlReachability(baseUrl, correlationId);
   checks.push(urlCheck);
-  if (urlCheck.status === 'failed') {
-    hasFailed = true;
-  }
+  if (urlCheck.status === 'failed') hasFailed = true;
 
   if (!hasFailed) {
     const authCheck = await scimValidator.validateAuthentication(
@@ -310,9 +334,7 @@ export const runSCIMValidation = async (
       correlationId,
     );
     checks.push(authCheck);
-    if (authCheck.status === 'failed') {
-      hasFailed = true;
-    }
+    if (authCheck.status === 'failed') hasFailed = true;
   }
 
   if (!hasFailed) {
@@ -322,15 +344,21 @@ export const runSCIMValidation = async (
       correlationId,
     );
     checks.push(endpointCheck);
-    if (endpointCheck.status === 'failed') {
-      hasFailed = true;
-    }
+    if (endpointCheck.status === 'failed') hasFailed = true;
   }
 
-  if (hasFailed) {
-    overallStatus = 'failed';
-  }
+  if (hasFailed) overallStatus = 'failed';
 
+  return { checks, overallStatus };
+}
+
+export const runSCIMValidation = async (
+  params: SCIMValidationParams,
+): Promise<SSOValidationResult> => {
+  const { baseUrl, bearerToken, tenantId, executedBy } = params;
+  const correlationId = crypto.randomUUID();
+
+  const { checks, overallStatus } = await runSCIMChecks(baseUrl, bearerToken, correlationId);
   const now = new Date();
   const expiresAt = new Date(now.getTime() + DEFAULT_VALIDATION_FRESHNESS_SECONDS * 1000);
 
@@ -368,6 +396,27 @@ export const runSCIMValidation = async (
   };
 };
 
+const computeActivationState = (
+  enforceSSOOnly: boolean,
+  lastValidationAt: Date | null,
+  lastValidationStatus: ValidationStatus | null,
+  isStale: boolean,
+): { activationStatus: SSOActivationGate['activationStatus']; canActivate: boolean } => {
+  if (enforceSSOOnly) {
+    return { activationStatus: 'activated', canActivate: true };
+  }
+  if (!lastValidationAt || lastValidationStatus === null) {
+    return { activationStatus: 'validation_required', canActivate: false };
+  }
+  if (isStale) {
+    return { activationStatus: 'validation_stale', canActivate: false };
+  }
+  if (lastValidationStatus === 'ok' || lastValidationStatus === 'warning') {
+    return { activationStatus: 'ready_to_activate', canActivate: true };
+  }
+  return { activationStatus: 'validation_required', canActivate: false };
+};
+
 export const getActivationGate = async (
   providerId: string,
   tenantId: string,
@@ -384,37 +433,20 @@ export const getActivationGate = async (
 
   const connection = result[0];
   const now = new Date();
-
   const lastValidationAt = connection.lastValidationAt;
   const lastValidationStatus = connection.lastValidationStatus as ValidationStatus | null;
+  const timeSinceValidation = lastValidationAt
+    ? now.getTime() - lastValidationAt.getTime()
+    : Infinity;
+  const isStale = timeSinceValidation > DEFAULT_VALIDATION_FRESHNESS_SECONDS * 1000;
+  const isStaleWarning = timeSinceValidation > VALIDATION_WARNING_THRESHOLD_SECONDS * 1000;
 
-  const isStale = lastValidationAt
-    ? now.getTime() - lastValidationAt.getTime() > DEFAULT_VALIDATION_FRESHNESS_SECONDS * 1000
-    : true;
-
-  const isStaleWarning = lastValidationAt
-    ? now.getTime() - lastValidationAt.getTime() > VALIDATION_WARNING_THRESHOLD_SECONDS * 1000
-    : false;
-
-  let canActivate = false;
-  let activationStatus: SSOActivationGate['activationStatus'] = 'not_activated';
-
-  if (connection.enforceSSOOnly) {
-    activationStatus = 'activated';
-    canActivate = true;
-  } else if (!lastValidationAt || lastValidationStatus === null) {
-    activationStatus = 'validation_required';
-    canActivate = false;
-  } else if (isStale) {
-    activationStatus = 'validation_stale';
-    canActivate = false;
-  } else if (lastValidationStatus === 'ok' || lastValidationStatus === 'warning') {
-    activationStatus = 'ready_to_activate';
-    canActivate = true;
-  } else {
-    activationStatus = 'validation_required';
-    canActivate = false;
-  }
+  const { activationStatus, canActivate } = computeActivationState(
+    connection.enforceSSOOnly,
+    lastValidationAt,
+    lastValidationStatus,
+    isStale,
+  );
 
   return {
     providerId: connection.id,

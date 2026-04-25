@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { OIDCPreflightValidator } from '../oidc-validator.js';
-import { SAMLPreflightValidator } from '../saml-validator.js';
+import { OIDCPreflightValidator } from '../oidc.validator.js';
+import { SAMLPreflightValidator } from '../saml.validator.js';
 
 const oidcValidator = new OIDCPreflightValidator();
 const samlValidator = new SAMLPreflightValidator();

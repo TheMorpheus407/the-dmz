@@ -6,7 +6,7 @@ export {
   validatePasswordAgainstPolicy,
   screenPasswordForCompromise,
   REFRESH_TOKEN_EXPIRY_DAYS,
-} from './auth-crypto.js';
+} from './auth.crypto.js';
 
 export { resolveTenantId, type ResolveTenantOptions, type ResolvedTenant } from './auth.utils.js';
 

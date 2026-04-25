@@ -25,7 +25,7 @@ import {
   findActiveSessionWithContext,
   updateSessionLastActive,
 } from './auth.repo.js';
-import { hashToken, generateTokens, REFRESH_TOKEN_EXPIRY_DAYS } from './auth-crypto.js';
+import { hashToken, generateTokens, REFRESH_TOKEN_EXPIRY_DAYS } from './auth.crypto.js';
 import { verifyJWT } from './jwt-keys.service.js';
 import {
   InvalidCredentialsError,
@@ -49,16 +49,12 @@ export interface RefreshOptions {
   deviceFingerprint?: string;
 }
 
-export const refresh = async (
-  config: AppConfig,
-  refreshToken: string,
-  options?: RefreshOptions,
-): Promise<RefreshResponse> => {
-  const db = getDatabaseClient(config);
-
-  const refreshTokenHash = await hashToken(refreshToken, config.TOKEN_HASH_SALT);
-  const session = await findSessionByTokenHash(db, refreshTokenHash);
-
+async function validateSessionAndUser(
+  db: ReturnType<typeof getDatabaseClient>,
+  session: Awaited<ReturnType<typeof findSessionByTokenHash>>,
+  user: Awaited<ReturnType<typeof findUserById>>,
+  tenant: { tenantId: string; status: string; settings: Record<string, unknown> } | undefined,
+) {
   if (!session) {
     throw new InvalidCredentialsError();
   }
@@ -68,20 +64,9 @@ export const refresh = async (
     throw new SessionExpiredError();
   }
 
-  const user = await findUserById(db, session.userId, session.tenantId);
-
   if (!user || !user.isActive) {
     throw new InvalidCredentialsError();
   }
-
-  const tenant = await db.query.tenants.findFirst({
-    where: (t, { eq }) => eq(t.tenantId, user.tenantId),
-    columns: {
-      tenantId: true,
-      status: true,
-      settings: true,
-    },
-  });
 
   if (
     tenant &&
@@ -91,17 +76,18 @@ export const refresh = async (
       code: ErrorCodes.TENANT_INACTIVE,
       message: `Tenant is ${tenant.status}`,
       statusCode: 403,
-      details: {
-        tenantId: tenant.tenantId,
-        tenantStatus: tenant.status,
-      },
+      details: { tenantId: tenant.tenantId, tenantStatus: tenant.status },
     });
   }
 
-  const sessionPolicy = resolveTenantSessionPolicy(
-    tenant?.settings as Record<string, unknown> | undefined,
-  );
+  return { session, user };
+}
 
+async function validateSessionTimeout(
+  db: ReturnType<typeof getDatabaseClient>,
+  session: { id: string; createdAt: Date; lastActiveAt: Date | null },
+  sessionPolicy: ReturnType<typeof resolveTenantSessionPolicy>,
+) {
   const lastActiveAt = session.lastActiveAt ?? session.createdAt;
   const timeoutEval = evaluateSessionTimeouts(session.createdAt, lastActiveAt, sessionPolicy);
 
@@ -115,7 +101,14 @@ export const refresh = async (
     }
     throw new SessionExpiredError();
   }
+}
 
+async function checkSessionBinding(
+  db: ReturnType<typeof getDatabaseClient>,
+  session: { id: string },
+  sessionPolicy: ReturnType<typeof resolveTenantSessionPolicy>,
+  options?: RefreshOptions,
+) {
   if (sessionPolicy.sessionBindingMode !== 'none') {
     const originalSession = await findActiveSessionWithContext(db, session.id);
     if (originalSession) {
@@ -138,16 +131,62 @@ export const refresh = async (
       }
     }
   }
+}
 
-  if (!canRefreshSession(session.createdAt, user.role)) {
-    await deleteSession(db, session.id);
-    const policy = getSessionPolicyForRole(user.role);
+function validateRefreshPermission(session: { createdAt: Date }, role: string) {
+  if (!canRefreshSession(session.createdAt, role)) {
+    const policy = getSessionPolicyForRole(role);
     throw new AppError({
       code: ErrorCodes.AUTH_SESSION_EXPIRED,
-      message: `Session has exceeded maximum duration of ${policy.maxSessionDurationMs}ms for role ${user.role}`,
+      message: `Session has exceeded maximum duration of ${policy.maxSessionDurationMs}ms for role ${role}`,
       statusCode: 401,
     });
   }
+}
+
+interface NewSessionDataParams {
+  userId: string;
+  tenantId: string;
+  tokenHash: string;
+  expiresAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
+function buildNewSessionData(params: NewSessionDataParams) {
+  const { userId, tenantId, tokenHash, expiresAt, ipAddress, userAgent } = params;
+  return {
+    userId,
+    tenantId,
+    tokenHash,
+    expiresAt,
+    ...(ipAddress && { ipAddress }),
+    ...(userAgent && { userAgent }),
+  };
+}
+
+export const refresh = async (
+  config: AppConfig,
+  refreshToken: string,
+  options?: RefreshOptions,
+): Promise<RefreshResponse> => {
+  const db = getDatabaseClient(config);
+
+  const refreshTokenHash = await hashToken(refreshToken, config.TOKEN_HASH_SALT);
+  const session = await findSessionByTokenHash(db, refreshTokenHash);
+  const user = await findUserById(db, session?.userId ?? '', session?.tenantId ?? '');
+
+  const tenant = await db.query.tenants.findFirst({
+    where: (t, { eq }) => eq(t.tenantId, user?.tenantId ?? ''),
+    columns: { tenantId: true, status: true, settings: true },
+  });
+
+  const sessionPolicy = resolveTenantSessionPolicy(tenant?.settings);
+
+  await validateSessionAndUser(db, session, user, tenant ?? undefined);
+  await validateSessionTimeout(db, session, sessionPolicy);
+  await checkSessionBinding(db, session, sessionPolicy, options);
+  validateRefreshPermission(session, user.role);
 
   await updateSessionLastActive(db, session.id);
 
@@ -157,29 +196,16 @@ export const refresh = async (
   const refreshTokenExpiry = new Date();
   refreshTokenExpiry.setDate(refreshTokenExpiry.getDate() + REFRESH_TOKEN_EXPIRY_DAYS);
 
-  const newSessionData: {
-    userId: string;
-    tenantId: string;
-    tokenHash: string;
-    expiresAt: Date;
-    ipAddress?: string;
-    userAgent?: string;
-  } = {
+  const newSessionData = buildNewSessionData({
     userId: user.id,
     tenantId: user.tenantId,
     tokenHash: newRefreshTokenHash,
     expiresAt: refreshTokenExpiry,
-  };
-
-  if (options?.ipAddress) {
-    newSessionData.ipAddress = options.ipAddress;
-  }
-  if (options?.userAgent) {
-    newSessionData.userAgent = options.userAgent;
-  }
+    ipAddress: options?.ipAddress,
+    userAgent: options?.userAgent,
+  });
 
   const newSession = await createSession(db, newSessionData);
-
   await deleteSession(db, session.id);
 
   const newTokens = await generateTokens(config, user, newSession.id, newRefreshToken);

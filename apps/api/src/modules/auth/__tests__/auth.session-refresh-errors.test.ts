@@ -25,7 +25,7 @@ vi.mock('../auth.repo.js', () => ({
   findActiveSessionWithContext: vi.fn(),
 }));
 
-vi.mock('../auth-crypto.js', () => ({
+vi.mock('../auth.crypto.js', () => ({
   hashToken: vi.fn(),
   generateTokens: vi.fn(),
   REFRESH_TOKEN_EXPIRY_DAYS: 30,
@@ -400,7 +400,7 @@ describe('refresh() error paths', () => {
     it('skips binding validation when findActiveSessionWithContext returns null', async () => {
       const { findActiveSessionWithContext, deleteSession, createSession } =
         await import('../auth.repo.js');
-      const { generateTokens: generateTokensCrypto } = await import('../auth-crypto.js');
+      const { generateTokens: generateTokensCrypto } = await import('../auth.crypto.js');
       await createValidSessionAndUser();
 
       vi.mocked(findActiveSessionWithContext).mockResolvedValue(null);

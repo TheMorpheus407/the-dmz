@@ -18,7 +18,7 @@ vi.mock('../auth.repo.js', () => ({
   updateOAuthClientLastUsed: vi.fn(),
 }));
 
-vi.mock('../auth-crypto.js', () => ({
+vi.mock('../auth.crypto.js', () => ({
   hashPassword: vi.fn(),
 }));
 

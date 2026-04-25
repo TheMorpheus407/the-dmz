@@ -17,7 +17,7 @@ import {
   hashPassword,
   validatePasswordAgainstPolicy,
   screenPasswordForCompromise,
-} from './auth-crypto.js';
+} from './auth.crypto.js';
 import { resolveTenantId } from './auth.utils.js';
 import {
   PasswordResetTokenInvalidError,
@@ -31,6 +31,22 @@ export interface RequestPasswordResetResult {
   success: boolean;
 }
 
+async function resolvePasswordResetTenantId(
+  db: ReturnType<typeof getDatabaseClient>,
+  optionsTenantId?: string,
+): Promise<string | null> {
+  if (optionsTenantId) {
+    const tenant = await db.query.tenants.findFirst({
+      where: (tenants, { eq }) => eq(tenants.tenantId, optionsTenantId),
+    });
+    return tenant?.tenantId ?? null;
+  }
+  const defaultTenant = await db.query.tenants.findFirst({
+    where: (tenants, { eq }) => eq(tenants.slug, 'default'),
+  });
+  return defaultTenant?.tenantId ?? null;
+}
+
 export const requestPasswordReset = async (
   config: AppConfig,
   data: {
@@ -39,29 +55,10 @@ export const requestPasswordReset = async (
   options?: { tenantId?: string },
 ): Promise<RequestPasswordResetResult> => {
   const db = getDatabaseClient(config);
+  const tenantId = await resolvePasswordResetTenantId(db, options?.tenantId);
 
-  let tenantId: string;
-
-  if (options?.tenantId) {
-    const tenant = await db.query.tenants.findFirst({
-      where: (tenants, { eq }) => eq(tenants.tenantId, options.tenantId!),
-    });
-
-    if (!tenant) {
-      return { success: true };
-    }
-
-    tenantId = tenant.tenantId;
-  } else {
-    const defaultTenant = await db.query.tenants.findFirst({
-      where: (tenants, { eq }) => eq(tenants.slug, 'default'),
-    });
-
-    if (!defaultTenant) {
-      return { success: true };
-    }
-
-    tenantId = defaultTenant.tenantId;
+  if (!tenantId) {
+    return { success: true };
   }
 
   const user = await findUserByEmailForPasswordReset(db, data.email, tenantId);
@@ -92,6 +89,26 @@ export interface ChangePasswordWithTokenResult {
   sessionsRevoked?: number;
 }
 
+async function validatePasswordResetToken(
+  db: ReturnType<typeof getDatabaseClient>,
+  token: string,
+  tenantId: string,
+  tokenHash: string,
+) {
+  const tokenRecord = await findValidPasswordResetToken(db, tokenHash, tenantId);
+
+  if (!tokenRecord) {
+    throw new PasswordResetTokenInvalidError();
+  }
+  if (tokenRecord.usedAt) {
+    throw new PasswordResetTokenAlreadyUsedError();
+  }
+  if (new Date() > tokenRecord.expiresAt) {
+    throw new PasswordResetTokenExpiredError();
+  }
+  return tokenRecord;
+}
+
 export const changePasswordWithToken = async (
   config: AppConfig,
   data: {
@@ -108,30 +125,15 @@ export const changePasswordWithToken = async (
   );
 
   const tokenHash = await hashToken(data.token, config.TOKEN_HASH_SALT);
-  const tokenRecord = await findValidPasswordResetToken(db, tokenHash, tenantId);
-
-  if (!tokenRecord) {
-    throw new PasswordResetTokenInvalidError();
-  }
-
-  if (tokenRecord.usedAt) {
-    throw new PasswordResetTokenAlreadyUsedError();
-  }
-
-  if (new Date() > tokenRecord.expiresAt) {
-    throw new PasswordResetTokenExpiredError();
-  }
+  const tokenRecord = await validatePasswordResetToken(db, data.token, tenantId, tokenHash);
 
   validatePasswordAgainstPolicy(data.password, tokenRecord.tenantId);
-
   await screenPasswordForCompromise(config, data.password);
 
   const passwordHash = await hashPassword(data.password);
 
   await updateUserPassword(db, tokenRecord.userId, tokenRecord.tenantId, passwordHash);
-
   await markPasswordResetTokenUsed(db, tokenRecord.id);
-
   await deleteAllPasswordResetTokensForUser(db, tokenRecord.userId, tokenRecord.tenantId);
 
   const tenant = await db.query.tenants.findFirst({
