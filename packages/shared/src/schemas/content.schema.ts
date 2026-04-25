@@ -396,3 +396,96 @@ export const difficultyStatsResponseSchema = z
   .strict();
 
 export type DifficultyStatsResponse = z.infer<typeof difficultyStatsResponseSchema>;
+
+export const seasonSchema = z
+  .object({
+    id: z.string().uuid(),
+    tenantId: z.string().uuid(),
+    seasonNumber: z.number().int().min(1),
+    title: z.string().max(500),
+    theme: z.string(),
+    logline: z.string(),
+    description: z.string().nullish(),
+    threatCurveStart: threatLevelSchema,
+    threatCurveEnd: threatLevelSchema,
+    isActive: z.boolean().default(true),
+    metadata: z.record(z.unknown()).default({}),
+    createdAt: z.string().datetime().nullish(),
+    updatedAt: z.string().datetime().nullish(),
+  })
+  .strict();
+
+export type Season = z.infer<typeof seasonSchema>;
+
+export const seasonListQuerySchema = z
+  .object({
+    seasonNumber: z.number().int().min(1).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .strict();
+
+export type SeasonListQuery = z.infer<typeof seasonListQuerySchema>;
+
+export const seasonListResponseSchema = z
+  .object({
+    data: z.array(seasonSchema),
+  })
+  .strict();
+
+export type SeasonListResponse = z.infer<typeof seasonListResponseSchema>;
+
+export const seasonResponseSchema = z
+  .object({
+    data: seasonSchema,
+  })
+  .strict();
+
+export type SeasonResponse = z.infer<typeof seasonResponseSchema>;
+
+export const chapterSchema = z
+  .object({
+    id: z.string().uuid(),
+    tenantId: z.string().uuid(),
+    seasonId: z.string().uuid(),
+    chapterNumber: z.number().int().min(1),
+    act: z.number().int().min(1).max(3),
+    title: z.string().max(500),
+    description: z.string().nullish(),
+    dayStart: z.number().int().min(0),
+    dayEnd: z.number().int().min(0),
+    difficultyStart: z.number().int().min(1).max(5),
+    difficultyEnd: z.number().int().min(1).max(5),
+    threatLevel: threatLevelSchema,
+    isActive: z.boolean().default(true),
+    metadata: z.record(z.unknown()).default({}),
+    createdAt: z.string().datetime().nullish(),
+    updatedAt: z.string().datetime().nullish(),
+  })
+  .strict();
+
+export type Chapter = z.infer<typeof chapterSchema>;
+
+export const chapterListQuerySchema = z
+  .object({
+    act: z.number().int().min(1).max(3).optional(),
+    isActive: z.boolean().optional(),
+  })
+  .strict();
+
+export type ChapterListQuery = z.infer<typeof chapterListQuerySchema>;
+
+export const chapterListResponseSchema = z
+  .object({
+    data: z.array(chapterSchema),
+  })
+  .strict();
+
+export type ChapterListResponse = z.infer<typeof chapterListResponseSchema>;
+
+export const chapterResponseSchema = z
+  .object({
+    data: chapterSchema,
+  })
+  .strict();
+
+export type ChapterResponse = z.infer<typeof chapterResponseSchema>;

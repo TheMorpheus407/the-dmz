@@ -88,6 +88,27 @@ import {
   emailReadinessCheckSchema,
   emailReadinessResultSchema,
 } from '../src/schemas/email.schema.js';
+import {
+  seasonSchema,
+  seasonListQuerySchema,
+  seasonListResponseSchema,
+  seasonResponseSchema,
+  chapterSchema,
+  chapterListQuerySchema,
+  chapterListResponseSchema,
+  chapterResponseSchema,
+  scenarioSchema,
+  scenarioListQuerySchema,
+  scenarioListResponseSchema,
+  scenarioResponseSchema,
+  documentTemplateSchema,
+  documentTemplateListQuerySchema,
+  documentTemplateListResponseSchema,
+  documentTemplateResponseSchema,
+  emailTemplateListQuerySchema,
+  emailTemplateListResponseSchema,
+  emailTemplateResponseSchema,
+} from '../src/schemas/content.schema.js';
 
 const entries: Array<[string, Record<string, unknown>]> = [
   ['loginJsonSchema', createJsonSchema(loginSchema)],
@@ -167,6 +188,25 @@ const entries: Array<[string, Record<string, unknown>]> = [
   ['emailIntegrationJsonSchema', createJsonSchema(emailIntegrationSchema)],
   ['emailReadinessCheckJsonSchema', createJsonSchema(emailReadinessCheckSchema)],
   ['emailReadinessResultJsonSchema', createJsonSchema(emailReadinessResultSchema)],
+  ['seasonJsonSchema', createJsonSchema(seasonSchema)],
+  ['seasonListQueryJsonSchema', createJsonSchema(seasonListQuerySchema)],
+  ['seasonListResponseJsonSchema', createJsonSchema(seasonListResponseSchema)],
+  ['seasonResponseJsonSchema', createJsonSchema(seasonResponseSchema)],
+  ['chapterJsonSchema', createJsonSchema(chapterSchema)],
+  ['chapterListQueryJsonSchema', createJsonSchema(chapterListQuerySchema)],
+  ['chapterListResponseJsonSchema', createJsonSchema(chapterListResponseSchema)],
+  ['chapterResponseJsonSchema', createJsonSchema(chapterResponseSchema)],
+  ['scenarioJsonSchema', createJsonSchema(scenarioSchema)],
+  ['scenarioListQueryJsonSchema', createJsonSchema(scenarioListQuerySchema)],
+  ['scenarioListResponseJsonSchema', createJsonSchema(scenarioListResponseSchema)],
+  ['scenarioResponseJsonSchema', createJsonSchema(scenarioResponseSchema)],
+  ['documentTemplateJsonSchema', createJsonSchema(documentTemplateSchema)],
+  ['documentTemplateListQueryJsonSchema', createJsonSchema(documentTemplateListQuerySchema)],
+  ['documentTemplateListResponseJsonSchema', createJsonSchema(documentTemplateListResponseSchema)],
+  ['documentTemplateResponseJsonSchema', createJsonSchema(documentTemplateResponseSchema)],
+  ['emailTemplateListQueryJsonSchema', createJsonSchema(emailTemplateListQuerySchema)],
+  ['emailTemplateListResponseJsonSchema', createJsonSchema(emailTemplateListResponseSchema)],
+  ['emailTemplateResponseJsonSchema', createJsonSchema(emailTemplateResponseSchema)],
 ];
 
 const renderExport = (name: string, schema: Record<string, unknown>): string =>

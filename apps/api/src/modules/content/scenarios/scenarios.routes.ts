@@ -1,3 +1,9 @@
+import {
+  scenarioListResponseJsonSchema,
+  scenarioResponseJsonSchema,
+  emailTemplateListResponseJsonSchema,
+} from '@the-dmz/shared/schemas';
+
 import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
 import {
   contentReadRoutePreHandlers,
@@ -29,15 +35,7 @@ export const registerScenarioRoutes = async (fastify: FastifyInstance): Promise<
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: {
-                type: 'array',
-                items: { type: 'object' },
-              },
-            },
-          },
+          200: scenarioListResponseJsonSchema,
           401: errorResponseSchemas.Unauthorized,
           403: tenantInactiveOrForbiddenResponseJsonSchema,
           429: errorResponseSchemas.RateLimitExceeded,
@@ -73,12 +71,7 @@ export const registerScenarioRoutes = async (fastify: FastifyInstance): Promise<
           required: ['id'],
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: { type: 'object' },
-            },
-          },
+          200: scenarioResponseJsonSchema,
           401: errorResponseSchemas.Unauthorized,
           403: tenantInactiveOrForbiddenResponseJsonSchema,
           404: errorResponseSchemas.NotFound,
@@ -121,15 +114,7 @@ export const registerScenarioRoutes = async (fastify: FastifyInstance): Promise<
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: {
-                type: 'array',
-                items: { type: 'object' },
-              },
-            },
-          },
+          200: emailTemplateListResponseJsonSchema,
           401: errorResponseSchemas.Unauthorized,
           403: tenantInactiveOrForbiddenResponseJsonSchema,
           429: errorResponseSchemas.RateLimitExceeded,

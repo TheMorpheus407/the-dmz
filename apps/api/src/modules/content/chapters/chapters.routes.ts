@@ -1,3 +1,5 @@
+import { chapterListResponseJsonSchema } from '@the-dmz/shared/schemas';
+
 import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
 import {
   contentReadRoutePreHandlers,
@@ -33,15 +35,7 @@ export const registerChapterRoutes = async (fastify: FastifyInstance): Promise<v
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: {
-                type: 'array',
-                items: { type: 'object' },
-              },
-            },
-          },
+          200: chapterListResponseJsonSchema,
           401: errorResponseSchemas.Unauthorized,
           403: tenantInactiveOrForbiddenResponseJsonSchema,
           429: errorResponseSchemas.RateLimitExceeded,

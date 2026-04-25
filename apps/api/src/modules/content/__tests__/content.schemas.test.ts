@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { describe, it, expect } from 'vitest';
 
 import {
@@ -12,6 +13,10 @@ import {
   createEmailTemplateBodySchema,
   scenarioListQuerySchema,
   documentTemplateListQuerySchema,
+  scenarioListResponseSchema,
+  scenarioResponseSchema,
+  documentTemplateListResponseSchema,
+  documentTemplateResponseSchema,
 } from '@the-dmz/shared/schemas';
 
 describe('Content Schemas', () => {
@@ -162,6 +167,125 @@ describe('Content Schemas', () => {
 
       expect(scenarioSchema.parse(scenario)).toEqual(scenario);
     });
+
+    it('should validate scenario with minimal fields', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(scenarioSchema.parse(scenario)).toEqual(scenario);
+    });
+
+    it('should reject invalid difficulty (0)', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 0,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(() => scenarioSchema.parse(scenario)).toThrow();
+    });
+
+    it('should reject invalid difficulty (6)', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 6,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(() => scenarioSchema.parse(scenario)).toThrow();
+    });
+
+    it('should reject invalid faction', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        faction: 'Invalid Faction',
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(() => scenarioSchema.parse(scenario)).toThrow();
+    });
+
+    it('should reject missing required createdAt field', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(() => scenarioSchema.parse(scenario)).toThrow();
+    });
+
+    it('should reject missing required updatedAt field', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(() => scenarioSchema.parse(scenario)).toThrow();
+    });
+
+    it('should reject extra unknown fields', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+        unknownField: 'value',
+      };
+
+      expect(() => scenarioSchema.parse(scenario)).toThrow();
+    });
   });
 
   describe('scenarioBeatSchema', () => {
@@ -212,6 +336,103 @@ describe('Content Schemas', () => {
       };
 
       expect(documentTemplateSchema.parse(template)).toEqual(template);
+    });
+
+    it('should validate document template with minimal fields', () => {
+      const template = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Document',
+        documentType: 'VERIFICATION_PACKET',
+        title: 'Test Title',
+        content: 'Test content',
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(documentTemplateSchema.parse(template)).toEqual(template);
+    });
+
+    it('should reject invalid difficulty (0)', () => {
+      const template = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Document',
+        documentType: 'VERIFICATION_PACKET',
+        title: 'Test Title',
+        content: 'Test content',
+        difficulty: 0,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(() => documentTemplateSchema.parse(template)).toThrow();
+    });
+
+    it('should reject invalid difficulty (6)', () => {
+      const template = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Document',
+        documentType: 'VERIFICATION_PACKET',
+        title: 'Test Title',
+        content: 'Test content',
+        difficulty: 6,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(() => documentTemplateSchema.parse(template)).toThrow();
+    });
+
+    it('should reject missing required fields', () => {
+      const template = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Document',
+        documentType: 'VERIFICATION_PACKET',
+        title: 'Test Title',
+        content: 'Test content',
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+      };
+
+      expect(() => documentTemplateSchema.parse(template)).toThrow();
+    });
+
+    it('should reject extra unknown fields', () => {
+      const template = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Document',
+        documentType: 'VERIFICATION_PACKET',
+        title: 'Test Title',
+        content: 'Test content',
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+        unknownField: 'value',
+      };
+
+      expect(() => documentTemplateSchema.parse(template)).toThrow();
     });
   });
 
@@ -280,6 +501,11 @@ describe('Content Schemas', () => {
     it('should accept empty query', () => {
       expect(scenarioListQuerySchema.parse({})).toEqual({});
     });
+
+    it('should reject extra unknown fields', () => {
+      const query = { unknownField: 'value' };
+      expect(() => scenarioListQuerySchema.parse(query)).toThrow();
+    });
   });
 
   describe('documentTemplateListQuerySchema', () => {
@@ -292,6 +518,282 @@ describe('Content Schemas', () => {
       };
 
       expect(documentTemplateListQuerySchema.parse(query)).toEqual(query);
+    });
+
+    it('should accept empty query', () => {
+      expect(documentTemplateListQuerySchema.parse({})).toEqual({});
+    });
+
+    it('should reject extra unknown fields', () => {
+      const query = { unknownField: 'value' };
+      expect(() => documentTemplateListQuerySchema.parse(query)).toThrow();
+    });
+  });
+
+  describe('scenarioListResponseSchema', () => {
+    it('should validate list response structure', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const response = {
+        data: [scenario],
+      };
+      expect(scenarioListResponseSchema.parse(response)).toEqual(response);
+    });
+
+    it('should reject response without data array', () => {
+      const response = {
+        data: 'not-an-array',
+      };
+      expect(() => scenarioListResponseSchema.parse(response)).toThrow();
+    });
+
+    it('should reject response with invalid item in data array', () => {
+      const response = {
+        data: [{ invalid: 'scenario' }],
+      };
+      expect(() => scenarioListResponseSchema.parse(response)).toThrow();
+    });
+
+    it('should reject extra unknown fields', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const response = {
+        data: [scenario],
+        unknownField: 'value',
+      };
+      expect(() => scenarioListResponseSchema.parse(response)).toThrow();
+    });
+  });
+
+  describe('scenarioResponseSchema', () => {
+    it('should validate response with nested beats structure', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const beat = {
+        id: '123e4567-e89b-12d3-a456-426614174002',
+        scenarioId: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        beatIndex: 0,
+        dayOffset: 1,
+        name: 'First Beat',
+        requiredIndicators: [],
+        optionalIndicators: [],
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const response = {
+        data: {
+          scenario,
+          beats: [beat],
+        },
+      };
+      expect(scenarioResponseSchema.parse(response)).toEqual(response);
+    });
+
+    it('should reject response with data as array', () => {
+      const response = {
+        data: [],
+      };
+      expect(() => scenarioResponseSchema.parse(response)).toThrow();
+    });
+
+    it('should reject response with invalid scenario data', () => {
+      const response = {
+        data: { scenario: { invalid: 'scenario' }, beats: [] },
+      };
+      expect(() => scenarioResponseSchema.parse(response)).toThrow();
+    });
+
+    it('should reject response with invalid beat in beats array', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const response = {
+        data: {
+          scenario,
+          beats: [{ invalid: 'beat' }],
+        },
+      };
+      expect(() => scenarioResponseSchema.parse(response)).toThrow();
+    });
+
+    it('should reject extra unknown fields', () => {
+      const scenario = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Scenario',
+        difficulty: 3,
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const response = {
+        data: { scenario, beats: [] },
+        unknownField: 'value',
+      };
+      expect(() => scenarioResponseSchema.parse(response)).toThrow();
+    });
+  });
+
+  describe('documentTemplateListResponseSchema', () => {
+    it('should validate list response structure', () => {
+      const template = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Document',
+        documentType: 'VERIFICATION_PACKET',
+        title: 'Test Title',
+        content: 'Test content',
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const response = {
+        data: [template],
+      };
+      expect(documentTemplateListResponseSchema.parse(response)).toEqual(response);
+    });
+
+    it('should reject response without data array', () => {
+      const response = {
+        data: 'not-an-array',
+      };
+      expect(() => documentTemplateListResponseSchema.parse(response)).toThrow();
+    });
+
+    it('should reject response with invalid item in data array', () => {
+      const response = {
+        data: [{ invalid: 'template' }],
+      };
+      expect(() => documentTemplateListResponseSchema.parse(response)).toThrow();
+    });
+
+    it('should reject extra unknown fields', () => {
+      const template = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Document',
+        documentType: 'VERIFICATION_PACKET',
+        title: 'Test Title',
+        content: 'Test content',
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const response = {
+        data: [template],
+        unknownField: 'value',
+      };
+      expect(() => documentTemplateListResponseSchema.parse(response)).toThrow();
+    });
+  });
+
+  describe('documentTemplateResponseSchema', () => {
+    it('should validate single document template response structure', () => {
+      const template = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Document',
+        documentType: 'VERIFICATION_PACKET',
+        title: 'Test Title',
+        content: 'Test content',
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const response = {
+        data: template,
+      };
+      expect(documentTemplateResponseSchema.parse(response)).toEqual(response);
+    });
+
+    it('should reject response with data as array', () => {
+      const response = {
+        data: [],
+      };
+      expect(() => documentTemplateResponseSchema.parse(response)).toThrow();
+    });
+
+    it('should reject response with invalid template data', () => {
+      const response = {
+        data: { invalid: 'template' },
+      };
+      expect(() => documentTemplateResponseSchema.parse(response)).toThrow();
+    });
+
+    it('should reject extra unknown fields', () => {
+      const template = {
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        tenantId: '123e4567-e89b-12d3-a456-426614174001',
+        name: 'Test Document',
+        documentType: 'VERIFICATION_PACKET',
+        title: 'Test Title',
+        content: 'Test content',
+        language: 'en',
+        locale: 'en-US',
+        metadata: {},
+        isActive: true,
+        createdAt: '2026-01-01T00:00:00Z',
+        updatedAt: '2026-01-01T00:00:00Z',
+      };
+      const response = {
+        data: template,
+        unknownField: 'value',
+      };
+      expect(() => documentTemplateResponseSchema.parse(response)).toThrow();
     });
   });
 });

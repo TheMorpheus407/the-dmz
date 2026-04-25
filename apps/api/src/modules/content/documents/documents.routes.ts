@@ -1,3 +1,5 @@
+import { documentTemplateListResponseJsonSchema } from '@the-dmz/shared/schemas';
+
 import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
 import {
   contentReadRoutePreHandlers,
@@ -34,15 +36,7 @@ export const registerDocumentRoutes = async (fastify: FastifyInstance): Promise<
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: {
-                type: 'array',
-                items: { type: 'object' },
-              },
-            },
-          },
+          200: documentTemplateListResponseJsonSchema,
           401: errorResponseSchemas.Unauthorized,
           403: tenantInactiveOrForbiddenResponseJsonSchema,
           429: errorResponseSchemas.RateLimitExceeded,

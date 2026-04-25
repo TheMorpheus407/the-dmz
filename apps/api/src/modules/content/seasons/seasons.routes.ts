@@ -1,3 +1,5 @@
+import { seasonListResponseJsonSchema, seasonResponseJsonSchema } from '@the-dmz/shared/schemas';
+
 import { errorResponseSchemas } from '../../../shared/schemas/error-schemas.js';
 import {
   contentReadRoutePreHandlers,
@@ -26,15 +28,7 @@ export const registerSeasonRoutes = async (fastify: FastifyInstance): Promise<vo
           },
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: {
-                type: 'array',
-                items: { type: 'object' },
-              },
-            },
-          },
+          200: seasonListResponseJsonSchema,
           401: errorResponseSchemas.Unauthorized,
           403: tenantInactiveOrForbiddenResponseJsonSchema,
           429: errorResponseSchemas.RateLimitExceeded,
@@ -68,12 +62,7 @@ export const registerSeasonRoutes = async (fastify: FastifyInstance): Promise<vo
           required: ['id'],
         },
         response: {
-          200: {
-            type: 'object',
-            properties: {
-              data: { type: 'object' },
-            },
-          },
+          200: seasonResponseJsonSchema,
           401: errorResponseSchemas.Unauthorized,
           403: tenantInactiveOrForbiddenResponseJsonSchema,
           404: errorResponseSchemas.NotFound,
