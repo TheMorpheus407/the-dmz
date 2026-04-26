@@ -46,18 +46,13 @@ export type RetentionJobData =
   | CleanupExpiredArchivesJobData
   | AnonymizeUserJobData;
 
-export const DEFAULT_JOB_OPTIONS = {
-  removeOnComplete: {
-    age: 3600,
-    count: 500,
-  },
-  removeOnFail: {
-    age: 604800,
-    count: 1000,
-  },
-};
+import { RETENTION_QUEUE_DEFAULTS } from '../../../shared/queue/defaults.js';
 
-export const DEFAULT_CONCURRENCY = 3;
+export { RETENTION_QUEUE_DEFAULTS };
+
+export const DEFAULT_JOB_OPTIONS = RETENTION_QUEUE_DEFAULTS.jobOptions;
+export const DEFAULT_CONCURRENCY = RETENTION_QUEUE_DEFAULTS.concurrency;
+export const MAX_JOB_ATTEMPTS = RETENTION_QUEUE_DEFAULTS.maxAttempts;
 export const DEFAULT_BATCH_SIZE = 1000;
 
 export {
@@ -65,5 +60,3 @@ export {
   RETRY_STRATEGY,
   getQueueConfig,
 } from '../../../shared/queue/retry.js';
-
-export const MAX_JOB_ATTEMPTS = 5;

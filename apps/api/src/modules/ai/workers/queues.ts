@@ -44,22 +44,15 @@ export type AiGenerationJobData =
   | BatchGenerateJobData
   | RegenerateFailedJobData;
 
-export const DEFAULT_JOB_OPTIONS = {
-  removeOnComplete: {
-    age: 3600,
-    count: 1000,
-  },
-  removeOnFail: {
-    age: 604800,
-    count: 5000,
-  },
-};
+import { AI_QUEUE_DEFAULTS } from '../../../shared/queue/defaults.js';
 
-export const DEFAULT_CONCURRENCY = 5;
+export { AI_QUEUE_DEFAULTS };
+
+export const DEFAULT_JOB_OPTIONS = AI_QUEUE_DEFAULTS.jobOptions;
+export const DEFAULT_CONCURRENCY = AI_QUEUE_DEFAULTS.concurrency;
+export const MAX_JOB_ATTEMPTS = AI_QUEUE_DEFAULTS.maxAttempts;
 
 export { EXPONENTIAL_BACKOFF_DELAYS, RETRY_STRATEGY } from '../../../shared/queue/retry.js';
-
-export const MAX_JOB_ATTEMPTS = 10;
 
 export function createJobIdempotencyKey(jobType: JobType, data: AiGenerationJobData): string {
   const base = `${jobType}:${data.tenantId}`;

@@ -2,19 +2,11 @@ export const WEBHOOK_QUEUE_NAMES = {
   WEBHOOK_DELIVERY: 'webhook-delivery',
 } as const;
 
-export const WEBHOOK_JOB_OPTIONS = {
-  attempts: 3,
-  backoff: {
-    type: 'exponential' as const,
-    delay: 1000,
-  },
-  removeOnComplete: {
-    count: 100,
-  },
-  removeOnFail: {
-    count: 500,
-  },
-} as const;
+import { WEBHOOK_QUEUE_DEFAULTS } from '../../../shared/queue/defaults.js';
+
+export { WEBHOOK_QUEUE_DEFAULTS };
+
+export const WEBHOOK_JOB_OPTIONS = WEBHOOK_QUEUE_DEFAULTS.jobOptions;
 
 export interface WebhookDeliveryJobData {
   type: 'deliver-webhook';
