@@ -1,4 +1,5 @@
 import type { EmailInstance, EmailState } from '@the-dmz/shared';
+import { EMAIL_STATUS } from '@the-dmz/shared';
 
 export type UrgencyLevel = 'low' | 'medium' | 'high' | 'critical';
 
@@ -37,13 +38,21 @@ export const CATEGORY_LABELS: Record<EmailCategory, string> = {
 };
 
 export function getEmailCategory(status: EmailStateStatus): EmailCategory {
-  if (status === 'pending' || status === 'opened' || status === 'request_verification') {
+  if (
+    status === EMAIL_STATUS.PENDING ||
+    status === EMAIL_STATUS.OPENED ||
+    status === EMAIL_STATUS.REQUEST_VERIFICATION
+  ) {
     return 'pending';
   }
-  if (status === 'flagged') {
+  if (status === EMAIL_STATUS.FLAGGED) {
     return 'flagged';
   }
-  if (status === 'approved' || status === 'denied' || status === 'deferred') {
+  if (
+    status === EMAIL_STATUS.APPROVED ||
+    status === EMAIL_STATUS.DENIED ||
+    status === EMAIL_STATUS.DEFERRED
+  ) {
     return 'archived';
   }
   return 'new';
