@@ -1,7 +1,9 @@
 import { evaluateFlag } from '../feature-flags/index.js';
+import { channelTypes, type ChannelType } from '../../db/schema/social/index.js';
 
 import type { AppConfig } from '../../config.js';
-import type { ChannelType } from '../../db/schema/social/index.js';
+
+const [PARTY, GUILD, DIRECT] = channelTypes;
 
 interface FlagResult {
   enabled: true;
@@ -62,13 +64,13 @@ export async function requireChannelChatEnabled(
   tenantId: string,
   channelType: ChannelType,
 ): Promise<FlagResult | FlagResultDisabled> {
-  if (channelType === 'party') {
+  if (channelType === PARTY) {
     return requirePartyChatEnabled(config, tenantId);
   }
-  if (channelType === 'guild') {
+  if (channelType === GUILD) {
     return requireGuildChatEnabled(config, tenantId);
   }
-  if (channelType === 'direct') {
+  if (channelType === DIRECT) {
     return requireDirectChatEnabled(config, tenantId);
   }
   return { enabled: true };
