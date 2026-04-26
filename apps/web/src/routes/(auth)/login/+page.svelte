@@ -20,6 +20,8 @@
     if (result.error) {
       error = result.error;
       loading = false;
+      email = '';
+      password = '';
       return;
     }
 
