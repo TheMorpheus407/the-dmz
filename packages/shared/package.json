@@ -52,6 +52,11 @@
       "import": "./dist/esm/constants/index.js",
       "require": "./dist/cjs/constants/index.js"
     },
+    "./constants/auth": {
+      "types": "./dist/esm/constants/auth.d.ts",
+      "import": "./dist/esm/constants/auth.js",
+      "require": "./dist/cjs/constants/auth.js"
+    },
     "./constants/error-codes": {
       "types": "./dist/esm/constants/error-codes.d.ts",
       "import": "./dist/esm/constants/error-codes.js",
