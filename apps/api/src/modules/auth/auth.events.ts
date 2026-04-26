@@ -1,5 +1,103 @@
-/* eslint-disable max-lines */
 import type { DomainEvent } from '../../shared/events/event-types.js';
+import type {
+  AuthUserCreatedPayload,
+  AuthUserUpdatedPayload,
+  AuthUserDeactivatedPayload,
+} from './events/user.events.js';
+import type {
+  AuthSessionCreatedPayload,
+  AuthSessionRevokedPayload,
+  AuthSessionRevokedFederatedPayload,
+  AuthSessionRevocationFailedPayload,
+  AuthSessionRevocationIgnoredPayload,
+  AuthSessionRevokedAdminPayload,
+  AuthSessionRevokedUserAllPayload,
+  AuthSessionRevokedTenantAllPayload,
+  AuthSessionRevocationDeniedPayload,
+} from './events/session.events.js';
+import type {
+  AuthLoginFailedPayload,
+  AuthPasswordResetRequestedPayload,
+  AuthPasswordResetCompletedPayload,
+  AuthPasswordResetFailedPayload,
+  AuthAccountLockedPayload,
+  AuthAccountUnlockedPayload,
+  AuthNewDeviceSessionPayload,
+} from './events/login.events.js';
+import type {
+  AuthMfaEnabledPayload,
+  AuthMfaDisabledPayload,
+  AuthMfaRecoveryCodesUsedPayload,
+  AuthMfaPolicyUpdatedPayload,
+  AuthMfaChallengeRequiredPayload,
+  AuthMfaChallengeSucceededPayload,
+  AuthMfaChallengeFailedPayload,
+  AuthMfaEnrollmentDeferredPayload,
+  AuthMfaEnrollmentExpiredPayload,
+  AuthStepUpRequiredPayload,
+  AuthStepUpSucceededPayload,
+  AuthStepUpFailedPayload,
+  AuthAdaptiveMfaTriggeredPayload,
+} from './events/mfa.events.js';
+import type {
+  JWTSigningKeyCreatedPayload,
+  JWTSigningKeyRotatedPayload,
+  JWTSigningKeyRevokedPayload,
+} from './events/jwt.events.js';
+import type {
+  OAuthClientCreatedPayload,
+  OAuthClientRotatedPayload,
+  OAuthClientRevokedPayload,
+  OAuthTokenIssuedPayload,
+  OAuthTokenRevokedPayload,
+  OAuthScopeDeniedPayload,
+} from './events/oauth.events.js';
+import type {
+  SSOLoginInitiatedPayload,
+  SSOLoginSuccessPayload,
+  SSOLoginFailedPayload,
+  SSOAssertionValidatedPayload,
+  SSOAssertionFailedPayload,
+  SSOTokenExchangedPayload,
+  SSOAccountLinkedPayload,
+  SSOAccountLinkingFailedPayload,
+  SSOJitProvisionedPayload,
+  SSOJitDeniedPayload,
+  SSOMetadataRefreshedPayload,
+  SSOMetadataFailedPayload,
+  SSOValidationStartedPayload,
+  SSOValidationCompletedPayload,
+  SSOValidationFailedPayload,
+  SSOActivationSucceededPayload,
+  SSOActivationFailedPayload,
+  SSODeactivationSucceededPayload,
+  SSOLogoutInitiatedPayload,
+  SSOLogoutProcessedPayload,
+  SSOLogoutFailedPayload,
+} from './events/sso.events.js';
+import type {
+  SCIMUserProvisionedPayload,
+  SCIMUserUpdatedPayload,
+  SCIMUserDeprovisionedPayload,
+  SCIMUserReactivatedPayload,
+  SCIMGroupProvisionedPayload,
+  SCIMGroupUpdatedPayload,
+  SCIMGroupDeletedPayload,
+  SCIMGroupMembershipChangedPayload,
+  SCIMJitReconciliationPayload,
+} from './events/scim.events.js';
+import type {
+  AuthDelegationRoleCreatedPayload,
+  AuthDelegationRoleUpdatedPayload,
+  AuthDelegationRoleAssignedPayload,
+  AuthDelegationDeniedPayload,
+} from './events/delegation.events.js';
+import type {
+  AuthApiKeyCreatedPayload,
+  AuthApiKeyRotatedPayload,
+  AuthApiKeyRevokedPayload,
+  AuthApiKeyRejectedPayload,
+} from './events/api-key.events.js';
 
 export const AUTH_EVENTS = {
   USER_CREATED: 'auth.user.created',
@@ -85,641 +183,6 @@ export const AUTH_EVENTS = {
 
 export type AuthEventType = (typeof AUTH_EVENTS)[keyof typeof AUTH_EVENTS];
 
-export interface AuthUserCreatedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-}
-
-export interface AuthUserUpdatedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  changes: Array<keyof AuthUserUpdatedPayload>;
-}
-
-export interface AuthUserDeactivatedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-}
-
-export interface AuthSessionCreatedPayload {
-  sessionId: string;
-  userId: string;
-  tenantId: string;
-}
-
-export interface AuthSessionRevokedPayload {
-  sessionId: string;
-  userId: string;
-  tenantId: string;
-  reason: 'logout' | 'expired' | 'revoked' | 'refresh_rotation';
-}
-
-export interface AuthLoginFailedPayload {
-  tenantId: string;
-  email: string;
-  reason: 'invalid_credentials' | 'user_inactive' | 'account_locked';
-  correlationId: string;
-}
-
-export interface AuthPasswordResetRequestedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-}
-
-export interface AuthPasswordResetCompletedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  sessionsRevoked: number;
-}
-
-export interface AuthPasswordResetFailedPayload {
-  tenantId: string;
-  email: string;
-  reason: 'expired' | 'invalid' | 'already_used' | 'policy_denied' | 'rate_limited';
-  correlationId: string;
-}
-
-export interface AuthAccountLockedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  reason: string;
-  riskContext?: {
-    ipAddress?: string;
-    userAgent?: string;
-    deviceFingerprint?: string;
-    location?: string;
-    isAnomalous?: boolean;
-  };
-}
-
-export interface AuthAccountUnlockedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  reason: string;
-}
-
-export interface AuthNewDeviceSessionPayload {
-  sessionId: string;
-  userId: string;
-  email: string;
-  tenantId: string;
-  riskContext: {
-    ipAddress?: string;
-    userAgent?: string;
-    deviceFingerprint?: string;
-    location?: string;
-    isNewDevice: boolean;
-    isAnomalous?: boolean;
-  };
-}
-
-export interface AuthMfaEnabledPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  method: 'totp' | 'webauthn' | 'email';
-}
-
-export interface AuthMfaDisabledPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  reason: 'user_request' | 'admin_reset' | 'compromised';
-}
-
-export interface AuthMfaRecoveryCodesUsedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  riskContext?: {
-    ipAddress?: string;
-    userAgent?: string;
-    location?: string;
-  };
-}
-
-export interface JWTSigningKeyCreatedPayload {
-  kid: string;
-  keyType: string;
-  algorithm: string;
-}
-
-export interface JWTSigningKeyRotatedPayload {
-  oldKid: string;
-  newKid: string;
-}
-
-export interface JWTSigningKeyRevokedPayload {
-  kid: string;
-  reason: string;
-}
-
-export interface OAuthClientCreatedPayload {
-  clientId: string;
-  name: string;
-  tenantId: string;
-  scopes: string[];
-}
-
-export interface OAuthClientRotatedPayload {
-  clientId: string;
-  name: string;
-  tenantId: string;
-}
-
-export interface OAuthClientRevokedPayload {
-  clientId: string;
-  name: string;
-  tenantId: string;
-  reason: string;
-}
-
-export interface OAuthTokenIssuedPayload {
-  clientId: string;
-  tenantId: string;
-  scopes: string[];
-}
-
-export interface OAuthScopeDeniedPayload {
-  clientId: string;
-  tenantId: string;
-  requestedScope: string;
-  requiredScope: string;
-}
-
-export interface SSOLoginInitiatedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  redirectUri?: string;
-}
-
-export interface SSOLoginSuccessPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  userId: string;
-  email: string;
-  subject: string;
-  linkingOutcome: string;
-}
-
-export interface SSOLoginFailedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  reason: string;
-  failureCode: string;
-  correlationId: string;
-}
-
-export interface SSOAssertionValidatedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  subject: string;
-  valid: boolean;
-  failureReason?: string;
-}
-
-export interface SSOAssertionFailedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  failureCode: string;
-  failureReason: string;
-  correlationId: string;
-}
-
-export interface SSOTokenExchangedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  userId: string;
-  subject: string;
-}
-
-export interface SSOAccountLinkedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  userId: string;
-  subject: string;
-  linkingOutcome: string;
-}
-
-export interface SSOAccountLinkingFailedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  subject: string;
-  email?: string;
-  reason: string;
-  failureCode: string;
-  correlationId: string;
-}
-
-export interface SSOJitProvisionedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  userId: string;
-  email: string;
-  role: string;
-}
-
-export interface SSOJitDeniedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  subject: string;
-  email?: string;
-  reason: string;
-}
-
-export interface SSOMetadataRefreshedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-}
-
-export interface SSOMetadataFailedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  reason: string;
-  correlationId: string;
-}
-
-export interface SCIMUserProvisionedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  lifecycleOutcome: string;
-  idempotencyKey: string;
-  externalId?: string;
-}
-
-export interface SCIMUserUpdatedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  changes: string[];
-  lifecycleOutcome: string;
-}
-
-export interface SCIMUserDeprovisionedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-  reason: 'deactivate' | 'delete';
-  sessionsRevoked: number;
-}
-
-export interface SCIMUserReactivatedPayload {
-  userId: string;
-  email: string;
-  tenantId: string;
-}
-
-export interface SCIMGroupProvisionedPayload {
-  groupId: string;
-  name: string;
-  tenantId: string;
-  lifecycleOutcome: string;
-}
-
-export interface SCIMGroupUpdatedPayload {
-  groupId: string;
-  name: string;
-  tenantId: string;
-  changes: string[];
-}
-
-export interface SCIMGroupDeletedPayload {
-  groupId: string;
-  name: string;
-  tenantId: string;
-}
-
-export interface SCIMGroupMembershipChangedPayload {
-  groupId: string;
-  groupName: string;
-  tenantId: string;
-  userIdsAdded: string[];
-  userIdsRemoved: string[];
-}
-
-export interface SCIMJitReconciliationPayload {
-  tenantId: string;
-  scimUserId?: string;
-  jitUserId: string;
-  email: string;
-  outcome: string;
-  reason: string;
-}
-
-export interface SSOValidationStartedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc' | 'scim';
-  correlationId: string;
-  executedBy?: string;
-}
-
-export interface SSOValidationCompletedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc' | 'scim';
-  validationId: string;
-  overallStatus: 'ok' | 'warning' | 'failed';
-  checksPassed: number;
-  checksFailed: number;
-  checksWarning: number;
-  correlationId: string;
-}
-
-export interface SSOValidationFailedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc' | 'scim';
-  correlationId: string;
-  reason: string;
-  errorCode: string;
-}
-
-export interface SSOActivationSucceededPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  enforceSSOOnly: boolean;
-  activatedBy: string;
-  previousValidationId?: string;
-}
-
-export interface SSOActivationFailedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  reason: string;
-  errorCode: string;
-  correlationId: string;
-}
-
-export interface SSODeactivationSucceededPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  deactivatedBy: string;
-}
-
-export interface SSOLogoutInitiatedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  logoutType: 'back_channel' | 'front_channel' | 'idp_initiated' | 'sp_initiated';
-  correlationId: string;
-  userId?: string;
-}
-
-export interface SSOLogoutProcessedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  userId: string;
-  sessionsRevoked: number;
-  result: 'revoked' | 'already_revoked' | 'failed';
-  correlationId: string;
-}
-
-export interface SSOLogoutFailedPayload {
-  tenantId: string;
-  ssoProviderId: string;
-  providerType: 'saml' | 'oidc';
-  reason: string;
-  errorCode: string;
-  correlationId: string;
-}
-
-export interface AuthSessionRevokedFederatedPayload {
-  sessionId: string;
-  userId: string;
-  tenantId: string;
-  reason: 'saml_logout' | 'oidc_logout' | 'scim_deprovision' | 'admin_revocation';
-  sourceType: 'saml' | 'oidc' | 'scim';
-  ssoProviderId?: string;
-  correlationId: string;
-  sessionsRevoked: number;
-}
-
-export interface AuthSessionRevocationFailedPayload {
-  tenantId: string;
-  userId?: string;
-  reason: string;
-  errorCode: string;
-  sourceType: 'saml' | 'oidc' | 'scim';
-  correlationId: string;
-}
-
-export interface AuthSessionRevocationIgnoredPayload {
-  tenantId: string;
-  userId?: string;
-  reason: string;
-  sourceType: 'saml' | 'oidc' | 'scim';
-  correlationId: string;
-}
-
-export interface AuthSessionRevokedAdminPayload {
-  sessionId: string;
-  userId: string;
-  tenantId: string;
-  reason: 'admin_revoked';
-  initiatedBy: string;
-  correlationId: string;
-}
-
-export interface AuthSessionRevokedUserAllPayload {
-  userId: string;
-  tenantId: string;
-  sessionsRevoked: number;
-  reason: 'admin_revoked';
-  initiatedBy: string;
-  correlationId: string;
-}
-
-export interface AuthSessionRevokedTenantAllPayload {
-  tenantId: string;
-  sessionsRevoked: number;
-  reason: 'tenant_wide_admin_revocation';
-  initiatedBy: string;
-  correlationId: string;
-}
-
-export interface AuthSessionRevocationDeniedPayload {
-  sessionId?: string;
-  userId?: string;
-  tenantId: string;
-  reason: string;
-  initiatedBy: string;
-  correlationId: string;
-}
-
-export interface AuthMfaPolicyUpdatedPayload {
-  tenantId: string;
-  updatedBy: string;
-  previousPolicy: Record<string, unknown>;
-  newPolicy: Record<string, unknown>;
-}
-
-export interface AuthMfaChallengeRequiredPayload {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  method: string;
-  reason: 'login' | 'step_up' | 'adaptive';
-}
-
-export interface AuthMfaChallengeSucceededPayload {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  method: string;
-  challengeOutcome: string;
-}
-
-export interface AuthMfaChallengeFailedPayload {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  method: string;
-  failureReason: string;
-  attempts: number;
-}
-
-export interface AuthMfaEnrollmentDeferredPayload {
-  userId: string;
-  tenantId: string;
-  gracePeriodEndDate: string;
-}
-
-export interface AuthMfaEnrollmentExpiredPayload {
-  userId: string;
-  tenantId: string;
-  reason: string;
-}
-
-export interface AuthStepUpRequiredPayload {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  action: string;
-  correlationId: string;
-}
-
-export interface AuthStepUpSucceededPayload {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  action: string;
-  proofId: string;
-}
-
-export interface AuthStepUpFailedPayload {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  action: string;
-  failureReason: string;
-}
-
-export interface AuthAdaptiveMfaTriggeredPayload {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  triggers: string[];
-  riskScore: number;
-}
-
-export interface AuthDelegationRoleCreatedPayload {
-  actorId: string;
-  tenantId: string;
-  roleId: string;
-  roleName: string;
-  permissions: string[];
-  correlationId: string;
-}
-
-export interface AuthDelegationRoleUpdatedPayload {
-  actorId: string;
-  tenantId: string;
-  roleId: string;
-  roleName: string;
-  permissions: string[];
-  correlationId: string;
-}
-
-export interface AuthDelegationRoleAssignedPayload {
-  actorId: string;
-  tenantId: string;
-  targetUserId: string;
-  roleId: string;
-  roleName: string;
-  scope: string | null;
-  expiresAt: string | null;
-  correlationId: string;
-}
-
-export interface AuthDelegationDeniedPayload {
-  actorId: string;
-  tenantId: string;
-  targetUserId?: string;
-  roleId?: string;
-  roleName?: string;
-  permissions?: string[];
-  reason: string;
-  outcome: string;
-  correlationId: string;
-}
-
-export interface AuthApiKeyCreatedPayload {
-  keyId: string;
-  name: string;
-  tenantId: string;
-  ownerType: string;
-  ownerId?: string;
-  scopes: string[];
-  createdBy: string;
-}
-
-export interface AuthApiKeyRotatedPayload {
-  keyId: string;
-  name: string;
-  tenantId: string;
-  ownerType: string;
-  ownerId?: string;
-  rotatedBy: string;
-}
-
-export interface AuthApiKeyRevokedPayload {
-  keyId: string;
-  name: string;
-  tenantId: string;
-  ownerType: string;
-  ownerId?: string;
-  revokedBy: string;
-  reason?: string;
-}
-
-export interface AuthApiKeyRejectedPayload {
-  keyId: string;
-  tenantId: string;
-  reason: 'invalid' | 'revoked' | 'expired' | 'rotation_grace_expired' | 'scope_denied';
-  correlationId: string;
-}
-
 export interface AuthEventParams {
   source: string;
   correlationId: string;
@@ -751,6 +214,7 @@ export type AuthEventPayloadMap = {
   [AUTH_EVENTS.OAUTH_CLIENT_ROTATED]: OAuthClientRotatedPayload;
   [AUTH_EVENTS.OAUTH_CLIENT_REVOKED]: OAuthClientRevokedPayload;
   [AUTH_EVENTS.OAUTH_TOKEN_ISSUED]: OAuthTokenIssuedPayload;
+  [AUTH_EVENTS.OAUTH_TOKEN_REVOKED]: OAuthTokenRevokedPayload;
   [AUTH_EVENTS.OAUTH_SCOPE_DENIED]: OAuthScopeDeniedPayload;
   [AUTH_EVENTS.SSO_LOGIN_INITIATED]: SSOLoginInitiatedPayload;
   [AUTH_EVENTS.SSO_LOGIN_SUCCESS]: SSOLoginSuccessPayload;
@@ -813,4 +277,14 @@ export type AuthDomainEvent<T extends AuthEventType = AuthEventType> = DomainEve
   AuthEventPayloadMap[T]
 >;
 
+export * from './events/user.events.js';
+export * from './events/session.events.js';
+export * from './events/login.events.js';
+export * from './events/mfa.events.js';
+export * from './events/jwt.events.js';
+export * from './events/oauth.events.js';
+export * from './events/sso.events.js';
+export * from './events/scim.events.js';
+export * from './events/delegation.events.js';
+export * from './events/api-key.events.js';
 export * from './events/index.js';

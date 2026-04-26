@@ -6,8 +6,8 @@ import type {
   OAuthClientRevokedPayload,
   OAuthTokenIssuedPayload,
   OAuthScopeDeniedPayload,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './oauth.events.js';
+import type { AuthDomainEvent } from '../auth.events.js';
 
 interface OAuthEventParams {
   source: string;

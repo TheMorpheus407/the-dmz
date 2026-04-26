@@ -10,9 +10,8 @@ import type {
   SCIMGroupDeletedPayload,
   SCIMGroupMembershipChangedPayload,
   SCIMJitReconciliationPayload,
-  AuthEventParams,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './scim.events.js';
+import type { AuthEventParams, AuthDomainEvent } from '../auth.events.js';
 
 export const createSCIMUserProvisionedEvent = (
   params: AuthEventParams & { payload: SCIMUserProvisionedPayload },

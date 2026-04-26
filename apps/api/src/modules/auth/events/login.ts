@@ -8,9 +8,8 @@ import type {
   AuthAccountLockedPayload,
   AuthAccountUnlockedPayload,
   AuthNewDeviceSessionPayload,
-  AuthEventParams,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './login.events.js';
+import type { AuthEventParams, AuthDomainEvent } from '../auth.events.js';
 
 export const createAuthLoginFailedEvent = (
   params: AuthEventParams & { payload: AuthLoginFailedPayload },

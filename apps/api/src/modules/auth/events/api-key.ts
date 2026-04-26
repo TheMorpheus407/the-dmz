@@ -1,12 +1,12 @@
 import { AUTH_EVENTS } from '../auth.events.js';
 
+import type { AuthDomainEvent } from '../auth.events.js';
 import type {
   AuthApiKeyCreatedPayload,
   AuthApiKeyRotatedPayload,
   AuthApiKeyRevokedPayload,
   AuthApiKeyRejectedPayload,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './api-key.events.js';
 
 interface ApiKeyEventParams {
   source: string;

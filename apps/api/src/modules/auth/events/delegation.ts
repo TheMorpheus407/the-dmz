@@ -5,9 +5,8 @@ import type {
   AuthDelegationRoleUpdatedPayload,
   AuthDelegationRoleAssignedPayload,
   AuthDelegationDeniedPayload,
-  AuthEventParams,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './delegation.events.js';
+import type { AuthEventParams, AuthDomainEvent } from '../auth.events.js';
 
 export const createAuthDelegationRoleCreatedEvent = (
   params: AuthEventParams & { payload: AuthDelegationRoleCreatedPayload },

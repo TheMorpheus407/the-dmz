@@ -10,9 +10,8 @@ import type {
   AuthSessionRevokedUserAllPayload,
   AuthSessionRevokedTenantAllPayload,
   AuthSessionRevocationDeniedPayload,
-  AuthEventParams,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './session.events.js';
+import type { AuthEventParams, AuthDomainEvent } from '../auth.events.js';
 
 export const createAuthSessionCreatedEvent = (
   params: AuthEventParams & { payload: AuthSessionCreatedPayload },

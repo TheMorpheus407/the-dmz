@@ -4,8 +4,8 @@ import type {
   JWTSigningKeyCreatedPayload,
   JWTSigningKeyRotatedPayload,
   JWTSigningKeyRevokedPayload,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './jwt.events.js';
+import type { AuthDomainEvent } from '../auth.events.js';
 
 interface JWTSigningKeyEventParams {
   source: string;

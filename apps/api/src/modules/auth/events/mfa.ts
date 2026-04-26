@@ -14,9 +14,8 @@ import type {
   AuthStepUpSucceededPayload,
   AuthStepUpFailedPayload,
   AuthAdaptiveMfaTriggeredPayload,
-  AuthEventParams,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './mfa.events.js';
+import type { AuthEventParams, AuthDomainEvent } from '../auth.events.js';
 
 export const createAuthMfaEnabledEvent = (
   params: AuthEventParams & { payload: AuthMfaEnabledPayload },

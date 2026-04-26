@@ -22,8 +22,8 @@ import type {
   SSOLogoutInitiatedPayload,
   SSOLogoutProcessedPayload,
   SSOLogoutFailedPayload,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './sso.events.js';
+import type { AuthDomainEvent } from '../auth.events.js';
 
 interface SSOEventParams {
   source: string;

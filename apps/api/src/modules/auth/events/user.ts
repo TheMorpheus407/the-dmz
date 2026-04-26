@@ -4,9 +4,8 @@ import type {
   AuthUserCreatedPayload,
   AuthUserUpdatedPayload,
   AuthUserDeactivatedPayload,
-  AuthEventParams,
-  AuthDomainEvent,
-} from '../auth.events.js';
+} from './user.events.js';
+import type { AuthEventParams, AuthDomainEvent } from '../auth.events.js';
 
 export const createAuthUserCreatedEvent = (
   params: AuthEventParams & { payload: AuthUserCreatedPayload },
