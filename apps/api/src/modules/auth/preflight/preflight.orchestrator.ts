@@ -8,12 +8,12 @@ import type {
   SSOActivationResponse,
   SSOValidationPreflightResponse,
   SSOValidationCheckType,
-  ValidationStatus,
   SSOValidationType,
 } from '@the-dmz/shared/auth';
 import {
   DEFAULT_VALIDATION_FRESHNESS_SECONDS,
   VALIDATION_WARNING_THRESHOLD_SECONDS,
+  ValidationStatus,
 } from '@the-dmz/shared/auth';
 
 import {
@@ -96,38 +96,41 @@ async function runOIDCChecks(
   correlationId: string,
 ): Promise<{ checks: SSOValidationCheckResult[]; overallStatus: ValidationStatus }> {
   const checks: SSOValidationCheckResult[] = [];
-  let overallStatus: ValidationStatus = 'ok';
+  let overallStatus: ValidationStatus = ValidationStatus.OK;
 
   const discoveryCheck = await oidcValidator.validateDiscovery(
     connection.metadataUrl,
     correlationId,
   );
   checks.push(discoveryCheck);
-  if (discoveryCheck.status === 'failed') {
-    overallStatus = 'failed';
-  } else if (discoveryCheck.status === 'warning') {
-    overallStatus = 'warning';
+  if (discoveryCheck.status === ValidationStatus.FAILED) {
+    overallStatus = ValidationStatus.FAILED;
+  } else if (discoveryCheck.status === ValidationStatus.WARNING) {
+    overallStatus = ValidationStatus.WARNING;
   }
 
-  if (overallStatus !== 'failed' && connection.clientId) {
+  if (overallStatus !== ValidationStatus.FAILED && connection.clientId) {
     const issuerCheck = oidcValidator.validateIssuerMatch(
       connection.metadataUrl,
       connection.clientId,
     );
     checks.push(issuerCheck);
-    if (issuerCheck.status === 'failed') {
-      overallStatus = 'failed';
-    } else if (issuerCheck.status === 'warning') {
-      overallStatus = 'warning';
+    if (issuerCheck.status === ValidationStatus.FAILED) {
+      overallStatus = ValidationStatus.FAILED;
+    } else if (issuerCheck.status === ValidationStatus.WARNING) {
+      overallStatus = ValidationStatus.WARNING;
     }
   }
 
   const jwksCheck = await oidcValidator.validateJWKS(connection.metadataUrl, correlationId);
   checks.push(jwksCheck);
-  if (jwksCheck.status === 'failed' && overallStatus !== 'failed') {
-    overallStatus = 'failed';
-  } else if (jwksCheck.status === 'warning' && overallStatus === 'ok') {
-    overallStatus = 'warning';
+  if (jwksCheck.status === ValidationStatus.FAILED && overallStatus !== ValidationStatus.FAILED) {
+    overallStatus = ValidationStatus.FAILED;
+  } else if (
+    jwksCheck.status === ValidationStatus.WARNING &&
+    overallStatus === ValidationStatus.OK
+  ) {
+    overallStatus = ValidationStatus.WARNING;
   }
 
   return { checks, overallStatus };
@@ -168,7 +171,7 @@ export const runOIDCValidation = async (
       ssoConnectionId: providerId,
       validationType: 'oidc',
       overallStatus,
-      checks: checks as unknown as Record<string, unknown>[],
+      checks: checks,
       correlationId,
       executedAt: now,
       expiresAt,
@@ -210,26 +213,29 @@ async function runSAMLChecks(
   correlationId: string,
 ): Promise<{ checks: SSOValidationCheckResult[]; overallStatus: ValidationStatus }> {
   const checks: SSOValidationCheckResult[] = [];
-  let overallStatus: ValidationStatus = 'ok';
+  let overallStatus: ValidationStatus = ValidationStatus.OK;
 
   const metadataFetchCheck = await samlValidator.validateMetadataFetch(
     connection.metadataUrl,
     correlationId,
   );
   checks.push(metadataFetchCheck);
-  if (metadataFetchCheck.status === 'failed') {
-    overallStatus = 'failed';
-  } else if (metadataFetchCheck.status === 'warning') {
-    overallStatus = 'warning';
+  if (metadataFetchCheck.status === ValidationStatus.FAILED) {
+    overallStatus = ValidationStatus.FAILED;
+  } else if (metadataFetchCheck.status === ValidationStatus.WARNING) {
+    overallStatus = ValidationStatus.WARNING;
   }
 
-  if (metadataFetchCheck.status !== 'failed') {
+  if (metadataFetchCheck.status !== ValidationStatus.FAILED) {
     const certCheck = samlValidator.validateCertificate(connection.metadataUrl, correlationId);
     checks.push(certCheck);
-    if (certCheck.status === 'failed' && overallStatus !== 'failed') {
-      overallStatus = 'failed';
-    } else if (certCheck.status === 'warning' && overallStatus === 'ok') {
-      overallStatus = 'warning';
+    if (certCheck.status === ValidationStatus.FAILED && overallStatus !== ValidationStatus.FAILED) {
+      overallStatus = ValidationStatus.FAILED;
+    } else if (
+      certCheck.status === ValidationStatus.WARNING &&
+      overallStatus === ValidationStatus.OK
+    ) {
+      overallStatus = ValidationStatus.WARNING;
     }
   }
 
@@ -269,7 +275,7 @@ export const runSAMLValidation = async (
       ssoConnectionId: providerId,
       validationType: 'saml',
       overallStatus,
-      checks: checks as unknown as Record<string, unknown>[],
+      checks: checks,
       correlationId,
       executedAt: now,
       expiresAt,
@@ -320,12 +326,12 @@ async function runSCIMChecks(
   correlationId: string,
 ): Promise<{ checks: SSOValidationCheckResult[]; overallStatus: ValidationStatus }> {
   const checks: SSOValidationCheckResult[] = [];
-  let overallStatus: ValidationStatus = 'ok';
+  let overallStatus: ValidationStatus = ValidationStatus.OK;
   let hasFailed = false;
 
   const urlCheck = await scimValidator.validateBaseUrlReachability(baseUrl, correlationId);
   checks.push(urlCheck);
-  if (urlCheck.status === 'failed') hasFailed = true;
+  if (urlCheck.status === ValidationStatus.FAILED) hasFailed = true;
 
   if (!hasFailed) {
     const authCheck = await scimValidator.validateAuthentication(
@@ -334,7 +340,7 @@ async function runSCIMChecks(
       correlationId,
     );
     checks.push(authCheck);
-    if (authCheck.status === 'failed') hasFailed = true;
+    if (authCheck.status === ValidationStatus.FAILED) hasFailed = true;
   }
 
   if (!hasFailed) {
@@ -344,10 +350,10 @@ async function runSCIMChecks(
       correlationId,
     );
     checks.push(endpointCheck);
-    if (endpointCheck.status === 'failed') hasFailed = true;
+    if (endpointCheck.status === ValidationStatus.FAILED) hasFailed = true;
   }
 
-  if (hasFailed) overallStatus = 'failed';
+  if (hasFailed) overallStatus = ValidationStatus.FAILED;
 
   return { checks, overallStatus };
 }
@@ -369,7 +375,7 @@ export const runSCIMValidation = async (
       ssoConnectionId: null,
       validationType: 'scim',
       overallStatus,
-      checks: checks as unknown as Record<string, unknown>[],
+      checks: checks,
       correlationId,
       executedAt: now,
       expiresAt,
@@ -411,7 +417,10 @@ const computeActivationState = (
   if (isStale) {
     return { activationStatus: 'validation_stale', canActivate: false };
   }
-  if (lastValidationStatus === 'ok' || lastValidationStatus === 'warning') {
+  if (
+    lastValidationStatus === ValidationStatus.OK ||
+    lastValidationStatus === ValidationStatus.WARNING
+  ) {
     return { activationStatus: 'ready_to_activate', canActivate: true };
   }
   return { activationStatus: 'validation_required', canActivate: false };
@@ -480,7 +489,10 @@ export const activateSSO = async (
       message += 'validation required. Please run preflight validation first.';
     } else if (previousStatus === 'validation_stale') {
       message += 'validation is stale. Please re-run preflight validation.';
-    } else if (previousStatus === 'not_activated' && gate.lastValidationStatus !== 'ok') {
+    } else if (
+      previousStatus === 'not_activated' &&
+      gate.lastValidationStatus !== ValidationStatus.OK
+    ) {
       message += 'last validation did not pass. Please run preflight validation.';
     } else {
       message += 'activation requirements not met.';
