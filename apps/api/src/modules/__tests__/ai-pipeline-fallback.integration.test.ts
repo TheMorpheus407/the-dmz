@@ -1,10 +1,13 @@
 import { randomUUID } from 'crypto';
+import { fileURLToPath } from 'node:url';
 
 import { drizzle } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { createIsolatedDatabase, createIsolatedTestConfig } from '@the-dmz/shared/testing';
 
+import { getDatabasePool } from '../../shared/database/connection.js';
 import { tenants } from '../../shared/database/schema/tenants.js';
 import { emailTemplates } from '../../db/schema/content/email-templates.schema.js';
 import { createAiPipelineService } from '../ai-pipeline/ai-pipeline.service.js';
@@ -16,7 +19,25 @@ import type {
   PromptTemplateRepository,
 } from '../ai-pipeline/ai-pipeline.types.js';
 import type { DB } from '../../shared/database/connection.js';
-import type { Sql } from 'postgres';
+
+const migrationsFolder = fileURLToPath(
+  new URL('../../shared/database/migrations', import.meta.url),
+);
+
+const setupTestDatabase = async (databaseName: string) => {
+  const testConfig = createIsolatedTestConfig(databaseName);
+  const cleanupDatabase = await createIsolatedDatabase(testConfig);
+  cleanups.push(cleanupDatabase);
+  const pool = getDatabasePool(testConfig);
+  const db = drizzle(pool, {
+    schema: {
+      tenants,
+      emailTemplates,
+    },
+  }) as unknown as DB;
+  await migrate(db, { migrationsFolder });
+  return db;
+};
 
 const logger: AiPipelineLogger = {
   info: vi.fn(),
@@ -40,59 +61,6 @@ const createEventBus = () => ({
   unsubscribe: vi.fn(),
 });
 
-const setupDatabase = async (pool: Sql): Promise<void> => {
-  await pool.unsafe(`
-    CREATE TABLE tenants (
-      tenant_id uuid PRIMARY KEY NOT NULL,
-      name varchar(255) NOT NULL,
-      slug varchar(63) NOT NULL UNIQUE,
-      domain varchar(255),
-      plan_id varchar(32) DEFAULT 'free',
-      status varchar(20) NOT NULL DEFAULT 'active',
-      settings jsonb NOT NULL DEFAULT '{}'::jsonb,
-      data_region varchar(16) DEFAULT 'eu',
-      is_active boolean NOT NULL DEFAULT true,
-      created_at timestamp with time zone NOT NULL DEFAULT now(),
-      updated_at timestamp with time zone NOT NULL DEFAULT now()
-    );
-
-    CREATE SCHEMA content;
-
-    CREATE TABLE content.email_templates (
-      id uuid PRIMARY KEY NOT NULL,
-      tenant_id uuid NOT NULL REFERENCES tenants(tenant_id) ON DELETE RESTRICT,
-      name varchar(255) NOT NULL,
-      subject varchar(500) NOT NULL,
-      body text NOT NULL,
-      from_name varchar(255),
-      from_email varchar(255),
-      reply_to varchar(255),
-      content_type varchar(50) NOT NULL,
-      difficulty integer NOT NULL,
-      faction varchar(50),
-      attack_type varchar(100),
-      threat_level varchar(20) NOT NULL,
-      season integer,
-      chapter integer,
-      language varchar(10) NOT NULL DEFAULT 'en',
-      locale varchar(10) NOT NULL DEFAULT 'en-US',
-      metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
-      is_ai_generated boolean NOT NULL DEFAULT false,
-      is_active boolean NOT NULL DEFAULT true,
-      created_at timestamp with time zone NOT NULL DEFAULT now(),
-      updated_at timestamp with time zone NOT NULL DEFAULT now()
-    );
-  `);
-};
-
-const createDbMapper = (pool: Sql) =>
-  drizzle(pool, {
-    schema: {
-      tenants,
-      emailTemplates,
-    },
-  }) as unknown as DB;
-
 describe('ai-pipeline fallback integration', () => {
   const cleanups: Array<() => Promise<void>> = [];
 
@@ -108,12 +76,7 @@ describe('ai-pipeline fallback integration', () => {
 
   it('reuses generic handcrafted fallback templates through the real content gateway query path', async () => {
     const databaseName = `dmz_test_ai_fallback_${randomUUID().replace(/-/g, '_')}`;
-    const testConfig = createIsolatedTestConfig(databaseName);
-    const { db, cleanup } = await createIsolatedDatabase(testConfig, {
-      setup: setupDatabase,
-      dbMapper: createDbMapper,
-    });
-    cleanups.push(cleanup);
+    const db = await setupTestDatabase(databaseName);
     const tenantId = randomUUID();
     const tenantSlug = `ai-fallback-${tenantId.slice(0, 8)}`;
 
@@ -218,23 +181,26 @@ describe('ai-pipeline fallback integration', () => {
           : {},
     }));
 
+    const matchesFallbackFilters = (
+      nextTenantId: string,
+      filters: typeof requestedFallbackFilters,
+    ) =>
+      nextTenantId === tenantId &&
+      filters.contentType === requestedFallbackFilters.contentType &&
+      filters.difficulty === requestedFallbackFilters.difficulty &&
+      filters.faction === requestedFallbackFilters.faction &&
+      filters.attackType === requestedFallbackFilters.attackType &&
+      filters.threatLevel === requestedFallbackFilters.threatLevel &&
+      filters.season === requestedFallbackFilters.season &&
+      filters.chapter === requestedFallbackFilters.chapter;
+
     const contentGateway: ContentGateway = {
       createEmailTemplate: vi.fn().mockResolvedValue({ id: 'stored-fallback-email' }),
       listEmailTemplates: vi.fn().mockResolvedValue([]),
       listFallbackEmailTemplates: async (nextTenantId, filters) => {
-        if (
-          nextTenantId === tenantId &&
-          filters?.contentType === requestedFallbackFilters.contentType &&
-          filters?.difficulty === requestedFallbackFilters.difficulty &&
-          filters?.faction === requestedFallbackFilters.faction &&
-          filters?.attackType === requestedFallbackFilters.attackType &&
-          filters?.threatLevel === requestedFallbackFilters.threatLevel &&
-          filters?.season === requestedFallbackFilters.season &&
-          filters?.chapter === requestedFallbackFilters.chapter
-        ) {
+        if (filters && matchesFallbackFilters(nextTenantId, filters)) {
           return mappedFallbackTemplates;
         }
-
         return [];
       },
       createDocumentTemplate: vi.fn(),
