@@ -1,43 +1,9 @@
-export type GameEventType =
-  | 'session_started'
-  | 'session_paused'
-  | 'session_resumed'
-  | 'session_breached'
-  | 'session_recovered'
-  | 'session_completed'
-  | 'day_started'
-  | 'day_advanced'
-  | 'phase_changed'
-  | 'email_received'
-  | 'email_opened'
-  | 'email_flagged'
-  | 'email_unflagged'
-  | 'verification_requested'
-  | 'verification_completed'
-  | 'decision_made'
-  | 'decision_approved'
-  | 'decision_denied'
-  | 'decision_deferred'
-  | 'consequence_applied'
-  | 'threat_generated'
-  | 'incident_triggered'
-  | 'incident_resolved'
-  | 'breach_occurred'
-  | 'ransom_paid'
-  | 'resource_allocated'
-  | 'upgrade_purchased'
-  | 'facility_expanded'
-  | 'trust_changed'
-  | 'funds_changed'
-  | 'intel_earned'
-  | 'action_submitted'
-  | 'state_reconciled'
-  | 'action_queued'
-  | 'action_failed'
-  | 'dialog_started'
-  | 'dialog_node_advanced'
-  | 'dialog_choice_selected'
-  | 'dialog_completed';
+import { GAME_EVENT_TYPES, type GameEventType } from '@the-dmz/shared';
+import type { GameThreatTier } from '@the-dmz/shared/game';
+
+export { GAME_EVENT_TYPES };
+
+export type { GameEventType };
 
 export interface GameEvent {
   id: string;
@@ -79,8 +45,6 @@ export interface ConsequencePayload {
   factionChanges: Record<string, number>;
   riskChange: number;
 }
-
-import type { GameThreatTier } from '@the-dmz/shared/game';
 
 export interface ThreatPayload {
   threatLevel: GameThreatTier;
