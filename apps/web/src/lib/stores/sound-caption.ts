@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 
-import { SoundCategory } from '$lib/audio';
+import { SoundCategory } from '$lib/audio/types';
 
 export interface CaptionEntry {
   id: string;

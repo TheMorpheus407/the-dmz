@@ -14,4 +14,3 @@ export {
 export { synthesizeSound } from './sound-synthesis';
 export { createAudioContextManager, type AudioContextManager } from './audio-context';
 export { createVolumeController, type VolumeController } from './volume-control';
-export { soundCaptionStore } from '$lib/stores/sound-caption';
