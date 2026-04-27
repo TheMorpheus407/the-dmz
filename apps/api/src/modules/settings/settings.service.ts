@@ -6,60 +6,30 @@ import {
   gameplayPreferencesSchema,
   audioPreferencesSchema,
   accountPreferencesSchema,
+  type ThemePreferences,
+  type AccessibilityPreferences,
+  type GameplayPreferences,
+  type AudioPreferences,
+  type AccountPreferences,
 } from '@the-dmz/shared';
 
 import { validationFailed } from '../../shared/middleware/error-handler.js';
 
 import type { SettingsRepository } from './settings.repository.js';
 
-export interface DisplaySettings {
-  theme?: string;
-  enableTerminalEffects?: boolean;
-  effects?: Record<string, boolean>;
-  effectIntensity?: Record<string, number>;
-  fontSize?: number;
-  terminalGlowIntensity?: number;
-}
+export type DisplaySettings = ThemePreferences;
+export type AccessibilitySettings = AccessibilityPreferences;
+export type GameplaySettings = GameplayPreferences;
+export type AudioSettings = AudioPreferences;
+export type AccountSettings = AccountPreferences;
 
-export interface AccessibilitySettings {
-  reducedMotion?: boolean;
-  highContrast?: boolean;
-  fontSize?: number;
-  colorBlindMode?: 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia';
-  screenReaderAnnouncements?: boolean;
-  keyboardNavigationHints?: boolean;
-  focusIndicatorStyle?: 'subtle' | 'strong';
-}
-
-export interface GameplaySettings {
-  difficulty?: 'tutorial' | 'easy' | 'normal' | 'hard';
-  notificationVolume?: number;
-  notificationCategoryVolumes?: Record<'master' | 'alerts' | 'ui' | 'ambient', number>;
-  notificationDuration?: number;
-  autoAdvanceTiming?: number;
-  queueBuildupRate?: number;
-}
-
-export interface AudioSettings {
-  masterVolume?: number;
-  categoryVolumes?: Record<'alerts' | 'ui' | 'ambient' | 'narrative' | 'effects', number>;
-  muteAll?: boolean;
-  textToSpeechEnabled?: boolean;
-  textToSpeechSpeed?: number;
-}
-
-export interface AccountSettings {
-  displayName?: string;
-  privacyMode?: 'public' | 'friends' | 'private';
-}
-
-export interface UserAllSettings {
-  display: DisplaySettings | null;
-  accessibility: AccessibilitySettings | null;
-  gameplay: GameplaySettings | null;
-  audio: AudioSettings | null;
-  account: AccountSettings | null;
-}
+export type UserAllSettings = {
+  display: ThemePreferences | null;
+  accessibility: AccessibilityPreferences | null;
+  gameplay: GameplayPreferences | null;
+  audio: AudioPreferences | null;
+  account: AccountPreferences | null;
+};
 
 export interface ExportData {
   settings: UserAllSettings;
