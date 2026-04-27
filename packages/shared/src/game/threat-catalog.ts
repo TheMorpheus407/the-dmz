@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 export type ThreatTierLevel = 'low' | 'guarded' | 'elevated' | 'high' | 'severe';
 
 export const THREAT_TIER_CONFIG: Record<
@@ -462,22 +463,40 @@ export const getThreatTierByScore = (score: number, minimumDay: number): ThreatT
   return 'low';
 };
 
+export const THREAT_SCORE_WEIGHTS = {
+  narrativeProgress: 0.35,
+  playerCompetence: 0.25,
+  facilityScale: 0.25,
+  eventTriggers: 0.15,
+} as const;
+
+const RESPONSE_TIME_MAX_MINUTES = 12;
+const MINUTES_PER_HOUR = 60;
+const VERIFICATION_DEPTH_NORMALIZER = 5;
+const STREAK_DIVISOR_EPSILON = 1;
+
+export const PLAYER_COMPETENCE_WEIGHTS = {
+  avgDetectionRate: 0.25,
+  verificationDepth: 0.15,
+  falsePositiveRate: 0.1,
+  normalizedResponseTime: 0.15,
+  securityToolCoverage: 0.1,
+  toolMaintenanceLevel: 0.1,
+  crossReferenceRate: 0.1,
+  streakCorrect: 0.05,
+} as const;
+
 export const calculateThreatScore = (params: {
   narrativeProgress: number;
   playerCompetence: number;
   facilityScale: number;
   eventTriggers: number;
 }): number => {
-  const w1 = 0.35;
-  const w2 = 0.25;
-  const w3 = 0.25;
-  const w4 = 0.15;
-
   return (
-    w1 * params.narrativeProgress +
-    w2 * params.playerCompetence +
-    w3 * params.facilityScale +
-    w4 * params.eventTriggers
+    THREAT_SCORE_WEIGHTS.narrativeProgress * params.narrativeProgress +
+    THREAT_SCORE_WEIGHTS.playerCompetence * params.playerCompetence +
+    THREAT_SCORE_WEIGHTS.facilityScale * params.facilityScale +
+    THREAT_SCORE_WEIGHTS.eventTriggers * params.eventTriggers
   );
 };
 
@@ -491,18 +510,23 @@ export const calculatePlayerCompetence = (profile: PlayerBehaviorProfile): numbe
     1 -
       Math.min(
         1,
-        Object.values(profile.responseTimeByCategory).reduce((a, b) => a + b, 0) / 12 / 60,
+        Object.values(profile.responseTimeByCategory).reduce((a, b) => a + b, 0) /
+          RESPONSE_TIME_MAX_MINUTES /
+          MINUTES_PER_HOUR,
       ),
   );
 
   return (
-    0.25 * avgDetectionRate +
-    0.15 * (profile.verificationDepth / 5) +
-    0.1 * (1 - profile.falsePositiveRate) +
-    0.15 * normalizedResponseTime +
-    0.1 * profile.securityToolCoverage +
-    0.1 * profile.toolMaintenanceLevel +
-    0.1 * profile.crossReferenceRate +
-    0.05 * (profile.streakCorrect / (profile.streakCorrect + profile.streakIncorrect + 1))
+    PLAYER_COMPETENCE_WEIGHTS.avgDetectionRate * avgDetectionRate +
+    PLAYER_COMPETENCE_WEIGHTS.verificationDepth *
+      (profile.verificationDepth / VERIFICATION_DEPTH_NORMALIZER) +
+    PLAYER_COMPETENCE_WEIGHTS.falsePositiveRate * (1 - profile.falsePositiveRate) +
+    PLAYER_COMPETENCE_WEIGHTS.normalizedResponseTime * normalizedResponseTime +
+    PLAYER_COMPETENCE_WEIGHTS.securityToolCoverage * profile.securityToolCoverage +
+    PLAYER_COMPETENCE_WEIGHTS.toolMaintenanceLevel * profile.toolMaintenanceLevel +
+    PLAYER_COMPETENCE_WEIGHTS.crossReferenceRate * profile.crossReferenceRate +
+    PLAYER_COMPETENCE_WEIGHTS.streakCorrect *
+      (profile.streakCorrect /
+        (profile.streakCorrect + profile.streakIncorrect + STREAK_DIVISOR_EPSILON))
   );
 };
