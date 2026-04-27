@@ -1,3 +1,5 @@
+import { subscriptionStatuses, type Subscription } from '../../db/schema/billing/index.js';
+
 import { billingRepo } from './billing.repo.js';
 import {
   PLAN_LIMITS,
@@ -5,7 +7,6 @@ import {
   type UpdateSubscriptionInput,
 } from './billing.types.js';
 
-import type { Subscription } from '../../db/schema/billing/index.js';
 import type { AppConfig } from '../../config.js';
 
 const DEFAULT_TRIAL_DAYS = 14;
@@ -56,7 +57,7 @@ export const subscriptionService = {
       {
         tenantId: input.tenantId,
         planId: input.planId,
-        status: trialDays > 0 ? 'trial' : 'active',
+        status: trialDays > 0 ? subscriptionStatuses[0] : subscriptionStatuses[1],
         trialEndsAt: trialDays > 0 ? trialEndDate : null,
         currentPeriodStart: now,
         currentPeriodEnd: periodEnd,
@@ -144,7 +145,7 @@ export const subscriptionService = {
     };
 
     if (!cancelAtPeriodEnd) {
-      updateData.status = 'cancelled';
+      updateData.status = subscriptionStatuses[3];
       updateData.cancelledAt = new Date();
     }
 
@@ -162,7 +163,7 @@ export const subscriptionService = {
     periodEnd.setDate(periodEnd.getDate() + 30);
 
     const updateData: Partial<Subscription> = {
-      status: 'active',
+      status: subscriptionStatuses[1],
       currentPeriodStart: now,
       currentPeriodEnd: periodEnd,
       cancelledAt: null,
@@ -174,7 +175,7 @@ export const subscriptionService = {
 
   async transitionFromTrial(tenantId: string, config?: AppConfig): Promise<Subscription | null> {
     const existing = await billingRepo.getSubscriptionByTenantId(tenantId, config);
-    if (!existing || existing.status !== 'trial') {
+    if (!existing || existing.status !== subscriptionStatuses[0]) {
       return null;
     }
 
@@ -183,7 +184,7 @@ export const subscriptionService = {
     periodEnd.setDate(periodEnd.getDate() + 30);
 
     const updateData: Partial<Subscription> = {
-      status: 'active',
+      status: subscriptionStatuses[1],
       trialEndsAt: null,
       currentPeriodStart: now,
       currentPeriodEnd: periodEnd,
@@ -194,12 +195,12 @@ export const subscriptionService = {
 
   async expireTrial(tenantId: string, config?: AppConfig): Promise<Subscription | null> {
     const existing = await billingRepo.getSubscriptionByTenantId(tenantId, config);
-    if (!existing || existing.status !== 'trial') {
+    if (!existing || existing.status !== subscriptionStatuses[0]) {
       return null;
     }
 
     const updateData: Partial<Subscription> = {
-      status: 'expired',
+      status: subscriptionStatuses[5],
       trialEndsAt: null,
     };
 
@@ -212,7 +213,7 @@ export const subscriptionService = {
       return null;
     }
 
-    return billingRepo.updateSubscriptionStatus(existing.id, 'suspended', config);
+    return billingRepo.updateSubscriptionStatus(existing.id, subscriptionStatuses[2], config);
   },
 
   async markPastDue(tenantId: string, config?: AppConfig): Promise<Subscription | null> {
@@ -221,11 +222,11 @@ export const subscriptionService = {
       return null;
     }
 
-    return billingRepo.updateSubscriptionStatus(existing.id, 'past_due', config);
+    return billingRepo.updateSubscriptionStatus(existing.id, subscriptionStatuses[4], config);
   },
 
   isTrialExpired(subscription: Subscription): boolean {
-    if (subscription.status !== 'trial' || !subscription.trialEndsAt) {
+    if (subscription.status !== subscriptionStatuses[0] || !subscription.trialEndsAt) {
       return false;
     }
     return new Date() > subscription.trialEndsAt;
@@ -253,9 +254,9 @@ export const subscriptionService = {
       };
     }
 
-    const isTrial = subscription.status === 'trial';
-    const isExpired = subscription.status === 'expired';
-    const isActive = subscription.status === 'active';
+    const isTrial = subscription.status === subscriptionStatuses[0];
+    const isExpired = subscription.status === subscriptionStatuses[5];
+    const isActive = subscription.status === subscriptionStatuses[1];
 
     let daysUntilExpiry: number | null = null;
     if (isTrial && subscription.trialEndsAt) {

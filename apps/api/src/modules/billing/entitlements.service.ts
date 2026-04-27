@@ -1,3 +1,5 @@
+import { subscriptionStatuses } from '../../db/schema/billing/index.js';
+
 import { subscriptionService } from './subscription.service.js';
 import { seatService } from './seat.service.js';
 import { PLAN_FEATURES, PLAN_LIMITS, type EntitlementResult } from './billing.types.js';
@@ -244,7 +246,9 @@ export const entitlementsService = {
       return {
         features: cached.features,
         limits: cached.limits,
-        isActive: subscription.status === 'active' || subscription.status === 'trial',
+        isActive:
+          subscription.status === subscriptionStatuses[1] ||
+          subscription.status === subscriptionStatuses[0],
         planId: subscription.planId,
       };
     }
@@ -265,7 +269,9 @@ export const entitlementsService = {
     return {
       features: { ...features },
       limits,
-      isActive: subscription.status === 'active' || subscription.status === 'trial',
+      isActive:
+        subscription.status === subscriptionStatuses[1] ||
+        subscription.status === subscriptionStatuses[0],
       planId,
     };
   },
