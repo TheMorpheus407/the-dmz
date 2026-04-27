@@ -1,4 +1,5 @@
 import { getOutcome, getCompetencyTags, getThreatTier } from '../../shared/utils/payload.js';
+import { GAME_THREAT_TIERS } from '@the-dmz/shared/game';
 
 import type { DomainEvent } from '../../shared/events/event-types.js';
 
@@ -68,7 +69,8 @@ export class BehavioralMetricsService {
       const emailId = payload?.['email_id'] as string | undefined;
 
       if (competencyTags?.includes('phishing_detection')) {
-        const isRisky = threatTier === 'high' || threatTier === 'severe';
+        const isRisky =
+          threatTier === GAME_THREAT_TIERS.HIGH || threatTier === GAME_THREAT_TIERS.SEVERE;
         if (isRisky && outcome === 'correct') {
           update.riskyApprovals = currentMetrics.riskyApprovals + 1;
         }

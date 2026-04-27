@@ -15,6 +15,7 @@ import {
   RECOVERY_NARRATIVE_MESSAGES,
   POST_BREACH_EFFECTS_DEFAULT,
   SEVERITY_LEVEL_GAME_OVER,
+  GAME_THREAT_TIERS,
 } from '@the-dmz/shared/game';
 import { rng } from '@the-dmz/shared/game';
 
@@ -62,7 +63,7 @@ export class BreachService {
 
     let severity = trigger.severity;
 
-    if (severity === SEVERITY_LEVEL_GAME_OVER && threatTier !== 'severe') {
+    if (severity === SEVERITY_LEVEL_GAME_OVER && threatTier !== GAME_THREAT_TIERS.SEVERE) {
       severity = 3;
     }
 
