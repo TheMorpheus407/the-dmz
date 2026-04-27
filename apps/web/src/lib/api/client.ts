@@ -40,6 +40,90 @@ export class ApiClient {
     return this.httpExecutor.buildUrl(path, params);
   }
 
+  private async executeRetry<TResponse, TRequest>(
+    options: RequestOptions<TRequest>,
+    retryConfig: RetryConfig,
+    attempt: number,
+    response: Response,
+  ): Promise<{ data?: TResponse; error?: CategorizedApiError; requestId?: string } | null> {
+    if (attempt >= retryConfig.maxAttempts - 1) {
+      return null;
+    }
+
+    const errorBody: Record<string, unknown> = await response
+      .clone()
+      .json()
+      .catch(() => ({}));
+    const errorObj =
+      typeof errorBody['error'] === 'object' && errorBody['error'] !== null
+        ? (errorBody['error'] as { code?: string })
+        : ({} as { code?: string });
+
+    const retryHandler = new RetryHandler(retryConfig);
+    const shouldRetry =
+      retryHandler.shouldRetryByStatus(response.status) ||
+      retryHandler.shouldRetryByError(errorObj);
+
+    if (!shouldRetry || !isIdempotentMethod(options.method)) {
+      return null;
+    }
+
+    await delay(retryHandler.getBackoffDelay(attempt));
+    return this.request<TResponse, TRequest>(options, retryConfig, attempt + 1);
+  }
+
+  private categorizeError(
+    err: unknown,
+    _method: string,
+    requestId: string,
+  ): { error: CategorizedApiError; requestId: string } {
+    if (!(err instanceof Error)) {
+      return {
+        error: {
+          category: 'server',
+          code: 'UNKNOWN_ERROR',
+          message: 'An unexpected error occurred',
+          status: 0,
+          retryable: false,
+          requestId,
+        },
+        requestId,
+      };
+    }
+
+    if (err.name === 'AbortError') {
+      return {
+        error: {
+          category: 'network',
+          code: 'TIMEOUT',
+          message: 'Request timed out',
+          status: 0,
+          retryable: true,
+          requestId,
+        },
+        requestId,
+      };
+    }
+
+    const networkError = mapNetworkError(err);
+    return { error: networkError, requestId };
+  }
+
+  private shouldRetryOnError(
+    retryConfig: RetryConfig | null,
+    attempt: number,
+    method: string,
+    error: CategorizedApiError,
+  ): boolean {
+    if (!retryConfig || attempt >= retryConfig.maxAttempts - 1) {
+      return false;
+    }
+    if (!error.retryable) {
+      return false;
+    }
+    return isIdempotentMethod(method);
+  }
+
   private async request<TResponse, TRequest = unknown>(
     options: RequestOptions<TRequest>,
     retryConfig: RetryConfig,
@@ -83,24 +167,14 @@ export class ApiClient {
       const retryAfterHeader = response.headers.get('retry-after');
       const retryAfterSeconds = retryAfterHeader ? parseInt(retryAfterHeader, 10) : undefined;
 
-      if (retryConfig && attempt < retryConfig.maxAttempts - 1) {
-        const errorBody: Record<string, unknown> = await (
-          response.clone().json() as Promise<Record<string, unknown>>
-        ).catch(() => ({}) as Record<string, unknown>);
-        const errorObj =
-          typeof errorBody['error'] === 'object' && errorBody['error'] !== null
-            ? (errorBody['error'] as { code?: string })
-            : ({} as { code?: string });
-        const retryHandler = new RetryHandler(retryConfig);
-        if (
-          retryHandler.shouldRetryByStatus(response.status) ||
-          retryHandler.shouldRetryByError(errorObj)
-        ) {
-          if (isIdempotentMethod(method)) {
-            await delay(retryHandler.getBackoffDelay(attempt));
-            return this.request<TResponse, TRequest>(options, retryConfig, attempt + 1);
-          }
-        }
+      const retryResult = await this.executeRetry<TResponse, TRequest>(
+        options,
+        retryConfig,
+        attempt,
+        response,
+      );
+      if (retryResult !== null) {
+        return retryResult;
       }
 
       if (!contentType || !contentType.includes('application/json')) {
@@ -156,41 +230,15 @@ export class ApiClient {
       }
       return { data: undefined as TResponse, requestId: responseRequestId };
     } catch (err) {
-      if (err instanceof Error) {
-        if (err.name === 'AbortError') {
-          return {
-            error: {
-              category: 'network',
-              code: 'TIMEOUT',
-              message: 'Request timed out',
-              status: 0,
-              retryable: true,
-              requestId,
-            },
-            requestId,
-          };
-        }
-        const networkError = mapNetworkError(err);
-        if (retryConfig && attempt < retryConfig.maxAttempts - 1 && networkError.retryable) {
-          const retryHandler = new RetryHandler(retryConfig);
-          if (isIdempotentMethod(method)) {
-            await delay(retryHandler.getBackoffDelay(attempt));
-            return this.request<TResponse, TRequest>(options, retryConfig, attempt + 1);
-          }
-        }
-        return { error: networkError, requestId };
+      const categorized = this.categorizeError(err, method, requestId);
+
+      if (this.shouldRetryOnError(retryConfig, attempt, method, categorized.error)) {
+        const retryHandler = new RetryHandler(retryConfig);
+        await delay(retryHandler.getBackoffDelay(attempt));
+        return this.request<TResponse, TRequest>(options, retryConfig, attempt + 1);
       }
-      return {
-        error: {
-          category: 'server',
-          code: 'UNKNOWN_ERROR',
-          message: 'An unexpected error occurred',
-          status: 0,
-          retryable: false,
-          requestId,
-        },
-        requestId,
-      };
+
+      return categorized;
     }
   }
 
