@@ -1,7 +1,7 @@
 import type { SurfaceId, ThemeId } from '@the-dmz/shared/constants';
 import { THEME_METADATA } from '@the-dmz/shared/constants';
 
-const defaultEffectStates: Record<string, Record<string, boolean>> = {
+const DEFAULT_EFFECT_STATES: Record<string, Record<string, boolean>> = {
   green: {
     scanlines: true,
     curvature: true,
@@ -32,7 +32,7 @@ const defaultEffectStates: Record<string, Record<string, boolean>> = {
   },
 };
 
-const defaultEffectIntensity: Record<string, number> = {
+const DEFAULT_EFFECT_INTENSITY: Record<string, number> = {
   scanlines: 70,
   curvature: 50,
   glow: 60,
@@ -41,9 +41,9 @@ const defaultEffectIntensity: Record<string, number> = {
   flicker: 40,
 };
 
-const defaultTerminalGlowIntensity = 60;
+const DEFAULT_TERMINAL_GLOW_INTENSITY = 60;
 
-const defaultRoutePreferences: Record<string, { themePreferences?: { theme?: ThemeId } }> = {
+const DEFAULT_ROUTE_PREFERENCES: Record<string, { themePreferences?: { theme?: ThemeId } }> = {
   game: {
     themePreferences: {
       theme: 'green',
@@ -122,9 +122,9 @@ function resolveThemePreference(
     return { value: 'high-contrast', source: 'os' };
   }
 
-  if (surface && defaultRoutePreferences[surface]?.themePreferences?.theme) {
+  if (surface && DEFAULT_ROUTE_PREFERENCES[surface]?.themePreferences?.theme) {
     return {
-      value: defaultRoutePreferences[surface].themePreferences.theme,
+      value: DEFAULT_ROUTE_PREFERENCES[surface].themePreferences.theme,
       source: 'default',
     };
   }
@@ -137,7 +137,7 @@ function resolveEffectsPreference(
   locked: boolean,
   theme: ThemeId,
 ): EffectivePreferenceValue<Record<string, boolean>> {
-  const defaultEffects = (defaultEffectStates[theme] ?? defaultEffectStates['green']) as Record<
+  const defaultEffects = (DEFAULT_EFFECT_STATES[theme] ?? DEFAULT_EFFECT_STATES['green']) as Record<
     string,
     boolean
   >;
@@ -197,14 +197,14 @@ function resolveEffectIntensityPreference(
   locked: boolean,
 ): EffectivePreferenceValue<Record<string, number>> {
   if (locked && userValue) {
-    return { value: { ...defaultEffectIntensity, ...userValue }, source: 'policy' };
+    return { value: { ...DEFAULT_EFFECT_INTENSITY, ...userValue }, source: 'policy' };
   }
 
   if (userValue) {
-    return { value: { ...defaultEffectIntensity, ...userValue }, source: 'server' };
+    return { value: { ...DEFAULT_EFFECT_INTENSITY, ...userValue }, source: 'server' };
   }
 
-  return { value: defaultEffectIntensity, source: 'default' };
+  return { value: DEFAULT_EFFECT_INTENSITY, source: 'default' };
 }
 
 function resolveTerminalGlowIntensityPreference(
@@ -219,7 +219,7 @@ function resolveTerminalGlowIntensityPreference(
     return { value: userValue, source: 'server' };
   }
 
-  return { value: defaultTerminalGlowIntensity, source: 'default' };
+  return { value: DEFAULT_TERMINAL_GLOW_INTENSITY, source: 'default' };
 }
 
 function resolveAccessibilityPreference(
