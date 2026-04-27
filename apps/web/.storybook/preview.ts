@@ -1,5 +1,5 @@
 import type { Preview } from '@storybook/svelte';
-import { themes } from '@storybook/theming';
+import { themes } from '@storybook/addon-themes';
 
 import '../src/lib/ui/tokens/index.css';
 
