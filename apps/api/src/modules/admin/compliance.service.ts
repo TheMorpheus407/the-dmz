@@ -241,6 +241,40 @@ export const initializeFrameworkRequirements = async (
   }
 };
 
+interface RequirementCompletionResult {
+  completionPercentage: number;
+  status: ComplianceStatus;
+}
+
+export function calculateRequirementCompletion(
+  profiles: Array<{ competencyScores: Record<string, { score: number; evidenceCount: number }> }>,
+  requirement: { id: string; minCompetencyScore: number },
+  certs: Array<{ frameworkId: string }>,
+  frameworkId: RegulatoryFramework,
+): RequirementCompletionResult {
+  const reqProfiles = profiles.map((p) => ({
+    competencyScores: p.competencyScores,
+  }));
+  const competencyCompletion = calculateCompetencyCompletion(
+    reqProfiles,
+    requirement.minCompetencyScore,
+  );
+  const certificateCompletion = calculateCertificateCompletion(certs, frameworkId);
+  const completionPercentage = Math.max(competencyCompletion, certificateCompletion);
+  const status = determineStatus(completionPercentage);
+
+  return { completionPercentage, status };
+}
+
+export async function updateRequirementStatus(
+  repository: ComplianceRepository,
+  requirementId: string,
+  status: ComplianceStatus,
+  completionPercentage: number,
+): Promise<void> {
+  await repository.updateRequirements(requirementId, status, completionPercentage, new Date());
+}
+
 export const calculateComplianceSnapshot = async (
   tenantId: string,
   frameworkId: RegulatoryFramework,
@@ -261,10 +295,7 @@ export const calculateComplianceSnapshot = async (
   }));
 
   const profilesWithScores = profiles.map((p) => ({
-    competencyScores: p.competencyScores as Record<
-      string,
-      { score: number; evidenceCount: number }
-    >,
+    competencyScores: p.competencyScores,
   }));
 
   const certsInput = certs.map((c) => ({ frameworkId: c.frameworkId }));
@@ -277,18 +308,9 @@ export const calculateComplianceSnapshot = async (
   );
 
   for (const req of requirements) {
-    const reqProfiles = profiles.map((p) => ({
-      competencyScores: p.competencyScores as Record<
-        string,
-        { score: number; evidenceCount: number }
-      >,
-    }));
-    const competencyCompletion = calculateCompetencyCompletion(reqProfiles, req.minCompetencyScore);
-    const certificateCompletion = calculateCertificateCompletion(certsInput, frameworkId);
-    const reqCompletion = Math.max(competencyCompletion, certificateCompletion);
-    const reqStatus = determineStatus(reqCompletion);
-
-    await repository.updateRequirements(req.id, reqStatus, reqCompletion, new Date());
+    const { completionPercentage: reqCompletion, status: reqStatus } =
+      calculateRequirementCompletion(profiles, req, certsInput, frameworkId);
+    await updateRequirementStatus(repository, req.id, reqStatus, reqCompletion);
   }
 
   const validityYears = getFrameworkValidityYears(frameworkId);

@@ -12,6 +12,7 @@ import { ensureTenantColumns } from '../../../__tests__/helpers/db.js';
 import { createTestTenant, createTestUser } from '../../../__tests__/helpers/fixtures.js';
 import { playerProfiles } from '../../../db/schema/analytics/index.js';
 import * as complianceService from '../compliance.service.js';
+import { calculateRequirementCompletion, updateRequirementStatus } from '../compliance.service.js';
 import { frameworkRequirements } from '../../../db/schema/compliance/index.js';
 
 const createTestConfig = (): AppConfig => {
@@ -324,6 +325,182 @@ describe('compliance-service', () => {
 
       expect(result.length).toBeGreaterThan(0);
       expect(result[0]?.frameworkId).toBe('nist_800_50');
+    });
+  });
+
+  describe('calculateRequirementCompletion', () => {
+    const mockProfiles = [
+      {
+        competencyScores: {
+          phishing_detection: { score: 85, evidenceCount: 10 },
+        },
+      },
+    ];
+    const mockRequirement = { id: 'req-1', minCompetencyScore: 70 };
+    const mockCerts = [{ frameworkId: 'nist_800_50' }];
+
+    it('should use competency completion when it is higher than certificate completion', () => {
+      const result = calculateRequirementCompletion(
+        mockProfiles,
+        mockRequirement,
+        mockCerts,
+        'nist_800_50',
+      );
+      expect(result.completionPercentage).toBe(100);
+      expect(result.status).toBe('compliant');
+    });
+
+    it('should use certificate completion when it is higher than competency completion', () => {
+      const lowScoreProfiles = [
+        {
+          competencyScores: {
+            phishing_detection: { score: 50, evidenceCount: 1 },
+          },
+        },
+      ];
+      const result = calculateRequirementCompletion(
+        lowScoreProfiles,
+        mockRequirement,
+        mockCerts,
+        'nist_800_50',
+      );
+      expect(result.completionPercentage).toBe(100);
+      expect(result.status).toBe('compliant');
+    });
+
+    it('should return 100% when competency score exactly meets minimum with evidence', () => {
+      const profilesWithMinScore = [
+        {
+          competencyScores: {
+            phishing_detection: { score: 70, evidenceCount: 1 },
+          },
+        },
+      ];
+      const result = calculateRequirementCompletion(
+        profilesWithMinScore,
+        mockRequirement,
+        [],
+        'nist_800_50',
+      );
+      expect(result.completionPercentage).toBe(100);
+      expect(result.status).toBe('compliant');
+    });
+
+    it('should handle 0% completion edge case', () => {
+      const emptyProfiles: Array<{
+        competencyScores: Record<string, { score: number; evidenceCount: number }>;
+      }> = [];
+      const result = calculateRequirementCompletion(
+        emptyProfiles,
+        mockRequirement,
+        [],
+        'nist_800_50',
+      );
+      expect(result.completionPercentage).toBe(0);
+      expect(result.status).toBe('not_started');
+    });
+
+    it('should handle 100% completion edge case', () => {
+      const highScoreProfiles = [
+        {
+          competencyScores: {
+            phishing_detection: { score: 100, evidenceCount: 10 },
+          },
+        },
+      ];
+      const result = calculateRequirementCompletion(
+        highScoreProfiles,
+        mockRequirement,
+        [{ frameworkId: 'nist_800_50' }],
+        'nist_800_50',
+      );
+      expect(result.completionPercentage).toBe(100);
+      expect(result.status).toBe('compliant');
+    });
+
+    it('should return in_progress status when some profiles pass competency', () => {
+      const partialProfiles = [
+        {
+          competencyScores: {
+            phishing_detection: { score: 85, evidenceCount: 10 },
+          },
+        },
+        {
+          competencyScores: {
+            phishing_detection: { score: 50, evidenceCount: 1 },
+          },
+        },
+      ];
+      const result = calculateRequirementCompletion(
+        partialProfiles,
+        { id: 'req-1', minCompetencyScore: 70 },
+        [],
+        'nist_800_50',
+      );
+      expect(result.completionPercentage).toBe(50);
+      expect(result.status).toBe('in_progress');
+    });
+  });
+
+  describe('updateRequirementStatus', () => {
+    it('should call repository.updateRequirements with correct parameters', async () => {
+      const mockRepo = {
+        updateRequirements: vi.fn().mockResolvedValue(undefined),
+      };
+      const requirementId = 'test-requirement-id';
+      const status = 'compliant' as const;
+      const completionPercentage = 100;
+
+      await updateRequirementStatus(
+        mockRepo as ComplianceRepository,
+        requirementId,
+        status,
+        completionPercentage,
+      );
+
+      expect(mockRepo.updateRequirements).toHaveBeenCalledTimes(1);
+      expect(mockRepo.updateRequirements).toHaveBeenCalledWith(
+        requirementId,
+        status,
+        completionPercentage,
+        expect.any(Date),
+      );
+    });
+
+    it('should pass through correct requirementId to repository', async () => {
+      const mockRepo = {
+        updateRequirements: vi.fn().mockResolvedValue(undefined),
+      };
+
+      await updateRequirementStatus(
+        mockRepo as ComplianceRepository,
+        'my-req-id',
+        'in_progress',
+        50,
+      );
+
+      expect(mockRepo.updateRequirements).toHaveBeenCalledWith(
+        'my-req-id',
+        'in_progress',
+        50,
+        expect.any(Date),
+      );
+    });
+
+    it('should pass Date object to repository', async () => {
+      const mockRepo = {
+        updateRequirements: vi.fn().mockResolvedValue(undefined),
+      };
+      const beforeCall = new Date();
+
+      await updateRequirementStatus(mockRepo as ComplianceRepository, 'req-id', 'not_started', 0);
+
+      const afterCall = new Date();
+      const calledDate = mockRepo.updateRequirements.mock.calls[0][3] as Date;
+
+      expect(calledDate).toBeInstanceOf(Date);
+      expect(calledDate.getTime()).toBeGreaterThanOrEqual(beforeCall.getTime());
+      expect(calledDate.getTime()).toBeLessThanOrEqual(afterCall.getTime());
     });
   });
 });
