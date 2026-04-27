@@ -1,5 +1,26 @@
 import type { GamePhase } from '$lib/game/state/state-machine';
-import type { ActivePanel } from '$lib/game/store/types';
+
+export type ActivePanel =
+  | 'inbox'
+  | 'email'
+  | 'facility'
+  | 'upgrades'
+  | 'incident'
+  | 'settings'
+  | 'day-summary'
+  | 'game-over'
+  | 'worksheet'
+  | 'verification'
+  | 'feedback'
+  | 'threat'
+  | 'landing'
+  | 'decision'
+  | 'analytics'
+  | 'terminal'
+  | 'documents'
+  | 'document-comparison'
+  | 'ransom'
+  | 'coop';
 
 export interface PhaseViewConfig {
   mainPanel: ActivePanel;

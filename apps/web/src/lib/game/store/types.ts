@@ -1,26 +1,6 @@
 import type { DialogHistoryEntry } from '@the-dmz/shared/types';
 
-export type ActivePanel =
-  | 'inbox'
-  | 'email'
-  | 'facility'
-  | 'upgrades'
-  | 'incident'
-  | 'settings'
-  | 'day-summary'
-  | 'game-over'
-  | 'worksheet'
-  | 'verification'
-  | 'feedback'
-  | 'threat'
-  | 'landing'
-  | 'decision'
-  | 'analytics'
-  | 'terminal'
-  | 'documents'
-  | 'document-comparison'
-  | 'ransom'
-  | 'coop';
+export type { ActivePanel } from '$lib/game/state/phase-config';
 
 export type ToastType =
   | 'info'
