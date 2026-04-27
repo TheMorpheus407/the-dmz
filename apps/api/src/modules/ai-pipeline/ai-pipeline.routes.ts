@@ -7,9 +7,9 @@ import {
 } from '../../shared/routes/content-routes-config.js';
 
 import {
-  fictionalFactions,
-  promptTemplateCategories,
-  semanticVersionPattern,
+  FICTIONAL_FACTIONS,
+  PROMPT_TEMPLATE_CATEGORIES,
+  SEMANTIC_VERSION_PATTERN,
 } from './ai-pipeline.types.js';
 
 import type { FastifyInstance } from 'fastify';
@@ -20,8 +20,8 @@ type RouteUser = {
   userId: string;
 };
 
-const emailGenerationCategories = ['email_phishing', 'email_legitimate'] as const;
-const threatLevels = ['LOW', 'GUARDED', 'ELEVATED', 'HIGH', 'SEVERE'] as const;
+const EMAIL_GENERATION_CATEGORIES = ['email_phishing', 'email_legitimate'] as const;
+const THREAT_LEVELS = ['LOW', 'GUARDED', 'ELEVATED', 'HIGH', 'SEVERE'] as const;
 
 const asNullable = <T extends Record<string, unknown>>(schema: T) =>
   ({
@@ -30,10 +30,10 @@ const asNullable = <T extends Record<string, unknown>>(schema: T) =>
 
 const promptTemplateBodyProperties = {
   name: { type: 'string', minLength: 1, maxLength: 255 },
-  category: { type: 'string', enum: [...promptTemplateCategories] },
+  category: { type: 'string', enum: [...PROMPT_TEMPLATE_CATEGORIES] },
   description: asNullable({ type: 'string' }),
   attackType: asNullable({ type: 'string', maxLength: 100 }),
-  threatLevel: asNullable({ type: 'string', enum: [...threatLevels] }),
+  threatLevel: asNullable({ type: 'string', enum: [...THREAT_LEVELS] }),
   difficulty: asNullable({ type: 'integer', minimum: 1, maximum: 5 }),
   season: asNullable({ type: 'integer', minimum: 1 }),
   chapter: asNullable({ type: 'integer', minimum: 1 }),
@@ -44,7 +44,7 @@ const promptTemplateBodyProperties = {
     type: 'string',
     minLength: 5,
     maxLength: 32,
-    pattern: semanticVersionPattern,
+    pattern: SEMANTIC_VERSION_PATTERN,
   },
   tokenBudget: { type: 'integer', minimum: 1, maximum: 8_192 },
   metadata: { type: 'object', additionalProperties: true },
@@ -68,9 +68,9 @@ const generationBodyProperties = {
   templateId: { type: 'string', format: 'uuid' },
   templateName: { type: 'string', minLength: 1, maxLength: 255 },
   contentName: { type: 'string', minLength: 1, maxLength: 255 },
-  threatLevel: { type: 'string', enum: [...threatLevels] },
+  threatLevel: { type: 'string', enum: [...THREAT_LEVELS] },
   difficulty: { type: 'integer', minimum: 1, maximum: 5 },
-  faction: { type: 'string', enum: [...fictionalFactions] },
+  faction: { type: 'string', enum: [...FICTIONAL_FACTIONS] },
   attackType: { type: 'string', maxLength: 100 },
   season: { type: 'integer', minimum: 1 },
   chapter: { type: 'integer', minimum: 1 },
@@ -87,12 +87,12 @@ export const aiPromptTemplateJsonSchema = {
 export const aiPromptTemplateListQueryJsonSchema = {
   type: 'object',
   properties: {
-    category: { type: 'string', enum: [...promptTemplateCategories] },
+    category: { type: 'string', enum: [...PROMPT_TEMPLATE_CATEGORIES] },
     name: { type: 'string' },
-    version: { type: 'string', pattern: semanticVersionPattern },
+    version: { type: 'string', pattern: SEMANTIC_VERSION_PATTERN },
     isActive: { type: 'boolean' },
     attackType: { type: 'string', maxLength: 100 },
-    threatLevel: { type: 'string', enum: [...threatLevels] },
+    threatLevel: { type: 'string', enum: [...THREAT_LEVELS] },
     difficulty: { type: 'integer', minimum: 1, maximum: 5 },
     season: { type: 'integer', minimum: 1 },
     chapter: { type: 'integer', minimum: 1 },
@@ -136,7 +136,7 @@ export const aiEmailGenerationBodyJsonSchema = {
   type: 'object',
   required: ['category'],
   properties: {
-    category: { type: 'string', enum: [...emailGenerationCategories] },
+    category: { type: 'string', enum: [...EMAIL_GENERATION_CATEGORIES] },
     ...generationBodyProperties,
   },
   additionalProperties: false,

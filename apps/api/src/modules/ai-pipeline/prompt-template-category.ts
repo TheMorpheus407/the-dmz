@@ -1,4 +1,4 @@
-export const promptTemplateCategories = [
+export const PROMPT_TEMPLATE_CATEGORIES = [
   'email_phishing',
   'email_legitimate',
   'intel_brief',
@@ -7,9 +7,9 @@ export const promptTemplateCategories = [
   'micro_lesson',
 ] as const;
 
-export type PromptTemplateCategory = (typeof promptTemplateCategories)[number];
+export type PromptTemplateCategory = (typeof PROMPT_TEMPLATE_CATEGORIES)[number];
 
-const promptTemplateCategorySet = new Set<string>(promptTemplateCategories);
+const PROMPT_TEMPLATE_CATEGORY_SET = new Set<string>(PROMPT_TEMPLATE_CATEGORIES);
 
 export const isPromptTemplateCategory = (value: unknown): value is PromptTemplateCategory =>
-  typeof value === 'string' && promptTemplateCategorySet.has(value);
+  typeof value === 'string' && PROMPT_TEMPLATE_CATEGORY_SET.has(value);

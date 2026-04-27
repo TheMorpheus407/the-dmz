@@ -16,10 +16,10 @@ const factionDomainMap: Record<string, string> = {
   'Criminal Networks': 'networks',
 };
 
-const fallbackTimestamp = '2063-09-14T14:22:00Z';
-const bodyUrlRegex = /https?:\/\/[^\s)"'<>]+/gi;
-const defaultFallbackJustification = 'Review the request details carefully.';
-const defaultFallbackCallToAction =
+const FALLBACK_TIMESTAMP = '2063-09-14T14:22:00Z';
+const BODY_URL_REGEX = /https?:\/\/[^\s)"'<>]+/gi;
+const DEFAULT_FALLBACK_JUSTIFICATION = 'Review the request details carefully.';
+const DEFAULT_FALLBACK_CALL_TO_ACTION =
   'Use your standard verification process before approving this request.';
 
 const readString = (value: unknown): string | undefined =>
@@ -120,8 +120,8 @@ export const buildStructuredFallbackFromTemplate = (
   const resolvedSeason = pickFirstNumber(template.season, request.season);
   const resolvedChapter = pickFirstNumber(template.chapter, request.chapter);
   const summary = paragraphs[0] ?? template.subject;
-  const justification = paragraphs[1] ?? defaultFallbackJustification;
-  const callToAction = paragraphs[2] ?? defaultFallbackCallToAction;
+  const justification = paragraphs[1] ?? DEFAULT_FALLBACK_JUSTIFICATION;
+  const callToAction = paragraphs[2] ?? DEFAULT_FALLBACK_CALL_TO_ACTION;
 
   const metadataLinks = readLinkEntries(metadata).flatMap((entry) => {
     const url = readString(entry['url']);
@@ -137,7 +137,7 @@ export const buildStructuredFallbackFromTemplate = (
       },
     ];
   });
-  const bodyLinks = Array.from(template.body.matchAll(bodyUrlRegex)).map((match, index) => ({
+  const bodyLinks = Array.from(template.body.matchAll(BODY_URL_REGEX)).map((match, index) => ({
     label: `Referenced link ${index + 1}`,
     url: match[0],
     is_suspicious: request.category === 'email_phishing',
@@ -192,7 +192,7 @@ export const buildStructuredFallbackFromTemplate = (
       from: fromEmail,
       to: 'intake@archive.invalid',
       subject: template.subject,
-      date: fallbackTimestamp,
+      date: FALLBACK_TIMESTAMP,
       message_id: `<fallback-${template.id}@archive.invalid>`,
       reply_to: replyTo,
       spf: request.category === 'email_legitimate' ? 'pass' : 'fail',

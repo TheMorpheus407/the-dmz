@@ -1,5 +1,5 @@
 import {
-  promptTemplateCategories,
+  PROMPT_TEMPLATE_CATEGORIES,
   type PromptTemplateCategory,
 } from './prompt-template-category.js';
 
@@ -7,7 +7,7 @@ import type { AppConfig } from '../../config.js';
 import type { PromptTemplate } from '../../db/schema/ai/prompt-templates.js';
 import type { EventBus } from '../../shared/events/event-types.js';
 
-export const fictionalFactions = [
+export const FICTIONAL_FACTIONS = [
   'Sovereign Compact',
   'Nexion Industries',
   'Librarians',
@@ -15,19 +15,19 @@ export const fictionalFactions = [
   'Criminal Networks',
 ] as const;
 
-export const generatablePromptTemplateCategories = [
+export const GENERATABLE_PROMPT_TEMPLATE_CATEGORIES = [
   'email_phishing',
   'email_legitimate',
   'intel_brief',
   'scenario_variation',
 ] as const;
 
-export const semanticVersionPattern = '^[0-9]+\\.[0-9]+\\.[0-9]+$';
-export const semanticVersionRegex = /^[0-9]+\.[0-9]+\.[0-9]+$/;
+export const SEMANTIC_VERSION_PATTERN = '^[0-9]+\\.[0-9]+\\.[0-9]+$';
+export const SEMANTIC_VERSION_REGEX = /^[0-9]+\.[0-9]+\.[0-9]+$/;
 
 export type GeneratablePromptTemplateCategory =
-  (typeof generatablePromptTemplateCategories)[number];
-export { promptTemplateCategories, type PromptTemplateCategory };
+  (typeof GENERATABLE_PROMPT_TEMPLATE_CATEGORIES)[number];
+export { PROMPT_TEMPLATE_CATEGORIES, type PromptTemplateCategory };
 
 export interface AiPipelineLogger {
   info: (...args: unknown[]) => void;
