@@ -394,6 +394,266 @@ export const fetchAndParseIdPMetadata = async (
   }
 };
 
+const validateResponseSignature = (
+  decodedResponse: string,
+  response: SAMLXMLResponse,
+  idpMetadata: SAMLIdPMetadata,
+): SAMLValidationResult => {
+  const responseSignature = response.Signature;
+  const assertionSignature = response.Assertion?.Signature;
+
+  if (!responseSignature && !assertionSignature && idpMetadata.certificates.length > 0) {
+    return { valid: false, failureReason: 'invalid_assertion' };
+  }
+
+  if (!responseSignature && !assertionSignature) {
+    return { valid: true };
+  }
+
+  if (idpMetadata.certificates.length === 0) {
+    return { valid: true };
+  }
+
+  const sig = responseSignature || assertionSignature;
+  const signatureValue = sig?.SignatureValue;
+
+  if (!signatureValue) {
+    return { valid: false, failureReason: 'invalid_assertion' };
+  }
+
+  const isSignatureValid = validateXMLSignature(
+    decodedResponse,
+    signatureValue,
+    idpMetadata.certificates[0] ?? '',
+  );
+
+  if (!isSignatureValid) {
+    return { valid: false, failureReason: 'invalid_assertion' };
+  }
+
+  return { valid: true };
+};
+
+const validateIssuerAndDestination = (
+  response: SAMLXMLResponse,
+  idpMetadata: SAMLIdPMetadata,
+  expectedDestination: string,
+): SAMLValidationResult => {
+  const issuer =
+    typeof response.Issuer === 'object'
+      ? (response.Issuer['#text'] ?? response.Issuer)
+      : response.Issuer;
+
+  if (issuer !== idpMetadata.issuer && issuer !== idpMetadata.entityId) {
+    return { valid: false, failureReason: 'issuer_mismatch' };
+  }
+
+  const destination = response['@_Destination'];
+  if (destination && destination !== expectedDestination) {
+    return { valid: false, failureReason: 'configuration_error' };
+  }
+
+  return { valid: true };
+};
+
+const validateResponseTimestamps = (response: SAMLXMLResponse): SAMLValidationResult => {
+  const issueInstant = response['@_IssueInstant'];
+  if (!issueInstant) {
+    return { valid: true };
+  }
+
+  const issuedAt = new Date(issueInstant).getTime();
+  const now = Date.now();
+  const clockSkewMs = 300000;
+
+  if (Math.abs(now - issuedAt) > clockSkewMs) {
+    return { valid: false, failureReason: 'token_expired' };
+  }
+
+  return { valid: true };
+};
+
+const validateStatusCode = (response: SAMLXMLResponse): SAMLValidationResult => {
+  const statusCode = response.Status?.StatusCode?.['@_Value'];
+  if (statusCode && !statusCode.includes('Success')) {
+    return { valid: false, failureReason: 'invalid_assertion' };
+  }
+  return { valid: true };
+};
+
+const getActiveAssertion = (
+  response: SAMLXMLResponse,
+  provider: SSOProvider,
+): { assertion: SAMLXMLAssertion | null; failureReason?: SSOTrustFailureReason } => {
+  const assertion = response.Assertion;
+
+  if (assertion) {
+    return { assertion };
+  }
+
+  const encryptedAssertion = response.EncryptedAssertion as SAMLXMLEncryptedAssertion | undefined;
+  if (!encryptedAssertion) {
+    return { assertion: null, failureReason: 'invalid_assertion' };
+  }
+
+  if (!provider.spPrivateKey) {
+    return { assertion: null, failureReason: 'configuration_error' };
+  }
+
+  const decryptedAssertion = decryptEncryptedAssertion(encryptedAssertion, provider.spPrivateKey);
+  if (!decryptedAssertion) {
+    return { assertion: null, failureReason: 'invalid_assertion' };
+  }
+
+  return { assertion: decryptedAssertion };
+};
+
+const checkAssertionReplay = (assertionId: string | undefined): SAMLValidationResult => {
+  if (!assertionId) {
+    return { valid: true };
+  }
+
+  const isNewAssertion = checkAndCacheAssertionId(assertionId);
+  if (!isNewAssertion) {
+    return { valid: false, failureReason: 'invalid_assertion' };
+  }
+
+  return { valid: true };
+};
+
+const validateAssertionConditions = (assertion: SAMLXMLAssertion): SAMLValidationResult => {
+  const notBefore = assertion.Conditions?.['@_NotBefore'];
+  const notOnOrAfter = assertion.Conditions?.['@_NotOnOrAfter'];
+
+  if (!notBefore && !notOnOrAfter) {
+    return { valid: true };
+  }
+
+  const now = new Date().getTime();
+
+  if (notBefore) {
+    const notBeforeMs = new Date(notBefore).getTime();
+    if (now < notBeforeMs) {
+      return { valid: false, failureReason: 'token_early' };
+    }
+  }
+
+  if (notOnOrAfter) {
+    const notOnOrAfterMs = new Date(notOnOrAfter).getTime();
+    if (now >= notOnOrAfterMs) {
+      return { valid: false, failureReason: 'token_expired' };
+    }
+  }
+
+  return { valid: true };
+};
+
+const extractSubject = (assertion: SAMLXMLAssertion): { subject: string | null } => {
+  const nameId = assertion.Subject?.NameID;
+  const subjectValue = typeof nameId === 'object' ? (nameId['#text'] ?? nameId) : nameId;
+  return { subject: subjectValue ?? null };
+};
+
+const extractSAMLAttributes = (assertion: SAMLXMLAssertion): Record<string, unknown> => {
+  const attributes: Record<string, unknown> = {};
+  const attrStatements = assertion.AttributeStatement?.Attribute;
+
+  if (!attrStatements) {
+    return attributes;
+  }
+
+  const attrs = Array.isArray(attrStatements) ? attrStatements : [attrStatements];
+  for (const attr of attrs) {
+    const name = attr['@_Name'];
+    const values = attr.AttributeValue;
+    if (name && values) {
+      const value = Array.isArray(values)
+        ? values.map((v: unknown) => (v as { '#text'?: string })['#text'] || v)
+        : (values as { '#text'?: string })['#text'] || values;
+      attributes[name] = Array.isArray(value) && value.length === 1 ? value[0] : value;
+    }
+  }
+
+  return attributes;
+};
+
+const mapAttributesToClaims = (
+  attributes: Record<string, unknown>,
+  subjectValue: string,
+): SSOIdentityClaim => {
+  const attributeMapping = DEFAULT_ATTRIBUTE_MAPPING;
+
+  const emailRaw =
+    (attributes[attributeMapping.email] as string | undefined) ||
+    (attributes['email'] as string | undefined) ||
+    (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] as
+      | string
+      | undefined);
+
+  const firstName =
+    (attributes[attributeMapping.firstName] as string | undefined) ||
+    (attributes['firstName'] as string | undefined) ||
+    (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'] as
+      | string
+      | undefined);
+
+  const lastName =
+    (attributes[attributeMapping.lastName] as string | undefined) ||
+    (attributes['lastName'] as string | undefined) ||
+    (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'] as
+      | string
+      | undefined);
+
+  const groups: string[] = [];
+  const groupsAttr =
+    attributes[attributeMapping.groups] ||
+    attributes['groups'] ||
+    attributes['http://schemas.microsoft.com/ws/2008/06/identity/claims/groups'];
+  if (groupsAttr) {
+    const groupsArray = Array.isArray(groupsAttr) ? groupsAttr : [groupsAttr];
+    for (const g of groupsArray) {
+      if (typeof g === 'string') {
+        groups.push(g);
+      }
+    }
+  }
+
+  const department =
+    (attributes[attributeMapping.department] as string | undefined) ||
+    (attributes['department'] as string | undefined) ||
+    (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/department'] as
+      | string
+      | undefined);
+
+  const title =
+    (attributes[attributeMapping.title] as string | undefined) ||
+    (attributes['title'] as string | undefined) ||
+    (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle'] as
+      | string
+      | undefined);
+
+  const manager =
+    (attributes['manager'] as string | undefined) ||
+    (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/manager'] as
+      | string
+      | undefined);
+
+  const emailValue: string | undefined = emailRaw ? String(emailRaw).toLowerCase() : undefined;
+
+  const displayNameValue =
+    firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || undefined;
+
+  return {
+    subject: subjectValue,
+    email: emailValue,
+    displayName: displayNameValue,
+    groups: groups.length > 0 ? groups : undefined,
+    department: department,
+    title: title,
+    manager: manager,
+  };
+};
+
 export const validateSAMLResponse = async (
   samlResponse: string,
   provider: SSOProvider,
@@ -403,10 +663,7 @@ export const validateSAMLResponse = async (
   try {
     const metadataUrl = provider.metadataUrl;
     if (!metadataUrl) {
-      return {
-        valid: false,
-        failureReason: 'configuration_error',
-      };
+      return { valid: false, failureReason: 'configuration_error' };
     }
 
     const idpMetadata = await fetchAndParseIdPMetadata(metadataUrl);
@@ -417,257 +674,58 @@ export const validateSAMLResponse = async (
     const response = parsed.Response;
 
     if (!response) {
-      return {
-        valid: false,
-        failureReason: 'invalid_assertion',
-      };
+      return { valid: false, failureReason: 'invalid_assertion' };
     }
 
-    const responseSignature = response.Signature;
-    const assertionSignature = response.Assertion?.Signature;
-
-    if (!responseSignature && !assertionSignature && idpMetadata.certificates.length > 0) {
-      return {
-        valid: false,
-        failureReason: 'invalid_assertion',
-      };
+    const signatureResult = validateResponseSignature(decodedResponse, response, idpMetadata);
+    if (!signatureResult.valid) {
+      return signatureResult;
     }
 
-    if ((responseSignature || assertionSignature) && idpMetadata.certificates.length > 0) {
-      const sig = responseSignature || assertionSignature;
-      const signatureValue = sig?.SignatureValue;
-
-      if (!signatureValue) {
-        return {
-          valid: false,
-          failureReason: 'invalid_assertion',
-        };
-      }
-
-      const isSignatureValid = validateXMLSignature(
-        decodedResponse,
-        signatureValue,
-        idpMetadata.certificates[0] ?? '',
-      );
-
-      if (!isSignatureValid) {
-        return {
-          valid: false,
-          failureReason: 'invalid_assertion',
-        };
-      }
+    const issuerDestResult = validateIssuerAndDestination(
+      response,
+      idpMetadata,
+      expectedDestination,
+    );
+    if (!issuerDestResult.valid) {
+      return issuerDestResult;
     }
 
-    const issuer =
-      typeof response.Issuer === 'object'
-        ? (response.Issuer['#text'] ?? response.Issuer)
-        : response.Issuer;
-    if (issuer !== idpMetadata.issuer && issuer !== idpMetadata.entityId) {
-      return {
-        valid: false,
-        failureReason: 'issuer_mismatch',
-      };
+    const timestampResult = validateResponseTimestamps(response);
+    if (!timestampResult.valid) {
+      return timestampResult;
     }
 
-    const destination = response['@_Destination'];
-    if (destination && destination !== expectedDestination) {
-      return {
-        valid: false,
-        failureReason: 'configuration_error',
-      };
+    const statusResult = validateStatusCode(response);
+    if (!statusResult.valid) {
+      return statusResult;
     }
 
-    const issueInstant = response['@_IssueInstant'];
-    if (issueInstant) {
-      const issuedAt = new Date(issueInstant).getTime();
-      const now = Date.now();
-      const clockSkewMs = 300000;
-
-      if (Math.abs(now - issuedAt) > clockSkewMs) {
-        return {
-          valid: false,
-          failureReason: 'token_expired',
-        };
-      }
-    }
-
-    const statusCode = response.Status?.StatusCode?.['@_Value'];
-    if (statusCode && !statusCode.includes('Success')) {
-      return {
-        valid: false,
-        failureReason: 'invalid_assertion',
-      };
-    }
-
-    const assertion = response.Assertion;
-    let activeAssertion: SAMLXMLAssertion;
-    if (!assertion) {
-      const encryptedAssertion = response.EncryptedAssertion as
-        | SAMLXMLEncryptedAssertion
-        | undefined;
-      if (encryptedAssertion) {
-        if (!provider.spPrivateKey) {
-          return {
-            valid: false,
-            failureReason: 'configuration_error',
-          };
-        }
-        const decryptedAssertion = decryptEncryptedAssertion(
-          encryptedAssertion,
-          provider.spPrivateKey,
-        );
-        if (!decryptedAssertion) {
-          return {
-            valid: false,
-            failureReason: 'invalid_assertion',
-          };
-        }
-        activeAssertion = decryptedAssertion;
-      } else {
-        return {
-          valid: false,
-          failureReason: 'invalid_assertion',
-        };
-      }
-    } else {
-      activeAssertion = assertion;
+    const { assertion: activeAssertion, failureReason } = getActiveAssertion(response, provider);
+    if (!activeAssertion) {
+      return { valid: false, failureReason: failureReason ?? 'invalid_assertion' };
     }
 
     const assertionId = activeAssertion['@_ID'];
-    if (assertionId) {
-      const isNewAssertion = checkAndCacheAssertionId(assertionId);
-      if (!isNewAssertion) {
-        return {
-          valid: false,
-          failureReason: 'invalid_assertion',
-        };
-      }
 
-      const notBefore = activeAssertion.Conditions?.['@_NotBefore'];
-      const notOnOrAfter = activeAssertion.Conditions?.['@_NotOnOrAfter'];
-
-      if (notBefore || notOnOrAfter) {
-        const now = new Date().getTime();
-        if (notBefore) {
-          const notBeforeMs = new Date(notBefore).getTime();
-          if (now < notBeforeMs) {
-            return {
-              valid: false,
-              failureReason: 'token_early',
-            };
-          }
-        }
-        if (notOnOrAfter) {
-          const notOnOrAfterMs = new Date(notOnOrAfter).getTime();
-          if (now >= notOnOrAfterMs) {
-            return {
-              valid: false,
-              failureReason: 'token_expired',
-            };
-          }
-        }
-      }
+    const replayResult = checkAssertionReplay(assertionId);
+    if (!replayResult.valid) {
+      return replayResult;
     }
 
-    const subjectValue =
-      typeof activeAssertion.Subject?.NameID === 'object'
-        ? (activeAssertion.Subject.NameID['#text'] ?? activeAssertion.Subject.NameID)
-        : activeAssertion.Subject?.NameID;
-    if (!subjectValue) {
-      return {
-        valid: false,
-        failureReason: 'missing_required_claim',
-      };
+    const conditionsResult = validateAssertionConditions(activeAssertion);
+    if (!conditionsResult.valid) {
+      return conditionsResult;
     }
 
-    const attrStatements = activeAssertion.AttributeStatement?.Attribute;
-    const attributes: Record<string, unknown> = {};
-
-    if (attrStatements) {
-      const attrs = Array.isArray(attrStatements) ? attrStatements : [attrStatements];
-      for (const attr of attrs) {
-        const name = attr['@_Name'];
-        const values = attr.AttributeValue;
-        if (name && values) {
-          const value = Array.isArray(values)
-            ? values.map((v: unknown) => (v as { '#text'?: string })['#text'] || v)
-            : (values as { '#text'?: string })['#text'] || values;
-          attributes[name] = Array.isArray(value) && value.length === 1 ? value[0] : value;
-        }
-      }
+    const { subject } = extractSubject(activeAssertion);
+    if (!subject) {
+      return { valid: false, failureReason: 'missing_required_claim' };
     }
 
-    const attributeMapping = DEFAULT_ATTRIBUTE_MAPPING;
+    const attributes = extractSAMLAttributes(activeAssertion);
 
-    const emailRaw =
-      (attributes[attributeMapping.email] as string | undefined) ||
-      (attributes['email'] as string | undefined) ||
-      (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] as
-        | string
-        | undefined);
-
-    const firstName =
-      (attributes[attributeMapping.firstName] as string | undefined) ||
-      (attributes['firstName'] as string | undefined) ||
-      (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname'] as
-        | string
-        | undefined);
-
-    const lastName =
-      (attributes[attributeMapping.lastName] as string | undefined) ||
-      (attributes['lastName'] as string | undefined) ||
-      (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname'] as
-        | string
-        | undefined);
-
-    const groups: string[] = [];
-    const groupsAttr =
-      attributes[attributeMapping.groups] ||
-      attributes['groups'] ||
-      attributes['http://schemas.microsoft.com/ws/2008/06/identity/claims/groups'];
-    if (groupsAttr) {
-      const groupsArray = Array.isArray(groupsAttr) ? groupsAttr : [groupsAttr];
-      for (const g of groupsArray) {
-        if (typeof g === 'string') {
-          groups.push(g);
-        }
-      }
-    }
-
-    const department =
-      (attributes[attributeMapping.department] as string | undefined) ||
-      (attributes['department'] as string | undefined) ||
-      (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/department'] as
-        | string
-        | undefined);
-
-    const title =
-      (attributes[attributeMapping.title] as string | undefined) ||
-      (attributes['title'] as string | undefined) ||
-      (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/jobtitle'] as
-        | string
-        | undefined);
-
-    const manager =
-      (attributes['manager'] as string | undefined) ||
-      (attributes['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/manager'] as
-        | string
-        | undefined);
-
-    const emailValue: string | undefined = emailRaw ? String(emailRaw).toLowerCase() : undefined;
-
-    const displayNameValue =
-      firstName && lastName ? `${firstName} ${lastName}` : firstName || lastName || undefined;
-
-    const claims: SSOIdentityClaim = {
-      subject: subjectValue as string,
-      email: emailValue,
-      displayName: displayNameValue,
-      groups: groups.length > 0 ? groups : undefined,
-      department: department,
-      title: title,
-      manager: manager,
-    };
+    const claims = mapAttributesToClaims(attributes, subject);
 
     return {
       valid: true,
@@ -675,10 +733,7 @@ export const validateSAMLResponse = async (
       sessionIndex: assertionId ?? '',
     };
   } catch {
-    return {
-      valid: false,
-      failureReason: 'invalid_assertion',
-    };
+    return { valid: false, failureReason: 'invalid_assertion' };
   }
 };
 

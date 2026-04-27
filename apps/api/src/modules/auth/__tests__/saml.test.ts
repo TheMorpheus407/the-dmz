@@ -251,6 +251,325 @@ describe('SAML Service', () => {
 
       expect(result.valid).toBe(false);
     });
+
+    it('should return invalid when destination does not match', async () => {
+      const response = `<?xml version="1.0" encoding="UTF-8"?>
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                       xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                       ID="_response123"
+                       IssueInstant="${new Date().toISOString()}"
+                       Destination="https://wrong-destination.example.com/acs">
+          <saml:Issuer>https://idp.example.com</saml:Issuer>
+          <samlp:Status>
+            <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+          </samlp:Status>
+          <saml:Assertion ID="_assertion123">
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <saml:Subject>
+              <saml:NameID>user@example.com</saml:NameID>
+            </saml:Subject>
+          </saml:Assertion>
+        </samlp:Response>`;
+
+      const encoded = Buffer.from(response).toString('base64');
+
+      const result = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.failureReason).toBe('configuration_error');
+    });
+
+    it('should return invalid when status code indicates failure', async () => {
+      const response = `<?xml version="1.0" encoding="UTF-8"?>
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                       xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                       ID="_response123"
+                       IssueInstant="${new Date().toISOString()}"
+                       Destination="https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id">
+          <saml:Issuer>https://idp.example.com</saml:Issuer>
+          <samlp:Status>
+            <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Requester"/>
+          </samlp:Status>
+          <saml:Assertion ID="_assertion123">
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <saml:Subject>
+              <saml:NameID>user@example.com</saml:NameID>
+            </saml:Subject>
+          </saml:Assertion>
+        </samlp:Response>`;
+
+      const encoded = Buffer.from(response).toString('base64');
+
+      const result = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.failureReason).toBe('invalid_assertion');
+    });
+
+    it('should return invalid when token is expired due to clock skew', async () => {
+      const expiredIssueInstant = new Date(Date.now() - 400000).toISOString();
+
+      const response = `<?xml version="1.0" encoding="UTF-8"?>
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                       xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                       ID="_response123"
+                       IssueInstant="${expiredIssueInstant}"
+                       Destination="https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id">
+          <saml:Issuer>https://idp.example.com</saml:Issuer>
+          <samlp:Status>
+            <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+          </samlp:Status>
+          <saml:Assertion ID="_assertion123">
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <saml:Subject>
+              <saml:NameID>user@example.com</saml:NameID>
+            </saml:Subject>
+          </saml:Assertion>
+        </samlp:Response>`;
+
+      const encoded = Buffer.from(response).toString('base64');
+
+      const result = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.failureReason).toBe('token_expired');
+    });
+
+    it('should return invalid when assertion is not yet valid (NotBefore)', async () => {
+      const futureDate = new Date(Date.now() + 600000).toISOString();
+
+      const response = `<?xml version="1.0" encoding="UTF-8"?>
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                       xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                       ID="_response123"
+                       IssueInstant="${new Date().toISOString()}"
+                       Destination="https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id">
+          <saml:Issuer>https://idp.example.com</saml:Issuer>
+          <samlp:Status>
+            <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+          </samlp:Status>
+          <saml:Assertion ID="_assertion123">
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <saml:Subject>
+              <saml:NameID>user@example.com</saml:NameID>
+            </saml:Subject>
+            <saml:Conditions NotBefore="${futureDate}"/>
+          </saml:Assertion>
+        </samlp:Response>`;
+
+      const encoded = Buffer.from(response).toString('base64');
+
+      const result = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.failureReason).toBe('token_early');
+    });
+
+    it('should return invalid when assertion is expired (NotOnOrAfter)', async () => {
+      const pastDate = new Date(Date.now() - 60000).toISOString();
+
+      const response = `<?xml version="1.0" encoding="UTF-8"?>
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                       xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                       ID="_response123"
+                       IssueInstant="${new Date().toISOString()}"
+                       Destination="https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id">
+          <saml:Issuer>https://idp.example.com</saml:Issuer>
+          <samlp:Status>
+            <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+          </samlp:Status>
+          <saml:Assertion ID="_assertion456">
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <saml:Subject>
+              <saml:NameID>user@example.com</saml:NameID>
+            </saml:Subject>
+            <saml:Conditions NotOnOrAfter="${pastDate}"/>
+          </saml:Assertion>
+        </samlp:Response>`;
+
+      const encoded = Buffer.from(response).toString('base64');
+
+      const result = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(result.valid).toBe(false);
+      expect(result.failureReason).toBe('token_expired');
+    });
+
+    it('should detect replay attack on same assertion ID', async () => {
+      const response = `<?xml version="1.0" encoding="UTF-8"?>
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                       xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                       ID="_response123"
+                       IssueInstant="${new Date().toISOString()}"
+                       Destination="https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id">
+          <saml:Issuer>https://idp.example.com</saml:Issuer>
+          <samlp:Status>
+            <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+          </samlp:Status>
+          <saml:Assertion ID="_replay-assertion-id">
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <saml:Subject>
+              <saml:NameID>user@example.com</saml:NameID>
+            </saml:Subject>
+          </saml:Assertion>
+        </samlp:Response>`;
+
+      const encoded = Buffer.from(response).toString('base64');
+
+      const firstResult = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(firstResult.valid).toBe(true);
+
+      const secondResult = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(secondResult.valid).toBe(false);
+      expect(secondResult.failureReason).toBe('invalid_assertion');
+    });
+
+    it('should extract attributes and map to claims correctly', async () => {
+      const response = `<?xml version="1.0" encoding="UTF-8"?>
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                       xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                       ID="_response123"
+                       IssueInstant="${new Date().toISOString()}"
+                       Destination="https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id">
+          <saml:Issuer>https://idp.example.com</saml:Issuer>
+          <samlp:Status>
+            <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+          </samlp:Status>
+          <saml:Assertion ID="_assertion123">
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <saml:Subject>
+              <saml:NameID>user@example.com</saml:NameID>
+            </saml:Subject>
+            <saml:AttributeStatement>
+              <saml:Attribute Name="email">
+                <saml:AttributeValue>USER@EXAMPLE.COM</saml:AttributeValue>
+              </saml:Attribute>
+              <saml:Attribute Name="firstName">
+                <saml:AttributeValue>John</saml:AttributeValue>
+              </saml:Attribute>
+              <saml:Attribute Name="lastName">
+                <saml:AttributeValue>Doe</saml:AttributeValue>
+              </saml:Attribute>
+              <saml:Attribute Name="groups">
+                <saml:AttributeValue>admins</saml:AttributeValue>
+                <saml:AttributeValue>users</saml:AttributeValue>
+              </saml:Attribute>
+              <saml:Attribute Name="department">
+                <saml:AttributeValue>Engineering</saml:AttributeValue>
+              </saml:Attribute>
+              <saml:Attribute Name="title">
+                <saml:AttributeValue>Software Engineer</saml:AttributeValue>
+              </saml:Attribute>
+            </saml:AttributeStatement>
+          </saml:Assertion>
+        </samlp:Response>`;
+
+      const encoded = Buffer.from(response).toString('base64');
+
+      const result = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(result.valid).toBe(true);
+      expect(result.claims).toBeDefined();
+      expect(result.claims?.email).toBe('user@example.com');
+      expect(result.claims?.displayName).toBe('John Doe');
+      expect(result.claims?.groups).toEqual(['admins', 'users']);
+      expect(result.claims?.department).toBe('Engineering');
+      expect(result.claims?.title).toBe('Software Engineer');
+    });
+
+    it('should handle object-style NameID', async () => {
+      const response = `<?xml version="1.0" encoding="UTF-8"?>
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                       xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                       ID="_response123"
+                       IssueInstant="${new Date().toISOString()}"
+                       Destination="https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id">
+          <saml:Issuer>https://idp.example.com</saml:Issuer>
+          <samlp:Status>
+            <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+          </samlp:Status>
+          <saml:Assertion ID="_assertion123">
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <saml:Subject>
+              <saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">user@example.com</saml:NameID>
+            </saml:Subject>
+          </saml:Assertion>
+        </samlp:Response>`;
+
+      const encoded = Buffer.from(response).toString('base64');
+
+      const result = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(result.valid).toBe(true);
+      expect(result.claims?.subject).toBe('user@example.com');
+    });
+
+    it('should return valid when no timestamp is present', async () => {
+      const response = `<?xml version="1.0" encoding="UTF-8"?>
+        <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"
+                       xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion"
+                       ID="_response123"
+                       Destination="https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id">
+          <saml:Issuer>https://idp.example.com</saml:Issuer>
+          <samlp:Status>
+            <samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success"/>
+          </samlp:Status>
+          <saml:Assertion ID="_assertion123">
+            <saml:Issuer>https://idp.example.com</saml:Issuer>
+            <saml:Subject>
+              <saml:NameID>user@example.com</saml:NameID>
+            </saml:Subject>
+          </saml:Assertion>
+        </samlp:Response>`;
+
+      const encoded = Buffer.from(response).toString('base64');
+
+      const result = await validateSAMLResponse(
+        encoded,
+        mockProvider,
+        'https://dmz.thearchive.game/api/v1/auth/sso/saml/acs/provider-id',
+      );
+
+      expect(result.valid).toBe(true);
+    });
   });
 
   describe('fetchAndParseIdPMetadata', () => {
