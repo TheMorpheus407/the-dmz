@@ -436,12 +436,12 @@ export const SOUND_GENERATORS: Record<
   SoundCategory,
   (variantId: string, audioContext: AudioContext, destination: GainNode) => void
 > = {
-  [SoundCategory.Ambient]: generateAmbientSound,
-  [SoundCategory.UiFeedback]: generateUiFeedbackSound,
-  [SoundCategory.Alerts]: generateAlertsSound,
-  [SoundCategory.Stamps]: generateStampsSound,
-  [SoundCategory.Narrative]: generateNarrativeSound,
-  [SoundCategory.Effects]: generateEffectsSound,
+  [SoundCategory.AMBIENT]: generateAmbientSound,
+  [SoundCategory.UI_FEEDBACK]: generateUiFeedbackSound,
+  [SoundCategory.ALERTS]: generateAlertsSound,
+  [SoundCategory.STAMPS]: generateStampsSound,
+  [SoundCategory.NARRATIVE]: generateNarrativeSound,
+  [SoundCategory.EFFECTS]: generateEffectsSound,
 };
 
 export function synthesizeSound(

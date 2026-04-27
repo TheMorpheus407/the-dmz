@@ -12,30 +12,30 @@
 
   let masterVolume = $state(80);
   let categories = $state({
-    [SoundCategory.Ambient]: { enabled: false, volume: 80 },
-    [SoundCategory.UiFeedback]: { enabled: true, volume: 60 },
-    [SoundCategory.Alerts]: { enabled: true, volume: 80 },
-    [SoundCategory.Stamps]: { enabled: true, volume: 100 },
-    [SoundCategory.Narrative]: { enabled: true, volume: 70 },
-    [SoundCategory.Effects]: { enabled: true, volume: 80 },
+    [SoundCategory.AMBIENT]: { enabled: false, volume: 80 },
+    [SoundCategory.UI_FEEDBACK]: { enabled: true, volume: 60 },
+    [SoundCategory.ALERTS]: { enabled: true, volume: 80 },
+    [SoundCategory.STAMPS]: { enabled: true, volume: 100 },
+    [SoundCategory.NARRATIVE]: { enabled: true, volume: 70 },
+    [SoundCategory.EFFECTS]: { enabled: true, volume: 80 },
   });
 
   const categoryLabels: Record<SoundCategory, string> = {
-    [SoundCategory.Ambient]: 'Ambient',
-    [SoundCategory.UiFeedback]: 'UI Feedback',
-    [SoundCategory.Alerts]: 'Alerts',
-    [SoundCategory.Stamps]: 'Stamps',
-    [SoundCategory.Narrative]: 'Narrative',
-    [SoundCategory.Effects]: 'Effects',
+    [SoundCategory.AMBIENT]: 'Ambient',
+    [SoundCategory.UI_FEEDBACK]: 'UI Feedback',
+    [SoundCategory.ALERTS]: 'Alerts',
+    [SoundCategory.STAMPS]: 'Stamps',
+    [SoundCategory.NARRATIVE]: 'Narrative',
+    [SoundCategory.EFFECTS]: 'Effects',
   };
 
   const categoryDescriptions: Record<SoundCategory, string> = {
-    [SoundCategory.Ambient]: 'Background hum, varies with threat level',
-    [SoundCategory.UiFeedback]: 'Keyboard clicks, panel switches, buttons',
-    [SoundCategory.Alerts]: 'Email chime, threat escalation, breach alarm',
-    [SoundCategory.Stamps]: 'Approve/deny stamp sounds',
-    [SoundCategory.Narrative]: 'Story stings, Morpheus messages',
-    [SoundCategory.Effects]: 'CRT power-on, static bursts',
+    [SoundCategory.AMBIENT]: 'Background hum, varies with threat level',
+    [SoundCategory.UI_FEEDBACK]: 'Keyboard clicks, panel switches, buttons',
+    [SoundCategory.ALERTS]: 'Email chime, threat escalation, breach alarm',
+    [SoundCategory.STAMPS]: 'Approve/deny stamp sounds',
+    [SoundCategory.NARRATIVE]: 'Story stings, Morpheus messages',
+    [SoundCategory.EFFECTS]: 'CRT power-on, static bursts',
   };
 
   $effect(() => {

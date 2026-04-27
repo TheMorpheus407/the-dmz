@@ -14,53 +14,53 @@ export function loadSoundSettings(): SoundSettings {
       return {
         masterVolume: parsed.masterVolume ?? DEFAULT_SOUND_SETTINGS.masterVolume,
         categories: {
-          [SoundCategory.Ambient]: {
+          [SoundCategory.AMBIENT]: {
             enabled:
-              parsed.categories?.[SoundCategory.Ambient]?.enabled ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Ambient].enabled,
+              parsed.categories?.[SoundCategory.AMBIENT]?.enabled ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.AMBIENT].enabled,
             volume:
-              parsed.categories?.[SoundCategory.Ambient]?.volume ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Ambient].volume,
+              parsed.categories?.[SoundCategory.AMBIENT]?.volume ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.AMBIENT].volume,
           },
-          [SoundCategory.UiFeedback]: {
+          [SoundCategory.UI_FEEDBACK]: {
             enabled:
-              parsed.categories?.[SoundCategory.UiFeedback]?.enabled ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.UiFeedback].enabled,
+              parsed.categories?.[SoundCategory.UI_FEEDBACK]?.enabled ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.UI_FEEDBACK].enabled,
             volume:
-              parsed.categories?.[SoundCategory.UiFeedback]?.volume ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.UiFeedback].volume,
+              parsed.categories?.[SoundCategory.UI_FEEDBACK]?.volume ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.UI_FEEDBACK].volume,
           },
-          [SoundCategory.Alerts]: {
+          [SoundCategory.ALERTS]: {
             enabled:
-              parsed.categories?.[SoundCategory.Alerts]?.enabled ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Alerts].enabled,
+              parsed.categories?.[SoundCategory.ALERTS]?.enabled ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.ALERTS].enabled,
             volume:
-              parsed.categories?.[SoundCategory.Alerts]?.volume ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Alerts].volume,
+              parsed.categories?.[SoundCategory.ALERTS]?.volume ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.ALERTS].volume,
           },
-          [SoundCategory.Stamps]: {
+          [SoundCategory.STAMPS]: {
             enabled:
-              parsed.categories?.[SoundCategory.Stamps]?.enabled ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Stamps].enabled,
+              parsed.categories?.[SoundCategory.STAMPS]?.enabled ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.STAMPS].enabled,
             volume:
-              parsed.categories?.[SoundCategory.Stamps]?.volume ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Stamps].volume,
+              parsed.categories?.[SoundCategory.STAMPS]?.volume ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.STAMPS].volume,
           },
-          [SoundCategory.Narrative]: {
+          [SoundCategory.NARRATIVE]: {
             enabled:
-              parsed.categories?.[SoundCategory.Narrative]?.enabled ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Narrative].enabled,
+              parsed.categories?.[SoundCategory.NARRATIVE]?.enabled ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.NARRATIVE].enabled,
             volume:
-              parsed.categories?.[SoundCategory.Narrative]?.volume ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Narrative].volume,
+              parsed.categories?.[SoundCategory.NARRATIVE]?.volume ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.NARRATIVE].volume,
           },
-          [SoundCategory.Effects]: {
+          [SoundCategory.EFFECTS]: {
             enabled:
-              parsed.categories?.[SoundCategory.Effects]?.enabled ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Effects].enabled,
+              parsed.categories?.[SoundCategory.EFFECTS]?.enabled ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.EFFECTS].enabled,
             volume:
-              parsed.categories?.[SoundCategory.Effects]?.volume ??
-              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.Effects].volume,
+              parsed.categories?.[SoundCategory.EFFECTS]?.volume ??
+              DEFAULT_SOUND_SETTINGS.categories[SoundCategory.EFFECTS].volume,
           },
         },
       };

@@ -10,23 +10,23 @@
   const { category, showLabel = false }: Props = $props();
 
   const categoryLabels: Record<SoundCategory, string> = {
-    [SoundCategory.Ambient]: 'Ambient',
-    [SoundCategory.UiFeedback]: 'UI',
-    [SoundCategory.Alerts]: 'Alerts',
-    [SoundCategory.Stamps]: 'Stamps',
-    [SoundCategory.Narrative]: 'Narrative',
-    [SoundCategory.Effects]: 'Effects',
+    [SoundCategory.AMBIENT]: 'Ambient',
+    [SoundCategory.UI_FEEDBACK]: 'UI',
+    [SoundCategory.ALERTS]: 'Alerts',
+    [SoundCategory.STAMPS]: 'Stamps',
+    [SoundCategory.NARRATIVE]: 'Narrative',
+    [SoundCategory.EFFECTS]: 'Effects',
   };
 
   let currentSettings = $state({
     masterVolume: 80,
     categories: {
-      [SoundCategory.Ambient]: { enabled: false, volume: 80 },
-      [SoundCategory.UiFeedback]: { enabled: true, volume: 60 },
-      [SoundCategory.Alerts]: { enabled: true, volume: 80 },
-      [SoundCategory.Stamps]: { enabled: true, volume: 100 },
-      [SoundCategory.Narrative]: { enabled: true, volume: 70 },
-      [SoundCategory.Effects]: { enabled: true, volume: 80 },
+      [SoundCategory.AMBIENT]: { enabled: false, volume: 80 },
+      [SoundCategory.UI_FEEDBACK]: { enabled: true, volume: 60 },
+      [SoundCategory.ALERTS]: { enabled: true, volume: 80 },
+      [SoundCategory.STAMPS]: { enabled: true, volume: 100 },
+      [SoundCategory.NARRATIVE]: { enabled: true, volume: 70 },
+      [SoundCategory.EFFECTS]: { enabled: true, volume: 80 },
     },
   });
 

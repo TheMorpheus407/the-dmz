@@ -16,7 +16,7 @@
     {#each captions.slice(0, maxVisible) as caption (caption.id)}
       <div
         class="sound-caption"
-        class:sound-caption--alert={caption.category === SoundCategory.Alerts}
+        class:sound-caption--alert={caption.category === SoundCategory.ALERTS}
       >
         <span class="sound-caption__text">[{caption.text}]</span>
       </div>

@@ -17,37 +17,37 @@ describe('Sound Synthesis Architecture', () => {
     });
 
     it('should have a generator function for Ambient category', () => {
-      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Ambient]).toBeDefined();
-      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Ambient]).toBe('function');
+      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.AMBIENT]).toBeDefined();
+      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.AMBIENT]).toBe('function');
     });
 
     it('should have a generator function for UiFeedback category', () => {
-      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.UiFeedback]).toBeDefined();
-      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.UiFeedback]).toBe(
+      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.UI_FEEDBACK]).toBeDefined();
+      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.UI_FEEDBACK]).toBe(
         'function',
       );
     });
 
     it('should have a generator function for Alerts category', () => {
-      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Alerts]).toBeDefined();
-      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Alerts]).toBe('function');
+      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.ALERTS]).toBeDefined();
+      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.ALERTS]).toBe('function');
     });
 
     it('should have a generator function for Stamps category', () => {
-      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Stamps]).toBeDefined();
-      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Stamps]).toBe('function');
+      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.STAMPS]).toBeDefined();
+      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.STAMPS]).toBe('function');
     });
 
     it('should have a generator function for Narrative category', () => {
-      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Narrative]).toBeDefined();
-      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Narrative]).toBe(
+      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.NARRATIVE]).toBeDefined();
+      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.NARRATIVE]).toBe(
         'function',
       );
     });
 
     it('should have a generator function for Effects category', () => {
-      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Effects]).toBeDefined();
-      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.Effects]).toBe('function');
+      expect(soundSynthesisModule.SOUND_GENERATORS[SoundCategory.EFFECTS]).toBeDefined();
+      expect(typeof soundSynthesisModule.SOUND_GENERATORS[SoundCategory.EFFECTS]).toBe('function');
     });
   });
 

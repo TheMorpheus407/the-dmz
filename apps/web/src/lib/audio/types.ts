@@ -1,10 +1,10 @@
 export enum SoundCategory {
-  Ambient = 'ambient',
-  UiFeedback = 'uiFeedback',
-  Alerts = 'alerts',
-  Stamps = 'stamps',
-  Narrative = 'narrative',
-  Effects = 'effects',
+  AMBIENT = 'ambient',
+  UI_FEEDBACK = 'ui_feedback',
+  ALERTS = 'alerts',
+  STAMPS = 'stamps',
+  NARRATIVE = 'narrative',
+  EFFECTS = 'effects',
 }
 
 export interface SoundVariant {
@@ -32,27 +32,27 @@ export interface SoundSettings {
 export const DEFAULT_SOUND_SETTINGS: SoundSettings = {
   masterVolume: 80,
   categories: {
-    [SoundCategory.Ambient]: {
+    [SoundCategory.AMBIENT]: {
       enabled: false,
       volume: 80,
     },
-    [SoundCategory.UiFeedback]: {
+    [SoundCategory.UI_FEEDBACK]: {
       enabled: true,
       volume: 60,
     },
-    [SoundCategory.Alerts]: {
+    [SoundCategory.ALERTS]: {
       enabled: true,
       volume: 80,
     },
-    [SoundCategory.Stamps]: {
+    [SoundCategory.STAMPS]: {
       enabled: true,
       volume: 100,
     },
-    [SoundCategory.Narrative]: {
+    [SoundCategory.NARRATIVE]: {
       enabled: true,
       volume: 70,
     },
-    [SoundCategory.Effects]: {
+    [SoundCategory.EFFECTS]: {
       enabled: true,
       volume: 80,
     },
@@ -63,7 +63,7 @@ export const SOUND_DEFINITIONS: Record<
   SoundCategory,
   { variants: { id: string; duration?: number }[] }
 > = {
-  [SoundCategory.Ambient]: {
+  [SoundCategory.AMBIENT]: {
     variants: [
       { id: 'lowHum', duration: 3000 },
       { id: 'guardedHum', duration: 3000 },
@@ -72,33 +72,33 @@ export const SOUND_DEFINITIONS: Record<
       { id: 'severeDrone', duration: 3000 },
     ],
   },
-  [SoundCategory.UiFeedback]: {
+  [SoundCategory.UI_FEEDBACK]: {
     variants: [
       { id: 'keyClick', duration: 50 },
       { id: 'panelSwitch', duration: 100 },
       { id: 'buttonPress', duration: 80 },
     ],
   },
-  [SoundCategory.Alerts]: {
+  [SoundCategory.ALERTS]: {
     variants: [
       { id: 'newEmail', duration: 500 },
       { id: 'threatEscalation', duration: 800 },
       { id: 'breachAlarm', duration: 1000 },
     ],
   },
-  [SoundCategory.Stamps]: {
+  [SoundCategory.STAMPS]: {
     variants: [
       { id: 'approveStamp', duration: 300 },
       { id: 'denyStamp', duration: 300 },
     ],
   },
-  [SoundCategory.Narrative]: {
+  [SoundCategory.NARRATIVE]: {
     variants: [
       { id: 'storySting', duration: 2000 },
       { id: 'morpheusMessage', duration: 3000 },
     ],
   },
-  [SoundCategory.Effects]: {
+  [SoundCategory.EFFECTS]: {
     variants: [
       { id: 'crtPowerOn', duration: 800 },
       { id: 'staticBurst', duration: 400 },

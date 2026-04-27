@@ -113,18 +113,18 @@ function createSoundStore() {
         const newState = {
           ...state,
           categories: {
-            [SoundCategory.Ambient]: { ...state.categories[SoundCategory.Ambient], enabled: false },
-            [SoundCategory.UiFeedback]: {
-              ...state.categories[SoundCategory.UiFeedback],
+            [SoundCategory.AMBIENT]: { ...state.categories[SoundCategory.AMBIENT], enabled: false },
+            [SoundCategory.UI_FEEDBACK]: {
+              ...state.categories[SoundCategory.UI_FEEDBACK],
               enabled: false,
             },
-            [SoundCategory.Alerts]: { ...state.categories[SoundCategory.Alerts], enabled: false },
-            [SoundCategory.Stamps]: { ...state.categories[SoundCategory.Stamps], enabled: false },
-            [SoundCategory.Narrative]: {
-              ...state.categories[SoundCategory.Narrative],
+            [SoundCategory.ALERTS]: { ...state.categories[SoundCategory.ALERTS], enabled: false },
+            [SoundCategory.STAMPS]: { ...state.categories[SoundCategory.STAMPS], enabled: false },
+            [SoundCategory.NARRATIVE]: {
+              ...state.categories[SoundCategory.NARRATIVE],
               enabled: false,
             },
-            [SoundCategory.Effects]: { ...state.categories[SoundCategory.Effects], enabled: false },
+            [SoundCategory.EFFECTS]: { ...state.categories[SoundCategory.EFFECTS], enabled: false },
           },
         };
         Object.values(SoundCategory).forEach((cat) => soundManager.mute(cat));
@@ -138,18 +138,18 @@ function createSoundStore() {
         const newState = {
           ...state,
           categories: {
-            [SoundCategory.Ambient]: { ...state.categories[SoundCategory.Ambient], enabled: true },
-            [SoundCategory.UiFeedback]: {
-              ...state.categories[SoundCategory.UiFeedback],
+            [SoundCategory.AMBIENT]: { ...state.categories[SoundCategory.AMBIENT], enabled: true },
+            [SoundCategory.UI_FEEDBACK]: {
+              ...state.categories[SoundCategory.UI_FEEDBACK],
               enabled: true,
             },
-            [SoundCategory.Alerts]: { ...state.categories[SoundCategory.Alerts], enabled: true },
-            [SoundCategory.Stamps]: { ...state.categories[SoundCategory.Stamps], enabled: true },
-            [SoundCategory.Narrative]: {
-              ...state.categories[SoundCategory.Narrative],
+            [SoundCategory.ALERTS]: { ...state.categories[SoundCategory.ALERTS], enabled: true },
+            [SoundCategory.STAMPS]: { ...state.categories[SoundCategory.STAMPS], enabled: true },
+            [SoundCategory.NARRATIVE]: {
+              ...state.categories[SoundCategory.NARRATIVE],
               enabled: true,
             },
-            [SoundCategory.Effects]: { ...state.categories[SoundCategory.Effects], enabled: true },
+            [SoundCategory.EFFECTS]: { ...state.categories[SoundCategory.EFFECTS], enabled: true },
           },
         };
         Object.values(SoundCategory).forEach((cat) => soundManager.unmute(cat));

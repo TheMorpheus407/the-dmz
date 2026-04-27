@@ -190,7 +190,7 @@
     thunkType = 'approve';
     thunkVisible = true;
     setTimeout(() => (thunkVisible = false), 400);
-    soundManager.play(SoundCategory.Stamps, 'approveStamp');
+    soundManager.play(SoundCategory.STAMPS, 'approveStamp');
     uiStore.addNotification('Request approved', 'success');
   }
 
@@ -198,7 +198,7 @@
     thunkType = 'deny';
     thunkVisible = true;
     setTimeout(() => (thunkVisible = false), 400);
-    soundManager.play(SoundCategory.Stamps, 'denyStamp');
+    soundManager.play(SoundCategory.STAMPS, 'denyStamp');
     uiStore.addNotification('Request denied', 'warning');
   }
 
@@ -206,7 +206,7 @@
     thunkType = 'flag';
     thunkVisible = true;
     setTimeout(() => (thunkVisible = false), 400);
-    soundManager.play(SoundCategory.UiFeedback, 'panelSwitch');
+    soundManager.play(SoundCategory.UI_FEEDBACK, 'panelSwitch');
     uiStore.addNotification('Request flagged for review', 'info');
   }
 
@@ -214,7 +214,7 @@
     thunkType = 'verify';
     thunkVisible = true;
     setTimeout(() => (thunkVisible = false), 400);
-    soundManager.play(SoundCategory.UiFeedback, 'buttonPress');
+    soundManager.play(SoundCategory.UI_FEEDBACK, 'buttonPress');
     uiStore.addNotification('Verification requested', 'info');
   }
 
