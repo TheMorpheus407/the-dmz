@@ -147,10 +147,12 @@ function createOfflineModeStore() {
     startPeriodicSync(): void {
       if (syncInterval) return;
 
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      const self = this;
       syncInterval = setInterval(() => {
         const connState = get(connectivityStore);
         if (connState.online && engine) {
-          void this.sync();
+          void self.sync();
         }
       }, 60000);
     },
