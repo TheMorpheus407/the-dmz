@@ -259,6 +259,200 @@ export const SCHEMA_OWNERSHIP_MANIFEST: SchemaOwnershipManifest = {
       sharedSources: ['@the-dmz/shared/schemas'],
       exemptions: [],
     },
+    {
+      module: 'scim',
+      schemaNamespace: 'Scim',
+      ownedSchemas: [
+        'scimUserSchema',
+        'scimGroupSchema',
+        'scimListResponseSchema',
+        'scimBulkGetOperationSchema',
+        'scimBulkPostOperationSchema',
+        'scimBulkPutOperationSchema',
+        'scimBulkPatchOperationSchema',
+        'scimBulkDeleteOperationSchema',
+        'scimBulkOperationSchema',
+        'scimBulkRequestSchema',
+        'scimBulkResponseSchema',
+      ],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'webhooks',
+      schemaNamespace: 'Webhooks',
+      ownedSchemas: [],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'email',
+      schemaNamespace: 'Email',
+      ownedSchemas: [],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'narrative',
+      schemaNamespace: 'Narrative',
+      ownedSchemas: [],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'settings',
+      schemaNamespace: 'Settings',
+      ownedSchemas: [],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'analytics',
+      schemaNamespace: 'Analytics',
+      ownedSchemas: [],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'featureFlags',
+      schemaNamespace: 'FeatureFlags',
+      ownedSchemas: [
+        'createFeatureFlagSchema',
+        'updateFeatureFlagSchema',
+        'tenantOverrideSchema',
+        'featureFlagResponseSchema',
+        'featureFlagListResponseSchema',
+        'featureFlagWithOverrideResponseSchema',
+        'activeFlagsResponseSchema',
+      ],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'scorm',
+      schemaNamespace: 'Scorm',
+      ownedSchemas: [
+        'createScormPackageSchema',
+        'scormPackageResponseSchema',
+        'createRegistrationSchema',
+        'updateRegistrationSchema',
+        'scormRegistrationResponseSchema',
+      ],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'xapi',
+      schemaNamespace: 'Xapi',
+      ownedSchemas: [
+        'xapiStatementInputSchema',
+        'xapiArchiveInputSchema',
+        'lrsConfigInputSchema',
+        'lrsConfigUpdateSchema',
+        'xapiActorInputSchema',
+        'xapiVerbInputSchema',
+        'xapiObjectDefinitionInputSchema',
+        'xapiObjectInputSchema',
+        'xapiScoreInputSchema',
+        'xapiResultInputSchema',
+        'xapiContextInputSchema',
+        'xapiExtensionsSchema',
+      ],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'billing',
+      schemaNamespace: 'Billing',
+      ownedSchemas: [],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'retention',
+      schemaNamespace: 'Retention',
+      ownedSchemas: [
+        'createPolicyBodySchema',
+        'updatePolicyBodySchema',
+        'applyTemplateBodySchema',
+        'listArchivesQuerySchema',
+        'jobHistoryQuerySchema',
+      ],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'achievements',
+      schemaNamespace: 'Achievements',
+      ownedSchemas: [],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'multiplayer',
+      schemaNamespace: 'Multiplayer',
+      ownedSchemas: [
+        'partyStatusSchema',
+        'difficultySchema',
+        'declaredRoleSchema',
+        'createPartySchema',
+        'joinPartySchema',
+        'setRoleSchema',
+        'partyMemberResponseSchema',
+        'partyResponseSchema',
+        'createPartyResponseSchema',
+      ],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
+    {
+      module: 'chat',
+      schemaNamespace: 'Chat',
+      ownedSchemas: [
+        'channelTypeSchema',
+        'sendMessageBodySchema',
+        'sendMessageResponseSchema',
+        'getMessagesQuerySchema',
+        'chatMessageSchema',
+        'getMessagesResponseSchema',
+        'deleteMessageResponseSchema',
+        'reportMessageBodySchema',
+        'reportMessageResponseSchema',
+        'chatChannelSchema',
+        'listChannelsResponseSchema',
+        'getChannelResponseSchema',
+      ],
+      ownedComponents: [],
+      componentPatterns: [],
+      sharedSources: ['@the-dmz/shared/schemas'],
+      exemptions: [],
+    },
   ],
 };
 
@@ -269,58 +463,39 @@ export function getSchemaOwnership(moduleName: string): SchemaOwnershipEntry | u
 export function isSchemaOwnedByModule(moduleName: string, schemaName: string): boolean {
   const ownership = getSchemaOwnership(moduleName);
   if (!ownership) return false;
-
-  if (ownership.ownedSchemas.includes(schemaName)) {
-    return true;
-  }
-
-  return false;
+  return ownership.ownedSchemas.includes(schemaName);
 }
 
 export function isComponentOwnedByModule(moduleName: string, componentName: string): boolean {
   const ownership = getSchemaOwnership(moduleName);
   if (!ownership) return false;
-
-  if (ownership.ownedComponents.includes(componentName)) {
-    return true;
-  }
-
+  if (ownership.ownedComponents.includes(componentName)) return true;
   for (const pattern of ownership.componentPatterns) {
     const regex = new RegExp(pattern);
-    if (regex.test(componentName)) {
-      return true;
-    }
+    if (regex.test(componentName)) return true;
   }
-
   return false;
 }
 
 export function isSharedSourceAllowed(moduleName: string, source: string): boolean {
   const ownership = getSchemaOwnership(moduleName);
   if (!ownership) return false;
-
   return ownership.sharedSources.some((s) => source.startsWith(s));
 }
 
 export function getSchemaOwner(schemaName: string): string | undefined {
   for (const ownership of SCHEMA_OWNERSHIP_MANIFEST.ownership) {
-    if (ownership.ownedSchemas.includes(schemaName)) {
-      return ownership.module;
-    }
+    if (ownership.ownedSchemas.includes(schemaName)) return ownership.module;
   }
   return undefined;
 }
 
 export function getComponentOwner(componentName: string): string | undefined {
   for (const ownership of SCHEMA_OWNERSHIP_MANIFEST.ownership) {
-    if (ownership.ownedComponents.includes(componentName)) {
-      return ownership.module;
-    }
+    if (ownership.ownedComponents.includes(componentName)) return ownership.module;
     for (const pattern of ownership.componentPatterns) {
       const regex = new RegExp(pattern);
-      if (regex.test(componentName)) {
-        return ownership.module;
-      }
+      if (regex.test(componentName)) return ownership.module;
     }
   }
   return undefined;
