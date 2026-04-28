@@ -267,8 +267,8 @@ export async function handleMe(request: FastifyRequest, deps: HandlerDeps) {
           }
         : undefined,
       effectivePreferences,
-      permissions: permissionContext.permissions,
-      roles: permissionContext.roles,
+      permissions: permissionContext.permissions ?? [],
+      roles: permissionContext.roles ?? [],
     };
   } catch (error) {
     request.log.error(
