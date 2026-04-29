@@ -246,7 +246,7 @@ function pushFundsChangeEvent(
   });
 }
 
-function processLevelUp(
+function applyLevelUp(
   state: GameState,
   previousXP: number,
   xpAwarded: number,
@@ -442,7 +442,7 @@ function applyTrustAndFunds(
   state.funds = Math.max(0, state.funds + decisionEvaluation.fundsImpact);
 
   const xpAwarded = awardXPForDecision(decisionEvaluation.isCorrect, emailInstance.difficulty ?? 3);
-  processLevelUp(state, previousXP, xpAwarded, events);
+  applyLevelUp(state, previousXP, xpAwarded, events);
 
   applyFactionImpact(state, emailInstance, decisionEvaluation.factionImpact);
 

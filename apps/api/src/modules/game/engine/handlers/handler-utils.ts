@@ -92,7 +92,7 @@ export function applyUpgradeEffects(state: GameState, upgradeType: UpgradeType):
   );
 }
 
-export function processInstallations(state: GameState, events: DomainEvent[]): void {
+export function completeInstallations(state: GameState, events: DomainEvent[]): void {
   const facility = state.facility;
 
   for (const upgrade of facility.upgrades) {

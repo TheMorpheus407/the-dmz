@@ -13,7 +13,7 @@ import { GAME_ACTIONS } from '@the-dmz/shared';
 import { UPGRADE_CATALOG } from './upgrade-catalog.js';
 import {
   isActionAllowedInPhase,
-  processInstallations,
+  completeInstallations,
   recalculateSecurityOpEx,
   recalculateAttackSurface,
   validateUpgradePurchase,
@@ -228,7 +228,7 @@ function calculateUtilizationPercent(facility: GameState['facility']): number {
   );
 }
 
-function processUtilizationEffects(
+function applyUtilizationEffects(
   facility: GameState['facility'],
   utilizationPercent: number,
   events: DomainEvent[],
@@ -335,11 +335,11 @@ export function handleProcessFacilityTick(
 
   applyConsumptionToFacility(facility, totalConsumption);
   const utilizationPercent = calculateUtilizationPercent(facility);
-  processUtilizationEffects(facility, utilizationPercent, events, state);
+  applyUtilizationEffects(facility, utilizationPercent, events, state);
 
   const totalOpEx = calculateAndDeductOperatingCosts(state, facility, action.dayNumber, events);
 
-  processInstallations(state, events);
+  completeInstallations(state, events);
 
   facility.lastTickDay = action.dayNumber;
   events.push({

@@ -2,7 +2,7 @@ export type { DomainEvent } from './handlers/handler-utils.js';
 export {
   aggregateSecurityDeltas,
   applyUpgradeEffects,
-  processInstallations,
+  completeInstallations,
   recalculateSecurityOpEx,
   recalculateAttackSurface,
   validateUpgradePurchase,
