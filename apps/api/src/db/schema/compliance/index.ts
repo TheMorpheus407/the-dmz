@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import {
   index,
   integer,
@@ -17,7 +18,7 @@ export const complianceSnapshots = complianceSchema.table(
   {
     id: uuid('id')
       .primaryKey()
-      .default({} as never),
+      .default(sql`uuid_generate_v7()`),
     tenantId: uuid('tenant_id').notNull(),
     frameworkId: varchar('framework_id', { length: 32 }).notNull(),
     status: varchar('status', { length: 32 }).notNull().default('not_started'),
@@ -49,7 +50,7 @@ export const frameworkRequirements = complianceSchema.table(
   {
     id: uuid('id')
       .primaryKey()
-      .default({} as never),
+      .default(sql`uuid_generate_v7()`),
     tenantId: uuid('tenant_id').notNull(),
     frameworkId: varchar('framework_id', { length: 32 }).notNull(),
     requirementId: varchar('requirement_id', { length: 64 }).notNull(),
