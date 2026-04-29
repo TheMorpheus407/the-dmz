@@ -143,5 +143,52 @@ describe('certificate routes security', () => {
       expect(downloadResponse.headers['content-type']).toBe('application/pdf');
       expect(downloadResponse.headers['content-disposition']).toContain('attachment');
     });
+
+    it('returns valid PDF with correct content', async () => {
+      const { accessToken, user } = await registerUser(app);
+      await seedTenantAuthModel(testConfig, user.tenantId, [
+        { userId: user.id, role: 'tenant_admin' },
+      ]);
+
+      const generateResponse = await app.inject({
+        method: 'POST',
+        url: '/api/v1/admin/certificates/generate',
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+        payload: {
+          userId: user.id,
+          frameworkId: 'nist_800_50',
+          courseName: 'Test Security Awareness Course',
+          userName: 'Certificate Route Test User',
+        },
+      });
+
+      expect(generateResponse.statusCode).toBe(201);
+      const generateBody = generateResponse.json();
+      expect(generateBody.success).toBe(true);
+      const certificateId = generateBody.data.certificateId;
+
+      const downloadResponse = await app.inject({
+        method: 'GET',
+        url: `/api/v1/admin/certificates/${certificateId}/pdf`,
+        headers: {
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      expect(downloadResponse.statusCode).toBe(200);
+
+      const pdfBuffer = downloadResponse.body;
+      const pdfContent = pdfBuffer.toString('utf-8');
+
+      expect(pdfContent.startsWith('%PDF-')).toBe(true);
+
+      expect(pdfContent).toContain('Certificate Route Test User');
+      expect(pdfContent).toContain('Test Security Awareness Course');
+      expect(pdfContent).toContain('Certificate ID:');
+      expect(pdfContent).toContain(certificateId);
+      expect(pdfContent).toContain('NIST 800-50');
+    });
   });
 });
