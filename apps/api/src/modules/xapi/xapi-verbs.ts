@@ -1,0 +1,140 @@
+import { GAME_EVENT_TYPES, type GameEventType } from '@the-dmz/shared';
+
+export type XapiVersion = '1.0.3' | '2.0';
+
+export const XAPI_VERBS = {
+  COMPLETED: {
+    id: 'http://adlnet.gov/expapi/verbs/completed',
+    display: { 'en-US': 'completed' },
+  },
+  PASSED: {
+    id: 'http://adlnet.gov/expapi/verbs/passed',
+    display: { 'en-US': 'passed' },
+  },
+  EXPERIENCED: {
+    id: 'http://adlnet.gov/expapi/verbs/experienced',
+    display: { 'en-US': 'experienced' },
+  },
+  ANSWERED: {
+    id: 'http://adlnet.gov/expapi/verbs/answered',
+    display: { 'en-US': 'answered' },
+  },
+  ATTEMPTED: {
+    id: 'http://adlnet.gov/expapi/verbs/attempted',
+    display: { 'en-US': 'attempted' },
+  },
+  CORRECT: {
+    id: 'https://the-dmz.example.com/xapi/verbs/correct',
+    display: { 'en-US': 'correct' },
+  },
+  INCORRECT: {
+    id: 'https://the-dmz.example.com/xapi/verbs/incorrect',
+    display: { 'en-US': 'incorrect' },
+  },
+  LAUNCHED: {
+    id: 'http://adlnet.gov/expapi/verbs/launched',
+    display: { 'en-US': 'launched' },
+  },
+  INITIALIZED: {
+    id: 'http://adlnet.gov/expapi/verbs/initialized',
+    display: { 'en-US': 'initialized' },
+  },
+  TERMINATED: {
+    id: 'http://adlnet.gov/expapi/verbs/terminated',
+    display: { 'en-US': 'terminated' },
+  },
+} as const;
+
+export type XapiVerbId = keyof typeof XAPI_VERBS;
+
+export const DMZ_VERB_MAP: Record<GameEventType, XapiVerbId | null> = {
+  [GAME_EVENT_TYPES.SESSION_STARTED]: 'LAUNCHED',
+  [GAME_EVENT_TYPES.SESSION_ENDED]: null,
+  [GAME_EVENT_TYPES.SESSION_COMPLETED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.SESSION_PAUSED]: 'TERMINATED',
+  [GAME_EVENT_TYPES.SESSION_RESUMED]: 'INITIALIZED',
+  [GAME_EVENT_TYPES.SESSION_ABANDONED]: 'TERMINATED',
+  [GAME_EVENT_TYPES.SESSION_BREACH_RECOVERY]: null,
+  [GAME_EVENT_TYPES.DAY_STARTED]: 'LAUNCHED',
+  [GAME_EVENT_TYPES.DAY_ENDED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.DAY_PHASE_CHANGED]: null,
+  [GAME_EVENT_TYPES.INBOX_GENERATED]: 'EXPERIENCED',
+  [GAME_EVENT_TYPES.INBOX_LOADED]: null,
+  [GAME_EVENT_TYPES.EMAIL_RECEIVED]: null,
+  [GAME_EVENT_TYPES.EMAIL_OPENED]: 'EXPERIENCED',
+  [GAME_EVENT_TYPES.EMAIL_HEADER_VIEWED]: null,
+  [GAME_EVENT_TYPES.EMAIL_URL_HOVERED]: null,
+  [GAME_EVENT_TYPES.EMAIL_ATTACHMENT_PREVIEWED]: null,
+  [GAME_EVENT_TYPES.EMAIL_INDICATOR_MARKED]: 'ANSWERED',
+  [GAME_EVENT_TYPES.EMAIL_VERIFICATION_REQUESTED]: 'ATTEMPTED',
+  [GAME_EVENT_TYPES.EMAIL_DECISION_EVALUATED]: null,
+  [GAME_EVENT_TYPES.EMAIL_DECISION_SUBMITTED]: 'ATTEMPTED',
+  [GAME_EVENT_TYPES.EMAIL_DECISION_RESOLVED]: null,
+  [GAME_EVENT_TYPES.VERIFICATION_PACKET_GENERATED]: 'ANSWERED',
+  [GAME_EVENT_TYPES.VERIFICATION_DISCREPANCY_FLAGGED]: 'CORRECT',
+  [GAME_EVENT_TYPES.DECISION_APPROVED]: null,
+  [GAME_EVENT_TYPES.DECISION_DENIED]: null,
+  [GAME_EVENT_TYPES.DECISION_FLAGGED]: null,
+  [GAME_EVENT_TYPES.DECISION_VERIFICATION_REQUESTED]: null,
+  [GAME_EVENT_TYPES.VERIFICATION_PACKET_OPENED]: null,
+  [GAME_EVENT_TYPES.VERIFICATION_OUT_OF_BAND_INITIATED]: null,
+  [GAME_EVENT_TYPES.VERIFICATION_RESULT]: null,
+  [GAME_EVENT_TYPES.CONSEQUENCES_APPLIED]: null,
+  [GAME_EVENT_TYPES.TRUST_MODIFIED]: null,
+  [GAME_EVENT_TYPES.FUNDS_MODIFIED]: null,
+  [GAME_EVENT_TYPES.FACTION_MODIFIED]: null,
+  [GAME_EVENT_TYPES.BACKLOG_PRESSURE_CHANGED]: null,
+  [GAME_EVENT_TYPES.THREATS_GENERATED]: null,
+  [GAME_EVENT_TYPES.INCIDENT_CREATED]: 'EXPERIENCED',
+  [GAME_EVENT_TYPES.INCIDENT_STATUS_CHANGED]: null,
+  [GAME_EVENT_TYPES.INCIDENT_RESPONSE_ACTION]: null,
+  [GAME_EVENT_TYPES.INCIDENT_RESPONSE_ACTION_TAKEN]: null,
+  [GAME_EVENT_TYPES.INCIDENT_CONTAINED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.INCIDENT_ERADICATED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.INCIDENT_RECOVERED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.INCIDENT_CLOSED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.INCIDENT_RESOLVED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.BREACH_OCCURRED]: 'EXPERIENCED',
+  [GAME_EVENT_TYPES.BREACH_RANSOM_DISPLAYED]: 'EXPERIENCED',
+  [GAME_EVENT_TYPES.BREACH_RANSOM_PAID]: 'COMPLETED',
+  [GAME_EVENT_TYPES.BREACH_RANSOM_REFUSED]: 'INCORRECT',
+  [GAME_EVENT_TYPES.BREACH_RECOVERY_STARTED]: 'ATTEMPTED',
+  [GAME_EVENT_TYPES.BREACH_RECOVERY_COMPLETED]: 'PASSED',
+  [GAME_EVENT_TYPES.BREACH_POST_EFFECTS_STARTED]: 'EXPERIENCED',
+  [GAME_EVENT_TYPES.GAME_OVER]: 'EXPERIENCED',
+  [GAME_EVENT_TYPES.UPGRADE_PURCHASED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.RESOURCE_ADJUSTED]: null,
+  [GAME_EVENT_TYPES.THREAT_ATTACK_LAUNCHED]: null,
+  [GAME_EVENT_TYPES.THREAT_ATTACK_MITIGATED]: null,
+  [GAME_EVENT_TYPES.THREAT_ATTACK_SUCCEEDED]: null,
+  [GAME_EVENT_TYPES.THREAT_BREACH_OCCURRED]: null,
+  [GAME_EVENT_TYPES.THREAT_LEVEL_CHANGED]: null,
+  [GAME_EVENT_TYPES.INTEL_CHANGED]: null,
+  [GAME_EVENT_TYPES.LEVEL_UP]: null,
+  [GAME_EVENT_TYPES.FACILITY_CLIENT_ONBOARDED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.FACILITY_CLIENT_EVICTED]: 'EXPERIENCED',
+  [GAME_EVENT_TYPES.FACILITY_RESOURCE_CRITICAL]: 'EXPERIENCED',
+  [GAME_EVENT_TYPES.FACILITY_TIER_UPGRADED]: 'PASSED',
+  [GAME_EVENT_TYPES.FACILITY_UPGRADE_PURCHASED]: 'ATTEMPTED',
+  [GAME_EVENT_TYPES.FACILITY_UPGRADE_COMPLETED]: 'COMPLETED',
+  [GAME_EVENT_TYPES.FACILITY_TICK_PROCESSED]: null,
+};
+
+export interface XapiVerb {
+  id: string;
+  display: Record<string, string>;
+}
+
+export function getVerbFromMapping(eventType: GameEventType): XapiVerb | null {
+  const verbKey = DMZ_VERB_MAP[eventType];
+  if (!verbKey) return null;
+  return XAPI_VERBS[verbKey];
+}
+
+export function isCorrectDecisionVerb(verb: XapiVerb): boolean {
+  return verb.id === XAPI_VERBS.CORRECT.id || verb.id === XAPI_VERBS.PASSED.id;
+}
+
+export function isIncorrectDecisionVerb(verb: XapiVerb): boolean {
+  return verb.id === XAPI_VERBS.INCORRECT.id;
+}
