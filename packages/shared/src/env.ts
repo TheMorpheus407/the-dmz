@@ -103,7 +103,7 @@ export const backendEnvSchema = z
     REDIS_URL: z.string().min(1).default('redis://localhost:6379'),
     LOG_LEVEL: z.enum(logLevelValues).default('info'),
     JWT_SECRET: z.string().min(1).default('dev-test-jwt-secret'),
-    JWT_EXPIRES_IN: z.string().min(1).default('7d'),
+    JWT_EXPIRES_IN: z.string().min(1).default('15m'),
     JWT_ISSUER: z.string().min(1).default('https://the-dmz.local'),
     JWT_AUDIENCE: z.string().min(1).default('the-dmz-api'),
     TOKEN_HASH_SALT: z.string().min(1).default('token-hash-dev-test-salt'),
