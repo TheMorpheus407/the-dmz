@@ -14,7 +14,7 @@ import {
   createChatMessageDeletedEvent,
   createChatChannelCreatedEvent,
 } from './chat.events.js';
-import { ChatRepository } from './chat.repository.js';
+import { ChatRepository, type ChatRepositoryInterface } from './chat.repository.js';
 import { ChatModerationService } from './chat.moderation.service.js';
 
 import type { RedisRateLimitClient } from '../../shared/database/redis.js';
@@ -22,6 +22,56 @@ import type { AppConfig } from '../../config.js';
 import type { EventBus } from '../../shared/events/event-types.js';
 
 const MAX_MESSAGE_LENGTH = 280;
+
+function validateMessageContent(
+  content: string,
+): { valid: true } | { valid: false; error: string } {
+  const trimmed = content.trim();
+  if (trimmed.length === 0) {
+    return { valid: false, error: 'Message cannot be empty' };
+  }
+  if (trimmed.length > MAX_MESSAGE_LENGTH) {
+    return {
+      valid: false,
+      error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`,
+    };
+  }
+  return { valid: true };
+}
+
+/* eslint-disable max-params, @typescript-eslint/max-params */
+async function checkMessageRateLimit(
+  config: AppConfig,
+  tenantId: string,
+  playerId: string,
+  redisClient: RedisRateLimitClient | undefined,
+  rateLimiter: typeof checkRateLimit,
+): Promise<
+  { allowed: true } | { allowed: false; error: string; rateLimited: true; retryAfterMs: number }
+> {
+  const rateLimitResult = await rateLimiter(
+    config,
+    tenantId,
+    playerId,
+    'send_chat_message',
+    redisClient,
+  );
+  if (!rateLimitResult.allowed) {
+    return {
+      allowed: false,
+      error: 'Rate limit exceeded. Please wait before sending another message.',
+      rateLimited: true,
+      retryAfterMs: rateLimitResult.retryAfterMs ?? 2000,
+    };
+  }
+  return { allowed: true };
+}
+
+export interface ChatServiceDependencies {
+  repository?: ChatRepositoryInterface;
+  rateLimiter?: typeof checkRateLimit;
+  moderationService?: ChatModerationService;
+}
 
 export interface SendMessageInput {
   channelId: string;
@@ -86,6 +136,7 @@ export async function sendMessage(
   input: SendMessageInput,
   redisClient?: RedisRateLimitClient,
   eventBus?: EventBus,
+  dependencies?: ChatServiceDependencies,
 ): Promise<SendMessageResult> {
   const chatEnabled = await requireChatEnabled(config, tenantId);
   if (!chatEnabled.enabled) {
@@ -93,7 +144,7 @@ export async function sendMessage(
   }
 
   const db = getDatabaseClient(config);
-  const repository = new ChatRepository(db);
+  const repository = dependencies?.repository ?? new ChatRepository(db);
 
   const channel = await repository.findChannel({
     channelId: input.channelId,
@@ -109,35 +160,31 @@ export async function sendMessage(
     return { success: false, error: channelEnabled.error };
   }
 
+  const contentValidation = validateMessageContent(input.content);
+  if (!contentValidation.valid) {
+    return { success: false, error: contentValidation.error };
+  }
   const content = input.content.trim();
-  if (content.length === 0) {
-    return { success: false, error: 'Message cannot be empty' };
-  }
 
-  if (content.length > MAX_MESSAGE_LENGTH) {
-    return {
-      success: false,
-      error: `Message exceeds maximum length of ${MAX_MESSAGE_LENGTH} characters`,
-    };
-  }
-
-  const rateLimitResult = await checkRateLimit(
+  const rateLimiter = dependencies?.rateLimiter ?? checkRateLimit;
+  const rateLimitCheck = await checkMessageRateLimit(
     config,
     tenantId,
     playerId,
-    'send_chat_message',
     redisClient,
+    rateLimiter,
   );
-  if (!rateLimitResult.allowed) {
+  if (!rateLimitCheck.allowed) {
     return {
       success: false,
-      error: 'Rate limit exceeded. Please wait before sending another message.',
+      error: rateLimitCheck.error,
       rateLimited: true,
-      retryAfterMs: rateLimitResult.retryAfterMs ?? 2000,
+      retryAfterMs: rateLimitCheck.retryAfterMs,
     };
   }
 
-  const moderationService = new ChatModerationService(config, tenantId);
+  const moderationService =
+    dependencies?.moderationService ?? new ChatModerationService(config, tenantId);
   const { moderationStatus } = await moderationService.moderateChat({ content });
 
   if (moderationStatus === moderationStatuses[2]) {
@@ -192,6 +239,7 @@ export async function getMessages(
   channelId: string,
   limit = 50,
   cursor?: string,
+  dependencies?: ChatServiceDependencies,
 ): Promise<GetMessagesResult> {
   const chatEnabled = await requireChatEnabled(config, tenantId);
   if (!chatEnabled.enabled) {
@@ -199,7 +247,7 @@ export async function getMessages(
   }
 
   const db = getDatabaseClient(config);
-  const repository = new ChatRepository(db);
+  const repository = dependencies?.repository ?? new ChatRepository(db);
 
   const channel = await repository.findChannel({
     channelId,
@@ -229,6 +277,7 @@ export async function deleteMessage(
   channelId: string,
   messageId: string,
   eventBus?: EventBus,
+  dependencies?: ChatServiceDependencies,
 ): Promise<DeleteMessageResult> {
   const chatEnabled = await requireChatEnabled(config, tenantId);
   if (!chatEnabled.enabled) {
@@ -236,7 +285,7 @@ export async function deleteMessage(
   }
 
   const db = getDatabaseClient(config);
-  const repository = new ChatRepository(db);
+  const repository = dependencies?.repository ?? new ChatRepository(db);
 
   const message = await repository.findMessage(messageId, channelId);
 
@@ -276,6 +325,7 @@ export async function reportMessage(
   channelId: string,
   messageId: string,
   reason: string,
+  dependencies?: ChatServiceDependencies,
 ): Promise<ReportMessageResult> {
   const chatEnabled = await requireChatEnabled(config, tenantId);
   if (!chatEnabled.enabled) {
@@ -283,7 +333,7 @@ export async function reportMessage(
   }
 
   const db = getDatabaseClient(config);
-  const repository = new ChatRepository(db);
+  const repository = dependencies?.repository ?? new ChatRepository(db);
 
   const message = await repository.findMessage(messageId, channelId);
 
@@ -307,6 +357,7 @@ export async function listChannels(
   config: AppConfig,
   tenantId: string,
   _playerId: string,
+  dependencies?: ChatServiceDependencies,
 ): Promise<ListChannelsResult> {
   const chatEnabled = await requireChatEnabled(config, tenantId);
   if (!chatEnabled.enabled) {
@@ -314,7 +365,7 @@ export async function listChannels(
   }
 
   const db = getDatabaseClient(config);
-  const repository = new ChatRepository(db);
+  const repository = dependencies?.repository ?? new ChatRepository(db);
 
   const channels = await repository.findChannels(tenantId);
 
@@ -325,9 +376,10 @@ export async function getChannel(
   config: AppConfig,
   tenantId: string,
   channelId: string,
+  dependencies?: ChatServiceDependencies,
 ): Promise<GetChannelResult> {
   const db = getDatabaseClient(config);
-  const repository = new ChatRepository(db);
+  const repository = dependencies?.repository ?? new ChatRepository(db);
 
   const channel = await repository.findChannel({
     channelId,
@@ -346,6 +398,7 @@ export async function createChannel(
   tenantId: string,
   input: CreateChannelInput,
   eventBus?: EventBus,
+  dependencies?: ChatServiceDependencies,
 ): Promise<CreateChannelResult> {
   const chatEnabled = await requireChatEnabled(config, tenantId);
   if (!chatEnabled.enabled) {
@@ -358,7 +411,7 @@ export async function createChannel(
   }
 
   const db = getDatabaseClient(config);
-  const repository = new ChatRepository(db);
+  const repository = dependencies?.repository ?? new ChatRepository(db);
 
   const existingChannel = await repository.findExistingChannel({
     tenantId,
@@ -405,6 +458,7 @@ export async function getOrCreatePartyChannel(
   tenantId: string,
   partyId: string,
   eventBus?: EventBus,
+  dependencies?: ChatServiceDependencies,
 ): Promise<CreateChannelResult> {
   return createChannel(
     config,
@@ -414,6 +468,7 @@ export async function getOrCreatePartyChannel(
       partyId,
     },
     eventBus,
+    dependencies,
   );
 }
 
@@ -424,6 +479,7 @@ export async function getOrCreateDirectChannel(
   playerId1: string,
   playerId2: string,
   eventBus?: EventBus,
+  dependencies?: ChatServiceDependencies,
 ): Promise<CreateChannelResult> {
   const channelName = [playerId1, playerId2].sort().join('-');
 
@@ -435,5 +491,6 @@ export async function getOrCreateDirectChannel(
       name: `dm-${channelName}`,
     },
     eventBus,
+    dependencies,
   );
 }

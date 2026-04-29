@@ -1,22 +1,49 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+/* eslint-disable max-lines */
+import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 
-const mockGetDatabaseClient = vi.hoisted(() => vi.fn());
-const mockCheckRateLimit = vi.hoisted(() => vi.fn());
-const mockEvaluateFlag = vi.hoisted(() => vi.fn());
-const mockModerateChat = vi.hoisted(() => vi.fn());
+import {
+  createChatMessageSentEvent,
+  createChatMessageDeletedEvent,
+  createChatChannelCreatedEvent,
+} from '../chat.events.js';
+import {
+  sendMessage,
+  getMessages,
+  deleteMessage,
+  listChannels,
+  getChannel,
+  createChannel,
+  getOrCreatePartyChannel,
+  getOrCreateDirectChannel,
+  reportMessage,
+} from '../chat.service.js';
 
-const mockChatRepositoryFindChannel = vi.hoisted(() => vi.fn());
-const mockChatRepositoryFindChannels = vi.hoisted(() => vi.fn());
-const mockChatRepositoryFindExistingChannel = vi.hoisted(() => vi.fn());
-const mockChatRepositoryCreateChannel = vi.hoisted(() => vi.fn());
-const mockChatRepositoryFindMessage = vi.hoisted(() => vi.fn());
-const mockChatRepositoryFindMessages = vi.hoisted(() => vi.fn());
-const mockChatRepositoryCreateMessage = vi.hoisted(() => vi.fn());
-const mockChatRepositoryUpdateMessage = vi.hoisted(() => vi.fn());
-const mockChatRepositoryCreateModerationReport = vi.hoisted(() => vi.fn());
+import type { AppConfig } from '../../../config.js';
+import type { EventBus } from '../../../shared/events/event-types.js';
+import type { ChatRepositoryInterface } from '../chat.repository.js';
+import type {
+  ChatChannel,
+  ChatMessage,
+  ModerationStatus,
+  ChannelType,
+} from '../../../db/schema/social/index.js';
+
+const mockEvaluateFlag = vi.fn();
+const mockCheckRateLimit = vi.fn();
+const mockModerateChat = vi.fn();
+
+const mockChatRepositoryFindChannel = vi.fn();
+const mockChatRepositoryFindChannels = vi.fn();
+const mockChatRepositoryFindExistingChannel = vi.fn();
+const mockChatRepositoryCreateChannel = vi.fn();
+const mockChatRepositoryFindMessage = vi.fn();
+const mockChatRepositoryFindMessages = vi.fn();
+const mockChatRepositoryCreateMessage = vi.fn();
+const mockChatRepositoryUpdateMessage = vi.fn();
+const mockChatRepositoryCreateModerationReport = vi.fn();
 
 vi.mock('../../../shared/database/connection.js', () => ({
-  getDatabaseClient: (...args: unknown[]) => mockGetDatabaseClient(...args),
+  getDatabaseClient: vi.fn(),
 }));
 
 vi.mock('../../feature-flags/feature-flags.service.js', () => ({
@@ -57,31 +84,6 @@ vi.mock('../chat.events.js', () => ({
   createChatChannelCreatedEvent: vi.fn().mockReturnValue({ eventType: 'chat.channel.created' }),
 }));
 
-import {
-  createChatMessageSentEvent,
-  createChatMessageDeletedEvent,
-  createChatChannelCreatedEvent,
-} from '../chat.events.js';
-import {
-  sendMessage,
-  getMessages,
-  deleteMessage,
-  listChannels,
-  getChannel,
-  createChannel,
-  getOrCreatePartyChannel,
-  getOrCreateDirectChannel,
-  reportMessage,
-} from '../chat.service.js';
-
-import type { AppConfig } from '../../../config.js';
-import type { EventBus } from '../../../shared/events/event-types.js';
-import type {
-  ChannelType,
-  ChatMessage,
-  ModerationStatus,
-} from '../../../db/schema/social/index.js';
-
 const mockConfig = {} as AppConfig;
 const mockTenantId = 'test-tenant-id';
 const mockPlayerId = 'test-player-id';
@@ -90,6 +92,7 @@ const MAX_MESSAGE_LENGTH = 280;
 
 describe('ChatService', () => {
   let mockEventBus: EventBus;
+  let mockRepository: ChatRepositoryInterface;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -98,23 +101,24 @@ describe('ChatService', () => {
       publish: vi.fn(),
     } as unknown as EventBus;
 
-    mockGetDatabaseClient.mockReturnValue({} as never);
+    mockRepository = {
+      findChannel: mockChatRepositoryFindChannel,
+      findChannels: mockChatRepositoryFindChannels,
+      findExistingChannel: mockChatRepositoryFindExistingChannel,
+      createChannel: mockChatRepositoryCreateChannel,
+      findMessage: mockChatRepositoryFindMessage,
+      findMessages: mockChatRepositoryFindMessages,
+      createMessage: mockChatRepositoryCreateMessage,
+      updateMessage: mockChatRepositoryUpdateMessage,
+      createModerationReport: mockChatRepositoryCreateModerationReport,
+    };
+
     mockCheckRateLimit.mockResolvedValue({ allowed: true, current: 1, limit: 10 });
     mockEvaluateFlag.mockResolvedValue(true);
     mockModerateChat.mockResolvedValue({
       moderationStatus: 'approved' as ModerationStatus,
       contentCheckResult: { allowed: true, violations: [], highestSeverity: null },
     });
-
-    mockChatRepositoryFindChannel.mockReset();
-    mockChatRepositoryFindChannels.mockReset();
-    mockChatRepositoryFindExistingChannel.mockReset();
-    mockChatRepositoryCreateChannel.mockReset();
-    mockChatRepositoryFindMessage.mockReset();
-    mockChatRepositoryFindMessages.mockReset();
-    mockChatRepositoryCreateMessage.mockReset();
-    mockChatRepositoryUpdateMessage.mockReset();
-    mockChatRepositoryCreateModerationReport.mockReset();
   });
 
   describe('MAX_MESSAGE_LENGTH constant', () => {
@@ -127,7 +131,7 @@ describe('ChatService', () => {
     const mockChannel = {
       channelId: 'channel-1',
       tenantId: mockTenantId,
-      channelType: 'party' as ChannelType,
+      channelType: 'party' as const,
       partyId: 'party-1',
       guildId: null,
       name: null,
@@ -147,68 +151,62 @@ describe('ChatService', () => {
     };
 
     it('rejects empty message content', async () => {
-      const mockChannel = {
-        channelId: 'channel-1',
-        tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
-        partyId: 'party-1',
-        guildId: null,
-        name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
       mockChatRepositoryFindChannel.mockResolvedValue(mockChannel);
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: '',
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: '',
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Message cannot be empty');
     });
 
     it('rejects whitespace-only message content', async () => {
-      const mockChannel = {
-        channelId: 'channel-1',
-        tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
-        partyId: 'party-1',
-        guildId: null,
-        name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
       mockChatRepositoryFindChannel.mockResolvedValue(mockChannel);
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: '   ',
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: '   ',
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Message cannot be empty');
     });
 
     it('rejects message exceeding max length', async () => {
-      const mockChannel = {
-        channelId: 'channel-1',
-        tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
-        partyId: 'party-1',
-        guildId: null,
-        name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
       mockChatRepositoryFindChannel.mockResolvedValue(mockChannel);
 
       const longContent = 'a'.repeat(281);
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: longContent,
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: longContent,
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe(
@@ -222,10 +220,18 @@ describe('ChatService', () => {
       mockChatRepositoryFindChannel.mockResolvedValue(mockChannel);
       mockChatRepositoryCreateMessage.mockResolvedValue(mockMessage);
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: maxContent,
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: maxContent,
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(true);
       expect(mockChatRepositoryFindChannel).toHaveBeenCalledWith({
@@ -238,10 +244,18 @@ describe('ChatService', () => {
     it('returns error when channel not found', async () => {
       mockChatRepositoryFindChannel.mockResolvedValue(undefined);
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'nonexistent',
-        content: 'Hello',
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'nonexistent',
+          content: 'Hello',
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Channel not found');
@@ -260,10 +274,18 @@ describe('ChatService', () => {
         retryAfterMs: 2000,
       });
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: 'Hello',
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: 'Hello',
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.rateLimited).toBe(true);
@@ -273,10 +295,18 @@ describe('ChatService', () => {
     it('returns error when chat is disabled', async () => {
       mockEvaluateFlag.mockResolvedValue(false);
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: 'Hello',
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: 'Hello',
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Chat is disabled');
@@ -291,10 +321,18 @@ describe('ChatService', () => {
         },
       );
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: 'Hello',
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: 'Hello',
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Party chat is disabled');
@@ -307,10 +345,18 @@ describe('ChatService', () => {
         contentCheckResult: { allowed: false, violations: [], highestSeverity: null },
       });
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: 'bad content',
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: 'bad content',
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Message content is not allowed');
@@ -328,10 +374,18 @@ describe('ChatService', () => {
         moderationStatus: 'flagged' as ModerationStatus,
       });
 
-      const result = await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: 'Hello',
-      });
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: 'Hello',
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(true);
       expect(result.moderationStatus).toBe('flagged');
@@ -348,6 +402,7 @@ describe('ChatService', () => {
         { channelId: 'channel-1', content: 'Hello' },
         undefined,
         mockEventBus,
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(true);
@@ -367,6 +422,7 @@ describe('ChatService', () => {
         { channelId: 'channel-1', content: 'Hello' },
         undefined,
         undefined,
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(true);
@@ -377,10 +433,18 @@ describe('ChatService', () => {
       mockChatRepositoryFindChannel.mockResolvedValue(mockChannel);
       mockChatRepositoryCreateMessage.mockResolvedValue(mockMessage);
 
-      await sendMessage(mockConfig, mockTenantId, mockPlayerId, {
-        channelId: 'channel-1',
-        content: '  Hello  ',
-      });
+      await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        {
+          channelId: 'channel-1',
+          content: '  Hello  ',
+        },
+        undefined,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(mockChatRepositoryCreateMessage).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -391,10 +455,29 @@ describe('ChatService', () => {
   });
 
   describe('getMessages', () => {
+    const mockChannel = {
+      channelId: 'channel-1',
+      tenantId: mockTenantId,
+      channelType: 'party' as const,
+      partyId: 'party-1',
+      guildId: null,
+      name: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     it('returns error when chat is disabled', async () => {
       mockEvaluateFlag.mockResolvedValue(false);
 
-      const result = await getMessages(mockConfig, mockTenantId, mockPlayerId, 'channel-1');
+      const result = await getMessages(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        'channel-1',
+        50,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Chat is disabled');
@@ -403,29 +486,22 @@ describe('ChatService', () => {
     it('returns error when channel not found', async () => {
       mockChatRepositoryFindChannel.mockResolvedValue(undefined);
 
-      const result = await getMessages(mockConfig, mockTenantId, mockPlayerId, 'nonexistent');
+      const result = await getMessages(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        'nonexistent',
+        50,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Channel not found');
-      expect(mockChatRepositoryFindChannel).toHaveBeenCalledWith({
-        channelId: 'nonexistent',
-        tenantId: mockTenantId,
-      });
     });
 
     it('returns messages successfully', async () => {
-      const mockChannel = {
-        channelId: 'channel-1',
-        tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
-        partyId: 'party-1',
-        guildId: null,
-        name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      const mockMessages: ChatMessage[] = [
+      const mockMessages = [
         {
           messageId: 'msg-1',
           channelId: 'channel-1',
@@ -451,7 +527,15 @@ describe('ChatService', () => {
       mockChatRepositoryFindChannel.mockResolvedValue(mockChannel);
       mockChatRepositoryFindMessages.mockResolvedValue(mockMessages);
 
-      const result = await getMessages(mockConfig, mockTenantId, mockPlayerId, 'channel-1');
+      const result = await getMessages(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        'channel-1',
+        50,
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(true);
       expect(result.messages).toHaveLength(2);
@@ -465,17 +549,6 @@ describe('ChatService', () => {
     });
 
     it('passes limit and cursor parameters to repository', async () => {
-      const mockChannel = {
-        channelId: 'channel-1',
-        tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
-        partyId: 'party-1',
-        guildId: null,
-        name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
       mockChatRepositoryFindChannel.mockResolvedValue(mockChannel);
       mockChatRepositoryFindMessages.mockResolvedValue([]);
 
@@ -486,6 +559,7 @@ describe('ChatService', () => {
         'channel-1',
         25,
         'cursor-123',
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(true);
@@ -509,6 +583,8 @@ describe('ChatService', () => {
         mockPlayerId,
         'channel-1',
         'msg-1',
+        undefined,
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(false);
@@ -524,6 +600,8 @@ describe('ChatService', () => {
         mockPlayerId,
         'channel-1',
         'nonexistent',
+        undefined,
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(false);
@@ -549,6 +627,8 @@ describe('ChatService', () => {
         mockPlayerId,
         'channel-1',
         'msg-1',
+        undefined,
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(false);
@@ -574,6 +654,8 @@ describe('ChatService', () => {
         mockPlayerId,
         'channel-1',
         'msg-1',
+        undefined,
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(true);
@@ -604,6 +686,7 @@ describe('ChatService', () => {
         'channel-1',
         'msg-1',
         mockEventBus,
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(true);
@@ -616,10 +699,16 @@ describe('ChatService', () => {
     it('returns error when chat is disabled', async () => {
       mockEvaluateFlag.mockResolvedValue(false);
 
-      const result = await createChannel(mockConfig, mockTenantId, {
-        channelType: 'party',
-        partyId: 'party-1',
-      });
+      const result = await createChannel(
+        mockConfig,
+        mockTenantId,
+        {
+          channelType: 'party',
+          partyId: 'party-1',
+        },
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Chat is disabled');
@@ -633,10 +722,16 @@ describe('ChatService', () => {
         },
       );
 
-      const result = await createChannel(mockConfig, mockTenantId, {
-        channelType: 'party',
-        partyId: 'party-1',
-      });
+      const result = await createChannel(
+        mockConfig,
+        mockTenantId,
+        {
+          channelType: 'party',
+          partyId: 'party-1',
+        },
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Party chat is disabled');
@@ -646,7 +741,7 @@ describe('ChatService', () => {
       const existingChannel = {
         channelId: 'existing-channel',
         tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
+        channelType: 'party' as const,
         partyId: 'party-1',
         guildId: null,
         name: null,
@@ -656,10 +751,16 @@ describe('ChatService', () => {
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(existingChannel);
 
-      const result = await createChannel(mockConfig, mockTenantId, {
-        channelType: 'party',
-        partyId: 'party-1',
-      });
+      const result = await createChannel(
+        mockConfig,
+        mockTenantId,
+        {
+          channelType: 'party',
+          partyId: 'party-1',
+        },
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(true);
       expect(result.channel).toEqual(existingChannel);
@@ -675,7 +776,7 @@ describe('ChatService', () => {
       const newChannel = {
         channelId: 'new-channel',
         tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
+        channelType: 'party' as const,
         partyId: 'party-1',
         guildId: null,
         name: null,
@@ -686,10 +787,16 @@ describe('ChatService', () => {
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
       mockChatRepositoryCreateChannel.mockResolvedValue(newChannel);
 
-      const result = await createChannel(mockConfig, mockTenantId, {
-        channelType: 'party',
-        partyId: 'party-1',
-      });
+      const result = await createChannel(
+        mockConfig,
+        mockTenantId,
+        {
+          channelType: 'party',
+          partyId: 'party-1',
+        },
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(true);
       expect(result.channel).toEqual(newChannel);
@@ -704,10 +811,16 @@ describe('ChatService', () => {
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
       mockChatRepositoryCreateChannel.mockResolvedValue(null);
 
-      const result = await createChannel(mockConfig, mockTenantId, {
-        channelType: 'party',
-        partyId: 'party-1',
-      });
+      const result = await createChannel(
+        mockConfig,
+        mockTenantId,
+        {
+          channelType: 'party',
+          partyId: 'party-1',
+        },
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Failed to create channel');
@@ -717,7 +830,7 @@ describe('ChatService', () => {
       const newChannel = {
         channelId: 'guild-channel',
         tenantId: mockTenantId,
-        channelType: 'guild' as ChannelType,
+        channelType: 'guild' as const,
         partyId: null,
         guildId: 'guild-1',
         name: null,
@@ -728,10 +841,16 @@ describe('ChatService', () => {
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
       mockChatRepositoryCreateChannel.mockResolvedValue(newChannel);
 
-      const result = await createChannel(mockConfig, mockTenantId, {
-        channelType: 'guild',
-        guildId: 'guild-1',
-      });
+      const result = await createChannel(
+        mockConfig,
+        mockTenantId,
+        {
+          channelType: 'guild',
+          guildId: 'guild-1',
+        },
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(true);
       expect(result.channel).toEqual(newChannel);
@@ -746,7 +865,7 @@ describe('ChatService', () => {
       const newChannel = {
         channelId: 'new-channel',
         tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
+        channelType: 'party' as const,
         partyId: 'party-1',
         guildId: null,
         name: null,
@@ -762,6 +881,7 @@ describe('ChatService', () => {
         mockTenantId,
         { channelType: 'party', partyId: 'party-1' },
         mockEventBus,
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(true);
@@ -773,7 +893,7 @@ describe('ChatService', () => {
       const existingChannel = {
         channelId: 'existing-channel',
         tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
+        channelType: 'party' as const,
         partyId: 'party-1',
         guildId: null,
         name: null,
@@ -788,6 +908,7 @@ describe('ChatService', () => {
         mockTenantId,
         { channelType: 'party', partyId: 'party-1' },
         mockEventBus,
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(true);
@@ -800,7 +921,9 @@ describe('ChatService', () => {
     it('returns error when chat is disabled', async () => {
       mockEvaluateFlag.mockResolvedValue(false);
 
-      const result = await listChannels(mockConfig, mockTenantId, mockPlayerId);
+      const result = await listChannels(mockConfig, mockTenantId, mockPlayerId, {
+        repository: mockRepository as never,
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Chat is disabled');
@@ -811,7 +934,7 @@ describe('ChatService', () => {
         {
           channelId: 'channel-1',
           tenantId: mockTenantId,
-          channelType: 'party' as ChannelType,
+          channelType: 'party' as const,
           partyId: 'party-1',
           guildId: null,
           name: null,
@@ -821,7 +944,7 @@ describe('ChatService', () => {
         {
           channelId: 'channel-2',
           tenantId: mockTenantId,
-          channelType: 'guild' as ChannelType,
+          channelType: 'guild' as const,
           partyId: null,
           guildId: 'guild-1',
           name: null,
@@ -832,7 +955,9 @@ describe('ChatService', () => {
 
       mockChatRepositoryFindChannels.mockResolvedValue(mockChannels);
 
-      const result = await listChannels(mockConfig, mockTenantId, mockPlayerId);
+      const result = await listChannels(mockConfig, mockTenantId, mockPlayerId, {
+        repository: mockRepository as never,
+      });
 
       expect(result.success).toBe(true);
       expect(result.channels).toHaveLength(2);
@@ -844,7 +969,9 @@ describe('ChatService', () => {
     it('returns error when channel not found', async () => {
       mockChatRepositoryFindChannel.mockResolvedValue(undefined);
 
-      const result = await getChannel(mockConfig, mockTenantId, 'nonexistent');
+      const result = await getChannel(mockConfig, mockTenantId, 'nonexistent', {
+        repository: mockRepository as never,
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Channel not found');
@@ -858,7 +985,7 @@ describe('ChatService', () => {
       const mockChannel = {
         channelId: 'channel-1',
         tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
+        channelType: 'party' as const,
         partyId: 'party-1',
         guildId: null,
         name: null,
@@ -868,7 +995,9 @@ describe('ChatService', () => {
 
       mockChatRepositoryFindChannel.mockResolvedValue(mockChannel);
 
-      const result = await getChannel(mockConfig, mockTenantId, 'channel-1');
+      const result = await getChannel(mockConfig, mockTenantId, 'channel-1', {
+        repository: mockRepository as never,
+      });
 
       expect(result.success).toBe(true);
       expect(result.channel).toEqual(mockChannel);
@@ -884,7 +1013,7 @@ describe('ChatService', () => {
       const newChannel = {
         channelId: 'party-channel',
         tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
+        channelType: 'party' as const,
         partyId: 'party-1',
         guildId: null,
         name: null,
@@ -895,7 +1024,9 @@ describe('ChatService', () => {
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
       mockChatRepositoryCreateChannel.mockResolvedValue(newChannel);
 
-      const result = await getOrCreatePartyChannel(mockConfig, mockTenantId, 'party-1');
+      const result = await getOrCreatePartyChannel(mockConfig, mockTenantId, 'party-1', undefined, {
+        repository: mockRepository as never,
+      });
 
       expect(result.success).toBe(true);
       expect(mockChatRepositoryCreateChannel).toHaveBeenCalledWith(
@@ -907,7 +1038,7 @@ describe('ChatService', () => {
       const existingChannel = {
         channelId: 'existing-channel',
         tenantId: mockTenantId,
-        channelType: 'party' as ChannelType,
+        channelType: 'party' as const,
         partyId: 'party-1',
         guildId: null,
         name: null,
@@ -917,7 +1048,9 @@ describe('ChatService', () => {
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(existingChannel);
 
-      const result = await getOrCreatePartyChannel(mockConfig, mockTenantId, 'party-1');
+      const result = await getOrCreatePartyChannel(mockConfig, mockTenantId, 'party-1', undefined, {
+        repository: mockRepository as never,
+      });
 
       expect(result.success).toBe(true);
       expect(result.channel).toEqual(existingChannel);
@@ -930,7 +1063,7 @@ describe('ChatService', () => {
       const newChannel = {
         channelId: 'dm-channel',
         tenantId: mockTenantId,
-        channelType: 'direct' as ChannelType,
+        channelType: 'direct' as const,
         partyId: null,
         guildId: null,
         name: 'dm-player1-player2',
@@ -941,7 +1074,14 @@ describe('ChatService', () => {
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
       mockChatRepositoryCreateChannel.mockResolvedValue(newChannel);
 
-      const result = await getOrCreateDirectChannel(mockConfig, mockTenantId, 'player1', 'player2');
+      const result = await getOrCreateDirectChannel(
+        mockConfig,
+        mockTenantId,
+        'player1',
+        'player2',
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(true);
       expect(mockChatRepositoryCreateChannel).toHaveBeenCalledWith(
@@ -956,7 +1096,7 @@ describe('ChatService', () => {
       const newChannel = {
         channelId: 'dm-channel',
         tenantId: mockTenantId,
-        channelType: 'direct' as ChannelType,
+        channelType: 'direct' as const,
         partyId: null,
         guildId: null,
         name: 'dm-player1-player2',
@@ -967,7 +1107,14 @@ describe('ChatService', () => {
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
       mockChatRepositoryCreateChannel.mockResolvedValue(newChannel);
 
-      const result = await getOrCreateDirectChannel(mockConfig, mockTenantId, 'player2', 'player1');
+      const result = await getOrCreateDirectChannel(
+        mockConfig,
+        mockTenantId,
+        'player2',
+        'player1',
+        undefined,
+        { repository: mockRepository as never },
+      );
 
       expect(result.success).toBe(true);
       expect(mockChatRepositoryCreateChannel).toHaveBeenCalledWith(
@@ -989,6 +1136,7 @@ describe('ChatService', () => {
         'channel-1',
         'msg-1',
         'Spam',
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(false);
@@ -1005,6 +1153,7 @@ describe('ChatService', () => {
         'channel-1',
         'nonexistent',
         'Spam',
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(false);
@@ -1034,6 +1183,7 @@ describe('ChatService', () => {
         'channel-1',
         'msg-1',
         'Inappropriate content',
+        { repository: mockRepository as never },
       );
 
       expect(result.success).toBe(true);
@@ -1046,6 +1196,417 @@ describe('ChatService', () => {
           description: 'Inappropriate content',
         }),
       );
+    });
+  });
+});
+
+class InMemoryChatRepository implements ChatRepositoryInterface {
+  private channels: Map<string, ChatChannel> = new Map();
+  private messages: Map<string, ChatMessage> = new Map();
+  private moderationReports: unknown[] = [];
+
+  private generateId(): string {
+    return crypto.randomUUID();
+  }
+
+  async findChannel(params: {
+    channelId: string;
+    tenantId: string;
+  }): Promise<ChatChannel | undefined> {
+    const channel = this.channels.get(params.channelId);
+    if (channel && channel.tenantId === params.tenantId) {
+      return channel;
+    }
+    return undefined;
+  }
+
+  async findChannels(tenantId: string): Promise<ChatChannel[]> {
+    return Array.from(this.channels.values()).filter((c) => c.tenantId === tenantId);
+  }
+
+  async findExistingChannel(params: {
+    tenantId: string;
+    channelType: ChannelType;
+    partyId?: string;
+    guildId?: string;
+  }): Promise<ChatChannel | undefined> {
+    return Array.from(this.channels.values()).find((c) => {
+      if (c.tenantId !== params.tenantId || c.channelType !== params.channelType) {
+        return false;
+      }
+      if (params.partyId && c.partyId !== params.partyId) return false;
+      if (params.guildId && c.guildId !== params.guildId) return false;
+      return true;
+    });
+  }
+
+  async createChannel(params: {
+    tenantId: string;
+    channelType: ChannelType;
+    partyId?: string;
+    guildId?: string;
+    name?: string;
+  }): Promise<ChatChannel | undefined> {
+    const channel: ChatChannel = {
+      channelId: this.generateId(),
+      tenantId: params.tenantId,
+      channelType: params.channelType,
+      partyId: params.partyId ?? null,
+      guildId: params.guildId ?? null,
+      name: params.name ?? null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.channels.set(channel.channelId, channel);
+    return channel;
+  }
+
+  async findMessage(messageId: string, channelId: string): Promise<ChatMessage | undefined> {
+    const message = this.messages.get(messageId);
+    if (message && message.channelId === channelId) {
+      return message;
+    }
+    return undefined;
+  }
+
+  async findMessages(params: {
+    channelId: string;
+    tenantId: string;
+    isDeleted: boolean;
+    cursor?: string;
+    limit?: number;
+  }): Promise<ChatMessage[]> {
+    const allMessages = Array.from(this.messages.values()).filter(
+      (m) => m.channelId === params.channelId && m.isDeleted === params.isDeleted,
+    );
+    return allMessages.slice(0, params.limit ?? 50);
+  }
+
+  async createMessage(params: {
+    channelId: string;
+    senderPlayerId: string;
+    content: string;
+    moderationStatus: string;
+  }): Promise<ChatMessage | undefined> {
+    const message: ChatMessage = {
+      messageId: this.generateId(),
+      channelId: params.channelId,
+      senderPlayerId: params.senderPlayerId,
+      content: params.content,
+      moderationStatus: params.moderationStatus as ModerationStatus,
+      isDeleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.messages.set(message.messageId, message);
+    return message;
+  }
+
+  async updateMessage(params: { messageId: string; isDeleted: boolean }): Promise<void> {
+    const message = this.messages.get(params.messageId);
+    if (message) {
+      message.isDeleted = params.isDeleted;
+      message.updatedAt = new Date();
+    }
+  }
+
+  async createModerationReport(params: {
+    tenantId: string;
+    reporterPlayerId: string;
+    reportedPlayerId: string;
+    reportType: string;
+    contentReference: { type: string; id: string };
+    description: string;
+  }): Promise<void> {
+    this.moderationReports.push(params);
+  }
+
+  clear(): void {
+    this.channels.clear();
+    this.messages.clear();
+    this.moderationReports = [];
+  }
+}
+
+describe('ChatService with real repository', () => {
+  let inMemoryRepo: InMemoryChatRepository;
+  let _eventBus: EventBus;
+
+  beforeEach(() => {
+    inMemoryRepo = new InMemoryChatRepository();
+    _eventBus = { publish: vi.fn() } as unknown as EventBus;
+    mockCheckRateLimit.mockResolvedValue({ allowed: true, current: 1, limit: 10 });
+    mockEvaluateFlag.mockResolvedValue(true);
+    mockModerateChat.mockResolvedValue({
+      moderationStatus: 'approved' as ModerationStatus,
+      contentCheckResult: { allowed: true, violations: [], highestSeverity: null },
+    });
+  });
+
+  afterEach(() => {
+    inMemoryRepo.clear();
+  });
+
+  describe('sendMessage', () => {
+    it('creates message and returns it with correct properties', async () => {
+      const channel = await inMemoryRepo.createChannel({
+        tenantId: mockTenantId,
+        channelType: 'party',
+        partyId: 'party-1',
+      });
+
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        { channelId: channel!.channelId, content: 'Hello world' },
+        undefined,
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.message).toBeDefined();
+      expect(result.message!.content).toBe('Hello world');
+      expect(result.message!.senderPlayerId).toBe(mockPlayerId);
+      expect(result.message!.channelId).toBe(channel!.channelId);
+    });
+
+    it('trims message content before storing', async () => {
+      const channel = await inMemoryRepo.createChannel({
+        tenantId: mockTenantId,
+        channelType: 'party',
+        partyId: 'party-1',
+      });
+
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        { channelId: channel!.channelId, content: '  trimmed content  ' },
+        undefined,
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.message!.content).toBe('trimmed content');
+    });
+
+    it('rejects empty message', async () => {
+      const channel = await inMemoryRepo.createChannel({
+        tenantId: mockTenantId,
+        channelType: 'party',
+        partyId: 'party-1',
+      });
+
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        { channelId: channel!.channelId, content: '' },
+        undefined,
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Message cannot be empty');
+    });
+
+    it('rejects whitespace-only message', async () => {
+      const channel = await inMemoryRepo.createChannel({
+        tenantId: mockTenantId,
+        channelType: 'party',
+        partyId: 'party-1',
+      });
+
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        { channelId: channel!.channelId, content: '   ' },
+        undefined,
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Message cannot be empty');
+    });
+
+    it('rejects message exceeding max length', async () => {
+      const channel = await inMemoryRepo.createChannel({
+        tenantId: mockTenantId,
+        channelType: 'party',
+        partyId: 'party-1',
+      });
+
+      const result = await sendMessage(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        { channelId: channel!.channelId, content: 'a'.repeat(281) },
+        undefined,
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('exceeds maximum length');
+    });
+  });
+
+  describe('getMessages', () => {
+    it('returns messages from the channel', async () => {
+      const channel = await inMemoryRepo.createChannel({
+        tenantId: mockTenantId,
+        channelType: 'party',
+        partyId: 'party-1',
+      });
+
+      await inMemoryRepo.createMessage({
+        channelId: channel!.channelId,
+        senderPlayerId: mockPlayerId,
+        content: 'First message',
+        moderationStatus: 'approved',
+      });
+      await inMemoryRepo.createMessage({
+        channelId: channel!.channelId,
+        senderPlayerId: 'other-player',
+        content: 'Second message',
+        moderationStatus: 'approved',
+      });
+
+      const result = await getMessages(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        channel!.channelId,
+        50,
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.messages).toHaveLength(2);
+    });
+
+    it('does not return deleted messages', async () => {
+      const channel = await inMemoryRepo.createChannel({
+        tenantId: mockTenantId,
+        channelType: 'party',
+        partyId: 'party-1',
+      });
+
+      const msg1 = await inMemoryRepo.createMessage({
+        channelId: channel!.channelId,
+        senderPlayerId: mockPlayerId,
+        content: 'Active message',
+        moderationStatus: 'approved',
+      });
+      await inMemoryRepo.createMessage({
+        channelId: channel!.channelId,
+        senderPlayerId: mockPlayerId,
+        content: 'Deleted message',
+        moderationStatus: 'approved',
+      });
+      await inMemoryRepo.updateMessage({ messageId: msg1!.messageId, isDeleted: true });
+
+      const result = await getMessages(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        channel!.channelId,
+        50,
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.messages).toHaveLength(1);
+      expect(result.messages![0].content).toBe('Deleted message');
+    });
+
+    it('returns error when channel does not exist', async () => {
+      const result = await getMessages(
+        mockConfig,
+        mockTenantId,
+        mockPlayerId,
+        'nonexistent-channel',
+        50,
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Channel not found');
+    });
+  });
+
+  describe('createChannel', () => {
+    it('creates a channel and returns it', async () => {
+      const result = await createChannel(
+        mockConfig,
+        mockTenantId,
+        { channelType: 'party', partyId: 'party-1' },
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.channel).toBeDefined();
+      expect(result.channel!.channelType).toBe('party');
+      expect(result.channel!.partyId).toBe('party-1');
+    });
+
+    it('created channel can be retrieved via findChannel', async () => {
+      const createResult = await createChannel(
+        mockConfig,
+        mockTenantId,
+        { channelType: 'party', partyId: 'party-1' },
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      const channel = await inMemoryRepo.findChannel({
+        channelId: createResult.channel!.channelId,
+        tenantId: mockTenantId,
+      });
+
+      expect(channel).toBeDefined();
+      expect(channel!.channelType).toBe('party');
+      expect(channel!.partyId).toBe('party-1');
+    });
+
+    it('created channel can be retrieved via listChannels', async () => {
+      await createChannel(
+        mockConfig,
+        mockTenantId,
+        { channelType: 'party', partyId: 'party-1' },
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      const channels = await inMemoryRepo.findChannels(mockTenantId);
+
+      expect(channels).toHaveLength(1);
+      expect(channels[0].channelType).toBe('party');
+    });
+
+    it('returns error when chat is disabled', async () => {
+      mockEvaluateFlag.mockResolvedValue(false);
+
+      const result = await createChannel(
+        mockConfig,
+        mockTenantId,
+        { channelType: 'party', partyId: 'party-1' },
+        undefined,
+        { repository: inMemoryRepo },
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Chat is disabled');
     });
   });
 });

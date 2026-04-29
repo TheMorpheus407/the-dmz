@@ -60,7 +60,19 @@ interface CreateModerationReportParams {
   description: string;
 }
 
-export class ChatRepository {
+export interface ChatRepositoryInterface {
+  findChannel(params: FindChannelParams): Promise<ChatChannel | undefined>;
+  findChannels(tenantId: string): Promise<ChatChannel[]>;
+  findExistingChannel(params: FindExistingChannelParams): Promise<ChatChannel | undefined>;
+  createChannel(params: CreateChannelParams): Promise<ChatChannel | undefined>;
+  findMessage(messageId: string, channelId: string): Promise<ChatMessage | undefined>;
+  findMessages(params: FindMessagesParams): Promise<ChatMessage[]>;
+  createMessage(params: CreateMessageParams): Promise<ChatMessage | undefined>;
+  updateMessage(params: UpdateMessageParams): Promise<void>;
+  createModerationReport(params: CreateModerationReportParams): Promise<void>;
+}
+
+export class ChatRepository implements ChatRepositoryInterface {
   private readonly db: DatabaseClient;
 
   public constructor(db: DatabaseClient) {
