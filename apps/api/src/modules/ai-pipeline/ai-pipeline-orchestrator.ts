@@ -54,7 +54,7 @@ import {
 import {
   buildGenerationFailureCategory,
   clampGenerationRetries,
-  resolveGenerationTemperature,
+  getGenerationTemperature,
   formatGenerationAttemptErrorMessage,
   buildGenerationRetryPrompt,
   mergeUsageMetrics,
@@ -403,7 +403,7 @@ export const createAiPipelineOrchestrator = (
           systemPrompt: attemptPrompt.systemPrompt,
           userPrompt: attemptPrompt.userPrompt,
           maxTokens: template.tokenBudget,
-          temperature: resolveGenerationTemperature(attemptIndex),
+          temperature: getGenerationTemperature(attemptIndex),
           model: attemptedModel,
         });
 

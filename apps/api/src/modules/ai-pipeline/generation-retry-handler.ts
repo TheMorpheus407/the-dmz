@@ -48,7 +48,7 @@ export const buildGenerationFailureCategory = (error: unknown): GenerationFailur
 export const clampGenerationRetries = (configuredRetries: number): number =>
   Math.min(MAX_GENERATION_RETRIES, Math.max(0, configuredRetries));
 
-export const resolveGenerationTemperature = (attemptIndex: number): number => {
+export const getGenerationTemperature = (attemptIndex: number): number => {
   const resolved =
     generationRetryTemperatures[Math.min(attemptIndex, generationRetryTemperatures.length - 1)];
 
