@@ -2,8 +2,12 @@ import {
   CredentialStatus as CredentialStatusValue,
   CredentialType as CredentialTypeValue,
 } from '../auth/api-key-contract.js';
-import type { CredentialStatus, CredentialType } from '../auth/api-key-contract.js';
+
 import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
+
+import type { CredentialStatus, CredentialType } from '../auth/api-key-contract.js';
+
+/* eslint-disable max-lines */
 
 export type TestApiKey = {
   id: string;
@@ -33,6 +37,104 @@ export type TestApiKey = {
   refererRestrictions: unknown;
   rateLimitRequestsPerWindow: unknown;
   rateLimitWindowMs: unknown;
+};
+
+export type CampaignStatus = 'draft' | 'active' | 'paused' | 'completed';
+export type CampaignType = 'onboarding' | 'quarterly' | 'annual' | 'event-driven';
+export type EnrollmentStatus = 'not_started' | 'in_progress' | 'completed';
+
+export type CampaignSeed = {
+  campaignId: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  status: CampaignStatus;
+  campaignType: CampaignType;
+  createdBy: string;
+  startDate: Date | null;
+  endDate: Date | null;
+  timezone: string;
+  recurrencePattern: string;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type CampaignAudienceSeed = {
+  audienceId: string;
+  campaignId: string;
+  groupIds: string[];
+  departments: string[];
+  locations: string[];
+  roles: string[];
+  attributeFilters: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type CampaignContentSeed = {
+  contentId: string;
+  campaignId: string;
+  contentType: string;
+  contentItemId: string;
+  orderIndex: number;
+  dueDays: number | null;
+  isPrerequisite: boolean;
+  createdAt: Date;
+};
+
+export type CampaignEnrollmentSeed = {
+  enrollmentId: string;
+  campaignId: string;
+  userId: string;
+  status: EnrollmentStatus;
+  enrolledAt: Date;
+  completedAt: Date | null;
+  dueDate: Date | null;
+  lastReminderAt: Date | null;
+  reminderCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type CampaignTemplateSeed = {
+  templateId: string;
+  tenantId: string;
+  name: string;
+  description: string | null;
+  campaignType: CampaignType;
+  audienceConfig: Record<string, unknown>;
+  contentConfig: Record<string, unknown>;
+  scheduleConfig: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type CampaignEscalationSeed = {
+  escalationId: string;
+  campaignId: string;
+  reminderDays: number[];
+  managerNotification: boolean;
+  complianceAlert: boolean;
+  complianceAlertThreshold: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type NotificationDeliveryChannel = 'email' | 'in_app';
+export type NotificationDeliveryStatus = 'sent' | 'suppressed_dedupe' | 'rate_limited' | 'failed';
+
+export type NotificationSeed = {
+  id: string;
+  tenantId: string;
+  userId: string;
+  eventType: string;
+  channel: NotificationDeliveryChannel;
+  status: NotificationDeliveryStatus;
+  sentAt: Date | null;
+  suppressedReason: string | null;
+  failureReason: string | null;
+  templateCategory: string;
+  correlationId: string | null;
 };
 
 /**
@@ -292,6 +394,7 @@ export const createTestSeason = (overrides: Partial<SeasonSeed> = {}): SeasonSee
   metadata: overrides.metadata ?? {},
 });
 
+// eslint-disable-next-line complexity
 export const createTestChapter = (overrides: Partial<ChapterSeed> = {}): ChapterSeed => ({
   id: overrides.id ?? crypto.randomUUID(),
   tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
@@ -309,6 +412,7 @@ export const createTestChapter = (overrides: Partial<ChapterSeed> = {}): Chapter
   metadata: overrides.metadata ?? {},
 });
 
+/* eslint-disable complexity */
 export const createTestEmailTemplate = (
   overrides: Partial<EmailTemplateSeed> = {},
 ): EmailTemplateSeed => ({
@@ -333,6 +437,7 @@ export const createTestEmailTemplate = (
   isAiGenerated: overrides.isAiGenerated ?? false,
   isActive: overrides.isActive ?? true,
 });
+/* eslint-enable complexity */
 
 /**
  * The canonical set of tenants used by the seed script.
@@ -543,4 +648,107 @@ export const createTestApiKey = (overrides: Partial<TestApiKey> = {}): TestApiKe
   rateLimitRequestsPerWindow: null,
   rateLimitWindowMs: null,
   ...overrides,
+});
+
+export const createTestCampaign = (overrides: Partial<CampaignSeed> = {}): CampaignSeed => ({
+  campaignId: overrides.campaignId ?? crypto.randomUUID(),
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  name: overrides.name ?? 'Test Campaign',
+  description: overrides.description ?? null,
+  status: overrides.status ?? 'draft',
+  campaignType: overrides.campaignType ?? 'onboarding',
+  createdBy: overrides.createdBy ?? SEED_USER_IDS.acmeCorp.tenantAdmin,
+  startDate: overrides.startDate ?? null,
+  endDate: overrides.endDate ?? null,
+  timezone: overrides.timezone ?? 'UTC',
+  recurrencePattern: overrides.recurrencePattern ?? 'one-time',
+  createdAt: overrides.createdAt ?? new Date(),
+  updatedAt: overrides.updatedAt ?? new Date(),
+});
+
+export const createTestCampaignAudience = (
+  overrides: Partial<CampaignAudienceSeed> = {},
+): CampaignAudienceSeed => ({
+  audienceId: overrides.audienceId ?? crypto.randomUUID(),
+  campaignId: overrides.campaignId ?? crypto.randomUUID(),
+  groupIds: overrides.groupIds ?? [],
+  departments: overrides.departments ?? [],
+  locations: overrides.locations ?? [],
+  roles: overrides.roles ?? [],
+  attributeFilters: overrides.attributeFilters ?? {},
+  createdAt: overrides.createdAt ?? new Date(),
+  updatedAt: overrides.updatedAt ?? new Date(),
+});
+
+export const createTestCampaignContent = (
+  overrides: Partial<CampaignContentSeed> = {},
+): CampaignContentSeed => ({
+  contentId: overrides.contentId ?? crypto.randomUUID(),
+  campaignId: overrides.campaignId ?? crypto.randomUUID(),
+  contentType: overrides.contentType ?? 'module',
+  contentItemId: overrides.contentItemId ?? crypto.randomUUID(),
+  orderIndex: overrides.orderIndex ?? 0,
+  dueDays: overrides.dueDays ?? 7,
+  isPrerequisite: overrides.isPrerequisite ?? false,
+  createdAt: overrides.createdAt ?? new Date(),
+});
+
+export const createTestCampaignEnrollment = (
+  overrides: Partial<CampaignEnrollmentSeed> = {},
+): CampaignEnrollmentSeed => ({
+  enrollmentId: overrides.enrollmentId ?? crypto.randomUUID(),
+  campaignId: overrides.campaignId ?? crypto.randomUUID(),
+  userId: overrides.userId ?? SEED_USER_IDS.acmeCorp.learner,
+  status: overrides.status ?? 'not_started',
+  enrolledAt: overrides.enrolledAt ?? new Date(),
+  completedAt: overrides.completedAt ?? null,
+  dueDate: overrides.dueDate ?? null,
+  lastReminderAt: overrides.lastReminderAt ?? null,
+  reminderCount: overrides.reminderCount ?? 0,
+  createdAt: overrides.createdAt ?? new Date(),
+  updatedAt: overrides.updatedAt ?? new Date(),
+});
+
+export const createTestCampaignTemplate = (
+  overrides: Partial<CampaignTemplateSeed> = {},
+): CampaignTemplateSeed => ({
+  templateId: overrides.templateId ?? crypto.randomUUID(),
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  name: overrides.name ?? 'Test Campaign Template',
+  description: overrides.description ?? null,
+  campaignType: overrides.campaignType ?? 'onboarding',
+  audienceConfig: overrides.audienceConfig ?? {},
+  contentConfig: overrides.contentConfig ?? {},
+  scheduleConfig: overrides.scheduleConfig ?? {},
+  createdAt: overrides.createdAt ?? new Date(),
+  updatedAt: overrides.updatedAt ?? new Date(),
+});
+
+export const createTestCampaignEscalation = (
+  overrides: Partial<CampaignEscalationSeed> = {},
+): CampaignEscalationSeed => ({
+  escalationId: overrides.escalationId ?? crypto.randomUUID(),
+  campaignId: overrides.campaignId ?? crypto.randomUUID(),
+  reminderDays: overrides.reminderDays ?? [1, 3, 7],
+  managerNotification: overrides.managerNotification ?? true,
+  complianceAlert: overrides.complianceAlert ?? false,
+  complianceAlertThreshold: overrides.complianceAlertThreshold ?? null,
+  createdAt: overrides.createdAt ?? new Date(),
+  updatedAt: overrides.updatedAt ?? new Date(),
+});
+
+export const createTestNotification = (
+  overrides: Partial<NotificationSeed> = {},
+): NotificationSeed => ({
+  id: overrides.id ?? crypto.randomUUID(),
+  tenantId: overrides.tenantId ?? SEED_TENANT_IDS.acmeCorp,
+  userId: overrides.userId ?? SEED_USER_IDS.acmeCorp.learner,
+  eventType: overrides.eventType ?? 'auth_security.password_reset_requested',
+  channel: overrides.channel ?? 'email',
+  status: overrides.status ?? 'sent',
+  sentAt: overrides.sentAt ?? new Date(),
+  suppressedReason: overrides.suppressedReason ?? null,
+  failureReason: overrides.failureReason ?? null,
+  templateCategory: overrides.templateCategory ?? 'password_reset',
+  correlationId: overrides.correlationId ?? null,
 });

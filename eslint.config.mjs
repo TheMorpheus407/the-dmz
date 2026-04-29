@@ -453,6 +453,14 @@ export default [
     ],
     rules: {
       'no-console': 'off',
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'FunctionDeclaration[id.name=/^createTest(Tenant|User|Profile)$/]',
+          message:
+            'Avoid defining local createTestTenant, createTestUser, or createTestProfile in test files. Use factories from @the-dmz/shared/testing instead.',
+        },
+      ],
     },
   },
   prettierConfig,
