@@ -1,11 +1,15 @@
+import { get } from 'svelte/store';
+
 import type {
-  SettingsState,
+  ApiSettingsState,
   DisplaySettings,
   AccessibilitySettings,
   GameplaySettings,
   AudioSettings,
   AccountSettings,
+  SettingsState,
 } from '$lib/stores/settings';
+import { performanceStore } from '$lib/stores/settings';
 
 import { apiClient as client } from './client.js';
 
@@ -15,7 +19,13 @@ export async function fetchSettings(category?: SettingsCategory | 'all'): Promis
   const url = category ? `/api/v1/settings/${category}` : '/api/v1/settings/all';
 
   const response = await client.get(url);
-  return response as SettingsState;
+  const apiSettings = response as ApiSettingsState;
+  const performance = get(performanceStore);
+
+  return {
+    ...apiSettings,
+    performance,
+  };
 }
 
 export async function updateSettings(

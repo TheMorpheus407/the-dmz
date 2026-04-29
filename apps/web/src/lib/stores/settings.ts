@@ -174,7 +174,7 @@ export const settingsStore = createSettingsStore();
 
 export const effectiveTheme = derived(settingsStore, ($settings) => {
   if ($settings.accessibility.highContrast) {
-    return 'high-contrast' as ThemeId;
+    return 'high-contrast';
   }
   return $settings.display.theme;
 });
@@ -237,6 +237,7 @@ export type {
   AccountSettings,
   PerformanceSettings,
   SettingsState,
+  ApiSettingsState,
   PerformanceTier,
 } from './settings/types';
 export type {

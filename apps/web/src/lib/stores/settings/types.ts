@@ -82,11 +82,14 @@ export interface PerformanceSettings {
   reduceAnimations: boolean;
 }
 
-export interface SettingsState {
+export interface ApiSettingsState {
   display: DisplaySettings;
   accessibility: AccessibilitySettings;
   gameplay: GameplaySettings;
   audio: AudioSettings;
   account: AccountSettings;
+}
+
+export interface SettingsState extends ApiSettingsState {
   performance: PerformanceSettings;
 }
