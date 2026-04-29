@@ -1,3 +1,5 @@
+import { writable } from 'svelte/store';
+
 import { getDB } from '$lib/storage/idb';
 import { generateId } from '$lib/utils/id';
 import { logger } from '$lib/logger';
@@ -23,152 +25,197 @@ export interface TouchState {
 const MAX_STORED_INTERACTIONS = 1000;
 const SYNC_INTERVAL_MS = 30000;
 
-const touchState: TouchState = {
+const initialState: TouchState = {
   interactions: [],
   lastSyncAt: null,
   activeGestures: 0,
 };
 
-let syncTimer: ReturnType<typeof setInterval> | null = null;
+function createTouchStateStore() {
+  const { subscribe, set, update } = writable<TouchState>(initialState);
 
-export async function initTouchStatePersistence(): Promise<void> {
-  if (!browser) return;
+  let syncTimer: ReturnType<typeof setInterval> | null = null;
 
-  await loadTouchState();
-  startPeriodicSync();
-}
-
-async function loadTouchState(): Promise<void> {
-  if (!browser) return;
-
-  try {
-    const db = await getDB();
-    const all = await db.getAll('events');
-    const touchEvents = all.filter((e) => e.type && e.type.startsWith('touch_'));
-
-    touchState.interactions = touchEvents.slice(-MAX_STORED_INTERACTIONS).map((e) => ({
-      id: e.id,
-      type: e.type?.replace('touch_', '') as TouchInteraction['type'],
-      timestamp: e.timestamp,
-      synced: e.synced,
-      metadata: e.payload as Record<string, unknown>,
-    }));
-
-    touchState.lastSyncAt =
-      touchEvents.length > 0 ? Math.max(...touchEvents.map((e) => e.timestamp)) : null;
-  } catch (error) {
-    logger.error('Failed to load touch state', { error });
+  function getState(): TouchState {
+    let currentState: TouchState = initialState;
+    const unsubscribe = subscribe((state) => {
+      currentState = state;
+    });
+    unsubscribe();
+    return currentState;
   }
-}
 
-function startPeriodicSync(): void {
-  if (syncTimer) return;
+  return {
+    subscribe,
 
-  syncTimer = setInterval(() => {
-    void syncTouchState();
-  }, SYNC_INTERVAL_MS);
-}
+    getState,
 
-export function stopTouchStatePersistence(): void {
-  if (syncTimer) {
-    clearInterval(syncTimer);
-    syncTimer = null;
-  }
-}
+    getTouchState(): TouchState {
+      return { ...getState() };
+    },
 
-export async function syncTouchState(): Promise<number> {
-  if (!browser) return 0;
+    async initTouchStatePersistence(): Promise<void> {
+      if (!browser) return;
 
-  try {
-    await getDB();
-    const unsynced = touchState.interactions.filter((i) => !i.synced);
+      await loadTouchState();
+      this.startPeriodicSync();
+    },
 
-    for (const interaction of unsynced) {
-      interaction.synced = true;
-    }
+    recordTouchInteraction(
+      type: TouchInteraction['type'],
+      metadata?: Record<string, unknown>,
+      direction?: TouchInteraction['direction'],
+      targetElement?: string,
+    ): void {
+      if (!browser) return;
 
-    touchState.lastSyncAt = Date.now();
+      const interaction: TouchInteraction = {
+        id: generateId(),
+        type,
+        timestamp: Date.now(),
+        synced: false,
+        ...(direction !== undefined && { direction }),
+        ...(targetElement !== undefined && { targetElement }),
+        ...(metadata !== undefined && { metadata }),
+      };
 
-    return unsynced.length;
-  } catch (error) {
-    logger.error('Failed to sync touch state', { error });
-    return 0;
-  }
-}
+      update((state) => {
+        const interactions = [...state.interactions, interaction].slice(-MAX_STORED_INTERACTIONS);
+        return { ...state, interactions };
+      });
+    },
 
-export function recordTouchInteraction(
-  type: TouchInteraction['type'],
-  metadata?: Record<string, unknown>,
-  direction?: TouchInteraction['direction'],
-  targetElement?: string,
-): void {
-  if (!browser) return;
+    recordSwipe(direction: TouchInteraction['direction'], targetElement?: string): void {
+      void this.recordTouchInteraction('swipe', undefined, direction, targetElement);
+    },
 
-  const interaction: TouchInteraction = {
-    id: generateId(),
-    type,
-    timestamp: Date.now(),
-    synced: false,
-    ...(direction !== undefined && { direction }),
-    ...(targetElement !== undefined && { targetElement }),
-    ...(metadata !== undefined && { metadata }),
+    recordPan(direction: 'prev' | 'next', targetElement?: string): void {
+      void this.recordTouchInteraction(
+        'pan',
+        { panDirection: direction },
+        undefined,
+        targetElement,
+      );
+    },
+
+    recordPinch(scale: number, targetElement?: string): void {
+      void this.recordTouchInteraction('pinch', { scale }, undefined, targetElement);
+    },
+
+    recordLongPress(targetElement?: string): void {
+      void this.recordTouchInteraction('longpress', undefined, undefined, targetElement);
+    },
+
+    recordTap(targetElement?: string): void {
+      void this.recordTouchInteraction('tap', undefined, undefined, targetElement);
+    },
+
+    incrementActiveGestures(): void {
+      update((state) => ({ ...state, activeGestures: state.activeGestures + 1 }));
+    },
+
+    decrementActiveGestures(): void {
+      update((state) => ({
+        ...state,
+        activeGestures: Math.max(0, state.activeGestures - 1),
+      }));
+    },
+
+    getUnsyncedTouchInteractions(): TouchInteraction[] {
+      return getState().interactions.filter((i) => !i.synced);
+    },
+
+    async syncTouchState(): Promise<number> {
+      if (!browser) return 0;
+
+      try {
+        await getDB();
+        let unsyncedCount = 0;
+
+        update((state) => {
+          const interactions = state.interactions.map((i) => {
+            if (!i.synced) {
+              unsyncedCount++;
+              return { ...i, synced: true };
+            }
+            return i;
+          });
+
+          return { ...state, interactions, lastSyncAt: Date.now() };
+        });
+
+        return unsyncedCount;
+      } catch (error) {
+        logger.error('Failed to sync touch state', { error });
+        return 0;
+      }
+    },
+
+    clearOldTouchInteractions(olderThanMs: number = 7 * 24 * 60 * 60 * 1000): number {
+      const cutoff = Date.now() - olderThanMs;
+      let clearedCount = 0;
+
+      update((state) => {
+        const before = state.interactions.length;
+        const interactions = state.interactions.filter((i) => i.timestamp > cutoff || !i.synced);
+        clearedCount = before - interactions.length;
+        return { ...state, interactions };
+      });
+
+      return clearedCount;
+    },
+
+    startPeriodicSync(): void {
+      if (syncTimer) return;
+
+      syncTimer = setInterval(() => {
+        void this.syncTouchState();
+      }, SYNC_INTERVAL_MS);
+    },
+
+    stopPeriodicSync(): void {
+      if (syncTimer) {
+        clearInterval(syncTimer);
+        syncTimer = null;
+      }
+    },
+
+    reset(): void {
+      this.stopPeriodicSync();
+      set(initialState);
+    },
   };
 
-  touchState.interactions.push(interaction);
+  async function loadTouchState(): Promise<void> {
+    if (!browser) return;
 
-  if (touchState.interactions.length > MAX_STORED_INTERACTIONS) {
-    touchState.interactions = touchState.interactions.slice(-MAX_STORED_INTERACTIONS);
+    try {
+      const db = await getDB();
+      const all = await db.getAll('events');
+      const touchEvents = all.filter((e) => e.type && e.type.startsWith('touch_'));
+
+      const interactions: TouchInteraction[] = touchEvents
+        .slice(-MAX_STORED_INTERACTIONS)
+        .map((e) => ({
+          id: e.id,
+          type: e.type?.replace('touch_', '') as TouchInteraction['type'],
+          timestamp: e.timestamp,
+          synced: e.synced,
+          metadata: e.payload as Record<string, unknown>,
+        }));
+
+      const lastSyncAt =
+        touchEvents.length > 0 ? Math.max(...touchEvents.map((e) => e.timestamp)) : null;
+
+      update((state) => ({
+        ...state,
+        interactions,
+        lastSyncAt,
+      }));
+    } catch (error) {
+      logger.error('Failed to load touch state', { error });
+    }
   }
 }
 
-export function recordSwipe(
-  direction: TouchInteraction['direction'],
-  targetElement?: string,
-): void {
-  recordTouchInteraction('swipe', undefined, direction, targetElement);
-}
-
-export function recordPan(direction: 'prev' | 'next', targetElement?: string): void {
-  recordTouchInteraction('pan', { panDirection: direction }, undefined, targetElement);
-}
-
-export function recordPinch(scale: number, targetElement?: string): void {
-  recordTouchInteraction('pinch', { scale }, undefined, targetElement);
-}
-
-export function recordLongPress(targetElement?: string): void {
-  recordTouchInteraction('longpress', undefined, undefined, targetElement);
-}
-
-export function recordTap(targetElement?: string): void {
-  recordTouchInteraction('tap', undefined, undefined, targetElement);
-}
-
-export function incrementActiveGestures(): void {
-  touchState.activeGestures++;
-}
-
-export function decrementActiveGestures(): void {
-  touchState.activeGestures = Math.max(0, touchState.activeGestures - 1);
-}
-
-export function getTouchState(): TouchState {
-  return { ...touchState };
-}
-
-export function getUnsyncedTouchInteractions(): TouchInteraction[] {
-  return touchState.interactions.filter((i) => !i.synced);
-}
-
-export async function clearOldTouchInteractions(
-  olderThanMs: number = 7 * 24 * 60 * 60 * 1000,
-): Promise<number> {
-  const cutoff = Date.now() - olderThanMs;
-  const before = touchState.interactions.length;
-
-  touchState.interactions = touchState.interactions.filter(
-    (i) => i.timestamp > cutoff || !i.synced,
-  );
-
-  return before - touchState.interactions.length;
-}
+export const touchStateStore = createTouchStateStore();
