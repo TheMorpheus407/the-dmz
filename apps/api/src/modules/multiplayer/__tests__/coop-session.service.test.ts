@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../shared/database/connection.js', () => ({
@@ -669,6 +670,64 @@ describe('coop-session service', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe('Authority cannot finalize own proposal');
     });
+
+    it('should fail when feature flag is disabled', async () => {
+      vi.mocked(evaluateFlag).mockResolvedValue(false);
+
+      const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'confirm',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op system is disabled');
+    });
+
+    it('should fail when session not found', async () => {
+      setupMockDb(mockDb, null);
+
+      const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'confirm',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op session not found');
+    });
+
+    it('should fail when player is not part of session', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, []);
+
+      const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'confirm',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Player is not part of this co-op session');
+    });
+
+    it('should fail when permission denied', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
+      ]);
+
+      const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'confirm',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('requires authority status to perform');
+    });
   });
 
   describe('authorityOverride', () => {
@@ -740,6 +799,64 @@ describe('coop-session service', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Proposal not found');
+    });
+
+    it('should fail when feature flag is disabled', async () => {
+      vi.mocked(evaluateFlag).mockResolvedValue(false);
+
+      const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'override',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op system is disabled');
+    });
+
+    it('should fail when session not found', async () => {
+      setupMockDb(mockDb, null);
+
+      const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'override',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Co-op session not found');
+    });
+
+    it('should fail when player is not part of session', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, []);
+
+      const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'override',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Player is not part of this co-op session');
+    });
+
+    it('should fail when permission denied', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
+      ]);
+
+      const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        proposalId: 'proposal-1',
+        action: 'override',
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('requires authority status to perform');
     });
   });
 

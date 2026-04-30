@@ -1,13 +1,19 @@
+/* eslint-disable max-lines */
 import { DAY_PHASES, type DayPhase } from '@the-dmz/shared/game';
 
 import { evaluateFlag } from '../feature-flags/index.js';
 import {
   coopSessionStatuses,
   type CoopRole,
+  type CoopSession,
   type CoopSessionStatus,
 } from '../../db/schema/multiplayer/index.js';
 
-import { CoopSessionRepository, type CoopSessionWithRoles } from './coop-session.repository.js';
+import {
+  CoopSessionRepository,
+  type CoopSessionWithRoles,
+  type CoopRoleAssignmentResult,
+} from './coop-session.repository.js';
 import { CoopSessionCacheService, toCacheData } from './coop-session.cache-service.js';
 import { CoopSessionEventEmitter, type SessionData } from './coop-session-event-emitter.js';
 import {
@@ -67,6 +73,15 @@ export interface AuthorityActionInput {
   conflictReason?: string | undefined;
 }
 
+interface ValidateAuthorityActionOptions {
+  tenantId: string;
+  sessionId: string;
+  playerId: string;
+  permissionAction: string;
+  currentPhase: DayPhase;
+  requiredStatus?: CoopSessionStatus;
+}
+
 export class CoopSessionService {
   private readonly repository: CoopSessionRepository;
   private readonly cache: CoopSessionCacheService;
@@ -115,6 +130,65 @@ export class CoopSessionService {
       status: session.status as CoopSessionStatus,
       roles: session.roles,
     };
+  }
+
+  /* eslint-disable max-params, @typescript-eslint/max-params, max-statements */
+  private async validateAuthorityAction(
+    options: ValidateAuthorityActionOptions,
+  ): Promise<
+    | { session: CoopSession; roleAssignment: CoopRoleAssignmentResult }
+    | { success: false; error: string }
+  > {
+    const { tenantId, sessionId, playerId, permissionAction, currentPhase, requiredStatus } =
+      options;
+    const coopEnabled = await this.checkCoopEnabled(tenantId);
+    if (!coopEnabled) {
+      return { success: false, error: 'Co-op system is disabled' };
+    }
+
+    const session = await this.repository.findSession({ tenantId, sessionId });
+    if (!session) {
+      return { success: false, error: 'Co-op session not found' };
+    }
+
+    if (requiredStatus !== undefined && session.status !== requiredStatus) {
+      return { success: false, error: 'Can only submit proposals in active session' };
+    }
+
+    const roleAssignment = await this.repository.findRoleAssignmentByPlayer(sessionId, playerId);
+    if (!roleAssignment) {
+      return { success: false, error: 'Player is not part of this co-op session' };
+    }
+
+    const roleConfigResult = await getSessionRoleConfig(this.config, tenantId, sessionId);
+    const matrix: PermissionMatrixConfig = roleConfigResult.config ?? createDefaultRoleConfig();
+
+    try {
+      checkPermission({
+        action: permissionAction,
+        actorRole: roleAssignment.role,
+        actorId: playerId,
+        authorityPlayerId: session.authorityPlayerId,
+        phase: currentPhase,
+        matrix,
+      });
+    } catch (error) {
+      if (error instanceof PermissionDeniedError) {
+        this.events.emitPermissionDenied(
+          tenantId,
+          playerId,
+          roleAssignment.role,
+          permissionAction,
+          currentPhase,
+          error.reason,
+          sessionId,
+        );
+        return { success: false, error: error.message };
+      }
+      throw error;
+    }
+
+    return { session, roleAssignment };
   }
 
   public async createSession(
@@ -423,54 +497,20 @@ export class CoopSessionService {
     input: SubmitProposalInput,
     currentPhase: DayPhase = DAY_PHASES.PHASE_EMAIL_INTAKE,
   ): Promise<CoopSessionResult> {
-    const coopEnabled = await this.checkCoopEnabled(tenantId);
-    if (!coopEnabled) {
-      return { success: false, error: 'Co-op system is disabled' };
+    const validation = await this.validateAuthorityAction({
+      tenantId,
+      sessionId,
+      playerId,
+      permissionAction: 'email.propose_decision',
+      currentPhase,
+      requiredStatus: STATUS_ACTIVE,
+    });
+
+    if (!('session' in validation)) {
+      return validation;
     }
 
-    const session = await this.repository.findSession({ tenantId, sessionId });
-    if (!session) {
-      return { success: false, error: 'Co-op session not found' };
-    }
-
-    if (session.status !== STATUS_ACTIVE) {
-      return { success: false, error: 'Can only submit proposals in active session' };
-    }
-
-    const roleAssignment = await this.repository.findRoleAssignmentByPlayer(sessionId, playerId);
-    if (!roleAssignment) {
-      return { success: false, error: 'Player is not part of this co-op session' };
-    }
-
-    const roleConfigResult = await getSessionRoleConfig(this.config, tenantId, sessionId);
-    const matrix: PermissionMatrixConfig = roleConfigResult.config ?? createDefaultRoleConfig();
-
-    const permissionAction = 'email.propose_decision';
-
-    try {
-      checkPermission({
-        action: permissionAction,
-        actorRole: roleAssignment.role,
-        actorId: playerId,
-        authorityPlayerId: session.authorityPlayerId,
-        phase: currentPhase,
-        matrix,
-      });
-    } catch (error) {
-      if (error instanceof PermissionDeniedError) {
-        this.events.emitPermissionDenied(
-          tenantId,
-          playerId,
-          roleAssignment.role,
-          permissionAction,
-          currentPhase,
-          error.reason,
-          sessionId,
-        );
-        return { success: false, error: error.message };
-      }
-      throw error;
-    }
+    const { roleAssignment } = validation;
 
     const proposal = await this.repository.createProposal({
       sessionId,
@@ -507,50 +547,19 @@ export class CoopSessionService {
     input: AuthorityActionInput,
     currentPhase: DayPhase = DAY_PHASES.PHASE_DECISION,
   ): Promise<CoopSessionResult> {
-    const coopEnabled = await this.checkCoopEnabled(tenantId);
-    if (!coopEnabled) {
-      return { success: false, error: 'Co-op system is disabled' };
+    const validation = await this.validateAuthorityAction({
+      tenantId,
+      sessionId,
+      playerId,
+      permissionAction: 'action.confirm',
+      currentPhase,
+    });
+
+    if (!('session' in validation)) {
+      return validation;
     }
 
-    const session = await this.repository.findSession({ tenantId, sessionId });
-    if (!session) {
-      return { success: false, error: 'Co-op session not found' };
-    }
-
-    const roleAssignment = await this.repository.findRoleAssignmentByPlayer(sessionId, playerId);
-    if (!roleAssignment) {
-      return { success: false, error: 'Player is not part of this co-op session' };
-    }
-
-    const roleConfigResult = await getSessionRoleConfig(this.config, tenantId, sessionId);
-    const matrix: PermissionMatrixConfig = roleConfigResult.config ?? createDefaultRoleConfig();
-
-    const permissionAction = 'action.confirm';
-
-    try {
-      checkPermission({
-        action: permissionAction,
-        actorRole: roleAssignment.role,
-        actorId: playerId,
-        authorityPlayerId: session.authorityPlayerId,
-        phase: currentPhase,
-        matrix,
-      });
-    } catch (error) {
-      if (error instanceof PermissionDeniedError) {
-        this.events.emitPermissionDenied(
-          tenantId,
-          playerId,
-          roleAssignment.role,
-          permissionAction,
-          currentPhase,
-          error.reason,
-          sessionId,
-        );
-        return { success: false, error: error.message };
-      }
-      throw error;
-    }
+    const { session } = validation;
 
     if (session.authorityPlayerId !== playerId) {
       return { success: false, error: 'Only the authority can confirm proposals' };
@@ -603,50 +612,19 @@ export class CoopSessionService {
     input: AuthorityActionInput,
     currentPhase: DayPhase = DAY_PHASES.PHASE_DECISION,
   ): Promise<CoopSessionResult> {
-    const coopEnabled = await this.checkCoopEnabled(tenantId);
-    if (!coopEnabled) {
-      return { success: false, error: 'Co-op system is disabled' };
+    const validation = await this.validateAuthorityAction({
+      tenantId,
+      sessionId,
+      playerId,
+      permissionAction: 'action.override',
+      currentPhase,
+    });
+
+    if (!('session' in validation)) {
+      return validation;
     }
 
-    const session = await this.repository.findSession({ tenantId, sessionId });
-    if (!session) {
-      return { success: false, error: 'Co-op session not found' };
-    }
-
-    const roleAssignment = await this.repository.findRoleAssignmentByPlayer(sessionId, playerId);
-    if (!roleAssignment) {
-      return { success: false, error: 'Player is not part of this co-op session' };
-    }
-
-    const roleConfigResult = await getSessionRoleConfig(this.config, tenantId, sessionId);
-    const matrix: PermissionMatrixConfig = roleConfigResult.config ?? createDefaultRoleConfig();
-
-    const permissionAction = 'action.override';
-
-    try {
-      checkPermission({
-        action: permissionAction,
-        actorRole: roleAssignment.role,
-        actorId: playerId,
-        authorityPlayerId: session.authorityPlayerId,
-        phase: currentPhase,
-        matrix,
-      });
-    } catch (error) {
-      if (error instanceof PermissionDeniedError) {
-        this.events.emitPermissionDenied(
-          tenantId,
-          playerId,
-          roleAssignment.role,
-          permissionAction,
-          currentPhase,
-          error.reason,
-          sessionId,
-        );
-        return { success: false, error: error.message };
-      }
-      throw error;
-    }
+    const { session } = validation;
 
     if (session.authorityPlayerId !== playerId) {
       return { success: false, error: 'Only the authority can override proposals' };
