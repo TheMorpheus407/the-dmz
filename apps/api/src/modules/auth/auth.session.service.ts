@@ -1,7 +1,10 @@
 import { randomUUID } from 'crypto';
 
 import type { SessionBindingContext } from '@the-dmz/shared/auth/session-policy.js';
-import { SessionRevocationReason } from '@the-dmz/shared/auth/session-policy.js';
+import {
+  SessionBindingMode,
+  SessionRevocationReason,
+} from '@the-dmz/shared/auth/session-policy.js';
 
 import { getDatabaseClient } from '../../shared/database/connection.js';
 import { ALLOWED_TENANT_STATUSES } from '../../shared/middleware/pre-auth-tenant-status-guard.js';
@@ -109,7 +112,7 @@ async function checkSessionBinding(
   sessionPolicy: ReturnType<typeof resolveTenantSessionPolicy>,
   options?: RefreshOptions,
 ) {
-  if (sessionPolicy.sessionBindingMode !== 'none') {
+  if (sessionPolicy.sessionBindingMode !== SessionBindingMode.NONE) {
     const originalSession = await findActiveSessionWithContext(db, session.id);
     if (originalSession) {
       const bindingContext: SessionBindingContext = {
