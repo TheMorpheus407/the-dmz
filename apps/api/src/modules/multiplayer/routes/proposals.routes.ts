@@ -47,10 +47,12 @@ export const registerProposalsRoutes = async (fastify: FastifyInstance): Promise
       const service = createCoopSessionService(config, db, eventBus);
 
       const result = await service.submitProposal(user.tenantId, sessionId, user.userId, {
-        playerId: input.playerId,
-        role: input.role,
-        emailId: input.emailId,
-        action: input.action,
+        input: {
+          playerId: input.playerId,
+          role: input.role,
+          emailId: input.emailId,
+          action: input.action,
+        },
       });
 
       if (!result.success) {
@@ -113,8 +115,10 @@ export const registerProposalsRoutes = async (fastify: FastifyInstance): Promise
       const service = createCoopSessionService(config, db, eventBus);
 
       const result = await service.authorityConfirm(user.tenantId, sessionId, user.userId, {
-        proposalId: input.proposalId,
-        action: input.action,
+        input: {
+          proposalId: input.proposalId,
+          action: input.action,
+        },
       });
 
       if (!result.success) {
@@ -177,9 +181,11 @@ export const registerProposalsRoutes = async (fastify: FastifyInstance): Promise
       const service = createCoopSessionService(config, db, eventBus);
 
       const result = await service.authorityOverride(user.tenantId, sessionId, user.userId, {
-        proposalId: input.proposalId,
-        action: input.action,
-        conflictReason: input.conflictReason,
+        input: {
+          proposalId: input.proposalId,
+          action: input.action,
+          conflictReason: input.conflictReason,
+        },
       });
 
       if (!result.success) {

@@ -638,8 +638,10 @@ describe('coop-session service', () => {
       });
 
       const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'confirm',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'confirm',
+        },
       });
 
       expect(result.success).toBe(true);
@@ -663,8 +665,10 @@ describe('coop-session service', () => {
       });
 
       const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'confirm',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'confirm',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -675,8 +679,10 @@ describe('coop-session service', () => {
       vi.mocked(evaluateFlag).mockResolvedValue(false);
 
       const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'confirm',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'confirm',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -687,8 +693,10 @@ describe('coop-session service', () => {
       setupMockDb(mockDb, null);
 
       const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'confirm',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'confirm',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -703,8 +711,10 @@ describe('coop-session service', () => {
       setupMockDb(mockDb, mockSession, []);
 
       const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'confirm',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'confirm',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -721,12 +731,37 @@ describe('coop-session service', () => {
       ]);
 
       const result = await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'confirm',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'confirm',
+        },
       });
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('requires authority status to perform');
+    });
+
+    it('should emit permission.denied event when permission denied', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
+      ]);
+
+      await service.authorityConfirm(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        input: {
+          proposalId: 'proposal-1',
+          action: 'confirm',
+        },
+      });
+
+      expect(mockEventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'permission.denied',
+        }),
+      );
     });
   });
 
@@ -770,9 +805,11 @@ describe('coop-session service', () => {
       });
 
       const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'override',
-        conflictReason: 'insufficient_verification',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'override',
+          conflictReason: 'insufficient_verification',
+        },
       });
 
       expect(result.success).toBe(true);
@@ -793,8 +830,10 @@ describe('coop-session service', () => {
       );
 
       const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'override',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'override',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -805,8 +844,10 @@ describe('coop-session service', () => {
       vi.mocked(evaluateFlag).mockResolvedValue(false);
 
       const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'override',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'override',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -817,8 +858,10 @@ describe('coop-session service', () => {
       setupMockDb(mockDb, null);
 
       const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'override',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'override',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -833,8 +876,10 @@ describe('coop-session service', () => {
       setupMockDb(mockDb, mockSession, []);
 
       const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'override',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'override',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -851,12 +896,37 @@ describe('coop-session service', () => {
       ]);
 
       const result = await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        proposalId: 'proposal-1',
-        action: 'override',
+        input: {
+          proposalId: 'proposal-1',
+          action: 'override',
+        },
       });
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('requires authority status to perform');
+    });
+
+    it('should emit permission.denied event when permission denied', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
+      ]);
+
+      await service.authorityOverride(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        input: {
+          proposalId: 'proposal-1',
+          action: 'override',
+        },
+      });
+
+      expect(mockEventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'permission.denied',
+        }),
+      );
     });
   });
 
@@ -865,10 +935,12 @@ describe('coop-session service', () => {
       vi.mocked(evaluateFlag).mockResolvedValue(false);
 
       const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        emailId: 'email-1',
-        action: 'quarantine',
-        playerId: PLAYER_1_ID,
-        role: 'triage_lead',
+        input: {
+          emailId: 'email-1',
+          action: 'quarantine',
+          playerId: PLAYER_1_ID,
+          role: 'triage_lead',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -879,10 +951,12 @@ describe('coop-session service', () => {
       setupMockDb(mockDb, null);
 
       const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        emailId: 'email-1',
-        action: 'quarantine',
-        playerId: PLAYER_1_ID,
-        role: 'triage_lead',
+        input: {
+          emailId: 'email-1',
+          action: 'quarantine',
+          playerId: PLAYER_1_ID,
+          role: 'triage_lead',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -894,10 +968,12 @@ describe('coop-session service', () => {
       setupMockDb(mockDb, mockSession);
 
       const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        emailId: 'email-1',
-        action: 'quarantine',
-        playerId: PLAYER_1_ID,
-        role: 'triage_lead',
+        input: {
+          emailId: 'email-1',
+          action: 'quarantine',
+          playerId: PLAYER_1_ID,
+          role: 'triage_lead',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -909,10 +985,12 @@ describe('coop-session service', () => {
       setupMockDb(mockDb, mockSession, []);
 
       const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
-        emailId: 'email-1',
-        action: 'quarantine',
-        playerId: PLAYER_1_ID,
-        role: 'triage_lead',
+        input: {
+          emailId: 'email-1',
+          action: 'quarantine',
+          playerId: PLAYER_1_ID,
+          role: 'triage_lead',
+        },
       });
 
       expect(result.success).toBe(false);
@@ -928,21 +1006,44 @@ describe('coop-session service', () => {
         createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
       ]);
 
-      const result = await service.submitProposal(
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        {
+      const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        input: {
           emailId: 'email-1',
           action: 'quarantine',
           playerId: PLAYER_1_ID,
           role: 'triage_lead',
         },
-        'PHASE_VERIFICATION',
-      );
+        currentPhase: 'PHASE_VERIFICATION',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('cannot perform');
+    });
+
+    it('should emit permission.denied event when permission denied', async () => {
+      const mockSession = createMockCoopSession({
+        status: 'active',
+        authorityPlayerId: PLAYER_2_ID,
+      });
+      setupMockDb(mockDb, mockSession, [
+        createMockRoleAssignment({ playerId: PLAYER_1_ID, role: 'triage_lead' }),
+      ]);
+
+      await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        input: {
+          emailId: 'email-1',
+          action: 'quarantine',
+          playerId: PLAYER_1_ID,
+          role: 'triage_lead',
+        },
+        currentPhase: 'PHASE_VERIFICATION',
+      });
+
+      expect(mockEventBus.publish).toHaveBeenCalledWith(
+        expect.objectContaining({
+          eventType: 'permission.denied',
+        }),
+      );
     });
 
     it('should successfully submit proposal', async () => {
@@ -971,18 +1072,15 @@ describe('coop-session service', () => {
         }),
       });
 
-      const result = await service.submitProposal(
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        {
+      const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        input: {
           emailId: 'email-1',
           action: 'quarantine',
           playerId: PLAYER_1_ID,
           role: 'triage_lead',
         },
-        'PHASE_EMAIL_INTAKE',
-      );
+        currentPhase: 'PHASE_EMAIL_INTAKE',
+      });
 
       expect(result.success).toBe(true);
       expect(deleteCachedCoopSession).toHaveBeenCalledWith(mockConfig, TENANT_ID, SESSION_ID);
@@ -1004,18 +1102,15 @@ describe('coop-session service', () => {
         }),
       });
 
-      const result = await service.submitProposal(
-        TENANT_ID,
-        SESSION_ID,
-        PLAYER_1_ID,
-        {
+      const result = await service.submitProposal(TENANT_ID, SESSION_ID, PLAYER_1_ID, {
+        input: {
           emailId: 'email-1',
           action: 'quarantine',
           playerId: PLAYER_1_ID,
           role: 'triage_lead',
         },
-        'PHASE_EMAIL_INTAKE',
-      );
+        currentPhase: 'PHASE_EMAIL_INTAKE',
+      });
 
       expect(result.success).toBe(false);
       expect(result.error).toBe('Failed to submit proposal');
