@@ -4,6 +4,7 @@ export * from './party.service.js';
 export * from './party.routes.js';
 export * from './coop-session.service.js';
 export * from './coop-session.routes.js';
+export * from './coop-session.schemas.js';
 export * from './invite-code.js';
 export { CoopSessionRepository } from './coop-session.repository.js';
 export { CoopSessionCacheService } from './coop-session.cache-service.js';
