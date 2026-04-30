@@ -332,7 +332,7 @@ function calculateOverallScore(breakdown: QualityScoreBreakdown): number {
   return Math.round(weighted);
 }
 
-function determineStatus(overall: number): 'excellent' | 'good' | 'fair' | 'poor' {
+function classifyQualityScore(overall: number): 'excellent' | 'good' | 'fair' | 'poor' {
   if (overall >= 80) return 'excellent';
   if (overall >= 60) return 'good';
   if (overall >= 40) return 'fair';
@@ -372,7 +372,7 @@ export const scoreEmail = (input: QualityScoringInput): QualityScoreResult => {
   };
 
   const overall = calculateOverallScore(breakdown);
-  const status = determineStatus(overall);
+  const status = classifyQualityScore(overall);
 
   const uniqueFlags = [...new Set(allFlags)];
   const uniqueRecommendations = [...new Set(allRecommendations)];
