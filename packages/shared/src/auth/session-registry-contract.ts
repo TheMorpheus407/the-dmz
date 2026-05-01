@@ -8,22 +8,22 @@ export const SessionStatus = {
 
 export type SessionStatus = (typeof SessionStatus)[keyof typeof SessionStatus];
 
-export const sessionStatusSchema = z.enum([
+export const SESSION_STATUS_SCHEMA = z.enum([
   SessionStatus.ACTIVE,
   SessionStatus.EXPIRED,
   SessionStatus.REVOKED,
 ]);
 
-export const sessionRegistryQuerySchema = z.object({
+export const SESSION_REGISTRY_QUERY_SCHEMA = z.object({
   userId: z.string().uuid().optional(),
-  status: sessionStatusSchema.optional(),
+  status: SESSION_STATUS_SCHEMA.optional(),
   cursor: z.string().optional(),
   limit: z.number().int().min(1).max(100).default(20),
 });
 
-export type SessionRegistryQuery = z.infer<typeof sessionRegistryQuerySchema>;
+export type SessionRegistryQuery = z.infer<typeof SESSION_REGISTRY_QUERY_SCHEMA>;
 
-export const sessionSummarySchema = z.object({
+export const SESSION_SUMMARY_SCHEMA = z.object({
   sessionId: z.string().uuid(),
   userId: z.string().uuid(),
   userEmail: z.string().email(),
@@ -38,18 +38,18 @@ export const sessionSummarySchema = z.object({
     })
     .optional()
     .nullable(),
-  status: sessionStatusSchema,
+  status: SESSION_STATUS_SCHEMA,
 });
 
-export type SessionSummary = z.infer<typeof sessionSummarySchema>;
+export type SessionSummary = z.infer<typeof SESSION_SUMMARY_SCHEMA>;
 
-export const sessionListResponseSchema = z.object({
-  sessions: z.array(sessionSummarySchema),
+export const SESSION_LIST_RESPONSE_SCHEMA = z.object({
+  sessions: z.array(SESSION_SUMMARY_SCHEMA),
   nextCursor: z.string().optional(),
   total: z.number().int().min(0),
 });
 
-export type SessionListResponse = z.infer<typeof sessionListResponseSchema>;
+export type SessionListResponse = z.infer<typeof SESSION_LIST_RESPONSE_SCHEMA>;
 
 export const SessionRevocationResult = {
   REVOKED: 'revoked',
@@ -62,7 +62,7 @@ export const SessionRevocationResult = {
 export type SessionRevocationResult =
   (typeof SessionRevocationResult)[keyof typeof SessionRevocationResult];
 
-export const sessionRevocationResultSchema = z.enum([
+export const SESSION_REVOCATION_RESULT_SCHEMA = z.enum([
   SessionRevocationResult.REVOKED,
   SessionRevocationResult.ALREADY_REVOKED,
   SessionRevocationResult.NOT_FOUND,
@@ -70,29 +70,31 @@ export const sessionRevocationResultSchema = z.enum([
   SessionRevocationResult.FAILED,
 ]);
 
-export const singleSessionRevocationResponseSchema = z.object({
-  result: sessionRevocationResultSchema,
+export const SINGLE_SESSION_REVOCATION_RESPONSE_SCHEMA = z.object({
+  result: SESSION_REVOCATION_RESULT_SCHEMA,
   sessionId: z.string().uuid(),
   reason: z.string(),
 });
 
-export type SingleSessionRevocationResponse = z.infer<typeof singleSessionRevocationResponseSchema>;
+export type SingleSessionRevocationResponse = z.infer<
+  typeof SINGLE_SESSION_REVOCATION_RESPONSE_SCHEMA
+>;
 
-export const bulkSessionRevocationResponseSchema = z.object({
-  result: sessionRevocationResultSchema,
+export const BULK_SESSION_REVOCATION_RESPONSE_SCHEMA = z.object({
+  result: SESSION_REVOCATION_RESULT_SCHEMA,
   sessionsRevoked: z.number().int().min(0),
   reason: z.string(),
 });
 
-export type BulkSessionRevocationResponse = z.infer<typeof bulkSessionRevocationResponseSchema>;
+export type BulkSessionRevocationResponse = z.infer<typeof BULK_SESSION_REVOCATION_RESPONSE_SCHEMA>;
 
-export const tenantWideRevocationResponseSchema = z.object({
-  result: sessionRevocationResultSchema,
+export const TENANT_WIDE_REVOCATION_RESPONSE_SCHEMA = z.object({
+  result: SESSION_REVOCATION_RESULT_SCHEMA,
   sessionsRevoked: z.number().int().min(0),
   reason: z.string(),
 });
 
-export type TenantWideRevocationResponse = z.infer<typeof tenantWideRevocationResponseSchema>;
+export type TenantWideRevocationResponse = z.infer<typeof TENANT_WIDE_REVOCATION_RESPONSE_SCHEMA>;
 
 export const adminSessionPermissions = {
   SESSIONS_READ: 'admin:sessions:read',

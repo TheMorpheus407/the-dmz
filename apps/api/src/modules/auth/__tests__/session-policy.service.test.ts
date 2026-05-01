@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   SessionOutcome,
   SessionRevocationReason,
-  defaultTenantSessionPolicy,
+  DEFAULT_TENANT_SESSION_POLICY,
   SessionBindingMode,
   SESSION_POLICY_DEFAULTS,
 } from '@the-dmz/shared/auth/session-policy.js';
@@ -195,12 +195,12 @@ describe('session-policy.service', () => {
   describe('resolveTenantSessionPolicy', () => {
     it('should return defaults when tenant settings are undefined', () => {
       const result = resolveTenantSessionPolicy(undefined);
-      expect(result).toEqual(defaultTenantSessionPolicy);
+      expect(result).toEqual(DEFAULT_TENANT_SESSION_POLICY);
     });
 
     it('should return defaults when tenant settings are empty', () => {
       const result = resolveTenantSessionPolicy({});
-      expect(result).toEqual(defaultTenantSessionPolicy);
+      expect(result).toEqual(DEFAULT_TENANT_SESSION_POLICY);
     });
 
     it('should use custom policy when provided in settings', () => {
@@ -215,7 +215,7 @@ describe('session-policy.service', () => {
       expect(result.idleTimeoutMinutes).toBe(TEST_CONSTANTS.IDLE_TIMEOUT_MINUTES * 2);
       expect(result.absoluteTimeoutMinutes).toBe(TEST_CONSTANTS.ABSOLUTE_TIMEOUT_MINUTES);
       expect(result.maxConcurrentSessionsPerUser).toBe(
-        defaultTenantSessionPolicy.maxConcurrentSessionsPerUser,
+        DEFAULT_TENANT_SESSION_POLICY.maxConcurrentSessionsPerUser,
       );
     });
 
@@ -228,7 +228,7 @@ describe('session-policy.service', () => {
 
       const result = resolveTenantSessionPolicy(customSettings);
       expect(result.maxConcurrentSessionsPerUser).toBe(10);
-      expect(result.idleTimeoutMinutes).toBe(defaultTenantSessionPolicy.idleTimeoutMinutes);
+      expect(result.idleTimeoutMinutes).toBe(DEFAULT_TENANT_SESSION_POLICY.idleTimeoutMinutes);
     });
   });
 
@@ -240,7 +240,7 @@ describe('session-policy.service', () => {
       const result = evaluateSessionTimeouts(
         sessionCreatedAt,
         lastActiveAt,
-        defaultTenantSessionPolicy,
+        DEFAULT_TENANT_SESSION_POLICY,
       );
 
       expect(result.allowed).toBe(true);
@@ -253,7 +253,7 @@ describe('session-policy.service', () => {
       const sessionCreatedAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.ONE_HOUR_MS);
       const lastActiveAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.FORTY_FIVE_MINUTES_MS);
 
-      const policy = { ...defaultTenantSessionPolicy, idleTimeoutMinutes: 30 };
+      const policy = { ...DEFAULT_TENANT_SESSION_POLICY, idleTimeoutMinutes: 30 };
 
       const result = evaluateSessionTimeouts(sessionCreatedAt, lastActiveAt, policy);
 
@@ -268,7 +268,7 @@ describe('session-policy.service', () => {
       const lastActiveAt = new Date(FIXED_NOW.getTime());
 
       const policy = {
-        ...defaultTenantSessionPolicy,
+        ...DEFAULT_TENANT_SESSION_POLICY,
         absoluteTimeoutMinutes: TEST_CONSTANTS.ABSOLUTE_TIMEOUT_MINUTES,
       };
 
@@ -281,7 +281,7 @@ describe('session-policy.service', () => {
     });
 
     it('should return active at exact idle timeout boundary', () => {
-      const policy = { ...defaultTenantSessionPolicy, idleTimeoutMinutes: 30 };
+      const policy = { ...DEFAULT_TENANT_SESSION_POLICY, idleTimeoutMinutes: 30 };
       const sessionCreatedAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.ONE_HOUR_MS);
       const lastActiveAt = new Date(FIXED_NOW.getTime() - 30 * 60 * 1000);
 
@@ -293,7 +293,7 @@ describe('session-policy.service', () => {
     });
 
     it('should return active at exact idle timeout boundary - 1ms before', () => {
-      const policy = { ...defaultTenantSessionPolicy, idleTimeoutMinutes: 30 };
+      const policy = { ...DEFAULT_TENANT_SESSION_POLICY, idleTimeoutMinutes: 30 };
       const sessionCreatedAt = new Date(FIXED_NOW.getTime() - TEST_CONSTANTS.ONE_HOUR_MS);
       const lastActiveAt = new Date(FIXED_NOW.getTime() - 30 * 60 * 1000 + 1);
 
@@ -306,7 +306,7 @@ describe('session-policy.service', () => {
 
   describe('evaluateConcurrentSessions', () => {
     it('should allow session when under limit', () => {
-      const result = evaluateConcurrentSessions(3, defaultTenantSessionPolicy);
+      const result = evaluateConcurrentSessions(3, DEFAULT_TENANT_SESSION_POLICY);
 
       expect(result.allowed).toBe(true);
       expect(result.currentSessionCount).toBe(3);
@@ -314,14 +314,14 @@ describe('session-policy.service', () => {
     });
 
     it('should allow session when currentSessionCount is zero', () => {
-      const result = evaluateConcurrentSessions(0, defaultTenantSessionPolicy);
+      const result = evaluateConcurrentSessions(0, DEFAULT_TENANT_SESSION_POLICY);
 
       expect(result.allowed).toBe(true);
       expect(result.currentSessionCount).toBe(0);
     });
 
     it('should deny session when at limit', () => {
-      const result = evaluateConcurrentSessions(5, defaultTenantSessionPolicy);
+      const result = evaluateConcurrentSessions(5, DEFAULT_TENANT_SESSION_POLICY);
 
       expect(result.allowed).toBe(false);
       expect(result.outcome).toBe(SessionOutcome.POLICY_DENIED);
@@ -329,7 +329,7 @@ describe('session-policy.service', () => {
     });
 
     it('should deny all sessions when maxConcurrentSessionsPerUser is 0', () => {
-      const policy = { ...defaultTenantSessionPolicy, maxConcurrentSessionsPerUser: 0 };
+      const policy = { ...DEFAULT_TENANT_SESSION_POLICY, maxConcurrentSessionsPerUser: 0 };
 
       const result = evaluateConcurrentSessions(0, policy);
 
@@ -339,14 +339,14 @@ describe('session-policy.service', () => {
     });
 
     it('should allow exactly at limit boundary', () => {
-      const policy = { ...defaultTenantSessionPolicy, maxConcurrentSessionsPerUser: 3 };
+      const policy = { ...DEFAULT_TENANT_SESSION_POLICY, maxConcurrentSessionsPerUser: 3 };
       const result = evaluateConcurrentSessions(2, policy);
 
       expect(result.allowed).toBe(true);
     });
 
     it('should deny at limit boundary (current equals max)', () => {
-      const policy = { ...defaultTenantSessionPolicy, maxConcurrentSessionsPerUser: 3 };
+      const policy = { ...DEFAULT_TENANT_SESSION_POLICY, maxConcurrentSessionsPerUser: 3 };
       const result = evaluateConcurrentSessions(3, policy);
 
       expect(result.allowed).toBe(false);
@@ -354,7 +354,7 @@ describe('session-policy.service', () => {
     });
 
     it('should allow unlimited sessions when maxConcurrentSessionsPerUser is null', () => {
-      const policy = { ...defaultTenantSessionPolicy, maxConcurrentSessionsPerUser: null };
+      const policy = { ...DEFAULT_TENANT_SESSION_POLICY, maxConcurrentSessionsPerUser: null };
 
       const result = evaluateConcurrentSessions(100, policy);
 
@@ -365,7 +365,7 @@ describe('session-policy.service', () => {
   describe('validateSessionBinding', () => {
     it('should allow when binding mode is none', () => {
       const policy = {
-        ...defaultTenantSessionPolicy,
+        ...DEFAULT_TENANT_SESSION_POLICY,
         sessionBindingMode: SessionBindingMode.NONE,
       };
       const original = { ipAddress: '192.168.1.1', deviceFingerprint: 'abc123' };
@@ -377,7 +377,7 @@ describe('session-policy.service', () => {
     });
 
     it('should detect IP binding violation', () => {
-      const policy = { ...defaultTenantSessionPolicy, sessionBindingMode: SessionBindingMode.IP };
+      const policy = { ...DEFAULT_TENANT_SESSION_POLICY, sessionBindingMode: SessionBindingMode.IP };
       const original = { ipAddress: '192.168.1.1', deviceFingerprint: null };
       const current = { ipAddress: '10.0.0.1', deviceFingerprint: null };
 
@@ -389,7 +389,7 @@ describe('session-policy.service', () => {
 
     it('should detect device binding violation', () => {
       const policy = {
-        ...defaultTenantSessionPolicy,
+        ...DEFAULT_TENANT_SESSION_POLICY,
         sessionBindingMode: SessionBindingMode.DEVICE,
       };
       const original = { ipAddress: null, deviceFingerprint: 'abc123' };
@@ -403,7 +403,7 @@ describe('session-policy.service', () => {
 
     it('should detect both IP and device binding violations', () => {
       const policy = {
-        ...defaultTenantSessionPolicy,
+        ...DEFAULT_TENANT_SESSION_POLICY,
         sessionBindingMode: SessionBindingMode.IP_DEVICE,
       };
       const original = { ipAddress: '192.168.1.1', deviceFingerprint: 'abc123' };
@@ -417,7 +417,7 @@ describe('session-policy.service', () => {
     });
 
     it('should allow when no original context', () => {
-      const policy = { ...defaultTenantSessionPolicy, sessionBindingMode: SessionBindingMode.IP };
+      const policy = { ...DEFAULT_TENANT_SESSION_POLICY, sessionBindingMode: SessionBindingMode.IP };
       const original = { ipAddress: null, deviceFingerprint: null };
       const current = { ipAddress: '10.0.0.1', deviceFingerprint: null };
 

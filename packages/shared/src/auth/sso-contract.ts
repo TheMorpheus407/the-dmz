@@ -7,7 +7,7 @@ export const SSOProviderType = {
 
 export type SSOProviderType = (typeof SSOProviderType)[keyof typeof SSOProviderType];
 
-export const ssoProviderTypeSchema = z.enum([SSOProviderType.SAML, SSOProviderType.OIDC]);
+export const SSO_PROVIDER_TYPE_SCHEMA = z.enum([SSOProviderType.SAML, SSOProviderType.OIDC]);
 
 export const SAMLSignatureAlgorithm = {
   RSA_SHA256: 'RSA-SHA256',
@@ -21,7 +21,7 @@ export const SAMLSignatureAlgorithm = {
 export type SAMLSignatureAlgorithm =
   (typeof SAMLSignatureAlgorithm)[keyof typeof SAMLSignatureAlgorithm];
 
-export const samlSignatureAlgorithmSchema = z.enum([
+export const SAML_SIGNATURE_ALGORITHM_SCHEMA = z.enum([
   SAMLSignatureAlgorithm.RSA_SHA256,
   SAMLSignatureAlgorithm.RSA_SHA384,
   SAMLSignatureAlgorithm.RSA_SHA512,
@@ -45,7 +45,7 @@ export const OIDCSignatureAlgorithm = {
 export type OIDCSignatureAlgorithm =
   (typeof OIDCSignatureAlgorithm)[keyof typeof OIDCSignatureAlgorithm];
 
-export const oidcSignatureAlgorithmSchema = z.enum([
+export const OIDC_SIGNATURE_ALGORITHM_SCHEMA = z.enum([
   OIDCSignatureAlgorithm.RS256,
   OIDCSignatureAlgorithm.RS384,
   OIDCSignatureAlgorithm.RS512,
@@ -89,20 +89,20 @@ export interface OIDCProviderConfig {
 
 export type SSOProviderConfig = SAMLProviderConfig | OIDCProviderConfig;
 
-export const samlProviderConfigSchema = z.object({
+export const SAML_PROVIDER_CONFIG_SCHEMA = z.object({
   type: z.literal(SSOProviderType.SAML),
   issuer: z.string().min(1),
   entityId: z.string().min(1),
   ssoUrl: z.string().url(),
   certificate: z.string().min(1),
-  signatureAlgorithm: samlSignatureAlgorithmSchema,
+  signatureAlgorithm: SAML_SIGNATURE_ALGORITHM_SCHEMA,
   wantAssertionsSigned: z.boolean(),
   wantMessagesSigned: z.boolean(),
   allowedClockSkewSeconds: z.number().int().min(0).max(3600),
   attributeConsumingServiceIndex: z.string().optional(),
 });
 
-export const oidcProviderConfigSchema = z.object({
+export const OIDC_PROVIDER_CONFIG_SCHEMA = z.object({
   type: z.literal(SSOProviderType.OIDC),
   issuer: z.string().min(1),
   clientId: z.string().min(1),
@@ -112,19 +112,19 @@ export const oidcProviderConfigSchema = z.object({
   userinfoEndpoint: z.string().url().optional(),
   jwksUri: z.string().url(),
   scopes: z.array(z.string()).min(1),
-  idTokenSignedResponseAlg: oidcSignatureAlgorithmSchema,
-  idTokenAlg: oidcSignatureAlgorithmSchema.optional(),
+  idTokenSignedResponseAlg: OIDC_SIGNATURE_ALGORITHM_SCHEMA,
+  idTokenAlg: OIDC_SIGNATURE_ALGORITHM_SCHEMA.optional(),
   allowedClockSkewSeconds: z.number().int().min(0).max(3600),
   responseType: z.string(),
   responseMode: z.enum(['query', 'fragment', 'form_post']).optional(),
 });
 
-export const ssoProviderConfigSchema = z.discriminatedUnion('type', [
-  samlProviderConfigSchema,
-  oidcProviderConfigSchema,
+export const SSO_PROVIDER_CONFIG_SCHEMA = z.discriminatedUnion('type', [
+  SAML_PROVIDER_CONFIG_SCHEMA,
+  OIDC_PROVIDER_CONFIG_SCHEMA,
 ]);
 
-export const SSOIdentityClaimSchema = z.object({
+export const SSO_IDENTITY_CLAIM_SCHEMA = z.object({
   subject: z.string().min(1),
   email: z.string().email().optional(),
   displayName: z.string().optional(),
@@ -135,7 +135,7 @@ export const SSOIdentityClaimSchema = z.object({
   manager: z.string().optional(),
 });
 
-export type SSOIdentityClaim = z.infer<typeof SSOIdentityClaimSchema>;
+export type SSOIdentityClaim = z.infer<typeof SSO_IDENTITY_CLAIM_SCHEMA>;
 
 export const SSOTrustFailureReason = {
   INVALID_SIGNATURE: 'invalid_signature',
@@ -156,7 +156,7 @@ export const SSOTrustFailureReason = {
 export type SSOTrustFailureReason =
   (typeof SSOTrustFailureReason)[keyof typeof SSOTrustFailureReason];
 
-export const ssoTrustFailureReasonSchema = z.enum([
+export const SSO_TRUST_FAILURE_REASON_SCHEMA = z.enum([
   SSOTrustFailureReason.INVALID_SIGNATURE,
   SSOTrustFailureReason.ISSUER_MISMATCH,
   SSOTrustFailureReason.AUDIENCE_MISMATCH,
@@ -186,7 +186,7 @@ export const SSOAccountLinkingOutcome = {
 export type SSOAccountLinkingOutcome =
   (typeof SSOAccountLinkingOutcome)[keyof typeof SSOAccountLinkingOutcome];
 
-export const ssoAccountLinkingOutcomeSchema = z.enum([
+export const SSO_ACCOUNT_LINKING_OUTCOME_SCHEMA = z.enum([
   SSOAccountLinkingOutcome.LINKED_EXISTING,
   SSOAccountLinkingOutcome.LINKED_NEW,
   SSOAccountLinkingOutcome.LINKED_NEW_JIT,
@@ -207,7 +207,7 @@ export const JITProvisioningBehavior = {
 export type JITProvisioningBehavior =
   (typeof JITProvisioningBehavior)[keyof typeof JITProvisioningBehavior];
 
-export const jitProvisioningBehaviorSchema = z.enum([
+export const JIT_PROVISIONING_BEHAVIOR_SCHEMA = z.enum([
   JITProvisioningBehavior.CREATE,
   JITProvisioningBehavior.UPDATE,
   JITProvisioningBehavior.LINK,
@@ -225,37 +225,37 @@ export interface SSOTrustContract {
   clockSkewDefaultSeconds: number;
 }
 
-export const ssoTrustContractSchema: z.ZodType<SSOTrustContract> = z.object({
+export const SSO_TRUST_CONTRACT_SCHEMA: z.ZodType<SSOTrustContract> = z.object({
   version: z.string(),
-  providerConfigs: z.array(ssoProviderConfigSchema),
+  providerConfigs: z.array(SSO_PROVIDER_CONFIG_SCHEMA),
   defaultRole: z.string(),
   allowedRolesForJIT: z.array(z.string()),
-  jitProvisioningBehavior: jitProvisioningBehaviorSchema,
+  jitProvisioningBehavior: JIT_PROVISIONING_BEHAVIOR_SCHEMA,
   allowGroupRoleMapping: z.boolean(),
   groupToRoleMapping: z.record(z.string()),
   clockSkewDefaultSeconds: z.number().int().min(0).max(3600),
 });
 
-export const SSOAuthResponseSchema = z.object({
+export const SSO_AUTH_RESPONSE_SCHEMA = z.object({
   accessToken: z.string(),
   refreshToken: z.string().optional(),
   idToken: z.string().optional(),
   tokenType: z.literal('Bearer'),
   expiresIn: z.number().int().positive(),
   scope: z.string().optional(),
-  user: SSOIdentityClaimSchema,
+  user: SSO_IDENTITY_CLAIM_SCHEMA,
 });
 
-export type SSOAuthResponse = z.infer<typeof SSOAuthResponseSchema>;
+export type SSOAuthResponse = z.infer<typeof SSO_AUTH_RESPONSE_SCHEMA>;
 
-export const SSOErrorResponseSchema = z.object({
+export const SSO_ERROR_RESPONSE_SCHEMA = z.object({
   error: z.string(),
   errorDescription: z.string().optional(),
   errorCode: z.string(),
   correlationId: z.string().optional(),
 });
 
-export type SSOErrorResponse = z.infer<typeof SSOErrorResponseSchema>;
+export type SSOErrorResponse = z.infer<typeof SSO_ERROR_RESPONSE_SCHEMA>;
 
 export interface IdPMetadata {
   issuer: string;
@@ -269,7 +269,7 @@ export interface IdPMetadata {
   expiresAt: Date;
 }
 
-export const idpMetadataSchema = z.object({
+export const IDP_METADATA_SCHEMA = z.object({
   issuer: z.string(),
   entityId: z.string().optional(),
   ssoUrl: z.string().optional(),

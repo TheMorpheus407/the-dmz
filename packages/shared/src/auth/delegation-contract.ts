@@ -14,7 +14,7 @@ export const GrantDecisionOutcome = {
 
 export type GrantDecisionOutcome = (typeof GrantDecisionOutcome)[keyof typeof GrantDecisionOutcome];
 
-export const grantDecisionOutcomeSchema = z.enum([
+export const GRANT_DECISION_OUTCOME_SCHEMA = z.enum([
   GrantDecisionOutcome.ALLOWED,
   GrantDecisionOutcome.DENIED_PERMISSION_CEILING,
   GrantDecisionOutcome.DENIED_ROLE_NOT_ASSIGNABLE,
@@ -86,7 +86,7 @@ export interface RoleUpdateOutput {
   reason?: string;
 }
 
-export const permissionCeilingInputSchema = z.object({
+export const PERMISSION_CEILING_INPUT_SCHEMA = z.object({
   actorId: z.string().uuid(),
   actorTenantId: z.string().uuid(),
   targetPermissions: z.array(z.string()),
@@ -94,7 +94,7 @@ export const permissionCeilingInputSchema = z.object({
   targetUserId: z.string().uuid().optional(),
 });
 
-export const roleGrantInputSchema = z.object({
+export const ROLE_GRANT_INPUT_SCHEMA = z.object({
   actorId: z.string().uuid(),
   actorTenantId: z.string().uuid(),
   targetUserId: z.string().uuid(),
@@ -103,7 +103,7 @@ export const roleGrantInputSchema = z.object({
   expiresAt: z.date().nullable().optional(),
 });
 
-export const roleCreateInputSchema = z.object({
+export const ROLE_CREATE_INPUT_SCHEMA = z.object({
   actorId: z.string().uuid(),
   actorTenantId: z.string().uuid(),
   name: z.string().min(1).max(64),
@@ -111,7 +111,7 @@ export const roleCreateInputSchema = z.object({
   permissions: z.array(z.string()),
 });
 
-export const roleUpdateInputSchema = z.object({
+export const ROLE_UPDATE_INPUT_SCHEMA = z.object({
   actorId: z.string().uuid(),
   actorTenantId: z.string().uuid(),
   roleId: z.string().uuid(),

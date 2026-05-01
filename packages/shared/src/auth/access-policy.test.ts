@@ -5,15 +5,15 @@ import {
   Role,
   AccessPolicyTenantStatus,
   RouteGroup,
-  routeGroupPolicyMatrix,
-  apiEndpointPolicyMatrix,
+  ROUTE_GROUP_POLICY_MATRIX,
+  API_ENDPOINT_POLICY_MATRIX,
   isRouteGroupProtected,
   isApiEndpointProtected,
   hasRequiredRole,
   hasAllowedTenantStatus,
   evaluateRouteGroupPolicy,
-  adminRoles,
-  allRoles,
+  ADMIN_ROLES,
+  ALL_ROLES,
   getApiPolicyForEndpoint,
   ApiScope,
 } from './access-policy.js';
@@ -57,27 +57,27 @@ describe('Access Policy Constants', () => {
 
 describe('Route Group Policy Matrix', () => {
   it('defines policy for all route groups', () => {
-    expect(routeGroupPolicyMatrix).toHaveProperty(RouteGroup.PUBLIC);
-    expect(routeGroupPolicyMatrix).toHaveProperty(RouteGroup.AUTH);
-    expect(routeGroupPolicyMatrix).toHaveProperty(RouteGroup.GAME);
-    expect(routeGroupPolicyMatrix).toHaveProperty(RouteGroup.ADMIN);
+    expect(ROUTE_GROUP_POLICY_MATRIX).toHaveProperty(RouteGroup.PUBLIC);
+    expect(ROUTE_GROUP_POLICY_MATRIX).toHaveProperty(RouteGroup.AUTH);
+    expect(ROUTE_GROUP_POLICY_MATRIX).toHaveProperty(RouteGroup.GAME);
+    expect(ROUTE_GROUP_POLICY_MATRIX).toHaveProperty(RouteGroup.ADMIN);
   });
 
   it('allows anonymous for (public)', () => {
-    const policy = routeGroupPolicyMatrix[RouteGroup.PUBLIC];
+    const policy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.PUBLIC];
     expect(policy.actorType).toBe(ActorType.ANONYMOUS);
     expect(policy.requiredRoles).toHaveLength(0);
   });
 
   it('allows anonymous for (auth) but redirects authenticated', () => {
-    const policy = routeGroupPolicyMatrix[RouteGroup.AUTH];
+    const policy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.AUTH];
     expect(policy.actorType).toBe(ActorType.ANONYMOUS);
     expect(policy.requiredRoles).toHaveLength(0);
     expect(policy.redirectOnDeny).toBe('/game');
   });
 
   it('requires authentication for (game)', () => {
-    const policy = routeGroupPolicyMatrix[RouteGroup.GAME];
+    const policy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.GAME];
     expect(policy.actorType).toBe(ActorType.AUTHENTICATED);
     expect(policy.requiredRoles).toHaveLength(0);
     expect(policy.allowedTenantStatuses).toContain(AccessPolicyTenantStatus.ACTIVE);
@@ -85,9 +85,9 @@ describe('Route Group Policy Matrix', () => {
   });
 
   it('requires admin role for (admin)', () => {
-    const policy = routeGroupPolicyMatrix[RouteGroup.ADMIN];
+    const policy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.ADMIN];
     expect(policy.actorType).toBe(ActorType.AUTHENTICATED);
-    expect(policy.requiredRoles).toEqual(adminRoles);
+    expect(policy.requiredRoles).toEqual(ADMIN_ROLES);
     expect(policy.allowedTenantStatuses).toContain(AccessPolicyTenantStatus.ACTIVE);
     expect(policy.redirectOnDeny).toBe('/game');
   });
@@ -95,7 +95,7 @@ describe('Route Group Policy Matrix', () => {
   it('has no implicit fallthrough - all route groups have explicit policy', () => {
     const routeGroups = [RouteGroup.PUBLIC, RouteGroup.AUTH, RouteGroup.GAME, RouteGroup.ADMIN];
     for (const group of routeGroups) {
-      const policy = routeGroupPolicyMatrix[group];
+      const policy = ROUTE_GROUP_POLICY_MATRIX[group];
       expect(policy).toBeDefined();
       expect(policy.actorType).toBeDefined();
       expect(Array.isArray(policy.requiredRoles)).toBe(true);
@@ -106,33 +106,33 @@ describe('Route Group Policy Matrix', () => {
 
 describe('API Endpoint Policy Matrix', () => {
   it('defines policies for auth endpoints', () => {
-    expect(apiEndpointPolicyMatrix['/api/v1/auth/me']).toBeDefined();
-    expect(apiEndpointPolicyMatrix['/api/v1/auth/login']).toBeDefined();
-    expect(apiEndpointPolicyMatrix['/api/v1/auth/logout']).toBeDefined();
-    expect(apiEndpointPolicyMatrix['/api/v1/auth/refresh']).toBeDefined();
-    expect(apiEndpointPolicyMatrix['/api/v1/auth/register']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/auth/me']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/auth/login']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/auth/logout']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/auth/refresh']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/auth/register']).toBeDefined();
   });
 
   it('defines policies for protected endpoints', () => {
-    expect(apiEndpointPolicyMatrix['/api/v1/profile']).toBeDefined();
-    expect(apiEndpointPolicyMatrix['/api/v1/games']).toBeDefined();
-    expect(apiEndpointPolicyMatrix['/api/v1/admin/games']).toBeDefined();
-    expect(apiEndpointPolicyMatrix['/api/v1/admin/tenants']).toBeDefined();
-    expect(apiEndpointPolicyMatrix['/api/v1/admin/users']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/profile']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/games']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/admin/games']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/admin/tenants']).toBeDefined();
+    expect(API_ENDPOINT_POLICY_MATRIX['/api/v1/admin/users']).toBeDefined();
   });
 
   it('requires active tenant for protected endpoints', () => {
-    const profilePolicy = apiEndpointPolicyMatrix['/api/v1/profile'];
+    const profilePolicy = API_ENDPOINT_POLICY_MATRIX['/api/v1/profile'];
     expect(profilePolicy.allowedTenantStatuses).toContain(AccessPolicyTenantStatus.ACTIVE);
   });
 
   it('requires admin role for admin endpoints', () => {
-    const adminUsersPolicy = apiEndpointPolicyMatrix['/api/v1/admin/users'];
-    expect(adminUsersPolicy.requiredRoles).toEqual(adminRoles);
+    const adminUsersPolicy = API_ENDPOINT_POLICY_MATRIX['/api/v1/admin/users'];
+    expect(adminUsersPolicy.requiredRoles).toEqual(ADMIN_ROLES);
   });
 
   it('allows any tenant status for auth endpoints', () => {
-    const loginPolicy = apiEndpointPolicyMatrix['/api/v1/auth/login'];
+    const loginPolicy = API_ENDPOINT_POLICY_MATRIX['/api/v1/auth/login'];
     expect(loginPolicy.allowedTenantStatuses).toHaveLength(0);
   });
 });
@@ -176,18 +176,18 @@ describe('hasRequiredRole', () => {
 
   it('returns false when role required but user has none', () => {
     expect(hasRequiredRole(undefined, [Role.TENANT_ADMIN])).toBe(false);
-    expect(hasRequiredRole(undefined, adminRoles)).toBe(false);
+    expect(hasRequiredRole(undefined, ADMIN_ROLES)).toBe(false);
   });
 
   it('returns true when user has required role', () => {
     expect(hasRequiredRole('tenant_admin', [Role.TENANT_ADMIN])).toBe(true);
-    expect(hasRequiredRole('super_admin', adminRoles)).toBe(true);
+    expect(hasRequiredRole('super_admin', ADMIN_ROLES)).toBe(true);
     expect(hasRequiredRole('learner', [Role.LEARNER])).toBe(true);
   });
 
   it('performs case-insensitive matching', () => {
     expect(hasRequiredRole('TENANT_ADMIN', [Role.TENANT_ADMIN])).toBe(true);
-    expect(hasRequiredRole('SUPER_ADMIN', adminRoles)).toBe(true);
+    expect(hasRequiredRole('SUPER_ADMIN', ADMIN_ROLES)).toBe(true);
   });
 });
 
@@ -357,7 +357,7 @@ describe('getApiPolicyForEndpoint', () => {
       expect(policy).toBeDefined();
       expect(policy?.scopes).toContain(ApiScope.GAME_ADMIN_READ);
       expect(policy?.scopes).toContain(ApiScope.GAME_ADMIN_WRITE);
-      expect(policy?.requiredRoles).toEqual(adminRoles);
+      expect(policy?.requiredRoles).toEqual(ADMIN_ROLES);
     });
 
     it('returns policy for /api/v1/admin/tenants', () => {
@@ -365,7 +365,7 @@ describe('getApiPolicyForEndpoint', () => {
       expect(policy).toBeDefined();
       expect(policy?.scopes).toContain(ApiScope.ADMIN_TENANT_READ);
       expect(policy?.scopes).toContain(ApiScope.ADMIN_TENANT_WRITE);
-      expect(policy?.requiredRoles).toEqual(adminRoles);
+      expect(policy?.requiredRoles).toEqual(ADMIN_ROLES);
     });
 
     it('returns policy for /api/v1/admin/users', () => {
@@ -373,7 +373,7 @@ describe('getApiPolicyForEndpoint', () => {
       expect(policy).toBeDefined();
       expect(policy?.scopes).toContain(ApiScope.ADMIN_USER_READ);
       expect(policy?.scopes).toContain(ApiScope.ADMIN_USER_WRITE);
-      expect(policy?.requiredRoles).toEqual(adminRoles);
+      expect(policy?.requiredRoles).toEqual(ADMIN_ROLES);
     });
   });
 
@@ -416,10 +416,10 @@ describe('getApiPolicyForEndpoint', () => {
 
   describe('wildcard pattern matching', () => {
     beforeEach(() => {
-      Object.defineProperty(apiEndpointPolicyMatrix, '/api/v1/admin/*', {
+      Object.defineProperty(API_ENDPOINT_POLICY_MATRIX, '/api/v1/admin/*', {
         value: {
           scopes: [ApiScope.ADMIN_TENANT_READ],
-          requiredRoles: adminRoles,
+          requiredRoles: ADMIN_ROLES,
           allowedTenantStatuses: [AccessPolicyTenantStatus.ACTIVE],
         },
         writable: true,
@@ -429,7 +429,7 @@ describe('getApiPolicyForEndpoint', () => {
     });
 
     afterEach(() => {
-      delete (apiEndpointPolicyMatrix as Record<string, unknown>)['/api/v1/admin/*'];
+      delete (API_ENDPOINT_POLICY_MATRIX as Record<string, unknown>)['/api/v1/admin/*'];
     });
 
     it('matches wildcard pattern for /api/v1/admin/analytics', () => {
@@ -457,19 +457,19 @@ describe('getApiPolicyForEndpoint', () => {
 });
 
 describe('Role arrays', () => {
-  it('adminRoles contains admin roles', () => {
-    expect(adminRoles).toContain(Role.SUPER_ADMIN);
-    expect(adminRoles).toContain(Role.TENANT_ADMIN);
-    expect(adminRoles).not.toContain(Role.MANAGER);
-    expect(adminRoles).not.toContain(Role.LEARNER);
+  it('ADMIN_ROLES contains admin roles', () => {
+    expect(ADMIN_ROLES).toContain(Role.SUPER_ADMIN);
+    expect(ADMIN_ROLES).toContain(Role.TENANT_ADMIN);
+    expect(ADMIN_ROLES).not.toContain(Role.MANAGER);
+    expect(ADMIN_ROLES).not.toContain(Role.LEARNER);
   });
 
-  it('allRoles contains all roles', () => {
-    expect(allRoles).toHaveLength(5);
-    expect(allRoles).toContain(Role.SUPER_ADMIN);
-    expect(allRoles).toContain(Role.TENANT_ADMIN);
-    expect(allRoles).toContain(Role.MANAGER);
-    expect(allRoles).toContain(Role.TRAINER);
-    expect(allRoles).toContain(Role.LEARNER);
+  it('ALL_ROLES contains all roles', () => {
+    expect(ALL_ROLES).toHaveLength(5);
+    expect(ALL_ROLES).toContain(Role.SUPER_ADMIN);
+    expect(ALL_ROLES).toContain(Role.TENANT_ADMIN);
+    expect(ALL_ROLES).toContain(Role.MANAGER);
+    expect(ALL_ROLES).toContain(Role.TRAINER);
+    expect(ALL_ROLES).toContain(Role.LEARNER);
   });
 });

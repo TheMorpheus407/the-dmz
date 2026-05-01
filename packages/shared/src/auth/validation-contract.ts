@@ -8,7 +8,7 @@ export const ValidationStatus = {
 
 export type ValidationStatus = (typeof ValidationStatus)[keyof typeof ValidationStatus];
 
-export const validationStatusSchema = z.enum([
+export const VALIDATION_STATUS_SCHEMA = z.enum([
   ValidationStatus.OK,
   ValidationStatus.WARNING,
   ValidationStatus.FAILED,
@@ -22,7 +22,7 @@ export const SSOValidationType = {
 
 export type SSOValidationType = (typeof SSOValidationType)[keyof typeof SSOValidationType];
 
-export const ssoValidationTypeSchema = z.enum([
+export const SSO_VALIDATION_TYPE_SCHEMA = z.enum([
   SSOValidationType.SAML,
   SSOValidationType.OIDC,
   SSOValidationType.SCIM,
@@ -48,7 +48,7 @@ export const SSOValidationCheckType = {
 export type SSOValidationCheckType =
   (typeof SSOValidationCheckType)[keyof typeof SSOValidationCheckType];
 
-export const ssoValidationCheckTypeSchema = z.enum([
+export const SSO_VALIDATION_CHECK_TYPE_SCHEMA = z.enum([
   SSOValidationCheckType.METADATA_FETCH,
   SSOValidationCheckType.METADATA_PARSE,
   SSOValidationCheckType.CERTIFICATE_VALIDITY,
@@ -65,23 +65,23 @@ export const ssoValidationCheckTypeSchema = z.enum([
   SSOValidationCheckType.SCIM_DRY_RUN,
 ]);
 
-export const ssoValidationCheckResultSchema = z.object({
-  checkType: ssoValidationCheckTypeSchema,
-  status: validationStatusSchema,
+export const SSO_VALIDATION_CHECK_RESULT_SCHEMA = z.object({
+  checkType: SSO_VALIDATION_CHECK_TYPE_SCHEMA,
+  status: VALIDATION_STATUS_SCHEMA,
   message: z.string(),
   details: z.record(z.unknown()).optional(),
   correlationId: z.string().uuid().optional(),
   timestamp: z.date(),
 });
 
-export type SSOValidationCheckResult = z.infer<typeof ssoValidationCheckResultSchema>;
+export type SSOValidationCheckResult = z.infer<typeof SSO_VALIDATION_CHECK_RESULT_SCHEMA>;
 
-export const ssoValidationResultSchema = z.object({
+export const SSO_VALIDATION_RESULT_SCHEMA = z.object({
   validationId: z.string().uuid(),
   providerId: z.string().uuid(),
-  validationType: ssoValidationTypeSchema,
-  overallStatus: validationStatusSchema,
-  checks: z.array(ssoValidationCheckResultSchema),
+  validationType: SSO_VALIDATION_TYPE_SCHEMA,
+  overallStatus: VALIDATION_STATUS_SCHEMA,
+  checks: z.array(SSO_VALIDATION_CHECK_RESULT_SCHEMA),
   correlationId: z.string().uuid(),
   executedAt: z.date(),
   expiresAt: z.date(),
@@ -89,7 +89,7 @@ export const ssoValidationResultSchema = z.object({
   warnings: z.array(z.string()).optional(),
 });
 
-export type SSOValidationResult = z.infer<typeof ssoValidationResultSchema>;
+export type SSOValidationResult = z.infer<typeof SSO_VALIDATION_RESULT_SCHEMA>;
 
 export const SSOActivationStatus = {
   NOT_ACTIVATED: 'not_activated',
@@ -102,7 +102,7 @@ export const SSOActivationStatus = {
 
 export type SSOActivationStatus = (typeof SSOActivationStatus)[keyof typeof SSOActivationStatus];
 
-export const ssoActivationStatusSchema = z.enum([
+export const SSO_ACTIVATION_STATUS_SCHEMA = z.enum([
   SSOActivationStatus.NOT_ACTIVATED,
   SSOActivationStatus.VALIDATION_REQUIRED,
   SSOActivationStatus.VALIDATION_STALE,
@@ -111,13 +111,13 @@ export const ssoActivationStatusSchema = z.enum([
   SSOActivationStatus.ACTIVATION_FAILED,
 ]);
 
-export const SSOActivationGateSchema = z.object({
+export const SSO_ACTIVATION_GATE_SCHEMA = z.object({
   providerId: z.string().uuid(),
   tenantId: z.string().uuid(),
-  activationStatus: ssoActivationStatusSchema,
+  activationStatus: SSO_ACTIVATION_STATUS_SCHEMA,
   lastValidationId: z.string().uuid().nullable(),
   lastValidationAt: z.date().nullable(),
-  lastValidationStatus: validationStatusSchema.nullable(),
+  lastValidationStatus: VALIDATION_STATUS_SCHEMA.nullable(),
   activatedAt: z.date().nullable(),
   activatedBy: z.string().uuid().nullable(),
   canActivate: z.boolean(),
@@ -125,30 +125,30 @@ export const SSOActivationGateSchema = z.object({
   isStale: z.boolean(),
 });
 
-export type SSOActivationGate = z.infer<typeof SSOActivationGateSchema>;
+export type SSOActivationGate = z.infer<typeof SSO_ACTIVATION_GATE_SCHEMA>;
 
-export const SSOActivationRequestSchema = z.object({
+export const SSO_ACTIVATION_REQUEST_SCHEMA = z.object({
   providerId: z.string().uuid(),
   enforceSSOOnly: z.boolean(),
 });
 
-export type SSOActivationRequest = z.infer<typeof SSOActivationRequestSchema>;
+export type SSOActivationRequest = z.infer<typeof SSO_ACTIVATION_REQUEST_SCHEMA>;
 
-export const SSOActivationResponseSchema = z.object({
+export const SSO_ACTIVATION_RESPONSE_SCHEMA = z.object({
   providerId: z.string().uuid(),
-  previousStatus: ssoActivationStatusSchema,
-  newStatus: ssoActivationStatusSchema,
+  previousStatus: SSO_ACTIVATION_STATUS_SCHEMA,
+  newStatus: SSO_ACTIVATION_STATUS_SCHEMA,
   enforceSSOOnly: z.boolean(),
   correlationId: z.string().uuid(),
   message: z.string(),
   requiresValidation: z.boolean(),
 });
 
-export type SSOActivationResponse = z.infer<typeof SSOActivationResponseSchema>;
+export type SSOActivationResponse = z.infer<typeof SSO_ACTIVATION_RESPONSE_SCHEMA>;
 
-export const SSOValidationRequestSchema = z.object({
+export const SSO_VALIDATION_REQUEST_SCHEMA = z.object({
   providerId: z.string().uuid(),
-  validationType: ssoValidationTypeSchema,
+  validationType: SSO_VALIDATION_TYPE_SCHEMA,
   testClaims: z
     .object({
       email: z.string().email(),
@@ -157,46 +157,48 @@ export const SSOValidationRequestSchema = z.object({
     .optional(),
 });
 
-export type SSOValidationRequest = z.infer<typeof SSOValidationRequestSchema>;
+export type SSOValidationRequest = z.infer<typeof SSO_VALIDATION_REQUEST_SCHEMA>;
 
-export const SSOValidationPreflightRequestSchema = z.object({
+export const SSO_VALIDATION_PREFLIGHT_REQUEST_SCHEMA = z.object({
   providerId: z.string().uuid(),
 });
 
-export type SSOValidationPreflightRequest = z.infer<typeof SSOValidationPreflightRequestSchema>;
+export type SSOValidationPreflightRequest = z.infer<typeof SSO_VALIDATION_PREFLIGHT_REQUEST_SCHEMA>;
 
-export const SCIMValidationRequestSchema = z.object({
+export const SCIM_VALIDATION_REQUEST_SCHEMA = z.object({
   baseUrl: z.string().url(),
   bearerToken: z.string().min(1),
   tenantId: z.string().uuid(),
   dryRunEmail: z.string().email().optional(),
 });
 
-export type SCIMValidationRequest = z.infer<typeof SCIMValidationRequestSchema>;
+export type SCIMValidationRequest = z.infer<typeof SCIM_VALIDATION_REQUEST_SCHEMA>;
 
-export const SSOValidationPreflightResponseSchema = z.object({
+export const SSO_VALIDATION_PREFLIGHT_RESPONSE_SCHEMA = z.object({
   providerId: z.string().uuid(),
-  validationType: ssoValidationTypeSchema,
-  supportedChecks: z.array(ssoValidationCheckTypeSchema),
+  validationType: SSO_VALIDATION_TYPE_SCHEMA,
+  supportedChecks: z.array(SSO_VALIDATION_CHECK_TYPE_SCHEMA),
   requiresCredentials: z.boolean(),
   timeoutSeconds: z.number().int().positive(),
 });
 
-export type SSOValidationPreflightResponse = z.infer<typeof SSOValidationPreflightResponseSchema>;
+export type SSOValidationPreflightResponse = z.infer<
+  typeof SSO_VALIDATION_PREFLIGHT_RESPONSE_SCHEMA
+>;
 
-export const SSOValidationSummarySchema = z.object({
+export const SSO_VALIDATION_SUMMARY_SCHEMA = z.object({
   providerId: z.string().uuid(),
   tenantId: z.string().uuid(),
-  providerType: ssoValidationTypeSchema,
+  providerType: SSO_VALIDATION_TYPE_SCHEMA,
   lastValidationAt: z.date().nullable(),
-  lastValidationStatus: validationStatusSchema.nullable(),
-  activationStatus: ssoActivationStatusSchema,
+  lastValidationStatus: VALIDATION_STATUS_SCHEMA.nullable(),
+  activationStatus: SSO_ACTIVATION_STATUS_SCHEMA,
   isStale: z.boolean(),
   staleWarning: z.string().optional(),
   canActivate: z.boolean(),
 });
 
-export type SSOValidationSummary = z.infer<typeof SSOValidationSummarySchema>;
+export type SSOValidationSummary = z.infer<typeof SSO_VALIDATION_SUMMARY_SCHEMA>;
 
 export const DEFAULT_VALIDATION_FRESHNESS_SECONDS = 86400;
 

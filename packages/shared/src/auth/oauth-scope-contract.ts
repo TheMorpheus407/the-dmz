@@ -6,7 +6,7 @@ export const OAuthGrantType = {
 
 export type OAuthGrantType = (typeof OAuthGrantType)[keyof typeof OAuthGrantType];
 
-export const oauthGrantTypeSchema = z.enum([OAuthGrantType.CLIENT_CREDENTIALS]);
+export const OAUTH_GRANT_TYPE_SCHEMA = z.enum([OAuthGrantType.CLIENT_CREDENTIALS]);
 
 export const OAuthScope = {
   SCIM_READ: 'scim.read',
@@ -39,7 +39,7 @@ export const OAuthScope = {
 
 export type OAuthScope = (typeof OAuthScope)[keyof typeof OAuthScope];
 
-export const oauthScopeSchema = z.enum([
+export const OAUTH_SCOPE_SCHEMA = z.enum([
   OAuthScope.SCIM_READ,
   OAuthScope.SCIM_WRITE,
   OAuthScope.ZAPIER_READ,
@@ -68,7 +68,7 @@ export const oauthScopeSchema = z.enum([
   OAuthScope.DMZ_CLI_ADMIN,
 ]);
 
-export const oauthScopes = [
+export const OAUTH_SCOPES = [
   OAuthScope.SCIM_READ,
   OAuthScope.SCIM_WRITE,
   OAuthScope.ZAPIER_READ,
@@ -97,14 +97,14 @@ export const oauthScopes = [
   OAuthScope.DMZ_CLI_ADMIN,
 ] as const;
 
-export const oauthScopesArray = oauthScopes as unknown as string[];
+export const OAUTH_SCOPES_ARRAY = OAUTH_SCOPES as unknown as string[];
 
 export interface OAuthClientScopeConfig {
   allowedScopes: readonly OAuthScope[];
   defaultScopes: readonly OAuthScope[];
 }
 
-export const oauthClientScopeConfigs: Record<string, OAuthClientScopeConfig> = {
+export const OAUTH_CLIENT_SCOPE_CONFIGS: Record<string, OAuthClientScopeConfig> = {
   scim: {
     allowedScopes: [OAuthScope.SCIM_READ, OAuthScope.SCIM_WRITE],
     defaultScopes: [OAuthScope.SCIM_READ],
@@ -163,17 +163,17 @@ export const oauthClientScopeConfigs: Record<string, OAuthClientScopeConfig> = {
 };
 
 export const getAllowedScopes = (clientType: string): readonly OAuthScope[] => {
-  const config = oauthClientScopeConfigs[clientType];
+  const config = OAUTH_CLIENT_SCOPE_CONFIGS[clientType];
   return config?.allowedScopes ?? [];
 };
 
 export const getDefaultScopes = (clientType: string): readonly OAuthScope[] => {
-  const config = oauthClientScopeConfigs[clientType];
+  const config = OAUTH_CLIENT_SCOPE_CONFIGS[clientType];
   return config?.defaultScopes ?? [];
 };
 
 export const isValidScope = (scope: string): scope is OAuthScope => {
-  return oauthScopes.includes(scope as OAuthScope);
+  return OAUTH_SCOPES.includes(scope as OAuthScope);
 };
 
 export const isValidScopeCombination = (
@@ -242,7 +242,7 @@ export const OAuthClientExpiredError = {
   message: 'OAuth client has expired',
 } as const;
 
-export const insufficientScopeErrorSchema = {
+export const INSUFFICIENT_SCOPE_ERROR_SCHEMA = {
   type: 'object',
   properties: {
     success: { type: 'boolean', const: false },
@@ -258,7 +258,7 @@ export const insufficientScopeErrorSchema = {
   required: ['success', 'error'],
 } as const;
 
-export const invalidClientErrorSchema = {
+export const INVALID_CLIENT_ERROR_SCHEMA = {
   type: 'object',
   properties: {
     success: { type: 'boolean', const: false },

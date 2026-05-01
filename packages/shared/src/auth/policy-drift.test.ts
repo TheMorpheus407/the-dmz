@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   RouteGroup,
-  routeGroupPolicyMatrix,
-  apiEndpointPolicyMatrix,
+  ROUTE_GROUP_POLICY_MATRIX,
+  API_ENDPOINT_POLICY_MATRIX,
   AccessPolicyTenantStatus,
-  adminRoles,
+  ADMIN_ROLES,
 } from './access-policy.js';
 
 const _FRONTEND_GUARD_FILES = [
@@ -24,7 +24,7 @@ describe('Policy Drift Detection', () => {
   describe('Route Group Policy Matrix', () => {
     it('should have no implicit fallthrough - all route groups must be explicitly defined', () => {
       const expectedRouteGroups = ['(public)', '(auth)', '(game)', '(admin)'];
-      const definedRouteGroups = Object.keys(routeGroupPolicyMatrix);
+      const definedRouteGroups = Object.keys(ROUTE_GROUP_POLICY_MATRIX);
 
       for (const group of expectedRouteGroups) {
         expect(definedRouteGroups).toContain(group);
@@ -32,24 +32,24 @@ describe('Policy Drift Detection', () => {
     });
 
     it('should require authentication for protected route groups', () => {
-      const gamePolicy = routeGroupPolicyMatrix[RouteGroup.GAME];
-      const adminPolicy = routeGroupPolicyMatrix[RouteGroup.ADMIN];
+      const gamePolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.GAME];
+      const adminPolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.ADMIN];
 
       expect(gamePolicy.actorType).toBe('authenticated');
       expect(adminPolicy.actorType).toBe('authenticated');
     });
 
     it('should allow anonymous for public route groups', () => {
-      const publicPolicy = routeGroupPolicyMatrix[RouteGroup.PUBLIC];
-      const authPolicy = routeGroupPolicyMatrix[RouteGroup.AUTH];
+      const publicPolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.PUBLIC];
+      const authPolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.AUTH];
 
       expect(publicPolicy.actorType).toBe('anonymous');
       expect(authPolicy.actorType).toBe('anonymous');
     });
 
     it('should have redirect URLs for protected route groups', () => {
-      const gamePolicy = routeGroupPolicyMatrix[RouteGroup.GAME];
-      const adminPolicy = routeGroupPolicyMatrix[RouteGroup.ADMIN];
+      const gamePolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.GAME];
+      const adminPolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.ADMIN];
 
       expect(gamePolicy.redirectOnDeny).toBeDefined();
       expect(adminPolicy.redirectOnDeny).toBeDefined();
@@ -72,7 +72,7 @@ describe('Policy Drift Detection', () => {
       ];
 
       for (const endpoint of requiredEndpoints) {
-        expect(apiEndpointPolicyMatrix[endpoint]).toBeDefined();
+        expect(API_ENDPOINT_POLICY_MATRIX[endpoint]).toBeDefined();
       }
     });
 
@@ -87,7 +87,7 @@ describe('Policy Drift Detection', () => {
       ];
 
       for (const endpoint of protectedEndpoints) {
-        const policy = apiEndpointPolicyMatrix[endpoint];
+        const policy = API_ENDPOINT_POLICY_MATRIX[endpoint];
         expect(policy.allowedTenantStatuses).toContain(AccessPolicyTenantStatus.ACTIVE);
       }
     });
@@ -100,16 +100,16 @@ describe('Policy Drift Detection', () => {
       ];
 
       for (const endpoint of adminEndpoints) {
-        const policy = apiEndpointPolicyMatrix[endpoint];
-        expect(policy.requiredRoles).toEqual(adminRoles);
+        const policy = API_ENDPOINT_POLICY_MATRIX[endpoint];
+        expect(policy.requiredRoles).toEqual(ADMIN_ROLES);
       }
     });
   });
 
   describe('Frontend/Backend Policy Alignment', () => {
     it('should have matching tenant status requirements between frontend and backend', () => {
-      const frontendGamePolicy = routeGroupPolicyMatrix[RouteGroup.GAME];
-      const backendProfilePolicy = apiEndpointPolicyMatrix['/api/v1/profile'];
+      const frontendGamePolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.GAME];
+      const backendProfilePolicy = API_ENDPOINT_POLICY_MATRIX['/api/v1/profile'];
 
       expect(frontendGamePolicy.allowedTenantStatuses).toEqual(
         backendProfilePolicy.allowedTenantStatuses,
@@ -117,8 +117,8 @@ describe('Policy Drift Detection', () => {
     });
 
     it('should have matching admin role requirements between frontend and backend', () => {
-      const frontendAdminPolicy = routeGroupPolicyMatrix[RouteGroup.ADMIN];
-      const backendAdminUsersPolicy = apiEndpointPolicyMatrix['/api/v1/admin/users'];
+      const frontendAdminPolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.ADMIN];
+      const backendAdminUsersPolicy = API_ENDPOINT_POLICY_MATRIX['/api/v1/admin/users'];
 
       expect(frontendAdminPolicy.requiredRoles).toEqual(backendAdminUsersPolicy.requiredRoles);
     });
@@ -126,8 +126,8 @@ describe('Policy Drift Detection', () => {
 
   describe('Error Envelope Consistency', () => {
     it('should use standard error codes for tenant inactive', () => {
-      const gamePolicy = routeGroupPolicyMatrix[RouteGroup.GAME];
-      const adminPolicy = routeGroupPolicyMatrix[RouteGroup.ADMIN];
+      const gamePolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.GAME];
+      const adminPolicy = ROUTE_GROUP_POLICY_MATRIX[RouteGroup.ADMIN];
 
       expect(gamePolicy.allowedTenantStatuses).toContain(AccessPolicyTenantStatus.ACTIVE);
       expect(gamePolicy.allowedTenantStatuses).not.toContain(AccessPolicyTenantStatus.SUSPENDED);

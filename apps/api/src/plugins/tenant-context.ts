@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 
-import { allowedTenantStatuses } from '@the-dmz/shared/auth';
+import { ALLOWED_TENANT_STATUSES } from '@the-dmz/shared/auth';
 
 import { ErrorCodes, AppError } from '../shared/middleware/error-handler.js';
 import { getDatabaseClient, getDatabasePool } from '../shared/database/connection.js';
@@ -50,7 +50,9 @@ const validateTenantAndGetContext = async (
     });
   }
 
-  if (!allowedTenantStatuses.includes(tenant.status as (typeof allowedTenantStatuses)[number])) {
+  if (
+    !ALLOWED_TENANT_STATUSES.includes(tenant.status as (typeof ALLOWED_TENANT_STATUSES)[number])
+  ) {
     throw new AppError({
       code: ErrorCodes.TENANT_INACTIVE,
       message: `Tenant is ${tenant.status}`,

@@ -4,7 +4,7 @@ import {
   ConcurrentSessionStrategy,
   SessionBindingMode,
   type TenantSessionPolicy,
-  defaultTenantSessionPolicy,
+  DEFAULT_TENANT_SESSION_POLICY,
   type SessionBindingContext,
   type SessionPolicy,
   type SessionBindingViolation,
@@ -148,7 +148,7 @@ export const resolveTenantSessionPolicy = (
   tenantSettings: Record<string, unknown> | undefined,
 ): TenantSessionPolicy => {
   if (!tenantSettings) {
-    return defaultTenantSessionPolicy;
+    return DEFAULT_TENANT_SESSION_POLICY;
   }
 
   const sessionPolicySettings = tenantSettings['sessionPolicy'] as
@@ -156,29 +156,31 @@ export const resolveTenantSessionPolicy = (
     | undefined;
 
   if (!sessionPolicySettings) {
-    return defaultTenantSessionPolicy;
+    return DEFAULT_TENANT_SESSION_POLICY;
   }
 
   return {
     idleTimeoutMinutes:
-      sessionPolicySettings['idleTimeoutMinutes'] ?? defaultTenantSessionPolicy.idleTimeoutMinutes,
+      sessionPolicySettings['idleTimeoutMinutes'] ??
+      DEFAULT_TENANT_SESSION_POLICY.idleTimeoutMinutes,
     absoluteTimeoutMinutes:
       sessionPolicySettings['absoluteTimeoutMinutes'] ??
-      defaultTenantSessionPolicy.absoluteTimeoutMinutes,
+      DEFAULT_TENANT_SESSION_POLICY.absoluteTimeoutMinutes,
     maxConcurrentSessionsPerUser:
       sessionPolicySettings['maxConcurrentSessionsPerUser'] ??
-      defaultTenantSessionPolicy.maxConcurrentSessionsPerUser,
+      DEFAULT_TENANT_SESSION_POLICY.maxConcurrentSessionsPerUser,
     sessionBindingMode:
-      sessionPolicySettings['sessionBindingMode'] ?? defaultTenantSessionPolicy.sessionBindingMode,
+      sessionPolicySettings['sessionBindingMode'] ??
+      DEFAULT_TENANT_SESSION_POLICY.sessionBindingMode,
     forceLogoutOnPasswordChange:
       sessionPolicySettings['forceLogoutOnPasswordChange'] ??
-      defaultTenantSessionPolicy.forceLogoutOnPasswordChange,
+      DEFAULT_TENANT_SESSION_POLICY.forceLogoutOnPasswordChange,
     forceLogoutOnRoleChange:
       sessionPolicySettings['forceLogoutOnRoleChange'] ??
-      defaultTenantSessionPolicy.forceLogoutOnRoleChange,
+      DEFAULT_TENANT_SESSION_POLICY.forceLogoutOnRoleChange,
     concurrentSessionStrategy:
       sessionPolicySettings['concurrentSessionStrategy'] ??
-      defaultTenantSessionPolicy.concurrentSessionStrategy,
+      DEFAULT_TENANT_SESSION_POLICY.concurrentSessionStrategy,
   };
 };
 

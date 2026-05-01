@@ -25,7 +25,7 @@ export const roleSchema = z.enum([
   Role.LEARNER,
 ]);
 
-export const allRoles: readonly Role[] = [
+export const ALL_ROLES: readonly Role[] = [
   Role.SUPER_ADMIN,
   Role.TENANT_ADMIN,
   Role.MANAGER,
@@ -33,7 +33,7 @@ export const allRoles: readonly Role[] = [
   Role.LEARNER,
 ];
 
-export const adminRoles: readonly Role[] = [Role.SUPER_ADMIN, Role.TENANT_ADMIN];
+export const ADMIN_ROLES: readonly Role[] = [Role.SUPER_ADMIN, Role.TENANT_ADMIN];
 
 export const AccessPolicyTenantStatus = {
   PROVISIONING: 'provisioning',
@@ -52,10 +52,10 @@ export const tenantStatusSchema = z.enum([
   AccessPolicyTenantStatus.DEACTIVATED,
 ]);
 
-export const allowedTenantStatuses: readonly AccessPolicyTenantStatus[] = [
+export const ALLOWED_TENANT_STATUSES: readonly AccessPolicyTenantStatus[] = [
   AccessPolicyTenantStatus.ACTIVE,
 ];
-export const blockedTenantStatuses: readonly AccessPolicyTenantStatus[] = [
+export const BLOCKED_TENANT_STATUSES: readonly AccessPolicyTenantStatus[] = [
   AccessPolicyTenantStatus.SUSPENDED,
   AccessPolicyTenantStatus.DEACTIVATED,
 ];
@@ -78,14 +78,14 @@ export const RouteOutcome = {
 
 export type RouteOutcome = (typeof RouteOutcome)[keyof typeof RouteOutcome];
 
-export const routeOutcomeStatus: Record<RouteOutcome, number> = {
+export const ROUTE_OUTCOME_STATUS: Record<RouteOutcome, number> = {
   [RouteOutcome.UNAUTHENTICATED]: 401,
   [RouteOutcome.FORBIDDEN]: 403,
   [RouteOutcome.TENANT_BLOCKED]: 403,
   [RouteOutcome.NOT_FOUND]: 404,
 };
 
-export const routeOutcomeMessages: Record<
+export const ROUTE_OUTCOME_MESSAGES: Record<
   RouteOutcome,
   Record<RouteGroup, { title: string; message: string; recoveryAction: string }>
 > = {
@@ -193,7 +193,7 @@ export interface RouteGroupPolicy {
   redirectOnDeny?: string;
 }
 
-export const routeGroupPolicyMatrix: Record<RouteGroup, RouteGroupPolicy> = {
+export const ROUTE_GROUP_POLICY_MATRIX: Record<RouteGroup, RouteGroupPolicy> = {
   [RouteGroup.PUBLIC]: {
     actorType: ActorType.ANONYMOUS,
     requiredRoles: [],
@@ -213,7 +213,7 @@ export const routeGroupPolicyMatrix: Record<RouteGroup, RouteGroupPolicy> = {
   },
   [RouteGroup.ADMIN]: {
     actorType: ActorType.AUTHENTICATED,
-    requiredRoles: adminRoles,
+    requiredRoles: ADMIN_ROLES,
     allowedTenantStatuses: [AccessPolicyTenantStatus.ACTIVE],
     redirectOnDeny: '/game',
   },
@@ -247,7 +247,7 @@ export interface ApiEndpointPolicy {
   allowedTenantStatuses: readonly AccessPolicyTenantStatus[];
 }
 
-export const apiEndpointPolicyMatrix: Record<string, ApiEndpointPolicy> = {
+export const API_ENDPOINT_POLICY_MATRIX: Record<string, ApiEndpointPolicy> = {
   '/api/v1/auth/me': {
     scopes: [ApiScope.AUTH_ME],
     requiredRoles: [],
@@ -285,28 +285,28 @@ export const apiEndpointPolicyMatrix: Record<string, ApiEndpointPolicy> = {
   },
   '/api/v1/admin/games': {
     scopes: [ApiScope.GAME_ADMIN_READ, ApiScope.GAME_ADMIN_WRITE],
-    requiredRoles: adminRoles,
+    requiredRoles: ADMIN_ROLES,
     allowedTenantStatuses: [AccessPolicyTenantStatus.ACTIVE],
   },
   '/api/v1/admin/tenants': {
     scopes: [ApiScope.ADMIN_TENANT_READ, ApiScope.ADMIN_TENANT_WRITE],
-    requiredRoles: adminRoles,
+    requiredRoles: ADMIN_ROLES,
     allowedTenantStatuses: [AccessPolicyTenantStatus.ACTIVE],
   },
   '/api/v1/admin/users': {
     scopes: [ApiScope.ADMIN_USER_READ, ApiScope.ADMIN_USER_WRITE],
-    requiredRoles: adminRoles,
+    requiredRoles: ADMIN_ROLES,
     allowedTenantStatuses: [AccessPolicyTenantStatus.ACTIVE],
   },
 };
 
 export const isRouteGroupProtected = (routeGroup: RouteGroup): boolean => {
-  const policy = routeGroupPolicyMatrix[routeGroup];
+  const policy = ROUTE_GROUP_POLICY_MATRIX[routeGroup];
   return policy.actorType === ActorType.AUTHENTICATED || policy.requiredRoles.length > 0;
 };
 
 export const isApiEndpointProtected = (endpoint: string): boolean => {
-  const policy = apiEndpointPolicyMatrix[endpoint];
+  const policy = API_ENDPOINT_POLICY_MATRIX[endpoint];
   if (!policy) {
     return false;
   }
@@ -349,7 +349,7 @@ export const evaluateRouteGroupPolicy = (
   routeGroup: RouteGroup,
   user: { role?: string; tenantStatus?: string } | null,
 ): PolicyEvaluationResult => {
-  const policy = routeGroupPolicyMatrix[routeGroup];
+  const policy = ROUTE_GROUP_POLICY_MATRIX[routeGroup];
 
   if (policy.actorType === ActorType.ANONYMOUS) {
     if (user && policy.redirectOnDeny) {
@@ -386,12 +386,12 @@ export const evaluateRouteGroupPolicy = (
 };
 
 export const getApiPolicyForEndpoint = (endpoint: string): ApiEndpointPolicy | undefined => {
-  const exactMatch = apiEndpointPolicyMatrix[endpoint];
+  const exactMatch = API_ENDPOINT_POLICY_MATRIX[endpoint];
   if (exactMatch) {
     return exactMatch;
   }
 
-  for (const [pattern, policy] of Object.entries(apiEndpointPolicyMatrix)) {
+  for (const [pattern, policy] of Object.entries(API_ENDPOINT_POLICY_MATRIX)) {
     const regex = new RegExp(`^${pattern.replace(/\*/g, '.*')}$`);
     if (regex.test(endpoint)) {
       return policy;

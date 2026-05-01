@@ -1,4 +1,4 @@
-import { routeOutcomeMessages, RouteOutcome, RouteGroup } from '@the-dmz/shared/auth';
+import { ROUTE_OUTCOME_MESSAGES, RouteOutcome, RouteGroup } from '@the-dmz/shared/auth';
 
 import type { CategorizedApiError, ApiErrorCategory } from './types.js';
 
@@ -331,7 +331,7 @@ const routeGroupMap: Record<RouteSurface, RouteGroup> = {
 
 export function getErrorCopyForOutcome(outcome: RouteOutcome, surface: RouteSurface): ErrorCopy {
   const routeGroup = routeGroupMap[surface];
-  const outcomeCopy = routeOutcomeMessages[outcome][routeGroup];
+  const outcomeCopy = ROUTE_OUTCOME_MESSAGES[outcome][routeGroup];
   return {
     title: outcomeCopy.title,
     message: outcomeCopy.message,

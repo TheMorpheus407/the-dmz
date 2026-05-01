@@ -4,14 +4,11 @@ import {
   SessionOutcome,
   SessionRevocationReason,
   type TenantSessionPolicy,
-  defaultTenantSessionPolicy,
+  DEFAULT_TENANT_SESSION_POLICY,
   tenantSessionPolicySchema,
   SessionBindingMode,
   ConcurrentSessionStrategy,
   SESSION_POLICY_DEFAULTS,
-  SessionOutcomeStatusCode,
-  SessionOutcomeMessages,
-  SessionRevocationReasonMessages,
   getStatusCodeForSessionOutcome,
   getMessageForSessionOutcome,
   getMessageForRevocationReason,
@@ -21,37 +18,37 @@ describe('session-policy', () => {
   describe('TenantSessionPolicy', () => {
     describe('default values', () => {
       it('should have correct default idle timeout', () => {
-        expect(defaultTenantSessionPolicy.idleTimeoutMinutes).toBe(
+        expect(DEFAULT_TENANT_SESSION_POLICY.idleTimeoutMinutes).toBe(
           SESSION_POLICY_DEFAULTS.IDLE_TIMEOUT_MINUTES,
         );
       });
 
       it('should have correct default absolute timeout', () => {
-        expect(defaultTenantSessionPolicy.absoluteTimeoutMinutes).toBe(
+        expect(DEFAULT_TENANT_SESSION_POLICY.absoluteTimeoutMinutes).toBe(
           SESSION_POLICY_DEFAULTS.ABSOLUTE_TIMEOUT_MINUTES,
         );
       });
 
       it('should have correct default max concurrent sessions', () => {
-        expect(defaultTenantSessionPolicy.maxConcurrentSessionsPerUser).toBe(
+        expect(DEFAULT_TENANT_SESSION_POLICY.maxConcurrentSessionsPerUser).toBe(
           SESSION_POLICY_DEFAULTS.MAX_CONCURRENT_SESSIONS,
         );
       });
 
       it('should have default session binding mode as none', () => {
-        expect(defaultTenantSessionPolicy.sessionBindingMode).toBe(SessionBindingMode.NONE);
+        expect(DEFAULT_TENANT_SESSION_POLICY.sessionBindingMode).toBe(SessionBindingMode.NONE);
       });
 
       it('should have force logout on password change enabled by default', () => {
-        expect(defaultTenantSessionPolicy.forceLogoutOnPasswordChange).toBe(true);
+        expect(DEFAULT_TENANT_SESSION_POLICY.forceLogoutOnPasswordChange).toBe(true);
       });
 
       it('should have force logout on role change disabled by default', () => {
-        expect(defaultTenantSessionPolicy.forceLogoutOnRoleChange).toBe(false);
+        expect(DEFAULT_TENANT_SESSION_POLICY.forceLogoutOnRoleChange).toBe(false);
       });
 
       it('should have default concurrent session strategy as revoke oldest', () => {
-        expect(defaultTenantSessionPolicy.concurrentSessionStrategy).toBe(
+        expect(DEFAULT_TENANT_SESSION_POLICY.concurrentSessionStrategy).toBe(
           ConcurrentSessionStrategy.REVOKE_OLDEST,
         );
       });
@@ -75,7 +72,7 @@ describe('session-policy', () => {
 
       it('should reject idle timeout below minimum', () => {
         const policy = {
-          ...defaultTenantSessionPolicy,
+          ...DEFAULT_TENANT_SESSION_POLICY,
           idleTimeoutMinutes: 1,
         };
 
@@ -85,7 +82,7 @@ describe('session-policy', () => {
 
       it('should reject idle timeout above maximum', () => {
         const policy = {
-          ...defaultTenantSessionPolicy,
+          ...DEFAULT_TENANT_SESSION_POLICY,
           idleTimeoutMinutes: 1000,
         };
 
@@ -95,7 +92,7 @@ describe('session-policy', () => {
 
       it('should reject invalid session binding mode', () => {
         const policy = {
-          ...defaultTenantSessionPolicy,
+          ...DEFAULT_TENANT_SESSION_POLICY,
           sessionBindingMode: 'invalid',
         };
 
@@ -105,7 +102,7 @@ describe('session-policy', () => {
 
       it('should allow null for maxConcurrentSessionsPerUser (unlimited)', () => {
         const policy = {
-          ...defaultTenantSessionPolicy,
+          ...DEFAULT_TENANT_SESSION_POLICY,
           maxConcurrentSessionsPerUser: null,
         };
 

@@ -40,7 +40,7 @@ export const SessionRevocationReasonSchema = z.enum([
   SessionRevocationReason.SESSION_BINDING_VIOLATION,
 ]);
 
-export const sessionOutcomeSchema = z.enum([
+export const SESSION_OUTCOME_SCHEMA = z.enum([
   SessionOutcome.ACTIVE,
   SessionOutcome.EXPIRED,
   SessionOutcome.REVOKED,
@@ -56,7 +56,7 @@ export const SessionBindingMode = {
 
 export type SessionBindingMode = (typeof SessionBindingMode)[keyof typeof SessionBindingMode];
 
-export const sessionBindingModeSchema = z.enum([
+export const SESSION_BINDING_MODE_SCHEMA = z.enum([
   SessionBindingMode.NONE,
   SessionBindingMode.IP,
   SessionBindingMode.DEVICE,
@@ -71,7 +71,7 @@ export const ConcurrentSessionStrategy = {
 export type ConcurrentSessionStrategy =
   (typeof ConcurrentSessionStrategy)[keyof typeof ConcurrentSessionStrategy];
 
-export const concurrentSessionStrategySchema = z.enum([
+export const CONCURRENT_SESSION_STRATEGY_SCHEMA = z.enum([
   ConcurrentSessionStrategy.REJECT_NEWEST,
   ConcurrentSessionStrategy.REVOKE_OLDEST,
 ]);
@@ -108,13 +108,13 @@ export const tenantSessionPolicySchema: z.ZodType<TenantSessionPolicy> = z.objec
     .min(SESSION_POLICY_DEFAULTS.MIN_ABSOLUTE_TIMEOUT_MINUTES)
     .max(SESSION_POLICY_DEFAULTS.MAX_ABSOLUTE_TIMEOUT_MINUTES),
   maxConcurrentSessionsPerUser: z.number().int().min(1).nullable(),
-  sessionBindingMode: sessionBindingModeSchema,
+  sessionBindingMode: SESSION_BINDING_MODE_SCHEMA,
   forceLogoutOnPasswordChange: z.boolean(),
   forceLogoutOnRoleChange: z.boolean(),
-  concurrentSessionStrategy: concurrentSessionStrategySchema,
+  concurrentSessionStrategy: CONCURRENT_SESSION_STRATEGY_SCHEMA,
 });
 
-export const defaultTenantSessionPolicy: TenantSessionPolicy = {
+export const DEFAULT_TENANT_SESSION_POLICY: TenantSessionPolicy = {
   idleTimeoutMinutes: SESSION_POLICY_DEFAULTS.IDLE_TIMEOUT_MINUTES,
   absoluteTimeoutMinutes: SESSION_POLICY_DEFAULTS.ABSOLUTE_TIMEOUT_MINUTES,
   maxConcurrentSessionsPerUser: SESSION_POLICY_DEFAULTS.MAX_CONCURRENT_SESSIONS,

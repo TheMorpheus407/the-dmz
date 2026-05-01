@@ -7,7 +7,7 @@ export const CredentialType = {
 
 export type CredentialType = (typeof CredentialType)[keyof typeof CredentialType];
 
-export const credentialTypeSchema = z.enum([CredentialType.API_KEY, CredentialType.PAT]);
+export const CREDENTIAL_TYPE_SCHEMA = z.enum([CredentialType.API_KEY, CredentialType.PAT]);
 
 export const CredentialOwnerType = {
   SERVICE: 'service',
@@ -16,7 +16,7 @@ export const CredentialOwnerType = {
 
 export type CredentialOwnerType = (typeof CredentialOwnerType)[keyof typeof CredentialOwnerType];
 
-export const credentialOwnerTypeSchema = z.enum([
+export const CREDENTIAL_OWNER_TYPE_SCHEMA = z.enum([
   CredentialOwnerType.SERVICE,
   CredentialOwnerType.USER,
 ]);
@@ -30,19 +30,19 @@ export const CredentialStatus = {
 
 export type CredentialStatus = (typeof CredentialStatus)[keyof typeof CredentialStatus];
 
-export const credentialStatusSchema = z.enum([
+export const CREDENTIAL_STATUS_SCHEMA = z.enum([
   CredentialStatus.ACTIVE,
   CredentialStatus.ROTATING,
   CredentialStatus.REVOKED,
   CredentialStatus.EXPIRED,
 ]);
 
-export const activeCredentialStatuses: readonly CredentialStatus[] = [
+export const ACTIVE_CREDENTIAL_STATUSES: readonly CredentialStatus[] = [
   CredentialStatus.ACTIVE,
   CredentialStatus.ROTATING,
 ];
 
-export const validCredentialStatuses: readonly CredentialStatus[] = [
+export const VALID_CREDENTIAL_STATUSES: readonly CredentialStatus[] = [
   CredentialStatus.ACTIVE,
   CredentialStatus.ROTATING,
   CredentialStatus.EXPIRED,
@@ -74,7 +74,7 @@ export const ApiKeyScopeResource = {
 
 export type ApiKeyScopeResource = (typeof ApiKeyScopeResource)[keyof typeof ApiKeyScopeResource];
 
-export const apiKeyScopeResourceSchema = z.enum([
+export const API_KEY_SCOPE_RESOURCE_SCHEMA = z.enum([
   'analytics',
   'users',
   'admin',
@@ -83,17 +83,17 @@ export const apiKeyScopeResourceSchema = z.enum([
   'integrations',
 ]);
 
-export const scopeActions = ['read', 'write', 'admin'] as const;
-export type ScopeAction = (typeof scopeActions)[number];
+export const SCOPE_ACTIONS = ['read', 'write', 'admin'] as const;
+export type ScopeAction = (typeof SCOPE_ACTIONS)[number];
 
-export const scopeActionSchema = z.enum(scopeActions);
+export const SCOPE_ACTION_SCHEMA = z.enum(SCOPE_ACTIONS);
 
-export const apiKeyScopeSchema: z.ZodSchema<ApiKeyScope> = z.object({
-  resource: apiKeyScopeResourceSchema,
-  actions: z.array(scopeActionSchema).min(1),
+export const API_KEY_SCOPE_SCHEMA: z.ZodSchema<ApiKeyScope> = z.object({
+  resource: API_KEY_SCOPE_RESOURCE_SCHEMA,
+  actions: z.array(SCOPE_ACTION_SCHEMA).min(1),
 });
 
-export const apiKeyScopesSchema = z.array(apiKeyScopeSchema);
+export const apiKeyScopesSchema = z.array(API_KEY_SCOPE_SCHEMA);
 
 export const ApiKeyPermission = {
   ANALYTICS_READ: 'analytics:read',
@@ -112,7 +112,7 @@ export const ApiKeyPermission = {
 
 export type ApiKeyPermission = (typeof ApiKeyPermission)[keyof typeof ApiKeyPermission];
 
-export const apiKeyPermissionSchema = z.enum([
+export const API_KEY_PERMISSION_SCHEMA = z.enum([
   'analytics:read',
   'analytics:write',
   'users:read',
@@ -127,7 +127,7 @@ export const apiKeyPermissionSchema = z.enum([
   'integrations:write',
 ]);
 
-export const permissionToScope: Record<ApiKeyScopeResource, ScopeAction[]> = {
+export const PERMISSION_TO_SCOPE: Record<ApiKeyScopeResource, ScopeAction[]> = {
   [ApiKeyScopeResource.ANALYTICS]: ['read', 'write'],
   [ApiKeyScopeResource.USERS]: ['read', 'write'],
   [ApiKeyScopeResource.ADMIN]: ['read', 'write', 'admin'],
@@ -242,17 +242,17 @@ export interface ApiKeyWithSecret extends ApiKeyResponse {
   secret: string;
 }
 
-export const apiKeyResponseSchema: z.ZodSchema<ApiKeyResponse> = z.object({
+export const API_KEY_RESPONSE_SCHEMA: z.ZodSchema<ApiKeyResponse> = z.object({
   id: z.string().uuid(),
   keyId: z.string().uuid(),
   name: z.string().min(1).max(255),
-  type: credentialTypeSchema,
-  ownerType: credentialOwnerTypeSchema,
+  type: CREDENTIAL_TYPE_SCHEMA,
+  ownerType: CREDENTIAL_OWNER_TYPE_SCHEMA,
   ownerId: z.string().uuid().nullable(),
   serviceAccountId: z.string().uuid().nullable(),
   tenantId: z.string().uuid(),
   scopes: apiKeyScopesSchema,
-  status: credentialStatusSchema,
+  status: CREDENTIAL_STATUS_SCHEMA,
   expiresAt: z.date().nullable(),
   rotationGracePeriodDays: z.number().int().min(1).max(30),
   rotationGraceEndsAt: z.date().nullable(),
@@ -267,17 +267,17 @@ export const apiKeyResponseSchema: z.ZodSchema<ApiKeyResponse> = z.object({
   rateLimitWindowMs: z.number().int().positive().nullable(),
 });
 
-export const apiKeyWithSecretSchema: z.ZodSchema<ApiKeyWithSecret> = z.object({
+export const API_KEY_WITH_SECRET_SCHEMA: z.ZodSchema<ApiKeyWithSecret> = z.object({
   id: z.string().uuid(),
   keyId: z.string().uuid(),
   name: z.string().min(1).max(255),
-  type: credentialTypeSchema,
-  ownerType: credentialOwnerTypeSchema,
+  type: CREDENTIAL_TYPE_SCHEMA,
+  ownerType: CREDENTIAL_OWNER_TYPE_SCHEMA,
   ownerId: z.string().uuid().nullable(),
   serviceAccountId: z.string().uuid().nullable(),
   tenantId: z.string().uuid(),
   scopes: apiKeyScopesSchema,
-  status: credentialStatusSchema,
+  status: CREDENTIAL_STATUS_SCHEMA,
   expiresAt: z.date().nullable(),
   rotationGracePeriodDays: z.number().int().min(1).max(30),
   rotationGraceEndsAt: z.date().nullable(),
@@ -294,7 +294,7 @@ export const apiKeyWithSecretSchema: z.ZodSchema<ApiKeyWithSecret> = z.object({
 });
 
 export const apiKeyListResponseSchema = z.object({
-  keys: z.array(apiKeyResponseSchema),
+  keys: z.array(API_KEY_RESPONSE_SCHEMA),
   total: z.number().int().nonnegative(),
   cursor: z.string().optional(),
 });
@@ -435,10 +435,10 @@ export const rotateApiKeySchema = z.object({
 
 export type RotateApiKeyInput = z.infer<typeof rotateApiKeySchema>;
 
-export const createApiKeySchema = z.object({
+export const CREATE_API_KEY_SCHEMA = z.object({
   name: z.string().min(1).max(255),
-  type: credentialTypeSchema.optional().default(CredentialType.API_KEY),
-  ownerType: credentialOwnerTypeSchema.optional().default(CredentialOwnerType.SERVICE),
+  type: CREDENTIAL_TYPE_SCHEMA.optional().default(CredentialType.API_KEY),
+  ownerType: CREDENTIAL_OWNER_TYPE_SCHEMA.optional().default(CredentialOwnerType.SERVICE),
   ownerId: z.string().uuid().optional(),
   serviceAccountId: z.string().uuid().optional(),
   scopes: apiKeyScopesSchema.min(1),
@@ -456,17 +456,17 @@ export const createApiKeySchema = z.object({
   rateLimitWindowMs: z.number().int().positive().optional(),
 });
 
-export type CreateApiKeyInput = z.infer<typeof createApiKeySchema>;
+export type CreateApiKeyInput = z.infer<typeof CREATE_API_KEY_SCHEMA>;
 
-export const revokeApiKeySchema = z.object({
+export const REVOKE_API_KEY_SCHEMA = z.object({
   reason: z.string().max(500).optional(),
 });
 
-export type RevokeApiKeyInput = z.infer<typeof revokeApiKeySchema>;
+export type RevokeApiKeyInput = z.infer<typeof REVOKE_API_KEY_SCHEMA>;
 
-export const validateApiKeyInputSchema = z.object({
+export const VALIDATE_API_KEY_INPUT_SCHEMA = z.object({
   keyId: z.string().uuid(),
   secret: z.string().min(API_KEY_MIN_LENGTH).max(API_KEY_MAX_LENGTH),
 });
 
-export type ValidateApiKeyInput = z.infer<typeof validateApiKeyInputSchema>;
+export type ValidateApiKeyInput = z.infer<typeof VALIDATE_API_KEY_INPUT_SCHEMA>;
