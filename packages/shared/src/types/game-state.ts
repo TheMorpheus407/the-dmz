@@ -5,12 +5,14 @@ import type {
   GameThreatTier,
   FacilityTierLevel,
 } from './game-engine.js';
-import type { EmailInstance, EmailStatus, VerificationPacket } from '../game/email-instance.js';
-import type { GeneratedAttack } from '../game/threat-catalog.js';
-import type { BreachState } from '../game/breach.js';
-import type { CoopContext } from '../game/coop-scaling.js';
-
-export type { BreachState } from '../game/breach.js';
+import type {
+  EmailInstance,
+  EmailStatus,
+  VerificationPacket,
+  GeneratedAttack,
+  BreachState,
+  CoopContext,
+} from '../game/index.js';
 
 export interface GameState {
   sessionId: string;
