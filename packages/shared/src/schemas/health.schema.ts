@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const serviceCheckSchema = z
+const SERVICE_CHECK_SCHEMA = z
   .object({
     ok: z.boolean(),
     message: z.string(),
@@ -26,7 +26,7 @@ export type HealthResponse = z.infer<typeof healthResponseSchema>;
 export const readinessResponseSchema = z
   .object({
     status: z.enum(['ok', 'degraded']),
-    checks: z.record(z.string(), serviceCheckSchema),
+    checks: z.record(z.string(), SERVICE_CHECK_SCHEMA),
   })
   .strict();
 

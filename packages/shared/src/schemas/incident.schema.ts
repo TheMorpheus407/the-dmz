@@ -98,15 +98,15 @@ export const incidentResolveResponseSchema = z.object({
   data: incidentSchema,
 });
 
-const detectionQualitySchema = z.enum(['excellent', 'good', 'fair', 'poor']);
+const DETECTION_QUALITY_SCHEMA = z.enum(['excellent', 'good', 'fair', 'poor']);
 
-const detectionAnalysisSchema = z.object({
+const DETECTION_ANALYSIS_SCHEMA = z.object({
   source: z.enum(DETECTION_SOURCES),
   timeToDetect: z.number(),
-  detectionQuality: detectionQualitySchema,
+  detectionQuality: DETECTION_QUALITY_SCHEMA,
 });
 
-const responseEvaluationSchema = z.object({
+const RESPONSE_EVALUATION_SCHEMA = z.object({
   actionsTaken: z.number(),
   effectiveness: z.number(),
   appropriateForType: z.boolean(),
@@ -116,8 +116,8 @@ const responseEvaluationSchema = z.object({
 export const postIncidentReviewSchema = z.object({
   incidentId: z.string().uuid(),
   timeline: z.array(incidentTimelineEntrySchema),
-  detectionAnalysis: detectionAnalysisSchema,
-  responseEvaluation: responseEvaluationSchema,
+  detectionAnalysis: DETECTION_ANALYSIS_SCHEMA,
+  responseEvaluation: RESPONSE_EVALUATION_SCHEMA,
   rootCause: z.string(),
   recommendations: z.array(z.string()),
   competenceScore: z.number(),

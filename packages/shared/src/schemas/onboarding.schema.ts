@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { REGULATORY_FRAMEWORKS } from '../constants/frameworks.js';
 
-export const onboardingSteps = [
+export const ONBOARDING_STEPS = [
   'not_started',
   'org_profile',
   'idp_config',
@@ -11,7 +11,7 @@ export const onboardingSteps = [
   'complete',
 ] as const;
 
-export type OnboardingStep = (typeof onboardingSteps)[number];
+export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
 
 export const orgProfileSchema = z.object({
   name: z.string().min(1).max(255),
@@ -45,7 +45,7 @@ export const scimTokenSchema = z.object({
 
 export type ScimTokenInput = z.infer<typeof scimTokenSchema>;
 
-export const regulatoryRegions = [
+export const REGULATORY_REGIONS = [
   'us_federal',
   'us_state_local',
   'eu',
@@ -57,11 +57,11 @@ export const regulatoryRegions = [
   'other',
 ] as const;
 
-export type RegulatoryRegion = (typeof regulatoryRegions)[number];
+export type RegulatoryRegion = (typeof REGULATORY_REGIONS)[number];
 
 export const complianceFrameworksSchema = z.object({
   frameworks: z.array(z.enum(REGULATORY_FRAMEWORKS)),
-  regulatoryRegion: z.enum(regulatoryRegions).optional(),
+  regulatoryRegion: z.enum(REGULATORY_REGIONS).optional(),
   complianceCoordinatorContact: z
     .object({
       name: z.string().min(1).max(255),
@@ -74,15 +74,15 @@ export const complianceFrameworksSchema = z.object({
 export type ComplianceFrameworksInput = z.infer<typeof complianceFrameworksSchema>;
 
 export const onboardingStateSchema = z.object({
-  currentStep: z.enum(onboardingSteps),
-  completedSteps: z.array(z.enum(onboardingSteps)),
+  currentStep: z.enum(ONBOARDING_STEPS),
+  completedSteps: z.array(z.enum(ONBOARDING_STEPS)),
   startedAt: z.string().datetime().nullable(),
   completedAt: z.string().datetime().nullable(),
   orgProfile: orgProfileSchema.optional(),
   idpConfig: idpConfigSchema.optional(),
   scimTokenId: z.string().uuid().optional(),
   complianceFrameworks: z.array(z.enum(REGULATORY_FRAMEWORKS)).optional(),
-  regulatoryRegion: z.enum(regulatoryRegions).optional(),
+  regulatoryRegion: z.enum(REGULATORY_REGIONS).optional(),
   complianceCoordinatorContact: z
     .object({
       name: z.string().min(1).max(255),
@@ -98,7 +98,7 @@ export const onboardingStatusResponseSchema = z.object({
   tenantId: z.string().uuid(),
   state: onboardingStateSchema,
   canProceed: z.boolean(),
-  nextStep: z.enum(onboardingSteps).nullable(),
+  nextStep: z.enum(ONBOARDING_STEPS).nullable(),
 });
 
 export type OnboardingStatusResponse = z.infer<typeof onboardingStatusResponseSchema>;
@@ -106,7 +106,7 @@ export type OnboardingStatusResponse = z.infer<typeof onboardingStatusResponseSc
 export const startOnboardingResponseSchema = z.object({
   tenantId: z.string().uuid(),
   state: onboardingStateSchema,
-  nextStep: z.enum(onboardingSteps),
+  nextStep: z.enum(ONBOARDING_STEPS),
 });
 
 export type StartOnboardingResponse = z.infer<typeof startOnboardingResponseSchema>;
@@ -115,7 +115,7 @@ export const orgProfileResponseSchema = z.object({
   tenantId: z.string().uuid(),
   state: onboardingStateSchema,
   completed: z.boolean(),
-  nextStep: z.enum(onboardingSteps).nullable(),
+  nextStep: z.enum(ONBOARDING_STEPS).nullable(),
 });
 
 export type OrgProfileResponse = z.infer<typeof orgProfileResponseSchema>;
@@ -125,7 +125,7 @@ export const idpConfigResponseSchema = z.object({
   state: onboardingStateSchema,
   idpConfig: idpConfigSchema,
   completed: z.boolean(),
-  nextStep: z.enum(onboardingSteps).nullable(),
+  nextStep: z.enum(ONBOARDING_STEPS).nullable(),
 });
 
 export type IdpConfigResponse = z.infer<typeof idpConfigResponseSchema>;
@@ -136,7 +136,7 @@ export const scimTokenResponseSchema = z.object({
   tokenId: z.string().uuid(),
   token: z.string().optional(),
   completed: z.boolean(),
-  nextStep: z.enum(onboardingSteps).nullable(),
+  nextStep: z.enum(ONBOARDING_STEPS).nullable(),
 });
 
 export type ScimTokenResponse = z.infer<typeof scimTokenResponseSchema>;
@@ -145,7 +145,7 @@ export const complianceResponseSchema = z.object({
   tenantId: z.string().uuid(),
   state: onboardingStateSchema,
   frameworks: z.array(z.enum(REGULATORY_FRAMEWORKS)),
-  regulatoryRegion: z.enum(regulatoryRegions).nullable(),
+  regulatoryRegion: z.enum(REGULATORY_REGIONS).nullable(),
   complianceCoordinatorContact: z
     .object({
       name: z.string(),
@@ -154,7 +154,7 @@ export const complianceResponseSchema = z.object({
     })
     .nullable(),
   completed: z.boolean(),
-  nextStep: z.enum(onboardingSteps).nullable(),
+  nextStep: z.enum(ONBOARDING_STEPS).nullable(),
 });
 
 export type ComplianceResponse = z.infer<typeof complianceResponseSchema>;

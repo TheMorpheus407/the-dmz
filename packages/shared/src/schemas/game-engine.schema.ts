@@ -10,7 +10,7 @@ import {
   FACILITY_TIER_LEVELS,
 } from '../types/game-engine.js';
 
-import { coopRoles } from './coop-session.schema.js';
+import { COOP_ROLES } from './coop-session.schema.js';
 
 import type { EmailInstance, VerificationPacket } from '../game/email-instance.js';
 import type { GeneratedAttack } from '../game/threat-catalog.js';
@@ -415,7 +415,7 @@ export const coopThreatScalingSchema = z.object({
   timePressureMultiplier: z.number(),
 });
 
-export const coopRoleSchema: z.ZodType<CoopRole> = z.enum(coopRoles);
+export const coopRoleSchema: z.ZodType<CoopRole> = z.enum(COOP_ROLES);
 
 export const coopContextSchema: z.ZodType<CoopContext> = z.object({
   partySize: z.number().int().min(1),

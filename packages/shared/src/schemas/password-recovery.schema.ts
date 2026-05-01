@@ -1,7 +1,5 @@
 import { z } from 'zod';
 
-const pwSchema = z.string().min(12).max(128);
-
 export const passwordResetRequestSchema = z.object({
   email: z.string().email(),
 });
@@ -16,7 +14,7 @@ export type PasswordResetRequestResponse = z.infer<typeof passwordResetRequestRe
 
 export const passwordChangeRequestSchema = z.object({
   token: z.string().min(16).max(64),
-  password: pwSchema,
+  password: z.string().min(12).max(128),
 });
 
 export type PasswordChangeRequestInput = z.infer<typeof passwordChangeRequestSchema>;

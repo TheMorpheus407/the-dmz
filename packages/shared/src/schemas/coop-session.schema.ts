@@ -1,12 +1,18 @@
 import { z } from 'zod';
 
-export const coopRoles = ['triage_lead', 'verification_lead'] as const;
-export type CoopRole = (typeof coopRoles)[number];
+export const COOP_ROLES = ['triage_lead', 'verification_lead'] as const;
+export type CoopRole = (typeof COOP_ROLES)[number];
 
-export const coopSessionStatuses = ['lobby', 'active', 'paused', 'completed', 'abandoned'] as const;
-export type CoopSessionStatus = (typeof coopSessionStatuses)[number];
+export const COOP_SESSION_STATUSES = [
+  'lobby',
+  'active',
+  'paused',
+  'completed',
+  'abandoned',
+] as const;
+export type CoopSessionStatus = (typeof COOP_SESSION_STATUSES)[number];
 
-export const proposalStatuses = [
+export const PROPOSAL_STATUSES = [
   'proposed',
   'confirmed',
   'overridden',
@@ -14,18 +20,18 @@ export const proposalStatuses = [
   'expired',
   'consensus',
 ] as const;
-export type ProposalStatus = (typeof proposalStatuses)[number];
+export type ProposalStatus = (typeof PROPOSAL_STATUSES)[number];
 
-export const authorityActions = ['confirm', 'override'] as const;
-export type AuthorityAction = (typeof authorityActions)[number];
+export const AUTHORITY_ACTIONS = ['confirm', 'override'] as const;
+export type AuthorityAction = (typeof AUTHORITY_ACTIONS)[number];
 
-export const conflictReasons = [
+export const CONFLICT_REASONS = [
   'insufficient_verification',
   'risk_tolerance',
   'factual_dispute',
   'policy_conflict',
 ] as const;
-export type ConflictReason = (typeof conflictReasons)[number];
+export type ConflictReason = (typeof CONFLICT_REASONS)[number];
 
 export const coopSessionBootstrapSchema = z
   .object({
@@ -34,7 +40,7 @@ export const coopSessionBootstrapSchema = z
     partyId: z.string().uuid(),
     tenantId: z.string().uuid(),
     authorityPlayerId: z.string().uuid().nullable(),
-    status: z.enum(coopSessionStatuses),
+    status: z.enum(COOP_SESSION_STATUSES),
     dayNumber: z.number().int().min(1).default(1),
     seed: z.string().length(32),
     createdAt: z.string().datetime(),
@@ -42,7 +48,7 @@ export const coopSessionBootstrapSchema = z
       .array(
         z.object({
           playerId: z.string().uuid(),
-          role: z.enum(coopRoles),
+          role: z.enum(COOP_ROLES),
           isAuthority: z.boolean(),
         }),
       )
@@ -60,13 +66,13 @@ export const coopDecisionProposalSchema = z
     proposalId: z.string().uuid(),
     sessionId: z.string().uuid(),
     playerId: z.string().uuid(),
-    role: z.enum(coopRoles),
+    role: z.enum(COOP_ROLES),
     emailId: z.string().uuid(),
     action: coopProposalActionSchema,
-    status: z.enum(proposalStatuses).default('proposed'),
-    authorityAction: z.enum(authorityActions).nullable(),
+    status: z.enum(PROPOSAL_STATUSES).default('proposed'),
+    authorityAction: z.enum(AUTHORITY_ACTIONS).nullable(),
     conflictFlag: z.boolean().default(false),
-    conflictReason: z.enum(conflictReasons).nullable(),
+    conflictReason: z.enum(CONFLICT_REASONS).nullable(),
     rationale: z.string().min(10).max(500).nullable(),
     proposedAt: z.string().datetime(),
     resolvedAt: z.string().datetime().nullable(),

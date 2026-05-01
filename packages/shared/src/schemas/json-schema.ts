@@ -4,12 +4,12 @@ import type { ZodTypeAny } from 'zod';
 
 export type JsonSchema = Record<string, unknown>;
 
-const toJsonSchema = zodToJsonSchema as unknown as (
+const TO_JSON_SCHEMA = zodToJsonSchema as unknown as (
   schema: ZodTypeAny,
   options: { $refStrategy: 'none' },
 ) => JsonSchema;
 
 export const createJsonSchema = (schema: ZodTypeAny): JsonSchema =>
-  toJsonSchema(schema, {
+  TO_JSON_SCHEMA(schema, {
     $refStrategy: 'none',
   });

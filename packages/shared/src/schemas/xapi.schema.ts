@@ -117,14 +117,14 @@ export const xapiArchiveInputSchema = z
 
 export type XapiArchiveInput = z.infer<typeof xapiArchiveInputSchema>;
 
-const xapiVersionSchema = z.enum(['1.0.3', '2.0']).default('1.0.3');
+const XAPI_VERSION_SCHEMA = z.enum(['1.0.3', '2.0']).default('1.0.3');
 
 export const lrsConfigInputSchema = z.object({
   name: z.string().min(1).max(255),
   endpoint: z.string().url().max(512),
   authKeyId: z.string().min(1).max(255),
   authSecret: z.string().min(8).max(512),
-  version: xapiVersionSchema,
+  version: XAPI_VERSION_SCHEMA,
   enabled: z.boolean().default(true),
   batchingEnabled: z.boolean().default(true),
   batchSize: z.number().int().positive().max(1000).default(10),
@@ -139,7 +139,7 @@ export const lrsConfigUpdateSchema = z.object({
   endpoint: z.string().url().max(512).optional(),
   authKeyId: z.string().min(1).max(255).optional(),
   authSecret: z.string().min(8).max(512).optional(),
-  version: xapiVersionSchema.optional(),
+  version: XAPI_VERSION_SCHEMA.optional(),
   enabled: z.boolean().optional(),
   batchingEnabled: z.boolean().optional(),
   batchSize: z.number().int().positive().max(1000).optional(),
