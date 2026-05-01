@@ -1,11 +1,15 @@
 import { randomBytes } from 'node:crypto';
 
-const LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
-const UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const NUMBERS = '0123456789';
-const SPECIAL = '!@#$%^&*';
+const PASSWORD_CHARSET_LOWERCASE = 'abcdefghijklmnopqrstuvwxyz';
+const PASSWORD_CHARSET_UPPERCASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const PASSWORD_CHARSET_DIGIT = '0123456789';
+const PASSWORD_CHARSET_SPECIAL = '!@#$%^&*';
 
-const ALL_CHARS = LOWERCASE + UPPERCASE + NUMBERS + SPECIAL;
+const PASSWORD_CHARSET_ALL =
+  PASSWORD_CHARSET_LOWERCASE +
+  PASSWORD_CHARSET_UPPERCASE +
+  PASSWORD_CHARSET_DIGIT +
+  PASSWORD_CHARSET_SPECIAL;
 
 const getRandomIndex = (max: number): number => {
   const bytes = randomBytes(4);
@@ -21,13 +25,13 @@ const getRandomChar = (chars: string): string => {
 export const generateSecurePassword = (length: number = 16): string => {
   const password: string[] = [];
 
-  password.push(getRandomChar(LOWERCASE));
-  password.push(getRandomChar(UPPERCASE));
-  password.push(getRandomChar(NUMBERS));
-  password.push(getRandomChar(SPECIAL));
+  password.push(getRandomChar(PASSWORD_CHARSET_LOWERCASE));
+  password.push(getRandomChar(PASSWORD_CHARSET_UPPERCASE));
+  password.push(getRandomChar(PASSWORD_CHARSET_DIGIT));
+  password.push(getRandomChar(PASSWORD_CHARSET_SPECIAL));
 
   for (let i = password.length; i < length; i++) {
-    password.push(getRandomChar(ALL_CHARS));
+    password.push(getRandomChar(PASSWORD_CHARSET_ALL));
   }
 
   for (let i = password.length - 1; i > 0; i--) {
