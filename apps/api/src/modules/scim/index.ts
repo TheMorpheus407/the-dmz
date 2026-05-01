@@ -1,5 +1,11 @@
 export { scimPlugin } from './scim.plugin.js';
 export { registerScimRoutes } from './scim.routes.js';
+export { registerServiceProviderConfigRoutes } from './scim.service-provider.routes.js';
+export { registerSchemasRoutes } from './scim.schemas.routes.js';
+export { registerResourceTypesRoutes } from './scim.resource-types.routes.js';
+export { registerUsersRoutes } from './scim.users.routes.js';
+export { registerGroupsRoutes } from './scim.groups.routes.js';
+export { registerBulkRoutes } from './scim.bulk.routes.js';
 export { oauthGuard, requireReadScope, requireWriteScope } from './scim.auth.js';
 export * from './scim.types.js';
 export * from './scim.service.js';
