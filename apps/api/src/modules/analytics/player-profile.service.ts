@@ -35,6 +35,7 @@ export class PlayerProfileService {
   private readonly CALIBRATION_DAYS = 3;
   private readonly MIN_CALIBRATION_EVIDENCE = 20;
   private readonly MAX_HISTORY_POINTS = 1000;
+  private readonly LOW_EVIDENCE_PRIORITY_THRESHOLD = 10;
 
   public computeInitialProfile(
     userId: string,
@@ -370,7 +371,7 @@ export class PlayerProfileService {
         priority += 20;
       }
 
-      if (evidenceCount < 10) {
+      if (evidenceCount < this.LOW_EVIDENCE_PRIORITY_THRESHOLD) {
         priority += 10;
       }
 

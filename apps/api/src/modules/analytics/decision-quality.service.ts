@@ -55,6 +55,9 @@ export interface HistoricalDataPoint {
 
 export class DecisionQualityService {
   private readonly db: DB;
+  private readonly MIN_EVIDENCE_FOR_NEW_PLAYER = 10;
+  private readonly MIN_EVIDENCE_FOR_EXPERIENCED = 50;
+  private readonly MIN_EVIDENCE_FOR_EXPERT = 100;
 
   public constructor(db: DB) {
     this.db = db;
@@ -343,7 +346,7 @@ export class DecisionQualityService {
     evidenceCount: number,
     competencyScores?: Record<string, { score: number; evidenceCount: number }>,
   ): 'new' | 'intermediate' | 'experienced' | 'expert' {
-    if (evidenceCount < 10) {
+    if (evidenceCount < this.MIN_EVIDENCE_FOR_NEW_PLAYER) {
       return 'new';
     }
 
@@ -356,10 +359,10 @@ export class DecisionQualityService {
       0,
     );
 
-    if (totalEvidence >= 100) {
+    if (totalEvidence >= this.MIN_EVIDENCE_FOR_EXPERT) {
       return 'expert';
     }
-    if (totalEvidence >= 50) {
+    if (totalEvidence >= this.MIN_EVIDENCE_FOR_EXPERIENCED) {
       return 'experienced';
     }
 
