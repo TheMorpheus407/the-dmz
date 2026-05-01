@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
+import { MOCK_NOW } from './mock-date.js';
+
 const WEBSOCKET_GATEWAY_METHODS = [
   'getConnectionCount',
   'getConnection',
@@ -195,8 +197,8 @@ describe('createMockWsGateway', () => {
         userId: 'user-456',
         tenantId: 'tenant-789',
         subscriptions: new Set<string>(),
-        connectedAt: Date.now(),
-        lastHeartbeat: Date.now(),
+        connectedAt: MOCK_NOW.getTime(),
+        lastHeartbeat: MOCK_NOW.getTime(),
       };
 
       wsGateway.getConnection.mockReturnValue(mockConnection);

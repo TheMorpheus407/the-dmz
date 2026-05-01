@@ -1,6 +1,8 @@
 /* eslint-disable max-lines */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { createMockDate } from '@the-dmz/shared/testing';
+
 vi.mock('../../../shared/database/connection.js', () => ({
   getDatabaseClient: vi.fn(),
 }));
@@ -108,7 +110,7 @@ const createMockCoopSession = (overrides: Partial<Record<string, unknown>> = {})
   sessionSeq: 0,
   lastSnapshotSeq: 0,
   lastSnapshotAt: null,
-  createdAt: new Date(),
+  createdAt: createMockDate(),
   completedAt: null,
   roleConfig: null,
   scenarioId: null,
@@ -123,7 +125,7 @@ const createMockRoleAssignment = (overrides: Partial<Record<string, unknown>> = 
   role: 'triage_lead',
   rolePreference: null,
   isAuthority: true,
-  assignedAt: new Date(),
+  assignedAt: createMockDate(),
   ...overrides,
 });
 
@@ -475,7 +477,7 @@ describe('coop-session service', () => {
             returning: vi
               .fn()
               .mockResolvedValue([
-                { ...mockSession, status: 'completed', completedAt: new Date() },
+                { ...mockSession, status: 'completed', completedAt: createMockDate() },
               ]),
           }),
         }),
@@ -526,7 +528,7 @@ describe('coop-session service', () => {
             returning: vi
               .fn()
               .mockResolvedValue([
-                { ...mockSession, status: 'abandoned', completedAt: new Date() },
+                { ...mockSession, status: 'abandoned', completedAt: createMockDate() },
               ]),
           }),
         }),

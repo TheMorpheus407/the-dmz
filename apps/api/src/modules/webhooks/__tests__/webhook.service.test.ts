@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { createMockDate, MOCK_NOW } from '@the-dmz/shared/testing';
 import {
   WebhookSubscriptionStatus,
   WebhookDeliveryStatus,
@@ -94,7 +95,7 @@ describe('WebhookService', () => {
     it('should create a webhook subscription with test_pending status', async () => {
       const mockDbSubscription = buildSubscriptionDb({
         status: 'test_pending',
-        testPendingAt: new Date(),
+        testPendingAt: createMockDate(),
       });
 
       mockRepo.createSubscription.mockResolvedValue(mockDbSubscription);
@@ -151,7 +152,7 @@ describe('WebhookService', () => {
     it('should update subscription status', async () => {
       const mockDbSubscription = buildSubscriptionDb({
         status: 'disabled',
-        disabledAt: new Date(),
+        disabledAt: createMockDate(),
       });
 
       mockRepo.getSubscriptionById.mockResolvedValue({
@@ -202,7 +203,7 @@ describe('WebhookService', () => {
     it('should accept HTTPS URLs in createSubscription', async () => {
       const mockDbSubscription = buildSubscriptionDb({
         status: 'test_pending',
-        testPendingAt: new Date(),
+        testPendingAt: createMockDate(),
       });
 
       mockRepo.createSubscription.mockResolvedValue(mockDbSubscription);
@@ -330,7 +331,7 @@ describe('WebhookService', () => {
   describe('Signature Verification', () => {
     it('should verify valid signature', () => {
       const payload = { eventId: '123', data: { test: true } };
-      const timestamp = Date.now().toString();
+      const timestamp = MOCK_NOW.getTime().toString();
       const signature = service.generateSignature(
         { ...payload, timestamp: parseInt(timestamp) },
         mockSecret,
@@ -343,7 +344,7 @@ describe('WebhookService', () => {
 
     it('should reject expired signature (replay protection)', () => {
       const payload = { eventId: '123', data: { test: true } };
-      const expiredTimestamp = (Date.now() - WEBHOOK_REPLAY_WINDOW_MS - 1000).toString();
+      const expiredTimestamp = (MOCK_NOW.getTime() - WEBHOOK_REPLAY_WINDOW_MS - 1000).toString();
 
       expect(() => {
         service.verifySignature(payload, 'v1=somesignature', mockSecret, expiredTimestamp);
@@ -352,7 +353,7 @@ describe('WebhookService', () => {
 
     it('should reject invalid signature', () => {
       const payload = { eventId: '123', data: { test: true } };
-      const timestamp = Date.now().toString();
+      const timestamp = MOCK_NOW.getTime().toString();
 
       expect(() => {
         service.verifySignature(
@@ -403,7 +404,7 @@ describe('WebhookService', () => {
         failedRequests: 19,
         consecutiveFailures: 1,
         isOpen: true,
-        openedAt: new Date(),
+        openedAt: createMockDate(),
       });
 
       mockRepo.getOrCreateCircuitBreaker.mockResolvedValue(mockBreaker);
@@ -510,7 +511,7 @@ describe('testSubscription', () => {
       createdAt: fixedDate,
       updatedAt: fixedDate,
       disabledAt: null,
-      testPendingAt: new Date(),
+      testPendingAt: createMockDate(),
       failureDisabledAt: null,
     };
 
@@ -557,7 +558,7 @@ describe('testSubscription', () => {
       createdAt: fixedDate,
       updatedAt: fixedDate,
       disabledAt: null,
-      testPendingAt: new Date(),
+      testPendingAt: createMockDate(),
       failureDisabledAt: null,
     };
 
@@ -619,7 +620,7 @@ describe('testSubscription', () => {
       failedRequests: 19,
       consecutiveFailures: 19,
       isOpen: true,
-      openedAt: new Date(),
+      openedAt: createMockDate(),
       closedAt: null,
       lastCheckedAt: fixedDate,
       createdAt: fixedDate,
@@ -869,11 +870,11 @@ describe('WebhookPolicy Schema Tests', () => {
       status: 'success',
       attemptNumber: 1,
       maxAttempts: 5,
-      nextAttemptAt: new Date(),
-      lastAttemptAt: new Date(),
+      nextAttemptAt: createMockDate(),
+      lastAttemptAt: createMockDate(),
       errorMessage: undefined,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: createMockDate(),
+      updatedAt: createMockDate(),
       responseStatusCode: 200,
       responseBody: '{"status":"ok"}',
       latencyMs: 100,
@@ -894,8 +895,8 @@ describe('WebhookPolicy Schema Tests', () => {
       status: 'success',
       attemptNumber: 1,
       maxAttempts: 5,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: createMockDate(),
+      updatedAt: createMockDate(),
       responseStatusCode: 200,
     };
 

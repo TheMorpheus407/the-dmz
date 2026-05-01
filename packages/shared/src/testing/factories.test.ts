@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { MOCK_NOW, createMockDate } from './mock-date.js';
 import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
 import {
   createTestApiKey,
@@ -497,7 +498,7 @@ describe('createTestSession', () => {
 
   it('has a default expiration 7 days from now', () => {
     const session = createTestSession();
-    const sevenDaysFromNow = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const sevenDaysFromNow = createMockDate({ daysFromNow: 7 });
     expect(session.expiresAt.getTime()).toBeCloseTo(sevenDaysFromNow.getTime(), -3);
   });
 
@@ -925,7 +926,7 @@ describe('createTestApiKey', () => {
       expiresAt: new Date('2027-01-01'),
       rotationGracePeriodDays: '14',
       rotationGraceEndsAt: new Date('2027-01-15'),
-      lastUsedAt: new Date(),
+      lastUsedAt: createMockDate(),
       createdBy: 'custom-creator',
       createdAt: new Date('2025-01-01'),
       updatedAt: new Date('2025-06-01'),
@@ -958,7 +959,7 @@ describe('createTestApiKey', () => {
   });
 
   it('produces a revoked key when status is revoked', () => {
-    const revokedAt = new Date();
+    const revokedAt = createMockDate();
     const key = createTestApiKey({
       status: 'revoked',
       revokedAt,

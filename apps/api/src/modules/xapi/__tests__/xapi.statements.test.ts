@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { type FastifyInstance } from 'fastify';
 
-import { createTestId } from '@the-dmz/shared/testing';
+import { createMockDate, createTestId } from '@the-dmz/shared/testing';
 
 import { buildApp } from '../../../app.js';
 import { loadConfig, type AppConfig } from '../../../config.js';
@@ -402,7 +402,7 @@ describe('xAPI Statement routes', () => {
         method: 'POST',
         url: '/api/v1/xapi/archive',
         payload: {
-          beforeDate: new Date().toISOString(),
+          beforeDate: createMockDate().toISOString(),
         },
       });
 
@@ -436,7 +436,7 @@ describe('xAPI Statement routes', () => {
           authorization: `Bearer ${accessToken}`,
         },
         payload: {
-          beforeDate: new Date().toISOString(),
+          beforeDate: createMockDate().toISOString(),
         },
       });
 

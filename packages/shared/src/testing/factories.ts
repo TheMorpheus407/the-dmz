@@ -4,6 +4,7 @@ import {
 } from '../auth/api-key-contract.js';
 
 import { SEED_PROFILE_IDS, SEED_TENANT_IDS, SEED_USER_IDS } from './seed-ids.js';
+import { createMockDate } from './mock-date.js';
 
 import type { CredentialStatus, CredentialType } from '../auth/api-key-contract.js';
 
@@ -356,7 +357,7 @@ export const createTestSession = (overrides: Partial<SessionSeed> = {}): Session
   ipAddress: overrides.ipAddress ?? null,
   userAgent: overrides.userAgent ?? null,
   deviceFingerprint: overrides.deviceFingerprint ?? null,
-  expiresAt: overrides.expiresAt ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+  expiresAt: overrides.expiresAt ?? createMockDate({ daysFromNow: 7 }),
   mfaVerifiedAt: overrides.mfaVerifiedAt ?? null,
   mfaMethod: overrides.mfaMethod ?? null,
   mfaFailedAttempts: overrides.mfaFailedAttempts ?? 0,
@@ -637,8 +638,8 @@ export const createTestApiKey = (overrides: Partial<TestApiKey> = {}): TestApiKe
   rotationGraceEndsAt: null,
   lastUsedAt: null,
   createdBy: 'test-user',
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: createMockDate(),
+  updatedAt: createMockDate(),
   revokedAt: null,
   revokedBy: null,
   revocationReason: null,
@@ -662,8 +663,8 @@ export const createTestCampaign = (overrides: Partial<CampaignSeed> = {}): Campa
   endDate: overrides.endDate ?? null,
   timezone: overrides.timezone ?? 'UTC',
   recurrencePattern: overrides.recurrencePattern ?? 'one-time',
-  createdAt: overrides.createdAt ?? new Date(),
-  updatedAt: overrides.updatedAt ?? new Date(),
+  createdAt: overrides.createdAt ?? createMockDate(),
+  updatedAt: overrides.updatedAt ?? createMockDate(),
 });
 
 export const createTestCampaignAudience = (
@@ -676,8 +677,8 @@ export const createTestCampaignAudience = (
   locations: overrides.locations ?? [],
   roles: overrides.roles ?? [],
   attributeFilters: overrides.attributeFilters ?? {},
-  createdAt: overrides.createdAt ?? new Date(),
-  updatedAt: overrides.updatedAt ?? new Date(),
+  createdAt: overrides.createdAt ?? createMockDate(),
+  updatedAt: overrides.updatedAt ?? createMockDate(),
 });
 
 export const createTestCampaignContent = (
@@ -690,7 +691,7 @@ export const createTestCampaignContent = (
   orderIndex: overrides.orderIndex ?? 0,
   dueDays: overrides.dueDays ?? 7,
   isPrerequisite: overrides.isPrerequisite ?? false,
-  createdAt: overrides.createdAt ?? new Date(),
+  createdAt: overrides.createdAt ?? createMockDate(),
 });
 
 export const createTestCampaignEnrollment = (
@@ -700,13 +701,13 @@ export const createTestCampaignEnrollment = (
   campaignId: overrides.campaignId ?? crypto.randomUUID(),
   userId: overrides.userId ?? SEED_USER_IDS.acmeCorp.learner,
   status: overrides.status ?? 'not_started',
-  enrolledAt: overrides.enrolledAt ?? new Date(),
+  enrolledAt: overrides.enrolledAt ?? createMockDate(),
   completedAt: overrides.completedAt ?? null,
   dueDate: overrides.dueDate ?? null,
   lastReminderAt: overrides.lastReminderAt ?? null,
   reminderCount: overrides.reminderCount ?? 0,
-  createdAt: overrides.createdAt ?? new Date(),
-  updatedAt: overrides.updatedAt ?? new Date(),
+  createdAt: overrides.createdAt ?? createMockDate(),
+  updatedAt: overrides.updatedAt ?? createMockDate(),
 });
 
 export const createTestCampaignTemplate = (
@@ -720,8 +721,8 @@ export const createTestCampaignTemplate = (
   audienceConfig: overrides.audienceConfig ?? {},
   contentConfig: overrides.contentConfig ?? {},
   scheduleConfig: overrides.scheduleConfig ?? {},
-  createdAt: overrides.createdAt ?? new Date(),
-  updatedAt: overrides.updatedAt ?? new Date(),
+  createdAt: overrides.createdAt ?? createMockDate(),
+  updatedAt: overrides.updatedAt ?? createMockDate(),
 });
 
 export const createTestCampaignEscalation = (
@@ -733,8 +734,8 @@ export const createTestCampaignEscalation = (
   managerNotification: overrides.managerNotification ?? true,
   complianceAlert: overrides.complianceAlert ?? false,
   complianceAlertThreshold: overrides.complianceAlertThreshold ?? null,
-  createdAt: overrides.createdAt ?? new Date(),
-  updatedAt: overrides.updatedAt ?? new Date(),
+  createdAt: overrides.createdAt ?? createMockDate(),
+  updatedAt: overrides.updatedAt ?? createMockDate(),
 });
 
 export const createTestNotification = (
@@ -746,7 +747,7 @@ export const createTestNotification = (
   eventType: overrides.eventType ?? 'auth_security.password_reset_requested',
   channel: overrides.channel ?? 'email',
   status: overrides.status ?? 'sent',
-  sentAt: overrides.sentAt ?? new Date(),
+  sentAt: overrides.sentAt ?? createMockDate(),
   suppressedReason: overrides.suppressedReason ?? null,
   failureReason: overrides.failureReason ?? null,
   templateCategory: overrides.templateCategory ?? 'password_reset',

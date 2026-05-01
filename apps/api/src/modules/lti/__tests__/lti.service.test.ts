@@ -1,6 +1,8 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import Database from 'better-sqlite3';
 
+import { createMockDate, MOCK_NOW } from '@the-dmz/shared/testing';
+
 import {
   createLtiPlatform,
   getLtiPlatformById,
@@ -242,8 +244,8 @@ const mockPlatform = {
   isActive: true,
   lastValidationStatus: null,
   lastValidatedAt: null,
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: createMockDate(),
+  updatedAt: createMockDate(),
 };
 
 const mockLineItem = {
@@ -255,10 +257,10 @@ const mockLineItem = {
   scoreMaximum: 100,
   resourceId: 'resource-1',
   tag: 'homework',
-  startDate: new Date(),
-  endDate: new Date(),
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  startDate: createMockDate(),
+  endDate: createMockDate(),
+  createdAt: createMockDate(),
+  updatedAt: createMockDate(),
 };
 
 const mockScore = {
@@ -270,8 +272,8 @@ const mockScore = {
   scoreMaximum: 100,
   activityProgress: 'completed',
   gradingProgress: 'FullyGraded',
-  timestamp: new Date(),
-  createdAt: new Date(),
+  timestamp: createMockDate(),
+  createdAt: createMockDate(),
 };
 
 const mockDeepLinkContent = {
@@ -284,8 +286,8 @@ const mockDeepLinkContent = {
   lineItemId: null,
   customParams: {},
   available: true,
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  createdAt: createMockDate(),
+  updatedAt: createMockDate(),
 };
 
 const mockSession = {
@@ -297,16 +299,16 @@ const mockSession = {
   contextId: 'context-1',
   roles: ['Learner'],
   launchId: 'launch-123',
-  createdAt: new Date(),
+  createdAt: createMockDate(),
 };
 
 const mockNonce = {
   nonceId: '550e8400-e29b-41d4-a716-446655440006',
   nonceValue: 'test-nonce-value',
   platformId: mockPlatformId,
-  expiresAt: new Date(Date.now() + 60000),
+  expiresAt: createMockDate({ msFromNow: 60000 }),
   usedAt: null,
-  createdAt: new Date(),
+  createdAt: createMockDate(),
 };
 
 const mockState = {
@@ -315,9 +317,9 @@ const mockState = {
   platformId: mockPlatformId,
   codeVerifier: 'test-code-verifier',
   redirectUri: 'https://example.com/callback',
-  expiresAt: new Date(Date.now() + 60000),
+  expiresAt: createMockDate({ msFromNow: 60000 }),
   usedAt: null,
-  createdAt: new Date(),
+  createdAt: createMockDate(),
 };
 
 describe('LTI Service', () => {
@@ -571,7 +573,7 @@ describe('LTI Service', () => {
     it('creates nonce successfully', async () => {
       setReturningResult([mockNonce]);
 
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = createMockDate({ msFromNow: 60000 });
 
       await expect(
         createNonce(mockConfig, mockPlatformId, 'test-nonce', expiresAt),
@@ -608,7 +610,7 @@ describe('LTI Service', () => {
     });
 
     it('returns false for expired nonce', async () => {
-      const expiredNonce = { ...mockNonce, expiresAt: new Date(Date.now() - 1000) };
+      const expiredNonce = { ...mockNonce, expiresAt: createMockDate({ msFromNow: -1000 }) };
       setQueryResult([expiredNonce]);
 
       const result = await validateAndConsumeNonce(mockConfig, mockPlatformId, 'test-nonce');
@@ -1121,7 +1123,7 @@ describe('LTI Service', () => {
     it('creates state successfully', async () => {
       setReturningResult([mockState]);
 
-      const expiresAt = new Date(Date.now() + 60000);
+      const expiresAt = createMockDate({ msFromNow: 60000 });
 
       await expect(
         createState(
@@ -1171,7 +1173,7 @@ describe('LTI Service', () => {
     });
 
     it('returns null for expired state', async () => {
-      const expiredState = { ...mockState, expiresAt: new Date(Date.now() - 1000) };
+      const expiredState = { ...mockState, expiresAt: createMockDate({ msFromNow: -1000 }) };
       setQueryResult([expiredState]);
 
       const result = await validateAndConsumeState(mockConfig, 'test-state');
@@ -1380,8 +1382,8 @@ describe('LTI Service', () => {
       vi.mocked(decodeJwt).mockReturnValue({
         iss: mockPlatform.platformUrl,
         aud: mockPlatform.clientId,
-        exp: Math.floor(Date.now() / 1000) - 100,
-        iat: Math.floor(Date.now() / 1000) - 120,
+        exp: Math.floor(MOCK_NOW.getTime() / 1000) - 100,
+        iat: Math.floor(MOCK_NOW.getTime() / 1000) - 120,
         sub: 'user-123',
         nonce: 'test-nonce',
       });
@@ -1398,8 +1400,8 @@ describe('LTI Service', () => {
       vi.mocked(decodeJwt).mockReturnValue({
         iss: 'https://wrong.example.edu',
         aud: mockPlatform.clientId,
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(MOCK_NOW.getTime() / 1000) + 3600,
+        iat: Math.floor(MOCK_NOW.getTime() / 1000),
         sub: 'user-123',
         nonce: 'test-nonce',
       });
@@ -1416,8 +1418,8 @@ describe('LTI Service', () => {
       vi.mocked(decodeJwt).mockReturnValue({
         iss: mockPlatform.platformUrl,
         aud: null,
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(MOCK_NOW.getTime() / 1000) + 3600,
+        iat: Math.floor(MOCK_NOW.getTime() / 1000),
         sub: 'user-123',
         nonce: 'test-nonce',
       });
@@ -1434,8 +1436,8 @@ describe('LTI Service', () => {
       vi.mocked(decodeJwt).mockReturnValue({
         iss: mockPlatform.platformUrl,
         aud: 'wrong-client-id',
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(MOCK_NOW.getTime() / 1000) + 3600,
+        iat: Math.floor(MOCK_NOW.getTime() / 1000),
         sub: 'user-123',
         nonce: 'test-nonce',
       });
@@ -1452,8 +1454,8 @@ describe('LTI Service', () => {
       vi.mocked(decodeJwt).mockReturnValue({
         iss: mockPlatform.platformUrl,
         aud: mockPlatform.clientId,
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        iat: Math.floor(Date.now() / 1000) + 120,
+        exp: Math.floor(MOCK_NOW.getTime() / 1000) + 3600,
+        iat: Math.floor(MOCK_NOW.getTime() / 1000) + 120,
         sub: 'user-123',
         nonce: 'test-nonce',
       });
@@ -1470,8 +1472,8 @@ describe('LTI Service', () => {
       vi.mocked(decodeJwt).mockReturnValue({
         iss: mockPlatform.platformUrl,
         aud: mockPlatform.clientId,
-        exp: Math.floor(Date.now() / 1000) + 3600,
-        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(MOCK_NOW.getTime() / 1000) + 3600,
+        iat: Math.floor(MOCK_NOW.getTime() / 1000),
         sub: 'user-123',
         nonce: 'wrong-nonce',
       });
@@ -1546,14 +1548,14 @@ describe('validateAudience', () => {
 
 describe('validateExpiration', () => {
   it('should return valid: true when token is not expired', () => {
-    const futureExp = Math.floor(Date.now() / 1000) + 3600;
+    const futureExp = Math.floor(MOCK_NOW.getTime() / 1000) + 3600;
     const result = validateExpiration({ exp: futureExp });
     expect(result.valid).toBe(true);
     expect(result.error).toBeUndefined();
   });
 
   it('should return valid: false when token is expired', () => {
-    const pastExp = Math.floor(Date.now() / 1000) - 100;
+    const pastExp = Math.floor(MOCK_NOW.getTime() / 1000) - 100;
     const result = validateExpiration({ exp: pastExp });
     expect(result.valid).toBe(false);
     expect(result.error).toBe('Token expired');
@@ -1568,21 +1570,21 @@ describe('validateExpiration', () => {
 
 describe('validateIssuedAt', () => {
   it('should return valid: true when iat is in the past (within 60s clock skew)', () => {
-    const now = Math.floor(Date.now() / 1000);
+    const now = Math.floor(MOCK_NOW.getTime() / 1000);
     const result = validateIssuedAt({ iat: now });
     expect(result.valid).toBe(true);
     expect(result.error).toBeUndefined();
   });
 
   it('should return valid: true when iat is slightly in the future (within 60s clock skew)', () => {
-    const nearFuture = Math.floor(Date.now() / 1000) + 30;
+    const nearFuture = Math.floor(MOCK_NOW.getTime() / 1000) + 30;
     const result = validateIssuedAt({ iat: nearFuture });
     expect(result.valid).toBe(true);
     expect(result.error).toBeUndefined();
   });
 
   it('should return valid: false when iat is too far in the future (>60s)', () => {
-    const farFuture = Math.floor(Date.now() / 1000) + 120;
+    const farFuture = Math.floor(MOCK_NOW.getTime() / 1000) + 120;
     const result = validateIssuedAt({ iat: farFuture });
     expect(result.valid).toBe(false);
     expect(result.error).toBe('Token issued in the future');
@@ -1698,8 +1700,8 @@ describe('LTI Service - Replay Attack Prevention (SQLite)', () => {
   });
 
   it('returns false for already-used nonce (replay attack prevention)', () => {
-    const now = new Date().toISOString();
-    const future = new Date(Date.now() + 60000).toISOString();
+    const now = createMockDate().toISOString();
+    const future = createMockDate({ msFromNow: 60000 }).toISOString();
 
     sqliteDb
       .prepare(
@@ -1717,8 +1719,8 @@ describe('LTI Service - Replay Attack Prevention (SQLite)', () => {
   });
 
   it('returns null for already-used state (replay attack prevention)', () => {
-    const now = new Date().toISOString();
-    const future = new Date(Date.now() + 60000).toISOString();
+    const now = createMockDate().toISOString();
+    const future = createMockDate({ msFromNow: 60000 }).toISOString();
 
     sqliteDb
       .prepare(
@@ -1743,7 +1745,7 @@ describe('LTI Service - Replay Attack Prevention (SQLite)', () => {
   });
 
   it('returns nonce when not yet used (isNull condition works correctly)', () => {
-    const future = new Date(Date.now() + 60000).toISOString();
+    const future = createMockDate({ msFromNow: 60000 }).toISOString();
 
     sqliteDb
       .prepare(
@@ -1762,7 +1764,7 @@ describe('LTI Service - Replay Attack Prevention (SQLite)', () => {
   });
 
   it('returns state when not yet used (isNull condition works correctly)', () => {
-    const future = new Date(Date.now() + 60000).toISOString();
+    const future = createMockDate({ msFromNow: 60000 }).toISOString();
 
     sqliteDb
       .prepare(

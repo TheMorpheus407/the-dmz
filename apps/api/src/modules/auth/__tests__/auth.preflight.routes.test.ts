@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { createTestConfig } from '@the-dmz/shared/testing';
+import { createTestConfig, createTestId } from '@the-dmz/shared/testing';
 
 import { buildApp } from '../../../app.js';
 import { type AppConfig } from '../../../config.js';
@@ -8,7 +8,7 @@ import { closeDatabase } from '../../../shared/database/connection.js';
 
 const testConfig = createTestConfig() as AppConfig;
 
-const unique = Date.now();
+const unique = createTestId();
 
 describe('auth preflight routes', () => {
   const app = buildApp(testConfig);

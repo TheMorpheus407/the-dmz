@@ -1,6 +1,8 @@
 /* eslint-disable max-lines */
 import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
 
+import { createMockDate } from '@the-dmz/shared/testing';
+
 import {
   createChatMessageSentEvent,
   createChatMessageDeletedEvent,
@@ -135,8 +137,8 @@ describe('ChatService', () => {
       partyId: 'party-1',
       guildId: null,
       name: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: createMockDate(),
+      updatedAt: createMockDate(),
     };
 
     const mockMessage = {
@@ -146,8 +148,8 @@ describe('ChatService', () => {
       content: 'Hello',
       moderationStatus: 'approved' as ModerationStatus,
       isDeleted: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: createMockDate(),
+      updatedAt: createMockDate(),
     };
 
     it('rejects empty message content', async () => {
@@ -462,8 +464,8 @@ describe('ChatService', () => {
       partyId: 'party-1',
       guildId: null,
       name: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: createMockDate(),
+      updatedAt: createMockDate(),
     };
 
     it('returns error when chat is disabled', async () => {
@@ -509,8 +511,8 @@ describe('ChatService', () => {
           content: 'Hello',
           moderationStatus: 'approved',
           isDeleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: createMockDate(),
+          updatedAt: createMockDate(),
         },
         {
           messageId: 'msg-2',
@@ -519,8 +521,8 @@ describe('ChatService', () => {
           content: 'Hi there',
           moderationStatus: 'approved',
           isDeleted: false,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: createMockDate(),
+          updatedAt: createMockDate(),
         },
       ];
 
@@ -617,8 +619,8 @@ describe('ChatService', () => {
         content: 'Hello',
         moderationStatus: 'approved',
         isDeleted: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       });
 
       const result = await deleteMessage(
@@ -643,8 +645,8 @@ describe('ChatService', () => {
         content: 'Hello',
         moderationStatus: 'approved',
         isDeleted: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       });
       mockChatRepositoryUpdateMessage.mockResolvedValue(undefined);
 
@@ -674,8 +676,8 @@ describe('ChatService', () => {
         content: 'Hello',
         moderationStatus: 'approved',
         isDeleted: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       });
       mockChatRepositoryUpdateMessage.mockResolvedValue(undefined);
 
@@ -745,8 +747,8 @@ describe('ChatService', () => {
         partyId: 'party-1',
         guildId: null,
         name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(existingChannel);
@@ -780,8 +782,8 @@ describe('ChatService', () => {
         partyId: 'party-1',
         guildId: null,
         name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
@@ -834,8 +836,8 @@ describe('ChatService', () => {
         partyId: null,
         guildId: 'guild-1',
         name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
@@ -869,8 +871,8 @@ describe('ChatService', () => {
         partyId: 'party-1',
         guildId: null,
         name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
@@ -897,8 +899,8 @@ describe('ChatService', () => {
         partyId: 'party-1',
         guildId: null,
         name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(existingChannel);
@@ -938,8 +940,8 @@ describe('ChatService', () => {
           partyId: 'party-1',
           guildId: null,
           name: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: createMockDate(),
+          updatedAt: createMockDate(),
         },
         {
           channelId: 'channel-2',
@@ -948,8 +950,8 @@ describe('ChatService', () => {
           partyId: null,
           guildId: 'guild-1',
           name: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
+          createdAt: createMockDate(),
+          updatedAt: createMockDate(),
         },
       ];
 
@@ -989,8 +991,8 @@ describe('ChatService', () => {
         partyId: 'party-1',
         guildId: null,
         name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindChannel.mockResolvedValue(mockChannel);
@@ -1017,8 +1019,8 @@ describe('ChatService', () => {
         partyId: 'party-1',
         guildId: null,
         name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
@@ -1042,8 +1044,8 @@ describe('ChatService', () => {
         partyId: 'party-1',
         guildId: null,
         name: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(existingChannel);
@@ -1067,8 +1069,8 @@ describe('ChatService', () => {
         partyId: null,
         guildId: null,
         name: 'dm-player1-player2',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
@@ -1100,8 +1102,8 @@ describe('ChatService', () => {
         partyId: null,
         guildId: null,
         name: 'dm-player1-player2',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindExistingChannel.mockResolvedValue(undefined);
@@ -1169,8 +1171,8 @@ describe('ChatService', () => {
         content: 'Hello',
         moderationStatus: 'approved' as ModerationStatus,
         isDeleted: false,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: createMockDate(),
+        updatedAt: createMockDate(),
       };
 
       mockChatRepositoryFindMessage.mockResolvedValue(mockMessage);
@@ -1254,8 +1256,8 @@ class InMemoryChatRepository implements ChatRepositoryInterface {
       partyId: params.partyId ?? null,
       guildId: params.guildId ?? null,
       name: params.name ?? null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: createMockDate(),
+      updatedAt: createMockDate(),
     };
     this.channels.set(channel.channelId, channel);
     return channel;
@@ -1295,8 +1297,8 @@ class InMemoryChatRepository implements ChatRepositoryInterface {
       content: params.content,
       moderationStatus: params.moderationStatus as ModerationStatus,
       isDeleted: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: createMockDate(),
+      updatedAt: createMockDate(),
     };
     this.messages.set(message.messageId, message);
     return message;
@@ -1306,7 +1308,7 @@ class InMemoryChatRepository implements ChatRepositoryInterface {
     const message = this.messages.get(params.messageId);
     if (message) {
       message.isDeleted = params.isDeleted;
-      message.updatedAt = new Date();
+      message.updatedAt = createMockDate();
     }
   }
 

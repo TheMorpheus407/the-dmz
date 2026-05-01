@@ -1,5 +1,7 @@
 import { vi } from 'vitest';
 
+import { MOCK_NOW } from './mock-date.js';
+
 type WEBSOCKET_GATEWAY_METHODS = readonly [
   'getConnectionCount',
   'getConnection',
@@ -35,8 +37,8 @@ export function createMockWsGateway(): MockWsGateway {
       userId: 'mock-user-id',
       tenantId: 'mock-tenant-id',
       subscriptions: new Set<string>(),
-      connectedAt: Date.now(),
-      lastHeartbeat: Date.now(),
+      connectedAt: MOCK_NOW.getTime(),
+      lastHeartbeat: MOCK_NOW.getTime(),
     })),
     removeConnection: vi.fn(() => {}),
     isSubscribed: vi.fn(() => true),
@@ -51,7 +53,7 @@ export function createMockWsGateway(): MockWsGateway {
     createMessage: vi.fn((type: string, payload: Record<string, unknown>) => ({
       type,
       payload,
-      timestamp: Date.now(),
+      timestamp: MOCK_NOW.getTime(),
       sequence: 1,
     })),
     parseChannel: vi.fn((channel: string) => {
