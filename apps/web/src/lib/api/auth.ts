@@ -10,8 +10,9 @@ import {
   type WebauthnRegistrationResponse,
   type WebauthnVerificationResponse,
   type WebauthnCredentialsListResponse,
+  type UpdatePreferencesInput,
+  type ProfileData,
 } from '@the-dmz/shared/schemas';
-import type { ThemeName, EffectState } from '$lib/stores/theme';
 
 import { apiClient } from './client.js';
 import { createInvalidResponseError } from './errors.js';
@@ -54,24 +55,10 @@ export async function login(
   return { error: createInvalidResponseError('No data received from server') };
 }
 
-export interface UpdatePreferencesInput {
-  themePreferences?: {
-    theme?: ThemeName;
-    enableTerminalEffects?: boolean;
-    effects?: EffectState;
-    fontSize?: number;
-  };
-  accessibilityPreferences?: {
-    reducedMotion?: boolean;
-    highContrast?: boolean;
-    fontSize?: number;
-  };
-}
-
 export async function updatePreferences(
   preferences: UpdatePreferencesInput,
-): Promise<{ data?: Record<string, unknown>; error?: CategorizedApiError }> {
-  const result = await apiClient.patch<Record<string, unknown>, UpdatePreferencesInput>(
+): Promise<{ data?: ProfileData; error?: CategorizedApiError }> {
+  const result = await apiClient.patch<ProfileData, UpdatePreferencesInput>(
     '/auth/profile',
     preferences,
   );
