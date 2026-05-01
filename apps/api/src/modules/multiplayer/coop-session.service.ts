@@ -162,6 +162,26 @@ export class CoopSessionService {
     return { success: true };
   }
 
+  private async initializeGameSession(
+    tenantId: string,
+    sessionId: string,
+    leaderProfile: { userId: string } | null,
+    seed: string,
+  ): Promise<void> {
+    if (!leaderProfile) {
+      return;
+    }
+    await this.linkGameSession(tenantId, sessionId, leaderProfile.userId, seed);
+  }
+
+  private async updatePartyStatus(
+    tenantId: string,
+    partyId: string,
+    status: string,
+  ): Promise<void> {
+    await this.repository.updatePartyStatus(partyId, tenantId, status);
+  }
+
   private async guardSessionExists(
     tenantId: string,
     sessionId: string,
@@ -294,9 +314,9 @@ export class CoopSessionService {
     leaderId: string,
     input: CreateCoopSessionInput,
   ): Promise<CoopSessionResult> {
-    const coopEnabled = await this.checkCoopEnabled(tenantId);
-    if (!coopEnabled) {
-      return { success: false, error: 'Co-op system is disabled' };
+    const coopEnabledResult = await this.guardCoopEnabled(tenantId);
+    if (!coopEnabledResult.success) {
+      return coopEnabledResult;
     }
 
     const existingSession = await this.repository.findSessionByParty({
@@ -322,11 +342,14 @@ export class CoopSessionService {
       tenantId,
     });
 
-    if (leaderProfile) {
-      await this.linkGameSession(tenantId, newSession.sessionId, leaderProfile.userId, input.seed);
-    }
+    await this.initializeGameSession(
+      tenantId,
+      newSession.sessionId,
+      leaderProfile ?? null,
+      input.seed,
+    );
 
-    await this.repository.updatePartyStatus(input.partyId, tenantId, 'in_session');
+    await this.updatePartyStatus(tenantId, input.partyId, 'in_session');
 
     const sessionWithRoles = await this.getSessionWithRoles(tenantId, newSession.sessionId);
     if (!sessionWithRoles) {
@@ -576,7 +599,7 @@ export class CoopSessionService {
       tenantId,
       playerId,
       this.toSessionData(sessionWithRoles),
-      transferResult.previousAuthorityId,
+      transferResult.previousAuthorityId ?? playerId,
     );
 
     return { success: true, session: sessionWithRoles };
@@ -829,7 +852,7 @@ export class CoopSessionService {
       tenantId,
       playerId,
       this.toSessionData(sessionWithRoles),
-      advanceResult.previousAuthorityId,
+      advanceResult.previousAuthorityId ?? playerId,
     );
 
     return { success: true, session: sessionWithRoles };

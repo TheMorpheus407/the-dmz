@@ -54,7 +54,7 @@ interface UpdateSessionParams {
   sessionId: string;
   updates: Partial<{
     status: string;
-    authorityPlayerId: string;
+    authorityPlayerId: string | null;
     dayNumber: number;
     scenarioId: string;
     difficultyTier: string;
