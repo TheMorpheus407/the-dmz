@@ -13,7 +13,7 @@ import * as emailTemplatesService from '../email-templates/email-templates.servi
 
 import * as scenariosService from './scenarios.service.js';
 
-import type { AuthenticatedUser } from '../../game/session/index.js';
+import type { AuthenticatedUser } from '../../auth/index.js';
 import type { FastifyInstance } from 'fastify';
 
 export const registerScenarioRoutes = async (fastify: FastifyInstance): Promise<void> => {

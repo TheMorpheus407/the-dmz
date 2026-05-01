@@ -3,5 +3,5 @@ export * from './game-session.service.js';
 export * from './game-session.routes.js';
 export * from './game-session.events.js';
 
-export type { AuthenticatedUser } from './game-session.service.js';
+export type { AuthenticatedUser } from '../../auth/index.js';
 export { findActiveGameSession, updatePlayerXP } from './game-session.repo.js';

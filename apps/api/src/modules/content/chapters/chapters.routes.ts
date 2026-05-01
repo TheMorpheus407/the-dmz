@@ -8,7 +8,7 @@ import {
 
 import * as chaptersService from './chapters.service.js';
 
-import type { AuthenticatedUser } from '../../game/session/index.js';
+import type { AuthenticatedUser } from '../../auth/index.js';
 import type { FastifyInstance } from 'fastify';
 
 export const registerChapterRoutes = async (fastify: FastifyInstance): Promise<void> => {

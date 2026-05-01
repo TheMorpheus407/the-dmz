@@ -6,7 +6,7 @@ import {
 
 import * as narrativeService from './narrative.service.js';
 
-import type { AuthenticatedUser } from '../../game/session/index.js';
+import type { AuthenticatedUser } from '../../auth/index.js';
 import type { FastifyInstance } from 'fastify';
 
 export const registerNarrativeRoutes = async (fastify: FastifyInstance): Promise<void> => {

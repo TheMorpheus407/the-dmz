@@ -4,11 +4,11 @@ import {
   bootstrapGameSession,
   getGameSession,
   ensureGameSession,
-  type AuthenticatedUser,
 } from '../game-session.service.js';
 import { findActiveGameSession, createGameSession } from '../game-session.repo.js';
 import { recordGameSession } from '../../../shared/metrics/hooks.js';
 
+import type { AuthenticatedUser } from '../../auth/auth.types.js';
 import type { DB } from '../../../shared/database/connection.js';
 
 vi.mock('../../../shared/database/connection.js', () => ({

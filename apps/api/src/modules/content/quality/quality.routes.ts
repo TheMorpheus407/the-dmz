@@ -8,7 +8,7 @@ import { scoreEmail, scoreBatch } from '../quality-scorer/index.js';
 
 import * as qualityService from './quality.service.js';
 
-import type { AuthenticatedUser } from '../../game/session/index.js';
+import type { AuthenticatedUser } from '../../auth/index.js';
 import type { FastifyInstance } from 'fastify';
 
 export const registerQualityRoutes = async (fastify: FastifyInstance): Promise<void> => {

@@ -8,7 +8,7 @@ import {
 
 import * as documentsService from './documents.service.js';
 
-import type { AuthenticatedUser } from '../../game/session/index.js';
+import type { AuthenticatedUser } from '../../auth/index.js';
 import type { FastifyInstance } from 'fastify';
 
 export const registerDocumentRoutes = async (fastify: FastifyInstance): Promise<void> => {

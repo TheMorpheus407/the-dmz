@@ -5,7 +5,7 @@ import { errorResponseSchemas } from '../../shared/schemas/error-schemas.js';
 
 import * as narrativeService from './narrative.service.js';
 
-import type { AuthenticatedUser } from '../game/session/index.js';
+import type { AuthenticatedUser } from '../auth/index.js';
 import type { FastifyInstance } from 'fastify';
 
 const protectedRoutePreHandlers = [authGuard, tenantContext, tenantStatusGuard];

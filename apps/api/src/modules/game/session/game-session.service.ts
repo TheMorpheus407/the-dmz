@@ -10,12 +10,7 @@ import {
   type GameSession,
 } from './game-session.repo.js';
 
-export type AuthenticatedUser = {
-  userId: string;
-  tenantId: string;
-  sessionId: string;
-  role: string;
-};
+import type { AuthenticatedUser } from '../../auth/auth.types.js';
 
 export type GameSessionBootstrapData = {
   schemaVersion: 1;

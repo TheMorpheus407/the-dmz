@@ -10,7 +10,7 @@ import * as gameSessionService from './game-session.service.js';
 import { createGameSessionStartedEvent } from './game-session.events.js';
 
 import type { FastifyInstance } from 'fastify';
-import type { AuthenticatedUser } from './game-session.service.js';
+import type { AuthenticatedUser } from '../../auth/index.js';
 
 export const registerGameSessionRoutes = async (fastify: FastifyInstance): Promise<void> => {
   const config = fastify.config;

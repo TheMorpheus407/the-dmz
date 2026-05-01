@@ -6,7 +6,7 @@ import {
 
 import * as localizedService from './localized.service.js';
 
-import type { AuthenticatedUser } from '../../game/session/index.js';
+import type { AuthenticatedUser } from '../../auth/index.js';
 import type { FastifyInstance } from 'fastify';
 
 export const registerLocalizedRoutes = async (fastify: FastifyInstance): Promise<void> => {
