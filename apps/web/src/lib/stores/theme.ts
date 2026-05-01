@@ -976,6 +976,48 @@ export function getRouteDefaultTheme(surface: SurfaceId): ThemeId {
   }
 }
 
+export function resolveThemeName(
+  themePref: EffectivePreferences['themePreferences']['theme'],
+  osPrefs: ReturnType<typeof themeStore.getSystemPreferences>,
+): { name: ThemeName; source: PreferenceSourceState['theme'] } {
+  const name: ThemeName =
+    (themePref?.value as ThemeName) ?? (osPrefs.prefersContrast ? 'high-contrast' : 'green');
+  const source = (themePref?.source ?? (osPrefs.prefersContrast ? 'os' : 'default')) as ThemeSource;
+  return { name, source };
+}
+
+export function resolveEffects(
+  effectsPref: EffectivePreferences['themePreferences']['effects'],
+  themeName: ThemeName,
+): { effects: EffectState; source: PreferenceSourceState['effects'] } {
+  const effects: EffectState =
+    (effectsPref?.value as EffectState) ?? defaultEffectStates[themeName] ?? DEFAULT_EFFECTS;
+  const source = (effectsPref?.source ?? 'default') as ThemeSource;
+  return { effects, source };
+}
+
+export function resolveTerminalEffects(
+  enableTerminalEffectsPref: EffectivePreferences['themePreferences']['enableTerminalEffects'],
+  themeName: ThemeName,
+): { enableTerminalEffects: boolean; source: PreferenceSourceState['enableTerminalEffects'] } {
+  const enableTerminalEffects: boolean =
+    enableTerminalEffectsPref?.value !== undefined
+      ? (enableTerminalEffectsPref.value as boolean)
+      : themeName !== 'high-contrast' && themeName !== 'enterprise';
+  const source = (enableTerminalEffectsPref?.source ?? 'default') as ThemeSource;
+  return { enableTerminalEffects, source };
+}
+
+export function resolveFontSize(
+  fontSizePref: EffectivePreferences['themePreferences']['fontSize'] | undefined,
+  osPrefs: ReturnType<typeof themeStore.getSystemPreferences>,
+): { fontSize: number; source: PreferenceSourceState['fontSize'] } {
+  const fontSize: number =
+    (fontSizePref?.value as number) ?? (osPrefs.prefersReducedMotion ? 18 : 16);
+  const source = (fontSizePref?.source ?? (osPrefs.prefersReducedMotion ? 'os' : 'default')) as ThemeSource;
+  return { fontSize, source };
+}
+
 export function resolveEffectiveTheme(
   effectivePrefs: unknown,
   _lockedKeys: string[],
@@ -990,14 +1032,14 @@ export function resolveEffectiveTheme(
 
   if (!prefs) {
     const osPrefs = themeStore.getSystemPreferences();
-    const name = osPrefs.prefersContrast ? 'high-contrast' : 'green';
+    const { name, source: themeSource } = resolveThemeName(undefined, osPrefs);
     return {
       name,
       enableTerminalEffects: name !== 'high-contrast',
       effects: defaultEffectStates[name] ?? DEFAULT_EFFECTS,
       fontSize: osPrefs.prefersReducedMotion ? 18 : 16,
       source: {
-        theme: osPrefs.prefersContrast ? 'os' : 'default',
+        theme: themeSource,
         enableTerminalEffects: 'default',
         effects: 'default',
         fontSize: osPrefs.prefersReducedMotion ? 'os' : 'default',
@@ -1012,21 +1054,13 @@ export function resolveEffectiveTheme(
 
   const osPrefs = themeStore.getSystemPreferences();
 
-  const name: ThemeName =
-    (themePref?.value as ThemeName) ?? (osPrefs.prefersContrast ? 'high-contrast' : 'green');
-  const effects: EffectState =
-    (effectsPref?.value as EffectState) ?? defaultEffectStates[name] ?? DEFAULT_EFFECTS;
-  const enableTerminalEffects: boolean =
-    enableTerminalEffectsPref?.value !== undefined
-      ? (enableTerminalEffectsPref.value as boolean)
-      : name !== 'high-contrast' && name !== 'enterprise';
-  const fontSize: number =
-    (fontSizePref?.value as number) ?? (osPrefs.prefersReducedMotion ? 18 : 16);
-
-  const themeSource = themePref?.source ?? (osPrefs.prefersContrast ? 'os' : 'default');
-  const effectsSource = effectsPref?.source ?? 'default';
-  const enableTerminalEffectsSource = enableTerminalEffectsPref?.source ?? 'default';
-  const fontSizeSource = fontSizePref?.source ?? (osPrefs.prefersReducedMotion ? 'os' : 'default');
+  const { name, source: themeSource } = resolveThemeName(themePref, osPrefs);
+  const { effects, source: effectsSource } = resolveEffects(effectsPref, name);
+  const { enableTerminalEffects, source: enableTerminalEffectsSource } = resolveTerminalEffects(
+    enableTerminalEffectsPref,
+    name,
+  );
+  const { fontSize, source: fontSizeSource } = resolveFontSize(fontSizePref, osPrefs);
 
   return {
     name,
@@ -1034,10 +1068,10 @@ export function resolveEffectiveTheme(
     effects,
     fontSize,
     source: {
-      theme: themeSource as ThemeSource,
-      effects: effectsSource as ThemeSource,
-      enableTerminalEffects: enableTerminalEffectsSource as ThemeSource,
-      fontSize: fontSizeSource as ThemeSource,
+      theme: themeSource,
+      effects: effectsSource,
+      enableTerminalEffects: enableTerminalEffectsSource,
+      fontSize: fontSizeSource,
     },
   };
 }
