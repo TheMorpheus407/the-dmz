@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 import { PseudonymizationService } from '../pseudonymization.service.js';
 
@@ -6,7 +6,12 @@ describe('PseudonymizationService', () => {
   let service: PseudonymizationService;
 
   beforeEach(() => {
+    vi.useFakeTimers();
     service = new PseudonymizationService('test-encryption-key');
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   describe('createPseudonymousId', () => {
@@ -142,6 +147,120 @@ describe('PseudonymizationService', () => {
       const payload = { eventName: 'test', token: 'abc123' };
 
       expect(service.isSafeForAnalyticsStorage(payload)).toBe(false);
+    });
+  });
+
+  describe('TTL eviction', () => {
+    const TTL_MS = 60 * 60 * 1000;
+
+    it('should evict mappingCache entry after TTL expires', async () => {
+      await service.createPseudonymousId('user-123', 'tenant-456');
+
+      vi.advanceTimersByTime(TTL_MS + 1);
+
+      const hasMapping = service.hasPseudonymMapping('user-123');
+      expect(hasMapping).toBe(false);
+    });
+
+    it('should evict reverseCache entry after TTL expires', async () => {
+      const createResult = await service.createPseudonymousId('user-123', 'tenant-456');
+
+      vi.advanceTimersByTime(TTL_MS + 1);
+
+      const reverseResult = await service.reversePseudonymousId(createResult.pseudonymousId!);
+      expect(reverseResult.success).toBe(false);
+    });
+
+    it('should not evict entry before TTL expires', async () => {
+      await service.createPseudonymousId('user-123', 'tenant-456');
+
+      vi.advanceTimersByTime(TTL_MS - 1);
+
+      const hasMapping = service.hasPseudonymMapping('user-123');
+      expect(hasMapping).toBe(true);
+    });
+
+    it('should create new mapping after TTL expiration', async () => {
+      const result1 = await service.createPseudonymousId('user-123', 'tenant-456');
+
+      vi.advanceTimersByTime(TTL_MS + 1);
+
+      const result2 = await service.createPseudonymousId('user-123', 'tenant-456');
+
+      expect(result2.pseudonymousId).not.toBe(result1.pseudonymousId);
+    });
+
+    it('should refresh TTL on cache access', async () => {
+      await service.createPseudonymousId('user-123', 'tenant-456');
+
+      vi.advanceTimersByTime(TTL_MS - 1);
+
+      service.getPseudonymousIdOrFallback('user-123');
+
+      vi.advanceTimersByTime(TTL_MS - 1);
+
+      const hasMapping = service.hasPseudonymMapping('user-123');
+      expect(hasMapping).toBe(true);
+    });
+
+    it('should track different users independently', async () => {
+      await service.createPseudonymousId('user-1', 'tenant-456');
+      await service.createPseudonymousId('user-2', 'tenant-456');
+
+      vi.advanceTimersByTime(TTL_MS + 1);
+
+      expect(service.hasPseudonymMapping('user-1')).toBe(false);
+      expect(service.hasPseudonymMapping('user-2')).toBe(false);
+    });
+
+    it('should bound cache size when entries expire', async () => {
+      for (let i = 0; i < 100; i++) {
+        await service.createPseudonymousId(`user-${i}`, 'tenant-456');
+      }
+
+      expect(service.getCacheSize()).toBe(100);
+
+      vi.advanceTimersByTime(TTL_MS + 1);
+
+      expect(service.getCacheSize()).toBe(0);
+    });
+  });
+
+  describe('GDPR compliance - removeUser', () => {
+    it('should have removeUser method for GDPR right to be forgotten', () => {
+      expect(typeof service.removeUser).toBe('function');
+    });
+
+    it('should remove user mapping from both caches', async () => {
+      await service.createPseudonymousId('user-123', 'tenant-456');
+
+      service.removeUser('user-123');
+
+      expect(service.hasPseudonymMapping('user-123')).toBe(false);
+      expect(service.getPseudonymousIdOrFallback('user-123')).toBe('user-123');
+    });
+
+    it('should remove reverse mapping so pseudonymous ID cannot be reversed', async () => {
+      const createResult = await service.createPseudonymousId('user-123', 'tenant-456');
+
+      service.removeUser('user-123');
+
+      const reverseResult = await service.reversePseudonymousId(createResult.pseudonymousId!);
+      expect(reverseResult.success).toBe(false);
+    });
+
+    it('should handle removing non-existent user without error', () => {
+      expect(() => service.removeUser('non-existent-user')).not.toThrow();
+    });
+
+    it('should reduce cache size after removeUser', async () => {
+      await service.createPseudonymousId('user-123', 'tenant-456');
+
+      const sizeBefore = service.getCacheSize();
+      service.removeUser('user-123');
+      const sizeAfter = service.getCacheSize();
+
+      expect(sizeAfter).toBe(sizeBefore - 1);
     });
   });
 });
