@@ -5,6 +5,7 @@ import {
   effectivePreferencesSchema,
   policyLockedPreferencesSchema,
 } from './preferences.schema.js';
+import { displayNameSchema } from './common.schema.js';
 
 const PASSWORD_KEY = 'password' as const;
 
@@ -55,7 +56,7 @@ export const registerSchema = z
   .object({
     email: z.string().email(),
     [PASSWORD_KEY]: z.string().min(12).max(128),
-    displayName: z.string().min(2).max(64),
+    displayName: displayNameSchema,
   })
   .strict();
 

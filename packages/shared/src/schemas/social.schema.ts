@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { displayNameSchema } from './common.schema.js';
+
 export const socialPrivacyModeSchema = z.enum(['public', 'friends_only', 'private']);
 export type SocialPrivacyMode = z.infer<typeof socialPrivacyModeSchema>;
 
@@ -24,7 +26,7 @@ export const playerProfileBaseSchema = z.object({
   profileId: z.string().uuid(),
   userId: z.string().uuid(),
   tenantId: z.string().uuid(),
-  displayName: z.string().min(1).max(50),
+  displayName: displayNameSchema,
   avatarId: z.string().max(36).nullable(),
   privacyMode: socialPrivacyModeSchema,
   bio: z.string().max(280).nullable(),
@@ -48,7 +50,7 @@ export const playerProfilePrivateSchema = z.object({
   profileId: z.string().uuid(),
   userId: z.string().uuid(),
   tenantId: z.string().uuid(),
-  displayName: z.string().min(1).max(50),
+  displayName: displayNameSchema,
   privacyMode: socialPrivacyModeSchema,
   seasonRank: z.number().int().nullable(),
   skillRatingBlue: z.number().int().nullable(),
@@ -62,7 +64,7 @@ export const playerProfilePrivateSchema = z.object({
 });
 
 export const updatePlayerProfileInputSchema = z.object({
-  displayName: z.string().min(1).max(50).optional(),
+  displayName: displayNameSchema.optional(),
   avatarId: z.string().max(36).optional(),
   bio: z.string().max(280).optional(),
   seasonRank: z.number().int().optional(),

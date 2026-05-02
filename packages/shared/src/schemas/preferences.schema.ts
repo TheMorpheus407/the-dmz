@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 import { THEME_IDS, SURFACE_IDS } from '../constants/taxonomy.js';
 
+import { displayNameSchema } from './common.schema.js';
+
 export const DIFFICULTY_LEVELS = ['tutorial', 'easy', 'normal', 'hard'] as const;
 export type DifficultyLevel = (typeof DIFFICULTY_LEVELS)[number];
 
@@ -196,7 +198,7 @@ export const defaultAudioPreferences: AudioPreferences = {
 
 export const accountPreferencesSchema = z
   .object({
-    displayName: z.string().min(1).max(50).optional(),
+    displayName: displayNameSchema.optional(),
     privacyMode: z.enum(PRIVACY_MODES).optional(),
   })
   .strict();

@@ -2,6 +2,10 @@ import { z } from 'zod';
 
 import { DEFAULT_PAGINATION_LIMIT } from '../constants/pagination.js';
 
+export const displayNameSchema = z.string().min(1).max(50);
+
+export type DisplayNameInput = z.infer<typeof displayNameSchema>;
+
 export const sortOrderSchema = z.enum(['asc', 'desc']);
 
 export type SortOrderInput = z.infer<typeof sortOrderSchema>;

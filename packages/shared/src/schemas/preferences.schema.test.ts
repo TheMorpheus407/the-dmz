@@ -250,6 +250,10 @@ describe('accountPreferencesSchema', () => {
   it('rejects display name too long', () => {
     expect(() => accountPreferencesSchema.parse({ displayName: 'a'.repeat(51) })).toThrow();
   });
+
+  it('rejects empty display name', () => {
+    expect(() => accountPreferencesSchema.parse({ displayName: '' })).toThrow();
+  });
 });
 
 describe('userPreferencesSchema with new categories', () => {
