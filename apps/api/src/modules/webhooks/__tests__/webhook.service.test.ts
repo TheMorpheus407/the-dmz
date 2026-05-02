@@ -6,6 +6,7 @@ import { createMockDate, MOCK_NOW } from '@the-dmz/shared/testing';
 import {
   WebhookSubscriptionStatus,
   WebhookDeliveryStatus,
+  WebhookEventType,
   WEBHOOK_REPLAY_WINDOW_MS,
   WEBHOOK_RETRY_DELAYS_MS,
   WEBHOOK_EVENT_TYPES,
@@ -167,6 +168,27 @@ describe('WebhookService', () => {
 
       expect(result.status).toBe(WebhookSubscriptionStatus.DISABLED);
       expect(mockRepo.updateSubscription).toHaveBeenCalled();
+    });
+
+    it('should throw WebhookSubscriptionNotFoundError when subscription not found', async () => {
+      mockRepo.getSubscriptionById.mockResolvedValue(undefined);
+
+      await expect(
+        service.updateSubscription(mockTenantId, randomUUID(), {
+          name: 'New Name',
+        }),
+      ).rejects.toThrow(WebhookSubscriptionNotFoundError);
+    });
+
+    it('should throw WebhookSubscriptionNotFoundError when update returns null', async () => {
+      mockRepo.getSubscriptionById.mockResolvedValue(buildSubscriptionDb());
+      mockRepo.updateSubscription.mockResolvedValue(null);
+
+      await expect(
+        service.updateSubscription(mockTenantId, mockSubscriptionId, {
+          name: 'New Name',
+        }),
+      ).rejects.toThrow(WebhookSubscriptionNotFoundError);
     });
   });
 
@@ -842,6 +864,15 @@ describe('getDelivery', () => {
 
     await expect(service.getDelivery(mockTenantId, randomUUID())).rejects.toThrow();
   });
+
+  it('should throw WebhookDeliveryFailedError with correct message when delivery not found', async () => {
+    mockRepo.getDeliveryById.mockResolvedValue(undefined);
+    const nonExistentDeliveryId = randomUUID();
+
+    await expect(service.getDelivery(mockTenantId, nonExistentDeliveryId)).rejects.toThrow(
+      `Webhook delivery failed: ${nonExistentDeliveryId} - Delivery not found`,
+    );
+  });
 });
 
 describe('WebhookPolicy Schema Tests', () => {
@@ -1103,6 +1134,73 @@ describe('processDelivery error paths', () => {
       ).rejects.toThrow(WebhookDeliveryMaxRetriesExceededError);
 
       fetchMock.mockRestore();
+    });
+  });
+});
+
+describe('queueEvent error paths', () => {
+  let service: WebhookService;
+  const mockRepo = vi.mocked(webhookRepo);
+  const mockTenantId = randomUUID();
+  const mockSubscriptionId = randomUUID();
+  const fixedDate = new Date('2026-03-10T00:00:00.000Z');
+
+  beforeAll(() => {
+    service = new WebhookService();
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    WebhookService.configureRedis('redis://localhost:6379');
+  });
+
+  describe('Redis URL not configured', () => {
+    it('throws error when Redis URL is not configured and queueEvent is called', async () => {
+      WebhookService.configureRedis('' as unknown as string);
+
+      const mockSubscription = {
+        id: mockSubscriptionId,
+        tenantId: mockTenantId,
+        name: 'Test Webhook',
+        targetUrl: 'https://example.com/webhook',
+        eventTypes: JSON.stringify(['auth.user.created']),
+        status: 'active',
+        secretHash: 'hashed-secret',
+        filters: null,
+        ipAllowlist: null,
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+        disabledAt: null,
+        testPendingAt: null,
+        failureDisabledAt: null,
+      };
+
+      mockRepo.getActiveSubscriptionsForEvent.mockResolvedValue([mockSubscription as WebhookSubscriptionDb]);
+      mockRepo.createDelivery.mockResolvedValue({
+        id: randomUUID(),
+        subscriptionId: mockSubscriptionId,
+        eventId: randomUUID(),
+        eventType: 'auth.user.created',
+        tenantId: mockTenantId,
+        targetUrl: 'https://example.com/webhook',
+        status: 'pending',
+        attemptNumber: 1,
+        maxAttempts: 5,
+        nextAttemptAt: null,
+        lastAttemptAt: null,
+        responseStatusCode: null,
+        responseBody: null,
+        errorMessage: null,
+        latencyMs: null,
+        payload: { test: true },
+        signatureHeaders: null,
+        createdAt: fixedDate,
+        updatedAt: fixedDate,
+      });
+
+      await expect(
+        service.queueEvent(mockTenantId, 'auth.user.created' as WebhookEventType, { data: 'test' }),
+      ).rejects.toThrow('Redis URL not configured. Call WebhookService.configureRedis() first.');
     });
   });
 });
