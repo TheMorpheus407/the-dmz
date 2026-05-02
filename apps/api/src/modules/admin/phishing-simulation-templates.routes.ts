@@ -48,7 +48,19 @@ export async function registerPhishingSimulationTemplateRoutes(fastify: FastifyI
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
-      const input = templateInputSchema.parse(request.body);
+
+      let input;
+      try {
+        input = templateInputSchema.parse(request.body);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.code(400).send({
+            success: false,
+            error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: error.errors },
+          });
+        }
+        throw error;
+      }
 
       const template = await phishingService.createPhishingTemplate(tenantId, input);
       return reply.code(201).send({
@@ -71,7 +83,19 @@ export async function registerPhishingSimulationTemplateRoutes(fastify: FastifyI
     },
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
-      const query = templateListQuerySchema.parse(request.query);
+
+      let query;
+      try {
+        query = templateListQuerySchema.parse(request.query);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.code(400).send({
+            success: false,
+            error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: error.errors },
+          });
+        }
+        throw error;
+      }
 
       const result = await phishingService.listPhishingTemplates(tenantId, {
         category: query.category,
@@ -133,7 +157,19 @@ export async function registerPhishingSimulationTemplateRoutes(fastify: FastifyI
     async (request: FastifyRequest, reply: FastifyReply) => {
       const { tenantId } = request.tenantContext!;
       const { templateId } = request.params as { templateId: string };
-      const input = templateInputSchema.partial().parse(request.body);
+
+      let input;
+      try {
+        input = templateInputSchema.partial().parse(request.body);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          return reply.code(400).send({
+            success: false,
+            error: { code: 'VALIDATION_ERROR', message: 'Invalid input', details: error.errors },
+          });
+        }
+        throw error;
+      }
 
       try {
         const template = await phishingService.updatePhishingTemplate(
