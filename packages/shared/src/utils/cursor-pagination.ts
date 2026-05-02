@@ -1,6 +1,13 @@
 import { cursorPaginationMetaSchema, cursorPaginationSchema } from '../schemas/common.schema.js';
+import {
+  DEFAULT_PAGINATION_LIMIT,
+  MAX_PAGINATION_LIMIT,
+  MIN_PAGINATION_LIMIT,
+} from '../constants/pagination.js';
 
 import type { CursorPaginationInput, CursorPaginationMeta } from '../types/common.js';
+
+export { DEFAULT_PAGINATION_LIMIT, MAX_PAGINATION_LIMIT, MIN_PAGINATION_LIMIT };
 
 export interface CursorPayload {
   offset: number;
@@ -84,10 +91,6 @@ export function buildCursorPaginationMeta(
 export function validateCursorPaginationMeta(meta: unknown): meta is CursorPaginationMeta {
   return cursorPaginationMetaSchema.safeParse(meta).success;
 }
-
-export const DEFAULT_PAGINATION_LIMIT = 25;
-export const MAX_PAGINATION_LIMIT = 100;
-export const MIN_PAGINATION_LIMIT = 1;
 
 export function clampLimit(limit: number): number {
   return Math.max(MIN_PAGINATION_LIMIT, Math.min(MAX_PAGINATION_LIMIT, limit));

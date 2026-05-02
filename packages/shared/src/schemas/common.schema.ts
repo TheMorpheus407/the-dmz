@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { DEFAULT_PAGINATION_LIMIT } from '../constants/pagination.js';
+
 export const sortOrderSchema = z.enum(['asc', 'desc']);
 
 export type SortOrderInput = z.infer<typeof sortOrderSchema>;
@@ -7,7 +9,7 @@ export type SortOrderInput = z.infer<typeof sortOrderSchema>;
 export const cursorPaginationSchema = z
   .object({
     cursor: z.string().optional(),
-    limit: z.coerce.number().int().min(1).max(100).default(25),
+    limit: z.coerce.number().int().min(1).max(100).default(DEFAULT_PAGINATION_LIMIT),
   })
   .strict();
 
