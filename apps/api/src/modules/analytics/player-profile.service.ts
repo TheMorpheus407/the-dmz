@@ -36,6 +36,8 @@ export class PlayerProfileService {
   private readonly MIN_CALIBRATION_EVIDENCE = 20;
   private readonly MAX_HISTORY_POINTS = 1000;
   private readonly LOW_EVIDENCE_PRIORITY_THRESHOLD = 10;
+  private readonly EVIDENCE_TTL_DAYS = 90;
+  private readonly MAX_TOTAL_EVIDENCE_POINTS = 5000;
 
   public computeInitialProfile(
     userId: string,
@@ -236,7 +238,9 @@ export class PlayerProfileService {
 
   private addEvidencePoint(domain: string, score: number, timestamp: string): void {
     const key = domain;
-    const history = this.evidenceHistory.get(key) || [];
+    let history = this.evidenceHistory.get(key) || [];
+
+    history = this.evictStaleFromArray(history, this.EVIDENCE_TTL_DAYS);
 
     history.push({
       timestamp,
@@ -249,6 +253,91 @@ export class PlayerProfileService {
     }
 
     this.evidenceHistory.set(key, history);
+    this.evictOldestEntriesIfNeeded();
+  }
+
+  private evictStaleFromArray(history: EvidencePoint[], ttlDays: number): EvidencePoint[] {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - ttlDays);
+    return history.filter((ep) => new Date(ep.timestamp) >= cutoffDate);
+  }
+
+  private evictOldestEntriesIfNeeded(): void {
+    const totalSize = this.getEvidenceHistorySize();
+    if (totalSize <= this.MAX_TOTAL_EVIDENCE_POINTS) {
+      return;
+    }
+
+    const entries = this.collectAllEntries();
+    entries.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+    const toEvict = totalSize - this.MAX_TOTAL_EVIDENCE_POINTS;
+    const evictIndices = this.computeEvictIndices(entries, toEvict);
+
+    this.applyEviction(evictIndices);
+  }
+
+  private collectAllEntries(): Array<{ domain: string; timestamp: string; index: number }> {
+    const entries: Array<{ domain: string; timestamp: string; index: number }> = [];
+    for (const [domain, history] of this.evidenceHistory.entries()) {
+      history.forEach((ep, index) => {
+        entries.push({ domain, timestamp: ep.timestamp, index });
+      });
+    }
+    return entries;
+  }
+
+  private computeEvictIndices(
+    entries: Array<{ domain: string; timestamp: string; index: number }>,
+    toEvict: number,
+  ): Map<string, number[]> {
+    const evictIndices = new Map<string, number[]>();
+    for (let i = 0; i < toEvict; i++) {
+      const entry = entries[i];
+      if (!evictIndices.has(entry.domain)) {
+        evictIndices.set(entry.domain, []);
+      }
+      evictIndices.get(entry.domain)!.push(entry.index);
+    }
+    return evictIndices;
+  }
+
+  private applyEviction(evictIndices: Map<string, number[]>): void {
+    for (const [domain, indices] of evictIndices.entries()) {
+      indices.sort((a, b) => b - a);
+      const domainHistory = this.evidenceHistory.get(domain);
+      if (domainHistory) {
+        for (const idx of indices) {
+          domainHistory.splice(idx, 1);
+        }
+        if (domainHistory.length === 0) {
+          this.evidenceHistory.delete(domain);
+        }
+      }
+    }
+  }
+
+  public getEvidenceHistorySize(): number {
+    let total = 0;
+    for (const history of this.evidenceHistory.values()) {
+      total += history.length;
+    }
+    return total;
+  }
+
+  public getEvidenceHistory(domain: string): EvidencePoint[] {
+    return this.evidenceHistory.get(domain) || [];
+  }
+
+  public cleanupStaleEvidence(days: number): void {
+    for (const [domain, history] of this.evidenceHistory.entries()) {
+      const filtered = this.evictStaleFromArray(history, days);
+      if (filtered.length === 0) {
+        this.evidenceHistory.delete(domain);
+      } else {
+        this.evidenceHistory.set(domain, filtered);
+      }
+    }
   }
 
   private getFreshnessFactor(lastReviewedAt?: string, lastUpdated?: string): number {

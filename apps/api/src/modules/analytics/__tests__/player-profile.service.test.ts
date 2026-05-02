@@ -243,4 +243,269 @@ describe('PlayerProfileService', () => {
       expect(contextFactor).toBe(1.3);
     });
   });
+
+  describe('evidenceHistory bounded growth', () => {
+    it('should not grow unbounded as new domains are added over time', () => {
+      const oldTimestamp = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString();
+      const recentTimestamp = new Date().toISOString();
+
+      for (let i = 0; i < 5100; i++) {
+        const domain = `domain_${i}`;
+        const profile = {
+          userId: 'user-1',
+          tenantId: 'tenant-1',
+          totalSessions: 1,
+          totalDaysPlayed: 1,
+          phishingDetectionRate: 0.5,
+          falsePositiveRate: 0.5,
+          avgDecisionTimeSeconds: null,
+          indicatorProficiency: {} as Record<string, unknown>,
+          competencyScores: {
+            [domain]: { score: 50, evidenceCount: 0, lastUpdated: oldTimestamp },
+          },
+          skillRating: 1000,
+          lastComputedAt: new Date(),
+          createdAt: new Date(),
+          calibrationPhase: 'active' as const,
+          calibrationStartDate: new Date(),
+          trend30d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+          trend90d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+          recommendedFocus: [] as string[],
+          confidenceIntervals: {} as Record<string, { lower: number; upper: number; confidence: number }>,
+          lastSnapshotAt: new Date(),
+        };
+
+        const event: DomainEvent = {
+          eventId: `event-${i}`,
+          eventType: 'game.decision.approved',
+          timestamp: recentTimestamp,
+          correlationId: 'corr-1',
+          tenantId: 'tenant-1',
+          userId: 'user-1',
+          source: 'game',
+          payload: {
+            competency_tags: [domain],
+            outcome: 'correct',
+            difficulty_tier: 'tier_3',
+          },
+          version: 1,
+        };
+
+        playerProfileService.updateProfileFromEvent(profile, event);
+      }
+
+      const historySize = playerProfileService.getEvidenceHistorySize();
+      expect(historySize).toBeLessThanOrEqual(5000);
+    });
+
+    it('should evict evidence points older than TTL threshold', () => {
+      const domain = 'phishing_detection';
+      const oldTimestamp = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString();
+      const recentTimestamp = new Date().toISOString();
+
+      const profile = {
+        userId: 'user-1',
+        tenantId: 'tenant-1',
+        totalSessions: 1,
+        totalDaysPlayed: 1,
+        phishingDetectionRate: 0.5,
+        falsePositiveRate: 0.5,
+        avgDecisionTimeSeconds: null,
+        indicatorProficiency: {} as Record<string, unknown>,
+        competencyScores: {
+          [domain]: { score: 50, evidenceCount: 0, lastUpdated: oldTimestamp },
+        },
+        skillRating: 1000,
+        lastComputedAt: new Date(),
+        createdAt: new Date(),
+        calibrationPhase: 'active' as const,
+        calibrationStartDate: new Date(),
+        trend30d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+        trend90d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+        recommendedFocus: [] as string[],
+        confidenceIntervals: {} as Record<string, { lower: number; upper: number; confidence: number }>,
+        lastSnapshotAt: new Date(),
+      };
+
+      const oldEvent: DomainEvent = {
+        eventId: 'old-event',
+        eventType: 'game.decision.approved',
+        timestamp: oldTimestamp,
+        correlationId: 'corr-1',
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        source: 'game',
+        payload: {
+          competency_tags: [domain],
+          outcome: 'correct',
+          difficulty_tier: 'tier_3',
+        },
+        version: 1,
+      };
+
+      playerProfileService.updateProfileFromEvent(profile, oldEvent);
+
+      const recentEvent: DomainEvent = {
+        eventId: 'recent-event',
+        eventType: 'game.decision.approved',
+        timestamp: recentTimestamp,
+        correlationId: 'corr-1',
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        source: 'game',
+        payload: {
+          competency_tags: [domain],
+          outcome: 'correct',
+          difficulty_tier: 'tier_3',
+        },
+        version: 1,
+      };
+
+      playerProfileService.updateProfileFromEvent(profile, recentEvent);
+
+      const history = playerProfileService.getEvidenceHistory(domain);
+      const hasOldEntry = history.some((ep) => ep.timestamp === oldTimestamp);
+      expect(hasOldEntry).toBe(false);
+    });
+
+    it('should provide method to cleanup stale evidence for inactive domains', () => {
+      const inactiveDomain = 'inactive_domain';
+      const activeDomain = 'phishing_detection';
+      const oldTimestamp = new Date(Date.now() - 100 * 24 * 60 * 60 * 1000).toISOString();
+      const recentTimestamp = new Date().toISOString();
+
+      const inactiveProfile = {
+        userId: 'user-1',
+        tenantId: 'tenant-1',
+        totalSessions: 1,
+        totalDaysPlayed: 1,
+        phishingDetectionRate: 0.5,
+        falsePositiveRate: 0.5,
+        avgDecisionTimeSeconds: null,
+        indicatorProficiency: {} as Record<string, unknown>,
+        competencyScores: {
+          [inactiveDomain]: { score: 50, evidenceCount: 0, lastUpdated: oldTimestamp },
+        },
+        skillRating: 1000,
+        lastComputedAt: new Date(),
+        createdAt: new Date(),
+        calibrationPhase: 'active' as const,
+        calibrationStartDate: new Date(),
+        trend30d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+        trend90d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+        recommendedFocus: [] as string[],
+        confidenceIntervals: {} as Record<string, { lower: number; upper: number; confidence: number }>,
+        lastSnapshotAt: new Date(),
+      };
+
+      const activeProfile = {
+        userId: 'user-1',
+        tenantId: 'tenant-1',
+        totalSessions: 1,
+        totalDaysPlayed: 1,
+        phishingDetectionRate: 0.5,
+        falsePositiveRate: 0.5,
+        avgDecisionTimeSeconds: null,
+        indicatorProficiency: {} as Record<string, unknown>,
+        competencyScores: {
+          [activeDomain]: { score: 50, evidenceCount: 0, lastUpdated: recentTimestamp },
+        },
+        skillRating: 1000,
+        lastComputedAt: new Date(),
+        createdAt: new Date(),
+        calibrationPhase: 'active' as const,
+        calibrationStartDate: new Date(),
+        trend30d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+        trend90d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+        recommendedFocus: [] as string[],
+        confidenceIntervals: {} as Record<string, { lower: number; upper: number; confidence: number }>,
+        lastSnapshotAt: new Date(),
+      };
+
+      const inactiveEvent: DomainEvent = {
+        eventId: 'inactive-event',
+        eventType: 'game.decision.approved',
+        timestamp: oldTimestamp,
+        correlationId: 'corr-1',
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        source: 'game',
+        payload: { competency_tags: [inactiveDomain], outcome: 'correct', difficulty_tier: 'tier_3' },
+        version: 1,
+      };
+
+      const activeEvent: DomainEvent = {
+        eventId: 'active-event',
+        eventType: 'game.decision.approved',
+        timestamp: recentTimestamp,
+        correlationId: 'corr-1',
+        tenantId: 'tenant-1',
+        userId: 'user-1',
+        source: 'game',
+        payload: { competency_tags: [activeDomain], outcome: 'correct', difficulty_tier: 'tier_3' },
+        version: 1,
+      };
+
+      playerProfileService.updateProfileFromEvent(inactiveProfile, inactiveEvent);
+      playerProfileService.updateProfileFromEvent(activeProfile, activeEvent);
+
+      const initialSize = playerProfileService.getEvidenceHistorySize();
+      expect(initialSize).toBeGreaterThan(0);
+
+      playerProfileService.cleanupStaleEvidence(30);
+
+      const sizeAfterCleanup = playerProfileService.getEvidenceHistorySize();
+      expect(sizeAfterCleanup).toBeLessThan(initialSize);
+      expect(playerProfileService.getEvidenceHistory(activeDomain)).toBeDefined();
+    });
+
+    it('should auto-evict oldest entries when total Map size exceeds limit', () => {
+      const oldTimestamp = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
+      const recentTimestamp = new Date().toISOString();
+
+      for (let i = 0; i < 5001; i++) {
+        const domain = `eviction_test_domain_${i}`;
+        const profile = {
+          userId: 'user-1',
+          tenantId: 'tenant-1',
+          totalSessions: 1,
+          totalDaysPlayed: 1,
+          phishingDetectionRate: 0.5,
+          falsePositiveRate: 0.5,
+          avgDecisionTimeSeconds: null,
+          indicatorProficiency: {} as Record<string, unknown>,
+          competencyScores: {
+            [domain]: { score: 50, evidenceCount: 0, lastUpdated: oldTimestamp },
+          },
+          skillRating: 1000,
+          lastComputedAt: new Date(),
+          createdAt: new Date(),
+          calibrationPhase: 'active' as const,
+          calibrationStartDate: new Date(),
+          trend30d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+          trend90d: {} as Record<string, { slope: number; dataPoints: number; lastCalculated: string }>,
+          recommendedFocus: [] as string[],
+          confidenceIntervals: {} as Record<string, { lower: number; upper: number; confidence: number }>,
+          lastSnapshotAt: new Date(),
+        };
+
+        const event: DomainEvent = {
+          eventId: `eviction-event-${i}`,
+          eventType: 'game.decision.approved',
+          timestamp: recentTimestamp,
+          correlationId: 'corr-1',
+          tenantId: 'tenant-1',
+          userId: 'user-1',
+          source: 'game',
+          payload: { competency_tags: [domain], outcome: 'correct', difficulty_tier: 'tier_3' },
+          version: 1,
+        };
+
+        playerProfileService.updateProfileFromEvent(profile, event);
+      }
+
+      const sizeAfterAdding = playerProfileService.getEvidenceHistorySize();
+      expect(sizeAfterAdding).toBeLessThanOrEqual(5000);
+    });
+  });
 });
