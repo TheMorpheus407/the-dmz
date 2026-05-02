@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { reportTypeSchema, reportStatusSchema } from '@the-dmz/shared/schemas';
+
 import { authGuard } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
@@ -11,14 +13,6 @@ import { getPlayerModerationHistory, getModerationActions } from './moderation.s
 import type { AppConfig } from '../../config.js';
 import type { FastifyInstance } from 'fastify';
 import type { AuthenticatedUser } from '../auth/index.js';
-
-const reportTypeSchema = z.enum(['harassment', 'spam', 'cheating', 'content', 'other']);
-const reportStatusSchema = z.enum([
-  'pending',
-  'under_review',
-  'resolved_actioned',
-  'resolved_dismissed',
-]);
 
 const moderationHistoryQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),

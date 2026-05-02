@@ -1,5 +1,11 @@
 import { z } from 'zod';
 
+import {
+  reportTypeSchema,
+  reportStatusSchema,
+  reportResolutionSchema,
+} from '@the-dmz/shared/schemas';
+
 import { authGuard } from '../../shared/middleware/authorization.js';
 import { tenantContext } from '../../shared/middleware/tenant-context.js';
 import { tenantStatusGuard } from '../../shared/middleware/tenant-status-guard.js';
@@ -22,21 +28,6 @@ import type { AuthenticatedUser } from '../auth/index.js';
 interface ModeratorUser extends AuthenticatedUser {
   role: 'moderator' | 'admin';
 }
-
-const reportTypeSchema = z.enum(['harassment', 'spam', 'cheating', 'content', 'other']);
-const reportStatusSchema = z.enum([
-  'pending',
-  'under_review',
-  'resolved_actioned',
-  'resolved_dismissed',
-]);
-const reportResolutionSchema = z.enum([
-  'warning',
-  'mute',
-  'content_removal',
-  'restriction',
-  'dismissed',
-]);
 
 const contentReferenceSchema = z.object({
   type: z.string(),
