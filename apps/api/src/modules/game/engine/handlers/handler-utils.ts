@@ -1,5 +1,7 @@
 import {
   GAME_ACTIONS,
+  FACILITY_TIER_LEVELS,
+  UPGRADE_STATUS,
   type GameState,
   type UpgradeType,
   type UpgradeDefinition,
@@ -110,11 +112,11 @@ export function completeInstallations(state: GameState, events: DomainEvent[]): 
 
   for (const upgrade of facility.upgrades) {
     if (
-      upgrade.status === 'installing' &&
+      upgrade.status === UPGRADE_STATUS.INSTALLING &&
       upgrade.completesDay &&
       state.currentDay >= upgrade.completesDay
     ) {
-      upgrade.status = 'completed';
+      upgrade.status = UPGRADE_STATUS.COMPLETED;
       upgrade.isCompleted = true;
       upgrade.completionDay = state.currentDay;
 
@@ -164,7 +166,7 @@ export function validateUpgradePurchase(
     throw new Error('PURCHASE_FACILITY_UPGRADE not allowed in current phase');
   }
 
-  const tierOrder = ['outpost', 'station', 'vault', 'fortress', 'citadel'];
+  const tierOrder = Object.values(FACILITY_TIER_LEVELS);
   const currentTierIndex = tierOrder.indexOf(state.facilityTier);
   const requiredTierIndex = tierOrder.indexOf(upgradeDef.minTier);
   if (currentTierIndex < requiredTierIndex) {
@@ -202,7 +204,7 @@ export function installUpgrade(
   );
 
   if (existingInProgress) {
-    existingInProgress.status = 'installing';
+    existingInProgress.status = UPGRADE_STATUS.INSTALLING;
     existingInProgress.completesDay = state.currentDay + upgradeDef.installationDays;
     existingInProgress.tierLevel += 1;
     return;
@@ -214,7 +216,7 @@ export function installUpgrade(
     upgradeType: upgradeType,
     category: upgradeDef.category,
     tierLevel: 1,
-    status: isZeroDayInstall ? 'completed' : 'installing',
+    status: isZeroDayInstall ? UPGRADE_STATUS.COMPLETED : UPGRADE_STATUS.INSTALLING,
     purchasedDay: state.currentDay,
     completesDay: isZeroDayInstall
       ? state.currentDay

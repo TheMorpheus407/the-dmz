@@ -88,6 +88,14 @@ export const upgradeStatusSchema = z.enum([
   'maintained',
 ]);
 
+export const UPGRADE_STATUS = {
+  AVAILABLE: 'available',
+  PURCHASED: 'purchased',
+  INSTALLING: 'installing',
+  COMPLETED: 'completed',
+  MAINTAINED: 'maintained',
+} as const;
+
 export const upgradeCategorySchema = z.enum([
   'capacity',
   'efficiency',
