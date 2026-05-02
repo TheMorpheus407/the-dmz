@@ -32,31 +32,65 @@ export interface PlayerProfileUpdate {
   requestedVerification: boolean;
 }
 
+interface TTLCacheEntry<T> {
+  value: T;
+  expiresAt: number;
+}
+
+const PLAYER_PROFILE_TTL_MS = 24 * 60 * 60 * 1000;
+const THREAT_TIER_TTL_MS = 60 * 60 * 1000;
+
 export class ThreatDetectionService {
   private config: ThreatEngineConfig;
-  private playerProfiles: Map<string, PlayerBehaviorProfile> = new Map();
-  private currentThreatTiers: Map<string, ThreatTierLevel> = new Map();
-  private lastTierChangeDays: Map<string, number> = new Map();
+  private playerProfiles: Map<string, TTLCacheEntry<PlayerBehaviorProfile>> = new Map();
+  private currentThreatTiers: Map<string, TTLCacheEntry<ThreatTierLevel>> = new Map();
+  private lastTierChangeDays: Map<string, TTLCacheEntry<number>> = new Map();
 
   constructor(config: Partial<ThreatEngineConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }
 
-  public getOrCreatePlayerProfile(sessionId: string): PlayerBehaviorProfile {
-    let profile = this.playerProfiles.get(sessionId);
-    if (!profile) {
-      profile = createInitialPlayerBehaviorProfile();
-      this.playerProfiles.set(sessionId, profile);
+  private getCurrentTime(): number {
+    return Date.now();
+  }
+
+  private getWithTTL<T>(map: Map<string, TTLCacheEntry<T>>, sessionId: string): T | undefined {
+    const entry = map.get(sessionId);
+    if (!entry) return undefined;
+    if (entry.expiresAt < this.getCurrentTime()) {
+      map.delete(sessionId);
+      return undefined;
     }
-    return profile;
+    return entry.value;
+  }
+
+  private setWithTTL<T>(map: Map<string, TTLCacheEntry<T>>, sessionId: string, value: T, ttlMs: number): void {
+    map.set(sessionId, {
+      value,
+      expiresAt: this.getCurrentTime() + ttlMs,
+    });
+  }
+
+  public getOrCreatePlayerProfile(sessionId: string): PlayerBehaviorProfile {
+    let entry = this.playerProfiles.get(sessionId);
+    if (!entry || entry.expiresAt < this.getCurrentTime()) {
+      if (entry) {
+        this.playerProfiles.delete(sessionId);
+      }
+      const profile = createInitialPlayerBehaviorProfile();
+      this.setWithTTL(this.playerProfiles, sessionId, profile, PLAYER_PROFILE_TTL_MS);
+      return profile;
+    }
+    return entry.value;
   }
 
   public getPlayerProfile(sessionId: string): PlayerBehaviorProfile | undefined {
-    return this.playerProfiles.get(sessionId);
+    return this.getWithTTL(this.playerProfiles, sessionId);
   }
 
   public updatePlayerProfile(sessionId: string, update: PlayerProfileUpdate): void {
     const profile = this.getOrCreatePlayerProfile(sessionId);
+    this.setWithTTL(this.playerProfiles, sessionId, profile, PLAYER_PROFILE_TTL_MS);
 
     if (update.detected) {
       profile.streakCorrect++;
@@ -86,11 +120,11 @@ export class ThreatDetectionService {
   }
 
   public getThreatTier(sessionId: string): ThreatTierLevel {
-    return this.currentThreatTiers.get(sessionId) ?? 'low';
+    return this.getWithTTL(this.currentThreatTiers, sessionId) ?? 'low';
   }
 
   public setThreatTier(sessionId: string, tier: ThreatTierLevel): void {
-    this.currentThreatTiers.set(sessionId, tier);
+    this.setWithTTL(this.currentThreatTiers, sessionId, tier, THREAT_TIER_TTL_MS);
   }
 
   public calculateThreatTier(
@@ -98,7 +132,7 @@ export class ThreatDetectionService {
     sessionId: string,
   ): { tier: ThreatTierLevel; changed: boolean; event?: ThreatTierChangeEvent } {
     const currentTier = this.getThreatTier(sessionId);
-    const lastChangeDay = this.lastTierChangeDays.get(sessionId) ?? 0;
+    const lastChangeDay = this.getWithTTL(this.lastTierChangeDays, sessionId) ?? 0;
     const daysSinceLastChange = state.currentDay - lastChangeDay;
 
     if (daysSinceLastChange < this.config.minHoldDays) {
@@ -152,8 +186,8 @@ export class ThreatDetectionService {
       return { tier: currentTier, changed: false };
     }
 
-    this.currentThreatTiers.set(sessionId, newTier);
-    this.lastTierChangeDays.set(sessionId, state.currentDay);
+    this.setWithTTL(this.currentThreatTiers, sessionId, newTier, THREAT_TIER_TTL_MS);
+    this.setWithTTL(this.lastTierChangeDays, sessionId, state.currentDay, THREAT_TIER_TTL_MS);
 
     const isEscalation = newIndex > currentIndex;
     const narrativeKey = isEscalation ? 'escalation' : 'deescalation';

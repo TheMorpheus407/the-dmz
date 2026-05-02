@@ -25,8 +25,36 @@ export interface ThreatGenerationResult {
   coopScalingApplied: CoopThreatScaling | undefined;
 }
 
+interface TTLCacheEntry<T> {
+  value: T;
+  expiresAt: number;
+}
+
+const INTENSITY_GAUGE_TTL_MS = 30 * 60 * 1000;
+
 export class ThreatResponseService {
-  private intensityGauges: Map<string, number> = new Map();
+  private intensityGauges: Map<string, TTLCacheEntry<number>> = new Map();
+
+  private getCurrentTime(): number {
+    return Date.now();
+  }
+
+  private getWithTTL<T>(map: Map<string, TTLCacheEntry<T>>, sessionId: string): T | undefined {
+    const entry = map.get(sessionId);
+    if (!entry) return undefined;
+    if (entry.expiresAt < this.getCurrentTime()) {
+      map.delete(sessionId);
+      return undefined;
+    }
+    return entry.value;
+  }
+
+  private setWithTTL<T>(map: Map<string, TTLCacheEntry<T>>, sessionId: string, value: T, ttlMs: number): void {
+    map.set(sessionId, {
+      value,
+      expiresAt: this.getCurrentTime() + ttlMs,
+    });
+  }
 
   public generateAttacks(
     state: GameState,
@@ -126,7 +154,7 @@ export class ThreatResponseService {
   }
 
   public getIntensityGauge(sessionId: string): number {
-    return this.intensityGauges.get(sessionId) ?? 0;
+    return this.getWithTTL(this.intensityGauges, sessionId) ?? 0;
   }
 
   public updateIntensityGauge(
@@ -144,7 +172,7 @@ export class ThreatResponseService {
     gauge -= timeSinceLastAttack * 0.02;
 
     gauge = Math.max(0, Math.min(1, gauge));
-    this.intensityGauges.set(sessionId, gauge);
+    this.setWithTTL(this.intensityGauges, sessionId, gauge, INTENSITY_GAUGE_TTL_MS);
 
     return gauge;
   }
