@@ -3,6 +3,7 @@ import { GAME_EVENT_TYPES } from '@the-dmz/shared';
 import type { DomainEvent } from '../../../../shared/events/event-types.js';
 
 export const GAME_ENGINE_EVENTS = {
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
   SESSION_STARTED: GAME_EVENT_TYPES.SESSION_STARTED as string,
   SESSION_ENDED: GAME_EVENT_TYPES.SESSION_ENDED as string,
   SESSION_PAUSED: GAME_EVENT_TYPES.SESSION_PAUSED as string,
@@ -56,6 +57,7 @@ export const GAME_ENGINE_EVENTS = {
   TRUST_CHANGED: GAME_EVENT_TYPES.TRUST_MODIFIED as string,
   INTEL_CHANGED: GAME_EVENT_TYPES.INTEL_CHANGED as string,
   LEVEL_UP: GAME_EVENT_TYPES.LEVEL_UP as string,
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
 } as const satisfies Record<string, string>;
 
 export type GameEngineEventType = (typeof GAME_ENGINE_EVENTS)[keyof typeof GAME_ENGINE_EVENTS];
@@ -426,6 +428,24 @@ export interface LevelUpPayload {
   newLevel: number;
   xpRequired: number;
   xpAwarded: number;
+}
+
+export function createGameEngineEvent<T extends GameEngineEventType>(
+  eventType: T,
+  params: GameEngineEventParams,
+  payload: GameEngineEventPayloadMap[T],
+): GameEngineDomainEvent<T> {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType,
+    timestamp: new Date().toISOString(),
+    correlationId: params.correlationId,
+    tenantId: params.tenantId,
+    userId: params.userId,
+    source: params.source,
+    version: params.version,
+    payload,
+  };
 }
 
 export type GameEngineEventPayloadMap = {

@@ -14,6 +14,7 @@ import {
   type EmailDecisionEvaluatedPayload,
   type VerificationPacketGeneratedPayload,
   type InboxLoadedPayload,
+  createGameEngineEvent,
 } from './shared-types.js';
 
 export type {
@@ -34,191 +35,83 @@ export type {
 export const createEmailReceivedEvent = (
   params: GameEngineEventParams & { payload: EmailReceivedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_RECEIVED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_RECEIVED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(GAME_ENGINE_EVENTS.EMAIL_RECEIVED, params, params.payload);
 };
 
 export const createEmailOpenedEvent = (
   params: GameEngineEventParams & { payload: EmailOpenedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_OPENED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_OPENED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(GAME_ENGINE_EVENTS.EMAIL_OPENED, params, params.payload);
 };
 
 export const createEmailIndicatorMarkedEvent = (
   params: GameEngineEventParams & { payload: EmailIndicatorMarkedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_INDICATOR_MARKED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_INDICATOR_MARKED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(GAME_ENGINE_EVENTS.EMAIL_INDICATOR_MARKED, params, params.payload);
 };
 
 export const createEmailHeaderViewedEvent = (
   params: GameEngineEventParams & { payload: EmailHeaderViewedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_HEADER_VIEWED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_HEADER_VIEWED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(GAME_ENGINE_EVENTS.EMAIL_HEADER_VIEWED, params, params.payload);
 };
 
 export const createEmailUrlHoveredEvent = (
   params: GameEngineEventParams & { payload: EmailUrlHoveredPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_URL_HOVERED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_URL_HOVERED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(GAME_ENGINE_EVENTS.EMAIL_URL_HOVERED, params, params.payload);
 };
 
 export const createEmailAttachmentPreviewedEvent = (
   params: GameEngineEventParams & { payload: EmailAttachmentPreviewedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_ATTACHMENT_PREVIEWED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_ATTACHMENT_PREVIEWED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(
+    GAME_ENGINE_EVENTS.EMAIL_ATTACHMENT_PREVIEWED,
+    params,
+    params.payload,
+  );
 };
 
 export const createEmailVerificationRequestedEvent = (
   params: GameEngineEventParams & { payload: EmailVerificationRequestedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_VERIFICATION_REQUESTED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_VERIFICATION_REQUESTED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(
+    GAME_ENGINE_EVENTS.EMAIL_VERIFICATION_REQUESTED,
+    params,
+    params.payload,
+  );
 };
 
 export const createEmailDecisionSubmittedEvent = (
   params: GameEngineEventParams & { payload: EmailDecisionSubmittedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(GAME_ENGINE_EVENTS.EMAIL_DECISION_SUBMITTED, params, params.payload);
 };
 
 export const createEmailDecisionResolvedEvent = (
   params: GameEngineEventParams & { payload: EmailDecisionResolvedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_DECISION_RESOLVED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_RESOLVED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(GAME_ENGINE_EVENTS.EMAIL_DECISION_RESOLVED, params, params.payload);
 };
 
 export const createEmailDecisionEvaluatedEvent = (
   params: GameEngineEventParams & { payload: EmailDecisionEvaluatedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.EMAIL_DECISION_EVALUATED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.EMAIL_DECISION_EVALUATED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(GAME_ENGINE_EVENTS.EMAIL_DECISION_EVALUATED, params, params.payload);
 };
 
 export const createVerificationPacketGeneratedEvent = (
   params: GameEngineEventParams & { payload: VerificationPacketGeneratedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.VERIFICATION_PACKET_GENERATED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.VERIFICATION_PACKET_GENERATED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(
+    GAME_ENGINE_EVENTS.VERIFICATION_PACKET_GENERATED,
+    params,
+    params.payload,
+  );
 };
 
 export const createInboxLoadedEvent = (
   params: GameEngineEventParams & { payload: InboxLoadedPayload },
 ): GameEngineDomainEvent<typeof GAME_ENGINE_EVENTS.INBOX_LOADED> => {
-  return {
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.INBOX_LOADED,
-    timestamp: new Date().toISOString(),
-    correlationId: params.correlationId,
-    tenantId: params.tenantId,
-    userId: params.userId,
-    source: params.source,
-    version: params.version,
-    payload: params.payload,
-  };
+  return createGameEngineEvent(GAME_ENGINE_EVENTS.INBOX_LOADED, params, params.payload);
 };
