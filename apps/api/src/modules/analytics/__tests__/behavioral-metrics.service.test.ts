@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 
 import { BehavioralMetricsService } from '../behavioral-metrics.service.js';
 
 import type { DomainEvent } from '../../../shared/events/event-types.js';
+
+const EMAIL_RECEIVE_TIME_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 describe('BehavioralMetricsService', () => {
   let service: BehavioralMetricsService;
@@ -138,6 +140,190 @@ describe('BehavioralMetricsService', () => {
 
       const update = service.updateMetricsFromEvent(metrics, event);
       expect(update.verificationActions).toBe(1);
+    });
+  });
+
+  describe('emailReceiveTimes TTL eviction', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const createPhishingEmailReceivedEvent = (emailId: string, timestamp: string): DomainEvent => ({
+      eventId: `event-${emailId}-received`,
+      eventType: 'game.email.received',
+      timestamp,
+      correlationId: 'corr-1',
+      tenantId: 'tenant-1',
+      userId: 'user-1',
+      source: 'game',
+      payload: {
+        email_id: emailId,
+        is_phishing: true,
+      },
+      version: 1,
+    });
+
+    const createPhishingDecisionEvent = (
+      emailId: string,
+      timestamp: string,
+      outcome: 'correct' | 'incorrect',
+    ): DomainEvent => ({
+      eventId: `event-${emailId}-decision`,
+      eventType: 'game.decision.approved',
+      timestamp,
+      correlationId: 'corr-1',
+      tenantId: 'tenant-1',
+      userId: 'user-1',
+      source: 'game',
+      payload: {
+        email_id: emailId,
+        competency_tags: ['phishing_detection'],
+        outcome,
+        threat_tier: 'high',
+      },
+      version: 1,
+    });
+
+    it('should calculate meanTimeToReport for email reported before TTL expires', () => {
+      const metrics = service.getInitialMetrics();
+      const receiveTime = new Date();
+      vi.setSystemTime(receiveTime);
+
+      service.updateMetricsFromEvent(
+        metrics,
+        createPhishingEmailReceivedEvent('email-1', receiveTime.toISOString()),
+      );
+
+      const decisionTime = new Date(receiveTime.getTime() + 5000);
+      vi.setSystemTime(decisionTime);
+
+      const update = service.updateMetricsFromEvent(
+        metrics,
+        createPhishingDecisionEvent('email-1', decisionTime.toISOString(), 'correct'),
+      );
+
+      expect(update.meanTimeToReportMs).toBe(5000);
+      expect(update.reportTimes).toEqual([5000]);
+    });
+
+    it('should not calculate meanTimeToReport for email received after TTL expired', () => {
+      const metrics = service.getInitialMetrics();
+      const receiveTime = new Date();
+      vi.setSystemTime(receiveTime);
+
+      service.updateMetricsFromEvent(
+        metrics,
+        createPhishingEmailReceivedEvent('email-1', receiveTime.toISOString()),
+      );
+
+      vi.advanceTimersByTime(EMAIL_RECEIVE_TIME_TTL_MS + 1);
+
+      const decisionTime = new Date(receiveTime.getTime() + EMAIL_RECEIVE_TIME_TTL_MS + 10000);
+      vi.setSystemTime(decisionTime);
+
+      const update = service.updateMetricsFromEvent(
+        metrics,
+        createPhishingDecisionEvent('email-1', decisionTime.toISOString(), 'correct'),
+      );
+
+      expect(update.meanTimeToReportMs).toBeUndefined();
+      expect(update.reportTimes).toBeUndefined();
+    });
+
+    it('should track different emails independently with TTL', () => {
+      const metrics = service.getInitialMetrics();
+      const time1 = new Date();
+      vi.setSystemTime(time1);
+
+      service.updateMetricsFromEvent(
+        metrics,
+        createPhishingEmailReceivedEvent('email-1', time1.toISOString()),
+      );
+
+      const time2 = new Date(time1.getTime() + 10000);
+      vi.setSystemTime(time2);
+      service.updateMetricsFromEvent(
+        metrics,
+        createPhishingEmailReceivedEvent('email-2', time2.toISOString()),
+      );
+
+      vi.advanceTimersByTime(EMAIL_RECEIVE_TIME_TTL_MS + 1);
+
+      const decisionTime = new Date(time2.getTime() + EMAIL_RECEIVE_TIME_TTL_MS + 5000);
+      vi.setSystemTime(decisionTime);
+
+      const update = service.updateMetricsFromEvent(
+        metrics,
+        createPhishingDecisionEvent('email-2', decisionTime.toISOString(), 'correct'),
+      );
+
+      expect(update.meanTimeToReportMs).toBe(5000);
+      expect(update.reportTimes).toEqual([5000]);
+    });
+
+    it('should not affect in-flight email processing after TTL for unreported email', () => {
+      const metrics = service.getInitialMetrics();
+      const receiveTime = new Date();
+      vi.setSystemTime(receiveTime);
+
+      service.updateMetricsFromEvent(
+        metrics,
+        createPhishingEmailReceivedEvent('email-1', receiveTime.toISOString()),
+      );
+
+      const time2 = new Date(receiveTime.getTime() + 10000);
+      vi.setSystemTime(time2);
+      service.updateMetricsFromEvent(
+        metrics,
+        createPhishingEmailReceivedEvent('email-2', time2.toISOString()),
+      );
+
+      vi.advanceTimersByTime(EMAIL_RECEIVE_TIME_TTL_MS + 1);
+
+      const decisionTime = new Date(time2.getTime() + 5000);
+      vi.setSystemTime(decisionTime);
+
+      const update = service.updateMetricsFromEvent(
+        metrics,
+        createPhishingDecisionEvent('email-2', decisionTime.toISOString(), 'correct'),
+      );
+
+      expect(update.meanTimeToReportMs).toBe(5000);
+    });
+
+    it('should handle decision on email within TTL while another email TTL has expired', () => {
+      const metrics = service.getInitialMetrics();
+      const time1 = new Date();
+      vi.setSystemTime(time1);
+
+      service.updateMetricsFromEvent(
+        metrics,
+        createPhishingEmailReceivedEvent('email-1', time1.toISOString()),
+      );
+
+      const time2 = new Date(time1.getTime() + 10000);
+      vi.setSystemTime(time2);
+      service.updateMetricsFromEvent(
+        metrics,
+        createPhishingEmailReceivedEvent('email-2', time2.toISOString()),
+      );
+
+      vi.advanceTimersByTime(EMAIL_RECEIVE_TIME_TTL_MS + 1);
+
+      const decisionTime = new Date(time2.getTime() + 5000);
+      vi.setSystemTime(decisionTime);
+
+      const update = service.updateMetricsFromEvent(
+        metrics,
+        createPhishingDecisionEvent('email-2', decisionTime.toISOString(), 'correct'),
+      );
+
+      expect(update.meanTimeToReportMs).toBe(5000);
+      expect(update.reportTimes).toEqual([5000]);
     });
   });
 });
