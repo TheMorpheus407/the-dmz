@@ -15,7 +15,7 @@ import {
 import { breachService } from '../../breach/index.js';
 import { GAME_ENGINE_EVENTS } from '../events/index.js';
 
-import { isActionAllowedInPhase } from './handler-utils.js';
+import { isActionAllowedInPhase, createGameEvent } from './handler-utils.js';
 
 import type { DomainEvent } from './handler-utils.js';
 
@@ -33,12 +33,11 @@ export function handleResolveIncident(
     incident.resolvedDay = state.currentDay;
     incident.responseActions = action.responseActions;
   }
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.INCIDENT_RESOLVED,
-    timestamp: state.updatedAt,
-    payload: { incidentId: action.incidentId, responseActions: action.responseActions },
-  });
+  events.push(createGameEvent(
+    GAME_ENGINE_EVENTS.INCIDENT_RESOLVED,
+    { incidentId: action.incidentId, responseActions: action.responseActions },
+    state.updatedAt,
+  ));
 }
 
 export function handleTriggerBreach(
@@ -86,29 +85,27 @@ export function handleTriggerBreach(
   );
   state.breachState = breachState;
 
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.BREACH_OCCURRED,
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    GAME_ENGINE_EVENTS.BREACH_OCCURRED,
+    {
       triggerType: action.triggerType,
       severity,
       isBreach,
       trustPenalty: breachResult.trustPenalty,
     },
-  });
+    state.updatedAt,
+  ));
 
   if (isBreach) {
-    events.push({
-      eventId: crypto.randomUUID(),
-      eventType: GAME_ENGINE_EVENTS.BREACH_RANSOM_DISPLAYED,
-      timestamp: state.updatedAt,
-      payload: {
+    events.push(createGameEvent(
+      GAME_ENGINE_EVENTS.BREACH_RANSOM_DISPLAYED,
+      {
         severity,
         currentFunds: state.funds,
         ransomAmount: breachResult.ransomAmount,
       },
-    });
+      state.updatedAt,
+    ));
   }
 }
 
@@ -130,24 +127,22 @@ export function handlePayRansom(
 
   state.funds -= breachState.ransomAmount;
 
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.BREACH_RANSOM_PAID,
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    GAME_ENGINE_EVENTS.BREACH_RANSOM_PAID,
+    {
       amount: breachState.ransomAmount,
       remainingFunds: state.funds,
     },
-  });
+    state.updatedAt,
+  ));
 
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.BREACH_RECOVERY_STARTED,
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    GAME_ENGINE_EVENTS.BREACH_RECOVERY_STARTED,
+    {
       recoveryDays: breachState.recoveryDaysRemaining,
     },
-  });
+    state.updatedAt,
+  ));
 
   state.currentPhase = DAY_PHASES.PHASE_RECOVERY;
 }
@@ -168,29 +163,27 @@ export function handleRefuseRansom(
     state.currentMacroState = SESSION_MACRO_STATES.SESSION_COMPLETED;
     state.currentPhase = DAY_PHASES.PHASE_DAY_END;
 
-    events.push({
-      eventId: crypto.randomUUID(),
-      eventType: GAME_ENGINE_EVENTS.SESSION_GAME_OVER,
-      timestamp: state.updatedAt,
-      payload: {
+    events.push(createGameEvent(
+      GAME_ENGINE_EVENTS.SESSION_GAME_OVER,
+      {
         reason: 'Unable to pay ransom',
         daysSurvived: state.currentDay,
         totalEarnings: breachState.totalLifetimeEarningsAtBreach ?? state.funds,
         breaches: state.analyticsState.breaches,
       },
-    });
+      state.updatedAt,
+    ));
   } else {
     state.currentPhase = DAY_PHASES.PHASE_RECOVERY;
   }
 
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.BREACH_RANSOM_REFUSED,
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    GAME_ENGINE_EVENTS.BREACH_RANSOM_REFUSED,
+    {
       severity: breachState.currentSeverity,
     },
-  });
+    state.updatedAt,
+  ));
 }
 
 export function handleAdvanceRecovery(
@@ -220,37 +213,34 @@ export function handleAdvanceRecovery(
       reputationImpactDaysRemaining: 30,
     };
 
-    events.push({
-      eventId: crypto.randomUUID(),
-      eventType: GAME_ENGINE_EVENTS.BREACH_RECOVERY_COMPLETED,
-      timestamp: state.updatedAt,
-      payload: {
+    events.push(createGameEvent(
+      GAME_ENGINE_EVENTS.BREACH_RECOVERY_COMPLETED,
+      {
         daysInRecovery: breachState.recoveryDaysRemaining,
       },
-    });
+      state.updatedAt,
+    ));
 
-    events.push({
-      eventId: crypto.randomUUID(),
-      eventType: GAME_ENGINE_EVENTS.BREACH_POST_EFFECTS_STARTED,
-      timestamp: state.updatedAt,
-      payload: {
+    events.push(createGameEvent(
+      GAME_ENGINE_EVENTS.BREACH_POST_EFFECTS_STARTED,
+      {
         revenueDepressionDays: 30,
         increasedScrutinyDays: 14,
         reputationImpactDays: 30,
       },
-    });
+      state.updatedAt,
+    ));
   } else {
     state.breachState = result.newState;
 
-    events.push({
-      eventId: crypto.randomUUID(),
-      eventType: GAME_ENGINE_EVENTS.DAY_STARTED,
-      timestamp: state.updatedAt,
-      payload: {
+    events.push(createGameEvent(
+      GAME_ENGINE_EVENTS.DAY_STARTED,
+      {
         day: state.currentDay,
         recoveryDaysRemaining: result.newState.recoveryDaysRemaining,
         narrativeMessage: result.narrativeMessage ?? undefined,
       },
-    });
+      state.updatedAt,
+    ));
   }
 }

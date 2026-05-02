@@ -18,6 +18,19 @@ export interface DomainEvent {
   payload: Record<string, unknown>;
 }
 
+export function createGameEvent<T extends string>(
+  eventType: T,
+  payload: unknown,
+  timestamp: string,
+): DomainEvent {
+  return {
+    eventId: crypto.randomUUID(),
+    eventType,
+    timestamp,
+    payload: payload as Record<string, unknown>,
+  };
+}
+
 export interface AggregatedSecurityDeltas {
   breachProbabilityModifier: number;
   detectionProbabilityModifier: number;
@@ -108,16 +121,15 @@ export function completeInstallations(state: GameState, events: DomainEvent[]): 
       applyUpgradeEffects(state, upgrade.upgradeType);
 
       const upgradeDef = UPGRADE_CATALOG[upgrade.upgradeType];
-      events.push({
-        eventId: crypto.randomUUID(),
-        eventType: 'facility.upgrade.completed',
-        timestamp: state.updatedAt,
-        payload: {
+      events.push(createGameEvent(
+        'facility.upgrade.completed',
+        {
           upgradeType: upgrade.upgradeType,
           category: upgradeDef?.category,
           tierLevel: upgrade.tierLevel,
         },
-      });
+        state.updatedAt,
+      ));
     }
   }
 }

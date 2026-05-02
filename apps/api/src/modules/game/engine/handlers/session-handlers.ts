@@ -13,6 +13,8 @@ import { canTransitionMacroState, isActionAllowedInPhase } from '../state-machin
 import { GAME_ENGINE_EVENTS } from '../events/shared-types.js';
 import { breachService } from '../../breach/index.js';
 
+import { createGameEvent } from './handler-utils.js';
+
 import type { DomainEvent } from './handler-utils.js';
 
 export function handlePauseSession(
@@ -24,12 +26,7 @@ export function handlePauseSession(
     throw new Error('Cannot pause from current state');
   }
   state.currentMacroState = SESSION_MACRO_STATES.SESSION_PAUSED;
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.SESSION_PAUSED,
-    timestamp: state.updatedAt,
-    payload: {},
-  });
+  events.push(createGameEvent(GAME_ENGINE_EVENTS.SESSION_PAUSED, {}, state.updatedAt));
 }
 
 export function handleResumeSession(
@@ -41,12 +38,7 @@ export function handleResumeSession(
     throw new Error('Cannot resume from current state');
   }
   state.currentMacroState = SESSION_MACRO_STATES.SESSION_ACTIVE;
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.SESSION_RESUMED,
-    timestamp: state.updatedAt,
-    payload: {},
-  });
+  events.push(createGameEvent(GAME_ENGINE_EVENTS.SESSION_RESUMED, {}, state.updatedAt));
 }
 
 export function handleAbandonSession(
@@ -58,12 +50,7 @@ export function handleAbandonSession(
     throw new Error('Cannot abandon from current state');
   }
   state.currentMacroState = SESSION_MACRO_STATES.SESSION_ABANDONED;
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.SESSION_ABANDONED,
-    timestamp: state.updatedAt,
-    payload: { reason: action.reason },
-  });
+  events.push(createGameEvent(GAME_ENGINE_EVENTS.SESSION_ABANDONED, { reason: action.reason }, state.updatedAt));
 }
 
 export function handleAdvanceDay(
@@ -92,23 +79,21 @@ export function handleAdvanceDay(
 
   state.analyticsState.totalEmailsProcessed += processedEmails.length;
 
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.DAY_ENDED,
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    GAME_ENGINE_EVENTS.DAY_ENDED,
+    {
       day: state.currentDay - 1,
       emailsProcessed: processedEmails.length,
       emailsDeferred: deferredEmails.length,
     },
-  });
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: GAME_ENGINE_EVENTS.DAY_STARTED,
-    timestamp: state.updatedAt,
-    payload: {
+    state.updatedAt,
+  ));
+  events.push(createGameEvent(
+    GAME_ENGINE_EVENTS.DAY_STARTED,
+    {
       day: state.currentDay,
       deferredEmailsCarried: deferredEmails.length,
     },
-  });
+    state.updatedAt,
+  ));
 }

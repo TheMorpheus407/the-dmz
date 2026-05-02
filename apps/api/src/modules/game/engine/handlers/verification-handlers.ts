@@ -1,6 +1,6 @@
 import { GAME_ACTIONS, type GameState, type FlagDiscrepancyPayload } from '@the-dmz/shared';
 
-import { isActionAllowedInPhase } from './handler-utils.js';
+import { isActionAllowedInPhase, createGameEvent } from './handler-utils.js';
 
 import type { DomainEvent } from './handler-utils.js';
 
@@ -22,16 +22,15 @@ export function handleFlagDiscrepancy(
     throw new Error('Artifact not found in packet');
   }
 
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'game.verification.discrepancy_flagged',
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    'game.verification.discrepancy_flagged',
+    {
       emailId: action.emailId,
       packetId: packet.packetId,
       artifactId: action.artifactId,
       documentType: artifact.documentType,
       reason: action.reason,
     },
-  });
+    state.updatedAt,
+  ));
 }

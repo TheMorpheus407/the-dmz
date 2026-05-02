@@ -13,6 +13,7 @@ import { GAME_ACTIONS } from '@the-dmz/shared';
 import { UPGRADE_CATALOG } from './upgrade-catalog.js';
 import {
   isActionAllowedInPhase,
+  createGameEvent,
   completeInstallations,
   recalculateSecurityOpEx,
   recalculateAttackSurface,
@@ -31,12 +32,7 @@ export function handlePurchaseUpgrade(
   if (!isActionAllowedInPhase(GAME_ACTIONS.PURCHASE_UPGRADE, state.currentPhase)) {
     throw new Error('PURCHASE_UPGRADE not allowed in current phase');
   }
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'game.upgrade.purchased',
-    timestamp: state.updatedAt,
-    payload: { upgradeId: action.upgradeId },
-  });
+  events.push(createGameEvent('game.upgrade.purchased', { upgradeId: action.upgradeId }, state.updatedAt));
 }
 
 export function handleAdjustResource(
@@ -47,12 +43,7 @@ export function handleAdjustResource(
   if (!isActionAllowedInPhase(GAME_ACTIONS.ADJUST_RESOURCE, state.currentPhase)) {
     throw new Error('ADJUST_RESOURCE not allowed in current phase');
   }
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'game.resource.adjusted',
-    timestamp: state.updatedAt,
-    payload: { resourceId: action.resourceId, delta: action.delta },
-  });
+  events.push(createGameEvent('game.resource.adjusted', { resourceId: action.resourceId, delta: action.delta }, state.updatedAt));
 }
 
 function validateClientCapacity(
@@ -117,11 +108,9 @@ function pushClientOnboardedEvent(
   state: GameState,
   action: OnboardClientPayload,
 ): void {
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'facility.client.onboarded',
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    'facility.client.onboarded',
+    {
       clientId: action.clientId,
       clientName: action.clientName,
       organization: action.organization,
@@ -133,7 +122,8 @@ function pushClientOnboardedEvent(
       },
       dailyRate: action.dailyRate,
     },
-  });
+    state.updatedAt,
+  ));
 }
 
 export function handleOnboardClient(
@@ -180,15 +170,14 @@ export function handleEvictClient(
       ),
   );
   facility.clients.splice(clientIndex, 1);
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'facility.client.evicted',
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    'facility.client.evicted',
+    {
       clientId: action.clientId,
       reason: action.reason,
     },
-  });
+    state.updatedAt,
+  ));
 }
 
 function calculateRevenueAndConsumption(facility: GameState['facility']): {
@@ -237,16 +226,15 @@ function applyUtilizationEffects(
   if (utilizationPercent > 0.9) {
     facility.maintenanceDebt += Math.floor((utilizationPercent - 0.9) * 100);
     facility.facilityHealth = Math.max(0, facility.facilityHealth - 2);
-    events.push({
-      eventId: crypto.randomUUID(),
-      eventType: 'facility.resource.critical',
-      timestamp: state.updatedAt,
-      payload: {
+    events.push(createGameEvent(
+      'facility.resource.critical',
+      {
         utilizationPercent,
         maintenanceDebt: facility.maintenanceDebt,
         facilityHealth: facility.facilityHealth,
       },
-    });
+      state.updatedAt,
+    ));
   } else if (utilizationPercent > 0.7) {
     facility.maintenanceDebt += 1;
     facility.facilityHealth = Math.max(0, facility.facilityHealth - 1);
@@ -269,11 +257,9 @@ function calculateAndDeductOperatingCosts(
   state.funds -= totalOpEx;
 
   if (totalOpEx > 0) {
-    events.push({
-      eventId: crypto.randomUUID(),
-      eventType: 'game.economy.credits_changed',
-      timestamp: state.updatedAt,
-      payload: {
+    events.push(createGameEvent(
+      'game.economy.credits_changed',
+      {
         sessionId: state.sessionId,
         amount: -totalOpEx,
         balanceBefore: state.funds + totalOpEx,
@@ -281,7 +267,8 @@ function calculateAndDeductOperatingCosts(
         reason: 'operational_cost',
         context: { day: dayNumber },
       },
-    });
+      state.updatedAt,
+    ));
   }
   return totalOpEx;
 }
@@ -296,11 +283,9 @@ export interface RevenueEventContext {
 
 function pushRevenueEvent(ctx: RevenueEventContext): void {
   if (ctx.totalRevenue > 0) {
-    ctx.events.push({
-      eventId: crypto.randomUUID(),
-      eventType: 'game.economy.credits_changed',
-      timestamp: ctx.state.updatedAt,
-      payload: {
+    ctx.events.push(createGameEvent(
+      'game.economy.credits_changed',
+      {
         sessionId: ctx.state.sessionId,
         amount: ctx.totalRevenue,
         balanceBefore: ctx.state.funds - ctx.totalRevenue,
@@ -308,7 +293,8 @@ function pushRevenueEvent(ctx: RevenueEventContext): void {
         reason: 'client_approval',
         context: { day: ctx.dayNumber, clientCount: ctx.clientCount },
       },
-    });
+      ctx.state.updatedAt,
+    ));
   }
 }
 
@@ -342,11 +328,9 @@ export function handleProcessFacilityTick(
   completeInstallations(state, events);
 
   facility.lastTickDay = action.dayNumber;
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'facility.tick.processed',
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    'facility.tick.processed',
+    {
       dayNumber: action.dayNumber,
       revenue: totalRevenue,
       operatingCost: totalOpEx,
@@ -356,7 +340,8 @@ export function handleProcessFacilityTick(
       maintenanceDebt: facility.maintenanceDebt,
       facilityHealth: facility.facilityHealth,
     },
-  });
+    state.updatedAt,
+  ));
 }
 
 export function handleUpgradeFacilityTier(
@@ -384,11 +369,9 @@ export function handleUpgradeFacilityTier(
     throw new Error('Insufficient funds for tier upgrade');
   }
   state.funds -= upgrade.cost;
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'game.economy.credits_changed',
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    'game.economy.credits_changed',
+    {
       sessionId: state.sessionId,
       amount: -upgrade.cost,
       balanceBefore: state.funds + upgrade.cost,
@@ -396,23 +379,23 @@ export function handleUpgradeFacilityTier(
       reason: 'facility_upgrade',
       context: { fromTier: state.facilityTier, toTier: action.targetTier },
     },
-  });
+    state.updatedAt,
+  ));
   state.facilityTier = action.targetTier as typeof state.facilityTier;
   state.facility.tier = action.targetTier;
   state.facility.capacities.rackCapacityU = upgrade.rack;
   state.facility.capacities.powerCapacityKw = upgrade.power;
   state.facility.capacities.coolingCapacityTons = upgrade.cooling;
   state.facility.capacities.bandwidthCapacityMbps = upgrade.bandwidth;
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'facility.tier.upgraded',
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    'facility.tier.upgraded',
+    {
       fromTier: state.facilityTier,
       toTier: action.targetTier,
       cost: upgrade.cost,
     },
-  });
+    state.updatedAt,
+  ));
 }
 
 function pushUpgradePurchasedEvent(
@@ -421,18 +404,17 @@ function pushUpgradePurchasedEvent(
   action: PurchaseFacilityUpgradePayload,
   upgradeDef: (typeof UPGRADE_CATALOG)[keyof typeof UPGRADE_CATALOG],
 ): void {
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'facility.upgrade.purchased',
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    'facility.upgrade.purchased',
+    {
       upgradeType: action.upgradeType,
       category: upgradeDef.category,
       cost: upgradeDef.baseCost,
       installationDays: upgradeDef.installationDays,
       completesDay: state.currentDay + upgradeDef.installationDays,
     },
-  });
+    state.updatedAt,
+  ));
 }
 
 function handleZeroDayInstallation(
@@ -442,16 +424,15 @@ function handleZeroDayInstallation(
   events: DomainEvent[],
 ): void {
   applyUpgradeEffects(state, action.upgradeType);
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'facility.upgrade.completed',
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    'facility.upgrade.completed',
+    {
       upgradeType: action.upgradeType,
       category: upgradeDef.category,
       cost: upgradeDef.baseCost,
     },
-  });
+    state.updatedAt,
+  ));
 }
 
 export function handlePurchaseFacilityUpgrade(
@@ -468,11 +449,9 @@ export function handlePurchaseFacilityUpgrade(
 
   state.funds -= upgradeDef.baseCost;
 
-  events.push({
-    eventId: crypto.randomUUID(),
-    eventType: 'game.economy.credits_changed',
-    timestamp: state.updatedAt,
-    payload: {
+  events.push(createGameEvent(
+    'game.economy.credits_changed',
+    {
       sessionId: state.sessionId,
       amount: -upgradeDef.baseCost,
       balanceBefore: state.funds + upgradeDef.baseCost,
@@ -480,7 +459,8 @@ export function handlePurchaseFacilityUpgrade(
       reason: 'upgrade_purchase',
       context: { upgradeType: action.upgradeType, category: upgradeDef.category },
     },
-  });
+    state.updatedAt,
+  ));
 
   installUpgrade(state, upgradeDef, action.upgradeType);
 
