@@ -1,5 +1,6 @@
 import { generateId } from '$lib/utils/id';
 import { logger } from '$lib/logger';
+import { SESSION_SNAPSHOT_INTERVAL_MS } from '@the-dmz/shared/constants';
 
 import { getDB } from './idb';
 
@@ -42,8 +43,6 @@ export function isSnapshotValid(snapshot: SessionSnapshot): boolean {
 
   return true;
 }
-
-const SESSION_SNAPSHOT_INTERVAL_MS = 30000;
 
 interface SessionSnapshotManager {
   saveSessionSnapshot(state: unknown): Promise<SessionSnapshot>;
@@ -116,7 +115,7 @@ function createSessionSnapshotManager(): SessionSnapshotManager {
           logger.error('Failed to save session snapshot', { error });
         }
       })();
-    }, SESSION_SNAPSHOT_INTERVAL_MS);
+    }, SESSION_SNAPSHOT_INTERVAL_MS as number);
   }
 
   function stopSessionSnapshotTimer(): void {

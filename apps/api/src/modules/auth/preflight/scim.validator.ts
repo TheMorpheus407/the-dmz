@@ -1,4 +1,5 @@
 import type { SSOValidationCheckResult } from '@the-dmz/shared/auth';
+import { SSO_VALIDATION_TIMEOUT_MS } from '@the-dmz/shared/constants';
 
 export class SCIMPreflightValidator {
   async validateBaseUrlReachability(
@@ -11,7 +12,7 @@ export class SCIMPreflightValidator {
       const response = await fetch(`${baseUrl}/ServiceProviderConfig`, {
         method: 'GET',
         headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(SSO_VALIDATION_TIMEOUT_MS as number),
       });
 
       if (!response.ok) {
@@ -55,7 +56,7 @@ export class SCIMPreflightValidator {
           Accept: 'application/json',
           Authorization: `Bearer ${bearerToken}`,
         },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(SSO_VALIDATION_TIMEOUT_MS as number),
       });
 
       if (response.status === 401) {
@@ -107,7 +108,7 @@ export class SCIMPreflightValidator {
           Accept: 'application/json',
           Authorization: `Bearer ${bearerToken}`,
         },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(SSO_VALIDATION_TIMEOUT_MS as number),
       });
 
       if (!response.ok) {

@@ -1,3 +1,5 @@
+import { CLIENT_LOADING_TIMEOUT_MS } from '@the-dmz/shared/constants';
+
 export type LoadingStateType = 'initial' | 'navigation' | 'revalidation' | 'mutation';
 
 export type LoadingSurface = 'full-page' | 'panel' | 'inline';
@@ -23,7 +25,7 @@ export const LOADING_STATE_CONFIGS: Record<LoadingStateType, LoadingStateConfig>
   initial: {
     type: 'initial',
     surface: 'full-page',
-    timeout: 30000,
+    timeout: CLIENT_LOADING_TIMEOUT_MS as number,
     message: 'Initializing...',
   },
   navigation: {
@@ -41,7 +43,7 @@ export const LOADING_STATE_CONFIGS: Record<LoadingStateType, LoadingStateConfig>
   mutation: {
     type: 'mutation',
     surface: 'full-page',
-    timeout: 30000,
+    timeout: CLIENT_LOADING_TIMEOUT_MS as number,
     message: 'Processing...',
   },
 };

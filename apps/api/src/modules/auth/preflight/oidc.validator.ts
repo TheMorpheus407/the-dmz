@@ -1,4 +1,5 @@
 import type { SSOValidationCheckResult } from '@the-dmz/shared/auth';
+import { SSO_VALIDATION_TIMEOUT_MS } from '@the-dmz/shared/constants';
 
 interface OIDCDiscoveryDocument {
   issuer: string;
@@ -25,7 +26,7 @@ export class OIDCPreflightValidator {
       const response = await fetch(metadataUrl, {
         method: 'GET',
         headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(SSO_VALIDATION_TIMEOUT_MS as number),
       });
 
       if (!response.ok) {
@@ -108,7 +109,7 @@ export class OIDCPreflightValidator {
       const response = await fetch(metadataUrl, {
         method: 'GET',
         headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(SSO_VALIDATION_TIMEOUT_MS as number),
       });
 
       if (!response.ok) {
@@ -134,7 +135,7 @@ export class OIDCPreflightValidator {
       const jwksResponse = await fetch(data.jwks_uri, {
         method: 'GET',
         headers: { Accept: 'application/json' },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(SSO_VALIDATION_TIMEOUT_MS as number),
       });
 
       if (!jwksResponse.ok) {

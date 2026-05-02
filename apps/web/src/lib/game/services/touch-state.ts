@@ -3,6 +3,7 @@ import { writable } from 'svelte/store';
 import { getDB } from '$lib/storage/idb';
 import { generateId } from '$lib/utils/id';
 import { logger } from '$lib/logger';
+import { CLIENT_SYNC_INTERVAL_MS } from '@the-dmz/shared/constants';
 
 import { browser } from '$app/environment';
 
@@ -23,7 +24,6 @@ export interface TouchState {
 }
 
 const MAX_STORED_INTERACTIONS = 1000;
-const SYNC_INTERVAL_MS = 30000;
 
 const initialState: TouchState = {
   interactions: [],
@@ -170,7 +170,7 @@ function createTouchStateStore() {
 
       syncTimer = setInterval(() => {
         void this.syncTouchState();
-      }, SYNC_INTERVAL_MS);
+      }, CLIENT_SYNC_INTERVAL_MS as number);
     },
 
     stopPeriodicSync(): void {

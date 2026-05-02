@@ -5,7 +5,11 @@ import type {
   SSOIdentityClaim,
   SSOTrustFailureReason,
 } from '@the-dmz/shared/auth';
-import { ErrorCodes } from '@the-dmz/shared/constants';
+import {
+  ErrorCodes,
+  SSO_OPERATION_TIMEOUT_MS,
+  DEFAULT_CACHE_DURATION_MS,
+} from '@the-dmz/shared/constants';
 
 import { SSOError, decryptClientSecret } from './sso-shared.js';
 
@@ -31,7 +35,7 @@ const oidcMetadataCache: Map<string, { metadata: OIDCIdPMetadata; expiresAt: num
 
 export const fetchAndParseOIDCDiscovery = async (
   metadataUrl: string,
-  cacheDurationMs: number = 3600000,
+  cacheDurationMs: number = DEFAULT_CACHE_DURATION_MS as number,
 ): Promise<OIDCIdPMetadata> => {
   const cached = oidcMetadataCache.get(metadataUrl);
   if (cached && cached.expiresAt > Date.now()) {
@@ -41,7 +45,7 @@ export const fetchAndParseOIDCDiscovery = async (
   try {
     const response = await fetch(metadataUrl, {
       method: 'GET',
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(SSO_OPERATION_TIMEOUT_MS as number),
     });
 
     if (!response.ok) {
@@ -382,7 +386,7 @@ const jwksCache: Map<string, { jwks: JWKS; expiresAt: number }> = new Map();
 
 export const fetchJWKS = async (
   jwksUri: string,
-  cacheDurationMs: number = 3600000,
+  cacheDurationMs: number = DEFAULT_CACHE_DURATION_MS as number,
 ): Promise<JWKS> => {
   const cached = jwksCache.get(jwksUri);
   if (cached && cached.expiresAt > Date.now()) {
@@ -391,7 +395,7 @@ export const fetchJWKS = async (
 
   const response = await fetch(jwksUri, {
     method: 'GET',
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(SSO_OPERATION_TIMEOUT_MS as number),
   });
 
   if (!response.ok) {

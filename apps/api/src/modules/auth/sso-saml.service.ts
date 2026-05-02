@@ -7,7 +7,11 @@ import type {
   SSOIdentityClaim,
   SSOTrustFailureReason,
 } from '@the-dmz/shared/auth';
-import { ErrorCodes } from '@the-dmz/shared/constants';
+import {
+  ErrorCodes,
+  SSO_OPERATION_TIMEOUT_MS,
+  DEFAULT_CACHE_DURATION_MS,
+} from '@the-dmz/shared/constants';
 
 import { SSOError, DEFAULT_ROLE_MAPPING } from './sso-shared.js';
 
@@ -287,7 +291,7 @@ export const validateSAMLAssertion = async (
 
 export const fetchAndParseIdPMetadata = async (
   metadataUrl: string,
-  cacheDurationMs: number = 3600000,
+  cacheDurationMs: number = DEFAULT_CACHE_DURATION_MS as number,
 ): Promise<SAMLIdPMetadata> => {
   const cached = idpMetadataCache.get(metadataUrl);
   if (cached && cached.expiresAt > Date.now()) {
@@ -297,7 +301,7 @@ export const fetchAndParseIdPMetadata = async (
   try {
     const response = await fetch(metadataUrl, {
       method: 'GET',
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(SSO_OPERATION_TIMEOUT_MS as number),
     });
 
     if (!response.ok) {

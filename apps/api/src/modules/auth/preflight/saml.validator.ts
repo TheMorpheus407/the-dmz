@@ -1,4 +1,5 @@
 import type { SSOValidationCheckResult } from '@the-dmz/shared/auth';
+import { SSO_VALIDATION_TIMEOUT_MS } from '@the-dmz/shared/constants';
 
 export class SAMLPreflightValidator {
   async validateMetadataFetch(
@@ -10,7 +11,7 @@ export class SAMLPreflightValidator {
     try {
       const response = await fetch(metadataUrl, {
         method: 'GET',
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(SSO_VALIDATION_TIMEOUT_MS as number),
       });
 
       if (!response.ok) {

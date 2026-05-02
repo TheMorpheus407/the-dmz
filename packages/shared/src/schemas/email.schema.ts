@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { DEFAULT_EMAIL_TIMEOUT_MS } from '../constants/index.js';
+
 export enum EmailProviderType {
   SMTP = 'smtp',
   EXCHANGE_ONLINE = 'exchange_online',
@@ -67,7 +69,7 @@ export const smtpConfigSchema = z
     fromName: z.string().max(100).optional(),
     replyToAddress: z.string().email().max(320).optional(),
     maxConnections: z.number().int().positive().max(100).default(5),
-    timeoutMs: z.number().int().positive().max(60000).default(30000),
+    timeoutMs: z.number().int().positive().max(60000).default(DEFAULT_EMAIL_TIMEOUT_MS),
   })
   .strict();
 
