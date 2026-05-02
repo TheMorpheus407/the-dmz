@@ -4,5 +4,6 @@ export * from './config.js';
 export * from './error-codes.js';
 export * from './frameworks.js';
 export * from './pagination.js';
+export * from './retry.js';
 export * from './taxonomy.js';
 export * from './timeouts.js';

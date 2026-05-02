@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { STANDARD_RETRY_DELAYS_MS } from '../constants/retry.js';
+
 export const TeamsDeliveryMode = {
   TEAMS_APP: 'teams-app',
   INCOMING_WEBHOOK: 'incoming-webhook',
@@ -320,7 +322,7 @@ export const TEAMS_RATE_LIMITS = {
   NON_CRITICAL_PER_USER_PER_DAY: 2,
 } as const;
 
-export const TEAMS_RETRY_DELAYS_MS = [60000, 300000, 1800000, 7200000, 28800000];
+export const TEAMS_RETRY_DELAYS_MS = STANDARD_RETRY_DELAYS_MS;
 export const TEAMS_DEFAULT_MAX_ATTEMPTS = 5;
 
 export const m1TeamsNotificationContractManifest: Record<

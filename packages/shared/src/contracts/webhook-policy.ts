@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { STANDARD_RETRY_DELAYS_MS } from '../constants/retry.js';
+
 export enum WebhookSubscriptionStatus {
   ACTIVE = 'active',
   DISABLED = 'disabled',
@@ -174,13 +176,7 @@ export const WEBHOOK_SIGNATURE_VERSION = 'v1';
 export const WEBHOOK_REPLAY_WINDOW_MS = 5 * 60 * 1000;
 export const WEBHOOK_DEFAULT_MAX_ATTEMPTS = 5;
 export const WEBHOOK_DELIVERY_TIMEOUT_MS = 30 * 1000;
-export const WEBHOOK_RETRY_DELAYS_MS = [
-  60 * 1000,
-  5 * 60 * 1000,
-  30 * 60 * 1000,
-  2 * 60 * 60 * 1000,
-  24 * 60 * 60 * 1000,
-];
+export const WEBHOOK_RETRY_DELAYS_MS = STANDARD_RETRY_DELAYS_MS;
 
 export const WEBHOOK_RATE_LIMITS = {
   CREATE: { limit: 20, windowMs: 60 * 1000 },

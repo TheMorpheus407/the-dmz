@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { STANDARD_RETRY_DELAYS_MS } from '../constants/retry.js';
+
 export const SlackDeliveryMode = {
   SLACK_APP: 'slack-app',
   INCOMING_WEBHOOK: 'incoming-webhook',
@@ -491,7 +493,7 @@ export const SLACK_RATE_LIMITS = {
   SLASH_COMMANDS_PER_MINUTE: 20,
 } as const;
 
-export const SLACK_RETRY_DELAYS_MS = [60000, 300000, 1800000, 7200000, 28800000];
+export const SLACK_RETRY_DELAYS_MS = STANDARD_RETRY_DELAYS_MS;
 export const SLACK_DEFAULT_MAX_ATTEMPTS = 5;
 export const SLACK_SIGNATURE_VERSION = 'v0';
 export const SLACK_SIGNATURE_MAX_AGE_MS = 5 * 60 * 1000;
