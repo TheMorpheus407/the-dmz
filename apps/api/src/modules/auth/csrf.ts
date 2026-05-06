@@ -1,3 +1,5 @@
+import { timingSafeEqual } from 'node:crypto';
+
 import { AppError, ErrorCodes } from '../../shared/middleware/error-handler.js';
 
 import type {
@@ -51,7 +53,10 @@ export const validateCsrf: preHandlerAsyncHookHandler = async (
     });
   }
 
-  if (cookieToken !== headerToken) {
+  if (
+    cookieToken.length !== headerToken.length ||
+    !timingSafeEqual(Buffer.from(cookieToken), Buffer.from(headerToken))
+  ) {
     throw new AppError({
       code: ErrorCodes.AUTH_CSRF_INVALID,
       message: 'CSRF token invalid',
