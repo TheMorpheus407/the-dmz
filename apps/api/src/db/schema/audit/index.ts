@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  index,
   integer,
   jsonb,
   pgSchema,
@@ -39,18 +40,18 @@ export const auditLogs = auditSchema.table(
     userAgent: varchar('user_agent', { length: 512 }),
   },
   (table) => ({
-    tenantIdPartitionMonth: uniqueIndex('audit_logs_tenant_partition_idx').on(
+    tenantIdPartitionMonth: index('audit_logs_tenant_partition_idx').on(
       table.tenantId,
       table.partitionMonth,
     ),
-    tenantIdTimestamp: uniqueIndex('audit_logs_tenant_timestamp_idx').on(
+    tenantIdTimestamp: index('audit_logs_tenant_timestamp_idx').on(
       table.tenantId,
       table.timestamp,
       table.id,
     ),
-    tenantIdAction: uniqueIndex('audit_logs_tenant_action_idx').on(table.tenantId, table.action),
-    tenantIdUserId: uniqueIndex('audit_logs_tenant_user_idx').on(table.tenantId, table.userId),
-    tenantIdResource: uniqueIndex('audit_logs_tenant_resource_idx').on(
+    tenantIdAction: index('audit_logs_tenant_action_idx').on(table.tenantId, table.action),
+    tenantIdUserId: index('audit_logs_tenant_user_idx').on(table.tenantId, table.userId),
+    tenantIdResource: index('audit_logs_tenant_resource_idx').on(
       table.tenantId,
       table.resourceType,
       table.resourceId,

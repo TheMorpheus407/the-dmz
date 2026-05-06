@@ -3,7 +3,7 @@ import {
   index,
   integer,
   jsonb,
-  pgTable,
+  pgSchema,
   real,
   text,
   timestamp,
@@ -11,8 +11,10 @@ import {
   varchar,
 } from 'drizzle-orm/pg-core';
 
-export const analyticsEvents = pgTable(
-  'analytics.events',
+const analyticsSchema = pgSchema('analytics');
+
+export const analyticsEvents = analyticsSchema.table(
+  'events',
   {
     eventId: uuid('event_id').primaryKey(),
     correlationId: uuid('correlation_id').notNull(),
@@ -44,8 +46,8 @@ export const analyticsEvents = pgTable(
 export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
 export type NewAnalyticsEvent = typeof analyticsEvents.$inferInsert;
 
-export const playerProfiles = pgTable(
-  'analytics.player_profiles',
+export const playerProfiles = analyticsSchema.table(
+  'player_profiles',
   {
     userId: uuid('user_id').primaryKey(),
     tenantId: uuid('tenant_id').notNull(),
@@ -78,8 +80,8 @@ export const playerProfiles = pgTable(
 export type PlayerProfile = typeof playerProfiles.$inferSelect;
 export type NewPlayerProfile = typeof playerProfiles.$inferInsert;
 
-export const deadLetterQueue = pgTable(
-  'analytics.dead_letter_queue',
+export const deadLetterQueue = analyticsSchema.table(
+  'dead_letter_queue',
   {
     id: uuid('id')
       .primaryKey()
@@ -102,8 +104,8 @@ export const deadLetterQueue = pgTable(
 export type DeadLetterQueueItem = typeof deadLetterQueue.$inferSelect;
 export type NewDeadLetterQueueItem = typeof deadLetterQueue.$inferInsert;
 
-export const analyticsMetrics = pgTable(
-  'analytics.metrics',
+export const analyticsMetrics = analyticsSchema.table(
+  'metrics',
   {
     id: uuid('id')
       .primaryKey()
@@ -125,8 +127,8 @@ export const analyticsMetrics = pgTable(
 export type AnalyticsMetric = typeof analyticsMetrics.$inferSelect;
 export type NewAnalyticsMetric = typeof analyticsMetrics.$inferInsert;
 
-export const retentionCohorts = pgTable(
-  'analytics.retention_cohorts',
+export const retentionCohorts = analyticsSchema.table(
+  'retention_cohorts',
   {
     id: uuid('id')
       .primaryKey()
@@ -161,8 +163,8 @@ export const retentionCohorts = pgTable(
 export type RetentionCohort = typeof retentionCohorts.$inferSelect;
 export type NewRetentionCohort = typeof retentionCohorts.$inferInsert;
 
-export const pseudonymizationMappings = pgTable(
-  'analytics.pseudonymization_mappings',
+export const pseudonymizationMappings = analyticsSchema.table(
+  'pseudonymization_mappings',
   {
     id: uuid('id')
       .primaryKey()
