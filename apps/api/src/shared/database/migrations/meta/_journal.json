@@ -407,6 +407,13 @@
       "when": 1776300000000,
       "tag": "0056_add_device_fingerprint_to_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1744646400000,
+      "tag": "0059_rls_missing_schemas",
+      "breakpoints": true
     }
   ]
 }
