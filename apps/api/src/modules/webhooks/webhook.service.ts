@@ -1,4 +1,4 @@
-import { randomUUID, createHmac, timingSafeEqual } from 'crypto';
+import { randomUUID, createHmac, timingSafeEqual, createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 
 import { Queue } from 'bullmq';
 
@@ -26,6 +26,7 @@ import {
   WebhookDeliveryMaxRetriesExceededError,
   WebhookSignatureInvalidError,
   WebhookSignatureExpiredError,
+  WebhookSecretDecryptionError,
 } from './webhook.errors.js';
 import {
   WEBHOOK_QUEUE_NAMES,
@@ -39,6 +40,39 @@ import type {
   NewWebhookDeliveryDb,
   NewWebhookSubscriptionDb,
 } from '../../db/schema/webhooks.js';
+
+const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
+const ENCRYPTION_IV_LENGTH = 16;
+const ENCRYPTION_SALT_LENGTH = 32;
+
+function deriveEncryptionKey(encryptionKey: string, salt: Buffer): Buffer {
+  return scryptSync(encryptionKey, salt, 32);
+}
+
+function encryptWebhookSecret(secret: string, encryptionKey: string): string {
+  const salt = randomBytes(ENCRYPTION_SALT_LENGTH);
+  const key = deriveEncryptionKey(encryptionKey, salt);
+  const iv = randomBytes(ENCRYPTION_IV_LENGTH);
+  const cipher = createCipheriv(ENCRYPTION_ALGORITHM, key, iv);
+  const encrypted = Buffer.concat([cipher.update(secret, 'utf8'), cipher.final()]);
+  const authTag = cipher.getAuthTag();
+  return `${salt.toString('base64')}:${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted.toString('base64')}`;
+}
+
+function decryptWebhookSecret(encryptedData: string, encryptionKey: string): string {
+  const parts = encryptedData.split(':');
+  if (parts.length !== 4) {
+    throw new Error('Invalid encrypted webhook secret format');
+  }
+  const salt = Buffer.from(parts[0]!, 'base64');
+  const iv = Buffer.from(parts[1]!, 'base64');
+  const authTag = Buffer.from(parts[2]!, 'base64');
+  const encrypted = Buffer.from(parts[3]!, 'base64');
+  const key = deriveEncryptionKey(encryptionKey, salt);
+  const decipher = createDecipheriv(ENCRYPTION_ALGORITHM, key, iv);
+  decipher.setAuthTag(authTag);
+  return decipher.update(encrypted) + decipher.final('utf8');
+}
 
 interface SubscriptionUpdateData {
   name?: string;
@@ -95,7 +129,7 @@ export class WebhookService {
     }
 
     const generatedSecret = this.generateSecret();
-    const secretHash = this.hashSecret(generatedSecret);
+    const secretHash = this.encryptSecretForStorage(generatedSecret);
 
     const subscription = await webhookRepo.createSubscription({
       tenantId,
@@ -213,7 +247,7 @@ export class WebhookService {
     }
 
     const newSecret = this.generateSecret();
-    const newSecretHash = this.hashSecret(newSecret);
+    const newSecretHash = this.encryptSecretForStorage(newSecret);
 
     await webhookRepo.updateSubscription(tenantId, subscriptionId, {
       secretHash: newSecretHash,
@@ -241,7 +275,18 @@ export class WebhookService {
     }
 
     const testPayload = this.createTestEventPayload(subscription.id, subscription.tenantId);
-    const signingSecret = this.secretCache.get(subscriptionId) ?? subscription.secretHash;
+    let signingSecret = this.secretCache.get(subscriptionId);
+    if (!signingSecret && subscription.secretHash) {
+      try {
+        signingSecret = this.decryptSecretFromStorage(subscription.secretHash);
+        this.secretCache.set(subscriptionId, signingSecret);
+      } catch {
+        throw new WebhookSecretDecryptionError(subscriptionId);
+      }
+    }
+    if (!signingSecret) {
+      throw new WebhookSecretDecryptionError(subscriptionId);
+    }
     const signature = this.generateSignature(testPayload, signingSecret);
 
     const signatureHeaders: Record<string, string> = {
@@ -333,7 +378,19 @@ export class WebhookService {
       throw new WebhookSubscriptionInvalidStatusError(subscription?.status ?? 'unknown');
     }
 
-    const signingSecret = this.secretCache.get(subscriptionId) ?? subscription.secretHash;
+    let signingSecret = this.secretCache.get(subscriptionId);
+    if (!signingSecret && subscription.secretHash) {
+      // Decrypt the stored secret instead of using the hash as a signing key
+      try {
+        signingSecret = this.decryptSecretFromStorage(subscription.secretHash);
+        this.secretCache.set(subscriptionId, signingSecret);
+      } catch {
+        throw new WebhookSecretDecryptionError(subscriptionId);
+      }
+    }
+    if (!signingSecret) {
+      throw new WebhookSecretDecryptionError(subscriptionId);
+    }
     const signature = this.generateSignature(payload, signingSecret);
 
     const signatureHeaders: Record<string, string> = {
@@ -567,8 +624,18 @@ export class WebhookService {
     return randomUUID() + randomUUID();
   }
 
-  private hashSecret(secret: string): string {
-    return createHmac('sha256', secret).update(secret).digest('hex');
+  private encryptSecretForStorage(secret: string): string {
+    const encryptionKey = this.getEncryptionKey();
+    return encryptWebhookSecret(secret, encryptionKey);
+  }
+
+  private decryptSecretFromStorage(encrypted: string): string {
+    const encryptionKey = this.getEncryptionKey();
+    return decryptWebhookSecret(encrypted, encryptionKey);
+  }
+
+  private getEncryptionKey(): string {
+    return process.env.JWT_PRIVATE_KEY_ENCRYPTION_KEY || 'dev-webhook-encryption-key';
   }
 
   generateSignature(payload: Record<string, unknown>, secret: string): string {

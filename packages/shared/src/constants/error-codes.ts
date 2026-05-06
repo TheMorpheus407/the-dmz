@@ -200,6 +200,7 @@ export const ErrorCodes = {
   WEBHOOK_RATE_LIMIT_EXCEEDED: 'WEBHOOK_RATE_LIMIT_EXCEEDED',
   WEBHOOK_UNAUTHORIZED: 'WEBHOOK_UNAUTHORIZED',
   WEBHOOK_INSUFFICIENT_SCOPE: 'WEBHOOK_INSUFFICIENT_SCOPE',
+  WEBHOOK_SECRET_DECRYPTION_FAILED: 'WEBHOOK_SECRET_DECRYPTION_FAILED',
 } as const;
 
 export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
@@ -1135,6 +1136,11 @@ export const errorCodeMetadata: Record<ErrorCode, ErrorCodeMetadata> = {
     category: ErrorCodeCategory.AUTHORIZATION,
     retryable: false,
     messageKey: 'errors.webhook.insufficientScope',
+  },
+  [ErrorCodes.WEBHOOK_SECRET_DECRYPTION_FAILED]: {
+    category: ErrorCodeCategory.SERVER,
+    retryable: false,
+    messageKey: 'errors.webhook.secretDecryptionFailed',
   },
 };
 

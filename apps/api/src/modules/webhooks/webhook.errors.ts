@@ -155,3 +155,14 @@ export class WebhookInsufficientScopeError extends AppError {
     this.name = 'WebhookInsufficientScopeError';
   }
 }
+
+export class WebhookSecretDecryptionError extends AppError {
+  constructor(subscriptionId: string) {
+    super({
+      code: ErrorCodes.WEBHOOK_SECRET_DECRYPTION_FAILED,
+      message: `Failed to decrypt webhook secret for subscription ${subscriptionId}`,
+      statusCode: 500,
+    });
+    this.name = 'WebhookSecretDecryptionError';
+  }
+}
