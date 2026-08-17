@@ -79,7 +79,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
-    "@mswjs/cookies": "^1.1.0",
+    "@mswjs/cookies": "^1.1.1",
     "@mswjs/interceptors": "^0.37.0",
     "@types/argon2": "^0.15.4",
     "@types/node": "^22.0.0",
